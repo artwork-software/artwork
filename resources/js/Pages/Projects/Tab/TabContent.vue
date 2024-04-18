@@ -66,7 +66,7 @@ export default {
     },
     props: [
         'headerObject',
-        'dataObject',
+        'currentTab',
         'loadedProjectInformation',
         'first_project_tab_id',
         'first_project_calendar_tab_id',
@@ -99,7 +99,7 @@ export default {
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project">
         <div class="my-10 w-full">
-            <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
+            <div v-for="component in currentTab.components"  :class="removeML(component.component?.type)">
                 <Component
                     v-if="this.$canSeeComponent(component.component)"
                     :can-edit-component="this.$canEditComponent(component.component)"
@@ -122,7 +122,7 @@ export default {
                     :eventTypes="headerObject.eventTypes"
                     :opened_checklists="headerObject.project?.opened_checklists"
                     :projectManagerIds="headerObject.projectManagerIds"
-                    :tab_id="dataObject.currentTab.id"
+                    :tab_id="currentTab.id"
                     :first_project_tab_id="this.first_project_tab_id"
                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                     :first_project_budget_tab_id="this.first_project_budget_tab_id"
@@ -131,13 +131,13 @@ export default {
         </div>
 
 
-        <BaseSidenav @toggle="this.show =! this.show" v-if="dataObject.currentTab.hasSidebarTabs">
+        <BaseSidenav @toggle="this.show =! this.show" v-if="currentTab.hasSidebarTabs">
             <div class="w-full">
                 <div class="mb-5 ml-3">
                     <div class="hidden sm:block">
                         <div class="border-gray-200">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                                <div v-for="(tab, index) in dataObject.currentTab.sidebar_tabs" :key="tab?.name" @click="currentSideBarTab = index"
+                                <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name" @click="currentSideBarTab = index"
                                       :class="[index === currentSideBarTab ? 'text-artwork-buttons-create border-artwork-buttons-create' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-medium font-semibold cursor-pointer']"
                                       :aria-current="index === currentSideBarTab ? 'page' : undefined">
                                     {{ tab.name }}
@@ -147,7 +147,7 @@ export default {
                     </div>
                 </div>
                 <div class="px-3">
-                    <div v-for="component in dataObject.currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
+                    <div v-for="component in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
                         <Component
                             v-if="this.$canSeeComponent(component.component)"
                             :can-edit-component="this.$canEditComponent(component.component)"

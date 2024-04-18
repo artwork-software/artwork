@@ -154,13 +154,6 @@ class Project extends Model
         return $this->belongsToMany(Department::class);
     }
 
-    //@todo: fix phpcs error - refactor function name to projectHistories
-    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function project_histories(): HasMany
-    {
-        return $this->hasMany(ProjectHistory::class);
-    }
-
     public function checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);

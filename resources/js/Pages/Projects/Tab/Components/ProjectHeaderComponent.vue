@@ -206,15 +206,15 @@ export default {
                     </div>
                 </div>
                 <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
-                     v-if="headerObject.project.project_history.length">
+                     v-if="headerObject.project_history.length">
                     <div>
                         {{ $t('last modified') }}:
                     </div>
-                    <UserPopoverTooltip :user="headerObject.project.project_history[0]?.changes[0]?.changed_by"
-                                        :id="headerObject.project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4"
+                    <UserPopoverTooltip :user="headerObject.project_history[0]?.changes[0]?.changed_by"
+                                        :id="headerObject.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4"
                                         class="ml-2"/>
                     <span class="ml-2 subpixel-antialiased">
-                    {{ headerObject.project.project_history[0]?.created_at }}
+                    {{ headerObject.project_history[0]?.created_at }}
                 </span>
                     <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">
@@ -262,7 +262,7 @@ export default {
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"
-            :project_history="headerObject.project.project_history"
+            :project_history="headerObject.project_history"
             :access_budget="headerObject.project.access_budget"
         />
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">

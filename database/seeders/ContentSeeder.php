@@ -358,12 +358,6 @@ class ContentSeeder extends Seeder
         $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 
-
-        $project->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt"
-        ]);
-
         Checklist::create([
             'name' => 'Aufbau',
             'project_id' => 1,
@@ -394,11 +388,6 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        $second_project->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
-        ]);
-
         $projectController->generateBasicBudgetValues($second_project);
 
         $nextProject = Project::create([
@@ -423,11 +412,6 @@ class ContentSeeder extends Seeder
                     '“Prototyping Sonic Institutions” ins Leben gerufen,  ' .
                     'das von Black Swan und CTM Festival zur Festivalausgabe 2022 organisiert wurde.'
             ]
-        ]);
-
-        $nextProject->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
         ]);
 
         $projectController->generateBasicBudgetValues($nextProject);
@@ -457,11 +441,6 @@ class ContentSeeder extends Seeder
                     'the table - Samsa was a travelling salesman - and above it there hung a picture that he ' .
                     'had recently cut out of an illustrated magazine and housed in a nice, gilded frame.'
             ]
-        ]);
-
-        $nextProject->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
         ]);
 
         $projectController->generateBasicBudgetValues($nextProject);

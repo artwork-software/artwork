@@ -192,10 +192,10 @@
                                         <IconAdjustmentsAlt v-if="cell.sage_assigned_data.length >= 1" @click="handleCellClick(cell, 'sageAssignedData', index, row)" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
                                         <div>
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell" :value="this.formatCellValue(cell.sage_value)"/>
+                                                <SageDropCellElement :cell="cell" :value="this.toCurrencyString(cell.sage_value)"/>
                                                 <SageDragCellElement :cell="cell" class="hidden group-hover:block"/>
                                             </div>
-                                            <span v-else>{{ index < 3 ? cell.value : this.formatCellValue(cell.value) }}</span>
+                                            <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -225,7 +225,7 @@
                                          src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
-                                    {{ index < 3 ? cell.value : this.formatCellValue(cell.value) }}
+                                    {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
                                     <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
                                                     @click="openCellDetailModal(cell)"
                                                     class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
@@ -345,7 +345,7 @@
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span v-if="column.type !== 'sage'">
-                                {{ subPosition.columnSums[column.id]?.sum.toLocaleString() }}
+                                {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
                             </span>
                             <span v-else>
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
@@ -392,9 +392,10 @@ import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement
 import IconLib from "@/mixins/IconLib.vue";
 import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
         SageDragCellElement,
@@ -427,6 +428,7 @@ export default {
     ],
     data() {
         return {
+            editedCellOriginalValue: null,
             alreadyCellClicked: false,
             showMenu: null,
             hoveredRow: null,
@@ -510,20 +512,6 @@ export default {
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
-        formatCellValue(value) {
-            if (value === null) {
-                value = 0;
-            }
-            //cast value to String, replace commas by dots. Parse Number and format it to 1.234,56
-            return Number(
-                String(value).replace(',', '.')
-            ).toLocaleString(
-                'de-DE',
-                {
-                    minimumFractionDigits: 2
-                }
-            );
-        },
         updateRowCommented(rowId, bool) {
             this.$inertia.patch(
                 route(
@@ -686,6 +674,17 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
+            let onFinish = () => {
+                cell.clicked = false;
+                this.alreadyCellClicked = false;
+                this.editedCellOriginalValue = null;
+            };
+
+            if (cell.value === this.editedCellOriginalValue) {
+                onFinish();
+                return;
+            }
+
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }
@@ -698,10 +697,7 @@ export default {
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
                 preserveScroll: true,
-                onFinish: () => {
-                    cell.clicked = false;
-                    this.alreadyCellClicked = false;
-                }
+                onFinish: onFinish
             });
         },
         openCellDetailModal(cell) {
@@ -751,9 +747,8 @@ export default {
 
                 if (cell.clicked) {
                     this.alreadyCellClicked = true;
-                }
+                    this.editedCellOriginalValue = cell.value;
 
-                if (cell.clicked) {
                     await nextTick()
 
                     this.$refs[`cell-${cell.id}`][0].select();

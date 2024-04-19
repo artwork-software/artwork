@@ -358,7 +358,7 @@ class ProjectController extends Controller
                 [
                     'column_id' => $firstThreeColumn->id,
                     'sub_position_row_id' => $costSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0',
                     'verified_value' => "",
                     'linked_money_source_id' => null,
                 ]
@@ -370,7 +370,7 @@ class ProjectController extends Controller
                 [
                     'column_id' => $firstThreeColumn->id,
                     'sub_position_row_id' => $earningSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0',
                     'verified_value' => "",
                     'linked_money_source_id' => null,
                 ]
@@ -382,7 +382,7 @@ class ProjectController extends Controller
                 [
                     'column_id' => $column->id,
                     'sub_position_row_id' => $costSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0,00',
                     'verified_value' => null,
                     'linked_money_source_id' => null,
                 ]
@@ -391,7 +391,7 @@ class ProjectController extends Controller
                 [
                     'column_id' => $column->id,
                     'sub_position_row_id' => $earningSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0,00',
                     'verified_value' => null,
                     'linked_money_source_id' => null,
                 ]
@@ -1439,7 +1439,7 @@ class ProjectController extends Controller
             $subPositionRow->cells()->create([
                 'column_id' => $firstThreeColumn->id,
                 'sub_position_row_id' => $subPositionRow->id,
-                'value' => 0,
+                'value' => '0,00',
                 'linked_money_source_id' => null,
                 'verified_value' => ''
             ]);
@@ -1449,7 +1449,7 @@ class ProjectController extends Controller
             $subPositionRow->cells()->create([
                 'column_id' => $column->id,
                 'sub_position_row_id' => $subPositionRow->id,
-                'value' => 0,
+                'value' => '0,00',
                 'linked_money_source_id' => null,
                 'verified_value' => ''
             ]);
@@ -1524,7 +1524,7 @@ class ProjectController extends Controller
             $subPositionRow->cells()->create([
                 'column_id' => $firstThreeColumn->id,
                 'sub_position_row_id' => $subPositionRow->id,
-                'value' => 0,
+                'value' => '0,00',
                 'linked_money_source_id' => null,
                 'verified_value' => ''
             ]);
@@ -1540,7 +1540,7 @@ class ProjectController extends Controller
             $subPositionRow->cells()->create([
                 'column_id' => $column->id,
                 'sub_position_row_id' => $subPositionRow->id,
-                'value' => 0,
+                'value' => '0,00',
                 'linked_money_source_id' => null,
                 'verified_value' => ''
             ]);

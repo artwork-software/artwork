@@ -135,14 +135,14 @@ readonly class BudgetService
                 $costSubPositionRow->cells()->create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $costSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0,00',
                     'verified_value' => "",
                     'linked_money_source_id' => null,
                 ]);
                 $earningSubPositionRow->cells()->create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $earningSubPositionRow->id,
-                    'value' => 0,
+                    'value' => '0,00',
                     'verified_value' => "",
                     'linked_money_source_id' => null,
                 ]);

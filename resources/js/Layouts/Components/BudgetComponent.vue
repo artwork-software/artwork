@@ -363,8 +363,8 @@
                                         <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
-                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(0).toLocaleString() }}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
+                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
                                             <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -381,10 +381,10 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span v-if="column.type !== 'sage'">
-                                            {{ table.commentedCostSums[column.id]?.toLocaleString() }}
+                                            {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
                                         <span v-else>
-                                                {{ this.calculateSageColumnWithCellSageDataCommented(0).toLocaleString() }}
+                                                {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0)) }}
                                         </span>
                                     </div>
                                 </td>
@@ -448,8 +448,8 @@
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
-                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(1).toLocaleString() }}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
+                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
                                             <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -467,10 +467,10 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span v-if="column.type !== 'sage'">
-                                            {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
+                                            {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
                                          </span>
                                         <span v-else>
-                                            {{ calculateSageColumnWithCellSageDataCommented(1).toLocaleString() }}
+                                            {{ this.toCurrencyString(calculateSageColumnWithCellSageDataCommented(1)) }}
                                         </span>
                                     </div>
                                 </td>
@@ -505,10 +505,10 @@
                         v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                         <div class="w-48 my-2 p-1" :class="[this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '', this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '']">
                             <span v-if="column.type !== 'sage'">
-                                {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
+                                {{ this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id))) }}
                             </span>
                             <span v-else>
-                                {{ (this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)).toLocaleString() }}
+                                {{ this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0))) }}
                             </span>
                         </div>
                     </td>
@@ -749,10 +749,11 @@ import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: 'BudgetComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
         SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,

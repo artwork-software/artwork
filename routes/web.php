@@ -648,12 +648,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             )->name('project.budget.move.sage.row');
 
             // project.budget.move.sage.row
-            /*
-             * table_id: this.tableId,
-                        sub_position_id: this.subPositionId,
-                        positionBefore: this.row ? this.row.position : -1,
-                        sage_data_id: data.id,
-             */
             Route::post(
                 '/move/sage/row/to/row/{table_id}/{sub_position_id}/{positionBefore}/{columnCell}',
                 [BudgetGeneralController::class, 'moveSageDataRowToNewRow']

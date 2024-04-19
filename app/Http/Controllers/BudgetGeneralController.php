@@ -55,7 +55,6 @@ class BudgetGeneralController extends Controller
         return Redirect::back()->with('success', __('flash-messages.budget-general-setting.success.update'));
     }
 
-
     public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
     {
         $this->sage100Service->moveSageDataRow($columnCell, $movedColumn, $request);
@@ -85,6 +84,5 @@ class BudgetGeneralController extends Controller
                 $columnCell
             );
         }
-        //$this->sage100Service->moveSageDataRowToNewRow($request);
     }
 }

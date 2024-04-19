@@ -6,6 +6,7 @@ use App\Sage100\Sage100;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
@@ -259,7 +260,7 @@ class Sage100Service
                     $subPositionRow->cells()->create([
                         'column_id' => $column->id,
                         'sub_position_row_id' => $subPositionRow->id,
-                        'value' => 0,
+                        'value' => '0,00',
                         'verified_value' => null,
                         'linked_money_source_id' => null,
                     ]);
@@ -325,7 +326,7 @@ class Sage100Service
                 $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
                     $subPositionRow->cells()->create([
                         'column_id' => $sageColumn->id,
-                        'value' => 0,
+                        'value' => '0,00',
                         'verified_value' => null,
                         'linked_money_source_id' => null,
                         'commented' => $subPositionRow->commented
@@ -450,12 +451,13 @@ class Sage100Service
                         $subPositionRow->cells()->create([
                             'column_id' => $column->id,
                             'sub_position_row_id' => $subPositionRow->id,
-                            'value' => 0,
+                            'value' => '0,00',
                             'verified_value' => null,
                             'linked_money_source_id' => null,
                         ]);
                 }
             });
+            /** @var SageAssignedData|null $sageAssignedData */
             $sageAssignedData = $columnCell->sageAssignedData->first();
             $sageColumnCell = ColumnCell::create([
                 'column_id' => $sageColumn->id,
@@ -535,7 +537,7 @@ class Sage100Service
                     $subPositionRow->cells()->create([
                         'column_id' => $column->id,
                         'sub_position_row_id' => $subPositionRow->id,
-                        'value' => 0,
+                        'value' => '0,00',
                         'verified_value' => null,
                         'linked_money_source_id' => null,
                     ]);

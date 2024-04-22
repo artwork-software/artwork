@@ -14,7 +14,9 @@ abstract class BaseDto implements JsonSerializable, Arrayable
      */
     public function jsonSerialize(): array
     {
-        return $this->toArray();
+        //late static binding means: the last overwriting method is used. If ClassA derives from BaseDto
+        //and Class B derives from Class A, Class B's toArray implementation is used if it exists
+        return static::toArray();
     }
 
     /**

@@ -275,7 +275,6 @@ import {
     XCircleIcon,
     XIcon,
 } from '@heroicons/vue/outline';
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Disclosure,
     DisclosureButton,
@@ -332,7 +331,6 @@ export default {
         XIcon,
         DocumentTextIcon,
         XCircleIcon,
-        EventTypeIconCollection,
         Listbox,
         ListboxButton,
         ListboxOption,

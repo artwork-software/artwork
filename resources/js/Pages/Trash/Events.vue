@@ -112,7 +112,6 @@ import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon, SearchIco
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
@@ -120,11 +119,19 @@ export default {
     layout: [AppLayout, TrashLayout],
     props: ['trashed_events', 'first_project_calendar_tab_id'],
     components: {
-        Input, XIcon, SearchIcon,
+        Input,
+        XIcon,
+        SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,
-        Menu, MenuButton, DotsVerticalIcon,
-        MenuItems, MenuItem, RefreshIcon, TrashIcon, Link, EventTypeIconCollection
+        Menu,
+        MenuButton,
+        DotsVerticalIcon,
+        MenuItems,
+        MenuItem,
+        RefreshIcon,
+        TrashIcon,
+        Link
     },
     data() {
         return {

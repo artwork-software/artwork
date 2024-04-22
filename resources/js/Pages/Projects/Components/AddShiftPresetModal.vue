@@ -105,7 +105,6 @@ import {
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -113,14 +112,17 @@ export default defineComponent({
     name: "AddShiftPresetModal",
     components: {
         FormButton,
-        CheckIcon, ChevronDownIcon, EventTypeIconCollection,
+        CheckIcon,
+        ChevronDownIcon,
         SingleTimeLine,
         Input,
         Dialog,
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon,
+        XIcon,
+        DialogPanel,
+        PlusCircleIcon,
         Listbox,
         ListboxButton,
         ListboxOption,

@@ -234,7 +234,7 @@ class ContentSeeder extends Seeder
     {
         DB::table('event_types')->insert([
             'name' => 'Blocker',
-            'svg_name' => 'eventType0',
+            'hex_code' => '#A7A6B1',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'BL'
@@ -242,7 +242,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Meeting',
-            'svg_name' => 'eventType1',
+            'hex_code' => '#641A54',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'M'
@@ -250,7 +250,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Workshop',
-            'svg_name' => 'eventType2',
+            'hex_code' => '#641A54',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'WS'
@@ -258,7 +258,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Aufführung',
-            'svg_name' => 'eventType3',
+            'hex_code' => '#EB7A3D',
             'project_mandatory' => true,
             'individual_name' => true,
             'abbreviation' => 'A'
@@ -266,7 +266,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Probe',
-            'svg_name' => 'eventType4',
+            'hex_code' => '#F1B640',
             'project_mandatory' => true,
             'individual_name' => false,
             'abbreviation' => 'P'
@@ -274,7 +274,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Führung',
-            'svg_name' => 'eventType5',
+            'hex_code' => '#86C554',
             'project_mandatory' => true,
             'individual_name' => false,
             'abbreviation' => 'F'
@@ -282,7 +282,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Reinigung',
-            'svg_name' => 'eventType6',
+            'hex_code' => '#2EAA63',
             'project_mandatory' => false,
             'individual_name' => false,
             'abbreviation' => 'R'

@@ -149,7 +149,6 @@ import {
     SwitchGroup,
     SwitchLabel
 } from "@headlessui/vue";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -159,7 +158,6 @@ export default defineComponent({
         FormButton,
         CheckIcon,
         ChevronDownIcon,
-        EventTypeIconCollection,
         SingleTimeLine,
         Input,
         Dialog,

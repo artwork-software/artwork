@@ -903,7 +903,6 @@
 <script>
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import Checkbox from "@/Jetstream/Checkbox.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
@@ -977,7 +976,6 @@ export default {
         AddChecklistUserModal,
         TagComponent,
         TeamTooltip,
-        CategoryIconCollection,
         Checkbox,
         TeamIconCollection,
         AppLayout,

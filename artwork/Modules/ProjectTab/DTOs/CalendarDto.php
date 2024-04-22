@@ -4,7 +4,7 @@ namespace Artwork\Modules\ProjectTab\DTOs;
 
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Models\UserCalendarFilter;
-use Artwork\Core\Database\Abstracts\BaseDto;
+use Artwork\Core\Abstracts\BaseDto;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 

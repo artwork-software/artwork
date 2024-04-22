@@ -20,7 +20,7 @@ class EventTypeFactory extends Factory
         return [
             'name' => $this->faker->name,
             'abbreviation' => $this->faker->title(),
-            'hex_code' => $this->faker->name,
+            'hex_code' => $this->faker->hexColor,
             'project_mandatory' => $this->faker->boolean(0),
             'individual_name' => $this->faker->boolean(0),
         ];

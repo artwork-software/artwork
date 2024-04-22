@@ -104,7 +104,6 @@ import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {ChevronDownIcon, XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -119,7 +118,6 @@ export default {
         JetDialogModal,
         XIcon,
         CheckIcon,
-        EventTypeIconCollection,
         TagComponent,
         Listbox,
         ListboxButton,

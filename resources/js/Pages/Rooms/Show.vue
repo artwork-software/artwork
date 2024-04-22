@@ -99,98 +99,6 @@
                         </span>
                     </div>
                 </div>
-
-                <!-- EventRequest should not be shown due to actual design
-                <div class="flex flex-wrap">
-                    <span class="mt-12 headline2 w-full"
-                          v-if="requestsToShow?.length !== 0 && ($role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin)">
-                    Offene Belegungsanfragen
-                    </span>
-                    <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
-                        <div class="flex w-full items-center flex-wrap">
-                            <div class="flex items-center w-full mt-8">
-                                <div class="flex items-center w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="eventRequest.event_type.svg_name"/>
-                                    <div
-                                        class="mx-6 ml-2 flex leading-6 sDark">
-                                        {{ eventRequest.event_type.name }}
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
-                                    </div>
-
-                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
-                                         v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
-                                            eventRequest.start_time.split(',')[0]
-                                        }},{{ eventRequest.start_time.split(',')[1] }}
-                                        - {{ eventRequest.end_time.split(',')[1] }}
-                                    </div>
-                                    <div class="flex xsDark w-full whitespace-nowrap ml-3" v-else>
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
-                                        {{ eventRequest.start_time }} -
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
-                                        {{ eventRequest.end_time }}
-                                    </div>
-                                    <button @click="openApproveRequestModal(eventRequest)" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
-                                        <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
-                                    </button>
-                                    <button @click="openDeclineRequestModal(eventRequest)" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
-                                        <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="flex items-center w-full ml-8">
-                                <div v-if="eventRequest.project" class="w-64">
-                                    <div class="xsLight flex items-center">
-                                        Zugeordnet zu
-                                        <Link
-                                            :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
-                                            class="xsDark ml-2">
-                                            {{ eventRequest.project.name }}
-                                        </Link>
-                                    </div> -->
-                                    <!--
-                                                                        <div v-for="projectLeader in eventRequest.project.project_managers">
-                                                                            <img :data-tooltip-target="projectLeader.id"
-                                                                                 :src="projectLeader.profile_photo_url"
-                                                                                 :alt="projectLeader.name"
-                                                                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                                                            <UserTooltip :user="projectLeader"/>
-                                                                        </div>
-                                    -->
-                <!--
-                                </div>
-                                <div class="xsLight w-64" v-else>
-                                    Keinem Projekt zugeordnet
-                                </div>
-
-                                <div class="flex xsLight items-center" v-if="eventRequest.created_by">
-                                    angefragt:<img :data-tooltip-target="eventRequest.created_by?.id"
-                                                   :src="eventRequest.created_by?.profile_photo_url"
-                                                   :alt="eventRequest.created_by?.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="eventRequest.created_by"/>
-                                    <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
-                                </div>
-                                <div>
-
-                                </div>
-                            </div>
-
-                            <div class="flex ml-8 mt-2 xsLight items-center w-full"
-                                 v-if="eventRequest.description">
-                                {{ eventRequest.description }}
-                            </div>
-
-
-                        </div>
-                    </div>
-                </div> -->
             </div>
         </div>
 
@@ -576,7 +484,6 @@ import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
@@ -657,7 +564,6 @@ export default {
         DocumentTextIcon,
         DuplicateIcon,
         UserTooltip,
-        EventTypeIconCollection,
         PlusSmIcon,
         Link,
         Listbox,

@@ -48,8 +48,8 @@ readonly class VacationService
 
         if ($request->is_series) {
             $vacationSeries = $vacationSeriesService->create(
-                frequency: $request->series_repeat,
-                until: $request->series_repeat_until
+                $request->get('series_repeat'),
+                $request->get('series_repeat_until')
             );
             $firstVacation->update([
                 'series_id' => $vacationSeries->id

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Vacation\Services;
 use App\Http\Controllers\SchedulingController;
 use App\Models\Freelancer;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -27,7 +28,8 @@ readonly class VacationService
         VacationConflictService $vacationConflictService,
         VacationSeriesService $vacationSeriesService,
         ChangeService $changeService,
-        SchedulingController $schedulingController
+        SchedulingController $schedulingController,
+        NotificationService $notificationService
     ): Vacation|Model {
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
@@ -44,6 +46,7 @@ readonly class VacationService
             $firstVacation->vacationer_type === User::class ? User::find($firstVacation->vacationer_id) : null,
             $firstVacation->vacationer_type === Freelancer::class ?
                 Freelancer::find($firstVacation->vacationer_id) : null,
+            $notificationService
         );
 
         if ($request->is_series) {
@@ -62,7 +65,8 @@ readonly class VacationService
                 $request->date,
                 $vacationer,
                 $request,
-                $vacationConflictService
+                $vacationConflictService,
+                $notificationService
             );
         }
 
@@ -79,7 +83,8 @@ readonly class VacationService
         string $date,
         Vacationer $vacationer,
         Request $data,
-        VacationConflictService $vacationConflictService
+        VacationConflictService $vacationConflictService,
+        NotificationService $notificationService
     ): void {
         $series_until = Carbon::parse($series_repeat_until);
         $series_until->addDay();
@@ -101,6 +106,7 @@ readonly class VacationService
                     $newVacation->vacationer_type === User::class ? User::find($newVacation->vacationer_id) : null,
                     $newVacation->vacationer_type === Freelancer::class ?
                         Freelancer::find($newVacation->vacationer_id) : null,
+                    $notificationService
                 );
             }
         }
@@ -121,13 +127,18 @@ readonly class VacationService
                     $weekly->vacationer_type === User::class ? User::find($weekly->vacationer_id) : null,
                     $weekly->vacationer_type === Freelancer::class ?
                         Freelancer::find($weekly->vacationer_id) : null,
+                    $notificationService
                 );
             }
         }
     }
 
-    public function update($data, Vacation $vacation): Vacation
-    {
+    public function update(
+        $data,
+        Vacation $vacation,
+        VacationConflictService $vacationConflictService,
+        NotificationService $notificationService
+    ): Vacation {
         $vacation->start_time = $data->start_time;
         $vacation->end_time = $data->end_time;
         $vacation->date = $data->date;
@@ -137,11 +148,12 @@ readonly class VacationService
 
         $this->vacationRepository->save($vacation);
 
-        $this->vacationConflictService->checkVacationConflictsOnDay(
+        $vacationConflictService->checkVacationConflictsOnDay(
             $vacation->date,
             $vacation->vacationer_type === User::class ? User::find($vacation->vacationer_id) : null,
             $vacation->vacationer_type === Freelancer::class ?
                 Freelancer::find($vacation->vacationer_id) : null,
+            $notificationService
         );
 
         return $vacation;

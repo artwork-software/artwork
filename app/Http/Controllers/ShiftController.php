@@ -703,6 +703,7 @@ class ShiftController extends Controller
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
+        NotificationService $notificationService
     ): void {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
 
@@ -722,9 +723,19 @@ class ShiftController extends Controller
         }
 
         foreach ($shiftsToHandle['removeFromShift'] as $shiftIdToRemove) {
+            if ($serviceToUse instanceof ShiftServiceProviderService) {
+                $serviceToUse->removeFromShiftByUserIdAndShiftId(
+                    $request->get('userTypeId'),
+                    $shiftIdToRemove
+                );
+
+                continue;
+            }
+
             $serviceToUse->removeFromShiftByUserIdAndShiftId(
                 $request->get('userTypeId'),
-                $shiftIdToRemove
+                $shiftIdToRemove,
+                $notificationService
             );
         }
 
@@ -735,10 +746,21 @@ class ShiftController extends Controller
                 continue;
             }
 
+            if ($serviceToUse instanceof ShiftServiceProviderService) {
+                $serviceToUse->assignToShift(
+                    $shift,
+                    $request->get('userTypeId'),
+                    $shiftToAssign['shiftQualificationId'],
+                );
+
+                continue;
+            }
+
             $serviceToUse->assignToShift(
                 $shift,
                 $request->get('userTypeId'),
                 $shiftToAssign['shiftQualificationId'],
+                $notificationService
             );
         }
     }
@@ -748,7 +770,8 @@ class ShiftController extends Controller
         Request $request,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        NotificationService $notificationService
     ): RedirectResponse {
         $serviceToUse = match ($request->get('userType')) {
             0 => $shiftUserService,
@@ -761,10 +784,22 @@ class ShiftController extends Controller
             return Redirect::back();
         }
 
+        if ($serviceToUse instanceof ShiftServiceProviderService) {
+            $serviceToUse->assignToShift(
+                $shift,
+                $request->get('userId'),
+                $request->get('shiftQualificationId'),
+                $request->get('seriesShiftData')
+            );
+
+            return Redirect::back();
+        }
+
         $serviceToUse->assignToShift(
             $shift,
             $request->get('userId'),
             $request->get('shiftQualificationId'),
+            $notificationService,
             $request->get('seriesShiftData')
         );
 
@@ -777,7 +812,8 @@ class ShiftController extends Controller
         Request $request,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        NotificationService $notificationService
     ): RedirectResponse {
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
@@ -790,9 +826,19 @@ class ShiftController extends Controller
             return Redirect::back();
         }
 
+        if ($serviceToUse instanceof  ShiftServiceProviderService) {
+            $serviceToUse->removeFromShift(
+                $usersPivotId,
+                $request->boolean('removeFromSingleShift')
+            );
+
+            return Redirect::back();
+        }
+
         $serviceToUse->removeFromShift(
             $usersPivotId,
-            $request->boolean('removeFromSingleShift')
+            $request->boolean('removeFromSingleShift'),
+            $notificationService
         );
 
         return Redirect::back();
@@ -803,10 +849,11 @@ class ShiftController extends Controller
         ShiftService $shiftService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        NotificationService $notificationService
     ): RedirectResponse {
-        $shiftUserService->removeAllUsersFromShift($shift);
-        $shiftFreelancerService->removeAllFreelancersFromShift($shift);
+        $shiftUserService->removeAllUsersFromShift($shift, $notificationService);
+        $shiftFreelancerService->removeAllFreelancersFromShift($shift, $notificationService);
         $shiftServiceProviderService->removeAllServiceProvidersFromShift($shift);
 
         if ($shift->is_committed) {

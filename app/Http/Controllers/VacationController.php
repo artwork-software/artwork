@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Freelancer;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -15,6 +16,7 @@ use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class VacationController extends Controller
@@ -26,7 +28,8 @@ class VacationController extends Controller
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingController $schedulingController,
+        private readonly NotificationService $notificationService
     ) {
     }
 
@@ -41,7 +44,8 @@ class VacationController extends Controller
                 $this->vacationConflictService,
                 $this->vacationSeriesService,
                 $this->changeService,
-                $this->schedulingController
+                $this->schedulingController,
+                $this->notificationService
             );
         } else {
             $this->availabilityService->create(
@@ -62,7 +66,8 @@ class VacationController extends Controller
                 $this->vacationConflictService,
                 $this->vacationSeriesService,
                 $this->changeService,
-                $this->schedulingController
+                $this->schedulingController,
+                $this->notificationService
             );
         } else {
             $this->availabilityService->create(
@@ -99,7 +104,8 @@ class VacationController extends Controller
                 $this->vacationConflictService,
                 $this->vacationSeriesService,
                 $this->changeService,
-                $this->schedulingController
+                $this->schedulingController,
+                $this->notificationService
             );
         }
 
@@ -136,7 +142,8 @@ class VacationController extends Controller
                 $this->vacationConflictService,
                 $this->vacationSeriesService,
                 $this->changeService,
-                $this->schedulingController
+                $this->schedulingController,
+                $this->notificationService
             );
         }
 
@@ -149,7 +156,7 @@ class VacationController extends Controller
     public function update(
         UpdateVacationRequest $updateVacationRequest,
         Vacation $vacation
-    ): \Illuminate\Http\RedirectResponse {
+    ): RedirectResponse {
         if ($updateVacationRequest->validated()) {
             if ($updateVacationRequest->type_before_update !== $updateVacationRequest->type) {
                 if ($updateVacationRequest->type === 'available') {
@@ -173,15 +180,17 @@ class VacationController extends Controller
                 }
             } else {
                 $this->vacationService->update(
-                    data: $updateVacationRequest,
-                    vacation: $vacation
+                    $updateVacationRequest,
+                    $vacation,
+                    $this->vacationConflictService,
+                    $this->notificationService
                 );
             }
         }
         return redirect()->back();
     }
 
-    public function destroy(Vacation $vacation): \Illuminate\Http\RedirectResponse
+    public function destroy(Vacation $vacation): RedirectResponse
     {
         $this->vacationService->delete($vacation);
         return redirect()->back();

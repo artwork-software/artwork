@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Freelancer;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Https\Requests\UpdateAvailabilityRequest;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
@@ -24,7 +25,8 @@ class AvailabilityController extends Controller
         private readonly VacationConflictService $vacationConflictService,
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingController $schedulingController,
+        private readonly NotificationService $notificationService
     ) {
     }
 
@@ -42,7 +44,8 @@ class AvailabilityController extends Controller
                             $this->vacationConflictService,
                             $this->vacationSeriesService,
                             $this->changeService,
-                            $this->schedulingController
+                            $this->schedulingController,
+                            $this->notificationService
                         );
                     } elseif ($availability->available_type === Freelancer::class) {
                         $this->vacationService->create(
@@ -51,7 +54,8 @@ class AvailabilityController extends Controller
                             $this->vacationConflictService,
                             $this->vacationSeriesService,
                             $this->changeService,
-                            $this->schedulingController
+                            $this->schedulingController,
+                            $this->notificationService
                         );
                     }
                     $this->availabilityService->delete($availability);

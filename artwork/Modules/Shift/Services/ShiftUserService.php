@@ -30,7 +30,6 @@ readonly class ShiftUserService
         private ShiftCountService $shiftCountService,
         private VacationConflictService $vacationConflictService,
         private AvailabilityConflictService $availabilityConflictService,
-        private NotificationService $notificationService,
         private ChangeService $changeService
     ) {
     }
@@ -39,6 +38,7 @@ readonly class ShiftUserService
         Shift $shift,
         int $userId,
         int $shiftQualificationId,
+        NotificationService $notificationService,
         array|null $seriesShiftData = null
     ): void {
         $shiftUserPivot = $this->shiftUserRepository->createForShift(
@@ -54,7 +54,7 @@ readonly class ShiftUserService
         $this->assignUserToProjectIfNecessary($shift, $user);
 
         if ($shift->is_committed) {
-            $this->handleAssignedToShift($shift, $user, $shiftUserPivot->shiftQualification);
+            $this->handleAssignedToShift($shift, $user, $shiftUserPivot->shiftQualification, $notificationService);
         }
 
         if (
@@ -68,26 +68,31 @@ readonly class ShiftUserService
                 Carbon::parse($seriesShiftData['end'])->endOfDay(),
                 $seriesShiftData['dayOfWeek'],
                 $userId,
-                $shiftQualificationId
+                $shiftQualificationId,
+                $notificationService
             );
         }
     }
 
-    private function handleAssignedToShift(Shift $shift, User $user, ShiftQualification $shiftQualification): void
-    {
+    private function handleAssignedToShift(
+        Shift $shift,
+        User $user,
+        ShiftQualification $shiftQualification,
+        NotificationService $notificationService
+    ): void {
         $this->createAssignedToShiftHistoryEntry($shift, $user, $shiftQualification);
-        $this->createAssignedToShiftNotification($shift, $user);
+        $this->createAssignedToShiftNotification($shift, $user, $notificationService);
         if (
             $user->vacations()
                 ->where('date', '<=', $shift->event_start_day)
                 ->where('date', '>=', $shift->event_end_day)
                 ->count() > 0
         ) {
-            $this->createVacationConflictNotification($shift, $user);
+            $this->createVacationConflictNotification($shift, $user, $notificationService);
         }
-        $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user);
-        $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user);
-        $this->checkVacationConflicts($shift, $user);
+        $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
+        $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
+        $this->checkVacationConflicts($shift, $user, $notificationService);
         $this->checkAvailabilityConflicts($shift, $user);
     }
 
@@ -121,25 +126,28 @@ readonly class ShiftUserService
         );
     }
 
-    private function createAssignedToShiftNotification(Shift $shift, User $user): void
-    {
-        $this->notificationService->setProjectId($shift->event->project->id);
-        $this->notificationService->setEventId($shift->event->id);
-        $this->notificationService->setShiftId($shift->id);
+    private function createAssignedToShiftNotification(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $notificationService->setProjectId($shift->event->project->id);
+        $notificationService->setEventId($shift->event->id);
+        $notificationService->setShiftId($shift->id);
         $notificationTitle = __('notification.shift.new_shift_add', [
             'projectName' => $shift->event->project->name,
             'craftAbbreviation' => $shift->craft->abbreviation
         ], $user->language);
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
-        $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
-        $this->notificationService->setBroadcastMessage([
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon('green');
+        $notificationService->setPriority(3);
+        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $notificationService->setBroadcastMessage([
             'id' => rand(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ]);
-        $this->notificationService->setDescription([
+        $notificationService->setDescription([
             1 => [
                 'type' => 'string',
                 'title' => __('notification.keyWords.your_shift') .
@@ -148,19 +156,22 @@ readonly class ShiftUserService
                 'href' => null
             ],
         ]);
-        $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
-        $this->notificationService->clearNotificationData();
+        $notificationService->setNotificationTo($user);
+        $notificationService->createNotification();
+        $notificationService->clearNotificationData();
     }
 
-    private function createVacationConflictNotification(Shift $shift, User $user): void
-    {
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService
+    private function createVacationConflictNotification(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $notificationService->setIcon('blue');
+        $notificationService->setPriority(1);
+        $notificationService
             ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
 
-        $this->notificationService->setButtons(['change_shift_conflict']);
+        $notificationService->setButtons(['change_shift_conflict']);
         $usersWhichGotNotification = [];
         foreach ($user->crafts as $craft) {
             foreach ($craft->users as $craftUser) {
@@ -172,13 +183,13 @@ readonly class ShiftUserService
                     'projectName' => $shift->event->project->name,
                     'craftAbbreviation' => $shift->craft->abbreviation
                 ], $craftUser->language);
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage([
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setBroadcastMessage([
                     'id' => rand(1, 1000000),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ]);
-                $this->notificationService->setDescription([
+                $notificationService->setDescription([
                     1 => [
                         'type' => 'string',
                         'title' => __(
@@ -188,31 +199,34 @@ readonly class ShiftUserService
                         'href' => null
                     ],
                 ]);
-                $this->notificationService->setNotificationTo($craftUser);
-                $this->notificationService->createNotification();
+                $notificationService->setNotificationTo($craftUser);
+                $notificationService->createNotification();
                 $usersWhichGotNotification[] = $craftUser->id;
             }
         }
-        $this->notificationService->clearNotificationData();
+        $notificationService->clearNotificationData();
     }
 
-    private function checkShortBreakAndCreateNotificationsIfNecessary(Shift $shift, User $user): void
-    {
-        $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
+    private function checkShortBreakAndCreateNotificationsIfNecessary(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $shiftBreakCheck = $notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
 
         if ($shiftBreakCheck->shortBreak) {
             $notificationTitle = __('notification.shift.your_short_break', [], $user->language);
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('blue');
-            $this->notificationService->setPriority(1);
-            $this->notificationService
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('blue');
+            $notificationService->setPriority(1);
+            $notificationService
                 ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
-            $this->notificationService->setBroadcastMessage([
+            $notificationService->setBroadcastMessage([
                 'id' => rand(1, 1000000),
                 'type' => 'error',
                 'message' => $notificationTitle
             ]);
-            $this->notificationService->setDescription([
+            $notificationService->setDescription([
                 1 => [
                     'type' => 'string',
                     'title' => __(
@@ -238,20 +252,20 @@ readonly class ShiftUserService
                     'href' => null
                 ],
             ]);
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
+            $notificationService->setNotificationTo($user);
+            $notificationService->createNotification();
 
             // send same notification to admin
 
-            $this->notificationService->setPriority(1);
-            $this->notificationService
+            $notificationService->setPriority(1);
+            $notificationService
                 ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
-            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+            $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
                 $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setDescription([
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setDescription([
                     1 => [
                         'type' => 'string',
                         'title' => __(
@@ -276,8 +290,8 @@ readonly class ShiftUserService
                         'href' => null
                     ],
                 ]);
-                $this->notificationService->setNotificationTo($adminUser);
-                $this->notificationService->createNotification();
+                $notificationService->setNotificationTo($adminUser);
+                $notificationService->createNotification();
             }
 
             $usersWhichGotNotification = [];
@@ -290,8 +304,8 @@ readonly class ShiftUserService
                         continue;
                     }
                     $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
-                    $this->notificationService->setTitle($notificationTitle);
-                    $this->notificationService->setDescription([
+                    $notificationService->setTitle($notificationTitle);
+                    $notificationService->setDescription([
                         1 => [
                             'type' => 'string',
                             'title' => __(
@@ -316,32 +330,35 @@ readonly class ShiftUserService
                             'href' => null
                         ],
                     ]);
-                    $this->notificationService->setNotificationTo($craftUser);
-                    $this->notificationService->createNotification();
+                    $notificationService->setNotificationTo($craftUser);
+                    $notificationService->createNotification();
                     $usersWhichGotNotification[] = $craftUser->id;
                 }
             }
-            $this->notificationService->clearNotificationData();
+            $notificationService->clearNotificationData();
         }
     }
 
-    private function checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary(Shift $shift, User $user): void
-    {
-        $shiftCheck = $this->notificationService->checkIfUserInMoreThanTenShifts($user, $shift);
+    private function checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService
+    ): void {
+        $shiftCheck = $notificationService->checkIfUserInMoreThanTenShifts($user, $shift);
 
         if ($shiftCheck->moreThanTenShifts) {
             $notificationTitle = __('notification.shift.more_than_ten_days', [], $user->language);
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('red');
+            $notificationService->setPriority(2);
+            $notificationService
                 ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
-            $this->notificationService->setBroadcastMessage([
+            $notificationService->setBroadcastMessage([
                 'id' => rand(1, 1000000),
                 'type' => 'error',
                 'message' => $notificationTitle
             ]);
-            $this->notificationService->setDescription([
+            $notificationService->setDescription([
                 1 => [
                     'type' => 'string',
                     'title' => __(
@@ -367,19 +384,16 @@ readonly class ShiftUserService
                 ],
             ]);
 
-            $this->notificationService->setNotificationTo($user);
-            $this->notificationService->createNotification();
+            $notificationService->setNotificationTo($user);
+            $notificationService->createNotification();
 
-            // send same notification to admin
-
-
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('blue');
-            $this->notificationService->setPriority(1);
-            $this->notificationService
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('blue');
+            $notificationService->setPriority(1);
+            $notificationService
                 ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
 
-            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+            $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
                 $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
@@ -413,10 +427,10 @@ readonly class ShiftUserService
                         'href' => null
                     ],
                 ];
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationTo($adminUser);
-                $this->notificationService->createNotification();
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setDescription($notificationDescription);
+                $notificationService->setNotificationTo($adminUser);
+                $notificationService->createNotification();
             }
 
             $usersWhichGotNotification = [];
@@ -459,16 +473,16 @@ readonly class ShiftUserService
                             'href' => null
                         ],
                     ];
-                    $this->notificationService->setBroadcastMessage($broadcastMessage);
-                    $this->notificationService->setDescription($notificationDescription);
-                    $this->notificationService->setNotificationTo($craftUser);
-                    $this->notificationService->createNotification();
+                    $notificationService->setBroadcastMessage($broadcastMessage);
+                    $notificationService->setDescription($notificationDescription);
+                    $notificationService->setNotificationTo($craftUser);
+                    $notificationService->createNotification();
                     $usersWhichGotNotification[] = $craftUser->id;
                 }
             }
         }
 
-        $this->notificationService->clearNotificationData();
+        $notificationService->clearNotificationData();
     }
 
     private function handleSeriesShiftData(
@@ -477,7 +491,8 @@ readonly class ShiftUserService
         Carbon $end,
         string $dayOfWeek,
         int $userId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        NotificationService $notificationService
     ): void {
         /** @var Shift $shiftBetweenDates */
         foreach (
@@ -522,7 +537,7 @@ readonly class ShiftUserService
             ) {
                 //call assignToShift without seriesShiftData to make sure only this user is assigned to shift and same
                 //logic is applied for each user
-                $this->assignToShift($shiftBetweenDates, $userId, $shiftQualificationId, null);
+                $this->assignToShift($shiftBetweenDates, $userId, $shiftQualificationId, $notificationService);
             }
         }
     }
@@ -543,8 +558,11 @@ readonly class ShiftUserService
         );
     }
 
-    public function removeFromShift(ShiftUser|int $usersPivot, bool $removeFromSingleShift): void
-    {
+    public function removeFromShift(
+        ShiftUser|int $usersPivot,
+        bool $removeFromSingleShift,
+        NotificationService $notificationService
+    ): void {
         $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
             $this->shiftUserRepository->getById($usersPivot) :
             $usersPivot;
@@ -558,7 +576,7 @@ readonly class ShiftUserService
         $this->shiftCountService->handleShiftUsersShiftCount($shift, $user->id);
 
         if ($shift->is_committed) {
-            $this->handleRemovedFromShift($shift, $user);
+            $this->handleRemovedFromShift($shift, $user, $notificationService);
         }
 
         if (!$removeFromSingleShift) {
@@ -572,39 +590,43 @@ readonly class ShiftUserService
                 //deleted
                 $shiftUserPivotByUuid = $this->shiftRepository->getShiftUserPivotById($shiftByUuid, $user->id);
                 if ($shiftUserPivotByUuid instanceof ShiftUser) {
-                    $this->removeFromShift($shiftUserPivotByUuid, true);
+                    $this->removeFromShift($shiftUserPivotByUuid, true, $notificationService);
                 }
             }
         }
     }
 
-    public function removeAllUsersFromShift(Shift $shift): void
+    public function removeAllUsersFromShift(Shift $shift, NotificationService $notificationService): void
     {
         $shift->users()->each(
-            function (User $user): void {
+            function (User $user) use ($notificationService): void {
                 //call remove from shift with removeFromSingleShift set to true making sure same logic is applied
                 //for each pivot which is deleted
-                $this->removeFromShift($user->pivot, true);
+                $this->removeFromShift($user->pivot, true, $notificationService);
             }
         );
     }
 
-    public function removeFromShiftByUserIdAndShiftId(int $userId, int $shiftId): void
-    {
+    public function removeFromShiftByUserIdAndShiftId(
+        int $userId,
+        int $shiftId,
+        NotificationService $notificationService
+    ): void {
         $this->removeFromShift(
             $this->shiftUserRepository->findByUserIdAndShiftId(
                 $userId,
                 $shiftId
             ),
-            true
+            true,
+            $notificationService
         );
     }
 
-    private function handleRemovedFromShift(Shift $shift, User $user): void
+    private function handleRemovedFromShift(Shift $shift, User $user, NotificationService $notificationService): void
     {
         $this->createRemovedFromShiftHistoryEntry($shift, $user);
-        $this->createRemovedFromShiftNotification($shift, $user);
-        $this->checkVacationConflicts($shift, $user);
+        $this->createRemovedFromShiftNotification($shift, $user, $notificationService);
+        $this->checkVacationConflicts($shift, $user, $notificationService);
         $this->checkAvailabilityConflicts($shift, $user);
     }
 
@@ -628,9 +650,9 @@ readonly class ShiftUserService
 
     private function createRemovedFromShiftNotification(Shift $shift, User $user): void
     {
-        $this->notificationService->setProjectId($shift->event->project->id);
-        $this->notificationService->setEventId($shift->event->id);
-        $this->notificationService->setShiftId($shift->id);
+        $notificationService->setProjectId($shift->event->project->id);
+        $notificationService->setEventId($shift->event->id);
+        $notificationService->setShiftId($shift->id);
         $notificationTitle = __(
             'notification.shift.shift_staffing_deleted',
             [
@@ -639,16 +661,16 @@ readonly class ShiftUserService
             ],
             $user->language
         );
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
-        $this->notificationService->setBroadcastMessage([
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon('red');
+        $notificationService->setPriority(2);
+        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $notificationService->setBroadcastMessage([
             'id' => rand(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ]);
-        $this->notificationService->setDescription([
+        $notificationService->setDescription([
             1 => [
                 'type' => 'string',
                 'title' => __('notification.keyWords.concerns_shift', [], $user->language) .
@@ -657,14 +679,14 @@ readonly class ShiftUserService
                 'href' => null
             ],
         ]);
-        $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
-        $this->notificationService->clearNotificationData();
+        $notificationService->setNotificationTo($user);
+        $notificationService->createNotification();
+        $notificationService->clearNotificationData();
     }
 
-    private function checkVacationConflicts(Shift $shift, User $user): void
+    private function checkVacationConflicts(Shift $shift, User $user, NotificationService $notificationService): void
     {
-        $this->vacationConflictService->checkVacationConflictsShifts($shift, $user);
+        $this->vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
     }
 
     private function checkAvailabilityConflicts(Shift $shift, User $user): void

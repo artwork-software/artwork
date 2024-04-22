@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementAccountRequest;
+use Artwork\Modules\BudgetManagementAccount\Http\Requests\UpdateBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Repositories\BudgetManagementAccountRepository;
 use Artwork\Modules\Project\Models\Project;
@@ -45,14 +46,23 @@ readonly class BudgetManagementAccountService
     /**
      * @throws Throwable
      */
-    public function createFromRequest(
-        StoreBudgetManagementAccountRequest $storeBudgetManagementAccountRequest
-    ): BudgetManagementAccount {
-        $budgetManagementAccount = new BudgetManagementAccount(
-            $storeBudgetManagementAccountRequest->validated()
-        );
+    public function createFromRequest(StoreBudgetManagementAccountRequest $request): BudgetManagementAccount
+    {
+        $budgetManagementAccount = new BudgetManagementAccount($request->validated());
 
         $this->budgetManagementAccountRepository->saveOrFail($budgetManagementAccount);
+
+        return $budgetManagementAccount;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateFromRequest(
+        BudgetManagementAccount $budgetManagementAccount,
+        UpdateBudgetManagementAccountRequest $request
+    ): BudgetManagementAccount {
+        $this->budgetManagementAccountRepository->updateOrFail($budgetManagementAccount, $request->validated());
 
         return $budgetManagementAccount;
     }

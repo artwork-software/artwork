@@ -193,7 +193,7 @@
                                         <div>
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
                                                 <SageDropCellElement :cell="cell" :value="this.toCurrencyString(cell.sage_value)"/>
-                                                <SageDragCellElement :cell="cell" class="hidden group-hover:block"/>
+                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1" :cell="cell" class="hidden group-hover:block"/>
                                             </div>
                                             <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
@@ -853,13 +853,13 @@ export default {
         },
         handleBudgetManagementSearchSelect(index, cell, value, mainPositionIsVerified, subPositionIsVerified) {
             if (index === 0) {
-                cell.value = value;
                 cell.accountSearchResults = null;
             } else {
-                cell.value = value;
                 cell.costUnitSearchResults = null;
             }
-            cell.clicked = false;
+
+            cell.value = value;
+
             this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
         },
         handleBudgetManagementSearchCancel(cell) {
@@ -867,6 +867,8 @@ export default {
             cell.searchValue = '';
             cell.accountSearchResults = null;
             cell.costUnitSearchResults = null;
+            this.alreadyCellClicked = false;
+            this.editedCellOriginalValue = null;
         }
     }
 }

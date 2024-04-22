@@ -6,9 +6,9 @@ use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Artwork\Modules\ShiftPresetTimeline\Repositories\ShiftPresetTimelineRepository;
 use Artwork\Modules\Timeline\Models\Timeline;
 
-class ShiftPresetTimelineService
+readonly class ShiftPresetTimelineService
 {
-    public function __construct(private readonly ShiftPresetTimelineRepository $shiftPresetTimelineRepository)
+    public function __construct(private ShiftPresetTimelineRepository $shiftPresetTimelineRepository)
     {
     }
 

@@ -7,10 +7,10 @@ use Artwork\Modules\ShiftQualification\Http\Requests\UpdateServiceProviderShiftQ
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\ServiceProviderShiftQualificationRepository;
 
-class ServiceProviderShiftQualificationService
+readonly class ServiceProviderShiftQualificationService
 {
     public function __construct(
-        private readonly ServiceProviderShiftQualificationRepository $serviceProviderShiftQualificationRepository
+        private ServiceProviderShiftQualificationRepository $serviceProviderShiftQualificationRepository
     ) {
     }
 

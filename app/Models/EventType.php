@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
- * @property string $svg_name
  * @property bool $project_mandatory
  * @property bool $individual_name
  * @property string $abbreviation
@@ -28,8 +27,7 @@ class EventType extends Model
         'project_mandatory',
         'individual_name',
         'abbreviation',
-        'relevant_for_shift',
-        'svg_name'
+        'relevant_for_shift'
     ];
 
     protected $casts = [

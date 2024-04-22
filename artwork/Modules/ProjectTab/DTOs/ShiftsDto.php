@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ProjectTab\DTOs;
 
-use Artwork\Core\Database\Abstracts\BaseDto;
+use Artwork\Core\Abstracts\BaseDto;
 use Illuminate\Database\Eloquent\Collection;
 
 class ShiftsDto extends BaseDto

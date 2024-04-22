@@ -1,10 +1,10 @@
 <?php
 
-namespace Artwork\Core\Database\Abstracts;
+namespace Artwork\Core\Abstracts;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Str;
 use JsonSerializable;
-use Illuminate\Contracts\Support\Arrayable;
 
 abstract class BaseDto implements JsonSerializable, Arrayable
 {

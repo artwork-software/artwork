@@ -238,7 +238,6 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {XIcon} from "@heroicons/vue/outline";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {CheckIcon, ChevronDownIcon} from "@heroicons/vue/solid";
 import {
     Listbox,
@@ -281,7 +280,6 @@ export default {
         TagComponent,
         JetDialogModal,
         XIcon,
-        EventTypeIconCollection,
         ChevronDownIcon,
         Listbox, ListboxLabel, ListboxButton, ListboxOption, ListboxOptions,
         Menu, MenuItem, MenuItems, MenuButton, CheckIcon

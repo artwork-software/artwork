@@ -24,7 +24,7 @@ class ProductionDatabaseSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Blocker',
-            'hex_code' => '#eee',
+            'hex_code' => '#A7A6B1',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'BL'

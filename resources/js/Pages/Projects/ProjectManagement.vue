@@ -387,7 +387,6 @@ import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
@@ -431,7 +430,6 @@ export default defineComponent({
         ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
-        CategoryIconCollection,
         TeamIconCollection,
         SvgCollection,
         Button,

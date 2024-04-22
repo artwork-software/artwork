@@ -269,7 +269,7 @@ class WalidRaadSeeder extends Seeder
 
         EventType::create([
             'name' => 'Aufbau',
-            'svg_name' => 'eventType8',
+            'hex_code' => '#168FC3',
             'project_mandatory' => false,
             'individual_name' => false,
             'abbreviation' => 'A',

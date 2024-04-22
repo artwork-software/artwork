@@ -99,7 +99,6 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Button from "@/Jetstream/Button.vue";
 import {AdjustmentsIcon} from "@heroicons/vue/outline";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
@@ -119,7 +118,13 @@ export default {
     components: {
         FormButton,
         UserPopoverTooltip,
-        NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
+        NewUserToolTip,
+        AdjustmentsIcon,
+        Button,
+        UserTooltip,
+        JetDialogModal,
+        XIcon
+    },
     emits: ['closed', 'declined'],
     props: ['requestToDecline', 'eventTypes'],
     data(){

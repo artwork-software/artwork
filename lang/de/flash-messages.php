@@ -49,20 +49,24 @@ return [
         'success' => [
             'account' => [
                 'create' => 'Konto erfolgreich gespeichert.',
+                'update' => 'Konto erfolgreich aktualisiert.',
                 'delete' => 'Konto erfolgreich gelöscht.'
             ],
             'cost-unit' => [
                 'create' => 'Kostenstelle erfolgreich gespeichert.',
+                'update' => 'Kostenstelle erfolgreich aktualisiert.',
                 'delete' => 'Kostenstelle erfolgreich gelöscht.'
             ]
         ],
         'error' => [
             'account' => [
                 'create' => 'Konto konnte nicht gespeichert werden, bitte erneut versuchen.',
+                'update' => 'Konto konnte nicht aktualisiert werden, bitte erneut versuchen.',
                 'delete' => 'Konto konnte nicht gelöscht werden, bitte erneut versuchen.'
             ],
             'cost_unit' => [
                 'create' => 'Kostenstelle konnte nicht gespeichert werden, bitte erneut versuchen.',
+                'update' => 'Kostenstelle konnte nicht aktualisiert werden, bitte erneut versuchen.',
                 'delete' => 'Kostenstelle konnte nicht gelöscht werden, bitte erneut versuchen.'
             ]
         ]

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementAccountRequest;
+use Artwork\Modules\BudgetManagementAccount\Http\Requests\UpdateBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountService;
 use Illuminate\Database\Eloquent\Collection;
@@ -48,6 +49,30 @@ class BudgetManagementAccountController extends Controller
         return Redirect::back()->with(
             'success',
             __('flash-messages.budget-account-management.success.account.create')
+        );
+    }
+
+    public function update(
+        BudgetManagementAccount $budgetManagementAccount,
+        UpdateBudgetManagementAccountRequest $request
+    ): RedirectResponse {
+        try {
+            $this->budgetManagementAccountService->updateFromRequest(
+                $budgetManagementAccount,
+                $request
+            );
+        } catch (Throwable $t) {
+            Log::error('Can not update budget management account for reason: ' . $t->getMessage());
+
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-account-management.error.account.update')
+            );
+        }
+
+        return Redirect::back()->with(
+            'success',
+            __('flash-messages.budget-account-management.success.account.update')
         );
     }
 

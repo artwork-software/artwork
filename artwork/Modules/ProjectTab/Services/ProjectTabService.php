@@ -70,7 +70,14 @@ readonly class ProjectTabService
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-        $calendarData = $this->calendarController->createCalendarData('', $project);
+        $calendarData = $this->calendarController->createCalendarData(
+            type: '',
+            project: $project,
+            room: null,
+            startDate: null,
+            endDate: null,
+            user: Auth::user()
+        );
         $eventsAtAGlance = Collection::make();
         if (\request('atAGlance') === 'true') {
             $eventsAtAGlance = ProjectCalendarShowEventResource::collection(

@@ -75,6 +75,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\App\Models\Task> done_tasks
  * @property Collection<\Artwork\Modules\Event\Models\Event> events
  * @property Collection<\App\Models\Task> $privateTasks
+
  *
  * What is this sorcery?
  * @property string $profile_photo_url

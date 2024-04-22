@@ -13,8 +13,11 @@ use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
@@ -85,8 +88,13 @@ readonly class EventService
         }
     }
 
-    public function delete(Event $event): void
-    {
+    public function delete(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         if (!empty($event->project_id)) {
             $this->changeService->saveFromBuilder(
                 $this->changeService
@@ -102,7 +110,13 @@ readonly class EventService
 
         $this->eventCommentService->deleteEventComments($event->comments);
         $this->timelineService->deleteTimelines($event->timelines);
-        $this->shiftService->deleteShifts($event->shifts);
+        $this->shiftService->deleteShifts(
+            $event->shifts,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
         $this->subEventService->deleteSubEvents($event->subEvents);
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -112,8 +126,13 @@ readonly class EventService
         $this->eventRepository->delete($event);
     }
 
-    public function deleteAll(Collection|array $events): void
-    {
+    public function deleteAll(
+        Collection|array $events,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
@@ -131,7 +150,13 @@ readonly class EventService
 
             $this->eventCommentService->deleteEventComments($event->comments);
             $this->timelineService->deleteTimelines($event->timelines);
-            $this->shiftService->deleteShifts($event->shifts);
+            $this->shiftService->deleteShifts(
+                $event->shifts,
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService
+            );
             $this->subEventService->deleteSubEvents($event->subEvents);
 
             broadcast(new OccupancyUpdated())->toOthers();
@@ -142,8 +167,13 @@ readonly class EventService
         }
     }
 
-    public function restore(Event $event): void
-    {
+    public function restore(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
             $this->changeService->saveFromBuilder(
@@ -156,7 +186,13 @@ readonly class EventService
         }
         $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
         $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-        $this->shiftService->restoreShifts($event->shifts()->onlyTrashed()->get());
+        $this->shiftService->restoreShifts(
+            $event->shifts()->onlyTrashed()->get(),
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
         $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -177,8 +213,13 @@ readonly class EventService
         }
     }
 
-    public function restoreAll(Collection|array $events): void
-    {
+    public function restoreAll(
+        Collection|array $events,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         /** @var Event $event */
         foreach ($events as $event) {
             $this->eventRepository->restore($event);
@@ -194,7 +235,13 @@ readonly class EventService
 
             $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
             $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $this->shiftService->restoreShifts($event->shifts()->onlyTrashed()->get());
+            $this->shiftService->restoreShifts(
+                $event->shifts()->onlyTrashed()->get(),
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService
+            );
             $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
             broadcast(new OccupancyUpdated())->toOthers();

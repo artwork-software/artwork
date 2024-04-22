@@ -60,6 +60,10 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -2522,8 +2526,13 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(Project $project): RedirectResponse
-    {
+    public function destroy(
+        Project $project,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): RedirectResponse {
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
                 'project' => $project->name
@@ -2544,7 +2553,13 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->projectService->softDelete($project);
+        $this->projectService->softDelete(
+            $project,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
 
         return Redirect::route('projects');
     }
@@ -2561,13 +2576,24 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed');
     }
 
-    public function restore(int $id): RedirectResponse
-    {
+    public function restore(
+        int $id,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
         if ($project) {
-            $this->projectService->restore($project);
+            $this->projectService->restore(
+                $project,
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService
+            );
         }
         return Redirect::route('projects.trashed');
     }

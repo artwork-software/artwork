@@ -34,7 +34,11 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -1879,11 +1883,22 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function destroy(Event $event): RedirectResponse
-    {
+    public function destroy(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): RedirectResponse {
         $this->authorize('delete', $event);
 
-        $this->eventService->delete($event);
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
 
         return Redirect::back();
     }
@@ -1893,8 +1908,14 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function destroyByNotification(Event $event, Request $request): void
-    {
+    public function destroyByNotification(
+        Event $event,
+        Request $request,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         $this->authorize('delete', $event);
 
         if (!empty($event->project)) {
@@ -1917,7 +1938,13 @@ class EventController extends Controller
             }
         }
 
-        $this->eventService->delete($event);
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
     }
 
     /**

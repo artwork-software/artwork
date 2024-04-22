@@ -850,14 +850,15 @@ class ShiftController extends Controller
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ChangeService $changeService
     ): RedirectResponse {
         $shiftUserService->removeAllUsersFromShift($shift, $notificationService);
         $shiftFreelancerService->removeAllFreelancersFromShift($shift, $notificationService);
         $shiftServiceProviderService->removeAllServiceProvidersFromShift($shift);
 
         if ($shift->is_committed) {
-            $shiftService->createRemovedAllUsersFromShiftHistoryEntry($shift);
+            $shiftService->createRemovedAllUsersFromShiftHistoryEntry($shift, $changeService);
         }
 
         return Redirect::back();

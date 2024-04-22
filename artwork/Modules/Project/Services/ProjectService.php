@@ -9,6 +9,10 @@ use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,13 +63,24 @@ class ProjectService
         return $this->projectRepository->findById($id);
     }
 
-    public function softDelete(Project $project): bool
-    {
+    public function softDelete(
+        Project $project,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): bool {
         // delete project files
         $this->projectFileService->deleteAll($project->project_files);
 
         // delete all events and their shifts
-        $this->eventService->deleteAll($project->events);
+        $this->eventService->deleteAll(
+            $project->events,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
 
         // delete all checklists and their tasks
         $this->checklistService->deleteAll($project->checklists);
@@ -200,13 +215,24 @@ class ProjectService
         return $project->forceDelete();
     }
 
-    public function restore(Project $project): bool
-    {
+    public function restore(
+        Project $project,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): bool {
         // restore
         $project->restore();
 
         // restore events
-        $this->eventService->restoreAll($project->events()->with(['shifts'])->onlyTrashed()->get());
+        $this->eventService->restoreAll(
+            $project->events()->with(['shifts'])->onlyTrashed()->get(),
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService
+        );
 
         // restore checklists and their tasks
         $this->checklistService->restoreAll($project->checklists()->onlyTrashed()->get());

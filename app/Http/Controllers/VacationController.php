@@ -6,6 +6,7 @@ use App\Models\Freelancer;
 use App\Models\User;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
@@ -23,15 +24,24 @@ class VacationController extends Controller
         private readonly AvailabilityService $availabilityService,
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly AvailabilityConflictService $availabilityConflictService,
+        private readonly VacationConflictService $vacationConflictService,
+        private readonly ChangeService $changeService,
+        private readonly SchedulingController $schedulingController
     ) {
     }
 
-    public function store(CreateVacationRequest $createVacationRequest, User $user): void
-    {
+    public function store(
+        CreateVacationRequest $createVacationRequest,
+        User $user
+    ): void {
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
                 $user,
-                $createVacationRequest
+                $createVacationRequest,
+                $this->vacationConflictService,
+                $this->vacationSeriesService,
+                $this->changeService,
+                $this->schedulingController
             );
         } else {
             $this->availabilityService->create(
@@ -41,12 +51,18 @@ class VacationController extends Controller
         }
     }
 
-    public function storeFreelancerVacation(CreateVacationRequest $createVacationRequest, Freelancer $freelancer): void
-    {
+    public function storeFreelancerVacation(
+        CreateVacationRequest $createVacationRequest,
+        Freelancer $freelancer
+    ): void {
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
                 $freelancer,
-                $createVacationRequest
+                $createVacationRequest,
+                $this->vacationConflictService,
+                $this->vacationSeriesService,
+                $this->changeService,
+                $this->schedulingController
             );
         } else {
             $this->availabilityService->create(
@@ -56,8 +72,10 @@ class VacationController extends Controller
         }
     }
 
-    public function checkVacation(Request $request, User $user = null): void
-    {
+    public function checkVacation(
+        Request $request,
+        User $user
+    ): void {
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->checked;
 
@@ -75,7 +93,14 @@ class VacationController extends Controller
                 'is_series' => false,
                 'comment' => '',
             ]);
-            $this->vacationService->create($user, $createVacationRequest);
+            $this->vacationService->create(
+                $user,
+                $createVacationRequest,
+                $this->vacationConflictService,
+                $this->vacationSeriesService,
+                $this->changeService,
+                $this->schedulingController
+            );
         }
 
         $shifts = $user->shifts()->where('event_start_day', $day)->get();
@@ -84,8 +109,10 @@ class VacationController extends Controller
         }
     }
 
-    public function checkVacationFreelancer(Request $request, Freelancer $freelancer): void
-    {
+    public function checkVacationFreelancer(
+        Request $request,
+        Freelancer $freelancer
+    ): void {
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->checked;
 
@@ -103,7 +130,14 @@ class VacationController extends Controller
                 'is_series' => false,
                 'comment' => '',
             ]);
-            $this->vacationService->create($freelancer, $createVacationRequest);
+            $this->vacationService->create(
+                $freelancer,
+                $createVacationRequest,
+                $this->vacationConflictService,
+                $this->vacationSeriesService,
+                $this->changeService,
+                $this->schedulingController
+            );
         }
 
         $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();

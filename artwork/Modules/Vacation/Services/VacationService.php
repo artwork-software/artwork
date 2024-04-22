@@ -12,58 +12,62 @@ use Artwork\Modules\Vacation\Repository\VacationRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
-class VacationService
+readonly class VacationService
 {
     public function __construct(
-        private readonly VacationRepository $vacationRepository,
-        private readonly ChangeService $changeService,
-        private readonly SchedulingController $scheduler, //@todo refactor
-        private readonly VacationSeriesService $vacationSeriesService,
-        private readonly VacationConflictService $vacationConflictService,
+        private VacationRepository $vacationRepository,
     ) {
     }
 
-    public function create(Vacationer $vacationer, $data): Vacation|Model
-    {
+    public function create(
+        Vacationer $vacationer,
+        Request $request,
+        VacationConflictService $vacationConflictService,
+        VacationSeriesService $vacationSeriesService,
+        ChangeService $changeService,
+        SchedulingController $schedulingController
+    ): Vacation|Model {
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
-            'start_time' => $data->start_time,
-            'end_time' => $data->end_time,
-            'date' => $data->date,
-            'full_day' =>  $data->full_day,
-            'comment' => $data->comment,
-            'is_serie' => $data->is_series,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'date' => $request->date,
+            'full_day' =>  $request->full_day,
+            'comment' => $request->comment,
+            'is_serie' => $request->is_series,
         ]);
 
-        $this->vacationConflictService->checkVacationConflictsOnDay(
+        $vacationConflictService->checkVacationConflictsOnDay(
             $firstVacation->date,
             $firstVacation->vacationer_type === User::class ? User::find($firstVacation->vacationer_id) : null,
             $firstVacation->vacationer_type === Freelancer::class ?
                 Freelancer::find($firstVacation->vacationer_id) : null,
         );
 
-        if ($data->is_series) {
-            $vacationSeries = $this->vacationSeriesService->create(
-                frequency: $data->series_repeat,
-                until: $data->series_repeat_until
+        if ($request->is_series) {
+            $vacationSeries = $vacationSeriesService->create(
+                frequency: $request->series_repeat,
+                until: $request->series_repeat_until
             );
             $firstVacation->update([
                 'series_id' => $vacationSeries->id
             ]);
 
             $this->createSeries(
-                $data->series_repeat,
+                $request->series_repeat,
                 $vacationSeries->id,
-                $data->series_repeat_until,
-                $data->date,
+                $request->series_repeat_until,
+                $request->date,
                 $vacationer,
-                $data
+                $request,
+                $vacationConflictService
             );
         }
 
-        $this->createHistory($firstVacation, 'Availability added');
-        $this->announceChanges($firstVacation);
+        $this->createHistory($firstVacation, 'Availability added', $changeService);
+        $this->announceChanges($firstVacation, $schedulingController);
 
         return $firstVacation;
     }
@@ -74,9 +78,10 @@ class VacationService
         string $series_repeat_until,
         string $date,
         Vacationer $vacationer,
-        $data
+        Request $data,
+        VacationConflictService $vacationConflictService
     ): void {
-        $series_until = \Illuminate\Support\Carbon::parse($series_repeat_until);
+        $series_until = Carbon::parse($series_repeat_until);
         $series_until->addDay();
         $whileEndDate = Carbon::parse($date)->setTimezone(config('app.timezone'));
         if ($frequency === 'daily') {
@@ -91,7 +96,7 @@ class VacationService
                     'is_series' => true,
                     'series_id' => $seriesId
                 ]);
-                $this->vacationConflictService->checkVacationConflictsOnDay(
+                $vacationConflictService->checkVacationConflictsOnDay(
                     $newVacation->date,
                     $newVacation->vacationer_type === User::class ? User::find($newVacation->vacationer_id) : null,
                     $newVacation->vacationer_type === Freelancer::class ?
@@ -111,7 +116,7 @@ class VacationService
                     'is_series' => true,
                     'series_id' => $seriesId
                 ]);
-                $this->vacationConflictService->checkVacationConflictsOnDay(
+                $vacationConflictService->checkVacationConflictsOnDay(
                     $weekly->date,
                     $weekly->vacationer_type === User::class ? User::find($weekly->vacationer_id) : null,
                     $weekly->vacationer_type === Freelancer::class ?
@@ -167,10 +172,10 @@ class VacationService
         $this->vacationRepository->delete($vacation);
     }
 
-    protected function createHistory(Vacation $vacation, string $translationKey): void
+    protected function createHistory(Vacation $vacation, string $translationKey, ChangeService $changeService): void
     {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setModelClass(Vacation::class)
                 ->setModelId($vacation->id)
@@ -178,12 +183,12 @@ class VacationService
         );
     }
 
-    protected function announceChanges(Vacation $vacation): void
+    protected function announceChanges(Vacation $vacation, SchedulingController $schedulingController): void
     {
         if (!$vacation->vacationer instanceof User) {
             return;
         }
-        $this->scheduler->create(
+        $schedulingController->create(
             $vacation->vacationer_id,
             'VACATION_CHANGES',
             'USER_VACATIONS',

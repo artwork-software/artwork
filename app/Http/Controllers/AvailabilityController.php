@@ -9,6 +9,9 @@ use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
 use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\RedirectResponse;
 
@@ -17,7 +20,11 @@ class AvailabilityController extends Controller
     public function __construct(
         private readonly AvailabilityService $availabilityService,
         private readonly VacationService $vacationService,
-        private readonly AvailabilitySeriesService $availabilitySeriesService
+        private readonly AvailabilitySeriesService $availabilitySeriesService,
+        private readonly VacationConflictService $vacationConflictService,
+        private readonly VacationSeriesService $vacationSeriesService,
+        private readonly ChangeService $changeService,
+        private readonly SchedulingController $schedulingController
     ) {
     }
 
@@ -30,13 +37,21 @@ class AvailabilityController extends Controller
                 if ($updateAvailabilityRequest->type === 'vacation') {
                     if ($availability->available_type === User::class) {
                         $this->vacationService->create(
-                            vacationer: User::find($availability->available_id),
-                            data: $updateAvailabilityRequest
+                            User::find($availability->available_id),
+                            $updateAvailabilityRequest,
+                            $this->vacationConflictService,
+                            $this->vacationSeriesService,
+                            $this->changeService,
+                            $this->schedulingController
                         );
                     } elseif ($availability->available_type === Freelancer::class) {
                         $this->vacationService->create(
-                            vacationer: Freelancer::find($availability->available_id),
-                            data: $updateAvailabilityRequest
+                            Freelancer::find($availability->available_id),
+                            $updateAvailabilityRequest,
+                            $this->vacationConflictService,
+                            $this->vacationSeriesService,
+                            $this->changeService,
+                            $this->schedulingController
                         );
                     }
                     $this->availabilityService->delete($availability);

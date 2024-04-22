@@ -11,13 +11,10 @@ use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
-class ShiftPresetService
+readonly class ShiftPresetService
 {
     public function __construct(
-        private readonly ShiftPresetRepository $shiftPresetRepository,
-        private readonly PresetShiftService $presetShiftService,
-        private readonly PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService,
-        private readonly ShiftPresetTimelineService $shiftPresetTimelineService
+        private ShiftPresetRepository $shiftPresetRepository
     ) {
     }
 
@@ -57,15 +54,20 @@ class ShiftPresetService
         return $this->shiftPresetRepository->findByNameAndEventTypeId($name, $eventTypeId);
     }
 
-    public function storeFromEventAndRequest(Event $event, Request $request): void
-    {
+    public function storeFromEventAndRequest(
+        Event $event,
+        Request $request,
+        PresetShiftService $presetShiftService,
+        PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService,
+        ShiftPresetTimelineService $shiftPresetTimelineService
+    ): void {
         $shiftPreset = $this->createFromRequest($request);
 
         foreach ($event->shifts as $shift) {
-            $presetShift = $this->presetShiftService->createPresetShiftFromExistingShift($shiftPreset->id, $shift);
+            $presetShift = $presetShiftService->createPresetShiftFromExistingShift($shiftPreset->id, $shift);
 
             foreach ($shift->shiftsQualifications as $shiftsQualifications) {
-                $this->presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
+                $presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
                     $presetShift->id,
                     [
                         'shift_qualification_id' => $shiftsQualifications->shift_qualification_id,
@@ -76,22 +78,26 @@ class ShiftPresetService
         }
 
         foreach ($event->timelines as $timeline) {
-            $this->shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
+            $shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
         }
     }
 
-    public function duplicateShiftPreset(ShiftPreset $shiftPreset): void
-    {
+    public function duplicateShiftPreset(
+        ShiftPreset $shiftPreset,
+        PresetShiftService $presetShiftService,
+        PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService,
+        ShiftPresetTimelineService $shiftPresetTimelineService
+    ): void {
         $duplicatedShiftPreset = $this->createFromExistingShiftPreset($shiftPreset);
 
         foreach ($shiftPreset->shifts as $presetShift) {
-            $duplicatedPresetShift = $this->presetShiftService->createPresetShiftFromExistingPresetShift(
+            $duplicatedPresetShift = $presetShiftService->createPresetShiftFromExistingPresetShift(
                 $duplicatedShiftPreset->id,
                 $presetShift
             );
 
             foreach ($presetShift->shiftsQualifications as $presetShiftShiftsQualification) {
-                $this->presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
+                $presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
                     $duplicatedPresetShift->id,
                     [
                         'shift_qualification_id' => $presetShiftShiftsQualification->shift_qualification_id,
@@ -102,7 +108,7 @@ class ShiftPresetService
         }
 
         foreach ($shiftPreset->timeline as $timeline) {
-            $this->shiftPresetTimelineService->createFromExistingPresetTimeline($duplicatedShiftPreset->id, $timeline);
+            $shiftPresetTimelineService->createFromExistingPresetTimeline($duplicatedShiftPreset->id, $timeline);
         }
     }
 

@@ -6,8 +6,11 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\PresetShift\Services\PresetShiftService;
+use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
+use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -17,13 +20,15 @@ use Inertia\Response;
 class ShiftPresetController extends Controller
 {
     public function __construct(
-        private readonly CraftService              $craftService,
-        private readonly EventTypeService          $eventTypeService,
+        private readonly CraftService $craftService,
+        private readonly EventTypeService $eventTypeService,
         private readonly ShiftQualificationService $shiftQualificationService,
-        private readonly ShiftPresetService        $shiftPresetService,
-        private readonly EventService              $eventService
-    )
-    {
+        private readonly ShiftPresetService $shiftPresetService,
+        private readonly EventService $eventService,
+        private readonly PresetShiftService $presetShiftService,
+        private readonly PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService,
+        private readonly ShiftPresetTimelineService $shiftPresetTimelineService
+    ) {
     }
 
     public function index(): Response
@@ -38,12 +43,23 @@ class ShiftPresetController extends Controller
 
     public function store(Request $request, Event $event): void
     {
-        $this->shiftPresetService->storeFromEventAndRequest($event, $request);
+        $this->shiftPresetService->storeFromEventAndRequest(
+            $event,
+            $request,
+            $this->presetShiftService,
+            $this->presetShiftsShiftsQualificationsService,
+            $this->shiftPresetTimelineService
+        );
     }
 
     public function duplicate(ShiftPreset $shiftPreset): void
     {
-        $this->shiftPresetService->duplicateShiftPreset($shiftPreset);
+        $this->shiftPresetService->duplicateShiftPreset(
+            $shiftPreset,
+            $this->presetShiftService,
+            $this->presetShiftsShiftsQualificationsService,
+            $this->shiftPresetTimelineService
+        );
     }
 
     public function update(Request $request, ShiftPreset $shiftPreset): void

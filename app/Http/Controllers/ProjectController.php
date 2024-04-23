@@ -78,6 +78,7 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -239,8 +240,14 @@ class ProjectController extends Controller
     }
 
 
-    public function store(StoreProjectRequest $request): JsonResponse|RedirectResponse
-    {
+    public function store(
+        StoreProjectRequest $request,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): JsonResponse|RedirectResponse {
         if (
             !Auth::user()->canAny(
                 [
@@ -296,7 +303,14 @@ class ProjectController extends Controller
 
         //$this->generateBasicBudgetValues($project);
 
-        $this->budgetService->generateBasicBudgetValues($project);
+        $this->budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
@@ -1132,7 +1146,9 @@ class ProjectController extends Controller
         CellCommentService $cellCommentService,
         CellCalculationService $cellCalculationService,
         SageNotAssignedDataService $sageNotAssignedDataService,
-        SageAssignedDataService $sageAssignedDataService
+        SageAssignedDataService $sageAssignedDataService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
     ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
@@ -1155,7 +1171,14 @@ class ProjectController extends Controller
             $sageNotAssignedDataService,
             $sageAssignedDataService
         );
-        $this->budgetService->generateBasicBudgetValues($project);
+        $this->budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         return Redirect::back();
     }
@@ -1772,7 +1795,8 @@ class ProjectController extends Controller
         SageAssignedDataCommentService $sageAssignedDataCommentService,
         ShiftQualificationService $shiftQualificationService,
         RoomService $roomService,
-        CalendarController $calendarController
+        CalendarController $calendarController,
+        SageApiSettingsService $sageApiSettingsService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1884,9 +1908,10 @@ class ProjectController extends Controller
 
             if ($component->type === TabComponentEnums::BUDGET->value) {
                 $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
-                    project: $project,
-                    loadedProjectInformation: $loadedProjectInformation,
-                    sageAssignedDataCommentService: $sageAssignedDataCommentService,
+                    $project,
+                    $loadedProjectInformation,
+                    $sageAssignedDataCommentService,
+                    $sageApiSettingsService
                 );
             }
 
@@ -2578,8 +2603,14 @@ class ProjectController extends Controller
         }
     }
 
-    public function duplicate(Project $project): JsonResponse|RedirectResponse
-    {
+    public function duplicate(
+        Project $project,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): JsonResponse|RedirectResponse {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             if (
@@ -2607,7 +2638,14 @@ class ProjectController extends Controller
             'state' => $project->state,
         ]);
 
-        $this->budgetService->generateBasicBudgetValues($newProject);
+        $this->budgetService->generateBasicBudgetValues(
+            $newProject,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));

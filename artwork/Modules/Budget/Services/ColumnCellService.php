@@ -5,7 +5,6 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\ColumnCell;
-use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Repositories\ColumnCellRepository;
 
 readonly class ColumnCellService

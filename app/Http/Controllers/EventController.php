@@ -27,6 +27,10 @@ use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\TableService;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -34,6 +38,7 @@ use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -409,13 +414,28 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function storeEvent(EventStoreRequest $request): CalendarEventResource
-    {
+    public function storeEvent(
+        EventStoreRequest $request,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): CalendarEventResource {
         $this->authorize('create', Event::class);
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
-            $this->associateProject($request, $firstEvent, $this->budgetService);
+            $this->associateProject(
+                $request,
+                $firstEvent,
+                $this->budgetService,
+                $tableService,
+                $columnService,
+                $mainPositionService,
+                $columnSettingService,
+                $sageApiSettingsService
+            );
         }
 
         $projectFirstEvent = $firstEvent->project()->first();
@@ -808,10 +828,25 @@ class EventController extends Controller
         }
     }
 
-    private function associateProject($request, $event, BudgetService $budgetService): void
-    {
+    private function associateProject(
+        $request,
+        $event,
+        BudgetService $budgetService,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): void {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $budgetService->generateBasicBudgetValues($project);
+        $budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
         $event->project()->associate($project);
         $event->save();
     }

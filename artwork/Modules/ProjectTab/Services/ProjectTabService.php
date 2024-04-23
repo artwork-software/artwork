@@ -28,9 +28,8 @@ use Illuminate\Support\Facades\Auth;
 
 readonly class ProjectTabService
 {
-    public function __construct(
-        private ProjectTabRepository $projectTabRepository
-    ) {
+    public function __construct(private ProjectTabRepository $projectTabRepository)
+    {
     }
 
     public function findFirstProjectTab(): ProjectTab|null

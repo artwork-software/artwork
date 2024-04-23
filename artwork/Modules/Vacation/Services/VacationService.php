@@ -17,9 +17,8 @@ use Illuminate\Http\Request;
 
 readonly class VacationService
 {
-    public function __construct(
-        private VacationRepository $vacationRepository,
-    ) {
+    public function __construct(private VacationRepository $vacationRepository)
+    {
     }
 
     public function create(

@@ -10,9 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class ShiftService
 {
-    public function __construct(
-        private ShiftRepository $shiftRepository
-    ) {
+    public function __construct(private ShiftRepository $shiftRepository)
+    {
     }
 
     public function getById(int $shiftId): Shift|null

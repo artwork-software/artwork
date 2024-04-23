@@ -13,9 +13,8 @@ use Illuminate\Http\Request;
 
 readonly class ShiftPresetService
 {
-    public function __construct(
-        private ShiftPresetRepository $shiftPresetRepository
-    ) {
+    public function __construct(private ShiftPresetRepository $shiftPresetRepository)
+    {
     }
 
     public function getAllShiftPresetsWithSortedTimelines(): Collection

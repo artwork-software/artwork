@@ -9,9 +9,8 @@ use Illuminate\Http\Request;
 
 class PresetShiftService
 {
-    public function __construct(
-        private readonly PresetShiftRepository $presetShiftRepository
-    ) {
+    public function __construct(private readonly PresetShiftRepository $presetShiftRepository)
+    {
     }
 
     public function createFromRequestForShiftPreset(int $shiftPresetId, Request $request): int

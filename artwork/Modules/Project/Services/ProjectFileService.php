@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class ProjectFileService
 {
-    public function __construct(
-        private ProjectFileRepository $projectFileRepository
-    ) {
+    public function __construct(private ProjectFileRepository $projectFileRepository)
+    {
     }
 
     public function deleteAll(Collection|array $projectFiles): void

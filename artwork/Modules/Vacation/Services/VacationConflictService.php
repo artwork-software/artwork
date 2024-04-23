@@ -13,9 +13,8 @@ use Carbon\Carbon;
 
 readonly class VacationConflictService
 {
-    public function __construct(
-        private VacationConflictRepository $vacationConflictRepository,
-    ) {
+    public function __construct(private VacationConflictRepository $vacationConflictRepository)
+    {
     }
 
     public function create(array $data): VacationConflict

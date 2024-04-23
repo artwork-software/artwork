@@ -23,9 +23,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectService
 {
-    public function __construct(
-        private readonly ProjectRepository $projectRepository
-    ) {
+    public function __construct(private readonly ProjectRepository $projectRepository)
+    {
     }
 
     public function isManagerForProject(User $user, Project $project): bool

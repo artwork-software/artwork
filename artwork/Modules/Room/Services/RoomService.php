@@ -24,9 +24,8 @@ use Illuminate\Support\Facades\Auth;
 
 readonly class RoomService
 {
-    public function __construct(
-        private RoomRepository $roomRepository
-    ) {
+    public function __construct(private RoomRepository $roomRepository)
+    {
     }
 
     public function delete(Room $room): bool

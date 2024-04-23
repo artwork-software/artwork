@@ -14,9 +14,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class CommentService
 {
-    public function __construct(
-        private CommentRepository $commentRepository
-    ) {
+    public function __construct(private CommentRepository $commentRepository)
+    {
     }
 
     public function create(

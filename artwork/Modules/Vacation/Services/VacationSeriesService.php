@@ -8,9 +8,8 @@ use Artwork\Modules\Vacation\Repository\VacationSeriesRepository;
 
 readonly class VacationSeriesService
 {
-    public function __construct(
-        private VacationSeriesRepository $vacationSeriesRepository,
-    ) {
+    public function __construct(private VacationSeriesRepository $vacationSeriesRepository)
+    {
     }
 
     public function create(string $frequency, string $until): VacationSeries

@@ -11,9 +11,8 @@ use Throwable;
 
 readonly class SageApiSettingsService
 {
-    public function __construct(
-        private SageApiSettingsRepository $sageApiSettingsRepository
-    ) {
+    public function __construct(private SageApiSettingsRepository $sageApiSettingsRepository)
+    {
     }
 
     public function getFirst(): SageApiSettings|null

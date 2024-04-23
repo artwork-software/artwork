@@ -9,9 +9,8 @@ use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualification
 
 readonly class FreelancerShiftQualificationService
 {
-    public function __construct(
-        private FreelancerShiftQualificationRepository $freelancerShiftQualificationRepository
-    ) {
+    public function __construct(private FreelancerShiftQualificationRepository $freelancerShiftQualificationRepository)
+    {
     }
 
     public function createByRequestForFreelancer(

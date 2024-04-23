@@ -1,9 +1,9 @@
 <?php
 
-namespace Artwork\Modules\Permission\Service;
+namespace Artwork\Modules\Permission\Services;
 
-use Artwork\Modules\Permission\Repositories\PermissionRepository;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Permission\Repositories\PermissionRepository;
 use Illuminate\Support\Facades\DB;
 
 readonly class PermissionService

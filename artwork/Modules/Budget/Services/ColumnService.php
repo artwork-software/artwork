@@ -70,11 +70,23 @@ class ColumnService
         }
     }
 
-    public function forceDelete(Column $column): void
-    {
-        $column->subPositionSumDetails->each(function (SubPositionSumDetail $subPositionSumDetail): void {
-            $this->subPositionSumDetailService->forceDelete($subPositionSumDetail);
-        });
+    public function forceDelete(
+        Column $column,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
+    ): void {
+        $column->subPositionSumDetails->each(
+            function (SubPositionSumDetail $subPositionSumDetail) use (
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $this->subPositionSumDetailService->forceDelete(
+                    $subPositionSumDetail,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
         $column->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
             $this->mainPositionDetailsService->forceDelete($mainPositionDetails);

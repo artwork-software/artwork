@@ -30,15 +30,19 @@ readonly class TableService
     public function forceDelete(
         Table $table,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): void {
         $table->mainPositions->each(function (MainPosition $mainPosition) use ($mainPositionService): void {
             $mainPositionService->forceDelete($mainPosition);
         });
 
-        $table->columns->each(function (Column $column) use ($columnService): void {
-            $columnService->forceDelete($column);
-        });
+        $table->columns->each(
+            function (Column $column) use ($columnService, $sumCommentService, $sumMoneySourceService): void {
+                $columnService->forceDelete($column, $sumCommentService, $sumMoneySourceService);
+            }
+        );
 
         $this->tableRepository->forceDelete($table);
     }

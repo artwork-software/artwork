@@ -48,6 +48,8 @@ use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
+use Artwork\Modules\Budget\Services\SumCommentService;
+use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -1105,13 +1107,17 @@ class ProjectController extends Controller
         Project $project,
         TableService $tableService,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
             $project,
             $mainPositionService,
-            $columnService
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService
         );
         //$this->generateBasicBudgetValues($project);
         $this->budgetService->generateBasicBudgetValues($project);
@@ -1227,9 +1233,17 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column, ColumnService $columnService): RedirectResponse
-    {
-        $columnService->forceDelete($column);
+    public function columnDelete(
+        Column $column,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
+    ): RedirectResponse {
+        $columnService->forceDelete(
+            $column,
+            $sumCommentService,
+            $sumMoneySourceService
+        );
 
         return Redirect::back();
     }
@@ -2712,12 +2726,16 @@ class ProjectController extends Controller
         Table $table,
         TableService $tableService,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): RedirectResponse {
         $tableService->forceDelete(
             $table,
             $mainPositionService,
-            $columnService
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService
         );
 
         return Redirect::back();

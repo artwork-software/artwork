@@ -13,6 +13,8 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\SumCommentService;
+use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
@@ -176,14 +178,18 @@ class BudgetTemplateController extends Controller
         Table $table,
         Request $request,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): RedirectResponse {
         $project = Project::find($request->project_id);
 
         $this->deleteOldTable(
             $project,
             $mainPositionService,
-            $columnService
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService
         );
 
         $this->createTemplate($table->name, $table, false, $project->id);
@@ -194,7 +200,9 @@ class BudgetTemplateController extends Controller
     public function useTemplateFromProject(
         Request $request,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): void {
         if ($request->template_project_id !== $request->project_id) {
             $templateProject = Project::find($request->template_project_id);
@@ -203,7 +211,9 @@ class BudgetTemplateController extends Controller
             $this->deleteOldTable(
                 $project,
                 $mainPositionService,
-                $columnService
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService
             );
 
             $this->createTemplate(
@@ -218,7 +228,9 @@ class BudgetTemplateController extends Controller
     public function deleteOldTable(
         Project $project,
         MainPositionService $mainPositionService,
-        ColumnService $columnService
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
     ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
@@ -226,7 +238,9 @@ class BudgetTemplateController extends Controller
         $this->tableService->forceDelete(
             $tableToDelete,
             $mainPositionService,
-            $columnService
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService
         );
     }
 }

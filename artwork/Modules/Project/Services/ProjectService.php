@@ -17,6 +17,7 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -79,7 +80,8 @@ class ProjectService
         ShiftService $shiftService,
         SubEventService $subEventService,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
+        TaskService $taskService
     ): bool {
         $projectFileService->deleteAll($project->project_files);
         $eventService->deleteAll(
@@ -96,7 +98,7 @@ class ProjectService
             $notificationService,
             $projectTabService
         );
-        $checklistService->deleteAll($project->checklists);
+        $checklistService->deleteAll($project->checklists, $taskService);
         $projectFileService->deleteAll($project->project_files);
         $commentService->deleteAll($project->comments, $changeService);
 
@@ -161,7 +163,8 @@ class ProjectService
         TimelineService $timelineService,
         ShiftService $shiftService,
         SubEventService $subEventService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        TaskService $taskService
     ): bool {
         // detach the shift relevant event types from the pivot table
         $this->deleteShiftRelevanteEventTypes($project);
@@ -173,7 +176,7 @@ class ProjectService
         $this->deleteMoneySources($project);
 
         // force delete the checklists and their tasks
-        $checklistService->forceDeleteAll($project->checklists);
+        $checklistService->forceDeleteAll($project->checklists, $taskService);
 
         // force delete the events and their shifts
         $eventService->forceDeleteAll(
@@ -251,7 +254,8 @@ class ProjectService
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
         ShiftService $shiftService,
-        SubEventService $subEventService
+        SubEventService $subEventService,
+        TaskService $taskService
     ): bool {
         // restore
         $project->restore();
@@ -271,7 +275,7 @@ class ProjectService
         );
 
         // restore checklists and their tasks
-        $checklistService->restoreAll($project->checklists()->onlyTrashed()->get());
+        $checklistService->restoreAll($project->checklists()->onlyTrashed()->get(), $taskService);
 
         $table = $project->table()->onlyTrashed()->first();
         $table->restore();

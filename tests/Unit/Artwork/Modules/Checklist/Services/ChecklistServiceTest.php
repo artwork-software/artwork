@@ -5,6 +5,7 @@ namespace Tests\Unit\Artwork\Modules\Checklist\Services;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 
@@ -30,7 +31,7 @@ class ChecklistServiceTest extends TestCase
             ],
         ]);
 
-        $this->checklistService->updateByRequest($checklist, $request);
+        $this->checklistService->updateByRequest($checklist, $request, app()->make(TaskService::class));
 
         $this->assertDatabaseHas('checklists', [
             'id' => $checklist->id,

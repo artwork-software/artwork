@@ -29,10 +29,7 @@ use Illuminate\Support\Facades\Auth;
 readonly class ProjectTabService
 {
     public function __construct(
-        private ShiftQualificationService $shiftQualificationService,
-        private ProjectTabRepository $projectTabRepository,
-        private RoomService $roomService,
-        private CalendarController $calendarController
+        private ProjectTabRepository $projectTabRepository
     ) {
     }
 
@@ -61,8 +58,11 @@ readonly class ProjectTabService
         return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CALENDAR);
     }
 
-    public function getCalendarTab(Project $project): CalendarDto
-    {
+    public function getCalendarTab(
+        Project $project,
+        RoomService $roomService,
+        CalendarController $calendarController
+    ): CalendarDto {
         if (\request('startDate') && \request('endDate')) {
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -70,18 +70,14 @@ readonly class ProjectTabService
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-        $calendarData = $this->calendarController->createCalendarData(
-            type: '',
+        $calendarData = $calendarController->createCalendarData(
             project: $project,
-            room: null,
-            startDate: null,
-            endDate: null,
             user: Auth::user()
         );
         $eventsAtAGlance = Collection::make();
         if (\request('atAGlance') === 'true') {
             $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
-                $this->calendarController
+                $calendarController
                     ->filterEvents($project->events(), null, null, null, $project)
                     ->with(['room','project','creator'])
                     ->orderBy('start_time', 'ASC')
@@ -91,14 +87,14 @@ readonly class ProjectTabService
         return $this->createCalendarDto(
             $calendarData,
             $eventsAtAGlance,
-            $this->roomService->filterRooms($startDate, $endDate)->get(),
+            $roomService->filterRooms($startDate, $endDate)->get(),
             new CalendarEventCollectionResourceModel(
                 $calendarData['filterOptions']['areas'],
                 $calendarData['filterOptions']['projects'],
                 $calendarData['filterOptions']['eventTypes'],
                 $calendarData['filterOptions']['roomCategories'],
                 $calendarData['filterOptions']['roomAttributes'],
-                $this->calendarController->getEventsOfInterval($startDate, $endDate, $project),
+                $calendarController->getEventsOfInterval($startDate, $endDate, $project),
                 Filter::query()->where('user_id', Auth::id())->get(),
             )
         );
@@ -127,8 +123,10 @@ readonly class ProjectTabService
         return $calendarDto;
     }
 
-    public function getShiftTab(Project $project): ShiftsDto
-    {
+    public function getShiftTab(
+        Project $project,
+        ShiftQualificationService $shiftQualificationService
+    ): ShiftsDto {
         $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
         $shiftRelevantEvents = $project->events()
             ->whereIn('event_type_id', $shiftRelevantEventTypes)
@@ -223,7 +221,7 @@ readonly class ProjectTabService
             $eventsWithRelevant,
             Craft::all(),
             Auth::user()->crafts->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
+            $shiftQualificationService->getAllOrderedByCreationDateAscending()
         );
     }
 

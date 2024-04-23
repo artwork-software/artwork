@@ -206,7 +206,7 @@ class CalendarController extends Controller
         $endDate = null,
         ?Authenticatable $user = null
     ): array {
-        if(!empty($user)){
+        if (!empty($user)) {
             $this->user = $user;
             $this->userCalendarFilter = $this->user?->calendar_filter;
             $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;

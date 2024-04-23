@@ -60,11 +60,13 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -1687,7 +1689,10 @@ class ProjectController extends Controller
     public function projectTab(
         Project $project,
         ProjectTab $projectTab,
-        SageAssignedDataCommentService $sageAssignedDataCommentService
+        SageAssignedDataCommentService $sageAssignedDataCommentService,
+        ShiftQualificationService $shiftQualificationService,
+        RoomService $roomService,
+        CalendarController $calendarController
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1790,7 +1795,11 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::CALENDAR->value) {
-                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab($project);
+                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
+                    $project,
+                    $roomService,
+                    $calendarController
+                );
             }
 
             if ($component->type === TabComponentEnums::BUDGET->value) {
@@ -1809,7 +1818,10 @@ class ProjectController extends Controller
                 $headerObject->project->freelancers = Freelancer::all();
                 $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
 
-                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab($project);
+                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab(
+                    $project,
+                    $shiftQualificationService
+                );
             }
 
             if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {

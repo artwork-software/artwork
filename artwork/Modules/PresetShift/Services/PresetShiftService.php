@@ -7,9 +7,9 @@ use Artwork\Modules\PresetShift\Repositories\PresetShiftRepository;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Http\Request;
 
-class PresetShiftService
+readonly class PresetShiftService
 {
-    public function __construct(private readonly PresetShiftRepository $presetShiftRepository)
+    public function __construct(private PresetShiftRepository $presetShiftRepository)
     {
     }
 

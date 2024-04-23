@@ -22,9 +22,9 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectService
+readonly class ProjectService
 {
-    public function __construct(private readonly ProjectRepository $projectRepository)
+    public function __construct(private ProjectRepository $projectRepository)
     {
     }
 

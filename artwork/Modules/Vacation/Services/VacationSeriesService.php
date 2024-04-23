@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Vacation\Services;
 
-use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Vacation\Models\VacationSeries;
 use Artwork\Modules\Vacation\Repository\VacationSeriesRepository;
 

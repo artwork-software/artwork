@@ -2,20 +2,14 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Resources\ProjectCalendarShowEventResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\User;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-class CalendarService
+
+readonly class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
@@ -45,7 +39,6 @@ class CalendarService
                 ];
             });
 
-        // Aufteilung in Wochen
         return $days->chunk(7);
     }
 
@@ -60,17 +53,14 @@ class CalendarService
     {
         $vacationDays = [];
         $availabilityDays = [];
-        $shifts = [];
         if ($freelancer) {
             $vacationDays = $freelancer->vacations()->orderBy('date', 'ASC')->get();
             $availabilityDays = $freelancer->availabilities()->orderBy('date', 'ASC')->get();
-            $shifts = $freelancer->shifts()->where('is_committed', true)->get();
         }
 
         if ($user) {
             $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
             $availabilityDays = $user->availabilities()->orderBy('date', 'ASC')->get();
-            $shifts = $user->shifts()->where('is_committed', true)->get();
         }
 
         $currentMonth = Carbon::now()->startOfMonth();

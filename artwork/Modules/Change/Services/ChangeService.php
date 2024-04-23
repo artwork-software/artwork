@@ -10,9 +10,8 @@ use InvalidArgumentException;
 
 readonly class ChangeService
 {
-    public function __construct(
-        private ChangeRepository $changeRepository
-    ) {
+    public function __construct(private ChangeRepository $changeRepository)
+    {
     }
 
     public function createBuilder(): ChangeBuilder

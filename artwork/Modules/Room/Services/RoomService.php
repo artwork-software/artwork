@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Room\Services;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use App\Builders\EventBuilder;
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
@@ -18,7 +17,6 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 

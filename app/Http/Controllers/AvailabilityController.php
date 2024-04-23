@@ -8,6 +8,7 @@ use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Https\Requests\UpdateAvailabilityRequest;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -32,7 +33,8 @@ class AvailabilityController extends Controller
 
     public function update(
         UpdateAvailabilityRequest $updateAvailabilityRequest,
-        Availability $availability
+        Availability $availability,
+        AvailabilityConflictService $availabilityConflictService
     ): RedirectResponse {
         if ($updateAvailabilityRequest->validated()) {
             if ($updateAvailabilityRequest->type_before_update !== $updateAvailabilityRequest->type) {
@@ -63,9 +65,10 @@ class AvailabilityController extends Controller
                 return redirect()->back();
             } else {
                 $this->availabilityService->update(
-                    data: $updateAvailabilityRequest,
-                    availability: $availability,
-                    notificationService: $this->notificationService
+                    $updateAvailabilityRequest,
+                    $availability,
+                    $this->notificationService,
+                    $availabilityConflictService
                 );
             }
         }

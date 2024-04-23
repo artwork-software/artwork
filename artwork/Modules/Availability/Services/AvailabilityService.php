@@ -11,26 +11,25 @@ use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Repositories\AvailabilityRepository;
 use Artwork\Modules\Change\Services\ChangeService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 readonly class AvailabilityService
 {
-    public function __construct(
-        private AvailabilityRepository $availabilityRepository,
-        private ChangeService $changeService,
-        private SchedulingController $scheduler,
-        private AvailabilitySeriesService $availabilitySeriesService,
-        private AvailabilityConflictService $availabilityConflictService
-    ) {
+    public function __construct(private AvailabilityRepository $availabilityRepository)
+    {
     }
 
     //@todo: fix phpcs error - fix complexity
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function create(
         Available $available,
-        $data,
-        NotificationService $notificationService
+        Request $data,
+        NotificationService $notificationService,
+        AvailabilityConflictService $availabilityConflictService,
+        AvailabilitySeriesService $availabilitySeriesService,
+        ChangeService $changeService,
+        SchedulingController $schedulingController
     ): Available|Model {
         /** @var Availability $firstAvailable */
         $firstAvailable = $available->availabilities()->create([
@@ -42,7 +41,7 @@ readonly class AvailabilityService
             'is_series' => $data->is_series,
         ]);
 
-        $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+        $availabilityConflictService->checkAvailabilityConflictsOnDay(
             $firstAvailable->date,
             $notificationService,
             $firstAvailable->available_type === User::class ?
@@ -52,7 +51,7 @@ readonly class AvailabilityService
         );
 
         if ($data->is_series) {
-            $availableSeries = $this->availabilitySeriesService->create(
+            $availableSeries = $availabilitySeriesService->create(
                 frequency: $data->series_repeat,
                 until: $data->series_repeat_until
             );
@@ -75,7 +74,7 @@ readonly class AvailabilityService
                         'is_series' => true,
                         'series_id' => $availableSeries->id
                     ]);
-                    $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+                    $availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
                         $notificationService,
                         $newAvailability->available_type === User::class ?
@@ -97,7 +96,7 @@ readonly class AvailabilityService
                         'is_series' => true,
                         'series_id' => $availableSeries->id
                     ]);
-                    $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+                    $availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
                         $notificationService,
                         $newAvailability->available_type === User::class ?
@@ -109,16 +108,17 @@ readonly class AvailabilityService
             }
         }
 
-        $this->createHistory($firstAvailable, 'Availability added');
-        $this->announceChanges($firstAvailable);
+        $this->createHistory($firstAvailable, $changeService, 'Availability added');
+        $this->announceChanges($firstAvailable, $schedulingController);
 
         return $firstAvailable;
     }
 
     public function update(
-        $data,
+        Request $data,
         Availability $availability,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        AvailabilityConflictService $availabilityConflictService
     ): Availability|Model {
         $availability->start_time = $data->start_time;
         $availability->end_time = $data->end_time;
@@ -129,7 +129,7 @@ readonly class AvailabilityService
 
         $newAvailability = $this->availabilityRepository->save($availability);
 
-        $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+        $availabilityConflictService->checkAvailabilityConflictsOnDay(
             $availability->date,
             $notificationService,
             $availability->available_type === User::class ?
@@ -141,35 +141,18 @@ readonly class AvailabilityService
         return $newAvailability;
     }
 
-    public function findVacationsByUserId(int $id): Collection
-    {
-        return $this->availabilityRepository->getByIdAndModel($id, User::class);
-    }
-
-    public function findVacationsByFreelancerId(int $id): Collection
-    {
-        return $this->availabilityRepository->getByIdAndModel($id, Freelancer::class);
-    }
-
-    public function findVacationWithinInterval(Available $available, Carbon $from, Carbon $until): Collection
-    {
-        return $this->availabilityRepository->getVacationWithinInterval($available, $from, $until);
-    }
-
-    public function deleteVacationInterval(Available $available, Carbon $from, Carbon $until): void
-    {
-        $this->availabilityRepository->delete($this->findVacationWithinInterval($available, $from, $until));
-    }
-
     public function delete(Availability $availability): void
     {
         $this->availabilityRepository->delete($availability);
     }
 
-    protected function createHistory(Availability $availability, string $translationKey): void
-    {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+    private function createHistory(
+        Availability $availability,
+        ChangeService $changeService,
+        string $translationKey
+    ): void {
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setType('vacation')
                 ->setModelClass(Availability::class)
@@ -178,12 +161,14 @@ readonly class AvailabilityService
         );
     }
 
-    protected function announceChanges(Availability $availability): void
-    {
+    private function announceChanges(
+        Availability $availability,
+        SchedulingController $schedulingController
+    ): void {
         if (!$availability->available instanceof User) {
             return;
         }
-        $this->scheduler->create(
+        $schedulingController->create(
             $availability->available_id,
             'VACATION_CHANGES',
             'USER_VACATIONS',

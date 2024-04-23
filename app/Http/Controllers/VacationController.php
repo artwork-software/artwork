@@ -6,6 +6,7 @@ use App\Models\Freelancer;
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
@@ -35,7 +36,11 @@ class VacationController extends Controller
 
     public function store(
         CreateVacationRequest $createVacationRequest,
-        User $user
+        User $user,
+        AvailabilityConflictService $availabilityConflictService,
+        AvailabilitySeriesService $availabilitySeriesService,
+        ChangeService $changeService,
+        SchedulingController $schedulingController
     ): void {
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
@@ -51,14 +56,22 @@ class VacationController extends Controller
             $this->availabilityService->create(
                 $user,
                 $createVacationRequest,
-                $this->notificationService
+                $this->notificationService,
+                $availabilityConflictService,
+                $availabilitySeriesService,
+                $changeService,
+                $schedulingController
             );
         }
     }
 
     public function storeFreelancerVacation(
         CreateVacationRequest $createVacationRequest,
-        Freelancer $freelancer
+        Freelancer $freelancer,
+        AvailabilityConflictService $availabilityConflictService,
+        AvailabilitySeriesService $availabilitySeriesService,
+        ChangeService $changeService,
+        SchedulingController $schedulingController
     ): void {
         if ($createVacationRequest->type === 'vacation') {
             $this->vacationService->create(
@@ -74,7 +87,11 @@ class VacationController extends Controller
             $this->availabilityService->create(
                 $freelancer,
                 $createVacationRequest,
-                $this->notificationService
+                $this->notificationService,
+                $availabilityConflictService,
+                $availabilitySeriesService,
+                $changeService,
+                $schedulingController
             );
         }
     }
@@ -157,22 +174,34 @@ class VacationController extends Controller
 
     public function update(
         UpdateVacationRequest $updateVacationRequest,
-        Vacation $vacation
+        Vacation $vacation,
+        AvailabilityConflictService $availabilityConflictService,
+        AvailabilitySeriesService $availabilitySeriesService,
+        ChangeService $changeService,
+        SchedulingController $schedulingController
     ): RedirectResponse {
         if ($updateVacationRequest->validated()) {
             if ($updateVacationRequest->type_before_update !== $updateVacationRequest->type) {
                 if ($updateVacationRequest->type === 'available') {
                     if ($vacation->vacationer_type === User::class) {
                         $this->availabilityService->create(
-                            available: User::find($vacation->vacationer_id),
-                            data: $updateVacationRequest,
-                            notificationService: $this->notificationService
+                            User::find($vacation->vacationer_id),
+                            $updateVacationRequest,
+                            $this->notificationService,
+                            $availabilityConflictService,
+                            $availabilitySeriesService,
+                            $changeService,
+                            $schedulingController
                         );
                     } elseif ($vacation->vacationer_type === Freelancer::class) {
                         $this->availabilityService->create(
-                            available: Freelancer::find($vacation->vacationer_id),
-                            data: $updateVacationRequest,
-                            notificationService: $this->notificationService
+                            Freelancer::find($vacation->vacationer_id),
+                            $updateVacationRequest,
+                            $this->notificationService,
+                            $availabilityConflictService,
+                            $availabilitySeriesService,
+                            $changeService,
+                            $schedulingController
                         );
                     }
                     $this->vacationService->delete($vacation);

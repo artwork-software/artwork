@@ -27,37 +27,30 @@ class Sage100Service
 {
     private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
-    public function __construct(
-        private readonly ProjectService $projectService,
-        private readonly ColumnService $columnService,
-        private readonly SageNotAssignedDataService $sageNotAssignedDataService,
-        private readonly SageApiSettingsService $sageApiSettingsService,
-        private readonly SageAssignedDataService $sageAssignedDataService
-    ) {
-    }
-
-    private function getData(int|null $count, string|null $specificDay)
-    {
-        return app(Sage100::class)->getData($this->buildQuery($count, $specificDay));
-    }
-
-    public function importDataToBudget(int|null $count, string|null $specificDay): int
-    {
+    public function importDataToBudget(
+        ?int $count,
+        ?string $specificDay,
+        ProjectService $projectService,
+        ColumnService $columnService,
+        SageApiSettingsService $sageApiSettingsService,
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService
+    ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        foreach (($data = $this->getData($count, $specificDay)) as $item) {
-            if ($this->updateExistingSageAssignedDataIfExists($item)) {
+        foreach (($data = $this->getData($count, $specificDay, $sageApiSettingsService)) as $item) {
+            if ($this->updateExistingSageAssignedDataIfExists($item, $sageAssignedDataService)) {
                 continue;
             }
 
-            $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item);
+            $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item, $sageNotAssignedDataService);
 
             //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
-            $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+            $project = $projectService->getProjectByCostCenter($item['KstTraeger']);
             if (is_null($project)) {
                 //create project unrelated SageNotAssignedData if no Project is found
-                $this->createSageNotAssignedData($item);
+                $this->createSageNotAssignedData($item, $sageNotAssignedDataService);
 
                 continue;
             }
@@ -71,7 +64,7 @@ class Sage100Service
 
             //create project related SageNotAssignedData if not exactly one SubPositionRow
             if ($subPositionRows->count() !== 1) {
-                $this->createSageNotAssignedData($item, $project->id);
+                $this->createSageNotAssignedData($item, $sageNotAssignedDataService, $project->id);
 
                 continue;
             }
@@ -79,7 +72,7 @@ class Sage100Service
             /** @var Column|null $sageColumn */
             $sageColumn = $project->table->columns->where('type', 'sage')->first();
             if (!$sageColumn instanceof Column) {
-                $sageColumn = $this->createSageColumnForTable($project->table);
+                $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
             }
 
             $subPositionRowsSageColumnCellId = $sageColumn
@@ -90,7 +83,7 @@ class Sage100Service
 
             //check if SageNotAssignedData exists, if so create SageAssignedData from it
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
-                $this->sageAssignedDataService->createFromSageNotAssignedData(
+                $sageAssignedDataService->createFromSageNotAssignedData(
                     $subPositionRowsSageColumnCellId,
                     $sageNotAssignedData
                 );
@@ -99,7 +92,7 @@ class Sage100Service
             }
 
             //otherwise create a new SageAssignedData entity
-            $this->sageAssignedDataService->createFromSageApiData(
+            $sageAssignedDataService->createFromSageApiData(
                 $subPositionRowsSageColumnCellId,
                 $item
             );
@@ -107,101 +100,17 @@ class Sage100Service
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
         if (!empty($data)) {
-            $this->updateSageApiSettingsBookingDateFromData($data);
+            $this->updateSageApiSettingsBookingDateFromData($data, $sageApiSettingsService);
         }
 
         return 0;
     }
 
-    private function findSubPositionRowsByKtoAndKst(string $kto, string $kst, Project $project): Collection
-    {
-        $subPositionRows = Collection::make();
-
-        $project->table->mainPositions->each(
-            function (MainPosition $mainPosition) use ($kto, $kst, $subPositionRows): void {
-                $mainPosition->subPositions->each(
-                    function (SubPosition $subPosition) use ($kto, $kst, $subPositionRows): void {
-                        $subPosition->subPositionRows->each(
-                            function (SubPositionRow $subPositionRow) use ($kto, $kst, $subPositionRows): void {
-                                if (
-                                    $subPositionRow->cells->where('value', $kto)->first() &&
-                                    $subPositionRow->cells->where('value', $kst)->first()
-                                ) {
-                                    $subPositionRows->push($subPositionRow);
-                                }
-                            }
-                        );
-                    }
-                );
-            }
-        );
-
-        return $subPositionRows;
-    }
-
-    private function updateExistingSageAssignedDataIfExists(array $item): bool
-    {
-        $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
-
-        if (is_null($sageAssignedData)) {
-            return false;
-        }
-
-        $this->sageAssignedDataService->update(
-            $sageAssignedData,
-            [
-                'buchungsdatum' => $item['Buchungsdatum'],
-                'buchungsbetrag' => $item['Buchungsbetrag'],
-                'belegnummer' => $item['Belegnummer'],
-            ]
-        );
-
-        //dataset already assigned, no need to import again or check if it can be assigned
-        return true;
-    }
-
-    private function updateExistingSageNotAssignedDataIfExists(array $item): SageNotAssignedData|null
-    {
-        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
-
-        if ($sageNotAssignedData instanceof SageNotAssignedData) {
-            $this->sageNotAssignedDataService->update(
-                $sageNotAssignedData,
-                [
-                    'buchungsdatum' => $item['Buchungsdatum'],
-                    'buchungsbetrag' => $item['Buchungsbetrag'],
-                    'belegnummer' => $item['Belegnummer'],
-                ]
-            );
-        }
-
-        return $sageNotAssignedData;
-    }
-
-    private function createSageNotAssignedData(array $item, int $projectId = null): void
-    {
-        SageNotAssignedData::query()
-            ->where('sage_id', $item['ID'])
-            ->existsOr(
-                function () use ($item, $projectId): void {
-                    $this->sageNotAssignedDataService->createFromSageApiData(
-                        $item,
-                        $projectId
-                    );
-                }
-            );
-    }
-
-    private function updateSageApiSettingsBookingDateFromData(array $data): void
-    {
-        $lastDataset = array_pop($data);
-        if (isset($lastDataset['Buchungsdatum'])) {
-            $this->sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
-        }
-    }
-
-    public function dropData($request): void
-    {
+    public function dropData(
+        Request $request,
+        ColumnService $columnService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
         /** @var Table $table */
         $table = Table::find($request->table_id);
         $columns = $table->columns()->whereNot('type', 'sage')->get();
@@ -214,7 +123,7 @@ class Sage100Service
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();
         if (!$sageColumn instanceof Column) {
-            $sageColumn = $this->createSageColumnForTable($project->table);
+            $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
         }
 
         SubPositionRow::query()
@@ -277,77 +186,10 @@ class Sage100Service
             'verified_value' => null,
         ]);
 
-        $this->sageAssignedDataService->createFromSageNotAssignedData(
+        $sageAssignedDataService->createFromSageNotAssignedData(
             $sageColumnCell->id,
             $sageNotAssignedData
         );
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function buildQuery(int|null $count, string|null $specificDay): array
-    {
-        $query = [];
-
-        if ($count) {
-            $query['count'] = $count;
-        }
-
-        if ($specificDay) {
-            $query['where'] = sprintf(
-                '%s eq "%s"',
-                self::FILTER_FIELD_BOOKINGDATE,
-                Carbon::parse($specificDay)->format('d.m.Y')
-            );
-        } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
-            $query['where'] = sprintf(
-                '%s eq "%s" or %s gt "%s"',
-                self::FILTER_FIELD_BOOKINGDATE,
-                Carbon::parse($desiredBookingDate)->format('d.m.Y'),
-                self::FILTER_FIELD_BOOKINGDATE,
-                Carbon::parse($desiredBookingDate)->format('d.m.Y')
-            );
-        }
-
-        $query['orderBy'] = 'Buchungsdatum asc';
-
-        return $query;
-    }
-
-    private function createSageColumnForTable(Table $table): Column
-    {
-        $sageColumn = $this->columnService->createColumnInTable($table, 'Sage Abgleich', '-', 'sage');
-
-        $this->columnService->setColumnSubName($table->id);
-
-        $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
-            $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
-                $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
-                    $subPositionRow->cells()->create([
-                        'column_id' => $sageColumn->id,
-                        'value' => '0,00',
-                        'verified_value' => null,
-                        'linked_money_source_id' => null,
-                        'commented' => $subPositionRow->commented
-                    ]);
-                });
-
-                $sageColumn->subPositionSumDetails()->create(['sub_position_id' => $subPosition->id]);
-            });
-
-            $sageColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
-        });
-
-        $sageColumn->budgetSumDetails()->create([
-            'type' => 'COST'
-        ]);
-
-        $sageColumn->budgetSumDetails()->create([
-            'type' => 'EARNING'
-        ]);
-
-        return $sageColumn;
     }
 
     public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): RedirectResponse
@@ -378,24 +220,13 @@ class Sage100Service
         return Redirect::back();
     }
 
-    private function deleteMovedColumnCells(ColumnCell $movedColumn): void
-    {
-        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
-        $sageAssignedData = $movedColumn->sageAssignedData()->get();
-        if ($sageAssignedData->isEmpty()) {
-            $movedColumnCells->each(function ($cell) use ($movedColumn): void {
-                $cell->delete();
-            });
-            $movedColumn->subPositionRow->delete();
-        }
-    }
-
     public function moveSingleSageDataRowToNewRow(
         Request $request,
         Table $table,
         SubPosition $subPosition,
         int $positionBefore,
-        ColumnCell $columnCell
+        ColumnCell $columnCell,
+        ColumnService $columnService
     ): void {
         if ($request->multiple === false) {
             $project = $table->project;
@@ -404,7 +235,7 @@ class Sage100Service
             /** @var Column|null $sageColumn */
             $sageColumn = $table->columns->where('type', 'sage')->first();
             if (!$sageColumn instanceof Column) {
-                $sageColumn = $this->createSageColumnForTable($project->table);
+                $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
             }
 
             SubPositionRow::query()
@@ -476,13 +307,13 @@ class Sage100Service
         }
     }
 
-
     public function moveMultipleSageDataRowToNewRow(
         Request $request,
         Table $table,
         SubPosition $subPosition,
         int $positionBefore,
-        ColumnCell $columnCell
+        ColumnCell $columnCell,
+        ColumnService $columnService
     ): void {
         $project = $table->project;
         $columns = $table->columns()->whereNot('type', 'sage')->get();
@@ -490,7 +321,7 @@ class Sage100Service
         /** @var Column|null $sageColumn */
         $sageColumn = $table->columns->where('type', 'sage')->first();
         if (!$sageColumn instanceof Column) {
-            $sageColumn = $this->createSageColumnForTable($project->table);
+            $sageColumn = $this->createSageColumnForTable($project->table, $columnService);
         }
 
         SubPositionRow::query()
@@ -557,5 +388,188 @@ class Sage100Service
             $sageAssignedData->update(['column_cell_id' => $sageColumnCell->id]);
         }
         $this->deleteMovedColumnCells($columnCell);
+    }
+
+    private function findSubPositionRowsByKtoAndKst(string $kto, string $kst, Project $project): Collection
+    {
+        $subPositionRows = Collection::make();
+
+        $project->table->mainPositions->each(
+            function (MainPosition $mainPosition) use ($kto, $kst, $subPositionRows): void {
+                $mainPosition->subPositions->each(
+                    function (SubPosition $subPosition) use ($kto, $kst, $subPositionRows): void {
+                        $subPosition->subPositionRows->each(
+                            function (SubPositionRow $subPositionRow) use ($kto, $kst, $subPositionRows): void {
+                                if (
+                                    $subPositionRow->cells->where('value', $kto)->first() &&
+                                    $subPositionRow->cells->where('value', $kst)->first()
+                                ) {
+                                    $subPositionRows->push($subPositionRow);
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
+
+        return $subPositionRows;
+    }
+
+    private function updateExistingSageAssignedDataIfExists(
+        array $item,
+        SageAssignedDataService $sageAssignedDataService
+    ): bool {
+        $sageAssignedData = $sageAssignedDataService->findBySageId($item['ID']);
+
+        if (is_null($sageAssignedData)) {
+            return false;
+        }
+
+        $sageAssignedDataService->update(
+            $sageAssignedData,
+            [
+                'buchungsdatum' => $item['Buchungsdatum'],
+                'buchungsbetrag' => $item['Buchungsbetrag'],
+                'belegnummer' => $item['Belegnummer'],
+            ]
+        );
+
+        //dataset already assigned, no need to import again or check if it can be assigned
+        return true;
+    }
+
+    private function updateExistingSageNotAssignedDataIfExists(
+        array $item,
+        SageNotAssignedDataService $sageNotAssignedDataService
+    ): SageNotAssignedData|null {
+        $sageNotAssignedData = $sageNotAssignedDataService->findBySageId($item['ID']);
+
+        if ($sageNotAssignedData instanceof SageNotAssignedData) {
+            $sageNotAssignedDataService->update(
+                $sageNotAssignedData,
+                [
+                    'buchungsdatum' => $item['Buchungsdatum'],
+                    'buchungsbetrag' => $item['Buchungsbetrag'],
+                    'belegnummer' => $item['Belegnummer'],
+                ]
+            );
+        }
+
+        return $sageNotAssignedData;
+    }
+
+    private function createSageNotAssignedData(
+        array $item,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        ?int $projectId = null
+    ): void {
+        SageNotAssignedData::query()
+            ->where('sage_id', $item['ID'])
+            ->existsOr(
+                function () use ($sageNotAssignedDataService, $item, $projectId): void {
+                    $sageNotAssignedDataService->createFromSageApiData(
+                        $item,
+                        $projectId
+                    );
+                }
+            );
+    }
+
+    private function updateSageApiSettingsBookingDateFromData(
+        array $data,
+        SageApiSettingsService $sageApiSettingsService
+    ): void {
+        $lastDataset = array_pop($data);
+        if (isset($lastDataset['Buchungsdatum'])) {
+            $sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
+        }
+    }
+
+    private function getData(int|null $count, string|null $specificDay, SageApiSettingsService $sageApiSettingsService)
+    {
+        return app(Sage100::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildQuery(
+        int|null $count,
+        string|null $specificDay,
+        SageApiSettingsService $sageApiSettingsService
+    ): array {
+        $query = [];
+
+        if ($count) {
+            $query['count'] = $count;
+        }
+
+        if ($specificDay) {
+            $query['where'] = sprintf(
+                '%s eq "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($specificDay)->format('d.m.Y')
+            );
+        } elseif ($desiredBookingDate = $sageApiSettingsService->getFirst()?->bookingDate) {
+            $query['where'] = sprintf(
+                '%s eq "%s" or %s gt "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y'),
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y')
+            );
+        }
+
+        $query['orderBy'] = 'Buchungsdatum asc';
+
+        return $query;
+    }
+
+    private function createSageColumnForTable(Table $table, ColumnService $columnService): Column
+    {
+        $sageColumn = $columnService->createColumnInTable($table, 'Sage Abgleich', '-', 'sage');
+
+        $columnService->setColumnSubName($table->id);
+
+        $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
+            $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
+                $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
+                    $subPositionRow->cells()->create([
+                        'column_id' => $sageColumn->id,
+                        'value' => '0,00',
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                        'commented' => $subPositionRow->commented
+                    ]);
+                });
+
+                $sageColumn->subPositionSumDetails()->create(['sub_position_id' => $subPosition->id]);
+            });
+
+            $sageColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
+        });
+
+        $sageColumn->budgetSumDetails()->create([
+            'type' => 'COST'
+        ]);
+
+        $sageColumn->budgetSumDetails()->create([
+            'type' => 'EARNING'
+        ]);
+
+        return $sageColumn;
+    }
+
+    private function deleteMovedColumnCells(ColumnCell $movedColumn): void
+    {
+        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
+        $sageAssignedData = $movedColumn->sageAssignedData()->get();
+        if ($sageAssignedData->isEmpty()) {
+            $movedColumnCells->each(function ($cell) use ($movedColumn): void {
+                $cell->delete();
+            });
+            $movedColumn->subPositionRow->delete();
+        }
     }
 }

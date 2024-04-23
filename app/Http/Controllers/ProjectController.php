@@ -45,6 +45,7 @@ use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
+use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\TableService;
@@ -1460,9 +1461,13 @@ class ProjectController extends Controller
         }
     }
 
-    public function dropSageData(Request $request, Sage100Service $sage100Service): void
-    {
-        $sage100Service->dropData($request);
+    public function dropSageData(
+        Request $request,
+        Sage100Service $sage100Service,
+        ColumnService $columnService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $sage100Service->dropData($request, $columnService, $sageAssignedDataService);
     }
 
     public function addMainPosition(Request $request): void

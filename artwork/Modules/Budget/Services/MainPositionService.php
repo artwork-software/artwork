@@ -11,14 +11,10 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\MainPositionRepository;
 
-class MainPositionService
+readonly class MainPositionService
 {
-    public function __construct(
-        private readonly MainPositionRepository $mainPositionRepository,
-        private readonly SubPositionService $subPositionService,
-        private readonly MainPositionVerifiedService $mainPositionVerifiedService,
-        private readonly MainPositionDetailsService $mainPositionDetailsService
-    ) {
+    public function __construct(private MainPositionRepository $mainPositionRepository)
+    {
     }
 
     public function createMainPosition(
@@ -43,15 +39,22 @@ class MainPositionService
         SubPositionSumDetailService $subPositionSumDetailService,
         SubPositionRowService $subPositionRowService,
         RowCommentService $rowCommentService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService
     ): void {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
-            $this->mainPositionVerifiedService->forceDelete($mainPositionVerified);
+            $mainPositionVerifiedService->forceDelete($mainPositionVerified);
         }
 
-        $mainPosition->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
-            $this->mainPositionDetailsService->forceDelete($mainPositionDetails);
-        });
+        $mainPosition->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $mainPositionDetailsService
+            ): void {
+                $mainPositionDetailsService->forceDelete($mainPositionDetails);
+            }
+        );
 
         $mainPosition->subPositions->each(
             function (SubPosition $subPosition) use (
@@ -61,9 +64,10 @@ class MainPositionService
                 $subPositionSumDetailService,
                 $subPositionRowService,
                 $rowCommentService,
-                $columnCellService
+                $columnCellService,
+                $subPositionService
             ): void {
-                $this->subPositionService->forceDelete(
+                $subPositionService->forceDelete(
                     $subPosition,
                     $sumCommentService,
                     $sumMoneySourceService,

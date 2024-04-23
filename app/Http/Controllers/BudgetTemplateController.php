@@ -11,6 +11,7 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
@@ -196,7 +197,8 @@ class BudgetTemplateController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): RedirectResponse {
         $project = Project::find($request->project_id);
 
@@ -213,7 +215,8 @@ class BudgetTemplateController extends Controller
             $columnCellService,
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
-            $subPositionService
+            $subPositionService,
+            $budgetSumDetailsService
         );
 
         $this->createTemplate($table->name, $table, false, $project->id);
@@ -234,7 +237,8 @@ class BudgetTemplateController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): void {
         if ($request->template_project_id !== $request->project_id) {
             $templateProject = Project::find($request->template_project_id);
@@ -253,7 +257,8 @@ class BudgetTemplateController extends Controller
                 $columnCellService,
                 $mainPositionVerifiedService,
                 $mainPositionDetailsService,
-                $subPositionService
+                $subPositionService,
+                $budgetSumDetailsService
             );
 
             $this->createTemplate(
@@ -278,7 +283,8 @@ class BudgetTemplateController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
@@ -296,7 +302,8 @@ class BudgetTemplateController extends Controller
             $columnCellService,
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
-            $subPositionService
+            $subPositionService,
+            $budgetSumDetailsService
         );
     }
 }

@@ -42,6 +42,7 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
@@ -1124,7 +1125,8 @@ class ProjectController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
@@ -1140,7 +1142,8 @@ class ProjectController extends Controller
             $columnCellService,
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
-            $subPositionService
+            $subPositionService,
+            $budgetSumDetailsService
         );
         $this->budgetService->generateBasicBudgetValues($project);
 
@@ -1259,12 +1262,20 @@ class ProjectController extends Controller
         Column $column,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService
     ): RedirectResponse {
         $columnService->forceDelete(
             $column,
             $sumCommentService,
-            $sumMoneySourceService
+            $sumMoneySourceService,
+            $mainPositionDetailsService,
+            $subPositionSumDetailService,
+            $budgetSumDetailsService,
+            $columnCellService
         );
 
         return Redirect::back();
@@ -2761,7 +2772,8 @@ class ProjectController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): RedirectResponse {
         $tableService->forceDelete(
             $table,
@@ -2776,7 +2788,8 @@ class ProjectController extends Controller
             $columnCellService,
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
-            $subPositionService
+            $subPositionService,
+            $budgetSumDetailsService
         );
 
         return Redirect::back();

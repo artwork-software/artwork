@@ -40,7 +40,8 @@ readonly class TableService
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService
     ): void {
         $table->mainPositions->each(
             function (MainPosition $mainPosition) use (
@@ -73,8 +74,24 @@ readonly class TableService
         );
 
         $table->columns->each(
-            function (Column $column) use ($columnService, $sumCommentService, $sumMoneySourceService): void {
-                $columnService->forceDelete($column, $sumCommentService, $sumMoneySourceService);
+            function (Column $column) use (
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService,
+                $subPositionSumDetailService,
+                $budgetSumDetailsService,
+                $columnCellService
+            ): void {
+                $columnService->forceDelete(
+                    $column,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $mainPositionDetailsService,
+                    $subPositionSumDetailService,
+                    $budgetSumDetailsService,
+                    $columnCellService
+                );
             }
         );
 

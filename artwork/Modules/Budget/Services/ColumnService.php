@@ -11,15 +11,10 @@ use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
 
-class ColumnService
+readonly class ColumnService
 {
-    public function __construct(
-        private readonly ColumnRepository $columnRepository,
-        private readonly ColumnCellService $columnCellService,
-        private readonly SubPositionSumDetailService $subPositionSumDetailService,
-        private readonly MainPositionDetailsService $mainPositionDetailsService,
-        private readonly BudgetSumDetailsService $budgetSumDetailsService
-    ) {
+    public function __construct(private ColumnRepository $columnRepository)
+    {
     }
 
     public function createColumnInTable(
@@ -73,14 +68,19 @@ class ColumnService
     public function forceDelete(
         Column $column,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService
     ): void {
         $column->subPositionSumDetails->each(
             function (SubPositionSumDetail $subPositionSumDetail) use (
                 $sumCommentService,
-                $sumMoneySourceService
+                $sumMoneySourceService,
+                $subPositionSumDetailService
             ): void {
-                $this->subPositionSumDetailService->forceDelete(
+                $subPositionSumDetailService->forceDelete(
                     $subPositionSumDetail,
                     $sumCommentService,
                     $sumMoneySourceService
@@ -91,9 +91,10 @@ class ColumnService
         $column->mainPositionSumDetails->each(
             function (MainPositionDetails $mainPositionDetails) use (
                 $sumCommentService,
-                $sumMoneySourceService
+                $sumMoneySourceService,
+                $mainPositionDetailsService
             ): void {
-                $this->mainPositionDetailsService->forceDelete(
+                $mainPositionDetailsService->forceDelete(
                     $mainPositionDetails,
                     $sumCommentService,
                     $sumMoneySourceService
@@ -101,12 +102,14 @@ class ColumnService
             }
         );
 
-        $column->budgetSumDetails->each(function (BudgetSumDetails $budgetSumDetails): void {
-            $this->budgetSumDetailsService->forceDelete($budgetSumDetails);
-        });
+        $column->budgetSumDetails->each(
+            function (BudgetSumDetails $budgetSumDetails) use ($budgetSumDetailsService): void {
+                $budgetSumDetailsService->forceDelete($budgetSumDetails);
+            }
+        );
 
-        $column->cells->each(function (ColumnCell $columnCell): void {
-            $this->columnCellService->forceDelete($columnCell);
+        $column->cells->each(function (ColumnCell $columnCell) use ($columnCellService): void {
+            $columnCellService->forceDelete($columnCell);
         });
 
         $this->columnRepository->forceDelete($column);

@@ -48,6 +48,7 @@ use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\RowCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
+use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
@@ -1509,9 +1510,10 @@ class ProjectController extends Controller
         Request $request,
         Sage100Service $sage100Service,
         ColumnService $columnService,
-        SageAssignedDataService $sageAssignedDataService
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService
     ): void {
-        $sage100Service->dropData($request, $columnService, $sageAssignedDataService);
+        $sage100Service->dropData($request, $columnService, $sageAssignedDataService, $sageNotAssignedDataService);
     }
 
     public function addMainPosition(Request $request): void

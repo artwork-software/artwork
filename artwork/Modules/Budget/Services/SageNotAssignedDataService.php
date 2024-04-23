@@ -9,11 +9,10 @@ use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Redirect;
 
-class SageNotAssignedDataService
+readonly class SageNotAssignedDataService
 {
-    public function __construct(
-        private readonly SageNotAssignedDataRepository $sageNotAssignedDataRepository,
-    ) {
+    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository,)
+    {
     }
 
     public function create(array $attributes): SageNotAssignedData

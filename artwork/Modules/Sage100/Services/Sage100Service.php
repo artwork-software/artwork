@@ -85,7 +85,8 @@ readonly class Sage100Service
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
                 $sageAssignedDataService->createFromSageNotAssignedData(
                     $subPositionRowsSageColumnCellId,
-                    $sageNotAssignedData
+                    $sageNotAssignedData,
+                    $sageNotAssignedDataService
                 );
 
                 continue;
@@ -109,7 +110,8 @@ readonly class Sage100Service
     public function dropData(
         Request $request,
         ColumnService $columnService,
-        SageAssignedDataService $sageAssignedDataService
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService
     ): void {
         /** @var Table $table */
         $table = Table::find($request->table_id);
@@ -188,7 +190,8 @@ readonly class Sage100Service
 
         $sageAssignedDataService->createFromSageNotAssignedData(
             $sageColumnCell->id,
-            $sageNotAssignedData
+            $sageNotAssignedData,
+            $sageNotAssignedDataService
         );
     }
 

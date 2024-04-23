@@ -86,6 +86,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -2671,7 +2672,14 @@ class ProjectController extends Controller
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
-        EventService $eventService
+        EventService $eventService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService,
+        TaskService $taskService
     ): RedirectResponse {
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
@@ -2703,7 +2711,14 @@ class ProjectController extends Controller
             $commentService,
             $checklistService,
             $projectFileService,
-            $eventService
+            $eventService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService,
+            $taskService
         );
 
         return Redirect::route('projects');

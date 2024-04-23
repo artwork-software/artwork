@@ -18,11 +18,8 @@ use Throwable;
 
 readonly class BudgetManagementAccountService
 {
-    public function __construct(
-        private BudgetManagementAccountRepository $budgetManagementAccountRepository,
-        private ProjectService $projectService,
-        private ColumnCellService $columnCellService
-    ) {
+    public function __construct(private BudgetManagementAccountRepository $budgetManagementAccountRepository)
+    {
     }
 
     public function getAllOrderedByIsAccountForRevenue(): Collection
@@ -80,28 +77,40 @@ readonly class BudgetManagementAccountService
         $this->budgetManagementAccountRepository->restore($budgetManagementAccount);
     }
 
-    public function forceDelete(BudgetManagementAccount $budgetManagementAccount): void
-    {
+    public function forceDelete(
+        BudgetManagementAccount $budgetManagementAccount,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): void {
         //set all according column cells to 00000
         /** @var Project $project */
-        foreach ($this->projectService->getAll() as $project) {
+        foreach ($projectService->getAll() as $project) {
             $firstColumnId = $project->table->columns()->orderBy('id')->first()->id;
 
             $project->table->mainPositions->each(
-                function (MainPosition $mainPosition) use ($firstColumnId, $budgetManagementAccount): void {
+                function (MainPosition $mainPosition) use (
+                    $firstColumnId,
+                    $budgetManagementAccount,
+                    $columnCellService
+                ): void {
                     $mainPosition->subPositions->each(
-                        function (SubPosition $subPosition) use ($firstColumnId, $budgetManagementAccount): void {
+                        function (SubPosition $subPosition) use (
+                            $firstColumnId,
+                            $budgetManagementAccount,
+                            $columnCellService
+                        ): void {
                             $subPosition->subPositionRows->each(
                                 function (SubPositionRow $subPositionRow) use (
                                     $firstColumnId,
-                                    $budgetManagementAccount
+                                    $budgetManagementAccount,
+                                    $columnCellService
                                 ): void {
                                     $columnCell = $subPositionRow->cells
                                         ->where('column_id', $firstColumnId)
                                         ->first();
 
                                     if ($columnCell->value === $budgetManagementAccount->account_number) {
-                                        $this->columnCellService->updateValue($columnCell, '00000');
+                                        $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }
                             );

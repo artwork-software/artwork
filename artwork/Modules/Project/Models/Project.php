@@ -46,6 +46,7 @@ use Laravel\Scout\Searchable;
  * @property string $budget_deadline
  * @property Table|null $table
  * @property Collection<User> $managerUsers
+ * @property Collection<ProjectFile> $project_files
  */
 class Project extends Model
 {

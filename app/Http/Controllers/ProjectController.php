@@ -1809,9 +1809,8 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
-                $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
-                    $project,
-                    $loadedProjectInformation
+                $loadedProjectInformation['BudgetInformations'] = $this->budgetService->getBudgetInformationsDto(
+                    $project
                 );
             }
         }

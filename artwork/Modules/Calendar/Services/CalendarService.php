@@ -2,19 +2,13 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Resources\ProjectCalendarShowEventResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\User;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+
 class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection

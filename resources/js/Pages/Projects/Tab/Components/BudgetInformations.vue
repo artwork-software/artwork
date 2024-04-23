@@ -8,7 +8,7 @@
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
-                :collecting-societies="loadedProjectInformation['BudgetInformations'].collectingSocieties"
+                :collecting-societies="loadedProjectInformation['BudgetInformations'].collecting_societies"
             />
         </div>
         <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
@@ -19,7 +19,7 @@
         </div>
         <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
         <hr class="my-10 border-darkGray">
-        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformations'].projectManagerIds.includes(this.$page.props.user.id)">
+        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformations'].project_manager_ids.includes(this.$page.props.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
@@ -75,8 +75,8 @@
                     @close-modal="closeContractUploadModal"
                     :project-id="project.id"
                     :budget-access="this.loadedProjectInformation['BudgetInformations'].access_budget"
-                    :contract-types="this.loadedProjectInformation['BudgetInformations'].contractTypes"
-                    :company-types="this.loadedProjectInformation['BudgetInformations'].companyTypes"
+                    :contract-types="this.loadedProjectInformation['BudgetInformations'].contract_types"
+                    :company-types="this.loadedProjectInformation['BudgetInformations'].company_types"
                     :currencies="this.loadedProjectInformation['BudgetInformations'].currencies"
                 />
             </div>
@@ -115,9 +115,9 @@
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
                 <div v-if="showMoneySources">
-                    <div v-if="this.loadedProjectInformation['BudgetInformations'].projectMoneySources?.length > 0">
+                    <div v-if="this.loadedProjectInformation['BudgetInformations'].project_money_sources?.length > 0">
                         <div class="w-full flex items-center mb-2 text-secondary"
-                             v-for="moneySource in this.loadedProjectInformation['BudgetInformations'].projectMoneySources">
+                             v-for="moneySource in this.loadedProjectInformation['BudgetInformations'].project_money_sources">
                             <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
                                   class="cursor-pointer hover:text-secondaryHover text-linkOnDarkColor  underline" :href="route('money_sources.show', {moneySource: moneySource.id})">
                                 {{moneySource.name}}

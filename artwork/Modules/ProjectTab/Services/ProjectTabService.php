@@ -71,11 +71,7 @@ readonly class ProjectTabService
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
         $calendarData = $this->calendarController->createCalendarData(
-            type: '',
             project: $project,
-            room: null,
-            startDate: null,
-            endDate: null,
             user: Auth::user()
         );
         $eventsAtAGlance = Collection::make();
@@ -88,11 +84,19 @@ readonly class ProjectTabService
                     ->get()
             )->collection->groupBy('room.id');
         }
-        return $this->createCalendarDto(
-            $calendarData,
-            $eventsAtAGlance,
-            $this->roomService->filterRooms($startDate, $endDate)->get(),
-            new CalendarEventCollectionResourceModel(
+
+        return (new CalendarDto())
+            ->setCalendar($calendarData['roomsWithEvents'])
+            ->setDateValue($calendarData['dateValue'])
+            ->setDays($calendarData['days'])
+            ->setSelectedDate($calendarData['selectedDate'])
+            ->setFilterOptions($calendarData["filterOptions"])
+            ->setPersonalFilters($calendarData['personalFilters'])
+            ->setEventsWithoutRoom($calendarData['eventsWithoutRoom'])
+            ->setUserFilters($calendarData['user_filters'])
+            ->setEventsAtAGlance($eventsAtAGlance)
+            ->setRooms($this->roomService->filterRooms($startDate, $endDate)->get())
+            ->setEvents(new CalendarEventCollectionResourceModel(
                 $calendarData['filterOptions']['areas'],
                 $calendarData['filterOptions']['projects'],
                 $calendarData['filterOptions']['eventTypes'],
@@ -100,31 +104,7 @@ readonly class ProjectTabService
                 $calendarData['filterOptions']['roomAttributes'],
                 $this->calendarController->getEventsOfInterval($startDate, $endDate, $project),
                 Filter::query()->where('user_id', Auth::id())->get(),
-            )
-        );
-    }
-
-    public function createCalendarDto(
-        array $calendarData,
-        Collection $eventsAtAGlance,
-        EloquentCollection $filteredRooms,
-        CalendarEventCollectionResourceModel $calendarEventCollectionResourceModel
-    ): CalendarDto {
-        $calendarDto = new CalendarDto();
-
-        $calendarDto->setCalendar($calendarData['roomsWithEvents']);
-        $calendarDto->setDateValue($calendarData['dateValue']);
-        $calendarDto->setDays($calendarData['days']);
-        $calendarDto->setSelectedDate($calendarData['selectedDate']);
-        $calendarDto->setFilterOptions($calendarData["filterOptions"]);
-        $calendarDto->setPersonalFilters($calendarData['personalFilters']);
-        $calendarDto->setEventsWithoutRoom($calendarData['eventsWithoutRoom']);
-        $calendarDto->setUserFilters($calendarData['user_filters']);
-        $calendarDto->setEventsAtAGlance($eventsAtAGlance);
-        $calendarDto->setRooms($filteredRooms);
-        $calendarDto->setEvents($calendarEventCollectionResourceModel);
-
-        return $calendarDto;
+            ));
     }
 
     public function getShiftTab(Project $project): ShiftsDto
@@ -216,36 +196,17 @@ readonly class ProjectTabService
             ];
         }
 
-        return $this->createShiftsDto(
-            $usersWithPlannedWorkingHours,
-            $freelancersWithPlannedWorkingHours,
-            $serviceProvidersWithPlannedWorkingHours,
-            $eventsWithRelevant,
-            Craft::all(),
-            Auth::user()->crafts->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            $this->shiftQualificationService->getAllOrderedByCreationDateAscending()
-        );
-    }
-
-    public function createShiftsDto(
-        array $usersWithPlannedWorkingHours,
-        array $freelancersWithPlannedWorkingHours,
-        array $serviceProvidersWithPlannedWorkingHours,
-        array $eventsWithRelevant,
-        EloquentCollection $crafts,
-        EloquentCollection $currentUserCrafts,
-        EloquentCollection $shiftQualifications
-    ): ShiftsDto {
-        $shiftsDto = new ShiftsDto();
-
-        $shiftsDto->setUsersForShifts($usersWithPlannedWorkingHours);
-        $shiftsDto->setFreelancersForShifts($freelancersWithPlannedWorkingHours);
-        $shiftsDto->setServiceProvidersForShifts($serviceProvidersWithPlannedWorkingHours);
-        $shiftsDto->setEventsWithRelevant($eventsWithRelevant);
-        $shiftsDto->setCrafts($crafts);
-        $shiftsDto->setCurrentUserCrafts($currentUserCrafts);
-        $shiftsDto->setShiftQualifications($shiftQualifications);
-
-        return $shiftsDto;
+        return (new ShiftsDto())
+            ->setUsersForShifts($usersWithPlannedWorkingHours)
+            ->setFreelancersForShifts($freelancersWithPlannedWorkingHours)
+            ->setServiceProvidersForShifts($serviceProvidersWithPlannedWorkingHours)
+            ->setEventsWithRelevant($eventsWithRelevant)
+            ->setCrafts(Craft::all())
+            ->setCurrentUserCrafts(
+                Auth::user()
+                    ->crafts
+                    ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
+            )
+            ->setShiftQualifications($this->shiftQualificationService->getAllOrderedByCreationDateAscending());
     }
 }

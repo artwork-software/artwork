@@ -48,6 +48,8 @@ use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
+use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
+use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
 use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
@@ -2728,14 +2730,20 @@ class ProjectController extends Controller
         MainPositionService $mainPositionService,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService
     ): RedirectResponse {
         $tableService->forceDelete(
             $table,
             $mainPositionService,
             $columnService,
             $sumCommentService,
-            $sumMoneySourceService
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService
         );
 
         return Redirect::back();
@@ -2743,18 +2751,42 @@ class ProjectController extends Controller
 
     public function deleteMainPosition(
         MainPosition $mainPosition,
-        MainPositionService $mainPositionService
+        MainPositionService $mainPositionService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService
     ): RedirectResponse {
-        $mainPositionService->forceDelete($mainPosition);
+        $mainPositionService->forceDelete(
+            $mainPosition,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService
+        );
 
         return Redirect::back();
     }
 
     public function deleteSubPosition(
         SubPosition $subPosition,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService
     ): RedirectResponse {
-        $subPositionService->forceDelete($subPosition);
+        $subPositionService->forceDelete(
+            $subPosition,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService
+        );
 
         return Redirect::back();
     }

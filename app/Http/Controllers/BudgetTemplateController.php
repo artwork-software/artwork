@@ -13,6 +13,9 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\SubPositionRowService;
+use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
+use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
 use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
@@ -230,7 +233,10 @@ class BudgetTemplateController extends Controller
         MainPositionService $mainPositionService,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService
     ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
@@ -240,7 +246,10 @@ class BudgetTemplateController extends Controller
             $mainPositionService,
             $columnService,
             $sumCommentService,
-            $sumMoneySourceService
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService
         );
     }
 }

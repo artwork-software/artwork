@@ -32,11 +32,30 @@ readonly class TableService
         MainPositionService $mainPositionService,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService
     ): void {
-        $table->mainPositions->each(function (MainPosition $mainPosition) use ($mainPositionService): void {
-            $mainPositionService->forceDelete($mainPosition);
-        });
+        $table->mainPositions->each(
+            function (MainPosition $mainPosition) use (
+                $mainPositionService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService
+            ): void {
+                $mainPositionService->forceDelete(
+                    $mainPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService
+                );
+            }
+        );
 
         $table->columns->each(
             function (Column $column) use ($columnService, $sumCommentService, $sumMoneySourceService): void {

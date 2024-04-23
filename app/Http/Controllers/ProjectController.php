@@ -54,8 +54,11 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Services\CommentService;
+use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -2548,7 +2551,12 @@ class ProjectController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService
     ): RedirectResponse {
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
@@ -2575,19 +2583,35 @@ class ProjectController extends Controller
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftServiceProviderService,
+            $changeService,
+            $commentService,
+            $checklistService,
+            $projectFileService,
+            $eventService
         );
 
         return Redirect::route('projects');
     }
 
-    public function forceDelete(int $id): RedirectResponse
-    {
+    public function forceDelete(
+        int $id,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        EventService $eventService,
+        ProjectFileService $projectFileService
+    ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
         if ($project) {
-            $this->projectService->forceDelete($project);
+            $this->projectService->forceDelete(
+                $project,
+                $commentService,
+                $checklistService,
+                $eventService,
+                $projectFileService
+            );
         }
 
         return Redirect::route('projects.trashed');
@@ -2598,7 +2622,11 @@ class ProjectController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2609,7 +2637,11 @@ class ProjectController extends Controller
                 $shiftsQualificationsService,
                 $shiftUserService,
                 $shiftFreelancerService,
-                $shiftServiceProviderService
+                $shiftServiceProviderService,
+                $commentService,
+                $checklistService,
+                $projectFileService,
+                $eventService
             );
         }
         return Redirect::route('projects.trashed');

@@ -18,11 +18,7 @@ use Illuminate\Support\Facades\Auth;
 class ProjectService
 {
     public function __construct(
-        private readonly ProjectRepository $projectRepository,
-        private readonly EventService $eventService,
-        private readonly ProjectFileService $projectFileService,
-        private readonly ChecklistService $checklistService,
-        private readonly CommentService $commentService
+        private readonly ProjectRepository $projectRepository
     ) {
     }
 
@@ -68,32 +64,26 @@ class ProjectService
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService
+        ChangeService $changeService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService
     ): bool {
-        // delete project files
-        $this->projectFileService->deleteAll($project->project_files);
-
-        // delete all events and their shifts
-        $this->eventService->deleteAll(
+        $projectFileService->deleteAll($project->project_files);
+        $eventService->deleteAll(
             $project->events,
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
             $shiftServiceProviderService
         );
+        $checklistService->deleteAll($project->checklists);
+        $projectFileService->deleteAll($project->project_files);
+        $commentService->deleteAll($project->comments, $changeService);
 
-        // delete all checklists and their tasks
-        $this->checklistService->deleteAll($project->checklists);
-
-        // Soft delete all project files
-        $this->projectFileService->deleteAll($project->project_files);
-
-        $this->commentService->deleteAll($project->comments, $changeService);
-
-        // Soft delete the budget with all its relations
         $table = $project->table;
         if ($table) {
-            // Soft delete the budget
             $mainPositions = $table->mainPositions()->get();
             foreach ($mainPositions as $mainPosition) {
                 $subPositions = $mainPosition->subPositions()->get();
@@ -134,20 +124,22 @@ class ProjectService
 
         $project->contracts()->delete();
 
-        // soft delete the shift relevant event types form the pivot table
         $this->updateShiftRelevanteEventTypesForSoftDelete($project, now());
 
-        // soft delete the shift contact users
         $this->updateShiftContact($project, now());
 
-        // soft delete the money sources form money_source_project pivot table
         $this->updateMoneySources($project, now());
 
         return $project->delete();
     }
 
-    public function forceDelete(Project $project): bool
-    {
+    public function forceDelete(
+        Project $project,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        EventService $eventService,
+        ProjectFileService $projectFileService
+    ): bool {
         // detach the shift relevant event types from the pivot table
         $this->deleteShiftRelevanteEventTypes($project);
 
@@ -158,16 +150,16 @@ class ProjectService
         $this->deleteMoneySources($project);
 
         // force delete the checklists and their tasks
-        $this->checklistService->forceDeleteAll($project->checklists);
+        $checklistService->forceDeleteAll($project->checklists);
 
         // force delete the events and their shifts
-        $this->eventService->forceDeleteAll($project->events);
+        $eventService->forceDeleteAll($project->events);
 
         // force delete the project files
-        $this->projectFileService->forceDeleteAll($project->project_files);
+        $projectFileService->forceDeleteAll($project->project_files);
 
         // force delete the comments
-        $this->commentService->forceDeleteAll($project->comments);
+        $commentService->forceDeleteAll($project->comments);
 
         // Soft delete the budget with all its relations
         $table = $project->table;
@@ -220,13 +212,17 @@ class ProjectService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService
     ): bool {
         // restore
         $project->restore();
 
         // restore events
-        $this->eventService->restoreAll(
+        $eventService->restoreAll(
             $project->events()->with(['shifts'])->onlyTrashed()->get(),
             $shiftsQualificationsService,
             $shiftUserService,
@@ -235,7 +231,7 @@ class ProjectService
         );
 
         // restore checklists and their tasks
-        $this->checklistService->restoreAll($project->checklists()->onlyTrashed()->get());
+        $checklistService->restoreAll($project->checklists()->onlyTrashed()->get());
 
         $table = $project->table()->onlyTrashed()->first();
         $table->restore();
@@ -279,11 +275,11 @@ class ProjectService
         }
 
         // soft delete the comments
-        $this->commentService->restoreAll($project->comments()->get());
+        $commentService->restoreAll($project->comments()->get());
         //$project->comments()->restore();
 
         // restore the project files
-        $this->projectFileService->restoreAll($project->project_files()->get());
+        $projectFileService->restoreAll($project->project_files()->get());
 
         // restore the contracts
         $project->contracts()->restore();
@@ -302,6 +298,28 @@ class ProjectService
         return true;
     }
 
+    public function getAll(): Collection
+    {
+        return $this->projectRepository->getAll();
+    }
+
+    public function getByName(string $query): Collection
+    {
+        return $this->projectRepository->getByName($query);
+    }
+
+    public function updateShiftContact(Project $project, $time): void
+    {
+        $project->shift_contact()
+            ->updateExistingPivot(
+                $project->shift_contact()
+                    ->get()
+                    ->pluck('id')
+                    ->toArray(),
+                ['deleted_at' => $time]
+            );
+    }
+
     private function updateShiftRelevanteEventTypesForSoftDelete(Project $project, $time): void
     {
         $project->shiftRelevantEventTypes()
@@ -317,18 +335,6 @@ class ProjectService
     private function deleteShiftRelevanteEventTypes(Project $project): void
     {
         $project->shiftRelevantEventTypes()->detach();
-    }
-
-    public function updateShiftContact(Project $project, $time): void
-    {
-        $project->shift_contact()
-            ->updateExistingPivot(
-                $project->shift_contact()
-                    ->get()
-                    ->pluck('id')
-                    ->toArray(),
-                ['deleted_at' => $time]
-            );
     }
 
     private function deleteShiftContact(Project $project): void
@@ -351,15 +357,5 @@ class ProjectService
     private function deleteMoneySources(Project $project): void
     {
         $project->moneySources()->detach();
-    }
-
-    public function getAll(): Collection
-    {
-        return $this->projectRepository->getAll();
-    }
-
-    public function getByName(string $query): Collection
-    {
-        return $this->projectRepository->getByName($query);
     }
 }

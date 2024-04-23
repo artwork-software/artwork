@@ -9,10 +9,10 @@ use Artwork\Modules\SageApiSettings\Repositories\SageApiSettingsRepository;
 use Carbon\Carbon;
 use Throwable;
 
-class SageApiSettingsService
+readonly class SageApiSettingsService
 {
     public function __construct(
-        private readonly SageApiSettingsRepository $sageApiSettingsRepository
+        private SageApiSettingsRepository $sageApiSettingsRepository
     ) {
     }
 

@@ -6,7 +6,7 @@ use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\ProjectFileRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class ProjectFileService
+readonly class ProjectFileService
 {
     public function __construct(
         private ProjectFileRepository $projectFileRepository

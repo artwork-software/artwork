@@ -23,7 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
-class Sage100Service
+readonly class Sage100Service
 {
     private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 

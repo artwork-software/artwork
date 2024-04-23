@@ -8,10 +8,13 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\PresetShift\Services\PresetShiftService;
 use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
 use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\Timeline\Services\TimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -86,19 +89,33 @@ class ShiftPresetController extends Controller
     }
 
     public function import(
-        Request     $request,
-        Event       $event,
-        ShiftPreset $shiftPreset
-    ): void
-    {
+        Request $request,
+        Event $event,
+        ShiftPreset $shiftPreset,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        ShiftQualificationService $shiftQualificationService,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): void {
         if (!$request->boolean('all')) {
-            $this->eventService->importShiftPreset($event, $shiftPreset);
+            $this->eventService->importShiftPreset(
+                $event,
+                $shiftPreset,
+                $timelineService,
+                $shiftService,
+                $shiftQualificationService,
+                $shiftsQualificationsService
+            );
             return;
         }
 
         $this->eventService->importShiftPresetForEventsOfProjectByEventType(
             $shiftPreset,
-            $event->project_id
+            $event->project_id,
+            $timelineService,
+            $shiftService,
+            $shiftQualificationService,
+            $shiftsQualificationsService
         );
     }
 }

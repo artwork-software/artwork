@@ -3,15 +3,21 @@
 namespace Artwork\Modules\Project\Services;
 
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\Timeline\Services\TimelineService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -68,7 +74,13 @@ class ProjectService
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
-        EventService $eventService
+        EventService $eventService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
     ): bool {
         $projectFileService->deleteAll($project->project_files);
         $eventService->deleteAll(
@@ -76,7 +88,14 @@ class ProjectService
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
         );
         $checklistService->deleteAll($project->checklists);
         $projectFileService->deleteAll($project->project_files);
@@ -138,7 +157,12 @@ class ProjectService
         CommentService $commentService,
         ChecklistService $checklistService,
         EventService $eventService,
-        ProjectFileService $projectFileService
+        ProjectFileService $projectFileService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService
     ): bool {
         // detach the shift relevant event types from the pivot table
         $this->deleteShiftRelevanteEventTypes($project);
@@ -153,7 +177,14 @@ class ProjectService
         $checklistService->forceDeleteAll($project->checklists);
 
         // force delete the events and their shifts
-        $eventService->forceDeleteAll($project->events);
+        $eventService->forceDeleteAll(
+            $project->events,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
 
         // force delete the project files
         $projectFileService->forceDeleteAll($project->project_files);
@@ -216,7 +247,12 @@ class ProjectService
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
-        EventService $eventService
+        EventService $eventService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService
     ): bool {
         // restore
         $project->restore();
@@ -227,7 +263,12 @@ class ProjectService
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService
         );
 
         // restore checklists and their tasks

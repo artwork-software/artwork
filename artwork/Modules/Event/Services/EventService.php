@@ -27,43 +27,39 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class EventService
 {
-    public function __construct(
-        private ChangeService $changeService,
-        private EventRepository $eventRepository,
-        private ShiftService $shiftService,
-        private ShiftsQualificationsService $shiftsQualificationsService,
-        private ShiftQualificationService $shiftQualificationService,
-        private TimelineService $timelineService,
-        private NotificationService $notificationService,
-        private SubEventService $subEventService,
-        private EventCommentService $eventCommentService,
-        private ProjectTabService $projectTabService
-    ) {
+    public function __construct(private EventRepository $eventRepository)
+    {
     }
 
-    public function importShiftPreset(Event $event, ShiftPreset $shiftPreset): void
-    {
-        $this->timelineService->forceDeleteTimelines($event->timelines);
+    public function importShiftPreset(
+        Event $event,
+        ShiftPreset $shiftPreset,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        ShiftQualificationService $shiftQualificationService,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): void {
+        $timelineService->forceDeleteTimelines($event->timelines);
         foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
-            $this->timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event->id);
+            $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event->id);
         }
 
-        $this->shiftService->forceDeleteShifts($event->shifts);
+        $shiftService->forceDeleteShifts($event->shifts);
         /** @var PresetShift $presetShift */
         foreach ($shiftPreset->shifts as $presetShift) {
-            $shift = $this->shiftService->createFromShiftPresetShiftForEvent($presetShift, $event->id);
+            $shift = $shiftService->createFromShiftPresetShiftForEvent($presetShift, $event->id);
 
             /** @var PresetShiftShiftsQualifications $presetShiftShiftsQualification */
             foreach ($presetShift->shiftsQualifications as $presetShiftShiftsQualification) {
                 if (
-                    !$this->shiftQualificationService->isStillAvailable(
+                    !$shiftQualificationService->isStillAvailable(
                         $presetShiftShiftsQualification->shift_qualification_id
                     )
                 ) {
                     continue;
                 }
 
-                $this->shiftsQualificationsService->createShiftsQualificationForShift(
+                $shiftsQualificationsService->createShiftsQualificationForShift(
                     $shift->id,
                     [
                         'shift_qualification_id' => $presetShiftShiftsQualification->shift_qualification_id,
@@ -76,7 +72,11 @@ readonly class EventService
 
     public function importShiftPresetForEventsOfProjectByEventType(
         ShiftPreset $shiftPreset,
-        int $projectId
+        int $projectId,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        ShiftQualificationService $shiftQualificationService,
+        ShiftsQualificationsService $shiftsQualificationsService
     ): void {
         foreach (
             $this->eventRepository->getEventsByProjectIdAndEventTypeId(
@@ -84,7 +84,14 @@ readonly class EventService
                 $shiftPreset->event_type_id
             ) as $eventByProjectIdAndEventTypeId
         ) {
-            $this->importShiftPreset($eventByProjectIdAndEventTypeId, $shiftPreset);
+            $this->importShiftPreset(
+                $eventByProjectIdAndEventTypeId,
+                $shiftPreset,
+                $timelineService,
+                $shiftService,
+                $shiftQualificationService,
+                $shiftsQualificationsService
+            );
         }
     }
 
@@ -93,11 +100,18 @@ readonly class EventService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
     ): void {
         if (!empty($event->project_id)) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
+            $changeService->saveFromBuilder(
+                $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
                     ->setModelId($event->project->id)
@@ -105,23 +119,23 @@ readonly class EventService
             );
         }
 
-        $this->createEventDeletedNotificationsForProjectManagers($event);
-        $this->createEventDeletedNotification($event);
+        $this->createEventDeletedNotificationsForProjectManagers($event, $notificationService, $projectTabService);
+        $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
 
-        $this->eventCommentService->deleteEventComments($event->comments);
-        $this->timelineService->deleteTimelines($event->timelines);
-        $this->shiftService->deleteShifts(
+        $eventCommentService->deleteEventComments($event->comments);
+        $timelineService->deleteTimelines($event->timelines);
+        $shiftService->deleteShifts(
             $event->shifts,
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
             $shiftServiceProviderService
         );
-        $this->subEventService->deleteSubEvents($event->subEvents);
+        $subEventService->deleteSubEvents($event->subEvents);
 
         broadcast(new OccupancyUpdated())->toOthers();
 
-        $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+        $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
         $this->eventRepository->delete($event);
     }
@@ -131,13 +145,20 @@ readonly class EventService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
+                $changeService->saveFromBuilder(
+                    $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
                         ->setModelId($event->project->id)
@@ -145,23 +166,23 @@ readonly class EventService
                 );
             }
 
-            $this->createEventDeletedNotificationsForProjectManagers($event);
-            $this->createEventDeletedNotification($event);
+            $this->createEventDeletedNotificationsForProjectManagers($event, $notificationService, $projectTabService);
+            $this->createEventDeletedNotification($event, $notificationService, $projectTabService);
 
-            $this->eventCommentService->deleteEventComments($event->comments);
-            $this->timelineService->deleteTimelines($event->timelines);
-            $this->shiftService->deleteShifts(
+            $eventCommentService->deleteEventComments($event->comments);
+            $timelineService->deleteTimelines($event->timelines);
+            $shiftService->deleteShifts(
                 $event->shifts,
                 $shiftsQualificationsService,
                 $shiftUserService,
                 $shiftFreelancerService,
                 $shiftServiceProviderService
             );
-            $this->subEventService->deleteSubEvents($event->subEvents);
+            $subEventService->deleteSubEvents($event->subEvents);
 
             broadcast(new OccupancyUpdated())->toOthers();
 
-            $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
             $this->eventRepository->delete($event);
         }
@@ -172,42 +193,53 @@ readonly class EventService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService
     ): void {
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
+            $changeService->saveFromBuilder(
+                $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
                     ->setModelId($event->project->id)
                     ->setTranslationKey('Schedule restored')
             );
         }
-        $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
-        $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-        $this->shiftService->restoreShifts(
+        $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+        $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+        $shiftService->restoreShifts(
             $event->shifts()->onlyTrashed()->get(),
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
             $shiftServiceProviderService
         );
-        $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+        $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
         broadcast(new OccupancyUpdated())->toOthers();
     }
 
-    public function forceDeleteAll(Collection|array $events): void
-    {
+    public function forceDeleteAll(
+        Collection|array $events,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService
+    ): void {
         /** @var Event $event */
         foreach ($events as $event) {
-            $this->eventCommentService->deleteEventComments($event->comments);
-            $this->timelineService->forceDeleteTimelines($event->timelines);
-            $this->shiftService->forceDeleteShifts($event->shifts);
-            $this->subEventService->forceDeleteSubEvents($event->subEvents);
+            $eventCommentService->deleteEventComments($event->comments);
+            $timelineService->forceDeleteTimelines($event->timelines);
+            $shiftService->forceDeleteShifts($event->shifts);
+            $subEventService->forceDeleteSubEvents($event->subEvents);
 
-            $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+            $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
             $this->eventRepository->forceDelete($event);
         }
@@ -218,14 +250,19 @@ readonly class EventService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
             $this->eventRepository->restore($event);
             if (!empty($event->project_id)) {
-                $this->changeService->saveFromBuilder(
-                    $this->changeService
+                $changeService->saveFromBuilder(
+                    $changeService
                         ->createBuilder()
                         ->setModelClass(Project::class)
                         ->setModelId($event->project->id)
@@ -233,30 +270,33 @@ readonly class EventService
                 );
             }
 
-            $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
-            $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
-            $this->shiftService->restoreShifts(
+            $eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+            $timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+            $shiftService->restoreShifts(
                 $event->shifts()->onlyTrashed()->get(),
                 $shiftsQualificationsService,
                 $shiftUserService,
                 $shiftFreelancerService,
                 $shiftServiceProviderService
             );
-            $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+            $subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
             broadcast(new OccupancyUpdated())->toOthers();
         }
     }
 
-    private function createEventDeletedNotificationsForProjectManagers(Event $event): void
-    {
+    private function createEventDeletedNotificationsForProjectManagers(
+        Event $event,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
         if (is_null($event->project) || $event->project->managerUsers->isEmpty()) {
             return;
         }
 
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+        $notificationService->setIcon('blue');
+        $notificationService->setPriority(1);
+        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
 
         foreach ($event->project->managerUsers as $projectManager) {
             if ($projectManager->id === $event->creator->id) {
@@ -264,13 +304,13 @@ readonly class EventService
             }
 
             $notificationTitle = __('notification.event.deleted', [], $projectManager->language);
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setBroadcastMessage([
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setBroadcastMessage([
                 'id' => random_int(1, 1000000),
                 'type' => 'error',
                 'message' => $notificationTitle
             ]);
-            $this->notificationService->setDescription([
+            $notificationService->setDescription([
                 1 => [
                     'type' => 'link',
                     'title' => $event->room?->name,
@@ -288,7 +328,7 @@ readonly class EventService
                         'projects.tab',
                         [
                             $event->project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
                         ]
                     ) : null
                 ],
@@ -299,24 +339,27 @@ readonly class EventService
                     'href' => null
                 ]
             ]);
-            $this->notificationService->setNotificationTo($projectManager);
-            $this->notificationService->createNotification();
+            $notificationService->setNotificationTo($projectManager);
+            $notificationService->createNotification();
         }
     }
 
-    private function createEventDeletedNotification(Event $event): void
-    {
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+    private function createEventDeletedNotification(
+        Event $event,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
+        $notificationService->setIcon('blue');
+        $notificationService->setPriority(1);
+        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
         $notificationTitle = __('notification.event.deleted', [], $event->creator->language);
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setBroadcastMessage([
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setBroadcastMessage([
             'id' => random_int(1, 1000000),
             'type' => 'error',
             'message' => $notificationTitle
         ]);
-        $this->notificationService->setDescription([
+        $notificationService->setDescription([
             1 => [
                 'type' => 'link',
                 'title' => $event->room->name ?? '',
@@ -334,7 +377,7 @@ readonly class EventService
                     'projects.tab',
                     [
                         $event->project->id,
-                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
                     ]
                 ) : null
             ],
@@ -345,7 +388,7 @@ readonly class EventService
                 'href' => null
             ]
         ]);
-        $this->notificationService->setNotificationTo($event->creator);
-        $this->notificationService->createNotification();
+        $notificationService->setNotificationTo($event->creator);
+        $notificationService->createNotification();
     }
 }

@@ -55,6 +55,7 @@ use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -66,10 +67,12 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -2599,7 +2602,12 @@ class ProjectController extends Controller
         CommentService $commentService,
         ChecklistService $checklistService,
         EventService $eventService,
-        ProjectFileService $projectFileService
+        ProjectFileService $projectFileService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2610,7 +2618,12 @@ class ProjectController extends Controller
                 $commentService,
                 $checklistService,
                 $eventService,
-                $projectFileService
+                $projectFileService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService
             );
         }
 
@@ -2626,7 +2639,12 @@ class ProjectController extends Controller
         CommentService $commentService,
         ChecklistService $checklistService,
         ProjectFileService $projectFileService,
-        EventService $eventService
+        EventService $eventService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2641,7 +2659,12 @@ class ProjectController extends Controller
                 $commentService,
                 $checklistService,
                 $projectFileService,
-                $eventService
+                $eventService,
+                $changeService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService
             );
         }
         return Redirect::route('projects.trashed');

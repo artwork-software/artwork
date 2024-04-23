@@ -30,6 +30,7 @@ use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -40,6 +41,7 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -1888,7 +1890,14 @@ class EventController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
     ): RedirectResponse {
         $this->authorize('delete', $event);
 
@@ -1897,7 +1906,14 @@ class EventController extends Controller
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
         );
 
         return Redirect::back();
@@ -1914,7 +1930,14 @@ class EventController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
     ): void {
         $this->authorize('delete', $event);
 
@@ -1943,7 +1966,14 @@ class EventController extends Controller
             $shiftsQualificationsService,
             $shiftUserService,
             $shiftFreelancerService,
-            $shiftServiceProviderService
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
         );
     }
 

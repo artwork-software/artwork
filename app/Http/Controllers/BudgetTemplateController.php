@@ -11,8 +11,10 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\RowCommentService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
 use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
@@ -183,7 +185,12 @@ class BudgetTemplateController extends Controller
         MainPositionService $mainPositionService,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): RedirectResponse {
         $project = Project::find($request->project_id);
 
@@ -192,7 +199,12 @@ class BudgetTemplateController extends Controller
             $mainPositionService,
             $columnService,
             $sumCommentService,
-            $sumMoneySourceService
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService
         );
 
         $this->createTemplate($table->name, $table, false, $project->id);
@@ -205,7 +217,12 @@ class BudgetTemplateController extends Controller
         MainPositionService $mainPositionService,
         ColumnService $columnService,
         SumCommentService $sumCommentService,
-        SumMoneySourceService $sumMoneySourceService
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): void {
         if ($request->template_project_id !== $request->project_id) {
             $templateProject = Project::find($request->template_project_id);
@@ -216,7 +233,12 @@ class BudgetTemplateController extends Controller
                 $mainPositionService,
                 $columnService,
                 $sumCommentService,
-                $sumMoneySourceService
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService
             );
 
             $this->createTemplate(
@@ -236,7 +258,9 @@ class BudgetTemplateController extends Controller
         SumMoneySourceService $sumMoneySourceService,
         SubPositionVerifiedService $subPositionVerifiedService,
         SubPositionSumDetailService $subPositionSumDetailService,
-        SubPositionRowService $subPositionRowService
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
@@ -249,7 +273,9 @@ class BudgetTemplateController extends Controller
             $sumMoneySourceService,
             $subPositionVerifiedService,
             $subPositionSumDetailService,
-            $subPositionRowService
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService
         );
     }
 }

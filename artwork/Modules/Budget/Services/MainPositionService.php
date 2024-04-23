@@ -41,7 +41,9 @@ class MainPositionService
         SumMoneySourceService $sumMoneySourceService,
         SubPositionVerifiedService $subPositionVerifiedService,
         SubPositionSumDetailService $subPositionSumDetailService,
-        SubPositionRowService $subPositionRowService
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): void {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
             $this->mainPositionVerifiedService->forceDelete($mainPositionVerified);
@@ -57,7 +59,9 @@ class MainPositionService
                 $sumMoneySourceService,
                 $subPositionVerifiedService,
                 $subPositionSumDetailService,
-                $subPositionRowService
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService
             ): void {
                 $this->subPositionService->forceDelete(
                     $subPosition,
@@ -65,7 +69,9 @@ class MainPositionService
                     $sumMoneySourceService,
                     $subPositionVerifiedService,
                     $subPositionSumDetailService,
-                    $subPositionRowService
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService
                 );
             }
         );

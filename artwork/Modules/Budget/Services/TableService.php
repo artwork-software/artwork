@@ -35,7 +35,9 @@ readonly class TableService
         SumMoneySourceService $sumMoneySourceService,
         SubPositionVerifiedService $subPositionVerifiedService,
         SubPositionSumDetailService $subPositionSumDetailService,
-        SubPositionRowService $subPositionRowService
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): void {
         $table->mainPositions->each(
             function (MainPosition $mainPosition) use (
@@ -44,7 +46,9 @@ readonly class TableService
                 $sumMoneySourceService,
                 $subPositionVerifiedService,
                 $subPositionSumDetailService,
-                $subPositionRowService
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService
             ): void {
                 $mainPositionService->forceDelete(
                     $mainPosition,
@@ -52,7 +56,9 @@ readonly class TableService
                     $sumMoneySourceService,
                     $subPositionVerifiedService,
                     $subPositionSumDetailService,
-                    $subPositionRowService
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService
                 );
             }
         );

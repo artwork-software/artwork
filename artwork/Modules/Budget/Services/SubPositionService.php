@@ -20,7 +20,9 @@ readonly class SubPositionService
         SumMoneySourceService $sumMoneySourceService,
         SubPositionVerifiedService $subPositionVerifiedService,
         SubPositionSumDetailService $subPositionSumDetailService,
-        SubPositionRowService $subPositionRowService
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService
     ): void {
         if (($subPositionVerified = $subPosition->verified) instanceof SubPositionVerified) {
             $subPositionVerifiedService->forceDelete($subPositionVerified);
@@ -41,8 +43,12 @@ readonly class SubPositionService
         );
 
         $subPosition->subPositionRows->each(
-            function (SubPositionRow $subPositionRow) use ($subPositionRowService): void {
-                $subPositionRowService->forceDelete($subPositionRow);
+            function (SubPositionRow $subPositionRow) use (
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService
+            ): void {
+                $subPositionRowService->forceDelete($subPositionRow, $rowCommentService, $columnCellService);
             }
         );
 

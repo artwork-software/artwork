@@ -26,11 +26,7 @@ readonly class ShiftUserService
         private ShiftUserRepository $shiftUserRepository,
         private ShiftFreelancerRepository $shiftFreelancerRepository,
         private ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private ShiftCountService $shiftCountService,
-        private VacationConflictService $vacationConflictService,
-        private AvailabilityConflictService $availabilityConflictService,
-        private ChangeService $changeService
+        private ShiftsQualificationsRepository $shiftsQualificationsRepository
     ) {
     }
 
@@ -39,6 +35,10 @@ readonly class ShiftUserService
         int $userId,
         int $shiftQualificationId,
         NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService,
         array|null $seriesShiftData = null
     ): void {
         $shiftUserPivot = $this->shiftUserRepository->createForShift(
@@ -47,14 +47,22 @@ readonly class ShiftUserService
             $shiftQualificationId
         );
 
-        $this->shiftCountService->handleShiftUsersShiftCount($shift, $userId);
+        $shiftCountService->handleShiftUsersShiftCount($shift, $userId);
 
         /** @var User $user */
         $user = $shiftUserPivot->user;
         $this->assignUserToProjectIfNecessary($shift, $user);
 
         if ($shift->is_committed) {
-            $this->handleAssignedToShift($shift, $user, $shiftUserPivot->shiftQualification, $notificationService);
+            $this->handleAssignedToShift(
+                $shift,
+                $user,
+                $shiftUserPivot->shiftQualification,
+                $notificationService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
         }
 
         if (
@@ -69,7 +77,11 @@ readonly class ShiftUserService
                 $seriesShiftData['dayOfWeek'],
                 $userId,
                 $shiftQualificationId,
-                $notificationService
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
             );
         }
     }
@@ -78,39 +90,13 @@ readonly class ShiftUserService
         Shift $shift,
         User $user,
         ShiftQualification $shiftQualification,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
-        $this->createAssignedToShiftHistoryEntry($shift, $user, $shiftQualification);
-        $this->createAssignedToShiftNotification($shift, $user, $notificationService);
-        if (
-            $user->vacations()
-                ->where('date', '<=', $shift->event_start_day)
-                ->where('date', '>=', $shift->event_end_day)
-                ->count() > 0
-        ) {
-            $this->createVacationConflictNotification($shift, $user, $notificationService);
-        }
-        $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
-        $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
-        $this->checkVacationConflicts($shift, $user, $notificationService);
-        $this->checkAvailabilityConflicts($shift, $user);
-    }
-
-    private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
-    {
-        $project = $shift->event->project;
-        if (!$project->users->contains($user->id)) {
-            $project->users()->attach($user->id);
-        }
-    }
-
-    private function createAssignedToShiftHistoryEntry(
-        Shift $shift,
-        User $user,
-        ShiftQualification $shiftQualification
-    ): void {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setType('shift')
                 ->setModelClass(Shift::class)
@@ -124,6 +110,28 @@ readonly class ShiftUserService
                     $shiftQualification->name
                 ])
         );
+        $this->createAssignedToShiftNotification($shift, $user, $notificationService);
+        if (
+            $user->vacations()
+                ->where('date', '<=', $shift->event_start_day)
+                ->where('date', '>=', $shift->event_end_day)
+                ->count() > 0
+        ) {
+            $this->createVacationConflictNotification($shift, $user, $notificationService);
+        }
+        $this->checkShortBreakAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
+        $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
+
+        $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
+        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
+    }
+
+    private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
+    {
+        $project = $shift->event->project;
+        if (!$project->users->contains($user->id)) {
+            $project->users()->attach($user->id);
+        }
     }
 
     private function createAssignedToShiftNotification(
@@ -492,7 +500,11 @@ readonly class ShiftUserService
         string $dayOfWeek,
         int $userId,
         int $shiftQualificationId,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
         /** @var Shift $shiftBetweenDates */
         foreach (
@@ -537,7 +549,16 @@ readonly class ShiftUserService
             ) {
                 //call assignToShift without seriesShiftData to make sure only this user is assigned to shift and same
                 //logic is applied for each user
-                $this->assignToShift($shiftBetweenDates, $userId, $shiftQualificationId, $notificationService);
+                $this->assignToShift(
+                    $shiftBetweenDates,
+                    $userId,
+                    $shiftQualificationId,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
             }
         }
     }
@@ -561,7 +582,11 @@ readonly class ShiftUserService
     public function removeFromShift(
         ShiftUser|int $usersPivot,
         bool $removeFromSingleShift,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
         $shiftUserPivot = !$usersPivot instanceof ShiftUser ?
             $this->shiftUserRepository->getById($usersPivot) :
@@ -573,10 +598,17 @@ readonly class ShiftUserService
         $user = $shiftUserPivot->user;
 
         $this->forceDelete($shiftUserPivot);
-        $this->shiftCountService->handleShiftUsersShiftCount($shift, $user->id);
+        $shiftCountService->handleShiftUsersShiftCount($shift, $user->id);
 
         if ($shift->is_committed) {
-            $this->handleRemovedFromShift($shift, $user, $notificationService);
+            $this->handleRemovedFromShift(
+                $shift,
+                $user,
+                $notificationService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
         }
 
         if (!$removeFromSingleShift) {
@@ -590,19 +622,47 @@ readonly class ShiftUserService
                 //deleted
                 $shiftUserPivotByUuid = $this->shiftRepository->getShiftUserPivotById($shiftByUuid, $user->id);
                 if ($shiftUserPivotByUuid instanceof ShiftUser) {
-                    $this->removeFromShift($shiftUserPivotByUuid, true, $notificationService);
+                    $this->removeFromShift(
+                        $shiftUserPivotByUuid,
+                        true,
+                        $notificationService,
+                        $shiftCountService,
+                        $vacationConflictService,
+                        $availabilityConflictService,
+                        $changeService
+                    );
                 }
             }
         }
     }
 
-    public function removeAllUsersFromShift(Shift $shift, NotificationService $notificationService): void
-    {
+    public function removeAllUsersFromShift(
+        Shift $shift,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
         $shift->users()->each(
-            function (User $user) use ($notificationService): void {
+            function (User $user) use (
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            ): void {
                 //call remove from shift with removeFromSingleShift set to true making sure same logic is applied
                 //for each pivot which is deleted
-                $this->removeFromShift($user->pivot, true, $notificationService);
+                $this->removeFromShift(
+                    $user->pivot,
+                    true,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
             }
         );
     }
@@ -610,7 +670,11 @@ readonly class ShiftUserService
     public function removeFromShiftByUserIdAndShiftId(
         int $userId,
         int $shiftId,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
         $this->removeFromShift(
             $this->shiftUserRepository->findByUserIdAndShiftId(
@@ -618,22 +682,24 @@ readonly class ShiftUserService
                 $shiftId
             ),
             true,
-            $notificationService
+            $notificationService,
+            $shiftCountService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
         );
     }
 
-    private function handleRemovedFromShift(Shift $shift, User $user, NotificationService $notificationService): void
-    {
-        $this->createRemovedFromShiftHistoryEntry($shift, $user);
-        $this->createRemovedFromShiftNotification($shift, $user, $notificationService);
-        $this->checkVacationConflicts($shift, $user, $notificationService);
-        $this->checkAvailabilityConflicts($shift, $user);
-    }
-
-    private function createRemovedFromShiftHistoryEntry(Shift $shift, User $user): void
-    {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+    private function handleRemovedFromShift(
+        Shift $shift,
+        User $user,
+        NotificationService $notificationService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setType('shift')
                 ->setModelClass(Shift::class)
@@ -646,10 +712,7 @@ readonly class ShiftUserService
                     $shift->event->eventName
                 ])
         );
-    }
 
-    private function createRemovedFromShiftNotification(Shift $shift, User $user): void
-    {
         $notificationService->setProjectId($shift->event->project->id);
         $notificationService->setEventId($shift->event->id);
         $notificationService->setShiftId($shift->id);
@@ -682,16 +745,9 @@ readonly class ShiftUserService
         $notificationService->setNotificationTo($user);
         $notificationService->createNotification();
         $notificationService->clearNotificationData();
-    }
 
-    private function checkVacationConflicts(Shift $shift, User $user, NotificationService $notificationService): void
-    {
-        $this->vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
-    }
-
-    private function checkAvailabilityConflicts(Shift $shift, User $user): void
-    {
-        $this->availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
+        $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
+        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
     }
 
     public function delete(ShiftUser $shiftUser): bool

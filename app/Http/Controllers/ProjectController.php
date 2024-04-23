@@ -43,6 +43,8 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
+use Artwork\Modules\Budget\Services\CellCalculationService;
+use Artwork\Modules\Budget\Services\CellCommentService;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionDetailsService;
@@ -1126,7 +1128,11 @@ class ProjectController extends Controller
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionService $subPositionService,
-        BudgetSumDetailsService $budgetSumDetailsService
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable(
@@ -1143,7 +1149,11 @@ class ProjectController extends Controller
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
             $subPositionService,
-            $budgetSumDetailsService
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
         );
         $this->budgetService->generateBasicBudgetValues($project);
 
@@ -1266,7 +1276,11 @@ class ProjectController extends Controller
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionSumDetailService $subPositionSumDetailService,
         BudgetSumDetailsService $budgetSumDetailsService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
         $columnService->forceDelete(
             $column,
@@ -1275,7 +1289,11 @@ class ProjectController extends Controller
             $mainPositionDetailsService,
             $subPositionSumDetailService,
             $budgetSumDetailsService,
-            $columnCellService
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
         );
 
         return Redirect::back();
@@ -2751,9 +2769,21 @@ class ProjectController extends Controller
         SubPositionRow $subPositionRow,
         SubPositionRowService $subPositionRowService,
         RowCommentService $rowCommentService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $subPositionRowService->forceDelete($subPositionRow, $rowCommentService, $columnCellService);
+        $subPositionRowService->forceDelete(
+            $subPositionRow,
+            $rowCommentService,
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }
@@ -2773,7 +2803,11 @@ class ProjectController extends Controller
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionService $subPositionService,
-        BudgetSumDetailsService $budgetSumDetailsService
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
         $tableService->forceDelete(
             $table,
@@ -2789,7 +2823,11 @@ class ProjectController extends Controller
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
             $subPositionService,
-            $budgetSumDetailsService
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
         );
 
         return Redirect::back();
@@ -2807,7 +2845,11 @@ class ProjectController extends Controller
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
         $mainPositionService->forceDelete(
             $mainPosition,
@@ -2820,7 +2862,11 @@ class ProjectController extends Controller
             $columnCellService,
             $mainPositionVerifiedService,
             $mainPositionDetailsService,
-            $subPositionService
+            $subPositionService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
         );
 
         return Redirect::back();
@@ -2835,7 +2881,11 @@ class ProjectController extends Controller
         SubPositionSumDetailService $subPositionSumDetailService,
         SubPositionRowService $subPositionRowService,
         RowCommentService $rowCommentService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
         $subPositionService->forceDelete(
             $subPosition,
@@ -2845,7 +2895,11 @@ class ProjectController extends Controller
             $subPositionSumDetailService,
             $subPositionRowService,
             $rowCommentService,
-            $columnCellService
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
         );
 
         return Redirect::back();

@@ -41,7 +41,11 @@ readonly class TableService
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionService $subPositionService,
-        BudgetSumDetailsService $budgetSumDetailsService
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): void {
         $table->mainPositions->each(
             function (MainPosition $mainPosition) use (
@@ -55,7 +59,11 @@ readonly class TableService
                 $columnCellService,
                 $mainPositionVerifiedService,
                 $mainPositionDetailsService,
-                $subPositionService
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
             ): void {
                 $mainPositionService->forceDelete(
                     $mainPosition,
@@ -68,7 +76,11 @@ readonly class TableService
                     $columnCellService,
                     $mainPositionVerifiedService,
                     $mainPositionDetailsService,
-                    $subPositionService
+                    $subPositionService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
                 );
             }
         );
@@ -81,7 +93,11 @@ readonly class TableService
                 $mainPositionDetailsService,
                 $subPositionSumDetailService,
                 $budgetSumDetailsService,
-                $columnCellService
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
             ): void {
                 $columnService->forceDelete(
                     $column,
@@ -90,7 +106,11 @@ readonly class TableService
                     $mainPositionDetailsService,
                     $subPositionSumDetailService,
                     $budgetSumDetailsService,
-                    $columnCellService
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
                 );
             }
         );

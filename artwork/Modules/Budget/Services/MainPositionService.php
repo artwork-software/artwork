@@ -42,7 +42,11 @@ readonly class MainPositionService
         ColumnCellService $columnCellService,
         MainPositionVerifiedService $mainPositionVerifiedService,
         MainPositionDetailsService $mainPositionDetailsService,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): void {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
             $mainPositionVerifiedService->forceDelete($mainPositionVerified);
@@ -71,7 +75,11 @@ readonly class MainPositionService
                 $subPositionRowService,
                 $rowCommentService,
                 $columnCellService,
-                $subPositionService
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
             ): void {
                 $subPositionService->forceDelete(
                     $subPosition,
@@ -81,7 +89,11 @@ readonly class MainPositionService
                     $subPositionSumDetailService,
                     $subPositionRowService,
                     $rowCommentService,
-                    $columnCellService
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
                 );
             }
         );

@@ -72,7 +72,11 @@ readonly class ColumnService
         MainPositionDetailsService $mainPositionDetailsService,
         SubPositionSumDetailService $subPositionSumDetailService,
         BudgetSumDetailsService $budgetSumDetailsService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): void {
         $column->subPositionSumDetails->each(
             function (SubPositionSumDetail $subPositionSumDetail) use (
@@ -108,9 +112,23 @@ readonly class ColumnService
             }
         );
 
-        $column->cells->each(function (ColumnCell $columnCell) use ($columnCellService): void {
-            $columnCellService->forceDelete($columnCell);
-        });
+        $column->cells->each(
+            function (ColumnCell $columnCell) use (
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnCellService->forceDelete(
+                    $columnCell,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
 
         $this->columnRepository->forceDelete($column);
     }

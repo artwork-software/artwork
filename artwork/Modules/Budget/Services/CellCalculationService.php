@@ -11,6 +11,11 @@ readonly class CellCalculationService
     {
     }
 
+    public function delete(CellCalculation $cellCalculation): void
+    {
+        $this->cellCalculationsRepository->delete($cellCalculation);
+    }
+
     public function forceDelete(CellCalculation $cellCalculation): void
     {
         $this->cellCalculationsRepository->forceDelete($cellCalculation);

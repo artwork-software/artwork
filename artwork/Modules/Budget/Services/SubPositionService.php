@@ -22,7 +22,11 @@ readonly class SubPositionService
         SubPositionSumDetailService $subPositionSumDetailService,
         SubPositionRowService $subPositionRowService,
         RowCommentService $rowCommentService,
-        ColumnCellService $columnCellService
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): void {
         if (($subPositionVerified = $subPosition->verified) instanceof SubPositionVerified) {
             $subPositionVerifiedService->forceDelete($subPositionVerified);
@@ -46,9 +50,21 @@ readonly class SubPositionService
             function (SubPositionRow $subPositionRow) use (
                 $subPositionRowService,
                 $rowCommentService,
-                $columnCellService
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
             ): void {
-                $subPositionRowService->forceDelete($subPositionRow, $rowCommentService, $columnCellService);
+                $subPositionRowService->forceDelete(
+                    $subPositionRow,
+                    $rowCommentService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
             }
         );
 

@@ -1101,10 +1101,18 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function resetTable(Project $project, TableService $tableService): RedirectResponse
-    {
+    public function resetTable(
+        Project $project,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
-        $budgetTemplateController->deleteOldTable($project);
+        $budgetTemplateController->deleteOldTable(
+            $project,
+            $mainPositionService,
+            $columnService
+        );
         //$this->generateBasicBudgetValues($project);
         $this->budgetService->generateBasicBudgetValues($project);
 
@@ -2700,9 +2708,17 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function deleteTable(Table $table, TableService $tableService): RedirectResponse
-    {
-        $tableService->forceDelete($table);
+    public function deleteTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): RedirectResponse {
+        $tableService->forceDelete(
+            $table,
+            $mainPositionService,
+            $columnService
+        );
 
         return Redirect::back();
     }

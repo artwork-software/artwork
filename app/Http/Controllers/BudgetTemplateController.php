@@ -11,6 +11,8 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
@@ -170,24 +172,39 @@ class BudgetTemplateController extends Controller
         });
     }
 
-    public function useTemplate(Table $table, Request $request): RedirectResponse
-    {
+    public function useTemplate(
+        Table $table,
+        Request $request,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): RedirectResponse {
         $project = Project::find($request->project_id);
 
-        $this->deleteOldTable($project);
+        $this->deleteOldTable(
+            $project,
+            $mainPositionService,
+            $columnService
+        );
 
         $this->createTemplate($table->name, $table, false, $project->id);
 
         return Redirect::back();
     }
 
-    public function useTemplateFromProject(Request $request): void
-    {
+    public function useTemplateFromProject(
+        Request $request,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): void {
         if ($request->template_project_id !== $request->project_id) {
             $templateProject = Project::find($request->template_project_id);
             $project = Project::find($request->project_id);
 
-            $this->deleteOldTable($project);
+            $this->deleteOldTable(
+                $project,
+                $mainPositionService,
+                $columnService
+            );
 
             $this->createTemplate(
                 $templateProject->name . ' Budgettabelle',
@@ -198,11 +215,18 @@ class BudgetTemplateController extends Controller
         }
     }
 
-    public function deleteOldTable(Project $project): void
-    {
+    public function deleteOldTable(
+        Project $project,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
 
-        $this->tableService->forceDelete($tableToDelete);
+        $this->tableService->forceDelete(
+            $tableToDelete,
+            $mainPositionService,
+            $columnService
+        );
     }
 }

@@ -9,28 +9,17 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\TableRepository;
 use Artwork\Modules\Project\Models\Project;
 
-class TableService
+readonly class TableService
 {
-    /**
-     * @param TableRepository $tableRepository
-     */
-    public function __construct(
-        private readonly TableRepository $tableRepository,
-        private readonly MainPositionService $mainPositionService,
-        private readonly ColumnService $columnService
-    ) {
+    public function __construct(private TableRepository $tableRepository)
+    {
     }
 
-
-    /**
-     * function createTableByProject
-     * @param Project $project
-     * @param string $name
-     * @param bool $isTemplate
-     * @return Table|Model
-     */
-    public function createTableInProject(Project $project, string $name, bool $isTemplate): Table|Model
-    {
+    public function createTableInProject(
+        Project $project,
+        string $name,
+        bool $isTemplate
+    ): Table|Model {
         $table = new Table();
         $table->project_id = $project->id;
         $table->name = $name;
@@ -38,14 +27,17 @@ class TableService
         return $this->tableRepository->save($table);
     }
 
-    public function forceDelete(Table $table): void
-    {
-        $table->mainPositions->each(function (MainPosition $mainPosition): void {
-            $this->mainPositionService->forceDelete($mainPosition);
+    public function forceDelete(
+        Table $table,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService
+    ): void {
+        $table->mainPositions->each(function (MainPosition $mainPosition) use ($mainPositionService): void {
+            $mainPositionService->forceDelete($mainPosition);
         });
 
-        $table->columns->each(function (Column $column): void {
-            $this->columnService->forceDelete($column);
+        $table->columns->each(function (Column $column) use ($columnService): void {
+            $columnService->forceDelete($column);
         });
 
         $this->tableRepository->forceDelete($table);

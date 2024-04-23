@@ -50,7 +50,8 @@ class VacationController extends Controller
         } else {
             $this->availabilityService->create(
                 $user,
-                $createVacationRequest
+                $createVacationRequest,
+                $this->notificationService
             );
         }
     }
@@ -72,7 +73,8 @@ class VacationController extends Controller
         } else {
             $this->availabilityService->create(
                 $freelancer,
-                $createVacationRequest
+                $createVacationRequest,
+                $this->notificationService
             );
         }
     }
@@ -163,12 +165,14 @@ class VacationController extends Controller
                     if ($vacation->vacationer_type === User::class) {
                         $this->availabilityService->create(
                             available: User::find($vacation->vacationer_id),
-                            data: $updateVacationRequest
+                            data: $updateVacationRequest,
+                            notificationService: $this->notificationService
                         );
                     } elseif ($vacation->vacationer_type === Freelancer::class) {
                         $this->availabilityService->create(
                             available: Freelancer::find($vacation->vacationer_id),
-                            data: $updateVacationRequest
+                            data: $updateVacationRequest,
+                            notificationService: $this->notificationService
                         );
                     }
                     $this->vacationService->delete($vacation);

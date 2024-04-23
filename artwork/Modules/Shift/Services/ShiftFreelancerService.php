@@ -110,7 +110,12 @@ readonly class ShiftFreelancerService
             null,
             $freelancer
         );
-        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, null, $freelancer);
+        $availabilityConflictService->checkAvailabilityConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
+        );
     }
 
     private function handleSeriesShiftData(
@@ -339,7 +344,12 @@ readonly class ShiftFreelancerService
             null,
             $freelancer
         );
-        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, null, $freelancer);
+        $availabilityConflictService->checkAvailabilityConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
+        );
     }
 
     public function delete(ShiftFreelancer $shiftFreelancer): bool

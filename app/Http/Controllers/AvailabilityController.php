@@ -64,7 +64,8 @@ class AvailabilityController extends Controller
             } else {
                 $this->availabilityService->update(
                     data: $updateAvailabilityRequest,
-                    availability: $availability
+                    availability: $availability,
+                    notificationService: $this->notificationService
                 );
             }
         }

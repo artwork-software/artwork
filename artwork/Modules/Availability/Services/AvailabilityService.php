@@ -5,6 +5,7 @@ namespace Artwork\Modules\Availability\Services;
 use App\Http\Controllers\SchedulingController;
 use App\Models\Freelancer;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Repositories\AvailabilityRepository;
@@ -26,8 +27,11 @@ readonly class AvailabilityService
 
     //@todo: fix phpcs error - fix complexity
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function create(Available $available, $data): Available|Model
-    {
+    public function create(
+        Available $available,
+        $data,
+        NotificationService $notificationService
+    ): Available|Model {
         /** @var Availability $firstAvailable */
         $firstAvailable = $available->availabilities()->create([
             'start_time' => $data->start_time,
@@ -40,10 +44,11 @@ readonly class AvailabilityService
 
         $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
             $firstAvailable->date,
+            $notificationService,
             $firstAvailable->available_type === User::class ?
                 User::find($firstAvailable->available_id) : null,
             $firstAvailable->available_type === Freelancer::class ?
-                Freelancer::find($firstAvailable->available_id) : null,
+                Freelancer::find($firstAvailable->available_id) : null
         );
 
         if ($data->is_series) {
@@ -72,6 +77,7 @@ readonly class AvailabilityService
                     ]);
                     $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
+                        $notificationService,
                         $newAvailability->available_type === User::class ?
                             User::find($newAvailability->available_id) : null,
                         $newAvailability->available_type === Freelancer::class ?
@@ -93,6 +99,7 @@ readonly class AvailabilityService
                     ]);
                     $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
                         $newAvailability->date,
+                        $notificationService,
                         $newAvailability->available_type === User::class ?
                             User::find($newAvailability->available_id) : null,
                         $newAvailability->available_type === Freelancer::class ?
@@ -108,8 +115,11 @@ readonly class AvailabilityService
         return $firstAvailable;
     }
 
-    public function update($data, Availability $availability): Availability|Model
-    {
+    public function update(
+        $data,
+        Availability $availability,
+        NotificationService $notificationService
+    ): Availability|Model {
         $availability->start_time = $data->start_time;
         $availability->end_time = $data->end_time;
         $availability->date = $data->date;
@@ -121,6 +131,7 @@ readonly class AvailabilityService
 
         $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
             $availability->date,
+            $notificationService,
             $availability->available_type === User::class ?
                 User::find($availability->available_id) : null,
             $availability->available_type === Freelancer::class ?

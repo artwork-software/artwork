@@ -123,7 +123,7 @@ readonly class ShiftUserService
         $this->checkUserInMoreThanTenShiftsAndCreateNotificationsIfNecessary($shift, $user, $notificationService);
 
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
-        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
+        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
@@ -747,7 +747,7 @@ readonly class ShiftUserService
         $notificationService->clearNotificationData();
 
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
-        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
+        $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
     }
 
     public function delete(ShiftUser $shiftUser): bool

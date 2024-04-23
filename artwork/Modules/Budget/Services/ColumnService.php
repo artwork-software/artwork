@@ -107,8 +107,16 @@ readonly class ColumnService
         );
 
         $column->budgetSumDetails->each(
-            function (BudgetSumDetails $budgetSumDetails) use ($budgetSumDetailsService): void {
-                $budgetSumDetailsService->forceDelete($budgetSumDetails);
+            function (BudgetSumDetails $budgetSumDetails) use (
+                $budgetSumDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $budgetSumDetailsService->forceDelete(
+                    $budgetSumDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
             }
         );
 

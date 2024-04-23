@@ -7,23 +7,25 @@ use Artwork\Modules\Budget\Models\SumComment;
 use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\Budget\Repositories\MainPositionDetailsRepository;
 
-class MainPositionDetailsService
+readonly class MainPositionDetailsService
 {
-    public function __construct(
-        private readonly MainPositionDetailsRepository $mainPositionDetailsRepository,
-        private readonly SumCommentService $sumCommentService,
-        private readonly SumMoneySourceService $sumMoneySourceService
-    ) {
+    public function __construct(private MainPositionDetailsRepository $mainPositionDetailsRepository)
+    {
     }
 
-    public function forceDelete(MainPositionDetails $mainPositionDetails): void
-    {
-        $mainPositionDetails->comments->each(function (SumComment $sumComment): void {
-            $this->sumCommentService->forceDelete($sumComment);
-        });
+    public function forceDelete(
+        MainPositionDetails $mainPositionDetails,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService
+    ): void {
+        $mainPositionDetails->comments->each(
+            function (SumComment $sumComment) use ($sumCommentService): void {
+                $sumCommentService->forceDelete($sumComment);
+            }
+        );
 
         if (($sumMoneySource = $mainPositionDetails->sumMoneySource) instanceof SumMoneySource) {
-            $this->sumMoneySourceService->forceDelete($sumMoneySource);
+            $sumMoneySourceService->forceDelete($sumMoneySource);
         }
 
         $this->mainPositionDetailsRepository->forceDelete($mainPositionDetails);

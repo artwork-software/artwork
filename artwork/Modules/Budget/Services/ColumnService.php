@@ -88,9 +88,18 @@ class ColumnService
             }
         );
 
-        $column->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
-            $this->mainPositionDetailsService->forceDelete($mainPositionDetails);
-        });
+        $column->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $this->mainPositionDetailsService->forceDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
         $column->budgetSumDetails->each(function (BudgetSumDetails $budgetSumDetails): void {
             $this->budgetSumDetailsService->forceDelete($budgetSumDetails);

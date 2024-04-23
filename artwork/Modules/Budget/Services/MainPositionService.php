@@ -50,9 +50,15 @@ readonly class MainPositionService
 
         $mainPosition->mainPositionSumDetails->each(
             function (MainPositionDetails $mainPositionDetails) use (
-                $mainPositionDetailsService
+                $mainPositionDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
             ): void {
-                $mainPositionDetailsService->forceDelete($mainPositionDetails);
+                $mainPositionDetailsService->forceDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
             }
         );
 

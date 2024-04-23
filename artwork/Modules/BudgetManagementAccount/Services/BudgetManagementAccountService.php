@@ -37,7 +37,7 @@ readonly class BudgetManagementAccountService
 
     public function searchByRequest(Request $request): Collection
     {
-        return $this->budgetManagementAccountRepository->getByCostUnitNumberOrTitleAndIsAccountForRevenue(
+        return $this->budgetManagementAccountRepository->getByAccountNumberOrTitleAndIsAccountForRevenue(
             $request->get('search'),
             $request->boolean('is_account_for_revenue')
         );

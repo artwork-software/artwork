@@ -2,9 +2,8 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use App\Models\MoneySourceFile;
 use App\Models\User;
-use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Project\Models\Project;
@@ -68,7 +67,8 @@ class ProjectService
         ShiftsQualificationsService $shiftsQualificationsService,
         ShiftUserService $shiftUserService,
         ShiftFreelancerService $shiftFreelancerService,
-        ShiftServiceProviderService $shiftServiceProviderService
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService
     ): bool {
         // delete project files
         $this->projectFileService->deleteAll($project->project_files);
@@ -88,7 +88,7 @@ class ProjectService
         // Soft delete all project files
         $this->projectFileService->deleteAll($project->project_files);
 
-        $this->commentService->deleteAll($project->comments);
+        $this->commentService->deleteAll($project->comments, $changeService);
 
         // Soft delete the budget with all its relations
         $table = $project->table;

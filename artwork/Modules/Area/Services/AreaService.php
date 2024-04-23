@@ -9,11 +9,11 @@ use Artwork\Modules\Room\Services\RoomService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class AreaService
+readonly class AreaService
 {
     public function __construct(
-        private readonly AreaRepository $areaRepository,
-        private readonly RoomService $roomService
+        private AreaRepository $areaRepository,
+        private RoomService $roomService
     ) {
     }
 

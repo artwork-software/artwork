@@ -11,11 +11,11 @@ use Artwork\Modules\Availability\Repositories\AvailabilityConflictRepository;
 use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 
-class AvailabilityConflictService
+readonly class AvailabilityConflictService
 {
     public function __construct(
-        private readonly AvailabilityConflictRepository $availabilityConflictRepository,
-        protected readonly NotificationService $notificationService,
+        private AvailabilityConflictRepository $availabilityConflictRepository,
+        protected NotificationService $notificationService,
     ) {
     }
 

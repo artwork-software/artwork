@@ -6,46 +6,39 @@ use Artwork\Modules\Permission\Repositories\PermissionRepository;
 use Artwork\Modules\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
 
-class PermissionService
+readonly class PermissionService
 {
-    public function __construct(private readonly PermissionRepository $permissionRepository)
+    public function __construct(private PermissionRepository $permissionRepository)
     {
     }
 
     public function save(Permission $permission): Permission
     {
-        return $this->permissionRepository->save($permission);
-    }
+        /** @var Permission $permission */
+        $permission = $this->permissionRepository->save($permission);
 
-    public function create(
-        string      $name,
-        string      $guardName,
-        string|null $nameDe,
-        string|null $group,
-        string|null $tooltipText,
-        bool        $checked = false,
-    ): Permission
-    {
-        return $this->createFromArray([
-            'name' => $name,
-            'guard_name' => $guardName,
-            'name_de' => $nameDe,
-            'group' => $group,
-            'tooltipText' => $tooltipText,
-            'checked' => $checked
-        ]);
+        return $permission;
     }
 
     public function createFromArray(array $data): Permission
     {
-        return $this->permissionRepository->createFromArray($data);
+        /** @var Permission $permission */
+        $permission = $this->permissionRepository->createFromArray($data);
+
+        return $permission;
     }
 
     public function findByName(string $name): Permission|null
     {
-        return $this->permissionRepository->getByName($name);
+        /** @var Permission|null $permission */
+        $permission = $this->permissionRepository->getByName($name);
+
+        return $permission;
     }
 
+    /**
+     * @return array<mixed, mixed>
+     */
     public function getTableFields(): array
     {
         return DB::select('DESCRIBE `permissions`');

@@ -56,11 +56,10 @@ trait ModifiesBaseData
 
     private function modifyEntry(
         PermissionService|RoleService $service,
-        array                         $data,
-        array                         $tableFields,
-        array                         $exclusionKeys
-    ): void
-    {
+        array $data,
+        array $tableFields,
+        array $exclusionKeys
+    ): void {
         $validKeys = $this->getValidKeys($tableFields, $exclusionKeys);
         $data = Arr::only($data, $validKeys);
         try {

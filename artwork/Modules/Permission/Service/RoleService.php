@@ -7,42 +7,38 @@ use Artwork\Modules\Permission\Repositories\RoleRepository;
 use Artwork\Modules\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
 
-class RoleService
+readonly class RoleService
 {
-    public function __construct(private readonly RoleRepository $roleRepository)
+    public function __construct(private RoleRepository $roleRepository)
     {
     }
 
     public function save(Role $role): Role
     {
-        return $this->roleRepository->save($role);
-    }
+        $this->roleRepository->save($role);
 
-    public function create(
-        string      $name,
-        string      $guardName,
-        string|null $nameDe,
-        string|null $tooltipText,
-    ): Permission
-    {
-        return $this->createFromArray([
-            'name' => $name,
-            'guard_name' => $guardName,
-            'name_de' => $nameDe,
-            'tooltipText' => $tooltipText,
-        ]);
+        return $role;
     }
 
     public function createFromArray(array $data): Role
     {
-        return $this->roleRepository->createFromArray($data);
+        /** @var Role $role */
+        $role = $this->roleRepository->createFromArray($data);
+
+        return $role;
     }
 
     public function findByName(string $name): Role|null
     {
-        return $this->roleRepository->getByName($name);
+        /** @var Role|null $role */
+        $role = $this->roleRepository->getByName($name);
+
+        return $role;
     }
 
+    /**
+     * @return array<mixed, mixed>
+     */
     public function getTableFields(): array
     {
         return DB::select('DESCRIBE `roles`');

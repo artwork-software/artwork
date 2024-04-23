@@ -6,11 +6,10 @@ use Artwork\Modules\DayService\Models\DayService;
 use Artwork\Modules\DayService\Repositories\DayServiceRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class DayServicesService
+readonly class DayServicesService
 {
-    public function __construct(
-        private readonly DayServiceRepository $dayServiceRepository
-    ) {
+    public function __construct(private DayServiceRepository $dayServiceRepository)
+    {
     }
 
     public function getAll(): Collection

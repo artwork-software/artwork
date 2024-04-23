@@ -19,11 +19,11 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
 
-class ChecklistService
+readonly class ChecklistService
 {
     public function __construct(
-        private readonly ChecklistRepository $checklistRepository,
-        private readonly TaskService $taskService
+        private ChecklistRepository $checklistRepository,
+        private TaskService $taskService
     ) {
     }
 

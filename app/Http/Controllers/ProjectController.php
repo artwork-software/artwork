@@ -2734,7 +2734,8 @@ class ProjectController extends Controller
         TimelineService $timelineService,
         ShiftService $shiftService,
         SubEventService $subEventService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        TaskService $taskService
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2750,7 +2751,8 @@ class ProjectController extends Controller
                 $timelineService,
                 $shiftService,
                 $subEventService,
-                $notificationService
+                $notificationService,
+                $taskService
             );
         }
 
@@ -2771,7 +2773,8 @@ class ProjectController extends Controller
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
         ShiftService $shiftService,
-        SubEventService $subEventService
+        SubEventService $subEventService,
+        TaskService $taskService
     ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2791,7 +2794,8 @@ class ProjectController extends Controller
                 $eventCommentService,
                 $timelineService,
                 $shiftService,
-                $subEventService
+                $subEventService,
+                $taskService
             );
         }
         return Redirect::route('projects.trashed');

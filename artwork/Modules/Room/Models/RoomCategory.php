@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Room\Models;
 
-use App\Models\RoomRoomCategoryMapping;
+use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

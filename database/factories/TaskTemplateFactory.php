@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\ChecklistTemplate;
-use App\Models\TaskTemplate;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TaskTemplateFactory extends Factory

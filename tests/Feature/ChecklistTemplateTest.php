@@ -1,11 +1,11 @@
 <?php
 
-use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Task;
-use App\Models\TaskTemplate;
 use App\Models\User;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {

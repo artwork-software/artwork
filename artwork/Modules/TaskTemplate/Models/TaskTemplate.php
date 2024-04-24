@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\TaskTemplate\Models;
 
+use App\Models\ChecklistTemplate;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -35,7 +37,12 @@ class TaskTemplate extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function checklist_template(): BelongsTo
     {
-        return $this->belongsTo(ChecklistTemplate::class, 'checklist_template_id');
+        return $this->belongsTo(
+            ChecklistTemplate::class,
+            'checklist_template_id',
+            'id',
+            'checklist_templates'
+        );
     }
 
     //@todo: fix phpcs error - refactor function name to taskUsers

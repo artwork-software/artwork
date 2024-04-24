@@ -11,7 +11,6 @@ use App\Models\Genre;
 use App\Models\Invitation;
 use App\Models\Sector;
 use App\Models\ServiceProvider as ServiceProviderModel;
-use App\Models\TaskTemplate;
 use App\Models\User;
 use App\Policies\AreaPolicy;
 use App\Policies\CategoryPolicy;
@@ -44,13 +43,14 @@ use Artwork\Modules\BudgetManagementCostUnit\Policies\BudgetManagementCostUnitPo
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-use Artwork\Modules\GeneralSettings\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 

@@ -3,11 +3,11 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\ProjectController;
-use App\Models\CostCenter;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;

@@ -106,20 +106,24 @@
                         </div>
                         <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
                             <div v-for="user in filteredUsers">
-                                <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :expected-hours="user.expectedWorkingHours" :type="user.type"/>
+                                <DragElement :item="user.element"
+                                             :plannedHours="user.plannedWorkingHours"
+                                             :expected-hours="user.expectedWorkingHours"
+                                             :type="user.type"
+                                />
                             </div>
                         </div>
                     </div>
                 </transition>
-                <div class="xsDark" v-if="eventsWithRelevant?.length === 0 ?? loadedProjectInformation['ShiftTab']?.eventsWithRelevant?.length === 0">
+                <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
                     {{ $t('So far, there are no shift-relevant dates for this project.') }}
                 </div>
-                <SingleRelevantEvent v-for="event in eventsWithRelevant ?? loadedProjectInformation['ShiftTab']?.eventsWithRelevant"
-                                     :crafts="crafts ?? loadedProjectInformation['ShiftTab']?.crafts"
-                                     :currentUserCrafts="currentUserCrafts ?? loadedProjectInformation['ShiftTab']?.currentUserCrafts"
-                                     :event="event "
-                                     :event-types="eventTypes ?? headerObject?.eventTypes"
-                                     :shift-qualifications="shiftQualifications ?? loadedProjectInformation['ShiftTab']?.shiftQualifications"
+                <SingleRelevantEvent v-for="event in loadedProjectInformation['ShiftTab'].events_with_relevant"
+                                     :crafts="loadedProjectInformation['ShiftTab'].crafts"
+                                     :currentUserCrafts="loadedProjectInformation['ShiftTab'].current_user_crafts"
+                                     :event="event"
+                                     :event-types="headerObject.eventTypes"
+                                     :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
                 />
             </div>
@@ -145,12 +149,8 @@ import IconLib from "@/mixins/IconLib.vue";
 export default defineComponent({
     name: "ShiftTab",
     props: [
-        'eventsWithRelevant',
-        'crafts',
-        'users',
-        'eventTypes',
-        'currentUserCrafts',
-        'shiftQualifications','loadedProjectInformation', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts', 'headerObject'
+        'loadedProjectInformation',
+        'headerObject',
     ],
     mixins: [Permissions, IconLib],
     components: {
@@ -188,16 +188,8 @@ export default defineComponent({
         dropUsers(){
             const users = [];
 
-            if(this.usersForShifts) {
-                this.usersForShifts.forEach((user) => {
-                    users.push({
-                        element: user.user,
-                        type: 0,
-                        plannedWorkingHours: user.plannedWorkingHours,
-                    })
-                })
-            } else if(this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab']?.usersForShifts.forEach((user) => {
+            if (this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab'].users_for_shifts.forEach((user) => {
                     users.push({
                         element: user.user,
                         type: 0,
@@ -206,16 +198,8 @@ export default defineComponent({
                 })
             }
 
-            if(this.freelancersForShifts) {
-                this.freelancersForShifts.forEach((freelancer) => {
-                    users.push({
-                        element: freelancer.freelancer,
-                        type: 1,
-                        plannedWorkingHours: freelancer.plannedWorkingHours,
-                    })
-                })
-            } else if(this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab']?.freelancersForShifts.forEach((freelancer) => {
+            if (this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab'].freelancers_for_shifts.forEach((freelancer) => {
                     users.push({
                         element: freelancer.freelancer,
                         type: 1,
@@ -224,16 +208,8 @@ export default defineComponent({
                 })
             }
 
-            if(this.serviceProvidersForShifts) {
-                this.serviceProvidersForShifts.forEach((service_provider) => {
-                    users.push({
-                        element: service_provider.service_provider,
-                        type: 2,
-                        plannedWorkingHours: service_provider.plannedWorkingHours,
-                    })
-                })
-            } else if(this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab']?.serviceProvidersForShifts.forEach((service_provider) => {
+            if (this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab'].service_providers_for_shifts.forEach((service_provider) => {
                     users.push({
                         element: service_provider.service_provider,
                         type: 2,
@@ -246,27 +222,16 @@ export default defineComponent({
         },
         conflictMessage(){
             let conflicts = [];
-            if(this.eventsWithRelevant){
-                this.eventsWithRelevant.forEach(event => {
-                    event.shifts.forEach(shift => {
-                        shift.users.forEach(user => {
-                            if(user.formatted_vacation_days?.includes(shift.event_start_day)){
-                                conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
-                            }
-                        })
+
+            this.loadedProjectInformation['ShiftTab'].events_with_relevant.forEach(event => {
+                event.shifts.forEach(shift => {
+                    shift.users.forEach(user => {
+                        if(user.formatted_vacation_days?.includes(shift.event_start_day)){
+                            conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
+                        }
                     })
                 })
-            } else {
-                this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.forEach(event => {
-                    event.shifts.forEach(shift => {
-                        shift.users.forEach(user => {
-                            if(user.formatted_vacation_days?.includes(shift.event_start_day)){
-                                conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
-                            }
-                        })
-                    })
-                })
-            }
+            });
 
             return conflicts;
         },
@@ -296,11 +261,9 @@ export default defineComponent({
             return users;
         },
         hasUncommittedShift() {
-            if (this.eventsWithRelevant) {
-                return this.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
-            } else {
-                return this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
-            }
+            return this.loadedProjectInformation['ShiftTab']?.events_with_relevant.some(
+                event => event.shifts.find(shift => shift.is_committed === false)
+            );
         }
     },
     mounted() {
@@ -308,15 +271,11 @@ export default defineComponent({
     },
     methods: {
         checkCommitted(){
-            if(this.eventsWithRelevant){
-                return eventsWithRelevant?.length > 0;
-            } else if(this.loadedProjectInformation['ShiftTab']) {
-                return this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant?.length > 0;
-            }
+            return this.loadedProjectInformation['ShiftTab'].events_with_relevant?.length > 0;
         },
         projectMembers: function () {
             let projectMemberArray = [];
-            this.project.users.forEach(member => {
+            this.headerObject.project.users.forEach(member => {
                     projectMemberArray.push(member.id)
                 }
             )
@@ -332,8 +291,10 @@ export default defineComponent({
         usePage,
         updateCommitmentOfShifts() {
             this.$inertia.patch(route('update.shift.commitment'), {
-                project_id: this.$page.props.project.id,
-                shifts: this.eventsWithRelevant.flatMap(event => event.shifts.map(shift => shift.id)),
+                project_id: this.headerObject.project.id,
+                shifts: this.loadedProjectInformation['ShiftTab']?.events_with_relevant.flatMap(
+                    event => event.shifts.map(shift => shift.id)
+                ),
                 is_committed: this.hasUncommittedShift,
                 committing_user_id: this.$page.props.user.id
             }, {

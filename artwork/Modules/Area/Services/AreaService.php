@@ -9,12 +9,10 @@ use Artwork\Modules\Room\Services\RoomService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class AreaService
+readonly class AreaService
 {
-    public function __construct(
-        private readonly AreaRepository $areaRepository,
-        private readonly RoomService $roomService
-    ) {
+    public function __construct(private AreaRepository $areaRepository)
+    {
     }
 
     public function updateByRequest(Area $area, Request $request): Area|Model
@@ -35,7 +33,7 @@ class AreaService
         return $this->areaRepository->delete($area);
     }
 
-    public function duplicateByAreaModel(Area $area): void
+    public function duplicateByAreaModel(Area $area, RoomService $roomService): void
     {
         $new_area = $area->replicate();
         $new_area->name = '(Kopie) ' . $area->name;
@@ -43,7 +41,7 @@ class AreaService
         $this->areaRepository->save($new_area);
 
         foreach ($area->rooms as $room) {
-            $new_room = $this->roomService->duplicateByRoomModelWithoutArea($room);
+            $new_room = $roomService->duplicateByRoomModelWithoutArea($room);
             $new_room->created_at = Carbon::now();
             $new_area->rooms()->save($new_room);
         }

@@ -11,14 +11,10 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\MainPositionRepository;
 
-class MainPositionService
+readonly class MainPositionService
 {
-    public function __construct(
-        private readonly MainPositionRepository $mainPositionRepository,
-        private readonly SubPositionService $subPositionService,
-        private readonly MainPositionVerifiedService $mainPositionVerifiedService,
-        private readonly MainPositionDetailsService $mainPositionDetailsService
-    ) {
+    public function __construct(private MainPositionRepository $mainPositionRepository)
+    {
     }
 
     public function createMainPosition(
@@ -35,19 +31,72 @@ class MainPositionService
         return $this->mainPositionRepository->save($mainPosition);
     }
 
-    public function forceDelete(MainPosition $mainPosition): void
-    {
+    public function forceDelete(
+        MainPosition $mainPosition,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
-            $this->mainPositionVerifiedService->forceDelete($mainPositionVerified);
+            $mainPositionVerifiedService->forceDelete($mainPositionVerified);
         }
 
-        $mainPosition->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
-            $this->mainPositionDetailsService->forceDelete($mainPositionDetails);
-        });
+        $mainPosition->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $mainPositionDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $mainPositionDetailsService->forceDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
-        $mainPosition->subPositions->each(function (SubPosition $subPosition): void {
-            $this->subPositionService->forceDelete($subPosition);
-        });
+        $mainPosition->subPositions->each(
+            function (SubPosition $subPosition) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $subPositionService->forceDelete(
+                    $subPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
 
         $this->mainPositionRepository->forceDelete($mainPosition);
     }

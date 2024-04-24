@@ -6,9 +6,9 @@ use App\Builders\EventBuilder;
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -17,18 +17,13 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
-class RoomService
+readonly class RoomService
 {
-    public function __construct(
-        private readonly RoomRepository $roomRepository,
-        private readonly NotificationService $notificationService,
-        private readonly NewHistoryService $history
-    ) {
-        $this->history->setModel(Room::class);
+    public function __construct(private RoomRepository $roomRepository)
+    {
     }
 
     public function delete(Room $room): bool
@@ -141,30 +136,6 @@ class RoomService
             )->orderBy('position');
     }
 
-    public function createByRequest(Request $request): Room
-    {
-        $room = new Room();
-        $room->fill($request->only('name', 'description', 'area_id', 'room_type_id'));
-        $this->roomRepository->save($room);
-        $room->categories()->sync($request->categories);
-        $room->attributes()->sync($request->attributes);
-        $room->adjoiningRooms()->sync($request->adjoiningRooms);
-        $room->roomAdmins()->sync($request->roomAdmins);
-        $this->roomRepository->save($room);
-        $this->history->createHistory($room->id, 'Room created');
-        return $room;
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldTemporary
-     * @param $newTemporary
-     * @param $oldStartDate
-     * @param $newStartDate
-     * @param $oldEndDate
-     * @param $newEndDate
-     * @return void
-     */
     public function checkTemporaryChanges(
         $roomId,
         $oldTemporary,
@@ -172,33 +143,45 @@ class RoomService
         $oldStartDate,
         $newStartDate,
         $oldEndDate,
-        $newEndDate
+        $newEndDate,
+        ChangeService $changeService
     ): void {
         if ($oldTemporary && !$newTemporary) {
-            $this->history->createHistory($roomId, 'Temporary time period deleted');
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Temporary time period deleted')
+            );
             return;
         }
         if ($newTemporary && !$oldTemporary) {
-            $this->history->createHistory($roomId, 'Temporary time period added');
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Temporary time period added')
+            );
             return;
         }
 
         // add check if temporary not changed
         if ($oldTemporary && $newTemporary) {
             if ($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate) {
-                $this->history->createHistory($roomId, 'Temporary time period changed');
-                return;
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Temporary time period changed')
+                );
             }
         }
     }
 
-    /**
-     * @param $roomId
-     * @param $oldCategories
-     * @param $newCategories
-     * @return void
-     */
-    public function checkCategoryChanges($roomId, $oldCategories, $newCategories): void
+    public function checkCategoryChanges($roomId, $oldCategories, $newCategories, ChangeService $changeService): void
     {
         $oldCategoryIds = [];
         $oldCategoryNames = [];
@@ -212,32 +195,32 @@ class RoomService
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Added category',
-                    [$newCategory->name]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Added category')
+                        ->setTranslationKeyPlaceholderValues([$newCategory->name])
                 );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Deleted category',
-                    [$oldCategoryNames[$oldCategoryId]]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Deleted category')
+                        ->setTranslationKeyPlaceholderValues([$oldCategoryNames[$oldCategoryId]])
                 );
             }
         }
     }
 
-    /**
-     * @param $roomId
-     * @param $oldAttributes
-     * @param $newAttributes
-     * @return void
-     */
-    public function checkAttributeChanges($roomId, $oldAttributes, $newAttributes): void
+    public function checkAttributeChanges($roomId, $oldAttributes, $newAttributes, ChangeService $changeService): void
     {
         $oldAttributeIds = [];
         $oldAttributeNames = [];
@@ -251,60 +234,68 @@ class RoomService
         foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
             if (!in_array($newAttribute->id, $oldAttributeIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Added attribute',
-                    [$newAttribute->name]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Added attribute')
+                        ->setTranslationKeyPlaceholderValues([$newAttribute->name])
                 );
             }
         }
 
         foreach ($oldAttributeIds as $oldAttributeId) {
             if (!in_array($oldAttributeId, $newAttributeIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Deleted attribute',
-                    [$oldAttributeNames[$oldAttributeId]]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Deleted attribute')
+                        ->setTranslationKeyPlaceholderValues([$oldAttributeNames[$oldAttributeId]])
                 );
             }
         }
     }
 
-    /**
-     * @param $roomId
-     * @param $oldTitle
-     * @param $newTitle
-     * @return void
-     */
-    public function checkTitleChanges($roomId, $oldTitle, $newTitle): void
+    public function checkTitleChanges($roomId, $oldTitle, $newTitle, ChangeService $changeService): void
     {
         if ($oldTitle !== $newTitle) {
-            $this->history->createHistory($roomId, 'Room name has been changed');
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Room name has been changed')
+            );
         }
     }
 
-    /**
-     * @param $roomId
-     * @param $oldDescription
-     * @param $newDescription
-     * @return void
-     */
-    public function checkDescriptionChanges($roomId, $oldDescription, $newDescription): void
-    {
+    public function checkDescriptionChanges(
+        $roomId,
+        $oldDescription,
+        $newDescription,
+        ChangeService $changeService
+    ): void {
         // check changes in room description
         if ($oldDescription !== $newDescription) {
-            $this->history->createHistory($roomId, 'Description has been changed');
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Description has been changed')
+            );
         }
     }
 
-    /**
-     * @param $roomId
-     * @param $oldAdjoiningRooms
-     * @param $newAdjoiningRooms
-     * @return void
-     */
-    public function checkAdjoiningRoomChanges($roomId, $oldAdjoiningRooms, $newAdjoiningRooms): void
-    {
+    public function checkAdjoiningRoomChanges(
+        $roomId,
+        $oldAdjoiningRooms,
+        $newAdjoiningRooms,
+        ChangeService $changeService
+    ): void {
         $newAdjoiningRoomIds = [];
         $oldAdjoiningRoomIds = [];
         $oldAdjoiningRoomName = [];
@@ -317,33 +308,38 @@ class RoomService
         foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
             if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Adjoining room was added',
-                    [$newAdjoiningRoom->name]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Adjoining room was added')
+                        ->setTranslationKeyPlaceholderValues([$newAdjoiningRoom->name])
                 );
             }
         }
 
         foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
             if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Adjoining room has been removed',
-                    [$oldAdjoiningRoomName[$oldAdjoiningRoomId]]
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Adjoining room has been removed')
+                        ->setTranslationKeyPlaceholderValues([$oldAdjoiningRoomName[$oldAdjoiningRoomId]])
                 );
             }
         }
     }
 
-    /**
-     * @param Room $room
-     * @param $roomAdminsBefore
-     * @param $roomAdminsAfter
-     * @return void
-     */
-    public function checkMemberChanges(Room $room, $roomAdminsBefore, $roomAdminsAfter): void
-    {
+    public function checkMemberChanges(
+        Room $room,
+        $roomAdminsBefore,
+        $roomAdminsAfter,
+        NotificationService $notificationService,
+        ChangeService $changeService
+    ): void {
         $roomAdminIdsBefore = [];
         $roomAdminIdsAfter = [];
         foreach ($roomAdminsBefore as $roomAdminBefore) {
@@ -364,17 +360,20 @@ class RoomService
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-                $this->history->createHistory(
-                    $room->id,
-                    'Added as room admin',
-                    [$user->first_name]
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setIcon('green');
+                $notificationService->setPriority(3);
+                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setNotificationTo($user);
+                $notificationService->createNotification();
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($room->id)
+                        ->setTranslationKey('Added as room admin')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name])
                 );
             }
         }
@@ -393,17 +392,20 @@ class RoomService
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setNotificationTo($user);
-                $this->notificationService->createNotification();
-                $this->history->createHistory(
-                    $room->id,
-                    'Removed as room admin',
-                    [$user->first_name]
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setIcon('red');
+                $notificationService->setPriority(2);
+                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setNotificationTo($user);
+                $notificationService->createNotification();
+                $changeService->saveFromBuilder(
+                    $changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($room->id)
+                        ->setTranslationKey('Removed as room admin')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name])
                 );
             }
         }
@@ -500,6 +502,9 @@ class RoomService
             $roomEventsQuery->where('is_loud', false);
         }
 
+        // order $roomEventsQuery by start_time
+        $roomEventsQuery->orderBy('start_time', 'asc');
+
         $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
             // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
@@ -525,7 +530,7 @@ class RoomService
 
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function collectEventsForRoomShift(
+    private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
@@ -654,7 +659,7 @@ class RoomService
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
-                         $shiftPlan = false
+        $shiftPlan = false
     ): Collection {
         $roomEvents = collect();
 

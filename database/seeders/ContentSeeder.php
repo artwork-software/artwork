@@ -234,7 +234,7 @@ class ContentSeeder extends Seeder
     {
         DB::table('event_types')->insert([
             'name' => 'Blocker',
-            'svg_name' => 'eventType0',
+            'hex_code' => '#A7A6B1',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'BL'
@@ -242,7 +242,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Meeting',
-            'svg_name' => 'eventType1',
+            'hex_code' => '#641A54',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'M'
@@ -250,7 +250,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Workshop',
-            'svg_name' => 'eventType2',
+            'hex_code' => '#641A54',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'WS'
@@ -258,7 +258,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Aufführung',
-            'svg_name' => 'eventType3',
+            'hex_code' => '#EB7A3D',
             'project_mandatory' => true,
             'individual_name' => true,
             'abbreviation' => 'A'
@@ -266,7 +266,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Probe',
-            'svg_name' => 'eventType4',
+            'hex_code' => '#F1B640',
             'project_mandatory' => true,
             'individual_name' => false,
             'abbreviation' => 'P'
@@ -274,7 +274,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Führung',
-            'svg_name' => 'eventType5',
+            'hex_code' => '#86C554',
             'project_mandatory' => true,
             'individual_name' => false,
             'abbreviation' => 'F'
@@ -282,7 +282,7 @@ class ContentSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Reinigung',
-            'svg_name' => 'eventType6',
+            'hex_code' => '#2EAA63',
             'project_mandatory' => false,
             'individual_name' => false,
             'abbreviation' => 'R'
@@ -358,12 +358,6 @@ class ContentSeeder extends Seeder
         $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 
-
-        $project->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt"
-        ]);
-
         Checklist::create([
             'name' => 'Aufbau',
             'project_id' => 1,
@@ -394,11 +388,6 @@ class ContentSeeder extends Seeder
             ]
         ]);
 
-        $second_project->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
-        ]);
-
         $projectController->generateBasicBudgetValues($second_project);
 
         $nextProject = Project::create([
@@ -423,11 +412,6 @@ class ContentSeeder extends Seeder
                     '“Prototyping Sonic Institutions” ins Leben gerufen,  ' .
                     'das von Black Swan und CTM Festival zur Festivalausgabe 2022 organisiert wurde.'
             ]
-        ]);
-
-        $nextProject->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
         ]);
 
         $projectController->generateBasicBudgetValues($nextProject);
@@ -457,11 +441,6 @@ class ContentSeeder extends Seeder
                     'the table - Samsa was a travelling salesman - and above it there hung a picture that he ' .
                     'had recently cut out of an illustrated magazine and housed in a nice, gilded frame.'
             ]
-        ]);
-
-        $nextProject->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt",
         ]);
 
         $projectController->generateBasicBudgetValues($nextProject);

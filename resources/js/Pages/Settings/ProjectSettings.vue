@@ -159,7 +159,6 @@ import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vu
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
@@ -185,7 +184,6 @@ export default {
         MenuItem,
         MenuItems,
         JetDialogModal,
-        CategoryIconCollection,
         ChevronDownIcon,
         DotsVerticalIcon,
         TrashIcon,

@@ -53,7 +53,16 @@
                                 <span class="xsLight">{{ $t('Creditor') }}</span>
                                 <span class="xsLight text-black">{{ this.currentSageAssignedData.kreditor }}</span>
                                 <span class="xsLight">{{ $t('Amount') }}</span>
-                                <span class="xsLight text-black">{{ this.currentSageAssignedData.buchungsbetrag }} EUR</span>
+                                <span class="xsLight text-black">{{
+                                        Number(
+                                            String(this.currentSageAssignedData.buchungsbetrag).replace(',', '.')
+                                        ).toLocaleString(
+                                            'de-DE',
+                                            {
+                                                minimumFractionDigits: 2
+                                            }
+                                        )
+                                    }} EUR</span>
                                 <span class="xsLight">{{ $t('Booking text') }}</span>
                                 <span class="xsLight text-black">{{ this.currentSageAssignedData.buchungstext }}</span>
 

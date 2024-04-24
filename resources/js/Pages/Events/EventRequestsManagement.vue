@@ -328,7 +328,6 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -366,7 +365,6 @@ export default defineComponent({
         ListboxOption,
         ListboxOptions,
         Link,
-        EventTypeIconCollection,
         AdjustmentsIcon,
         Switch,
         UserTooltip

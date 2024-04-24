@@ -73,6 +73,7 @@ abstract class BaseRepository
             );
         }
 
+        //restore is available by SoftDeletes trait
         return $model->restore();
     }
 
@@ -84,6 +85,7 @@ abstract class BaseRepository
             );
         }
 
+        //restore is available by SoftDeletes trait
         return $model->restoreQuietly();
     }
 }

@@ -1,29 +1,26 @@
 <?php
 
 use App\Models\EventType;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(function () {
+beforeEach(function (): void {
 
     $this->auth_user = $this->adminUser();
     $this->actingAs($this->auth_user);
 
     $this->event_type = EventType::factory()->create();
-
 });
 
-test('users with the permission can view all EventTypes', function() {
+test('users with the permission can view all EventTypes', function (): void {
 
     $response = $this->get('/event_types')
         ->assertInertia(fn(Assert $page) => $page
-            ->component('Settings/EventSettings')
-        );
+            ->component('Settings/EventSettings'));
 
     $response->assertStatus(200);
 });
 
-test('users with the permission can create eventTypes', function() {
+test('users with the permission can create eventTypes', function (): void {
 
     $this->post('/event_types', [
         'name' => 'TestEventType',
@@ -38,8 +35,7 @@ test('users with the permission can create eventTypes', function() {
     ]);
 });
 
-test('users with the permission can update eventTypes', function() {
-
+test('users with the permission can update eventTypes', function (): void {
     $this->patch("/event_types/{$this->event_type->id}", [
         'name' => 'TestEventType'
     ]);
@@ -49,7 +45,7 @@ test('users with the permission can update eventTypes', function() {
     ]);
 });
 
-test('users with the permission can delete eventTypes', function() {
+test('users with the permission can delete eventTypes', function (): void {
 
     $this->delete("/event_types/{$this->event_type->id}");
 
@@ -57,6 +53,3 @@ test('users with the permission can delete eventTypes', function() {
         'id' => $this->event_type->id
     ]);
 });
-
-
-

@@ -6,9 +6,9 @@ use Artwork\Modules\Budget\Http\Requests\StoreSageAssignedDataCommentRequest;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
 use Artwork\Modules\Budget\Repositories\SageAssignedDataCommentRepository;
 
-class SageAssignedDataCommentService
+readonly class SageAssignedDataCommentService
 {
-    public function __construct(private readonly SageAssignedDataCommentRepository $sageAssignedDataCommentRepository)
+    public function __construct(private SageAssignedDataCommentRepository $sageAssignedDataCommentRepository)
     {
     }
 

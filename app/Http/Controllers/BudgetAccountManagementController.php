@@ -29,7 +29,7 @@ class BudgetAccountManagementController extends Controller
         return Inertia::render(
             'BudgetSettingsAccountManagement/Index',
             [
-                'accounts' => $this->budgetManagementAccountService->getAll(),
+                'accounts' => $this->budgetManagementAccountService->getAllOrderedByIsAccountForRevenue(),
                 'cost_units' => $this->budgetManagementCostUnitService->getAll()
             ]
         );

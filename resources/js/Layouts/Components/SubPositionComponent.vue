@@ -112,7 +112,6 @@
                                         <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
                                              @click="this.handleCellClick(cell, '', index, row)">
                                             {{ cell.value }}
-
                                         </div>
                                     </div>
                                 </div>
@@ -124,7 +123,7 @@
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
-                                               @keyup="this.handleBudgetManagementSearch(index, cell)"
+                                               @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                         />
                                         <XIcon class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
@@ -153,7 +152,7 @@
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
-                                        <div v-if="cell.costUnitSearchResults" class="absolute z-20 top-10">
+                                        <div v-if="cell.costUnitSearchResults" class="absolute w-64 z-20 top-10">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
                                                  v-for="cost_unit in cell.costUnitSearchResults"
                                                  class="flex flex-col"
@@ -190,13 +189,13 @@
                                         </div>
                                         <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)" v-if="cell.calculations_count > 0" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         <IconLink @click="handleCellClick(cell, 'moneysource', index, row)" v-if="cell.linked_money_source_id !== null" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconAdjustmentsAlt @click="handleCellClick(cell, 'sageAssignedData', index, row)" v-if="cell.sage_assigned_data.length >= 1" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
-                                        <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell, '', index, row)">
+                                        <IconAdjustmentsAlt v-if="cell.sage_assigned_data.length >= 1" @click="handleCellClick(cell, 'sageAssignedData', index, row)" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
+                                        <div>
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()"/>
-                                                <SageDragCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()" class="hidden group-hover:block"/>
+                                                <SageDropCellElement :cell="cell" :value="this.toCurrencyString(cell.sage_value)"/>
+                                                <SageDragCellElement v-if="cell.sage_assigned_data.length >= 1" :cell="cell" class="hidden group-hover:block"/>
                                             </div>
-                                            <span v-else>{{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}</span>
+                                            <span @click="handleCellClick(cell, '', index, row)" v-else>{{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -207,7 +206,8 @@
                                            :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
                                            class="my-2 xsDark  appearance-none z-10" type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
-                                           v-model="cell.value" @keypress="isNumber($event, index)"
+                                           v-model="cell.value"
+                                           @keypress="isNumber($event, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                     <IconCirclePlus stroke-width="1.5" v-if="index > 2"
                                                     @click="openCellDetailModal(cell)"
@@ -216,7 +216,8 @@
                                 <div
                                     :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
                                     class="my-4 h-6 flex items-center justify-end"
-                                    @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
+                                    @click="cell.clicked = !cell.clicked && cell.column.is_locked"
+                                    v-else>
                                     <img
                                         v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
                                         src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
@@ -224,7 +225,7 @@
                                          src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
-                                    {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                    {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
                                     <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
                                                     @click="openCellDetailModal(cell)"
                                                     class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
@@ -344,7 +345,7 @@
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span v-if="column.type !== 'sage'">
-                                {{ subPosition.columnSums[column.id]?.sum.toLocaleString() }}
+                                {{ this.toCurrencyString(subPosition.columnSums[column.id]?.sum) }}
                             </span>
                             <span v-else>
                                 {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
@@ -391,9 +392,10 @@ import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement
 import IconLib from "@/mixins/IconLib.vue";
 import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
         SageDragCellElement,
@@ -426,6 +428,8 @@ export default {
     ],
     data() {
         return {
+            editedCellOriginalValue: null,
+            alreadyCellClicked: false,
             showMenu: null,
             hoveredRow: null,
             showDeleteModal: false,
@@ -597,7 +601,7 @@ export default {
             })
         },
         isNumber(event, index) {
-            if (index > 2 && !(new RegExp('^([0-9.])$')).test(event.key)) {
+            if (index > 2 && !(new RegExp('^([0-9,])$')).test(event.key)) {
                 event.preventDefault();
             }
         },
@@ -670,6 +674,17 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
+            let onFinish = () => {
+                cell.clicked = false;
+                this.alreadyCellClicked = false;
+                this.editedCellOriginalValue = null;
+            };
+
+            if (cell.value === this.editedCellOriginalValue) {
+                onFinish();
+                return;
+            }
+
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }
@@ -682,7 +697,8 @@ export default {
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
                 preserveScroll: true,
-            })
+                onFinish: onFinish
+            });
         },
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)
@@ -723,9 +739,16 @@ export default {
             } else if (cell.calculations_count > 0) {
                 this.$emit('openCellDetailModal', cell, 'calculation')
             } else {
+                //if already a cell is clicked and another one is also clicked do nothing
+                if (this.alreadyCellClicked && cell.clicked !== true) {
+                    return;
+                }
                 cell.clicked = !cell.clicked
 
                 if (cell.clicked) {
+                    this.alreadyCellClicked = true;
+                    this.editedCellOriginalValue = cell.value;
+
                     await nextTick()
 
                     this.$refs[`cell-${cell.id}`][0].select();
@@ -800,13 +823,20 @@ export default {
                 preserveState: true
             })
         },
-        handleBudgetManagementSearch(index, cell) {
+        handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
+            if (cell.searchValue === '') {
+                //return if search input is emptied, reset search results
+                cell.accountSearchResults = null;
+                cell.costUnitSearchResults = null;
+                return;
+            }
             if (index === 0) {
                 axios.get(
                     route('budget-settings.account-management.search-accounts'),
                     {
                         params: {
-                            search: cell.searchValue
+                            search: cell.searchValue,
+                            is_account_for_revenue: is_account_for_revenue
                         }
                     }
                 ).then((response) => cell.accountSearchResults = response.data);
@@ -823,23 +853,24 @@ export default {
         },
         handleBudgetManagementSearchSelect(index, cell, value, mainPositionIsVerified, subPositionIsVerified) {
             if (index === 0) {
-                cell.value = value;
                 cell.accountSearchResults = null;
             } else {
-                cell.value = value;
                 cell.costUnitSearchResults = null;
             }
-            cell.clicked = false;
+
+            cell.value = value;
+
             this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
         },
         handleBudgetManagementSearchCancel(cell) {
-            cell.searchValue = '';
             cell.clicked = false;
+            cell.searchValue = '';
             cell.accountSearchResults = null;
             cell.costUnitSearchResults = null;
+            this.alreadyCellClicked = false;
+            this.editedCellOriginalValue = null;
         }
     }
-
 }
 </script>
 

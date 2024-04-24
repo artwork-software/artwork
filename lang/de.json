@@ -1727,5 +1727,10 @@
     "The permissions for this component are administered via the user settings and the project.": "Die Berechtigungen für diese Komponente werden über die Benutzereinstellungen und das Projekt administriert.",
     "The small logo field must not be greater than 2048 kilobytes.": "Das kleine Logo-Feld darf nicht größer als 2048 Kilobyte sein.",
     "The big logo field must not be greater than 2048 kilobytes.": "Das große Logo-Feld darf nicht größer als 2048 Kilobyte sein.",
-    "The banner field must not be greater than 2048 kilobytes.": "Das Banner-Feld darf nicht größer als 2048 Kilobyte sein."
+    "The banner field must not be greater than 2048 kilobytes.": "Das Banner-Feld darf nicht größer als 2048 Kilobyte sein.",
+    "Expense account": "Ausgabekonto",
+    "Revenue account": "Einnahmekonto",
+    "Account type": "Kontotyp",
+    "Schedule restored": "Termin wiederhergestellt",
+    "Enter filter name": "Bitte Name eingeben."
 }

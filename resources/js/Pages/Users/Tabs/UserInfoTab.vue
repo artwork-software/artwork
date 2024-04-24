@@ -14,19 +14,27 @@
                                      class="rounded-full h-20 w-20 object-cover cursor-pointer">
                             </div>
                             <div class="mt-1 ml-5 flex-grow relative">
-                                <input id="first_name" v-model="userForm.first_name" type="text"
+                                <input id="first_name"
+                                       v-model="userForm.first_name"
+                                       type="text"
                                        class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
+                                       placeholder="placeholder"
+                                       @focusout="this.editUser()"
+                                />
                                 <label for="first_name"
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('First name') }}</label>
                             </div>
                         </div>
                         <div class="sm:col-span-3 flex items-end">
                             <div class="relative mt-1 w-full">
-                                <input id="last_name" v-model="userForm.last_name" type="text"
+                                <input id="last_name"
+                                       v-model="userForm.last_name"
+                                       type="text"
                                        class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
                                                border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
+                                       placeholder="placeholder"
+                                       @focusout="this.editUser()"
+                                />
                                 <label for="last_name"
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
                                                focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
@@ -44,7 +52,9 @@
                         <input disabled="disabled"
                                type="text"
                                :value="$page.props.businessName"
-                               class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                               class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               @focusout="this.editUser()"
+                        />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -54,7 +64,9 @@
                                type="text"
                                v-model="userForm.position"
                                :placeholder="this.$t('Position')"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               @focusout="this.editUser()"
+                        />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -62,7 +74,9 @@
                         <input type="text" v-model="this.user_to_edit.email"
                                :disabled="!this.hasAdminRole()"
                                :class="this.hasAdminRole() ? '' : 'bg-gray-100'"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               @focusout="this.editUser()"
+                        />
                         <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                     </div>
                 </div>
@@ -73,11 +87,13 @@
                                type="text"
                                v-model="userForm.phone_number"
                                :placeholder="$t('Phone number')"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               @focusout="this.editUser()"
+                        />
                     </div>
                 </div>
                 <div class="col-span-full">
-                    <Listbox as="div" class="w-44" v-model="selectedLanguage">
+                    <Listbox as="div" class="w-44" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
                             <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
@@ -110,7 +126,9 @@
                                   :placeholder="$t('What should other artwork users know?')"
                                   v-model="userForm.description"
                                   rows="5"
-                                  class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                                  class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                                  @focusout="this.editUser()"
+                        />
                     </div>
                 </div>
                 <div class="sm:col-span-6 mt-4 flex">
@@ -163,15 +181,6 @@
                         </transition>
                     </Menu>
                 </div>
-            </div>
-        </div>
-        <div class="mt-8">
-            <div class="flex">
-                <FormButton
-                    @click="editUser"
-                    class="inline-flex items-center"
-                    :text="$t('Change settings')"
-                    />
             </div>
         </div>
         <div class="">

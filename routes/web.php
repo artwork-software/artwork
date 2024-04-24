@@ -524,8 +524,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('money_source.reminder', MoneySourceReminderController::class)->only('store');
 
     //Contracts
-    Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
-    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
+    Route::get('/contracts/view', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
@@ -649,12 +648,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             )->name('project.budget.move.sage.row');
 
             // project.budget.move.sage.row
-            /*
-             * table_id: this.tableId,
-                        sub_position_id: this.subPositionId,
-                        positionBefore: this.row ? this.row.position : -1,
-                        sage_data_id: data.id,
-             */
             Route::post(
                 '/move/sage/row/to/row/{table_id}/{sub_position_id}/{positionBefore}/{columnCell}',
                 [BudgetGeneralController::class, 'moveSageDataRowToNewRow']
@@ -807,6 +800,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'store'
             ]
         )->name('budget-settings.account-management.store-account');
+        Route::patch(
+            '/account-management/account/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'update'
+            ]
+        )->name('budget-settings.account-management.update-account');
         Route::delete(
             '/account-management/account/{budgetManagementAccount}',
             [
@@ -821,6 +821,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'store'
             ]
         )->name('budget-settings.account-management.store-cost-unit');
+        Route::patch(
+            '/account-management/cost-unit/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'update'
+            ]
+        )->name('budget-settings.account-management.update-cost-unit');
         Route::delete(
             '/account-management/cost-unit/{budgetManagementCostUnit}',
             [

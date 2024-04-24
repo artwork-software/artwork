@@ -10,7 +10,9 @@ use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\EventType;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -34,7 +36,8 @@ class RoomController extends Controller
 {
     public function __construct(
         protected readonly RoomService $roomService,
-        protected readonly CollisionService $collisionService
+        protected readonly CollisionService $collisionService,
+        private readonly SchedulingController $schedulingController
     ) {
     }
 
@@ -181,8 +184,12 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
-    public function update(Request $request, Room $room): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        Room $room,
+        NotificationService $notificationService,
+        ChangeService $changeService
+    ): RedirectResponse {
 
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;
@@ -241,12 +248,43 @@ class RoomController extends Controller
         $newStartDate = $room->start_date;
         $newEndDate = $room->end_date;
 
-        $this->roomService->checkAdjoiningRoomChanges($room->id, $oldAdjoiningRooms, $newAdjoiningRooms);
-        $this->roomService->checkDescriptionChanges($room->id, $oldRoomDescription, $newRoomDescription);
-        $this->roomService->checkMemberChanges($room, $roomAdminsBefore, $roomAdminsAfter);
-        $this->roomService->checkTitleChanges($room->id, $oldRoomTitle, $newRoomTitle);
-        $this->roomService->checkAttributeChanges($room->id, $oldRoomAttributes, $newRoomAttributes);
-        $this->roomService->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
+        $this->roomService->checkAdjoiningRoomChanges(
+            $room->id,
+            $oldAdjoiningRooms,
+            $newAdjoiningRooms,
+            $changeService
+        );
+        $this->roomService->checkDescriptionChanges(
+            $room->id,
+            $oldRoomDescription,
+            $newRoomDescription,
+            $changeService
+        );
+        $this->roomService->checkMemberChanges(
+            $room,
+            $roomAdminsBefore,
+            $roomAdminsAfter,
+            $notificationService,
+            $changeService
+        );
+        $this->roomService->checkTitleChanges(
+            $room->id,
+            $oldRoomTitle,
+            $newRoomTitle,
+            $changeService
+        );
+        $this->roomService->checkAttributeChanges(
+            $room->id,
+            $oldRoomAttributes,
+            $newRoomAttributes,
+            $changeService
+        );
+        $this->roomService->checkCategoryChanges(
+            $room->id,
+            $oldRoomCategories,
+            $newRoomCategories,
+            $changeService
+        );
         $this->roomService->checkTemporaryChanges(
             $room->id,
             $oldTemporary,
@@ -254,13 +292,13 @@ class RoomController extends Controller
             $oldStartDate,
             $newStartDate,
             $oldEndDate,
-            $newEndDate
+            $newEndDate,
+            $changeService
         );
 
-        $scheduling = new SchedulingController();
         $roomId = $room->id;
         foreach ($room->users()->wherePivot('is_admin', true)->get() as $user) {
-            $scheduling->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
+            $this->schedulingController->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
         return Redirect::back();

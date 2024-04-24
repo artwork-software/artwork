@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class DeleteNotifications extends Command
 {
@@ -11,10 +12,10 @@ class DeleteNotifications extends Command
 
     protected $description = 'Deletes notifications that were archived 7 or more days ago';
 
-    public function handle(): int
+    public function handle(SchedulingController $schedulingController): int
     {
-        $taskScheduling = new SchedulingController();
-        $taskScheduling->deleteOldNotifications();
-        return 1;
+        $schedulingController->deleteOldNotifications();
+
+        return CommandAlias::SUCCESS;
     }
 }

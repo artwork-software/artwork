@@ -58,7 +58,12 @@ module.exports = {
                         create: '#3073ae',
                         context: '#6f6f6f',
                         hover: '#1c77d7',
-                        default: '#2a3d75'
+                        default: '#2a3d75',
+                        update: '#2a3d75',
+                    },
+                    context: {
+                        light: '#e8e8e8',
+                        dark: '#6f6f6f'
                     },
                     project: {
                         background: '#eee',

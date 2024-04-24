@@ -202,7 +202,6 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
@@ -255,7 +254,6 @@ export default defineComponent({
         XCircleIcon,
         Link,
         InputComponent,
-        EventTypeIconCollection,
         ChevronRightIcon,
         NotificationUserIcon,
         AnswerEventRequestComponent,

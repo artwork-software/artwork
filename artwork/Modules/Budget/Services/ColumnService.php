@@ -11,15 +11,10 @@ use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
 
-class ColumnService
+readonly class ColumnService
 {
-    public function __construct(
-        private readonly ColumnRepository $columnRepository,
-        private readonly ColumnCellService $columnCellService,
-        private readonly SubPositionSumDetailService $subPositionSumDetailService,
-        private readonly MainPositionDetailsService $mainPositionDetailsService,
-        private readonly BudgetSumDetailsService $budgetSumDetailsService
-    ) {
+    public function __construct(private ColumnRepository $columnRepository)
+    {
     }
 
     public function createColumnInTable(
@@ -70,23 +65,78 @@ class ColumnService
         }
     }
 
-    public function forceDelete(Column $column): void
-    {
-        $column->subPositionSumDetails->each(function (SubPositionSumDetail $subPositionSumDetail): void {
-            $this->subPositionSumDetailService->forceDelete($subPositionSumDetail);
-        });
+    public function forceDelete(
+        Column $column,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $column->subPositionSumDetails->each(
+            function (SubPositionSumDetail $subPositionSumDetail) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionSumDetailService
+            ): void {
+                $subPositionSumDetailService->forceDelete(
+                    $subPositionSumDetail,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
-        $column->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
-            $this->mainPositionDetailsService->forceDelete($mainPositionDetails);
-        });
+        $column->mainPositionSumDetails->each(
+            function (MainPositionDetails $mainPositionDetails) use (
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService
+            ): void {
+                $mainPositionDetailsService->forceDelete(
+                    $mainPositionDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
-        $column->budgetSumDetails->each(function (BudgetSumDetails $budgetSumDetails): void {
-            $this->budgetSumDetailsService->forceDelete($budgetSumDetails);
-        });
+        $column->budgetSumDetails->each(
+            function (BudgetSumDetails $budgetSumDetails) use (
+                $budgetSumDetailsService,
+                $sumCommentService,
+                $sumMoneySourceService
+            ): void {
+                $budgetSumDetailsService->forceDelete(
+                    $budgetSumDetails,
+                    $sumCommentService,
+                    $sumMoneySourceService
+                );
+            }
+        );
 
-        $column->cells->each(function (ColumnCell $columnCell): void {
-            $this->columnCellService->forceDelete($columnCell);
-        });
+        $column->cells->each(
+            function (ColumnCell $columnCell) use (
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnCellService->forceDelete(
+                    $columnCell,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
 
         $this->columnRepository->forceDelete($column);
     }

@@ -42,9 +42,12 @@ class CalendarController extends Controller
         private readonly RoomService $roomService
     ) {
         //@todo This will break if no user present
-        $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user?->calendar_filter;
-        $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
+
+        if (!is_null(Auth::user()) || Auth::user() !== false) {
+            $this->user = Auth::user();
+            $this->userCalendarFilter = $this->user?->calendar_filter;
+            $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
+        }
     }
 
     /**
@@ -200,8 +203,14 @@ class CalendarController extends Controller
         ?Project $project = null,
         ?Room $room = null,
         $startDate = null,
-        $endDate = null
+        $endDate = null,
+        ?Authenticatable $user = null
     ): array {
+        if (!empty($user)) {
+            $this->user = $user;
+            $this->userCalendarFilter = $this->user?->calendar_filter;
+            $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
+        }
         $calendarType = 'individual';
         $selectedDate = null;
         if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
@@ -614,7 +623,7 @@ class CalendarController extends Controller
         ?Room $room,
         ?Project $project,
         $shiftPlan = false
-    ): mixed {
+    ): EventBuilder {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -632,7 +641,6 @@ class CalendarController extends Controller
         $areaIds = $calendarFilter->areas ?? null;
         $roomAttributeIds = $calendarFilter->room_attributes ?? null;
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
-
 
         return $query
             ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))

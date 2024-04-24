@@ -60,7 +60,6 @@
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
     ListboxButton,
@@ -91,7 +90,6 @@ export default {
         JetDialogModal,
         XIcon,
         XCircleIcon,
-        EventTypeIconCollection,
         Listbox,
         ListboxButton,
         ListboxOption,

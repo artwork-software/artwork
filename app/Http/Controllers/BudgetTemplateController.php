@@ -11,6 +11,23 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
+use Artwork\Modules\Budget\Services\CellCalculationService;
+use Artwork\Modules\Budget\Services\CellCommentService;
+use Artwork\Modules\Budget\Services\ColumnCellService;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionDetailsService;
+use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\MainPositionVerifiedService;
+use Artwork\Modules\Budget\Services\RowCommentService;
+use Artwork\Modules\Budget\Services\SageAssignedDataService;
+use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
+use Artwork\Modules\Budget\Services\SubPositionRowService;
+use Artwork\Modules\Budget\Services\SubPositionService;
+use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
+use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
+use Artwork\Modules\Budget\Services\SumCommentService;
+use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
@@ -170,24 +187,99 @@ class BudgetTemplateController extends Controller
         });
     }
 
-    public function useTemplate(Table $table, Request $request): RedirectResponse
-    {
+    public function useTemplate(
+        Table $table,
+        Request $request,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
         $project = Project::find($request->project_id);
 
-        $this->deleteOldTable($project);
+        $this->deleteOldTable(
+            $project,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         $this->createTemplate($table->name, $table, false, $project->id);
 
         return Redirect::back();
     }
 
-    public function useTemplateFromProject(Request $request): void
-    {
+    public function useTemplateFromProject(
+        Request $request,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
         if ($request->template_project_id !== $request->project_id) {
             $templateProject = Project::find($request->template_project_id);
             $project = Project::find($request->project_id);
 
-            $this->deleteOldTable($project);
+            $this->deleteOldTable(
+                $project,
+                $mainPositionService,
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $mainPositionVerifiedService,
+                $mainPositionDetailsService,
+                $subPositionService,
+                $budgetSumDetailsService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            );
 
             $this->createTemplate(
                 $templateProject->name . ' Budgettabelle',
@@ -198,11 +290,48 @@ class BudgetTemplateController extends Controller
         }
     }
 
-    public function deleteOldTable(Project $project): void
-    {
+    public function deleteOldTable(
+        Project $project,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
 
-        $this->tableService->forceDelete($tableToDelete);
+        $this->tableService->forceDelete(
+            $tableToDelete,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
     }
 }

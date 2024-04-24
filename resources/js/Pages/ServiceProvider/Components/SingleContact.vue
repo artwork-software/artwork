@@ -3,24 +3,21 @@
         <div class="col-span-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.first_name" name="first_name" id="first_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('First name')" />
+                    <input type="text" v-model="contactData.first_name" @focusout="updateContact" name="first_name" id="first_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('First name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.last_name" name="last_name" id="last_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Last name')" />
+                    <input type="text" v-model="contactData.last_name" @focusout="updateContact" name="last_name" id="last_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Last name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="email" v-model="contactData.email" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Email')" />
+                    <input type="email" v-model="contactData.email" @focusout="updateContact" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Email')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.phone_number" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Phone number')" />
+                    <input type="text" v-model="contactData.phone_number" @focusout="updateContact" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Phone number')" />
                 </div>
             </div>
         </div>
         <div class="col-span-1 hidden group-hover:block mx-auto">
            <div class="flex items-center justify-center gap-2">
-               <div class="rounded-full border-4 border-green-500 hover:bg-green-200 p-1 cursor-pointer">
-                   <CheckIcon class="h-5 w-5 text-green-500" @click="updateContact"/>
-               </div>
                <div class="rounded-full border-4 border-red-500 hover:bg-red-200 p-1 cursor-pointer">
                    <XIcon class="h-5 w-5 cursor-pointer text-red-500" @click="deleteContact"/>
                </div>
@@ -64,9 +61,11 @@ export default defineComponent({
             });
         },
         updateContact(){
-            this.contactData.patch(route('service-provider.contact.update', this.contact.id), {
-                preserveScroll: true, preserveState: true, onSuccess: () => this.openSuccessModal()
-            })
+            if (this.contactData.isDirty) {
+                this.contactData.patch(route('service-provider.contact.update', this.contact.id), {
+                    preserveScroll: true, preserveState: true, onSuccess: () => this.openSuccessModal()
+                })
+            }
         },
         openSuccessModal() {
             this.showSuccessModal = true;

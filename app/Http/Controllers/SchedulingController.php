@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Change\Repositories\ChangeRepository;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -14,6 +17,10 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -21,20 +28,10 @@ use stdClass;
 
 class SchedulingController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    protected ?stdClass $notificationData = null;
-
-    private ?ProjectTabService $projectTabService = null;
-
-    public function __construct()
-    {
-        $this->notificationService = new NotificationService();
-        $this->notificationData = new stdClass();
-        $this->notificationData->project = new stdClass();
-        $this->notificationData->task = new stdClass();
-        $this->notificationData->room = new stdClass();
-        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ProjectTabService $projectTabService
+    ) {
     }
 
 
@@ -74,7 +71,6 @@ class SchedulingController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendDeadlineNotification(): void
     {
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
         // Deadline Notification
         $checklists = Checklist::all();
         $taskWithReachedDeadline = [];
@@ -202,7 +198,7 @@ class SchedulingController extends Controller
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');

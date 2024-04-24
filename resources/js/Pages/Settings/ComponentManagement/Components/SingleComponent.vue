@@ -12,13 +12,18 @@
     <div class="flex items-center justify-center mb-2">
         <ComponentIcons :type="component.type" />
     </div>
-    <div class="text-center text-sm font-bold">
-        {{ component.name }}
-        <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.height">
-            {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
-        </div>
-        <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.title_size">
-            {{ component.data.title_size }} Pixel
+    <div class="text-center text-sm font-bold w-20">
+         <div v-if="component.special" class="truncate">
+                {{ $t(component.name) }}
+         </div>
+        <div v-else class="w-20 truncate">
+            {{ component.name }}
+            <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.height">
+                {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+            </div>
+            <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.title_size">
+                {{ component.data.title_size }} Pixel
+            </div>
         </div>
     </div>
     <ConfirmDeleteModal

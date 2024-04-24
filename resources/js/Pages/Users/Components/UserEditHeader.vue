@@ -19,7 +19,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="my-10">
                         <div class="hidden sm:block">
                             <div class="">
@@ -62,11 +61,9 @@ export default {
         AppLayout,
         InfoTab
     },
-
     props: [
         'user_to_edit',
         'currentTab',
-
     ],
     data() {
         return {

@@ -30,17 +30,21 @@
                 <div v-for="(componentsArray, index) in filteredComponents">
                     <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 3xl:grid-cols-12 gap-3 w-full">
-                        <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 min-w-28 justify-center items-center group relative" v-for="component in componentsArray">
-                            <SingleComponent :component="component" />
-                        </div>
+                        <DropComponentsToolTip  v-for="component in componentsArray" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
+                            <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 min-w-28 justify-center items-center group relative truncate break-all">
+                                <SingleComponent :component="component" />
+                            </div>
+                        </DropComponentsToolTip>
                     </div>
                 </div>
                 <div>
                     <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-12 gap-3">
-                        <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 justify-center items-center group relative" v-for="component in filteredSpecialComponents">
-                            <SingleComponent :component="component" />
-                        </div>
+                        <DropComponentsToolTip  v-for="component in filteredSpecialComponents" :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
+                            <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 justify-center items-center group relative truncate break-all">
+                                <SingleComponent :component="component" />
+                            </div>
+                        </DropComponentsToolTip>
                     </div>
                 </div>
             </div>
@@ -63,10 +67,12 @@ import IconLib from "@/mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import SingleComponent from "@/Pages/Settings/ComponentManagement/Components/SingleComponent.vue";
 import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";
+import DropComponentsToolTip from "@/Components/ToolTips/DropComponentsToolTip.vue";
 
 export default {
     name: "Index",
     components: {
+        DropComponentsToolTip,
         SingleComponent,
         PlusButton,
         ComponentIcons,

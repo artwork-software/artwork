@@ -115,9 +115,6 @@
                     <XIcon @click="closeAddEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="xsLight">
-                        <!--{{$t('You can create up to 10 different event types.')}}-->
-                    </div>
                     <div class="mt-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
@@ -176,36 +173,6 @@
                            aria-hidden="true"/>
                     <div class="mt-12">
                         <div class="flex">
-                            <Menu as="div" class=" relative hidden">
-                                <div>
-                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                        <ChevronDownIcon v-if="editEventTypeForm.svg_name === ''"
-                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <div>
-                                            <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : editEventTypeForm.hex_code }" />
-                                        </div>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                            <div>
-                                                <div class="" @click="editEventTypeForm.svg_name = item.iconName"
-                                                     :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <EventTypeIconCollection :height="64" :width="64"
-                                                                             :iconName="item.iconName"/>
-                                                </div>
-                                            </div>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
                                 <input type="color" v-model="editEventTypeForm.hex_code" class="rounded-full focus:outline-none h-14 w-14" >
                             </div>
@@ -307,7 +274,6 @@ import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vu
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import Permissions from "@/mixins/Permissions.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -364,7 +330,6 @@ export default {
         MenuItem,
         MenuItems,
         JetDialogModal,
-        EventTypeIconCollection,
         ChevronDownIcon,
         DotsVerticalIcon,
         TrashIcon,
@@ -387,7 +352,7 @@ export default {
                 project_mandatory: false,
                 individual_name: false,
                 abbreviation: '',
-                hex_code: '#000000',
+                hex_code: '#EC7A3D',
             }),
             editEventTypeForm: this.$inertia.form({
                 _method: 'PATCH',
@@ -430,7 +395,7 @@ export default {
             this.eventTypeForm.abbreviation = '';
         },
         addEventType() {
-            this.eventTypeForm.post(route('event_types.store', {event_type: this.eventTypeForm}));
+            this.eventTypeForm.post(route('event_types.store'));
             this.closeAddEventTypeModal();
         },
         editEventType() {

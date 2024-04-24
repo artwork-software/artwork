@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementAccountRequest;
+use Artwork\Modules\BudgetManagementAccount\Http\Requests\UpdateBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -51,6 +54,30 @@ class BudgetManagementAccountController extends Controller
         );
     }
 
+    public function update(
+        BudgetManagementAccount $budgetManagementAccount,
+        UpdateBudgetManagementAccountRequest $request
+    ): RedirectResponse {
+        try {
+            $this->budgetManagementAccountService->updateFromRequest(
+                $budgetManagementAccount,
+                $request
+            );
+        } catch (Throwable $t) {
+            Log::error('Can not update budget management account for reason: ' . $t->getMessage());
+
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-account-management.error.account.update')
+            );
+        }
+
+        return Redirect::back()->with(
+            'success',
+            __('flash-messages.budget-account-management.success.account.update')
+        );
+    }
+
     public function destroy(BudgetManagementAccount $budgetManagementAccount): RedirectResponse
     {
         try {
@@ -77,9 +104,16 @@ class BudgetManagementAccountController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(BudgetManagementAccount $budgetManagementAccount): RedirectResponse
-    {
-        $this->budgetManagementAccountService->forceDelete($budgetManagementAccount);
+    public function forceDelete(
+        BudgetManagementAccount $budgetManagementAccount,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        $this->budgetManagementAccountService->forceDelete(
+            $budgetManagementAccount,
+            $projectService,
+            $columnCellService
+        );
 
         return Redirect::back();
     }

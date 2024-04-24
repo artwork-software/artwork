@@ -1,7 +1,7 @@
 <template>
     <div class="mb-3">
         <!-- Event Header -->
-        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
+        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg"
              :style="{backgroundColor: event.event_type.hex_code}">
             <div class="flex items-center">
                 <span v-if="!event.event.allDay">

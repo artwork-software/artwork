@@ -1,13 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Filter\Models;
 
+use App\Models\EventType;
+use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -56,7 +58,7 @@ class Filter extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
     //@todo: fix phpcs error - refactor function name to roomCategories

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\SeriesEvents\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 
 /**
  * @property int $id

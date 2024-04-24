@@ -4,12 +4,12 @@ namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Models\Category;
-use App\Models\Contract;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;

@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Task\Models;
 
-use App\Models\Contract;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

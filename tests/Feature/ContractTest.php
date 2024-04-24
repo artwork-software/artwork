@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Contract;
 use App\Models\User;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\UploadedFile;
 

@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Contract\Models;
 
+use App\Models\User;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -68,26 +70,46 @@ class Contract extends Model
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id');
+        return $this->belongsTo(
+            Project::class,
+            'project_id',
+            'id',
+            'projects'
+        );
     }
 
     //@todo: fix phpcs error - refactor function name to companyType
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function company_type(): BelongsTo
     {
-        return $this->belongsTo(CompanyType::class, 'company_type_id');
+        return $this->belongsTo(
+            CompanyType::class,
+            'company_type_id',
+            'id',
+            'company_types'
+        );
     }
 
     //@todo: fix phpcs error - refactor function name to contractType
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function contract_type(): BelongsTo
     {
-        return $this->belongsTo(ContractType::class, 'contract_type_id');
+        return $this->belongsTo(
+            ContractType::class,
+            'contract_type_id',
+            'id',
+            'contract_types'
+        );
     }
 
     public function currency(): BelongsTo
     {
-        return $this->belongsTo(Currency::class, 'currency_id');
+        return $this->belongsTo(
+            Currency::class,
+            'currency_id',
+            'id',
+            'currencies'
+        );
     }
 
     public function accessingUsers(): BelongsToMany
@@ -108,6 +130,6 @@ class Contract extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(\Artwork\Modules\Project\Models\Comment::class, 'contract_id', 'id');
+        return $this->hasMany(Comment::class, 'contract_id', 'id');
     }
 }

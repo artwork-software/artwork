@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\CompanyType\Models;
 
-use App\Models\Contract;
+use Artwork\Modules\Contract\Models\Contract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\Contract\Models\Traits;
 
-use App\Models\Contract;
+use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\Contract\Models\Traits\BelongsToContract;
 use Illuminate\Database\Eloquent\Model;
 use Tests\TestCase;

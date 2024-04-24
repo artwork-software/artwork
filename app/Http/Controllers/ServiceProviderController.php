@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ServiceProviderShowResource;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;

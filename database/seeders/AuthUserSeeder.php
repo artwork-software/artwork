@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use App\Models\User;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;

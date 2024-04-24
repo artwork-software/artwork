@@ -10,7 +10,7 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Http\Resources\UserWorkProfileResource;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use App\Models\User;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Department\Models\Department;

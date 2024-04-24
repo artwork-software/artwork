@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;

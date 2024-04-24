@@ -15,7 +15,7 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftPlanResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserShiftPlanResource;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NotificationService;

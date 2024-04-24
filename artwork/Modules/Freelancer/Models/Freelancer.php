@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Freelancer\Models;
 
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;

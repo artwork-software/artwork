@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerShowResource;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;

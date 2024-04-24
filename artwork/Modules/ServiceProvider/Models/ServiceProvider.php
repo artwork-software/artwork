@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ServiceProvider\Models;
 
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;

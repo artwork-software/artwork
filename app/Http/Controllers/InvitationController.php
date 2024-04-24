@@ -7,9 +7,10 @@ use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
-use App\Models\Invitation;
 use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Permission\Models\Permission;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,6 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller

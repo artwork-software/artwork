@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use App\Models\Invitation;
+use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Support\Facades\Hash;
 
 class AcceptInvitationRequest extends UserCreateRequest

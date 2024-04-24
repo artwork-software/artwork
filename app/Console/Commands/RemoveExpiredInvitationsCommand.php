@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Invitation;
+use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Console\Command;
 
 class RemoveExpiredInvitationsCommand extends Command

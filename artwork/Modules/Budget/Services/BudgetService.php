@@ -19,7 +19,7 @@ use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\DTOs\BudgetInformationsDto;
+use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -357,9 +357,9 @@ readonly class BudgetService
         return $recentlyCreatedSageAssignedDataComment;
     }
 
-    public function getBudgetInformationsDto(Project $project): BudgetInformationsDto
+    public function getBudgetInformationDto(Project $project): BudgetInformationDto
     {
-        return (new BudgetInformationsDto())
+        return BudgetInformationDto::newInstance()
             ->setProjectManagerIds($project->managerUsers()->pluck('user_id'))
             ->setProjectFiles($project->project_files)
             ->setContracts($project->contracts()->with(['tasks', 'company_type', 'contract_type', 'currency'])->get())

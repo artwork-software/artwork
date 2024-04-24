@@ -8,7 +8,7 @@
                 :show="showCopyrightModal"
                 @close-modal="closeCopyrightModal"
                 :project="project"
-                :collecting-societies="loadedProjectInformation['BudgetInformations'].collecting_societies"
+                :collecting-societies="loadedProjectInformation['BudgetInformation'].collecting_societies"
             />
         </div>
         <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
@@ -19,7 +19,7 @@
         </div>
         <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
         <hr class="my-10 border-darkGray">
-        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformations'].project_manager_ids.includes(this.$page.props.user.id)">
+        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.loadedProjectInformation['BudgetInformation'].project_manager_ids.includes(this.$page.props.user.id)">
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
@@ -28,11 +28,11 @@
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
                                     :project-id="project.id"
-                                    :budget-access="loadedProjectInformation['BudgetInformations'].access_budget"/>
+                                    :budget-access="loadedProjectInformation['BudgetInformation'].access_budget"/>
         </div>
         <div v-if="showProjectFiles">
-            <div v-if="loadedProjectInformation['BudgetInformations'].project_files.length > 0">
-                <div v-for="projectFile in loadedProjectInformation['BudgetInformations'].project_files">
+            <div v-if="loadedProjectInformation['BudgetInformation'].project_files.length > 0">
+                <div v-for="projectFile in loadedProjectInformation['BudgetInformation'].project_files">
                     <div
                         v-if="projectFile.accessibleUsers?.filter(user => user.id === $page.props.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
@@ -74,15 +74,15 @@
                     :show="showContractUploadModal"
                     @close-modal="closeContractUploadModal"
                     :project-id="project.id"
-                    :budget-access="this.loadedProjectInformation['BudgetInformations'].access_budget"
-                    :contract-types="this.loadedProjectInformation['BudgetInformations'].contract_types"
-                    :company-types="this.loadedProjectInformation['BudgetInformations'].company_types"
-                    :currencies="this.loadedProjectInformation['BudgetInformations'].currencies"
+                    :budget-access="this.loadedProjectInformation['BudgetInformation'].access_budget"
+                    :contract-types="this.loadedProjectInformation['BudgetInformation'].contract_types"
+                    :company-types="this.loadedProjectInformation['BudgetInformation'].company_types"
+                    :currencies="this.loadedProjectInformation['BudgetInformation'].currencies"
                 />
             </div>
             <div v-if="showContracts">
-                <div v-if="this.loadedProjectInformation['BudgetInformations'].contracts?.length > 0">
-                    <div v-for="contract in this.loadedProjectInformation['BudgetInformations'].contracts">
+                <div v-if="this.loadedProjectInformation['BudgetInformation'].contracts?.length > 0">
+                    <div v-for="contract in this.loadedProjectInformation['BudgetInformation'].contracts">
                         <div
                             v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
@@ -115,9 +115,9 @@
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
                 <div v-if="showMoneySources">
-                    <div v-if="this.loadedProjectInformation['BudgetInformations'].project_money_sources?.length > 0">
+                    <div v-if="this.loadedProjectInformation['BudgetInformation'].project_money_sources?.length > 0">
                         <div class="w-full flex items-center mb-2 text-secondary"
-                             v-for="moneySource in this.loadedProjectInformation['BudgetInformations'].project_money_sources">
+                             v-for="moneySource in this.loadedProjectInformation['BudgetInformation'].project_money_sources">
                             <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
                                   class="cursor-pointer hover:text-secondaryHover text-linkOnDarkColor  underline" :href="route('money_sources.show', {moneySource: moneySource.id})">
                                 {{moneySource.name}}
@@ -200,7 +200,7 @@ export default {
     },
     methods: {
         hasBudgetAccess() {
-          return this.loadedProjectInformation['BudgetInformations'].access_budget.filter(
+          return this.loadedProjectInformation['BudgetInformation'].access_budget.filter(
               (user) => user.id === this.$page.props.user.id
           ).length > 0;
         },

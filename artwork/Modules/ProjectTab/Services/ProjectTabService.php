@@ -84,7 +84,7 @@ readonly class ProjectTabService
             )->collection->groupBy('room.id');
         }
 
-        return (new CalendarDto())
+        return CalendarDto::newInstance()
             ->setCalendar($calendarData['roomsWithEvents'])
             ->setDateValue($calendarData['dateValue'])
             ->setDays($calendarData['days'])
@@ -197,7 +197,7 @@ readonly class ProjectTabService
             ];
         }
 
-        return (new ShiftsDto())
+        return ShiftsDto::newInstance()
             ->setUsersForShifts($usersWithPlannedWorkingHours)
             ->setFreelancersForShifts($freelancersWithPlannedWorkingHours)
             ->setServiceProvidersForShifts($serviceProvidersWithPlannedWorkingHours)

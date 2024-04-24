@@ -6,7 +6,7 @@ use Artwork\Core\Abstracts\BaseDto;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
-class BudgetInformationsDto extends BaseDto
+class BudgetInformationDto extends BaseDto
 {
     public ?Collection $projectManagerIds = null;
 

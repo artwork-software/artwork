@@ -3,7 +3,7 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\ChecklistTemplatePolicy;
+use Artwork\Modules\ChecklistTemplate\Policies\ChecklistTemplatePolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

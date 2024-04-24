@@ -3,8 +3,8 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\EventPolicy;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Policies\EventPolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

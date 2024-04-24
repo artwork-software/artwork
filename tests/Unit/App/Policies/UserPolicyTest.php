@@ -3,8 +3,8 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\UserPolicy;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Policies\UserPolicy;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 

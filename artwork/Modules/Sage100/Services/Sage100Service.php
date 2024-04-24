@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Sage100\Services;
 
-use App\Sage100\Sage100;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
@@ -16,6 +15,7 @@ use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Sage100\Clients\Sage100Client;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -491,7 +491,7 @@ readonly class Sage100Service
 
     private function getData(int|null $count, string|null $specificDay, SageApiSettingsService $sageApiSettingsService)
     {
-        return app(Sage100::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
+        return app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
     }
 
     /**

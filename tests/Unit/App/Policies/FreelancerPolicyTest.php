@@ -3,7 +3,7 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\FreelancerPolicy;
+use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

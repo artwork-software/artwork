@@ -18,8 +18,6 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\UserResourceWithoutShifts;
-use App\Support\Services\MoneySourceThresholdReminderService;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
@@ -69,6 +67,9 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
+use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -1268,7 +1269,8 @@ class ProjectController extends Controller
 
     public function updateCellSource(
         Request $request,
-        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
+        MoneySourceCalculationService $moneySourceCalculationService
     ): void {
         ColumnCell::find($request->cell_id)
             ->update([
@@ -1278,7 +1280,11 @@ class ProjectController extends Controller
 
         if ($request->money_source_id) {
             $moneySourceThresholdReminderService
-                ->handleThresholdReminders(MoneySource::find($request->money_source_id));
+                ->handleThresholdReminders(
+                    MoneySource::find($request->money_source_id),
+                    $moneySourceCalculationService,
+                    $this->notificationService
+                );
         }
     }
 
@@ -1491,7 +1497,8 @@ class ProjectController extends Controller
 
     public function updateCellValue(
         Request $request,
-        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService,
+        MoneySourceCalculationService $moneySourceCalculationService
     ): void {
         $column = Column::find($request->column_id);
         $project = $column->table()->first()->project()->first();
@@ -1519,7 +1526,9 @@ class ProjectController extends Controller
 
         if ($cell->linked_money_source_id) {
             $moneySourceThresholdReminderService->handleThresholdReminders(
-                MoneySource::find($cell->linked_money_source_id)
+                MoneySource::find($cell->linked_money_source_id),
+                $moneySourceCalculationService,
+                $this->notificationService
             );
         }
     }

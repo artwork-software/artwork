@@ -3,7 +3,7 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\InvitationPolicy;
+use Artwork\Modules\Invitation\Policies\InvitationPolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

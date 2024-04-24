@@ -2,8 +2,7 @@
 
 namespace Tests\Unit\App\Sage100;
 
-use App\Sage100\Sage100;
-use Illuminate\Http\Client\Response;
+use Artwork\Modules\Sage100\Clients\Sage100Client;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -15,7 +14,7 @@ class Sage100Test extends TestCase
             '*' => Http::response(['$resources' => ['data']], 200),
         ]);
 
-        $sage100 = new Sage100('http://example.com', '/endpoint', 'user', 'password');
+        $sage100 = new Sage100Client('http://example.com', '/endpoint', 'user', 'password');
         $data = $sage100->getData();
 
         $this->assertIsArray($data);
@@ -28,7 +27,7 @@ class Sage100Test extends TestCase
             '*' => Http::response([], 200),
         ]);
 
-        $sage100 = new Sage100('http://example.com', '/endpoint', 'user', 'password');
+        $sage100 = new Sage100Client('http://example.com', '/endpoint', 'user', 'password');
         $result = $sage100->testConnection();
 
         $this->assertTrue($result);

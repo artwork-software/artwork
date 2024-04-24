@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\SubEvents\Models\SubEvent;
 use Illuminate\Http\Request;
 

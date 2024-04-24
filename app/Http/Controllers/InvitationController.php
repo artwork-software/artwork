@@ -69,7 +69,7 @@ class InvitationController extends Controller
         $roles = $request->roles;
 
         foreach ($request->user_emails as $email) {
-            $token = createToken();
+            $token = $this->createToken();
 
             $invitation = Invitation::create([
                 'email' => $email,
@@ -112,7 +112,7 @@ class InvitationController extends Controller
         $invitation->update($request->only('email'));
 
         if ($newMail !== $oldEmail) {
-            $token = createToken();
+            $token = $this->createToken();
             Mail::to($newMail)->send(new InvitationCreated($invitation, Auth::user(), $token['plain']));
             $invitation->update(['token' => $token['hash']]);
         }
@@ -169,5 +169,21 @@ class InvitationController extends Controller
         broadcast(new UserUpdated())->toOthers();
 
         return Redirect::route('dashboard');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function createToken(): array
+    {
+        do {
+            $tokenPlain = Str::random(20);
+            $hashedToken = Hash::make($tokenPlain);
+        } while (Invitation::where('token', $hashedToken)->first());
+
+        return [
+            'plain' => $tokenPlain,
+            'hash' => $hashedToken
+        ];
     }
 }

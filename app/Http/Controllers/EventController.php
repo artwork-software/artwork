@@ -15,8 +15,6 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftPlanResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserShiftPlanResource;
-use App\Support\Services\CollisionService;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;
@@ -25,11 +23,13 @@ use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
@@ -70,15 +70,15 @@ class EventController extends Controller
     protected UserShiftCalendarFilter $userShiftCalendarFilter;
 
     public function __construct(
-        private readonly CollisionService $collisionService,
-        private readonly NotificationService $notificationService,
-        private readonly BudgetService $budgetService,
-        private readonly EventService $eventService,
-        private readonly ShiftService $shiftService,
-        private readonly TimelineService $timelineService,
-        private readonly ProjectTabService $projectTabService,
-        private readonly ChangeService $changeService,
-        private readonly SchedulingService $schedulingService
+        private readonly EventCollisionService $collisionService,
+        private readonly NotificationService   $notificationService,
+        private readonly BudgetService         $budgetService,
+        private readonly EventService          $eventService,
+        private readonly ShiftService          $shiftService,
+        private readonly TimelineService       $timelineService,
+        private readonly ProjectTabService     $projectTabService,
+        private readonly ChangeService         $changeService,
+        private readonly SchedulingService     $schedulingService
     ) {
     }
 

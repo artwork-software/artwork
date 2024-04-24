@@ -5,9 +5,9 @@ namespace Artwork\Modules\Shift\Services;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 
-class ShiftsQualificationsService
+readonly class ShiftsQualificationsService
 {
-    public function __construct(private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository)
+    public function __construct(private ShiftsQualificationsRepository $shiftsQualificationsRepository)
     {
     }
 

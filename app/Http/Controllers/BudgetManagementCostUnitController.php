@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\UpdateBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -99,9 +101,16 @@ class BudgetManagementCostUnitController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(BudgetManagementCostUnit $budgetManagementCostUnit): RedirectResponse
-    {
-        $this->budgetManagementCostUnitService->forceDelete($budgetManagementCostUnit);
+    public function forceDelete(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        $this->budgetManagementCostUnitService->forceDelete(
+            $budgetManagementCostUnit,
+            $projectService,
+            $columnCellService
+        );
 
         return Redirect::back();
     }

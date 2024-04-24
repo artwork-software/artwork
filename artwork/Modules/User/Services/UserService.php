@@ -6,12 +6,12 @@ use App\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Support\Collection;
 
-class UserService
+readonly class UserService
 {
     /**
      * @param UserRepository $userRepository
      */
-    public function __construct(private readonly UserRepository $userRepository)
+    public function __construct(private UserRepository $userRepository)
     {
     }
 

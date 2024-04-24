@@ -10,14 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class ShiftService
 {
-    public function __construct(
-        private ShiftRepository $shiftRepository,
-        private ShiftsQualificationsService $shiftsQualificationsService,
-        private ShiftUserService $shiftUserService,
-        private ShiftFreelancerService $shiftFreelancerService,
-        private ShiftServiceProviderService $shiftServiceProviderService,
-        private ChangeService $changeService
-    ) {
+    public function __construct(private ShiftRepository $shiftRepository)
+    {
     }
 
     public function getById(int $shiftId): Shift|null
@@ -41,10 +35,10 @@ readonly class ShiftService
         return $shift;
     }
 
-    public function createRemovedAllUsersFromShiftHistoryEntry(Shift $shift): void
+    public function createRemovedAllUsersFromShiftHistoryEntry(Shift $shift, ChangeService $changeService): void
     {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setType('shift')
                 ->setModelClass(Shift::class)
@@ -58,55 +52,76 @@ readonly class ShiftService
         );
     }
 
-    public function delete(Shift $shift): bool
-    {
+    public function delete(
+        Shift $shift,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): bool {
         foreach ($shift->shiftsQualifications as $shiftsQualification) {
-            $this->shiftsQualificationsService->delete($shiftsQualification);
+            $shiftsQualificationsService->delete($shiftsQualification);
         }
 
         foreach ($shift->users as $user) {
-            $this->shiftUserService->delete($user->pivot);
+            $shiftUserService->delete($user->pivot);
         }
 
         foreach ($shift->freelancer as $freelancer) {
-            $this->shiftFreelancerService->delete($freelancer->pivot);
+            $shiftFreelancerService->delete($freelancer->pivot);
         }
 
         foreach ($shift->serviceProvider as $serviceProvider) {
-            $this->shiftServiceProviderService->delete($serviceProvider->pivot);
+            $shiftServiceProviderService->delete($serviceProvider->pivot);
         }
 
         return $this->shiftRepository->delete($shift);
     }
 
-    public function deleteShifts(Collection|array $shifts): void
-    {
+    public function deleteShifts(
+        Collection|array $shifts,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
-            $this->delete($shift);
+            $this->delete(
+                $shift,
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService
+            );
         }
     }
 
-    public function restoreShifts(Collection|array $shifts): void
-    {
+    public function restoreShifts(
+        Collection|array $shifts,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService
+    ): void {
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
             $shift->restore();
             $shift->shiftsQualifications()->onlyTrashed()->each(
-                fn($shiftsQualification) => $this->shiftsQualificationsService->restore($shiftsQualification)
+                fn($shiftsQualification) => $shiftsQualificationsService->restore($shiftsQualification)
             );
 
             // restore shift users and freelancers from pivot table
             $shift->users()->each(
-                fn($user) => $this->shiftUserService->restore($user->pivot)
+                fn($user) => $shiftUserService->restore($user->pivot)
             );
 
             $shift->freelancer()->each(
-                fn($freelancer) => $this->shiftFreelancerService->restore($freelancer->pivot)
+                fn($freelancer) => $shiftFreelancerService->restore($freelancer->pivot)
             );
 
             $shift->serviceProvider()->each(
-                fn($serviceProvider) => $this->shiftServiceProviderService->restore($serviceProvider->pivot)
+                fn($serviceProvider) => $shiftServiceProviderService->restore($serviceProvider->pivot)
             );
         }
     }

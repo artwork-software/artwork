@@ -11,7 +11,6 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
 
 readonly class ShiftServiceProviderService
@@ -22,8 +21,6 @@ readonly class ShiftServiceProviderService
         private ShiftFreelancerRepository $shiftFreelancerRepository,
         private ShiftServiceProviderRepository $shiftServiceProviderRepository,
         private ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private ShiftCountService $shiftCountService,
-        private ChangeService $changeService
     ) {
     }
 
@@ -31,6 +28,8 @@ readonly class ShiftServiceProviderService
         Shift $shift,
         int $serviceProviderId,
         int $shiftQualificationId,
+        ShiftCountService $shiftCountService,
+        ChangeService $changeService,
         array|null $seriesShiftData = null
     ): void {
         $shiftServiceProviderPivot = $this->shiftServiceProviderRepository->createForShift(
@@ -39,13 +38,23 @@ readonly class ShiftServiceProviderService
             $shiftQualificationId
         );
 
-        $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProviderId);
+        $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProviderId);
 
         if ($shift->is_committed) {
-            $this->createAssignedToShiftHistoryEntry(
-                $shift,
-                $shiftServiceProviderPivot->serviceProvider,
-                $shiftServiceProviderPivot->shiftQualification
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Service provider was added to the shift as')
+                    ->setTranslationKeyPlaceholderValues([
+                        $shiftServiceProviderPivot->serviceProvider->getNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event->eventName,
+                        $shiftServiceProviderPivot->shiftQualification->name
+                    ])
             );
         }
 
@@ -60,31 +69,11 @@ readonly class ShiftServiceProviderService
                 Carbon::parse($seriesShiftData['end'])->endOfDay(),
                 $seriesShiftData['dayOfWeek'],
                 $serviceProviderId,
-                $shiftQualificationId
+                $shiftQualificationId,
+                $shiftCountService,
+                $changeService
             );
         }
-    }
-
-    private function createAssignedToShiftHistoryEntry(
-        Shift $shift,
-        ServiceProvider $serviceProvider,
-        ShiftQualification $shiftQualification
-    ): void {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setType('shift')
-                ->setModelClass(Shift::class)
-                ->setModelId($shift->id)
-                ->setShift($shift)
-                ->setTranslationKey('Service provider was added to the shift as')
-                ->setTranslationKeyPlaceholderValues([
-                    $serviceProvider->getNameAttribute(),
-                    $shift->craft->abbreviation,
-                    $shift->event->eventName,
-                    $shiftQualification->name
-                ])
-        );
     }
 
     private function handleSeriesShiftData(
@@ -93,7 +82,9 @@ readonly class ShiftServiceProviderService
         Carbon $end,
         string $dayOfWeek,
         int $serviceProviderId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        ShiftCountService $shiftCountService,
+        ChangeService $changeService
     ): void {
         /** @var Shift $shiftBetweenDates */
         foreach (
@@ -138,7 +129,13 @@ readonly class ShiftServiceProviderService
             ) {
                 //call assignToShift without seriesShiftData to make sure only this user is assigned to shift and same
                 //logic is applied for each user
-                $this->assignToShift($shiftBetweenDates, $serviceProviderId, $shiftQualificationId, null);
+                $this->assignToShift(
+                    $shiftBetweenDates,
+                    $serviceProviderId,
+                    $shiftQualificationId,
+                    $shiftCountService,
+                    $changeService
+                );
             }
         }
     }
@@ -161,7 +158,9 @@ readonly class ShiftServiceProviderService
 
     public function removeFromShift(
         ShiftServiceProvider|int $serviceProvidersPivot,
-        bool $removeFromSingleShift
+        bool $removeFromSingleShift,
+        ShiftCountService $shiftCountService,
+        ChangeService $changeService
     ): void {
         $shiftServiceProviderPivot = !$serviceProvidersPivot instanceof ShiftServiceProvider ?
             $this->shiftServiceProviderRepository->getById($serviceProvidersPivot) :
@@ -174,11 +173,11 @@ readonly class ShiftServiceProviderService
 
         $this->forceDelete($shiftServiceProviderPivot);
 
-        $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
+        $shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
 
         if ($shift->is_committed) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
+            $changeService->saveFromBuilder(
+                $changeService
                     ->createBuilder()
                     ->setType('shift')
                     ->setModelClass(Shift::class)
@@ -207,29 +206,48 @@ readonly class ShiftServiceProviderService
                     $serviceProvider->id
                 );
                 if ($shiftServiceProviderPivotByUuid instanceof ShiftServiceProvider) {
-                    $this->removeFromShift($shiftServiceProviderPivotByUuid, true);
+                    $this->removeFromShift(
+                        $shiftServiceProviderPivotByUuid,
+                        true,
+                        $shiftCountService,
+                        $changeService
+                    );
                 }
             }
         }
     }
 
-    public function removeAllServiceProvidersFromShift(Shift $shift): void
-    {
+    public function removeAllServiceProvidersFromShift(
+        Shift $shift,
+        ShiftCountService $shiftCountService,
+        ChangeService $changeService
+    ): void {
         $shift->serviceProvider()->each(
-            function (ServiceProvider $serviceProvider): void {
-                $this->removeFromShift($serviceProvider->pivot, true);
+            function (ServiceProvider $serviceProvider) use ($shiftCountService, $changeService): void {
+                $this->removeFromShift(
+                    $serviceProvider->pivot,
+                    true,
+                    $shiftCountService,
+                    $changeService
+                );
             }
         );
     }
 
-    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): void
-    {
+    public function removeFromShiftByUserIdAndShiftId(
+        int $freelancerId,
+        int $shiftId,
+        ShiftCountService $shiftCountService,
+        ChangeService $changeService
+    ): void {
         $this->removeFromShift(
             $this->shiftServiceProviderRepository->findByUserIdAndShiftId(
                 $freelancerId,
                 $shiftId
             ),
-            true
+            true,
+            $shiftCountService,
+            $changeService
         );
     }
 

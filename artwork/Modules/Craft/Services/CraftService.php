@@ -8,9 +8,9 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class CraftService
+readonly class CraftService
 {
-    public function __construct(private readonly CraftRepository $craftRepository)
+    public function __construct(private CraftRepository $craftRepository)
     {
     }
 

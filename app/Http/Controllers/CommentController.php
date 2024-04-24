@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreCommentRequest;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Project\Models\Comment;
 use App\Models\User;
 use Artwork\Modules\Project\Services\CommentService;
@@ -30,7 +31,7 @@ class CommentController extends Controller
         return inertia('Comments/Create');
     }
 
-    public function store(StoreCommentRequest $request): JsonResponse|RedirectResponse
+    public function store(StoreCommentRequest $request, ChangeService $changeService): JsonResponse|RedirectResponse
     {
         $project = $this->projectService->findById($request->input('project_id'));
 
@@ -47,6 +48,7 @@ class CommentController extends Controller
                 user: $user,
                 project: $project,
                 tabId: $request->tab_id,
+                changeService: $changeService
             );
         }
 

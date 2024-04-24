@@ -2,23 +2,25 @@
 
 namespace Artwork\Modules\Vacation\Services;
 
-use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Vacation\Models\VacationSeries;
 use Artwork\Modules\Vacation\Repository\VacationSeriesRepository;
 
-class VacationSeriesService
+readonly class VacationSeriesService
 {
-    public function __construct(
-        private readonly VacationSeriesRepository $vacationSeriesRepository,
-    ) {
+    public function __construct(private VacationSeriesRepository $vacationSeriesRepository)
+    {
     }
 
-    public function create($frequency, $until): VacationSeries|Model
+    public function create(string $frequency, string $until): VacationSeries
     {
-        $vacationSeries = new VacationSeries();
-        $vacationSeries->frequency = $frequency;
-        $vacationSeries->end_date = $until;
-        return $this->vacationSeriesRepository->save($vacationSeries);
+        $vacationSeries = new VacationSeries([
+            'frequency' => $frequency,
+            'end_date' => $until
+        ]);
+
+        $this->vacationSeriesRepository->save($vacationSeries);
+
+        return $vacationSeries;
     }
 
     public function deleteSeries(VacationSeries $vacationSeries): void

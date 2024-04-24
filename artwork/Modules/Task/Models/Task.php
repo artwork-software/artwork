@@ -1,12 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Task\Models;
 
+use App\Models\Contract;
+use App\Models\MoneySourceTask;
+use App\Models\User;
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
-use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -52,7 +54,7 @@ class Task extends Model
 
     public function contract(): BelongsTo
     {
-        return $this->belongsTo(Contract::class, 'contract_id');
+        return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contracts');
     }
 
     //@todo: fix phpcs error - refactor function name to taskUsers
@@ -66,7 +68,7 @@ class Task extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function user_who_done(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'user_who_done');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
     public function checklistDepartments(): BelongsToMany

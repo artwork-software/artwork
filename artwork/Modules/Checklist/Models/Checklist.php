@@ -2,12 +2,12 @@
 
 namespace Artwork\Modules\Checklist\Models;
 
-use App\Models\Task;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\Traits\BelongsToProject;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

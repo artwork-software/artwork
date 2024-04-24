@@ -4,7 +4,6 @@ namespace Tests\Feature\Event;
 
 use App\Models\Freelancer;
 use App\Models\FreelancerVacation;
-use App\Models\Task;
 use App\Models\User;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
@@ -14,6 +13,7 @@ use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;

@@ -19,6 +19,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
@@ -74,10 +75,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\App\Models\Checklist> private_checklists
  * @property Collection<\Room> created_rooms
  * @property Collection<\Room> admin_rooms
- * @property Collection<\App\Models\Task> done_tasks
+ * @property Collection<\Artwork\Modules\Task\Models\Task> done_tasks
  * @property Collection<\Artwork\Modules\Event\Models\Event> events
- * @property Collection<\App\Models\Task> $privateTasks
-
+ * @property Collection<\Artwork\Modules\Task\Models\Task> $privateTasks
  *
  * What is this sorcery?
  * @property string $profile_photo_url

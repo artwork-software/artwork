@@ -6,7 +6,6 @@ use App\Models\Category;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Sector;
-use App\Models\Task;
 use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -15,6 +14,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
 

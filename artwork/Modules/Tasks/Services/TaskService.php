@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Tasks\Services;
 
-use App\Models\Task;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Tasks\Repositories\TaskRepository;
 use Illuminate\Database\Eloquent\Collection;
 

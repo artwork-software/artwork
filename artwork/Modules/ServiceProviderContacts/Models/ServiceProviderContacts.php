@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\ServiceProviderContacts\Models;
 
+use App\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -30,6 +31,11 @@ class ServiceProviderContacts extends Model
 
     public function serviceProvider(): BelongsTo
     {
-        return $this->belongsTo(ServiceProvider::class);
+        return $this->belongsTo(
+            ServiceProvider::class,
+            'service_provider_id',
+            'id',
+            'service_providers'
+        );
     }
 }

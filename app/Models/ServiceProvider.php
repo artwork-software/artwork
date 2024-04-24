@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;

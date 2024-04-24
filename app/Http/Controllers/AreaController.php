@@ -4,16 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\RoomAttribute;
-use Artwork\Modules\Room\Models\RoomCategory;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Date;
 
 beforeEach(function (): void {

@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

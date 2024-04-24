@@ -3,7 +3,6 @@
 namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\User;
 use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
@@ -16,6 +15,7 @@ use App\Notifications\ShiftNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

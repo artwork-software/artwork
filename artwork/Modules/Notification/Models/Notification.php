@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Notification\Models;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 
 class Notification
 {

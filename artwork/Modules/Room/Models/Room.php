@@ -9,7 +9,7 @@ use Artwork\Modules\Area\Models\BelongsToArea;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
 use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
-use Artwork\Modules\User\Models\BelongsToUser;
+use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
@@ -35,7 +35,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon $deleted_at
  * @property Area $area
- * @property \App\Models\User $creator
+ * @property \Artwork\Modules\User\Models\User $creator
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
@@ -87,18 +87,18 @@ class Room extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id', 'id', 'users');
+        return $this->belongsTo(\Artwork\Modules\User\Models\User::class, 'user_id', 'id', 'users');
     }
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class, 'room_user', 'room_id')
+        return $this->belongsToMany(\Artwork\Modules\User\Models\User::class, 'room_user', 'room_id')
             ->withPivot('is_admin', 'can_request');
     }
 
     public function admins(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class, 'room_user', 'room_id')
+        return $this->belongsToMany(\Artwork\Modules\User\Models\User::class, 'room_user', 'room_id')
             ->wherePivot('is_admin', true);
     }
 

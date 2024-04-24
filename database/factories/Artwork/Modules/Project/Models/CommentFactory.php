@@ -2,9 +2,9 @@
 
 namespace Database\Factories\Artwork\Modules\Project\Models;
 
-use App\Models\User;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

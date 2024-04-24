@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\ChecklistTemplate\Models;
 
-use App\Models\User;
-use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
-use Artwork\Modules\User\Models\BelongsToUser;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\Traits\BelongsToUser;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;

@@ -1,8 +1,8 @@
 <?php
 
-namespace Artwork\Modules\User\Models;
+namespace Artwork\Modules\User\Models\Traits;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToUser

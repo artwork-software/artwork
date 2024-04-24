@@ -4,9 +4,8 @@ namespace Artwork\Modules\Shift\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\User;
-use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -16,6 +15,7 @@ use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 

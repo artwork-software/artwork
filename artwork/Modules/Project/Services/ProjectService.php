@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
@@ -19,6 +18,7 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Tasks\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 

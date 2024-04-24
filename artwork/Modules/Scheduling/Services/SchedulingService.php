@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Scheduling\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
@@ -12,6 +11,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Scheduling\Models\Scheduling;
 use Artwork\Modules\Scheduling\Repositories\SchedulingRepository;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 
 readonly class SchedulingService

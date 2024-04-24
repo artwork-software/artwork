@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\SageApiSettingsPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\SageApiSettingsPolicy;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 

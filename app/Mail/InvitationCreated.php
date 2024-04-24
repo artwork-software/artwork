@@ -2,9 +2,9 @@
 
 namespace App\Mail;
 
-use App\Models\User;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Mail\Mailable;

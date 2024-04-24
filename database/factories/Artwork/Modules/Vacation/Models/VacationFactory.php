@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\Vacation\Models;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\FreelancerPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\FreelancerPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class FreelancerPolicyTest extends TestCase

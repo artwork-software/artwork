@@ -3,7 +3,7 @@
 namespace Artwork\Modules\MoneySource\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Models\User;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
 use Artwork\Modules\MoneySourceCategoryMapping\Models\MoneySourceCategoryMapping;
@@ -12,9 +12,9 @@ use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;

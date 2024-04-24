@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\MoneySourceTask\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

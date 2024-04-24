@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\NotificationFrequency;
 use App\Enums\NotificationGroupEnum;
 use App\Mail\NotificationSummary;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 

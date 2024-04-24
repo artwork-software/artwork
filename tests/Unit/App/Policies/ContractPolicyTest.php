@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
 use App\Policies\ContractPolicy;
 use Artwork\Modules\Contract\Models\Contract;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ContractPolicyTest extends TestCase

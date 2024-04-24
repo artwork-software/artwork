@@ -2,11 +2,11 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\UserPolicy;
 use App\Enums\PermissionNameEnum;
-use Tests\TestCase;
+use App\Policies\UserPolicy;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Tests\TestCase;
 
 class UserPolicyTest extends TestCase
 {

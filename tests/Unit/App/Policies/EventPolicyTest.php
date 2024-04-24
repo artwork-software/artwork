@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use Artwork\Modules\Event\Models\Event;
-use App\Policies\EventPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\EventPolicy;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class EventPolicyTest extends TestCase

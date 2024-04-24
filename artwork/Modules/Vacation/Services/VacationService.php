@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\Vacation\Services;
 
-use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Vacation\Repository\VacationRepository;

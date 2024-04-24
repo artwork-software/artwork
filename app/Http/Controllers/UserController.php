@@ -10,9 +10,8 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Http\Resources\UserWorkProfileResource;
-use Artwork\Modules\Craft\Models\Craft;
-use App\Models\User;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -25,6 +24,7 @@ use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificatio
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Foundation\Application;

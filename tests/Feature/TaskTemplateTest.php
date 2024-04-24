@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Department\Models\Department;
@@ -8,6 +7,7 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\User;
 
 beforeEach(function () {
 

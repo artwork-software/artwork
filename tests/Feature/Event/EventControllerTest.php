@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Event;
 
-use App\Models\User;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -15,6 +14,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Models\Timeline;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;

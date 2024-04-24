@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use App\Models\User;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
@@ -10,6 +9,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\CommentRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class CommentService

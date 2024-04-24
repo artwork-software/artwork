@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\UserCommentedBudgetItemsSetting\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**

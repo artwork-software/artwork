@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Models\UserShiftCalendarFilter;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserShiftCalendarFilterFactory extends Factory

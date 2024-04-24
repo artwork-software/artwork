@@ -10,9 +10,9 @@ use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Command;
 
-class GetSage100Data extends Command
+class ImportSage100ApiDataCommand extends Command
 {
-    protected $signature = 'app:get-sage100-data {count?} {specificDay?}';
+    protected $signature = 'app:import-sage100-api-data {count?} {specificDay?}';
 
     protected $description = 'Get data from Sage100 and import it to budget.';
 

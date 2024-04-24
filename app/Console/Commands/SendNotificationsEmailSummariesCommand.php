@@ -9,9 +9,9 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
-class SendNotificationEmailSummaries extends Command
+class SendNotificationsEmailSummariesCommand extends Command
 {
-    protected $signature = 'app:send-email-notifications {frequency=daily}';
+    protected $signature = 'app:send-notifications-email-summaries {frequency=daily}';
 
     protected $description = 'Sends summaries of notifications to all users.';
 
@@ -25,11 +25,11 @@ class SendNotificationEmailSummaries extends Command
             return 1;
         }
 
-        User::all()->each(fn (User $user) => $this->sendNotificationSummary($user));
+        User::all()->each(fn (User $user) => $this->sendNotificationsSummary($user));
         return 0;
     }
 
-    protected function sendNotificationSummary(User $user): void
+    protected function sendNotificationsSummary(User $user): void
     {
         $typesOfUser = $user->notificationSettings()
             ->where('frequency', $this->argument('frequency'))

@@ -8,11 +8,14 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportPDFController extends Controller
 {
@@ -73,12 +76,10 @@ class ExportPDFController extends Controller
         return Inertia::location(\route('calendar.export.pdf.download', ['filename' => $pdfName]));
     }
 
-    public function download($filename): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function download($filename, ResponseFactory $responseFactory): BinaryFileResponse
     {
-        return Storage::download('pdf/' . $filename, $filename, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-        ]);
+        //file is deleted immediately after the request object is populated with pdf content so no cron job to delete
+        //old pdfs is required
+        return $responseFactory->download(Storage::path('pdf/' . $filename))->deleteFileAfterSend();
     }
 }

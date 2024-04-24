@@ -81,6 +81,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -119,7 +120,7 @@ class ProjectController extends Controller
 {
     public function __construct(
         private readonly NotificationService $notificationService,
-        private readonly SchedulingController $schedulingController,
+        private readonly SchedulingService $schedulingService,
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
@@ -2085,7 +2086,7 @@ class ProjectController extends Controller
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
-            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
+            $this->schedulingService->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
         return Redirect::back();
     }
@@ -2341,7 +2342,7 @@ class ProjectController extends Controller
         $project = Project::find($projectId);
         $projectUsers = $project->users()->get();
         foreach ($projectUsers as $projectUser) {
-            $this->schedulingController->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
+            $this->schedulingService->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
         }
     }
 

@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\SchedulingController;
 use App\Models\User;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 
@@ -26,7 +26,7 @@ test('notifications that were archived more than 7 days ago are getting deleted'
     $notification->read_at = Carbon::now()->subDays(8);
     $notification->save();
 
-    $taskScheduling = app()->get(SchedulingController::class);
+    $taskScheduling = app()->get(SchedulingService::class);
     $taskScheduling->deleteOldNotifications();
 
     $this->assertDatabaseMissing('notifications', [
@@ -53,7 +53,7 @@ test('notifications that were archived less than 7 days ago arent getting delete
     $notification->read_at = Carbon::now()->subDays(5);
     $notification->save();
 
-    $taskScheduling = app()->get(SchedulingController::class);
+    $taskScheduling = app()->get(SchedulingService::class);
     $taskScheduling->deleteOldNotifications();
 
     $this->assertDatabaseHas('notifications', [

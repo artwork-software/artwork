@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
-class RemoveTempRooms extends Command
+class RemoveTemporaryRoomsCommand extends Command
 {
     protected $signature = 'app:remove-temporary-rooms';
 

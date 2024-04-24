@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Invitation;
 use Illuminate\Console\Command;
 
-class RemoveExpiredInvitations extends Command
+class RemoveExpiredInvitationsCommand extends Command
 {
     /**
      * The name and signature of the console command.

@@ -35,6 +35,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
@@ -77,7 +78,7 @@ class EventController extends Controller
         private readonly TimelineService $timelineService,
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingService $schedulingService
     ) {
     }
 
@@ -1342,10 +1343,10 @@ class EventController extends Controller
     {
         if (!empty($event->project)) {
             foreach ($event->project->users->all() as $eventUser) {
-                $this->schedulingController->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+                $this->schedulingService->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $this->schedulingController->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+            $this->schedulingService->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 

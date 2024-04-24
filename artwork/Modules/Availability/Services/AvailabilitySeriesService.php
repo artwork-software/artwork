@@ -6,11 +6,10 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
 use Artwork\Modules\Availability\Repositories\AvailabilitySeriesRepository;
 
-class AvailabilitySeriesService
+readonly class AvailabilitySeriesService
 {
-    public function __construct(
-        private readonly AvailabilitySeriesRepository $availabilitySeriesRepository,
-    ) {
+    public function __construct(private AvailabilitySeriesRepository $availabilitySeriesRepository,)
+    {
     }
 
 

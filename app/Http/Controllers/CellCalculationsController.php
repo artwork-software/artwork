@@ -16,13 +16,15 @@ class CellCalculationsController extends Controller
     ) {
     }
 
-    public function destroy(CellCalculation $cellCalculation): RedirectResponse
-    {
+    public function destroy(
+        CellCalculation $cellCalculation,
+        CellCalculationService $cellCalculationService
+    ): RedirectResponse {
         $columnCell = $cellCalculation->cell;
 
         $this->cellCalculationsService->delete($cellCalculation);
 
-        $this->columnCellService->resetCellCalculationsPosition($columnCell);
+        $this->columnCellService->resetCellCalculationsPosition($columnCell, $cellCalculationService);
 
         return Redirect::back();
     }

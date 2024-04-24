@@ -42,24 +42,51 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\BudgetSumDetailsService;
+use Artwork\Modules\Budget\Services\CellCalculationService;
+use Artwork\Modules\Budget\Services\CellCommentService;
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionDetailsService;
 use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\MainPositionVerifiedService;
+use Artwork\Modules\Budget\Services\RowCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
+use Artwork\Modules\Budget\Services\SageAssignedDataService;
+use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
+use Artwork\Modules\Budget\Services\SubPositionSumDetailService;
+use Artwork\Modules\Budget\Services\SubPositionVerifiedService;
+use Artwork\Modules\Budget\Services\SumCommentService;
+use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Services\CommentService;
+use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
+use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -214,8 +241,14 @@ class ProjectController extends Controller
     }
 
 
-    public function store(StoreProjectRequest $request): JsonResponse|RedirectResponse
-    {
+    public function store(
+        StoreProjectRequest $request,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): JsonResponse|RedirectResponse {
         if (
             !Auth::user()->canAny(
                 [
@@ -271,7 +304,14 @@ class ProjectController extends Controller
 
         //$this->generateBasicBudgetValues($project);
 
-        $this->budgetService->generateBasicBudgetValues($project);
+        $this->budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
@@ -1088,12 +1128,58 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function resetTable(Project $project, TableService $tableService): RedirectResponse
-    {
+    public function resetTable(
+        Project $project,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): RedirectResponse {
         $budgetTemplateController = new BudgetTemplateController($tableService);
-        $budgetTemplateController->deleteOldTable($project);
-        //$this->generateBasicBudgetValues($project);
-        $this->budgetService->generateBasicBudgetValues($project);
+        $budgetTemplateController->deleteOldTable(
+            $project,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
+        $this->budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         return Redirect::back();
     }
@@ -1206,9 +1292,33 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column, ColumnService $columnService): RedirectResponse
-    {
-        $columnService->forceDelete($column);
+    public function columnDelete(
+        Column $column,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+        $columnService->forceDelete(
+            $column,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $mainPositionDetailsService,
+            $subPositionSumDetailService,
+            $budgetSumDetailsService,
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }
@@ -1456,9 +1566,14 @@ class ProjectController extends Controller
         }
     }
 
-    public function dropSageData(Request $request, Sage100Service $sage100Service): void
-    {
-        $sage100Service->dropData($request);
+    public function dropSageData(
+        Request $request,
+        Sage100Service $sage100Service,
+        ColumnService $columnService,
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService
+    ): void {
+        $sage100Service->dropData($request, $columnService, $sageAssignedDataService, $sageNotAssignedDataService);
     }
 
     public function addMainPosition(Request $request): void
@@ -1678,7 +1793,11 @@ class ProjectController extends Controller
     public function projectTab(
         Project $project,
         ProjectTab $projectTab,
-        SageAssignedDataCommentService $sageAssignedDataCommentService
+        SageAssignedDataCommentService $sageAssignedDataCommentService,
+        ShiftQualificationService $shiftQualificationService,
+        RoomService $roomService,
+        CalendarController $calendarController,
+        SageApiSettingsService $sageApiSettingsService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1781,14 +1900,19 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::CALENDAR->value) {
-                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab($project);
+                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
+                    $project,
+                    $roomService,
+                    $calendarController
+                );
             }
 
             if ($component->type === TabComponentEnums::BUDGET->value) {
                 $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
-                    project: $project,
-                    loadedProjectInformation: $loadedProjectInformation,
-                    sageAssignedDataCommentService: $sageAssignedDataCommentService,
+                    $project,
+                    $loadedProjectInformation,
+                    $sageAssignedDataCommentService,
+                    $sageApiSettingsService
                 );
             }
 
@@ -1800,7 +1924,10 @@ class ProjectController extends Controller
                 $headerObject->project->freelancers = Freelancer::all();
                 $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
 
-                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab($project);
+                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab(
+                    $project,
+                    $shiftQualificationService
+                );
             }
 
             if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {
@@ -2477,8 +2604,14 @@ class ProjectController extends Controller
         }
     }
 
-    public function duplicate(Project $project): JsonResponse|RedirectResponse
-    {
+    public function duplicate(
+        Project $project,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): JsonResponse|RedirectResponse {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             if (
@@ -2506,7 +2639,14 @@ class ProjectController extends Controller
             'state' => $project->state,
         ]);
 
-        $this->budgetService->generateBasicBudgetValues($newProject);
+        $this->budgetService->generateBasicBudgetValues(
+            $newProject,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));
@@ -2522,8 +2662,25 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(Project $project): RedirectResponse
-    {
+    public function destroy(
+        Project $project,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService,
+        TaskService $taskService
+    ): RedirectResponse {
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
                 'project' => $project->name
@@ -2544,30 +2701,102 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->projectService->softDelete($project);
+        $this->projectService->softDelete(
+            $project,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $commentService,
+            $checklistService,
+            $projectFileService,
+            $eventService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService,
+            $taskService
+        );
 
         return Redirect::route('projects');
     }
 
-    public function forceDelete(int $id): RedirectResponse
-    {
+    public function forceDelete(
+        int $id,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        EventService $eventService,
+        ProjectFileService $projectFileService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        TaskService $taskService
+    ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
         if ($project) {
-            $this->projectService->forceDelete($project);
+            $this->projectService->forceDelete(
+                $project,
+                $commentService,
+                $checklistService,
+                $eventService,
+                $projectFileService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService,
+                $taskService
+            );
         }
 
         return Redirect::route('projects.trashed');
     }
 
-    public function restore(int $id): RedirectResponse
-    {
+    public function restore(
+        int $id,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        CommentService $commentService,
+        ChecklistService $checklistService,
+        ProjectFileService $projectFileService,
+        EventService $eventService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        TaskService $taskService
+    ): RedirectResponse {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
         if ($project) {
-            $this->projectService->restore($project);
+            $this->projectService->restore(
+                $project,
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService,
+                $commentService,
+                $checklistService,
+                $projectFileService,
+                $eventService,
+                $changeService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $taskService
+            );
         }
         return Redirect::route('projects.trashed');
     }
@@ -2595,34 +2824,140 @@ class ProjectController extends Controller
 
     public function deleteRow(
         SubPositionRow $subPositionRow,
-        SubPositionRowService $subPositionRowService
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $subPositionRowService->forceDelete($subPositionRow);
+        $subPositionRowService->forceDelete(
+            $subPositionRow,
+            $rowCommentService,
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }
 
-    public function deleteTable(Table $table, TableService $tableService): RedirectResponse
-    {
-        $tableService->forceDelete($table);
+    public function deleteTable(
+        Table $table,
+        TableService $tableService,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): RedirectResponse {
+        $tableService->forceDelete(
+            $table,
+            $mainPositionService,
+            $columnService,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $budgetSumDetailsService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }
 
     public function deleteMainPosition(
         MainPosition $mainPosition,
-        MainPositionService $mainPositionService
+        MainPositionService $mainPositionService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $mainPositionService->forceDelete($mainPosition);
+        $mainPositionService->forceDelete(
+            $mainPosition,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $mainPositionVerifiedService,
+            $mainPositionDetailsService,
+            $subPositionService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }
 
     public function deleteSubPosition(
         SubPosition $subPosition,
-        SubPositionService $subPositionService
+        SubPositionService $subPositionService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
     ): RedirectResponse {
-        $subPositionService->forceDelete($subPosition);
+        $subPositionService->forceDelete(
+            $subPosition,
+            $sumCommentService,
+            $sumMoneySourceService,
+            $subPositionVerifiedService,
+            $subPositionSumDetailService,
+            $subPositionRowService,
+            $rowCommentService,
+            $columnCellService,
+            $cellCommentService,
+            $cellCalculationService,
+            $sageNotAssignedDataService,
+            $sageAssignedDataService
+        );
 
         return Redirect::back();
     }

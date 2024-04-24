@@ -18,7 +18,7 @@ class BudgetManagementAccountRepository extends BaseRepository
         return BudgetManagementAccount::onlyTrashed()->get();
     }
 
-    public function getByCostUnitNumberOrTitleAndIsAccountForRevenue(
+    public function getByAccountNumberOrTitleAndIsAccountForRevenue(
         string $search,
         bool $isAccountForRevenue
     ): Collection {

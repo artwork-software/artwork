@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class SubEventService
 {
-    public function __construct(
-        private SubEventRepository $subEventRepository
-    ) {
+    public function __construct(private SubEventRepository $subEventRepository)
+    {
     }
 
     public function delete(SubEvent $subEvent): bool

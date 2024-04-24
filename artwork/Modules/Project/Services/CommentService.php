@@ -14,15 +14,14 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class CommentService
 {
-    public function __construct(
-        private CommentRepository $commentRepository,
-        private ChangeService $changeService
-    ) {
+    public function __construct(private CommentRepository $commentRepository)
+    {
     }
 
     public function create(
         string $text,
         User $user,
+        ChangeService $changeService,
         ?Project $project = null,
         ?ProjectFile $projectFile = null,
         ?MoneySourceFile $moneySourceFile = null,
@@ -35,8 +34,8 @@ readonly class CommentService
         $comment->tab_id = $tabId;
         if ($project) {
             $comment->project()->associate($project);
-            $this->changeService->saveFromBuilder(
-                $this->changeService
+            $changeService->saveFromBuilder(
+                $changeService
                     ->createBuilder()
                     ->setModelClass(Project::class)
                     ->setModelId($project->id)
@@ -62,10 +61,10 @@ readonly class CommentService
         return $comment;
     }
 
-    public function delete(Comment $comment): void
+    public function delete(Comment $comment, ChangeService $changeService): void
     {
-        $this->changeService->saveFromBuilder(
-            $this->changeService
+        $changeService->saveFromBuilder(
+            $changeService
                 ->createBuilder()
                 ->setModelClass(Project::class)
                 ->setModelId($comment->project->id)
@@ -75,11 +74,11 @@ readonly class CommentService
         $comment->delete();
     }
 
-    public function deleteAll(array|Collection $comments): void
+    public function deleteAll(array|Collection $comments, ChangeService $changeService): void
     {
         /** @var Comment $comment */
         foreach ($comments as $comment) {
-            $this->delete($comment);
+            $this->delete($comment, $changeService);
         }
     }
 

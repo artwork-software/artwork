@@ -5,10 +5,10 @@ namespace Artwork\Modules\PresetShift\Services;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\PresetShift\Repositories\PresetShiftsShiftsQualificationsRepository;
 
-class PresetShiftsShiftsQualificationsService
+readonly class PresetShiftsShiftsQualificationsService
 {
     public function __construct(
-        private readonly PresetShiftsShiftsQualificationsRepository $presetShiftsQualificationsRepository
+        private PresetShiftsShiftsQualificationsRepository $presetShiftsQualificationsRepository
     ) {
     }
 

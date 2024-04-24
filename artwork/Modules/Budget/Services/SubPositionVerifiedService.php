@@ -5,11 +5,10 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\SubPositionVerified;
 use Artwork\Modules\Budget\Repositories\SubPositionVerifiedRepository;
 
-class SubPositionVerifiedService
+readonly class SubPositionVerifiedService
 {
-    public function __construct(
-        private readonly SubPositionVerifiedRepository $subPositionVerifiedRepository
-    ) {
+    public function __construct(private SubPositionVerifiedRepository $subPositionVerifiedRepository)
+    {
     }
 
     public function forceDelete(SubPositionVerified $subPositionVerified): void

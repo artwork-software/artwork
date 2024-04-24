@@ -7,9 +7,9 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Tasks\Repositories\TaskRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class TaskService
+readonly class TaskService
 {
-    public function __construct(private readonly TaskRepository $taskRepository)
+    public function __construct(private TaskRepository $taskRepository)
     {
     }
 

@@ -10,13 +10,13 @@ use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-class ShiftCountService
+readonly class ShiftCountService
 {
     public function __construct(
-        private readonly ShiftRepository $shiftRepository,
-        private readonly ShiftUserRepository $shiftUserRepository,
-        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
-        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository
+        private ShiftRepository $shiftRepository,
+        private ShiftUserRepository $shiftUserRepository,
+        private ShiftFreelancerRepository $shiftFreelancerRepository,
+        private ShiftServiceProviderRepository $shiftServiceProviderRepository
     ) {
     }
 

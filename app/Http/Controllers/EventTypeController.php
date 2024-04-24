@@ -41,15 +41,7 @@ class EventTypeController extends Controller
 
     public function update(Request $request, EventType $eventType): RedirectResponse
     {
-        $eventType->update(
-            [
-                'name' => $request->get('name'),
-                'hex_code' => $request->get('hex_code', '#EC7A3D'),
-                'project_mandatory' => $request->get('project_mandatory'),
-                'individual_name' => $request->get('individual_name'),
-                'abbreviation' => $request->get('abbreviation'),
-            ]
-        );
+        $eventType->update($request->all());
 
         return Redirect::route('event_types.management');
     }

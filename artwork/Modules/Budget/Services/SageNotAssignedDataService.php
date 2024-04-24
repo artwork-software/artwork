@@ -9,11 +9,10 @@ use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Redirect;
 
-class SageNotAssignedDataService
+readonly class SageNotAssignedDataService
 {
-    public function __construct(
-        private readonly SageNotAssignedDataRepository $sageNotAssignedDataRepository,
-    ) {
+    public function __construct(private SageNotAssignedDataRepository $sageNotAssignedDataRepository,)
+    {
     }
 
     public function create(array $attributes): SageNotAssignedData
@@ -102,7 +101,6 @@ class SageNotAssignedDataService
 
         // check if any cell in $columnCells has a value with the same
         // $sageNotAssignedData->sa_kto as $columnCell->value in the first three columns
-
         $cellWithSameSaKto = $columnCells->first(
             fn (ColumnCell $cell) => $cell->value === $sageNotAssignedData->sa_kto
         );
@@ -135,10 +133,15 @@ class SageNotAssignedDataService
             ]);
 
             $currentCellValue = $columnCell->value;
-            $columnCell->update(['value' => floatval($currentCellValue) +
-                floatval($sageNotAssignedData->buchungsbetrag)]);
+            $columnCell->update(
+                ['value' => floatval(str_replace(',', '.', $columnCell->value)) +
+                    floatval(str_replace(',', '.', $sageNotAssignedData->buchungsbetrag))
+                ]
+            );
 
             $this->forceDelete($sageNotAssignedData);
+
+            return Redirect::back();
         } else {
             return Redirect::back()->with(
                 'error',

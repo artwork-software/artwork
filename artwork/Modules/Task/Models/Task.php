@@ -3,12 +3,12 @@
 namespace Artwork\Modules\Task\Models;
 
 use App\Models\Contract;
-use App\Models\MoneySourceTask;
 use App\Models\User;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;

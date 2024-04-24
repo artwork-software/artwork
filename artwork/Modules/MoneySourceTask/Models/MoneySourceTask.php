@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySourceTask\Models;
 
+use App\Models\MoneySource;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -40,7 +42,12 @@ class MoneySourceTask extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source(): BelongsTo
     {
-        return $this->belongsTo(MoneySource::class);
+        return $this->belongsTo(
+            MoneySource::class,
+            'money_source_id',
+            'id',
+            'money_sources'
+        );
     }
 
     //@todo: fix phpcs error - refactor function name to moneySourceTaskUsers

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySourceReminder\Models;
 
+use App\Models\MoneySource;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MoneySourceReminder extends Model
@@ -15,6 +16,7 @@ class MoneySourceReminder extends Model
     public const MONEY_SOURCE_REMINDER_TYPE_THRESHOLD = 'threshold';
 
     protected $fillable = [
+        'money_source_id',
         'type',
         'value',
         'notification_created'
@@ -24,6 +26,11 @@ class MoneySourceReminder extends Model
 
     public function moneySource(): BelongsTo
     {
-        return $this->belongsTo(MoneySource::class);
+        return $this->belongsTo(
+            MoneySource::class,
+            'money_source_id',
+            'id',
+            'money_sources'
+        );
     }
 }

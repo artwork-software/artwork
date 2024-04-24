@@ -4,7 +4,7 @@ namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Models\MoneySource;
-use App\Models\MoneySourceReminder;
+use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Illuminate\Database\Eloquent\Collection;
 
 class MoneySourceThresholdReminderService

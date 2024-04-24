@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Modules\Budget\Models\SumMoneySource;
+use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Project\Models\Project;

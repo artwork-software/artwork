@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomRoomAttributeMapping;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\RoomAttribute;
 
 class RoomAttributeController extends Controller
 {

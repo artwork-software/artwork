@@ -3,11 +3,11 @@
 namespace Artwork\Modules\Room\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Models\RoomRoomAttributeMapping;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
 use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;

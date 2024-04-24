@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySourceFile\Models;
 
+use App\Models\MoneySource;
 use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,6 +24,12 @@ class MoneySourceFile extends Model
     use HasFactory;
     use SoftDeletes;
 
+    protected $fillable = [
+        'name',
+        'basename',
+        'money_source_id'
+    ];
+
     protected $guarded = [
         'id'
     ];
@@ -31,7 +38,12 @@ class MoneySourceFile extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source(): BelongsTo
     {
-        return $this->belongsTo(MoneySource::class);
+        return $this->belongsTo(
+            MoneySource::class,
+            'money_source_id',
+            'id',
+            'money_sources'
+        );
     }
 
     public function comments(): HasMany

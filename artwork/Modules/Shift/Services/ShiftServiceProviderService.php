@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use App\Models\ServiceProvider;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;

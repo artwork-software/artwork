@@ -4,8 +4,8 @@ namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
-use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

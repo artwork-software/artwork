@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Craft;
-use App\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\ServiceProviderShiftQualificationRepository;

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ShiftQualification\Services;
 
-use App\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateServiceProviderShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\ServiceProviderShiftQualificationRepository;

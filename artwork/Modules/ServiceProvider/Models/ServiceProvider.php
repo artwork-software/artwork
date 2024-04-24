@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\ServiceProvider\Models;
 
+use App\Models\Craft;
 use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
@@ -10,7 +11,7 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 

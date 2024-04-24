@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Freelancer;
-use App\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

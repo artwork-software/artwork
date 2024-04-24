@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\ServiceProviderContacts\Models;
 
-use App\Models\ServiceProvider;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**

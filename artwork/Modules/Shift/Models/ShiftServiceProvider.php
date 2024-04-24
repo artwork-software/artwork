@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use App\Models\ServiceProvider;
 use Artwork\Core\Database\Models\Pivot;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

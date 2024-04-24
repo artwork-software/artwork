@@ -3,9 +3,9 @@
 namespace Artwork\Modules\ShiftQualification\Models;
 
 use App\Models\Freelancer;
-use App\Models\ServiceProvider;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

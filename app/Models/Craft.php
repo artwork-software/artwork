@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

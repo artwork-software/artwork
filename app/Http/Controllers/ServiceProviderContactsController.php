@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Illuminate\Http\Request;
 

@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Department\Models;
 
-use App\Models\ChecklistTemplate;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;

@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\TaskTemplate\Models;
 
-use App\Models\ChecklistTemplate;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 

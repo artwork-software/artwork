@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\ChecklistTemplate\Models;
 
+use App\Models\User;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
 
 /**
@@ -28,12 +31,12 @@ class ChecklistTemplate extends Model
 
     //@todo: fix phpcs error - refactor function name to taskTemplate
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function task_templates()
+    public function task_templates(): HasMany
     {
         return $this->hasMany(TaskTemplate::class);
     }
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }

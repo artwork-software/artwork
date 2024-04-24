@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ChecklistShowResource;
-use App\Models\ChecklistTemplate;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
 use Artwork\Modules\Task\Models\Task;

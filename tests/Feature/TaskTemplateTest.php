@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\ChecklistTemplate;
 use App\Models\User;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ChecklistTemplateIndexResource;
-use App\Models\ChecklistTemplate;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Builders\EventBuilder;
 use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -623,7 +622,7 @@ class CalendarController extends Controller
         ?Room $room,
         ?Project $project,
         $shiftPlan = false
-    ): EventBuilder {
+    ): Builder {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -643,11 +642,11 @@ class CalendarController extends Controller
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
         return $query
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
+            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
+            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(EventBuilder $builder) => $builder->whereHas(
+                fn(Builder $builder) => $builder->whereHas(
                     'room',
                     fn(Builder $roomBuilder) => $roomBuilder
                         ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
@@ -690,11 +689,11 @@ class CalendarController extends Controller
                     );
                 }
             )
-            ->unless(!$hasAudience, fn(EventBuilder $builder) => $builder->where('audience', true))
-            ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
-            ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))
-            ->unless(!$isNotLoud, fn(EventBuilder $builder) => $builder->where('is_loud', false))
-            ->when($startDate, fn(EventBuilder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate));
+            ->unless(!$hasAudience, fn(Builder $builder) => $builder->where('audience', true))
+            ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
+            ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
+            ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
+            ->when($startDate, fn(Builder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate));
     }
 
     public function filterRooms($startDate, $endDate, $shiftPlan = false): Builder

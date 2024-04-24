@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\UpdateBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -102,9 +104,16 @@ class BudgetManagementAccountController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(BudgetManagementAccount $budgetManagementAccount): RedirectResponse
-    {
-        $this->budgetManagementAccountService->forceDelete($budgetManagementAccount);
+    public function forceDelete(
+        BudgetManagementAccount $budgetManagementAccount,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): RedirectResponse {
+        $this->budgetManagementAccountService->forceDelete(
+            $budgetManagementAccount,
+            $projectService,
+            $columnCellService
+        );
 
         return Redirect::back();
     }

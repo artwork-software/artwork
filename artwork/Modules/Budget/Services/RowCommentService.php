@@ -5,11 +5,10 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Repositories\RowCommentRepository;
 
-class RowCommentService
+readonly class RowCommentService
 {
-    public function __construct(
-        private readonly RowCommentRepository $rowCommentRepository
-    ) {
+    public function __construct(private RowCommentRepository $rowCommentRepository)
+    {
     }
 
     public function forceDelete(RowComment $rowComment): void

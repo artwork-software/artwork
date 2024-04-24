@@ -11,12 +11,10 @@ use Artwork\Modules\Availability\Repositories\AvailabilityConflictRepository;
 use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 
-class AvailabilityConflictService
+readonly class AvailabilityConflictService
 {
-    public function __construct(
-        private readonly AvailabilityConflictRepository $availabilityConflictRepository,
-        protected readonly NotificationService $notificationService,
-    ) {
+    public function __construct(private AvailabilityConflictRepository $availabilityConflictRepository)
+    {
     }
 
     public function create(array $data): void
@@ -30,6 +28,7 @@ class AvailabilityConflictService
     //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
     public function checkAvailabilityConflictsOnDay(
         string $day,
+        NotificationService $notificationService,
         ?User $user = null,
         ?Freelancer $freelancer = null,
     ): void {
@@ -80,15 +79,15 @@ class AvailabilityConflictService
                     ],
                 ];
 
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setIcon('red');
+                $notificationService->setPriority(2);
+                $notificationService
                     ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setButtons(['see_shift']);
-                $this->notificationService->setShiftId($shift->id);
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setDescription($notificationDescription);
+                $notificationService->setButtons(['see_shift']);
+                $notificationService->setShiftId($shift->id);
             }
             if ($availabilities->count() > 0) {
                 foreach ($availabilities as $availability) {
@@ -115,8 +114,8 @@ class AvailabilityConflictService
                                 'end_time' => $shift->end,
                             ]);
                             if (!$user) {
-                                $this->notificationService->setNotificationTo($user);
-                                $this->notificationService->createNotification();
+                                $notificationService->setNotificationTo($user);
+                                $notificationService->createNotification();
                             }
                         }
                     }
@@ -127,6 +126,7 @@ class AvailabilityConflictService
 
     public function checkAvailabilityConflictsShifts(
         Shift $shift,
+        NotificationService $notificationService,
         ?User $user = null,
         ?Freelancer $freelancer = null,
     ): void {
@@ -174,15 +174,15 @@ class AvailabilityConflictService
             ];
 
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('red');
+            $notificationService->setPriority(2);
+            $notificationService
             ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setButtons(['see_shift']);
-            $this->notificationService->setShiftId($shift->id);
+            $notificationService->setBroadcastMessage($broadcastMessage);
+            $notificationService->setDescription($notificationDescription);
+            $notificationService->setButtons(['see_shift']);
+            $notificationService->setShiftId($shift->id);
         }
         if ($availabilities->count() > 0) {
             foreach ($availabilities as $availability) {
@@ -207,8 +207,8 @@ class AvailabilityConflictService
                             'end_time' => $shift->end,
                         ]);
                         if (!$user) {
-                            $this->notificationService->setNotificationTo($user);
-                            $this->notificationService->createNotification();
+                            $notificationService->setNotificationTo($user);
+                            $notificationService->createNotification();
                         }
                     }
                 }

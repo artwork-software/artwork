@@ -9,28 +9,17 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\TableRepository;
 use Artwork\Modules\Project\Models\Project;
 
-class TableService
+readonly class TableService
 {
-    /**
-     * @param TableRepository $tableRepository
-     */
-    public function __construct(
-        private readonly TableRepository $tableRepository,
-        private readonly MainPositionService $mainPositionService,
-        private readonly ColumnService $columnService
-    ) {
+    public function __construct(private TableRepository $tableRepository)
+    {
     }
 
-
-    /**
-     * function createTableByProject
-     * @param Project $project
-     * @param string $name
-     * @param bool $isTemplate
-     * @return Table|Model
-     */
-    public function createTableInProject(Project $project, string $name, bool $isTemplate): Table|Model
-    {
+    public function createTableInProject(
+        Project $project,
+        string $name,
+        bool $isTemplate
+    ): Table|Model {
         $table = new Table();
         $table->project_id = $project->id;
         $table->name = $name;
@@ -38,15 +27,93 @@ class TableService
         return $this->tableRepository->save($table);
     }
 
-    public function forceDelete(Table $table): void
-    {
-        $table->mainPositions->each(function (MainPosition $mainPosition): void {
-            $this->mainPositionService->forceDelete($mainPosition);
-        });
+    public function forceDelete(
+        Table $table,
+        MainPositionService $mainPositionService,
+        ColumnService $columnService,
+        SumCommentService $sumCommentService,
+        SumMoneySourceService $sumMoneySourceService,
+        SubPositionVerifiedService $subPositionVerifiedService,
+        SubPositionSumDetailService $subPositionSumDetailService,
+        SubPositionRowService $subPositionRowService,
+        RowCommentService $rowCommentService,
+        ColumnCellService $columnCellService,
+        MainPositionVerifiedService $mainPositionVerifiedService,
+        MainPositionDetailsService $mainPositionDetailsService,
+        SubPositionService $subPositionService,
+        BudgetSumDetailsService $budgetSumDetailsService,
+        CellCommentService $cellCommentService,
+        CellCalculationService $cellCalculationService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+        SageAssignedDataService $sageAssignedDataService
+    ): void {
+        $table->mainPositions->each(
+            function (MainPosition $mainPosition) use (
+                $mainPositionService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $subPositionVerifiedService,
+                $subPositionSumDetailService,
+                $subPositionRowService,
+                $rowCommentService,
+                $columnCellService,
+                $mainPositionVerifiedService,
+                $mainPositionDetailsService,
+                $subPositionService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $mainPositionService->forceDelete(
+                    $mainPosition,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $subPositionVerifiedService,
+                    $subPositionSumDetailService,
+                    $subPositionRowService,
+                    $rowCommentService,
+                    $columnCellService,
+                    $mainPositionVerifiedService,
+                    $mainPositionDetailsService,
+                    $subPositionService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
 
-        $table->columns->each(function (Column $column): void {
-            $this->columnService->forceDelete($column);
-        });
+        $table->columns->each(
+            function (Column $column) use (
+                $columnService,
+                $sumCommentService,
+                $sumMoneySourceService,
+                $mainPositionDetailsService,
+                $subPositionSumDetailService,
+                $budgetSumDetailsService,
+                $columnCellService,
+                $cellCommentService,
+                $cellCalculationService,
+                $sageNotAssignedDataService,
+                $sageAssignedDataService
+            ): void {
+                $columnService->forceDelete(
+                    $column,
+                    $sumCommentService,
+                    $sumMoneySourceService,
+                    $mainPositionDetailsService,
+                    $subPositionSumDetailService,
+                    $budgetSumDetailsService,
+                    $columnCellService,
+                    $cellCommentService,
+                    $cellCalculationService,
+                    $sageNotAssignedDataService,
+                    $sageAssignedDataService
+                );
+            }
+        );
 
         $this->tableRepository->forceDelete($table);
     }

@@ -314,8 +314,8 @@
                                 </div>
                                 <div class="flex xxsLight items-center subpixel-antialiased">
                                     <div class="flex items-center pl-5 py-1 pr-1">
-                                        {{ moneySource.amount + moneySource.sumOfPositions }}€ /
-                                        {{ moneySource.amount }}€
+                                        {{ this.toCurrencyString(moneySource.amount + moneySource.sumOfPositions) }}€ /
+                                        {{ this.toCurrencyString(moneySource.amount) }}€
                                     </div>
                                     <div class="" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
                                         |
@@ -437,10 +437,11 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 
 export default defineComponent({
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
         FormButton,
         AddButtonSmall,

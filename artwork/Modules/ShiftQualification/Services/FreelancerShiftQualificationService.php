@@ -7,11 +7,10 @@ use Artwork\Modules\ShiftQualification\Http\Requests\UpdateFreelancerShiftQualif
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualificationRepository;
 
-class FreelancerShiftQualificationService
+readonly class FreelancerShiftQualificationService
 {
-    public function __construct(
-        private readonly FreelancerShiftQualificationRepository $freelancerShiftQualificationRepository
-    ) {
+    public function __construct(private FreelancerShiftQualificationRepository $freelancerShiftQualificationRepository)
+    {
     }
 
     public function createByRequestForFreelancer(

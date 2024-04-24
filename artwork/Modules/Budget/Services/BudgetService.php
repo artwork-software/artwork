@@ -28,19 +28,23 @@ use Illuminate\Support\Facades\DB;
 
 readonly class BudgetService
 {
-    public function __construct(
-        private TableService $budgetTableService,
-        private ColumnService $budgetColumnService,
-        private MainPositionService $mainPositionService,
-        private BudgetColumnSettingService $budgetColumnSettingService,
-        private SageApiSettingsService $sageApiSettingsService,
-    ) {
-    }
-
-    public function generateBasicBudgetValues(Project $project): void
-    {
-        DB::transaction(function () use ($project): void {
-            $table = $this->budgetTableService->createTableInProject(
+    public function generateBasicBudgetValues(
+        Project $project,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): void {
+        DB::transaction(function () use (
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        ): void {
+            $table = $tableService->createTableInProject(
                 $project,
                 $project->name . ' Budgettabelle',
                 false
@@ -48,32 +52,32 @@ readonly class BudgetService
 
             $columns = new Collection();
 
-            $columns[] = $this->budgetColumnService->createColumnInTable(
+            $columns[] = $columnService->createColumnInTable(
                 table: $table,
-                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
+                name: $columnSettingService->getColumnNameByColumnPosition(0),
                 subName: '',
                 type: 'empty'
             );
-            $columns[] = $this->budgetColumnService->createColumnInTable(
+            $columns[] = $columnService->createColumnInTable(
                 table: $table,
-                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
+                name: $columnSettingService->getColumnNameByColumnPosition(1),
                 subName: '',
                 type: 'empty'
             );
-            $columns[] = $this->budgetColumnService->createColumnInTable(
+            $columns[] = $columnService->createColumnInTable(
                 table: $table,
-                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
+                name: $columnSettingService->getColumnNameByColumnPosition(2),
                 subName: '',
                 type: 'empty'
             );
-            $columns[] = $this->budgetColumnService->createColumnInTable(
+            $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
                 type: 'empty'
             );
 
-            $costMainPosition = $this->mainPositionService->createMainPosition(
+            $costMainPosition = $mainPositionService->createMainPosition(
                 table: $table,
                 budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_COST,
                 name: 'Hauptpostion',
@@ -82,7 +86,7 @@ readonly class BudgetService
                     ->max('position') + 1
             );
 
-            $earningMainPosition = $this->mainPositionService->createMainPosition(
+            $earningMainPosition = $mainPositionService->createMainPosition(
                 table: $table,
                 budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_EARNING,
                 name: 'Hauptpostion',
@@ -174,12 +178,16 @@ readonly class BudgetService
         });
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getBudgetForProjectTab(
         Project $project,
         array $loadedProjectInformation,
-        SageAssignedDataCommentService $sageAssignedDataCommentService
+        SageAssignedDataCommentService $sageAssignedDataCommentService,
+        SageApiSettingsService $sageApiSettingsService
     ): array {
         $columns = $project->table()->first()->columns()->get();
 
@@ -242,7 +250,7 @@ readonly class BudgetService
         $projectsGroup = collect();
         $globalGroup = collect();
 
-        if ($this->sageApiSettingsService->getFirst()?->enabled) {
+        if ($sageApiSettingsService->getFirst()?->enabled) {
             $sageNotAssigned = SageNotAssignedData::query()
                 ->where('project_id', $project->id)
                 ->orWhere('project_id', null)

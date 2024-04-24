@@ -7,9 +7,9 @@ use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
 use App\Models\User;
 
-class UserShiftQualificationService
+readonly class UserShiftQualificationService
 {
-    public function __construct(private readonly UserShiftQualificationRepository $userShiftQualificationRepository)
+    public function __construct(private UserShiftQualificationRepository $userShiftQualificationRepository)
     {
     }
 

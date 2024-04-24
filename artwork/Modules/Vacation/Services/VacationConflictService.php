@@ -10,29 +10,30 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 
-class VacationConflictService
+readonly class VacationConflictService
 {
-    public function __construct(
-        private readonly VacationConflictRepository $vacationConflictRepository,
-        protected readonly NotificationService $notificationService,
-    ) {
+    public function __construct(private VacationConflictRepository $vacationConflictRepository)
+    {
     }
 
-    public function create(array $data): \Artwork\Core\Database\Models\Model
+    public function create(array $data): VacationConflict
     {
         $conflict = new VacationConflict();
         $conflict->fill($data);
-        return $this->vacationConflictRepository->save($conflict);
+
+        $this->vacationConflictRepository->save($conflict);
+
+        return $conflict;
     }
 
     //@todo: fix phpcs error - fix complexity and nesting level
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function checkVacationConflictsOnDay(
         string $day,
-        ?User $user = null,
-        ?Freelancer $freelancer = null,
+        ?User $user,
+        ?Freelancer $freelancer,
+        NotificationService $notificationService
     ): void {
         $shifts = collect();
         $vacations = collect();
@@ -81,15 +82,15 @@ class VacationConflictService
                     ],
                 ];
 
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('red');
-                $this->notificationService->setPriority(2);
-                $this->notificationService
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setIcon('red');
+                $notificationService->setPriority(2);
+                $notificationService
                 ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setButtons(['see_shift']);
-                $this->notificationService->setShiftId($shift->id);
+                $notificationService->setBroadcastMessage($broadcastMessage);
+                $notificationService->setDescription($notificationDescription);
+                $notificationService->setButtons(['see_shift']);
+                $notificationService->setShiftId($shift->id);
             }
             if ($vacations->count() > 0) {
                 foreach ($vacations as $vacation) {
@@ -107,8 +108,8 @@ class VacationConflictService
                             'end_time' => $shift->end,
                         ]);
                         if ($user) {
-                            $this->notificationService->setNotificationTo($user);
-                            $this->notificationService->createNotification();
+                            $notificationService->setNotificationTo($user);
+                            $notificationService->createNotification();
                         }
                     } else {
                         // check if shift is on vacation time
@@ -127,8 +128,8 @@ class VacationConflictService
                                 'end_time' => $shift->end,
                             ]);
                             if ($user) {
-                                $this->notificationService->setNotificationTo($user);
-                                $this->notificationService->createNotification();
+                                $notificationService->setNotificationTo($user);
+                                $notificationService->createNotification();
                             }
                         }
                     }
@@ -139,6 +140,7 @@ class VacationConflictService
 
     public function checkVacationConflictsShifts(
         Shift $shift,
+        NotificationService $notificationService,
         ?User $user = null,
         ?Freelancer $freelancer = null,
     ): void {
@@ -185,15 +187,14 @@ class VacationConflictService
                 ],
             ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setButtons(['see_shift']);
-            $this->notificationService->setShiftId($shift->id);
+            $notificationService->setTitle($notificationTitle);
+            $notificationService->setIcon('red');
+            $notificationService->setPriority(2);
+            $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            $notificationService->setBroadcastMessage($broadcastMessage);
+            $notificationService->setDescription($notificationDescription);
+            $notificationService->setButtons(['see_shift']);
+            $notificationService->setShiftId($shift->id);
         }
         if ($vacations->count() > 0) {
             foreach ($vacations as $vacation) {
@@ -211,8 +212,8 @@ class VacationConflictService
                         'end_time' => $shift->end,
                     ]);
                     if ($user) {
-                        $this->notificationService->setNotificationTo($user);
-                        $this->notificationService->createNotification();
+                        $notificationService->setNotificationTo($user);
+                        $notificationService->createNotification();
                     }
                 } else {
                     // check if shift is on vacation time
@@ -231,8 +232,8 @@ class VacationConflictService
                             'end_time' => $shift->end,
                         ]);
                         if ($user) {
-                            $this->notificationService->setNotificationTo($user);
-                            $this->notificationService->createNotification();
+                            $notificationService->setNotificationTo($user);
+                            $notificationService->createNotification();
                         }
                     }
                 }

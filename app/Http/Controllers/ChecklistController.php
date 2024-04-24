@@ -11,6 +11,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -131,15 +132,16 @@ class ChecklistController extends Controller
 
     public function update(
         ChecklistUpdateRequest $request,
-        Checklist $checklist
+        Checklist $checklist,
+        TaskService $taskService
     ): RedirectResponse {
-        $this->checklistService->updateByRequest($checklist, $request);
+        $this->checklistService->updateByRequest($checklist, $request, $taskService);
 
         if ($request->missing('assigned_user_ids')) {
             return Redirect::back();
         }
 
-        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids);
+        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids, $taskService);
 
         $this->changeService->saveFromBuilder(
             $this->changeService

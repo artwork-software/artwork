@@ -10,9 +10,8 @@ use Throwable;
 
 readonly class BudgetColumnSettingService
 {
-    public function __construct(
-        private BudgetColumnSettingRepository $budgetColumnSettingRepository
-    ) {
+    public function __construct(private BudgetColumnSettingRepository $budgetColumnSettingRepository)
+    {
     }
 
     public function getAll(): Collection

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Modules\Budget\Models\SumMoneySource;
+use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

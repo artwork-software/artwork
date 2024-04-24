@@ -8,6 +8,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Permission\Models\Permission;

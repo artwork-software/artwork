@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySourceUserPivot\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Artwork\Core\Database\Models\Pivot;
 
 /**
  * @property int $id

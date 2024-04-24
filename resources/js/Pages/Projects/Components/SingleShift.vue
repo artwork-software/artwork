@@ -208,7 +208,6 @@ import {
 } from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
-import Helper from "@/Mixins/Helper.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {Inertia} from "@inertiajs/inertia";
@@ -233,7 +232,7 @@ export default defineComponent({
         MenuItem,
         MenuItems
     },
-    mixins: [Helper, IconLib],
+    mixins: [IconLib],
     props: [
         'shift',
         'crafts',

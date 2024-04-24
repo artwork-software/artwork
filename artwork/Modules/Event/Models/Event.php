@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Builders\EventBuilder;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventType\Models\EventType;
@@ -195,6 +194,9 @@ class Event extends Model
         return Carbon::parse($this->end_time)->format('H:i');
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getEventDateWithoutTimeAttribute(): array
     {
         return [
@@ -241,11 +243,6 @@ class Event extends Model
         }
 
         return $days;
-    }
-
-    public function newEloquentBuilder($query): EventBuilder
-    {
-        return new EventBuilder($query);
     }
 
     public function getMinutesFromDayStart(Carbon $date): int
@@ -343,5 +340,12 @@ class Event extends Model
     public function scopeIsNotId(Builder $builder, int $eventId): Builder
     {
         return $builder->where('id', '!=', $eventId);
+    }
+
+    public function scopeOccursAt(Builder $builder, Carbon $carbon): Builder
+    {
+        return $builder
+            ->whereDate('start_time', '<=', $carbon)
+            ->whereDate('end_time', '>=', $carbon);
     }
 }

@@ -48,7 +48,7 @@
             <button v-if="!table.is_template"
                     @click="downloadBudgetExport(project.id)"
                     type="button"
-                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
             </button>
@@ -61,7 +61,7 @@
             </div>
             <SwitchGroup as="div" v-if="!table.is_template">
                 <Switch v-model="userExcludeCommentedBudgetItems"
-                        :class="[userExcludeCommentedBudgetItems ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                        :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
                         <span aria-hidden="true"
                               :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
@@ -363,8 +363,8 @@
                                         <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
-                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(0).toLocaleString() }}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
+                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
                                             <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -381,10 +381,10 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         <span v-if="column.type !== 'sage'">
-                                            {{ table.commentedCostSums[column.id]?.toLocaleString() }}
+                                            {{ this.toCurrencyString(table.commentedCostSums[column.id]) }}
                                         </span>
                                         <span v-else>
-                                                {{ this.calculateSageColumnWithCellSageDataCommented(0).toLocaleString() }}
+                                                {{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataCommented(0)) }}
                                         </span>
                                     </div>
                                 </td>
@@ -448,8 +448,8 @@
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
-                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(1).toLocaleString() }}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
+                                        <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
                                             <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -467,10 +467,10 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                          <span v-if="column.type !== 'sage'">
-                                            {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
+                                            {{ this.toCurrencyString(table.commentedEarningSums[column.id]) }}
                                          </span>
                                         <span v-else>
-                                            {{ calculateSageColumnWithCellSageDataCommented(1).toLocaleString() }}
+                                            {{ this.toCurrencyString(calculateSageColumnWithCellSageDataCommented(1)) }}
                                         </span>
                                     </div>
                                 </td>
@@ -505,10 +505,10 @@
                         v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                         <div class="w-48 my-2 p-1" :class="[this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '', this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '']">
                             <span v-if="column.type !== 'sage'">
-                                {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
+                                {{ this.toCurrencyString((this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id))) }}
                             </span>
                             <span v-else>
-                                {{ (this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)).toLocaleString() }}
+                                {{ this.toCurrencyString((this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0))) }}
                             </span>
                         </div>
                     </td>
@@ -749,10 +749,11 @@ import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: 'BudgetComponent',
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
         SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,
@@ -878,7 +879,8 @@ export default {
         'projectManager',
         'columns',
         'isBudgetTemplateManagement',
-        'sageNotAssigned'
+        'sageNotAssigned',
+        'first_project_budget_tab_id'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
@@ -1135,13 +1137,6 @@ export default {
                 preserveScroll: true
             });
         },
-        currencyFormat(number) {
-            const formatter = new Intl.NumberFormat('de-DE', {
-                style: 'currency',
-                currency: 'EUR',
-            });
-            return formatter.format(number);
-        },
         openAddColumnModal() {
             this.showAddColumnModal = true;
         },
@@ -1259,7 +1254,7 @@ export default {
         },
         openCellDetailModal(cell, type) {
             Inertia.get(
-                route('projects.show.budget', {project: this.project.id}),
+                route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedCell: cell.id,
                 },
@@ -1274,7 +1269,7 @@ export default {
             );
         },
         openBudgetSumDetailModal(type, column, tab = 'comment') {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
             }, {
@@ -1287,7 +1282,7 @@ export default {
             })
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1301,7 +1296,7 @@ export default {
             })
         },
         openMainPositionSumDetailModal(mainPosition, column, type) {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}),
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedMainPosition: mainPosition.id,
                     selectedColumn: column.id,

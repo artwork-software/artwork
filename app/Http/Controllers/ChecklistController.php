@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ChecklistShowResource;
 use App\Models\ChecklistTemplate;
 use App\Models\Task;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
-use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Support\Services\HistoryService;
-use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
+use Artwork\Modules\Tasks\Services\TaskService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,10 +22,10 @@ use Inertia\ResponseFactory;
 
 class ChecklistController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
-    public function __construct(protected readonly ChecklistService $checklistService)
-    {
+    public function __construct(
+        private readonly ChecklistService $checklistService,
+        private readonly ChangeService $changeService
+    ) {
         $this->authorizeResource(Checklist::class);
     }
 
@@ -48,11 +48,13 @@ class ChecklistController extends Controller
             $this->createWithoutTemplate($request);
         }
 
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->history->createHistory(
-            $request->project_id,
-            'Checklist added',
-            [$request->name]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Checklist added')
+                ->setTranslationKeyPlaceholderValues([$request->name])
         );
 
         ProjectHistory::create([
@@ -71,7 +73,8 @@ class ChecklistController extends Controller
         $checklist = Checklist::create([
             'name' => $template->name,
             'project_id' => $request->project_id,
-            'user_id' => $request->user_id
+            'user_id' => $request->user_id,
+            'tab_id' => $request->tab_id ?? null
         ]);
 
         foreach ($template->task_templates as $task_template) {
@@ -97,7 +100,8 @@ class ChecklistController extends Controller
         $checklist = Checklist::create([
             'name' => $request->name,
             'project_id' => $request->project_id,
-            'user_id' => $request->user_id
+            'user_id' => $request->user_id,
+            'tab_id' => $request->tab_id ?? null
         ]);
 
         foreach ($request->tasks as $task) {
@@ -126,41 +130,45 @@ class ChecklistController extends Controller
         ]);
     }
 
-    public function update(ChecklistUpdateRequest $request, Checklist $checklist): RedirectResponse
-    {
-        $this->checklistService->updateByRequest($checklist, $request);
+    public function update(
+        ChecklistUpdateRequest $request,
+        Checklist $checklist,
+        TaskService $taskService
+    ): RedirectResponse {
+        $this->checklistService->updateByRequest($checklist, $request, $taskService);
 
         if ($request->missing('assigned_user_ids')) {
             return Redirect::back();
         }
 
-        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids);
+        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids, $taskService);
 
-        $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory(
-            $checklist->project_id,
-            'Checklist modified',
-            [$checklist->name]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($checklist->project_id)
+                ->setTranslationKey('Checklist modified')
+                ->setTranslationKeyPlaceholderValues([$checklist->name])
         );
 
         return Redirect::back();
     }
 
-    public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
-    {
-        $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory(
-            $checklist->project_id,
-            'Checklist removed',
-            [$checklist->name]
-        );
+    public function destroy(
+        Checklist $checklist
+    ): RedirectResponse {
         $checklist->forceDelete();
-        $historyService->checklistUpdated($checklist);
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($checklist->project_id)
+                ->setTranslationKey('Checklist removed')
+                ->setTranslationKeyPlaceholderValues([$checklist->name])
+        );
 
         return Redirect::back();
-    }
-
-    public function forceDelete(): void
-    {
     }
 }

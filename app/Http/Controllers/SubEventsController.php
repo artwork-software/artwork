@@ -10,22 +10,7 @@ use Illuminate\Http\Request;
 
 class SubEventsController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    protected ?\stdClass $notificationData = null;
-
-    public function __construct()
-    {
-        $this->notificationService = new NotificationService();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->event = new \stdClass();
-    }
-
-    public function index(): void
-    {
-    }
-
-    public function create(): void
+    public function __construct(private readonly NotificationService $notificationService)
     {
     }
 
@@ -69,14 +54,6 @@ class SubEventsController extends Controller
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->createNotification();
         }
-    }
-
-    public function show(): void
-    {
-    }
-
-    public function edit(SubEvent $subEvents): void
-    {
     }
 
     public function update(Request $request, SubEvent $subEvents): void

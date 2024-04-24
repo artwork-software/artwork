@@ -118,7 +118,7 @@
                 <div v-if="!canEdit" class="flex w-full">
                     <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
                         {{$t('assigned to')}}: <a
-                        :href="route('projects.show.calendar', {project: selectedProject.id})"
+                        :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
                         class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
                         {{ this.selectedProject?.name }}
                     </a>
@@ -359,7 +359,7 @@
                                 <div class="xsLight flex" v-if="!this.creatingProject">
                                     {{$t('Currently assigned to:')}}
                                     <a v-if="this.selectedProject?.id"
-                                       :href="route('projects.show.calendar', {project: selectedProject.id})"
+                                       :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
                                        class="ml-3 flex xsDark">
                                         {{ this.selectedProject?.name }}
                                     </a>
@@ -661,7 +661,6 @@ import {
     XCircleIcon,
     XIcon
 } from '@heroicons/vue/outline';
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
     ListboxButton,
@@ -712,7 +711,6 @@ export default {
         JetDialogModal,
         XIcon,
         XCircleIcon,
-        EventTypeIconCollection,
         Listbox,
         ListboxButton,
         ListboxOption,
@@ -818,7 +816,8 @@ export default {
         'project',
         'wantedRoomId',
         'roomCollisions',
-        'showComments'
+        'showComments',
+        'first_project_calendar_tab_id'
     ],
     emits: ['closed'],
     watch: {

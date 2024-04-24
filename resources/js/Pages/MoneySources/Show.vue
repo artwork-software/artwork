@@ -114,7 +114,7 @@
                     <div class="w-1/2 xsLight uppercase border-r-2">
                         {{ $t('Original volume')}}
                         <div class="bigNumber my-4">
-                            {{ currencyFormat(moneySource.amount) }}
+                            {{ toCurrencyString(moneySource.amount) }}
                         </div>
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
@@ -125,7 +125,7 @@
                                     '',
                                     'bigNumber my-4'
                              ]">
-                            {{ currencyFormat(moneySource.amount_available) }}
+                            {{ toCurrencyString(moneySource.amount_available) }}
                         </div>
                     </div>
                 </div>
@@ -210,7 +210,7 @@
                              v-for="position in filteredPositions">
                             <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
                                 <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>
-                                {{ currencyFormat(position.value) }}
+                                {{ toCurrencyString(position.value) }}
                             </div>
                             <div class="project">
                                 <div class="text-gray-400"><a
@@ -248,6 +248,7 @@
                 :write-access="access_member"
                 :money-source-categories="moneySourceCategories"
                 :positionSumsPerProject="positionSumsPerProject"
+                :first_project_budget_tab_id="this.first_project_budget_tab_id"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -296,11 +297,20 @@ import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
+    props: [
+        'moneySource',
+        'moneySourceGroups',
+        'moneySources',
+        'moneySourceCategories',
+        'projects',
+        'linkedProjects',
+        'first_project_budget_tab_id'
+    ],
     components: {
         UserPopoverTooltip,
         ConfirmDeleteModal,
@@ -399,14 +409,7 @@ export default {
     },
     methods: {
         getProjectHref(project) {
-            return route('projects.show.budget', {project: project.id});
-        },
-        currencyFormat(number) {
-            const formatter = new Intl.NumberFormat('de-DE', {
-                style: 'currency',
-                currency: 'EUR',
-            });
-            return formatter.format(number);
+            return route('projects.tab', {project: project.id, projectTab: this.first_project_budget_tab_id});
         },
         getEditHref(moneySourceId) {
             return route('money_sources.show', {moneySource: moneySourceId});

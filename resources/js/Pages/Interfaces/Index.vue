@@ -64,11 +64,8 @@
                     />
                 </div>
             </div>
-            <input class="p-4 cursor-pointer text-sm text-white rounded-full bg-buttonBlue hover:bg-buttonHover"
-                   type="button"
-                   :value="$t('Save interface settings')"
-                   @click="this.showConfirmationComponent = true;"
-            />
+            <FormButton  classes="text-center justify-center" :text="$t('Save interface settings')" @click="this.showConfirmationComponent = true;" />
+
         </div>
         <div class="flex flex-col space-y-4">
             <hr class="mt-5"/>
@@ -133,9 +130,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     components: {
+        FormButton,
         ErrorComponent,
         SuccessModal,
         ConfirmationComponent,
@@ -219,11 +218,8 @@ export default defineComponent({
                     }
                 }
             );
-
-            console.debug(this.specificDayImportDate);
         },
         saveSageInterface(closedToSave) {
-            console.debug('saveSageInterface', closedToSave);
             this.showConfirmationComponent = false;
 
             if (!closedToSave) {

@@ -35,7 +35,7 @@
                         <div v-if="event.project" class="mt-1.5 flex">
                             {{ $t('assigned to')}}:
                             <a v-if="event.project?.id"
-                               :href="route('projects.show.calendar', {project: event.project.id})"
+                               :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
                                class="ml-3 text-md flex font-bold font-lexend text-primary">
                                 {{ event.project.name }}
                             </a>
@@ -112,19 +112,26 @@ import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon, SearchIco
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: "Events",
     layout: [AppLayout, TrashLayout],
-    props: ['trashed_events'],
+    props: ['trashed_events', 'first_project_calendar_tab_id'],
     components: {
-        Input, XIcon, SearchIcon,
+        Input,
+        XIcon,
+        SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,
-        Menu, MenuButton, DotsVerticalIcon,
-        MenuItems, MenuItem, RefreshIcon, TrashIcon, Link, EventTypeIconCollection
+        Menu,
+        MenuButton,
+        DotsVerticalIcon,
+        MenuItems,
+        MenuItem,
+        RefreshIcon,
+        TrashIcon,
+        Link
     },
     data() {
         return {

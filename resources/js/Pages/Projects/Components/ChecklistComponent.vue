@@ -5,7 +5,7 @@
                 {{ $t('Checklists') }}
             </h2>
             <div class="flex items-center"
-                 v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                 v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))">
                 <AddButtonSmall @click="openAddChecklistModal" :text="$t('New checklist')" />
                 <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -50,7 +50,7 @@
                                         </div>
                                     </div>
                                     <Menu
-                                        v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
                                         as="div" class="my-auto relative">
                                         <div class="flex">
                                             <MenuButton
@@ -144,7 +144,7 @@
                                 </div>
                             </div>
                             <div class="flex w-full mt-6"
-                                 v-if="this.opened_checklists.includes(checklist.id)">
+                                 v-if="this.canEditComponent && this.opened_checklists.includes(checklist.id)">
                                 <div class="flex"
                                      v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
@@ -162,7 +162,8 @@
                             </div>
                             <div class="mt-6 mb-12"
                                  v-if="this.opened_checklists.includes(checklist.id)">
-                                <draggable ghost-class="opacity-50"
+                                <draggable :disabled="!this.canEditComponent"
+                                           ghost-class="opacity-50"
                                            key="draggableKey"
                                            item-key="draggableID" :list="checklist.tasks"
                                            @start="dragging=true" @end="dragging=false"
@@ -172,15 +173,16 @@
                                              :key="element.id"
                                              @mouseout="showMenu = null">
                                             <div class="flex mt-6 flex-wrap w-full"
-                                                 :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                                                 :class="dragging ? 'cursor-grabbing' : this.canEditComponent ? 'cursor-grab' : ''">
                                                 <div class="flex w-full items-center">
-                                                    <div v-if="showMenu === element.id"
+                                                    <div v-if="this.canEditComponent && showMenu === element.id"
                                                          class="flex -mt-1 items-center">
                                                         <DotsVerticalIcon stroke-width="1.5" class="h-5 w-5 -mr-3.5 text-secondary"/>
                                                         <DotsVerticalIcon stroke-width="1.5" class="h-5 w-5 text-secondary"/>
                                                     </div>
                                                     <div v-else class="h-5 w-5 flex"></div>
-                                                    <input @change="updateTaskStatus(element)"
+                                                    <input :disabled="!this.canEditComponent"
+                                                           @change="updateTaskStatus(element)"
                                                            v-model="element.done"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -215,7 +217,7 @@
                                                         </span>
                                                     </span>
                                                     <Menu
-                                                        v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')"
+                                                        v-if="this.canEditComponent && (this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin'))"
                                                         as="div" class="ml-3 relative z-10"
                                                         v-show="showMenu === element.id">
                                                         <div class="flex items-center">
@@ -901,7 +903,6 @@
 <script>
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import Checkbox from "@/Jetstream/Checkbox.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
@@ -916,7 +917,8 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch
+    MenuItems,
+  Switch
 } from "@headlessui/vue";
 import {
     DocumentTextIcon,
@@ -962,7 +964,9 @@ export default {
         'project',
         'opened_checklists',
         'checklist_templates',
-        'projectManagerIds'
+        'projectManagerIds',
+        'tab_id',
+        'canEditComponent'
     ],
     components: {
         AddButtonBig,
@@ -973,7 +977,6 @@ export default {
         AddChecklistUserModal,
         TagComponent,
         TeamTooltip,
-        CategoryIconCollection,
         Checkbox,
         TeamIconCollection,
         AppLayout,
@@ -1049,7 +1052,8 @@ export default {
                 assigned_user_ids: [],
                 private: false,
                 template_id: null,
-                user_id: null
+                user_id: null,
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             editChecklistForm: useForm({
                 id: null,
@@ -1057,6 +1061,7 @@ export default {
                 private: false,
                 user_id: null,
                 assigned_user_ids: [],
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             taskForm: useForm({
                 name: "",
@@ -1067,6 +1072,7 @@ export default {
                 checklist_id: null,
                 users: [],
                 private: false,
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             taskToEditForm: useForm({
                 id: '',
@@ -1077,17 +1083,20 @@ export default {
                 deadlineTime: null,
                 users: [],
                 private: false,
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             duplicateForm: useForm({
                 name: "",
                 project_id: this.project.id,
                 tasks: [],
                 assigned_user_ids: [],
-                user_id: null
+                user_id: null,
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             templateForm: useForm({
                 checklist_id: null,
                 user_id: this.$page.props.user.id,
+                tab_id: this.tab_id ? this.tab_id : null
             }),
             doneTaskForm: useForm({
                 done: false,
@@ -1160,6 +1169,7 @@ export default {
             let userIds = [];
             this.duplicateForm.name = checklist.name + " (Kopie)";
             this.duplicateForm.tasks = checklist.tasks;
+
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
                 this.duplicateForm.user_id = this.$page.props.user.id;
             } else {

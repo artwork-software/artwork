@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Collection;
 use Artwork\Modules\Permission\Models\Permission;
 use Throwable;
 
-class PermissionPresetService
+readonly class PermissionPresetService
 {
     public function __construct(
-        private readonly PermissionRepository $permissionRepository,
-        private readonly PermissionPresetRepository $permissionPresetRepository
+        private PermissionRepository $permissionRepository,
+        private PermissionPresetRepository $permissionPresetRepository
     ) {
     }
 

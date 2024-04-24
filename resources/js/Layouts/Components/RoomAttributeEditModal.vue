@@ -156,11 +156,6 @@ const editRoomForm = useForm({
     adjoining_rooms: currentAdjoiningRooms.value,
 })
 
-onMounted(() => {
-    console.log(currentAdjoiningRooms.value)
-    console.log(props.availableAdjoiningRooms)
-})
-
 const saveRoomData = () => {
     updateRoomRequest()
     emit('close')

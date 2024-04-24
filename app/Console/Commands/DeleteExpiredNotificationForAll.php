@@ -12,10 +12,10 @@ class DeleteExpiredNotificationForAll extends Command
 
     protected $description = 'This command deletes the expired Notification for all';
 
-    public function handle(): int
+    public function handle(SchedulingController $schedulingController): int
     {
-        $scheduling = new SchedulingController();
-        $scheduling->deleteExpiredNotificationForAll();
+        $schedulingController->deleteExpiredNotificationForAll();
+
         return CommandAlias::SUCCESS;
     }
 }

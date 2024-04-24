@@ -3,8 +3,11 @@
 namespace Tests\Unit\Artwork\Modules\ShiftPreset\Services;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\PresetShift\Services\PresetShiftService;
+use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
+use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
@@ -46,7 +49,13 @@ class ShiftPresetServiceTest extends TestCase
             'event_type_id' => $event->event_type_id
         ]);
 
-        $this->shiftPresetService->storeFromEventAndRequest($event, $request);
+        $this->shiftPresetService->storeFromEventAndRequest(
+            $event,
+            $request,
+            app()->make(PresetShiftService::class),
+            app()->make(PresetShiftsShiftsQualificationsService::class),
+            app()->make(ShiftPresetTimelineService::class)
+        );
 
         $this->assertDatabaseHas('shift_presets', [
             'name' => 'Test Shift Preset',
@@ -58,7 +67,12 @@ class ShiftPresetServiceTest extends TestCase
     {
         $shiftPreset = ShiftPreset::factory()->create();
 
-        $this->shiftPresetService->duplicateShiftPreset($shiftPreset);
+        $this->shiftPresetService->duplicateShiftPreset(
+            $shiftPreset,
+            app()->make(PresetShiftService::class),
+            app()->make(PresetShiftsShiftsQualificationsService::class),
+            app()->make(ShiftPresetTimelineService::class)
+        );
 
         $this->assertDatabaseCount('shift_presets', 2);
     }

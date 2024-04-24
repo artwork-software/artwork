@@ -44,7 +44,6 @@ use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectStatesController;
-use App\Http\Controllers\ProjectHeadlineController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
@@ -134,9 +133,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
-        Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
-            ->name('projects.show.budget');
-
         Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 
@@ -221,6 +217,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
+    //user.sidebar.update
+    Route::patch('/users/{user}/sidebar/update', [UserController::class, 'updateSidebar'])
+        ->name('user.sidebar.update');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
@@ -273,24 +272,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');
-
-
-    //ProjectTabs
-    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])
-        ->name('projects.show.info')
-        ->middleware(CanViewProject::class);
-    Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
-        ->name('projects.show.calendar')->middleware(CanViewProject::class);
-    ;
-    Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
-        ->name('projects.show.checklist')->middleware(CanViewProject::class);
-    ;
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])
-        ->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
-    Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
-        ->name('projects.show.comment')->middleware(CanViewProject::class);
+
+    //ProjectTabs
+    Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
+        ->name('projects.tab')
+        ->middleware(CanViewProject::class);
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
@@ -536,8 +524,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('money_source.reminder', MoneySourceReminderController::class)->only('store');
 
     //Contracts
-    Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
-    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
+    Route::get('/contracts/view', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
@@ -661,12 +648,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             )->name('project.budget.move.sage.row');
 
             // project.budget.move.sage.row
-            /*
-             * table_id: this.tableId,
-                        sub_position_id: this.subPositionId,
-                        positionBefore: this.row ? this.row.position : -1,
-                        sage_data_id: data.id,
-             */
             Route::post(
                 '/move/sage/row/to/row/{table_id}/{sub_position_id}/{positionBefore}/{columnCell}',
                 [BudgetGeneralController::class, 'moveSageDataRowToNewRow']
@@ -819,6 +800,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'store'
             ]
         )->name('budget-settings.account-management.store-account');
+        Route::patch(
+            '/account-management/account/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'update'
+            ]
+        )->name('budget-settings.account-management.update-account');
         Route::delete(
             '/account-management/account/{budgetManagementAccount}',
             [
@@ -833,6 +821,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'store'
             ]
         )->name('budget-settings.account-management.store-cost-unit');
+        Route::patch(
+            '/account-management/cost-unit/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'update'
+            ]
+        )->name('budget-settings.account-management.update-cost-unit');
         Route::delete(
             '/account-management/cost-unit/{budgetManagementCostUnit}',
             [
@@ -947,21 +942,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
     Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])->name('currencies.restore');
     Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])->name('currencies.force');
-
-    // Project Headlines
-    Route::post('/project_headlines', [ProjectHeadlineController::class, 'store'])->name('project_headlines.store');
-    Route::put('/project_headlines/order', [ProjectHeadlineController::class, 'updateOrder'])
-        ->name('project_headlines.order');
-    Route::patch('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'update'])
-        ->name('project_headlines.update');
-    Route::patch(
-        '/project_headlines/{project_headline}/{project}/text',
-        [ProjectHeadlineController::class, 'updateText']
-    )->name('project_headlines.update.text');
-    Route::delete(
-        '/project_headlines/{project_headline}',
-        [ProjectHeadlineController::class, 'destroy']
-    )->name('project_headlines.delete');
 
     // Project States
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
@@ -1178,7 +1158,90 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('day-service.update');
     });
 
+    Route::group(['prefix' => 'settings'], function (): void {
+        Route::group(['prefix' => 'tab'], function (): void {
+            Route::get('index', [\App\Http\Controllers\ProjectTabController::class, 'index'])->name('tab.index');
+            Route::post('/{projectTab}/update/component/order', [\App\Http\Controllers\ProjectTabController::class,
+                'updateComponentOrder'])
+                ->name('tab.update.component.order');
+            //tab.add.component
+            Route::post('/{projectTab}/add/component', [\App\Http\Controllers\ProjectTabController::class,
+                'addComponent'])->name('tab.add.component');
+            // tab.remove.component
+            Route::delete('/{projectTab}/remove/component', [
+                \App\Http\Controllers\ProjectTabController::class,
+                'removeComponent'
+            ])->name('tab.remove.component');
+            // tab.destroy
+            Route::delete('/{projectTab}/destroy', [\App\Http\Controllers\ProjectTabController::class, 'destroy'])
+                ->name('tab.destroy');
+            // tab.update
+            Route::patch('/{projectTab}/update', [\App\Http\Controllers\ProjectTabController::class, 'update'])
+                ->name('tab.update');
+            // tab.store
+            Route::post('/store', [\App\Http\Controllers\ProjectTabController::class, 'store'])->name('tab.store');
+            //tab.reorder
+            Route::post('/reorder', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
+                ->name('tab.reorder');
+            //tab.add.component.sidebar
+            Route::post(
+                '/{projectTabSidebarTab}/add/component/sidebar',
+                [\App\Http\Controllers\ProjectTabController::class,
+                'addComponentSidebar']
+            )
+                ->name('tab.add.component.sidebar');
+            // tab.add.component.with.scopes
+            Route::post('/{projectTab}/add/component/with/scopes', [
+                \App\Http\Controllers\ProjectTabController::class,
+                'addComponentWithScopes'
+            ])->name('tab.add.component.with.scopes');
+        });
+        Route::group(['prefix' => 'component'], function (): void {
+            // index
+            Route::get('index', [\App\Http\Controllers\ComponentController::class, 'index'])
+                ->name('component.index');
+            // project.tab.component.update
+            Route::patch('/{project}/{component}/update', [\App\Http\Controllers\ProjectComponentValueController::class,
+                'update'])
+                ->name('project.tab.component.update');
+            //component.store
+            Route::post('/store', [\App\Http\Controllers\ComponentController::class, 'store'])
+                ->name('component.store');
+            //component.update
+            Route::patch('/{component}/update', [\App\Http\Controllers\ComponentController::class, 'update'])
+                ->name('component.update');
+            // component.destroy
+            Route::delete('/{component}/destroy', [\App\Http\Controllers\ComponentController::class, 'destroy'])
+                ->name('component.destroy');
+        });
+        Route::group(['prefix' => 'sidebar'], function (): void {
+            Route::delete('/component/{sidebarTabComponent}/remove', [
+                \App\Http\Controllers\SidebarTabComponentController::class,
+                'removeComponent'
+            ])
+                ->name('sidebar.component.remove');
+            //tab.sidebar.update
+            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'update'])
+                ->name('tab.sidebar.update');
 
-    Route::get('/test/project/{project}/tab/{projectTab}', [ProjectController::class, 'projectTabTest'])
-        ->name('project.tab.test');
+            //tab.sidebar.store
+            Route::post('/{projectTab}/store', [\App\Http\Controllers\ProjectTabSidebarTabController::class, 'store'])
+                ->name('tab.sidebar.store');
+            //sidebar.tab.update.component.order
+            Route::post('/{projectTabSidebarTab}/update/component/order', [
+                \App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'updateComponentOrder'
+            ])
+                ->name('sidebar.tab.update.component.order');
+            // tab.sidebar.update
+            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'update'])
+                ->name('tab.sidebar.update');
+            //sidebar.tab.reorder
+            Route::post('/reorder', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'reorder'])
+                ->name('sidebar.tab.reorder');
+        });
+    });
 });

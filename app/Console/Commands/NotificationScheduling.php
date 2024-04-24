@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class NotificationScheduling extends Command
 {
@@ -11,10 +12,10 @@ class NotificationScheduling extends Command
 
     protected $description = 'Send User Task Notification if task older than 30 minutes';
 
-    public function handle(): int
+    public function handle(SchedulingController $schedulingController): int
     {
-        $taskScheduling = new SchedulingController();
-        $taskScheduling->sendNotification();
-        return 1;
+        $schedulingController->sendNotification();
+
+        return CommandAlias::SUCCESS;
     }
 }

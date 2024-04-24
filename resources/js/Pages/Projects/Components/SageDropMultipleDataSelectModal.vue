@@ -4,10 +4,11 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import {XIcon} from "@heroicons/vue/solid";
 import IconLib from "@/mixins/IconLib.vue";
 import {Inertia} from "@inertiajs/inertia";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: "SageDropMultipleDataSelectModal",
-    mixins: [IconLib],
+    mixins: [IconLib, CurrencyFloatToStringFormatter],
     components: {
         FormButton,
         Dialog,
@@ -77,12 +78,6 @@ export default {
                     },
                 });
             }
-
-            console.log(checkedData);
-            console.log(this.type)
-        },
-        currencyFormattedValue(value) {
-            return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
         },
         formatBookingDataDate(dateString) {
             let parts = dateString.split('T');
@@ -157,7 +152,7 @@ export default {
                                             {{ data.buchungstext }}
                                         </div>
                                         <div class="w-52 text-right">
-                                            {{ this.currencyFormattedValue(data.buchungsbetrag) }}
+                                            {{ this.toCurrencyString(data.buchungsbetrag) }}
                                         </div>
                                     </div>
                                     <div class="flex justify-between my-3">

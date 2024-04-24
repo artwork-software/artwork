@@ -162,42 +162,7 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!--<div v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')" class="text-secondary flex flex-nowrap items-center !hidden">
-                                    <div v-if="project.project_history.length" class="flex items-center">
-                                        <span class=" xxsLight">
-                                              {{ $t('Last change:') }}
-                                        </span>
-                                        <UserPopoverTooltip v-if="project.project_history[0].changes[0].changed_by"
-                                                            :user="project.project_history[0].changes[0].changed_by"
-                                                            :id="index" height="4" width="4" class="ml-2"/>
-                                        <span class="ml-2 xxsLight subpixel-antialiased">
-                                                {{ project.project_history[0].created_at }}
-                                            </span>
-                                        <button
-                                            class="ml-4 xxsLight subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
-                                            @click="openProjectHistoryModal(project)">
-                                            <IconChevronRight stroke-width="1.5"
-                                                class="-mr-0.5 h-4 w-4 group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('View history') }}
-                                        </button>
-                                    </div>
-                                    <div v-else class="xxsLight">
-                                        {{ $t('No history available yet') }}
-                                    </div>
-                                </div>
-                                <div class="xxsLight w-11/12">
-                                    {{ truncate(project.description, 300, '...') }}
-                                </div>-->
                             </div>
-                            <!--<div class="col-start-9 flex items-center">
-                                <div class="flex items-top shrink-0 px-4">
-                                    <div class="-mr-3 " v-for="(user) in project.project_managers">
-                                        <UserPopoverTooltip :user="user" :id="user.id" height="8" width="8"/>
-                                    </div>
-                                </div>
-                            </div>-->
                             <div class="col-span-3 flex items-center justify-end">
                                 <div class="grid grid-cols-8">
                                     <div class="col-span-6">
@@ -422,7 +387,6 @@ import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
@@ -466,7 +430,6 @@ export default defineComponent({
         ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
-        CategoryIconCollection,
         TeamIconCollection,
         SvgCollection,
         Button,
@@ -665,7 +628,7 @@ export default defineComponent({
             this.project_search = '';
         },
         getEditHref(project) {
-            return route('projects.show.info', {project: project.id});
+            return route('projects.tab', {project: project.id, projectTab: project.first_tab_id});
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

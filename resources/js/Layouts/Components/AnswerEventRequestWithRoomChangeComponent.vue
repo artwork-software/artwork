@@ -21,7 +21,7 @@
                     <div class="my-2 flex w-full">
                         <div class="w-1/2 flex items-center my-auto" v-if="this.project?.id">
                             {{ $t('assigned to')}}: <a
-                            :href="route('projects.show.calendar', {project: this.project.id, openTab: 'calendar'})"
+                            :href="route('projects.tab', {project: this.project.id, projectTab: this.first_project_calendar_tab_id})"
                             class="ml-3 mt-1 items-center flex linkText">
                             {{ this.project?.name }}
                         </a>
@@ -104,7 +104,6 @@ import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {ChevronDownIcon, XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -119,7 +118,6 @@ export default {
         JetDialogModal,
         XIcon,
         CheckIcon,
-        EventTypeIconCollection,
         TagComponent,
         Listbox,
         ListboxButton,
@@ -127,7 +125,15 @@ export default {
         ListboxOptions,
         ChevronDownIcon,
     },
-    props: ['type', 'request', 'rooms', 'projects', 'eventTypes', 'creator'],
+    props: [
+        'type',
+        'request',
+        'rooms',
+        'projects',
+        'eventTypes',
+        'creator',
+        'first_project_calendar_tab_id'
+    ],
     emits: ['closed'],
     methods: {
         closeModal(bool) {

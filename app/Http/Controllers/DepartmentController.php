@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;
@@ -16,10 +17,6 @@ use Inertia\ResponseFactory;
 
 class DepartmentController extends Controller
 {
-    /**
-     * @param DepartmentService $departmentService
-     * @param UserService $userService
-     */
     public function __construct(
         private readonly DepartmentService $departmentService,
         private readonly UserService $userService,
@@ -27,11 +24,6 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function index(): Response|ResponseFactory
     {
         return inertia(
@@ -43,24 +35,14 @@ class DepartmentController extends Controller
         );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param StoreDepartmentRequest $storeDepartmentRequest
-     * @return RedirectResponse
-     */
-    public function store(StoreDepartmentRequest $storeDepartmentRequest): RedirectResponse
-    {
-        $this->departmentService->createByRequest($storeDepartmentRequest);
+    public function store(
+        StoreDepartmentRequest $storeDepartmentRequest,
+        NotificationService $notificationService
+    ): RedirectResponse {
+        $this->departmentService->createByRequest($storeDepartmentRequest, $notificationService);
         return Redirect::route('departments');
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param Department $department
-     * @return Response|ResponseFactory
-     */
     public function show(Department $department): Response|ResponseFactory
     {
         return inertia(
@@ -71,12 +53,6 @@ class DepartmentController extends Controller
         );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param Department $department
-     * @return Response|ResponseFactory
-     */
     public function edit(Department $department): Response|ResponseFactory
     {
         return inertia(
@@ -88,41 +64,33 @@ class DepartmentController extends Controller
         );
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param UpdateDepartmentRequest $updateDepartmentRequest
-     * @param Department $department
-     * @return RedirectResponse
-     */
-    public function update(UpdateDepartmentRequest $updateDepartmentRequest, Department $department): RedirectResponse
-    {
-        $this->departmentService->updateByRequest($updateDepartmentRequest, $department);
-        return Redirect::route('departments', $department->id);
+    public function update(
+        UpdateDepartmentRequest $updateDepartmentRequest,
+        Department $department,
+        UserService $userService,
+        NotificationService $notificationService
+    ): RedirectResponse {
+        $this->departmentService->updateByRequest(
+            $updateDepartmentRequest,
+            $department,
+            $userService,
+            $notificationService
+        );
+        return Redirect::route('departments.show', $department->id);
     }
 
     public function removeAllMembers(Department $department)
     {
         $this->departmentService->removeAllMembers($department);
-        return Redirect::route('departments', $department->id);
+        return Redirect::route('departments.show', $department->id);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Department $department
-     * @return RedirectResponse
-     */
-    public function destroy(Department $department): RedirectResponse
+    public function destroy(Department $department, NotificationService $notificationService): RedirectResponse
     {
-        $this->departmentService->deleteDepartment($department);
+        $this->departmentService->deleteDepartment($department, $notificationService);
         return Redirect::route('departments');
     }
 
-    /**
-     * @param SearchRequest $request
-     * @return Collection
-     */
     public function search(SearchRequest $request): Collection
     {
         return $this->departmentService->searchDepartments($request->get('query'));

@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\MoneySourceTask;
 use App\Models\Task;
 use App\Models\User;
-use App\Support\Services\HistoryService;
-use App\Support\Services\NewHistoryService;
-use App\Support\Services\NotificationService;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,19 +22,13 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use stdClass;
 
 class TaskController extends Controller
 {
-    protected ?stdClass $notificationData = null;
-
-    protected ?NewHistoryService $history = null;
-
-    public function __construct(protected NotificationService $notificationService)
-    {
-        $this->notificationData = new stdClass();
-        $this->notificationData->event = new stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
+    public function __construct(
+        private readonly ChangeService $changeService,
+        private readonly SchedulingController $schedulingController
+    ) {
     }
 
     public function create(): Response|ResponseFactory
@@ -44,7 +36,7 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
-    public function indexOwnTasks(): Response|ResponseFactory
+    public function indexOwnTasks(ProjectTabService $projectTabService): Response|ResponseFactory
     {
         $tasks = Task::query()
             ->with(['checklist.project', 'checklist.users'])
@@ -58,12 +50,14 @@ class TaskController extends Controller
             'tasks' => TaskShowResource::collection($tasks),
             'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function ($query) {
                 return $query->where('user_id', Auth::id());
-            }])->where('done', false)->get()
+            }])->where('done', false)->get(),
+            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id
         ]);
     }
 
-    public function store(StoreTaskRequest $request): JsonResponse|RedirectResponse
-    {
+    public function store(
+        StoreTaskRequest $request
+    ): JsonResponse|RedirectResponse {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
         $created = false;
@@ -89,22 +83,25 @@ class TaskController extends Controller
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
         }
 
-        $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory(
-            $checklist->project_id,
-            'Task added to',
-            [
-                $request->name,
-                $checklist->name
-            ]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($checklist->project_id)
+                ->setTranslationKey('Task added to')
+                ->setTranslationKeyPlaceholderValues([
+                    $request->name,
+                    $checklist->name
+                ])
         );
+
         $this->createNotificationForAllChecklistUser($checklist);
+
         return Redirect::back();
     }
 
     private function createNotificationForAllChecklistUser(Checklist $checklist): void
     {
-        $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
         if ($checklist->user_id === null) {
             $checklistUsers = $checklist->users()->get();
@@ -112,14 +109,14 @@ class TaskController extends Controller
                 $uniqueTaskUsers[$checklistUser->id] = $checklistUser->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser) {
-                $taskScheduling->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
+                $this->schedulingController->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
             }
         } else {
-            $taskScheduling->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
+            $this->schedulingController->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
         }
     }
 
-    private function createTask(Request $request): void
+    private function createTask(StoreTaskRequest $request): void
     {
         $task = Task::create([
             'name' => $request->name,
@@ -140,8 +137,6 @@ class TaskController extends Controller
         $checklistUsers = $checklist->users()->get();
 
         $task->task_users()->syncWithoutDetaching(collect($checklistUsers)->pluck('id'));
-
-        (new HistoryService())->taskUpdated($task);
     }
 
     public function edit(Task $task): Response|ResponseFactory
@@ -171,16 +166,17 @@ class TaskController extends Controller
         }
 
         if ($checklist = $task->checklist()->first()) {
-            $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $this->history->createHistory(
-                $checklist->project_id,
-                'Task changed from',
-                [
-                    $task->name,
-                    $checklist->name
-                ]
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($checklist->project_id)
+                    ->setTranslationKey('Task changed from')
+                    ->setTranslationKeyPlaceholderValues([
+                        $task->name,
+                        $checklist->name
+                    ])
             );
-
 
             $this->createNotificationUpdateTask($task);
         }
@@ -192,28 +188,26 @@ class TaskController extends Controller
     {
         $taskUser = $task->checklist()->first()->user_id;
         $users = $task->task_users()->get();
-        $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
         if ($taskUser === null) {
             foreach ($users as $user) {
                 $uniqueTaskUsers[$user->id] = $user->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser) {
-                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
+                $this->schedulingController->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
             }
         } else {
-            $taskScheduling->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
+            $this->schedulingController->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
         }
     }
 
-    public function updateOrder(Request $request, HistoryService $historyService): RedirectResponse
+    public function updateOrder(Request $request): RedirectResponse
     {
         $firstTask = Task::findOrFail($request->tasks[0]['id']);
 
         foreach ($request->tasks as $task) {
             Task::findOrFail($task['id'])->update(['order' => $task['order']]);
         }
-        $historyService->taskUpdated($firstTask);
 
         return Redirect::back();
     }
@@ -222,17 +216,20 @@ class TaskController extends Controller
     {
         $checklist = $task->checklist()->first();
 
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->history->createHistory(
-            $checklist->project_id,
-            'Task deleted from',
-            [
-                $task->name,
-                $checklist->name
-            ]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($checklist->project_id)
+                ->setTranslationKey('Task deleted from')
+                ->setTranslationKeyPlaceholderValues([
+                    $task->name,
+                    $checklist->name
+                ])
         );
 
         $task->forceDelete();
+
         return Redirect::back();
     }
 }

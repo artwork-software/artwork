@@ -1,10 +1,10 @@
 <template>
     <TransitionRoot as="template" :show="show">
         <TransitionChild as="template" enter="transform transition ease-in-out duration-500 sm:duration-700" enter-from="translate-x-full" enter-to="translate-x-0" leave="transform transition ease-in-out duration-500 sm:duration-700" leave-from="translate-x-0" leave-to="translate-x-full">
-            <div class="fixed right-0 top-0 z-30 h-screen bg-primary w-[26rem]">
-                <div class="">
+            <div class="fixed right-0 top-0 z-40 h-screen bg-primary w-[26rem]">
+                <div class="h-full max-h-screen overflow-y-scroll">
                     <div>
-                        <div class="mt-32 ml-8 mr-8 text-secondary">
+                        <div class="mt-5 px-3 text-secondary">
                             <slot></slot>
                         </div>
                     </div>
@@ -13,7 +13,7 @@
         </TransitionChild>
     </TransitionRoot>
 
-    <div class="fixed top-44 right-0 cursor-pointer z-50 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="$emit('toggle')">
+    <div class="fixed top-44 right-0 cursor-pointer z-50 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="updateShow">
         <div class="bg-primary px-2 py-1.5 flex items-center">
             <IconChevronsLeft class="w-5 h-5 xsLight" v-if="!show"/>
             <IconChevronsRight class="w-5 h-5 xsLight" v-else/>
@@ -22,6 +22,7 @@
             </div>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -39,9 +40,22 @@ export default {
         TransitionChild,
         TransitionRoot
     },
-    props: {
-        show: Boolean
+    data() {
+        return {
+            show: this.$page.props.user ? this.$page.props.user.is_sidebar_opened : false
+        }
     },
+    methods: {
+        updateShow() {
+            this.show = !this.show
+            this.$inertia.patch(route('user.sidebar.update', {user: this.$page.props.user.id}), {
+                is_sidebar_opened: this.show
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            })
+        }
+    }
 }
 </script>
 

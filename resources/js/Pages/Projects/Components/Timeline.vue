@@ -1,6 +1,6 @@
 <template>
-    <div class="w-[175px] ">
-        <div class="h-9 bg-gray-800/60 flex items-center px-4"  @click="showAddTimeLineModal = true">
+    <div class="w-[175px]">
+        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-t-lg"  @click="showAddTimeLineModal = true">
             <div class="uppercase text-white text-xs">
                 {{ $t('Timeline') }}
             </div>

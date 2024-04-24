@@ -1,5 +1,5 @@
 <template>
-    <div id="bar" class="w-[95%] p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed' : 'sticky':'fixed']">
+    <div id="bar" class="p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed w-[calc(100%-4rem)] ' : 'sticky w-full' : 'fixed  w-[calc(100%-4rem)] ']">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
@@ -270,7 +270,6 @@ export default {
             this.$emit('previousTimeRange')
         },
         nextTimeRange(){
-            //console.log('nextTimeRange')
             this.$emit('nextTimeRange')
         },
         filtersChanged(activeFilters) {
@@ -354,7 +353,7 @@ export default {
             return filteredArray.map(elem => elem.id)
         },
         handleScroll() {
-            this.isPageScrolled = window.scrollY > 192;
+            this.isPageScrolled = window.scrollY > 358;
         },
     },
     mounted(){

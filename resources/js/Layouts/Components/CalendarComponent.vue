@@ -240,6 +240,7 @@
         :wantedRoomId="wantedSplit"
         :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -250,6 +251,7 @@
         :rooms="rooms"
         :eventsWithoutRoom="this.filteredEvents"
         :isAdmin="this.hasAdminRole()"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 </template>
 
@@ -273,7 +275,6 @@ import {
     XCircleIcon,
     XIcon,
 } from '@heroicons/vue/outline';
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Disclosure,
     DisclosureButton,
@@ -330,7 +331,6 @@ export default {
         XIcon,
         DocumentTextIcon,
         XCircleIcon,
-        EventTypeIconCollection,
         Listbox,
         ListboxButton,
         ListboxOption,
@@ -367,7 +367,8 @@ export default {
         'eventsWithoutRoom',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_calendar_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

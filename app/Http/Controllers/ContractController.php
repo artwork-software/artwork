@@ -6,7 +6,6 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -15,12 +14,12 @@ use App\Models\Currency;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
-use Barryvdh\Debugbar\Facades\Debugbar;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -31,15 +30,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    public function __construct()
-    {
-        //$this->authorizeResource(Contract::class);
-        $this->notificationService = new NotificationService();
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ProjectTabService $projectTabService
+    ) {
     }
 
-    public function viewIndex(): Response|ResponseFactory
+    public function index(): Response|ResponseFactory
     {
         // get all contracts where i am creator or i am accessing user
         $contracts = Contract::where('creator_id', Auth::id())->get();
@@ -54,45 +51,9 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
-    }
-
-    public function index(Request $request)
-    {
-        $contracts = Contract::all();
-        $costsFilter = json_decode($request->input('costsFilter'));
-        $companyTypesFilter = json_decode($request->input('companyTypesFilter'));
-        $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
-
-        if (
-            count($costsFilter->array) != 0 ||
-            count($companyTypesFilter->array) != 0 ||
-            count($contractTypesFilter->array) != 0
-        ) {
-            $company_type_ids = collect($companyTypesFilter->array);
-            $contract_type_ids = collect($contractTypesFilter->array);
-            $cost_filters = collect($costsFilter->array);
-
-            Debugbar::info($company_type_ids);
-            Debugbar::info($cost_filters);
-
-            if ($cost_filters->contains('KSK-pflichtig')) {
-                $contracts = $contracts->where('ksk_liable', true);
-            }
-            if ($cost_filters->contains('Im Ausland ansässig')) {
-                $contracts = $contracts->where('resident_abroad', true);
-            }
-            if (count($company_type_ids) > 0) {
-                $contracts = $contracts->whereIn('company_type_id', $company_type_ids);
-            }
-            if (count($contract_type_ids) > 0) {
-                $contracts = $contracts->whereIn('contract_type_id', $contract_type_ids);
-            }
-        }
-        return [
-            'contracts' => ContractResource::collection($contracts),
-            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
-        ];
     }
 
     public function show(Contract $contract): Response|ResponseFactory
@@ -165,7 +126,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -178,13 +145,11 @@ class ContractController extends Controller
 
         $contract->save();
 
-        return Redirect::route('contracts.view.index');
+        return Redirect::route('contracts.index');
     }
 
     public function download(Contract $contract): StreamedResponse
     {
-        //$this->authorize('view contracts');
-
         return Storage::download('contracts/' . $contract->basename, $contract->name);
     }
 
@@ -244,7 +209,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -280,8 +251,6 @@ class ContractController extends Controller
         $project = $contract->project()->first();
         $contractUsers =  $contract->accessingUsers()->get();
 
-
-
         foreach ($contractUsers as $contractUser) {
             // notification.contract.delete
             $notificationTitle = __('notification.contract.delete', [], $contractUser->language);
@@ -299,7 +268,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ],
                 3 => [
                     'type' => 'string',

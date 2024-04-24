@@ -10,7 +10,7 @@
             {{ sageData.buchungstext }}
         </div>
         <div class="w-52 text-right">
-            {{ this.currencyFormattedValue(sageData.buchungsbetrag) }}
+            {{ this.toCurrencyString(sageData.buchungsbetrag) }}
         </div>
         <div class="w-40 text-right">
             {{ this.formatBookingDataDate(sageData.buchungsdatum) }}
@@ -30,19 +30,17 @@
 <script>
 import {TrashIcon} from "@heroicons/vue/solid";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: "SageDataDragElement",
     components: {
         TrashIcon
     },
-    mixins: [IconLib],
+    mixins: [IconLib, CurrencyFloatToStringFormatter],
     props: ['sageData','type'],
     emits: ['removeSageNotAssignedData'],
     methods: {
-        currencyFormattedValue(value) {
-            return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
-        },
         onDragStart(event) {
             this.sageData.type = 'globaleMove';
             event.dataTransfer.setData('text/plain', JSON.stringify(this.sageData));

@@ -7,9 +7,9 @@ use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Repositories\TimelineRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class TimelineService
+readonly class TimelineService
 {
-    public function __construct(private readonly TimelineRepository $timelineRepository)
+    public function __construct(private TimelineRepository $timelineRepository)
     {
     }
 

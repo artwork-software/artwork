@@ -8,7 +8,6 @@ use App\Models\Genre;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
-use App\Support\Services\HistoryService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
@@ -25,8 +24,6 @@ class TestContentSeeder extends Seeder
     {
         $this->seedModelsThatRequireNoRelationships();
         $this->seedRooms();
-
-        $historyService = new HistoryService();
 
         // Users
         $users = User::factory()->count(10)->create();
@@ -63,11 +60,8 @@ class TestContentSeeder extends Seeder
                 $task = Task::factory()->create([
                     'checklist_id' => $checklist->id,
                 ]);
-                $historyService->taskUpdated($task);
             }
         }
-
-        $checklists = Checklist::all();
 
         // Events
         $this->seedEvents();
@@ -113,7 +107,6 @@ class TestContentSeeder extends Seeder
 
     private function seedProjects(): void
     {
-        $historyService = new HistoryService();
         $sectors = Sector::all();
         $categories = Category::all();
         $genres = Genre::all();
@@ -136,10 +129,6 @@ class TestContentSeeder extends Seeder
             'category_id' => $categories->random()->id,
             'genre_id' => $genres->random()->id,
         ]);
-
-        $historyService->projectUpdated($project1);
-        $historyService->projectUpdated($project2);
-        $historyService->projectUpdated($project3);
     }
 
     private function seedEvents(): void

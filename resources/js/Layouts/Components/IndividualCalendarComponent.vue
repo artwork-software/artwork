@@ -1,5 +1,5 @@
 <template>
-    <div id="myCalendar" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
+    <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
             <div class="flex justify-center w-full bg-white">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
@@ -30,10 +30,10 @@
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div class="bg-secondaryHover">
-                        <tr class="flex w-full bg-userBg stickyHeader mb-4" :class="{'rounded-t-full': !isPageScrolled}">
+                        <tr class="flex w-full bg-userBg stickyHeader" :class="{'rounded-t-full': !isPageScrolled, 'mb-2' : !project}">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
-                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
+                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth: zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
                                     {{ room.name }}
@@ -45,8 +45,8 @@
                             :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
                             <th :style="{height: zoomFactor * 115 + 'px',width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}"
                                 :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
-                                class="text-secondary text-right -mt-2 pr-1">
-                                <div :style="textStyle">
+                                class="text-secondary text-right pr-1">
+                                <div :style="textStyle" class="mt-3">
                                     {{ zoomFactor >= 0.8 ? day.day_string : '' }} {{ zoomFactor >= 0.8 ? day.full_day : day.short_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                 </div>
 
@@ -56,7 +56,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5" v-for="event in room[day.full_day].events.data">
+                                <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events">
 
                                     <SingleCalendarEvent
                                         class="relative"
@@ -70,6 +70,7 @@
                                         :checked-events="checkedEvents"
                                         @open-edit-event-modal="openEditEventModal"
                                         @check-event="updateCheckedEvents"
+                                        :first_project_tab_id="this.first_project_tab_id"
                                     />
                                 </div>
                             </td>
@@ -89,6 +90,7 @@
                 :wantedRoomId="wantedRoom"
                 :isAdmin="this.hasAdminRole()"
                 :roomCollisions="roomCollisions"
+                :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
             />
 
         </div>
@@ -101,6 +103,7 @@
             :rooms="rooms"
             :eventsWithoutRoom="this.filteredEvents"
             :isAdmin="this.hasAdminRole()"
+            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         />
 
         <div v-show="multiEdit"
@@ -166,7 +169,7 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: this.$page.props.user ? this.$page.props.user.zoom_factor : 1,
+            zoomFactor: this.$page.props.user.zoom_factor ? this.$page.props.user.zoom_factor : 1,
             multiEdit: false,
             editEvents: [],
             showMultiEditModal: false,
@@ -187,7 +190,9 @@ export default {
         'isDashboard',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted() {
@@ -205,7 +210,7 @@ export default {
             };
         },
         filteredEvents() {
-            return this.eventsWithoutRoom.filter((event) => {
+            return this.eventsWithoutRoom?.filter((event) => {
                 let createdBy = event.created_by;
                 let projectLeaders = event.projectLeaders;
 

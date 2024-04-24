@@ -13,6 +13,8 @@ use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\ProjectTab\Models\ComponentUser;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -73,6 +75,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\App\Models\Task> done_tasks
  * @property Collection<\Artwork\Modules\Event\Models\Event> events
  * @property Collection<\App\Models\Task> $privateTasks
+
  *
  * What is this sorcery?
  * @property string $profile_photo_url
@@ -112,6 +115,7 @@ class User extends Authenticatable implements Vacationer, Available
         'salary_description',
         'language',
         'zoom_factor',
+        'is_sidebar_opened'
     ];
 
     protected $casts = [
@@ -122,6 +126,7 @@ class User extends Authenticatable implements Vacationer, Available
         'temporary' => 'boolean',
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
+        'is_sidebar_opened' => 'boolean'
     ];
 
     protected $hidden = [

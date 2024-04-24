@@ -11,7 +11,6 @@ use App\Models\MoneySourceReminder;
 use App\Models\MoneySourceTask;
 use App\Models\User;
 use App\Support\Services\MoneySourceCalculationService;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -21,7 +20,9 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,21 +30,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use stdClass;
 
 class MoneySourceController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    protected ?stdClass $notificationData = null;
-
-    protected ?NewHistoryService $history = null;
-
-    public function __construct()
-    {
-        $this->notificationService = new NotificationService();
-        $this->notificationData = new \stdClass();
-        $this->history = new NewHistoryService('App\Models\MoneySource');
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ChangeService $changeService
+    ) {
     }
 
     public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
@@ -157,7 +150,7 @@ class MoneySourceController extends Controller
         }
 
         $user = Auth::user();
-        $source = $user->money_sources()->create([
+        $moneySource = $user->money_sources()->create([
             'name' => $request->name,
             'amount' => $amount,
             'start_date' => $request->start_date,
@@ -169,23 +162,33 @@ class MoneySourceController extends Controller
             'is_group' => $request->is_group
         ]);
 
-        $source->users()->sync(collect($request->users));
+        $moneySource->users()->sync(collect($request->users));
 
         if ($request->is_group) {
             foreach ($request->sub_money_source_ids as $sub_money_source_id) {
                 $money_source = MoneySource::find($sub_money_source_id);
-                $money_source->update(['group_id' => $source->id]);
+                $money_source->update(['group_id' => $moneySource->id]);
             }
         }
 
-        $this->history->createHistory($source->id, 'Money source created');
+        try {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Money source created')
+            );
+        } catch (\Throwable $t) {
+            dd($t->getMessage());
+        }
 
-        return back()->with(['recentlyCreatedMoneySourceId' => $source->id]);
+        return back()->with(['recentlyCreatedMoneySourceId' => $moneySource->id]);
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function show(MoneySource $moneySource): Response|ResponseFactory
+    public function show(MoneySource $moneySource, ProjectTabService $projectTabService): Response|ResponseFactory
     {
         $moneySource->load([
             'moneySourceFiles'
@@ -467,7 +470,8 @@ class MoneySourceController extends Controller
                 'id' => $project->id,
                 'name' => $project->name,
             ]),
-            'linkedProjects' => $moneySource->projects()->get()
+            'linkedProjects' => $moneySource->projects()->get(),
+            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
     }
 
@@ -524,25 +528,54 @@ class MoneySourceController extends Controller
             }
         }
 
-
         if ($oldName !== $newName) {
-            $this->history->createHistory($moneySource->id, 'Money source name changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Money source name changed')
+            );
         }
 
         if ($oldDescription !== $newDescription && !empty($newDescription) && !empty($oldDescription)) {
-            $this->history->createHistory($moneySource->id, 'Description changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Description changed')
+            );
         }
 
         if (empty($oldDescription) && !empty($newDescription)) {
-            $this->history->createHistory($moneySource->id, 'Description added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Description added')
+            );
         }
 
         if (!empty($oldDescription) && empty($newDescription)) {
-            $this->history->createHistory($moneySource->id, 'Description deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Description deleted')
+            );
         }
 
         if (floatval($oldAmount) !== floatval($newAmount)) {
-            $this->history->createHistory($moneySource->id, 'Changed original volume');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(MoneySource::class)
+                    ->setModelId($moneySource->id)
+                    ->setTranslationKey('Changed original volume')
+            );
         }
     }
 
@@ -663,7 +696,14 @@ class MoneySourceController extends Controller
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($moneySource->id, 'User access to money source added');
+
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(MoneySource::class)
+                        ->setModelId($moneySource->id)
+                        ->setTranslationKey('User access to money source added')
+                );
             }
         }
 
@@ -689,7 +729,14 @@ class MoneySourceController extends Controller
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($moneySource->id, 'User access to money source removed');
+
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(MoneySource::class)
+                        ->setModelId($moneySource->id)
+                        ->setTranslationKey('User access to money source removed')
+                );
             }
         }
     }

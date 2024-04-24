@@ -62,7 +62,7 @@
                                         <div class="ml-16 xsLight flex items-center">
                                             {{ $t('assigned to')}}
                                             <Link
-                                                :href="route('projects.show.calendar',{project: eventRequest.project.id})"
+                                                :href="route('projects.tab',{project: eventRequest.project.id, projectTab: this.first_project_calendar_tab_id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project?.name }}
                                             </Link>
@@ -328,7 +328,6 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -366,12 +365,11 @@ export default defineComponent({
         ListboxOption,
         ListboxOptions,
         Link,
-        EventTypeIconCollection,
         AdjustmentsIcon,
         Switch,
         UserTooltip
     },
-    props: ['event_requests'],
+    props: ['event_requests', 'first_project_calendar_tab_id'],
     methods: {
         usePage,
         getGermanWeekdayAbbreviation(englishWeekday) {

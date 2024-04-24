@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoleNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Genre;
 use App\Models\Sector;
@@ -10,7 +11,7 @@ use Artwork\Modules\Project\Models\Project;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(function () {
+beforeEach(function (): void {
 
     $this->auth_user = User::factory()->create();
 
@@ -34,17 +35,17 @@ beforeEach(function () {
 });
 
 
-test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function () {
+test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function (): void {
 
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->assigned_department->users()->attach($this->auth_user);
 
     $response = $this->get("/tasks/own")
         ->assertInertia(fn(Assert $page) => $page
-            ->component('Tasks/OwnTasksManagement')
+            ->component('Tasks/OwnTasksManagement'));
         //->has('tasks.data', 10)
-        );
+
 
     $response->assertStatus(200);
 });
@@ -69,7 +70,7 @@ test('users can view a list of all their tasks, eg private or from checklists th
 //});
 
 
-test('users who arent assigned to a checklist cant create tasks on it', function () {
+test('users who arent assigned to a checklist cant create tasks on it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
 
@@ -85,7 +86,7 @@ test('users who arent assigned to a checklist cant create tasks on it', function
 });
 
 
-test('users that are assigned to a checklist can create tasks without a deadline for it', function () {
+test('users that are assigned to a checklist can create tasks without a deadline for it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
     $this->assigned_department->users()->attach($this->auth_user);
@@ -94,7 +95,7 @@ test('users that are assigned to a checklist can create tasks without a deadline
         'project_id' => $this->project->id
     ]);
 
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 
     $this->post('/tasks', [
@@ -110,10 +111,9 @@ test('users that are assigned to a checklist can create tasks without a deadline
         'checklist_id' => $checklist->id,
         'deadline' => null
     ]);
-
 });
 
-test('users that are assigned to a checklist can create tasks with a deadline for it', function () {
+test('users that are assigned to a checklist can create tasks with a deadline for it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
 
@@ -137,13 +137,12 @@ test('users that are assigned to a checklist can create tasks with a deadline fo
         'checklist_id' => $checklist->id,
         'deadline' => '2022-05-28T17:48'
     ]);
-
 });
 
 
-test('users that are admins can create tasks for any checklist in any project', function () {
+test('users that are admins can create tasks for any checklist in any project', function (): void {
 
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 
     $this->post('/tasks', [
@@ -157,10 +156,9 @@ test('users that are admins can create tasks for any checklist in any project', 
         'description' => "This is a description",
         'checklist_id' => $this->checklist->id
     ]);
-
 });
 
-test('users who are assigned to a checklist can update its tasks', function () {
+test('users who are assigned to a checklist can update its tasks', function (): void {
 
     $this->assigned_department->users()->attach($this->auth_user);
     $this->checklist->project()->associate($this->project);
@@ -195,10 +193,9 @@ test('users who are assigned to a checklist can update its tasks', function () {
         'done_at' => null,
         'user_id' => null
     ]);
-
 });
 
-test('users who are assigned to a checklist can delete its tasks', function () {
+test('users who are assigned to a checklist can delete its tasks', function (): void {
 
     $this->assigned_department->users()->attach($this->auth_user);
 

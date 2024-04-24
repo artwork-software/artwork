@@ -18,6 +18,7 @@ class FileUpload extends FormRequest
     {
         return [
             'file' => ['max:2000'],
+            'tabId' => ['integer', 'nullable'],
         ];
     }
 }

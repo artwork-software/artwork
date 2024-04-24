@@ -72,8 +72,13 @@ class Table extends Model
             ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
             ->get()
             ->groupBy('column_id')
-            ->mapWithKeys(function ($cells, $column_id) {
-                return [ $column_id => $cells->sum('value')];
+            ->mapWithKeys(function (\Illuminate\Database\Eloquent\Collection $cells, $column_id) {
+                return [
+                    $column_id => $cells->sum(
+                        //replace , with . to cast properly to float
+                        fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
+                    )
+                ];
             });
     }
 
@@ -94,8 +99,13 @@ class Table extends Model
             ->get()
             ->groupBy('column_id')
             ->skip(3)
-            ->mapWithKeys(function ($cells, $column_id) {
-                return [ $column_id => $cells->sum('value')];
+            ->mapWithKeys(function (\Illuminate\Database\Eloquent\Collection $cells, $column_id) {
+                return [
+                    $column_id => $cells->sum(
+                        //replace , with . to cast properly to float
+                        fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
+                    )
+                ];
             });
     }
 

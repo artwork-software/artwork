@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Collection;
 
 readonly class EventCommentService
 {
-    public function __construct(
-        private EventCommentRepository $eventCommentRepository
-    ) {
+    public function __construct(private EventCommentRepository $eventCommentRepository)
+    {
     }
 
     public function delete(EventComment $eventComment): bool

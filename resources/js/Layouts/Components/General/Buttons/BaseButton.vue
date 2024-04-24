@@ -29,8 +29,12 @@ export default {
         },
         backgroundColor: {
             type: String,
-            default: "bg-buttonBlue"
+            default: "bg-artwork-buttons-create"
         },
+        classes: {
+            type: String,
+            default: ""
+        }
     }
 }
 </script>
@@ -39,9 +43,9 @@ export default {
     <button
        type="button"
        :disabled="disabled"
-       :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-buttonHover`,
-       $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding]"
-       class="flex mt-1 items-center rounded-full shadow-sm hover:shadow-blueButton focus:outline-none"
+       :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-artwork-buttons-hover`,
+       $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding, classes]"
+       class="flex mt-1 items-center rounded-full shadow-sm focus:outline-none"
     >
         <!-- slot for the icon -->
         <slot></slot>

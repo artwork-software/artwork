@@ -18,12 +18,11 @@
                                 </div>
                             </div>
                             <div class="font-bold text-secondaryHover block">
-                                <img :src="$page.props.small_logo"
-                                     :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                             </div>
                         </div>
                         <div v-if="fullSidenav" class="ml-4">
-                            <img src="/Svgs/Logos/artwork_logo_white.svg"/>
+                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
 
@@ -98,21 +97,8 @@
                             </div>
                         </div>
                     </a>
-                    <Menu as="div" class="flex flex-col items-center" v-show="
-                        $canAny([
-                            'usermanagement',
-                            'admin checklistTemplates',
-                            'teammanagement',
-                            'update departments',
-                            'change tool settings',
-                            'change project settings',
-                            'change event settings',
-                            'change system notification',
-                            'view budget templates',
-                            'create, delete and update rooms'
-                        ]) || hasAdminRole()
-                        ">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                    <Menu as="div" class="flex flex-col items-center">
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.userNavigation) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
                             <div class="flex items-center" :class="fullSidenav ? '' : ''">
                                 <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
                                 <div class="ml-4 w-32 text-left" v-if="fullSidenav">
@@ -388,7 +374,7 @@ export default {
 
                 {
                     name: this.$t('Contracts'),
-                    href: route('contracts.view.index'),
+                    href: route('contracts.index'),
                     route: ['/contracts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_contract.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',

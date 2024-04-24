@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
+use App\Enums\TabComponentEnums;
 use App\Models\EventType;
 use App\Models\MoneySource;
 use App\Models\SeriesEvents;
@@ -12,8 +13,9 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
@@ -63,34 +65,57 @@ class WalidRaadSeeder extends Seeder
 
         $project = Project::create([
             'name' => 'Walid Raad',
-            'description' => 'COTTON UNDER MY FEET: THE HAMBURG CHAPTER Eine Performance-Tour durch die Sammlung ' .
-                'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.',
             'shift_description' => 'Wird blutig',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4
         ]);
 
+        /** @var Component $shortDescriptionComponent */
+        $shortDescriptionComponent = Component::query()
+            ->where('name', 'Short Description')
+            ->where('type', 'TextArea')
+            ->first();
+
+        $shortDescriptionComponent->projectValue()->create([
+            'project_id' => $project->id,
+            'data' => [
+                'text' => 'COTTON UNDER MY FEET: THE HAMBURG CHAPTER. Eine Performance-Tour durch die Sammlung ' .
+                    'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.'
+            ]
+        ]);
+
+
+        $firstChecklistTabWithChecklistComponentId = ProjectTab::query()
+            ->where('name', 'Checklists')
+            ->whereRelation('components.component', 'type', TabComponentEnums::CHECKLIST->value)
+            ->first()
+            ->id;
         /**
          * create project Checklist with tasks
          */
         $checkListBudgetErstellen = $project->checklists()->create([
-            'name' => 'Budget erstellen'
+            'name' => 'Budget erstellen',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListMarketing = $project->checklists()->create([
-            'name' => 'Marketing'
+            'name' => 'Marketing',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListCatering = $project->checklists()->create([
-            'name' => 'Catering'
+            'name' => 'Catering',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListEinlass = $project->checklists()->create([
-            'name' => 'Einlass'
+            'name' => 'Einlass',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListBudgetErstellenKopie = $project->checklists()->create([
-            'name' => 'Budget erstellen (Kopie)'
+            'name' => 'Budget erstellen (Kopie)',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checklist1Task1 = $checkListBudgetErstellen->tasks()->create([
@@ -186,32 +211,7 @@ class WalidRaadSeeder extends Seeder
             'order' => 7,
         ]);
 
-        /**
-         * Create Project Headlines
-         */
-
-        ProjectHeadline::create([
-            'name' => 'Website-Text',
-            'order' => 1
-        ]);
-
-        ProjectHeadline::create([
-            'name' => 'ÖA',
-            'order' => 2
-        ]);
-
-        /**
-         * Attach Project Headlines to Project
-         */
-
-
         $projects = Project::all();
-
-        foreach ($projects as $project) {
-            $project->headlines()->attach(1, ['text' => '']);
-            $project->headlines()->attach(2, ['text' => 'Hallo']);
-        }
-
 
         /**
          * Create Project States
@@ -230,35 +230,46 @@ class WalidRaadSeeder extends Seeder
         $moneySourceSuperQuelle->projects()->attach($project->id);
         $moneySourceTolleQuelle->projects()->attach($project->id);
 
+        $firstCommentsTabWithCommentsComponentId = ProjectTab::query()
+            ->where('name', 'Comments')
+            ->whereRelation('components.component', 'type', TabComponentEnums::COMMENT_TAB->value)
+            ->first()
+            ->id;
+
         $project->comments()->create([
             'text' => 'Artwork ist toll!',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Ich weiß, ich habe schon eine Benachrichtigung erhalten ;)',
-            'user_id' => 2
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'ich habe dich in die Marketing-Checkliste aufgenommen ;)',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Ich freue mich :)',
-            'user_id' => 2
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Hi, das Projekt wird toll',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
 
         EventType::create([
             'name' => 'Aufbau',
-            'svg_name' => 'eventType8',
+            'hex_code' => '#168FC3',
             'project_mandatory' => false,
             'individual_name' => false,
             'abbreviation' => 'A',
@@ -813,21 +824,21 @@ class WalidRaadSeeder extends Seeder
         $row1->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $row1->id,
-            'value' => 950,
+            'value' => '950,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
         $row1->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $row1->id,
-            'value' => 950,
+            'value' => '950,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
         $row1->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $row1->id,
-            'value' => 950,
+            'value' => '950,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -863,21 +874,21 @@ class WalidRaadSeeder extends Seeder
         $row2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $row2->id,
-            'value' => 1000,
+            'value' => '1000,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
         $row2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $row2->id,
-            'value' => 1200,
+            'value' => '1200,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
         $row2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $row2->id,
-            'value' => 1100,
+            'value' => '1100,00',
             'linked_money_source_id' => 1,
             'linked_type' => 'COST',
             'verified_value' => ''
@@ -916,7 +927,7 @@ class WalidRaadSeeder extends Seeder
         $row3->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $row3->id,
-            'value' => 850,
+            'value' => '850,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -924,7 +935,7 @@ class WalidRaadSeeder extends Seeder
         $row3->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $row3->id,
-            'value' => 800,
+            'value' => '800,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -932,7 +943,7 @@ class WalidRaadSeeder extends Seeder
         $row3->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $row3->id,
-            'value' => 800,
+            'value' => '800,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -970,7 +981,7 @@ class WalidRaadSeeder extends Seeder
         $row4->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $row4->id,
-            'value' => 1200,
+            'value' => '1200,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -978,7 +989,7 @@ class WalidRaadSeeder extends Seeder
         $row4->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $row4->id,
-            'value' => 1200,
+            'value' => '1200,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -986,7 +997,7 @@ class WalidRaadSeeder extends Seeder
         $row4->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $row4->id,
-            'value' => 1200,
+            'value' => '1200,00',
             'linked_money_source_id' => 2,
             'linked_type' => 'COST',
             'verified_value' => ''
@@ -1043,7 +1054,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $costSubPositionRow2->id,
-            'value' => 2482,
+            'value' => '2482,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1051,7 +1062,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $costSubPositionRow2->id,
-            'value' => 2450,
+            'value' => '2450,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1059,7 +1070,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $costSubPositionRow2->id,
-            'value' => 2450,
+            'value' => '2450,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1113,7 +1124,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $costSubPositionRow3->id,
-            'value' => 1500,
+            'value' => '1500,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
@@ -1121,7 +1132,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $costSubPositionRow3->id,
-            'value' => 1500,
+            'value' => '1500,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1129,7 +1140,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $costSubPositionRow3->id,
-            'value' => 1600,
+            'value' => '1600,00',
             'linked_money_source_id' => 1,
             'linked_type' => 'COST',
             'verified_value' => ''
@@ -1209,7 +1220,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow1Main2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $costSubPositionRow1Main2->id,
-            'value' => 550,
+            'value' => '550,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
@@ -1217,7 +1228,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow1Main2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $costSubPositionRow1Main2->id,
-            'value' => 550,
+            'value' => '550,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1225,7 +1236,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow1Main2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $costSubPositionRow1Main2->id,
-            'value' => 43545,
+            'value' => '43545,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1279,7 +1290,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2Main2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $costSubPositionRow2Main2->id,
-            'value' => 2000,
+            'value' => '2000,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
@@ -1287,7 +1298,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2Main2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $costSubPositionRow2Main2->id,
-            'value' => 2200,
+            'value' => '2200,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1295,7 +1306,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow2Main2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $costSubPositionRow2Main2->id,
-            'value' => 97987,
+            'value' => '97987,00',
             'linked_money_source_id' => null,
             'verified_value' => 2200
         ]);
@@ -1349,7 +1360,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3Main2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $costSubPositionRow3Main2->id,
-            'value' => 200,
+            'value' => '200,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
             'commented' => true
@@ -1358,7 +1369,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3Main2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $costSubPositionRow3Main2->id,
-            'value' => 200,
+            'value' => '200,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
             'commented' => true
@@ -1367,7 +1378,7 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionRow3Main2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $costSubPositionRow3Main2->id,
-            'value' => 300,
+            'value' => '300,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
             'commented' => true
@@ -1442,7 +1453,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $earningSubPositionRow->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
@@ -1450,7 +1461,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $earningSubPositionRow->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1458,7 +1469,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $earningSubPositionRow->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1513,7 +1524,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow2->cells()->create([
             'column_id' => $columns[3]->id,
             'sub_position_row_id' => $earningSubPositionRow2->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
@@ -1521,7 +1532,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow2->cells()->create([
             'column_id' => $columns[4]->id,
             'sub_position_row_id' => $earningSubPositionRow2->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
@@ -1529,7 +1540,7 @@ class WalidRaadSeeder extends Seeder
         $earningSubPositionRow2->cells()->create([
             'column_id' => $columns[5]->id,
             'sub_position_row_id' => $earningSubPositionRow2->id,
-            'value' => 5000,
+            'value' => '5000,00',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);

@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
+use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\UpdateBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Repositories\BudgetManagementCostUnitRepository;
 use Artwork\Modules\Project\Models\Project;
@@ -17,11 +18,8 @@ use Throwable;
 
 readonly class BudgetManagementCostUnitService
 {
-    public function __construct(
-        private BudgetManagementCostUnitRepository $budgetManagementCostUnitRepository,
-        private ProjectService $projectService,
-        private ColumnCellService $columnCellService
-    ) {
+    public function __construct(private BudgetManagementCostUnitRepository $budgetManagementCostUnitRepository)
+    {
     }
 
     public function getAll(): Collection
@@ -57,6 +55,18 @@ readonly class BudgetManagementCostUnitService
     /**
      * @throws Throwable
      */
+    public function updateFromRequest(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        UpdateBudgetManagementCostUnitRequest $request
+    ): BudgetManagementCostUnit {
+        $this->budgetManagementCostUnitRepository->updateOrFail($budgetManagementCostUnit, $request->validated());
+
+        return $budgetManagementCostUnit;
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function delete(BudgetManagementCostUnit $budgetManagementCostUnit): void
     {
         $this->budgetManagementCostUnitRepository->deleteOrFail($budgetManagementCostUnit);
@@ -67,11 +77,14 @@ readonly class BudgetManagementCostUnitService
         $this->budgetManagementCostUnitRepository->restore($budgetManagementCostUnit);
     }
 
-    public function forceDelete(BudgetManagementCostUnit $budgetManagementCostUnit): void
-    {
+    public function forceDelete(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        ProjectService $projectService,
+        ColumnCellService $columnCellService
+    ): void {
         //set all according column cells to 00000
         /** @var Project $project */
-        foreach ($this->projectService->getAll() as $project) {
+        foreach ($projectService->getAll() as $project) {
             $secondColumnId = $project->table
                 ->columns()
                 ->orderBy('id')
@@ -81,20 +94,29 @@ readonly class BudgetManagementCostUnitService
                 ->id;
 
             $project->table->mainPositions->each(
-                function (MainPosition $mainPosition) use ($secondColumnId, $budgetManagementCostUnit): void {
+                function (MainPosition $mainPosition) use (
+                    $secondColumnId,
+                    $budgetManagementCostUnit,
+                    $columnCellService
+                ): void {
                     $mainPosition->subPositions->each(
-                        function (SubPosition $subPosition) use ($secondColumnId, $budgetManagementCostUnit): void {
+                        function (SubPosition $subPosition) use (
+                            $secondColumnId,
+                            $budgetManagementCostUnit,
+                            $columnCellService
+                        ): void {
                             $subPosition->subPositionRows->each(
                                 function (SubPositionRow $subPositionRow) use (
                                     $secondColumnId,
-                                    $budgetManagementCostUnit
+                                    $budgetManagementCostUnit,
+                                    $columnCellService
                                 ): void {
                                     $columnCell = $subPositionRow->cells
                                         ->where('column_id', $secondColumnId)
                                         ->first();
 
                                     if ($columnCell->value === $budgetManagementCostUnit->cost_unit_number) {
-                                        $this->columnCellService->updateValue($columnCell, '00000');
+                                        $columnCellService->updateValue($columnCell, '00000');
                                     }
                                 }
                             );

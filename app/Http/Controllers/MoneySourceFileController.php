@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Project\Models\Comment;
 use App\Models\MoneySource;
 use App\Models\MoneySourceFile;
-use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,18 +17,17 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MoneySourceFileController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
-    public function __construct()
+    public function __construct(private readonly ChangeService $changeService)
     {
-        $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     /**
      * @throws AuthorizationException
      */
-    public function store(Request $request, MoneySource $moneySource): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        MoneySource $moneySource
+    ): RedirectResponse {
         if (!Storage::exists("money_source_files")) {
             Storage::makeDirectory("money_source_files");
         }
@@ -52,11 +51,16 @@ class MoneySourceFileController extends Controller
             ]);
             $moneySourceFile->comments()->save($comment);
         }
-        $this->history->createHistory(
-            $moneySource->id,
-            'Document uploaded',
-            [$original_name]
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(MoneySource::class)
+                ->setModelId($moneySource->id)
+                ->setTranslationKey('Document uploaded')
+                ->setTranslationKeyPlaceholderValues([$original_name])
         );
+
         return Redirect::back();
     }
 
@@ -65,8 +69,10 @@ class MoneySourceFileController extends Controller
         return Storage::download('money_source_files/' . $moneySourceFile->basename, $moneySourceFile->name);
     }
 
-    public function update(Request $request, MoneySourceFile $moneySourceFile): RedirectResponse
-    {
+    public function update(
+        Request $request,
+        MoneySourceFile $moneySourceFile
+    ): RedirectResponse {
         if ($request->file('file')) {
             Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $file = $request->file('file');
@@ -93,13 +99,19 @@ class MoneySourceFileController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(MoneySource $moneySource, MoneySourceFile $moneySourceFile): RedirectResponse
-    {
-        $this->history->createHistory(
-            $moneySource->id,
-            'Document deleted',
-            [$moneySourceFile->name]
+    public function destroy(
+        MoneySource $moneySource,
+        MoneySourceFile $moneySourceFile
+    ): RedirectResponse {
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(MoneySource::class)
+                ->setModelId($moneySource->id)
+                ->setTranslationKey('Document deleted')
+                ->setTranslationKeyPlaceholderValues([$moneySourceFile->name])
         );
+
         $moneySourceFile->delete();
 
         return Redirect::back();

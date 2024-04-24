@@ -7,10 +7,6 @@
             {{ $t("Edit the user's work profile here.")}}
         </div>
         <hr class="mb-2">
-        <div v-if="this.$page.props.flash.success?.workProfile"
-             class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-1">
-            {{ this.$page.props.flash.success?.workProfile }}
-        </div>
         <div class="w-2/3 mb-2">
             <label for="jobTitle" class="text-sm subpixel-antialiased text-secondary">
                 {{ $t('Job title') }}
@@ -19,7 +15,9 @@
                    v-model="workProfileForm.workName"
                    :placeholder="$t('No designation specified yet')"
                    type="text"
-                   class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
+                   class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"
+                   @focusout="this.updateWorkProfile()"
+            />
         </div>
         <div class="w-2/3 mb-2">
             <label for="jobDescription" class="text-sm subpixel-antialiased text-secondary">
@@ -27,16 +25,10 @@
             </label>
             <textarea
                 id="jobDescription"
-                v-model="workProfileForm.workDescription"
+                v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
                 :placeholder="$t('No description given yet')"
                 rows="4"
                 class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
-        </div>
-        <div class="w-2/3 flex flex-row justify-center">
-            <FormButton
-                :text="$t('Save')"
-                @click="updateWorkProfile"
-                />
         </div>
     </div>
     <div class="headline3 mb-2">
@@ -94,10 +86,6 @@
             {{  $t('Can be used in the following crafts') }}
         </div>
         <hr class="mb-2">
-        <div v-if="this.$page.props.flash.success?.craft"
-             class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-1">
-            {{ this.$page.props.flash.success?.craft }}
-        </div>
         <label for="selectedCraftToAdd" class="text-sm subpixel-antialiased text-secondary">
             {{  $t('Assign new crafts') }}
         </label>
@@ -301,13 +289,15 @@ export default {
             }
 
             if (desiredRoute) {
-                this.workProfileForm.patch(
-                    route(desiredRoute, routeParameter),
-                    {
-                        preserveScroll:true,
-                        preserveState:true
-                    }
-                );
+                if (this.workProfileForm.isDirty) {
+                    this.workProfileForm.patch(
+                        route(desiredRoute, routeParameter),
+                        {
+                            preserveScroll:true,
+                            preserveState:true
+                        }
+                    );
+                }
             }
         },
         assignCraft() {

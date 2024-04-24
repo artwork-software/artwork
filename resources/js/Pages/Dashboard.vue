@@ -4,7 +4,6 @@
             <div class="headline1 mb-10">
                 Dashboard
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-20">
                 <div class="col-span-2">
                     <div class="mb-10">
@@ -17,7 +16,7 @@
                                 {{ eventsOfDay?.length ?? 0 }}
                             </div>
                         </div>
-                        <div class="flex flex-col w-full bg-white shadow-cardShadow p-4">
+                        <DashboardCard>
                             <div class="font-semibold flex items-center gap-x-3 mb-3">
                                 <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
                                     <path id="Pfad_1003" data-name="Pfad 1003" d="M685.02,351.271h-2.832a.7.7,0,1,0,0,1.4h2.832a.7.7,0,1,0,0-1.4Z" transform="translate(-676.376 -341.693)" fill="#27233c"/>
@@ -57,7 +56,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </DashboardCard>
                         <div class="flex justify-end mt-3">
                             <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to calendar")}}</a>
                         </div>
@@ -71,7 +70,7 @@
                                 {{ shiftsOfDay?.length ?? 0 }}
                             </div>
                         </div>
-                        <div class="flex flex-col w-full bg-white shadow-cardShadow p-4">
+                        <DashboardCard>
                             <div class="font-semibold flex items-center gap-x-3">
                                 {{todayDate}}
                             </div>
@@ -106,7 +105,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </DashboardCard>
                         <div class="flex justify-end mt-3">
                             <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
@@ -127,33 +126,43 @@
                             <div v-if="Object.values(notificationOfToday)?.length > 0">
                                 <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
-                                        <div class="bg-white shadow-cardShadow p-3 mb-4" >
-                                            <NotificationBlock :history-objects="historyObjects" :notification="notification" :event="event" :event-types="eventTypes" :rooms="rooms"/>
-                                        </div>
+                                        <DashboardCard>
+                                            <NotificationBlock :history-objects="historyObjects"
+                                                               :notification="notification"
+                                                               :event="event"
+                                                               :event-types="eventTypes"
+                                                               :rooms="rooms"
+                                                               :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                               :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                               :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                            />
+                                        </DashboardCard>
                                     </div>
                                 </div>
                             </div>
                             <div v-else class="">
-                                <div class="bg-white shadow-cardShadow p-6 mb-4 flex gap-4 items-center" >
-                                    <svg id="Gruppe_642" data-name="Gruppe 642" xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45">
-                                        <g id="icon_note" data-name="icon–note">
-                                            <g id="Gruppe_642-2" data-name="Gruppe 642">
-                                                <circle id="Bildschirmfoto_2022-08-28_um_10.42.36" data-name="Bildschirmfoto 2022-08-28 um 10.42.36" cx="22.5" cy="22.5" r="22.5" fill="#cecdd8"/>
-                                            </g>
-                                            <g id="clock" transform="translate(9.5 6.313)">
-                                                <path id="Pfad_1078" data-name="Pfad 1078" d="M13.124,13.124h0A13.139,13.139,0,0,0,26.231,0H13.106A13.139,13.139,0,0,0,0,13.124Z" transform="translate(13.124 28.419) rotate(-90)" fill="#a7a6b1"/>
-                                                <path id="Pfad_1079" data-name="Pfad 1079" d="M13.124,0h0A13.139,13.139,0,0,1,26.231,13.124H13.106A13.139,13.139,0,0,1,0,0Z" transform="translate(0 28.428) rotate(-90)" fill="#fcfcfb"/>
-                                                <g id="Pfad_1507" data-name="Pfad 1507" transform="translate(17.07)" fill="#27233c">
-                                                    <path d="M 5.471749305725098 10.19349956512451 C 2.86816930770874 10.19349956512451 0.7499992847442627 8.075329780578613 0.7499992847442627 5.471749305725098 C 0.7499992847442627 2.86816930770874 2.86816930770874 0.7499992847442627 5.471749305725098 0.7499992847442627 C 8.075329780578613 0.7499992847442627 10.19349956512451 2.86816930770874 10.19349956512451 5.471749305725098 C 10.19349956512451 8.075329780578613 8.075329780578613 10.19349956512451 5.471749305725098 10.19349956512451 Z" stroke="none"/>
-                                                    <path d="M 5.471749305725098 1.499999046325684 C 3.281719207763672 1.499999046325684 1.499999046325684 3.281719207763672 1.499999046325684 5.471749305725098 C 1.499999046325684 7.661779403686523 3.281719207763672 9.443499565124512 5.471749305725098 9.443499565124512 C 7.661779403686523 9.443499565124512 9.443499565124512 7.661779403686523 9.443499565124512 5.471749305725098 C 9.443499565124512 3.281719207763672 7.661779403686523 1.499999046325684 5.471749305725098 1.499999046325684 M 5.471749305725098 -9.5367431640625e-07 C 8.493709564208984 -9.5367431640625e-07 10.94349956512451 2.449789047241211 10.94349956512451 5.471749305725098 C 10.94349956512451 8.493709564208984 8.493709564208984 10.94349956512451 5.471749305725098 10.94349956512451 C 2.449789047241211 10.94349956512451 -9.5367431640625e-07 8.493709564208984 -9.5367431640625e-07 5.471749305725098 C -9.5367431640625e-07 2.449789047241211 2.449789047241211 -9.5367431640625e-07 5.471749305725098 -9.5367431640625e-07 Z" stroke="none" fill="#cecdd8"/>
+                                <DashboardCard >
+                                    <div class="flex items-center gap-x-4">
+                                        <svg id="Gruppe_642" data-name="Gruppe 642" xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45">
+                                            <g id="icon_note" data-name="icon–note">
+                                                <g id="Gruppe_642-2" data-name="Gruppe 642">
+                                                    <circle id="Bildschirmfoto_2022-08-28_um_10.42.36" data-name="Bildschirmfoto 2022-08-28 um 10.42.36" cx="22.5" cy="22.5" r="22.5" fill="#cecdd8"/>
+                                                </g>
+                                                <g id="clock" transform="translate(9.5 6.313)">
+                                                    <path id="Pfad_1078" data-name="Pfad 1078" d="M13.124,13.124h0A13.139,13.139,0,0,0,26.231,0H13.106A13.139,13.139,0,0,0,0,13.124Z" transform="translate(13.124 28.419) rotate(-90)" fill="#a7a6b1"/>
+                                                    <path id="Pfad_1079" data-name="Pfad 1079" d="M13.124,0h0A13.139,13.139,0,0,1,26.231,13.124H13.106A13.139,13.139,0,0,1,0,0Z" transform="translate(0 28.428) rotate(-90)" fill="#fcfcfb"/>
+                                                    <g id="Pfad_1507" data-name="Pfad 1507" transform="translate(17.07)" fill="#27233c">
+                                                        <path d="M 5.471749305725098 10.19349956512451 C 2.86816930770874 10.19349956512451 0.7499992847442627 8.075329780578613 0.7499992847442627 5.471749305725098 C 0.7499992847442627 2.86816930770874 2.86816930770874 0.7499992847442627 5.471749305725098 0.7499992847442627 C 8.075329780578613 0.7499992847442627 10.19349956512451 2.86816930770874 10.19349956512451 5.471749305725098 C 10.19349956512451 8.075329780578613 8.075329780578613 10.19349956512451 5.471749305725098 10.19349956512451 Z" stroke="none"/>
+                                                        <path d="M 5.471749305725098 1.499999046325684 C 3.281719207763672 1.499999046325684 1.499999046325684 3.281719207763672 1.499999046325684 5.471749305725098 C 1.499999046325684 7.661779403686523 3.281719207763672 9.443499565124512 5.471749305725098 9.443499565124512 C 7.661779403686523 9.443499565124512 9.443499565124512 7.661779403686523 9.443499565124512 5.471749305725098 C 9.443499565124512 3.281719207763672 7.661779403686523 1.499999046325684 5.471749305725098 1.499999046325684 M 5.471749305725098 -9.5367431640625e-07 C 8.493709564208984 -9.5367431640625e-07 10.94349956512451 2.449789047241211 10.94349956512451 5.471749305725098 C 10.94349956512451 8.493709564208984 8.493709564208984 10.94349956512451 5.471749305725098 10.94349956512451 C 2.449789047241211 10.94349956512451 -9.5367431640625e-07 8.493709564208984 -9.5367431640625e-07 5.471749305725098 C -9.5367431640625e-07 2.449789047241211 2.449789047241211 -9.5367431640625e-07 5.471749305725098 -9.5367431640625e-07 Z" stroke="none" fill="#cecdd8"/>
+                                                    </g>
                                                 </g>
                                             </g>
-                                        </g>
-                                    </svg>
-                                    <div class="xsLight">
-                                        {{ $t("There are no new announcements for today.")}}
+                                        </svg>
+                                        <div class="xsLight">
+                                            {{ $t("There are no new announcements for today.")}}
+                                        </div>
                                     </div>
-                                </div>
+                                </DashboardCard>
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
@@ -169,7 +178,7 @@
                                 {{ tasks?.length ?? 0 }}
                             </div>
                         </div>
-                        <div class="flex flex-col w-full bg-white shadow-cardShadow">
+                        <DashboardCard :has-padding="false">
                             <div v-if="tasks.length > 0" class="p-4">
                                 <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
                                     <div class="flex w-full justify-between">
@@ -191,7 +200,7 @@
                                     </div>
 
 
-                                    <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
+                                    <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
                                           class="my-1 flex ml-10 xsDark">
                                         {{ task.projectName }}
                                         <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
@@ -212,11 +221,11 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="absolute bottom-0 right-0">
-                                    <img src="/Svgs/IconSvgs/empty_state.svg" alt="">
+                                <div class="absolute bottom-0 right-0 rounded-br-lg">
+                                    <img src="/Svgs/IconSvgs/empty_state.svg" class=" rounded-br-lg" alt="">
                                 </div>
                             </div>
-                        </div>
+                        </DashboardCard>
                         <div class="flex justify-end mt-3">
                             <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
                         </div>
@@ -252,6 +261,7 @@ import {CheckIcon} from "@heroicons/vue/outline";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
+import DashboardCard from "@/Components/DashboardCard.vue";
 
 export default defineComponent({
     mixins: [Permissions],
@@ -265,9 +275,15 @@ export default defineComponent({
         'event',
         'eventTypes',
         'rooms',
-        'historyObjects'
+        'historyObjects',
+        'first_project_tab_id',
+        'first_project_shift_tab_id',
+        'first_project_tasks_tab_id',
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     components: {
+        DashboardCard,
         NotificationBlock,
         NotificationButtons, NewUserToolTip,
         CheckIcon, VueMathjax,
@@ -311,7 +327,7 @@ export default defineComponent({
             this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
-            return route('projects.show.info', {project: project?.id});
+            return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});
         },
     },
     data() {

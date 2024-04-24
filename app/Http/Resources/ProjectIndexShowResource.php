@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,7 +54,8 @@ class ProjectIndexShowResource extends JsonResource
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'budget_deadline' => $this->budget_deadline,
-            'pinned_by_users' => $this->pinned_by_users
+            'pinned_by_users' => $this->pinned_by_users,
+            'first_tab_id' => ProjectTab::query()->first()->id
         ];
     }
 }

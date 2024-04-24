@@ -25,16 +25,28 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\TableService;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
+use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -52,12 +64,6 @@ use Inertia\ResponseFactory;
 
 class EventController extends Controller
 {
-    protected ?\stdClass $notificationData = null;
-
-    protected ?NewHistoryService $history = null;
-
-    protected ?string $notificationKey = '';
-
     protected Authenticatable $user;
 
     protected UserShiftCalendarFilter $userShiftCalendarFilter;
@@ -68,18 +74,16 @@ class EventController extends Controller
         private readonly BudgetService $budgetService,
         private readonly EventService $eventService,
         private readonly ShiftService $shiftService,
-        private readonly TimelineService $timelineService
+        private readonly TimelineService $timelineService,
+        private readonly ProjectTabService $projectTabService,
+        private readonly ChangeService $changeService,
+        private readonly SchedulingController $schedulingController
     ) {
-        $this->notificationData = new \stdClass();
-        $this->notificationData->event = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new NewHistoryService(Event::class);
-
-        $this->notificationKey = Str::random(15);
     }
 
-    public function viewEventIndex(CalendarController $calendarController): Response
-    {
+    public function viewEventIndex(
+        CalendarController $calendarController
+    ): Response {
         $this->user = Auth::user();
         $userCalendarFilter = $this->user->calendar_filter()->first();
         $this->userShiftCalendarFilter = $this->user
@@ -150,6 +154,8 @@ class EventController extends Controller
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'user_filters' => $showCalendar['user_filters'],
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -176,9 +182,14 @@ class EventController extends Controller
         }
 
         $events = Event::with(['shifts', 'event_type', 'room'])
-            ->whereHas('shifts', function ($query): void {
-                $query->whereNotNull('shifts.id')->without('crafts');
-            })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
+            ->whereHas(
+                'shifts',
+                function ($query): void {
+                    $query->whereNotNull('shifts.id')->without('crafts');
+                }
+            )
+            ->startAndEndTimeOverlap($startDate, $endDate)
+            ->without(['series'])
             ->get();
         $usersWithPlannedWorkingHours = [];
 
@@ -379,6 +390,11 @@ class EventController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::all(),
             'historyObjects' => $historyObjects,
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_shift_tab_id' => $this->projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
+            'first_project_tasks_tab_id' => $this->projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -392,18 +408,34 @@ class EventController extends Controller
 
         return inertia('Events/EventRequestsManagement', [
             'event_requests' => EventShowResource::collection($events)->resolve(),
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function storeEvent(EventStoreRequest $request): CalendarEventResource
-    {
+    public function storeEvent(
+        EventStoreRequest $request,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): CalendarEventResource {
         $this->authorize('create', Event::class);
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
-            $this->associateProject($request, $firstEvent, $this->budgetService);
+            $this->associateProject(
+                $request,
+                $firstEvent,
+                $this->budgetService,
+                $tableService,
+                $columnService,
+                $mainPositionService,
+                $columnSettingService,
+                $sageApiSettingsService
+            );
         }
 
         $projectFirstEvent = $firstEvent->project()->first();
@@ -476,8 +508,13 @@ class EventController extends Controller
             $eventProject = $firstEvent->project()->first();
 
             if ($eventProject) {
-                $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-                $projectHistory->createHistory($eventProject->id, 'Schedule added');
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($eventProject->id)
+                        ->setTranslationKey('Schedule added')
+                );
             }
         }
 
@@ -644,7 +681,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show.calendar', $project->id)
+                'href' => route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                )
             ],
             4 => [
                 'type' => 'string',
@@ -688,7 +731,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show.calendar', $project->id)
+                'href' => route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                )
             ],
             4 => [
                 'type' => 'string',
@@ -756,7 +805,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -773,19 +828,31 @@ class EventController extends Controller
         }
     }
 
-    private function associateProject($request, $event, BudgetService $budgetService): void
-    {
+    private function associateProject(
+        $request,
+        $event,
+        BudgetService $budgetService,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
+    ): void {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $budgetService->generateBasicBudgetValues($project);
+        $budgetService->generateBasicBudgetValues(
+            $project,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
         $event->project()->associate($project);
         $event->save();
     }
 
     private function createRequestNotification($request, Event $event): void
     {
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
-        $this->notificationData->event = $event;
-        $this->notificationData->accepted = false;
         $room = Room::find($request->roomId);
         $admins = $room->users()->wherePivot('is_admin', true)->get();
 
@@ -820,7 +887,13 @@ class EventController extends Controller
                         'type' => 'link',
                         'title' => $event->project()->first()->name ?? '',
                         'href' => $event->project()->first() ?
-                            route('projects.show.calendar', $event->project()->first()->id) :
+                            route(
+                                'projects.tab',
+                                [
+                                    $event->project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) :
                             null
                     ],
                     4 => [
@@ -860,7 +933,13 @@ class EventController extends Controller
                     'type' => 'link',
                     'title' => $event->project()->first()->name ?? '',
                     'href' => $event->project()->first() ?
-                        route('projects.show.calendar', $event->project()->first()->id) :
+                        route(
+                            'projects.tab',
+                            [
+                                $event->project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) :
                         null
                 ],
                 4 => [
@@ -891,7 +970,7 @@ class EventController extends Controller
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $room = $event->room()->first();
             $project = $event->project()->first();
             if (!empty($project)) {
@@ -899,7 +978,7 @@ class EventController extends Controller
             }
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $project = $event->project()->first();
                 if (!empty($project)) {
                     $projectManagers = $project->managerUsers()->get();
@@ -943,7 +1022,13 @@ class EventController extends Controller
                         3 => [
                             'type' => 'link',
                             'title' => $project ? $project->name : '',
-                            'href' => $project ? route('projects.show.calendar', $project->id) : null
+                            'href' => $project ? route(
+                                'projects.tab',
+                                [
+                                    $project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) : null
                         ],
                         4 => [
                             'type' => 'string',
@@ -960,7 +1045,7 @@ class EventController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setDescription($notificationDescription);
-                    $this->notificationService->setNotificationKey($this->notificationKey);
+                    $this->notificationService->setNotificationKey(Str::random(15));
                     $this->notificationService->setNotificationTo($projectManager);
                     $this->notificationService->createNotification();
                 }
@@ -986,7 +1071,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1003,7 +1094,7 @@ class EventController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $this->notificationService->setNotificationTo($event->creator);
                 $this->notificationService->createNotification();
             }
@@ -1044,7 +1135,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1089,7 +1186,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1132,9 +1235,13 @@ class EventController extends Controller
         }
 
         if (!empty($event->project_id)) {
-            $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($eventProject->id, 'Schedule modified');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project()->first()->id)
+                    ->setTranslationKey('Schedule modified')
+            );
         }
 
         $newEventDescription = $event->description;
@@ -1233,13 +1340,12 @@ class EventController extends Controller
 
     private function createEventScheduleNotification(Event $event): void
     {
-        $schedule = new SchedulingController();
         if (!empty($event->project)) {
             foreach ($event->project->users->all() as $eventUser) {
-                $schedule->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+                $this->schedulingController->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $schedule->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+            $this->schedulingController->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 
@@ -1256,7 +1362,7 @@ class EventController extends Controller
             'is_admin_comment' => false
         ]);
 
-        $this->notificationService->setNotificationKey($this->notificationKey);
+        $this->notificationService->setNotificationKey(Str::random(15));
         $room = Room::find($event->room_id);
         $admins = collect();
         if (!empty($room)) {
@@ -1292,7 +1398,13 @@ class EventController extends Controller
                         'type' => 'link',
                         'title' => $event->project()->first()->name ?? '',
                         'href' => $event->project()->first() ?
-                            route('projects.show.calendar', $event->project()->first()->id) :
+                            route(
+                                'projects.tab',
+                                [
+                                    $event->project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) :
                             null
                     ],
                     4 => [
@@ -1337,7 +1449,13 @@ class EventController extends Controller
                     'type' => 'link',
                     'title' => $event->project()->first()->name ?? '',
                     'href' => $event->project()->first() ?
-                        route('projects.show.calendar', $event->project()->first()->id) :
+                        route(
+                            'projects.tab',
+                            [
+                                $event->project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) :
                         null
                 ],
                 4 => [
@@ -1381,7 +1499,13 @@ class EventController extends Controller
 
         $event->occupancy_option = false;
 
-        $this->history->createHistory($event->id, 'Room confirmed');
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey('Room confirmed')
+        );
 
         $event->save();
         $room = Room::find($event->room_id);
@@ -1422,7 +1546,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1462,7 +1592,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show.calendar', $project->id) : null
+                'href' => $project ? route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                ) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1544,7 +1680,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1561,7 +1703,7 @@ class EventController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
@@ -1585,7 +1727,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1602,13 +1750,19 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $this->notificationService->setNotificationTo($event->creator);
             $this->notificationService->createNotification();
         }
 
-        $this->notificationKey = Str::random(15);
-        $this->history->createHistory($event->id, 'Room declined');
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey('Room declined')
+        );
+
         $room = Room::find($roomId);
         $project = Project::find($event->project_id);
 
@@ -1645,7 +1799,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1662,7 +1822,7 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
@@ -1686,7 +1846,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show.calendar', $project->id) : null
+                'href' => $project ? route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                ) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1703,7 +1869,7 @@ class EventController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationKey($this->notificationKey);
+        $this->notificationService->setNotificationKey(Str::random(15));
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
     }
@@ -1731,7 +1897,8 @@ class EventController extends Controller
                 'start' => $event->start_time->format('d.m.Y, H:i'),
                 'end' => $event->end_time->format('d.m.Y, H:i'),
                 'room_name' => $event->room?->label,
-            ])
+            ]),
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -1753,11 +1920,36 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function destroy(Event $event): RedirectResponse
-    {
+    public function destroy(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): RedirectResponse {
         $this->authorize('delete', $event);
 
-        $this->eventService->delete($event);
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
+        );
 
         return Redirect::back();
     }
@@ -1767,13 +1959,31 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function destroyByNotification(Event $event, Request $request): void
-    {
+    public function destroyByNotification(
+        Event $event,
+        Request $request,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
         $this->authorize('delete', $event);
 
         if (!empty($event->project)) {
-            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $projectHistory->createHistory($event->project->id, 'Schedule deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project->id)
+                    ->setTranslationKey('Schedule deleted')
+            );
         }
 
         if (!empty($request->notificationKey)) {
@@ -1786,7 +1996,20 @@ class EventController extends Controller
             }
         }
 
-        $this->eventService->delete($event);
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
+        );
     }
 
     /**
@@ -1831,51 +2054,105 @@ class EventController extends Controller
             strtotime($oldEventStartDate) !== strtotime($newEventStartDate) ||
             strtotime($oldEventEndDate) !== strtotime($newEventEndDate)
         ) {
-            $this->history->createHistory($eventId, 'Date/time changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Date/time changed')
+            );
         }
     }
 
     private function checkEventTypeChanges($eventId, $oldType, $newType): void
     {
         if ($oldType !== $newType) {
-            $this->history->createHistory($eventId, 'Appointment type changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment type changed')
+            );
         }
     }
 
     private function checkEventNameChanges($eventId, $oldName, $newName): void
     {
         if ($oldName === null && $newName !== null) {
-            $this->history->createHistory($eventId, 'Appointment name added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name added')
+            );
         }
 
         if ($oldName !== $newName && $newName !== null && $oldName !== null) {
-            $this->history->createHistory($eventId, 'Appointment name changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name changed')
+            );
         }
 
         if ($oldName !== null && $newName === null) {
-            $this->history->createHistory($eventId, 'Appointment name deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name deleted')
+            );
         }
     }
 
     private function checkProjectChanges($eventId, $oldProject, $newProject): void
     {
         if ($newProject !== null && $oldProject === null) {
-            $this->history->createHistory($eventId, 'Added project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Added project assignment')
+            );
         }
 
         if ($oldProject !== null && $newProject === null) {
-            $this->history->createHistory($eventId, 'Deleted project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Deleted project assignment')
+            );
         }
 
         if ($newProject !== null && $oldProject !== null && $newProject !== $oldProject) {
-            $this->history->createHistory($eventId, 'Changed project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Changed project assignment')
+            );
         }
     }
 
     private function checkRoomChanges($eventId, $oldRoom, $newRoom): void
     {
         if ($oldRoom !== $newRoom) {
-            $this->history->createHistory($eventId, 'Room changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Room changed')
+            );
 
             $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($eventId);
         }
@@ -1884,20 +2161,44 @@ class EventController extends Controller
     private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
     {
         if ($newDescription === null && $oldDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice deleted')
+            );
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice added')
+            );
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice changed')
+            );
         }
     }
 
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew): void
     {
         if ($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew) {
-            $this->history->createHistory($eventId, 'Changed appointment property');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Changed appointment property')
+            );
         }
     }
 

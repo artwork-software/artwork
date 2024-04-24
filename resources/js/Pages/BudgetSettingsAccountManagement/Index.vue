@@ -34,6 +34,17 @@
                 <input-component :placeholder="$t('Description')"
                                  v-model="this.accountForm.title"
                 />
+                <SwitchGroup as="div" class="flex items-center">
+                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
+                        {{ $t('Expense account') }}
+                    </SwitchLabel>
+                    <Switch v-model="this.accountForm.is_account_for_revenue " class="bg-indigo-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                        <span aria-hidden="true" :class="[this.accountForm.is_account_for_revenue  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'font-bold' : 'text-gray-400'">
+                        {{ $t('Revenue account') }}
+                    </SwitchLabel>
+                </SwitchGroup>
                 <AddButton :text="$t('Add')"
                            class="!mt-0"
                            @click="this.saveAccount()"
@@ -66,7 +77,7 @@
                         <div v-if="!this.showAccountSearch"
                              @click="this.showAccountSearch = !this.showAccountSearch"
                              class="cursor-pointer inset-y-0">
-                            <SearchIcon class="h-5 w-5"
+                            <IconSearch class="h-5 w-5"
                                         aria-hidden="true"
                             />
                         </div>
@@ -74,24 +85,77 @@
                             <inputComponent v-model="this.accountSearchQuery"
                                             :placeholder="$t('Search account')"
                             />
-                            <XIcon class="ml-2 cursor-pointer h-5 w-5"
+                            <IconX class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showAccountSearch = false"
                             />
                         </div>
                     </div>
                 </div>
                 <div class="flex flex-row">
-                    <span class="w-56 xsLight">{{ $t('Account number') }}</span>
-                    <span class="w-96 xsLight">{{ $t('Description') }}</span>
+                    <span class="w-56 xsLight mr-2">{{ $t('Account number') }}</span>
+                    <span class="w-96 xsLight mr-2">{{ $t('Description') }}</span>
+                    <span class="w-72 xsLight">{{ $t('Account type') }}</span>
                 </div>
-                <div class="flex flex-row items-center"
-                     v-for="account in this.filteredAccounts"
-                >
-                    <span class="w-56">{{ account.account_number }}</span>
-                    <span class="w-96 text-wrap">{{ account.title }}</span>
-                    <TrashIcon class="w-5 h-5 hover:text-error cursor-pointer"
-                               @click="this.showRemoveConfirmModal(account, 'account')"
-                    />
+                <div class="flex flex-col"
+                     v-for="account in this.filteredAccounts">
+                    <div class="flex flex-row items-center">
+                        <!-- If not edit for given account -->
+                        <div v-if="this.accountIdToEdit !== account.id" class="flex flex-row">
+                            <span class="w-56 text-wrap break-words mr-2">{{ account.account_number }}</span>
+                            <span class="w-96 text-wrap break-words mr-2">{{ account.title }}</span>
+                            <span class="w-72">
+                                {{ account.is_account_for_revenue ? $t('Revenue account') : $t('Expense account') }}
+                            </span>
+                        </div>
+                        <!-- if account is edited -->
+                        <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center">
+                            <span class="w-56 mr-2">
+                                <input-component v-model="this.editAccountForm.account_number"
+                                                 :placeholder="this.editAccountForm.account_number"
+                                />
+                            </span>
+                            <span class="w-96 mr-2">
+                                <input-component v-model="this.editAccountForm.title"
+                                                 :placeholder="this.editAccountForm.title"
+                                />
+                            </span>
+                            <span class="w-72 flex justify-center">
+                                <SwitchGroup as="div" class="flex items-center">
+                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
+                                        {{ $t('Expense account') }}
+                                    </SwitchLabel>
+                                    <Switch v-model="this.editAccountForm.is_account_for_revenue " class="bg-indigo-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                                        <span aria-hidden="true" :class="[this.editAccountForm.is_account_for_revenue  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                    </Switch>
+                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.editAccountForm.is_account_for_revenue ? 'font-bold' : 'text-gray-400'">
+                                        {{ $t('Revenue account') }}
+                                    </SwitchLabel>
+                                </SwitchGroup>
+                            </span>
+                        </div>
+                        <!-- only display edit/trash icons if no account is edited currently -->
+                        <div v-if="this.accountIdToEdit === null"
+                             class="flex flex-row items-center">
+                            <IconEdit class="w-5 h-5 hover:text-error cursor-pointer"
+                                      @click="this.initAccountEdit(account)"/>
+                            <IconTrash class="w-5 h-5 hover:text-error cursor-pointer"
+                                       @click="this.showRemoveConfirmModal(account, 'account')"
+                            />
+                        </div>
+                        <!-- only display save/x icons if current account is edited -->
+                        <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center">
+                            <IconDeviceFloppy @click="this.saveAccountEdit()"
+                                              class="w-5 h-5 hover:text-error cursor-pointer"
+                            />
+                            <IconX @click="this.resetAccountEdit();"
+                                   class="w-5 h-5 hover:text-error cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                    <div v-if="this.accountIdToEdit === account.id && this.editAccountFormHelpText"
+                         class="errorText">
+                        {{ this.editAccountFormHelpText }}
+                    </div>
                 </div>
             </div>
             <div class="flex flex-col">
@@ -101,7 +165,7 @@
                         <div v-if="!this.showCostUnitSearch"
                              @click="this.showCostUnitSearch = !this.showCostUnitSearch"
                              class="cursor-pointer inset-y-0">
-                            <SearchIcon class="h-5 w-5"
+                            <IconSearch class="h-5 w-5"
                                         aria-hidden="true"
                             />
                         </div>
@@ -109,24 +173,60 @@
                             <inputComponent v-model="this.costUnitSearchQuery"
                                             :placeholder="$t('Search cost center')"
                             />
-                            <XIcon class="ml-2 cursor-pointer h-5 w-5"
+                            <IconX class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showCostUnitSearch = false"
                             />
                         </div>
                     </div>
                 </div>
                 <div class="flex flex-row">
-                    <span class="w-56 xsLight">{{ $t('Cost unit number') }}</span>
+                    <span class="w-56 xsLight mr-2">{{ $t('Cost unit number') }}</span>
                     <span class="w-96 xsLight">{{ $t('Description') }}</span>
                 </div>
-                <div class="flex flex-row items-center"
-                     v-for="cost_unit in this.filteredCostUnits"
-                >
-                    <span class="w-56">{{ cost_unit.cost_unit_number }}</span>
-                    <span class="w-96 text-wrap">{{ cost_unit.title }}</span>
-                    <TrashIcon class="w-5 h-5 hover:text-error cursor-pointer"
-                               @click="this.showRemoveConfirmModal(cost_unit, 'cost_unit')"
-                    />
+                <div class="flex flex-col"
+                     v-for="cost_unit in this.filteredCostUnits">
+                    <div class="flex flex-row items-center">
+                        <!-- If not edit for given cost_unit -->
+                        <div v-if="this.costUnitIdToEdit !== cost_unit.id" class="flex flex-row">
+                            <span class="w-56 text-wrap break-words mr-2">{{ cost_unit.cost_unit_number }}</span>
+                            <span class="w-96 text-wrap break-words">{{ cost_unit.title }}</span>
+                        </div>
+                        <!-- if cost_unit is edited -->
+                        <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center">
+                            <span class="w-56 mr-2">
+                                <input-component v-model="this.editCostUnitForm.cost_unit_number"
+                                                 :placeholder="this.editCostUnitForm.cost_unit_number"
+                                />
+                            </span>
+                            <span class="w-96">
+                                <input-component v-model="this.editCostUnitForm.title"
+                                                 :placeholder="this.editCostUnitForm.title"
+                                />
+                            </span>
+                        </div>
+                        <!-- only display edit/trash icons if no cost_unit is edited currently -->
+                        <div v-if="this.costUnitIdToEdit === null"
+                             class="flex flex-row items-center">
+                            <IconEdit class="w-5 h-5 hover:text-error cursor-pointer"
+                                      @click="this.initCostUnitEdit(cost_unit)"/>
+                            <IconTrash class="w-5 h-5 hover:text-error cursor-pointer"
+                                       @click="this.showRemoveConfirmModal(cost_unit, 'cost_unit')"
+                            />
+                        </div>
+                        <!-- only display save/x icons if current cost_unit is edited -->
+                        <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center ml-2">
+                            <IconDeviceFloppy @click="this.saveCostUnitEdit()"
+                                              class="w-5 h-5 hover:text-error cursor-pointer"
+                            />
+                            <IconX @click="this.resetCostUnitEdit();"
+                                   class="w-5 h-5 hover:text-error cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                    <div v-if="this.costUnitIdToEdit === cost_unit.id && this.editCostUnitFormHelpText"
+                         class="errorText">
+                        {{ this.editCostUnitFormHelpText }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,14 +257,14 @@ import {Inertia} from "@inertiajs/inertia";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import {SearchIcon, TrashIcon, XIcon} from "@heroicons/vue/solid";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
+    mixins: [IconLib],
     components: {
-        XIcon, SearchIcon,
         SuccessModal,
         ErrorComponent,
         ConfirmationComponent,
@@ -174,7 +274,6 @@ export default defineComponent({
         SwitchGroup,
         BudgetSettingsHeader,
         InputComponent,
-        TrashIcon
     },
     props: [
         'accounts',
@@ -185,10 +284,24 @@ export default defineComponent({
             budgetAccountManagementGlobal: this.$page.props.budgetAccountManagementGlobal,
             accountForm: useForm({
                 account_number: '',
-                title: ''
+                title: '',
+                is_account_for_revenue: false
+            }),
+            editAccountFormHelpText: null,
+            accountIdToEdit: null,
+            editAccountForm: useForm({
+                account_number: '',
+                title: '',
+                is_account_for_revenue: false
             }),
             accountFormHelpText: null,
             costUnitForm: useForm({
+                cost_unit_number: '',
+                title: ''
+            }),
+            editCostUnitFormHelpText: null,
+            costUnitIdToEdit: null,
+            editCostUnitForm: useForm({
                 cost_unit_number: '',
                 title: ''
             }),
@@ -243,6 +356,96 @@ export default defineComponent({
         }
     },
     methods: {
+        initAccountEdit(account) {
+            this.editAccountForm.account_number = account.account_number;
+            this.editAccountForm.title = account.title;
+            this.editAccountForm.is_account_for_revenue = account.is_account_for_revenue;
+            this.accountIdToEdit = account.id;
+        },
+        resetAccountEdit() {
+            this.editAccountFormHelpText = null;
+            this.accountIdToEdit = null;
+            this.editAccountForm.reset();
+        },
+        saveAccountEdit() {
+            if (this.editAccountForm.account_number === '') {
+                this.editAccountFormHelpText = this.$t('The account number must contain at least one character.');
+                return;
+            }
+
+            if (this.editAccountForm.title === '') {
+                this.editAccountFormHelpText = this.$t('The description must contain at least one character.');
+                return;
+            }
+
+            if (this.editAccountForm.title.length > 255) {
+                this.editAccountFormHelpText = this.$t('The description must not be longer than 255 characters.');
+                return;
+            }
+
+            this.editAccountFormHelpText = null;
+            this.editAccountForm.patch(
+                route(
+                    'budget-settings.account-management.update-account',
+                    {
+                        budgetManagementAccount: this.accountIdToEdit
+                    }
+                ),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if (!this.$page.props.flash.error) {
+                            this.resetAccountEdit();
+                        }
+                    }
+                }
+            )
+        },
+        initCostUnitEdit(cost_unit) {
+            this.editCostUnitForm.cost_unit_number = cost_unit.cost_unit_number;
+            this.editCostUnitForm.title = cost_unit.title;
+            this.costUnitIdToEdit = cost_unit.id;
+        },
+        resetCostUnitEdit() {
+            this.editCostUnitFormHelpText = null;
+            this.costUnitIdToEdit = null;
+            this.editCostUnitForm.reset();
+        },
+        saveCostUnitEdit() {
+            if (this.editCostUnitForm.cost_unit_number === '') {
+                this.editCostUnitFormHelpText = this.$t('The cost center number must contain at least one character.');
+                return;
+            }
+
+            if (this.editCostUnitForm.title === '') {
+                this.editCostUnitFormHelpText = this.$t('The description must contain at least one character.');
+                return;
+            }
+
+            if (this.editCostUnitForm.title.length > 255) {
+                this.editCostUnitFormHelpText = this.$t('The description must not be longer than 255 characters.');
+                return;
+            }
+
+            this.editCostUnitFormHelpText = null;
+
+            this.editCostUnitForm.patch(
+                route(
+                    'budget-settings.account-management.update-cost-unit',
+                    {
+                        budgetManagementCostUnit: this.costUnitIdToEdit
+                    }
+                ),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        if (!this.$page.props.flash.error) {
+                            this.resetCostUnitEdit();
+                        }
+                    }
+                }
+            )
+        },
         showRemoveConfirmModal(resourceToDelete, type) {
             this.showRemoveResourceConfirmModal = true;
             switch (type) {
@@ -355,7 +558,7 @@ export default defineComponent({
                 return;
             }
 
-            this.costUnitFormHelpText = '';
+            this.costUnitFormHelpText = null;
 
             this.costUnitForm.post(
                 route('budget-settings.account-management.store-cost-unit'),

@@ -5,36 +5,42 @@ namespace Artwork\Modules\Project\Services;
 use App\Models\Contract;
 use App\Models\MoneySourceFile;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\CommentRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class CommentService
+readonly class CommentService
 {
-    public function __construct(
-        private readonly CommentRepository $commentRepository,
-        private readonly NewHistoryService $historyService
-    ) {
-        $this->historyService->setModel(Project::class);
+    public function __construct(private CommentRepository $commentRepository)
+    {
     }
 
     public function create(
         string $text,
         User $user,
+        ChangeService $changeService,
         ?Project $project = null,
         ?ProjectFile $projectFile = null,
         ?MoneySourceFile $moneySourceFile = null,
         ?Contract $contract = null,
+        ?int $tabId = null
     ): Comment {
         $comment = new Comment();
         $comment->text = $text;
         $comment->user()->associate($user);
+        $comment->tab_id = $tabId;
         if ($project) {
             $comment->project()->associate($project);
-            $this->historyService->createHistory($project->id, 'Comment added');
+            $changeService->saveFromBuilder(
+                $changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Comment added')
+            );
         }
         if ($projectFile) {
             $comment->project_file()->associate($projectFile);
@@ -55,17 +61,24 @@ class CommentService
         return $comment;
     }
 
-    public function delete(Comment $comment): void
+    public function delete(Comment $comment, ChangeService $changeService): void
     {
-        $this->historyService->createHistory($comment->project->id, 'Comment deleted');
+        $changeService->saveFromBuilder(
+            $changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($comment->project->id)
+                ->setTranslationKey('Comment deleted')
+        );
+
         $comment->delete();
     }
 
-    public function deleteAll(array|Collection $comments): void
+    public function deleteAll(array|Collection $comments, ChangeService $changeService): void
     {
         /** @var Comment $comment */
         foreach ($comments as $comment) {
-            $this->delete($comment);
+            $this->delete($comment, $changeService);
         }
     }
 

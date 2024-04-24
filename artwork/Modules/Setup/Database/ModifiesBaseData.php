@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Setup\Database;
 
-use Artwork\Modules\Permission\Service\PermissionService;
-use Artwork\Modules\Permission\Service\RoleService;
+use Artwork\Modules\Permission\Services\PermissionService;
+use Artwork\Modules\Permission\Services\RoleService;
 use Artwork\Modules\Setup\DataProvider\RoleAndPermissionDataProvider;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
@@ -56,11 +56,10 @@ trait ModifiesBaseData
 
     private function modifyEntry(
         PermissionService|RoleService $service,
-        array                         $data,
-        array                         $tableFields,
-        array                         $exclusionKeys
-    ): void
-    {
+        array $data,
+        array $tableFields,
+        array $exclusionKeys
+    ): void {
         $validKeys = $this->getValidKeys($tableFields, $exclusionKeys);
         $data = Arr::only($data, $validKeys);
         try {

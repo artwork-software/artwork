@@ -3,7 +3,7 @@ import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "SageDragCellElement",
-    props: ['cell', 'value'],
+    props: ['cell'],
     mixins: [IconLib],
     emits: ['isDragged'],
     methods: {

@@ -1,5 +1,5 @@
 <template>
-    <th class="p-0" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
+    <th class="p-0 rounded-t-lg" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
         <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id" @mouseout="showMenu = null">
             <div class="pl-2 xsWhiteBold flex w-full items-center h-10" v-if="!mainPosition.clicked">
                 <div @click="mainPosition.clicked = !mainPosition.clicked">
@@ -126,7 +126,7 @@
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <span v-if="column.type !== 'sage'">{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
+                        <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}</span>
                         <span v-else>{{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}</span>
                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
                             <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -160,10 +160,11 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import Permissions from "@/mixins/Permissions.vue";
 import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
 
 
 export default {
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
         SageAssignedDataModal,

@@ -17,6 +17,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
@@ -55,7 +57,6 @@ class Project extends Model
 
     protected $fillable = [
         'name',
-        'description',
         'shift_description',
         'number_of_participants',
         'cost_center_id',
@@ -106,13 +107,8 @@ class Project extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->using(ProjectUserPivot::class)
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
-    }
-
-    public function headlines(): BelongsToMany
-    {
-        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
-            ->withPivot('text');
     }
 
     //@todo: fix phpcs error - refactor function name to accessBudget
@@ -120,7 +116,7 @@ class Project extends Model
     public function access_budget(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('access_budget', true);
+            ->wherePivot('access_budget', true)->withCasts(['access_budget' => 'boolean']);
     }
 
     public function writeUsers(): BelongsToMany
@@ -156,13 +152,6 @@ class Project extends Model
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
-    }
-
-    //@todo: fix phpcs error - refactor function name to projectHistories
-    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function project_histories(): HasMany
-    {
-        return $this->hasMany(ProjectHistory::class);
     }
 
     public function checklists(): HasMany
@@ -202,11 +191,6 @@ class Project extends Model
         return $this->belongsToMany(Room::class, 'events');
     }
 
-    public function prunable(): Builder
-    {
-        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
-    }
-
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id');
@@ -231,6 +215,10 @@ class Project extends Model
         );
     }
 
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+    }
 
     /**
      * @return array<string, mixed>

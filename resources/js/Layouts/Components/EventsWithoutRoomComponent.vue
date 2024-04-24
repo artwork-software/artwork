@@ -261,7 +261,7 @@
                                     <div class="xsLight flex" v-if="!event.creatingProject">
                                         {{$t('Currently assigned to:')}}
                                         <a v-if="event.projectId"
-                                           :href="route('projects.show.calendar', {project: event.projectId})"
+                                           :href="route('projects.tab', {project: event.projectId, projectTab: this.first_project_calendar_tab_id})"
                                            class="ml-3 flex xsDark">
                                             {{ event.project?.name }}
                                         </a>
@@ -425,7 +425,7 @@
                             <div class="w-full flex">
                                 <div class="flex w-1/2 xxsDark items-center my-auto" v-if="event.projectId">
                                     {{$t('Project')}}:
-                                    <a :href="route('projects.show.calendar', {project: event.projectId})"
+                                    <a :href="route('projects.tab', {project: event.projectId, projectTab: this.first_project_calendar_tab_id})"
                                        class="ml-1 xxsDarkBold items-center flex">
                                         {{ event.projectName }}
                                     </a>
@@ -498,7 +498,6 @@ import {
     XCircleIcon,
     XIcon
 } from '@heroicons/vue/outline';
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
     ListboxButton,
@@ -533,7 +532,6 @@ export default {
         JetDialogModal,
         XIcon,
         XCircleIcon,
-        EventTypeIconCollection,
         Listbox,
         ListboxButton,
         ListboxOption,
@@ -604,7 +602,8 @@ export default {
         'rooms',
         'isAdmin',
         'eventsWithoutRoom',
-        'removeNotificationOnAction'
+        'removeNotificationOnAction',
+        'first_project_calendar_tab_id'
     ],
     emits: ['closed'],
     watch: {

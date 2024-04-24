@@ -41,9 +41,9 @@ class MoneySourceCalculationService
 
         foreach ($columnCells as $columnCell) {
             if ($columnCell->linked_type === 'EARNING') {
-                $columnCellsLinkedSum += $columnCell->value;
+                $columnCellsLinkedSum += floatval(str_replace(',', '.', $columnCell->value));
             } else {
-                $columnCellsLinkedSum -= $columnCell->value;
+                $columnCellsLinkedSum -= floatval(str_replace(',', '.', $columnCell->value));
             }
         }
 

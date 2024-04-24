@@ -16,24 +16,12 @@ use Artwork\Modules\Department\Repositories\DepartmentRepository;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Database\Eloquent\Collection;
 
-class DepartmentService
+readonly class DepartmentService
 {
-    /**
-     * @param NotificationService $notificationService
-     * @param UserService $userService
-     * @param DepartmentRepository $departmentRepository
-     */
-    public function __construct(
-        private readonly NotificationService $notificationService,
-        private readonly UserService $userService,
-        private readonly DepartmentRepository $departmentRepository,
-    ) {
+    public function __construct(private DepartmentRepository $departmentRepository)
+    {
     }
 
-    /**
-     * @param string $query
-     * @return Collection
-     */
     public function searchDepartments(string $query): \Illuminate\Support\Collection
     {
         return $this->departmentRepository
@@ -61,11 +49,7 @@ class DepartmentService
         return DepartmentIndexResource::collection($this->departmentRepository->getAllDepartments())->resolve();
     }
 
-    /**
-     * @param StoreDepartmentRequest $request
-     * @return void
-     */
-    public function createByRequest(StoreDepartmentRequest $request): void
+    public function createByRequest(StoreDepartmentRequest $request, NotificationService $notificationService): void
     {
         $department = new Department();
         $department->fill($request->only(['name', 'svg_name']));
@@ -77,20 +61,17 @@ class DepartmentService
         );
 
         foreach ($this->departmentRepository->getDepartmentUsers($department) as $user) {
-            $this->sendAddedToDepartmentNotification($department, $user);
+            $this->sendAddedToDepartmentNotification($department, $user, $notificationService);
         }
 
         $this->broadcastDepartmentUpdated();
     }
 
-    /**
-     * @param UpdateDepartmentRequest $updateDepartmentRequest
-     * @param Department $department
-     * @return void
-     */
     public function updateByRequest(
         UpdateDepartmentRequest $updateDepartmentRequest,
-        Department $department
+        Department $department,
+        UserService $userService,
+        NotificationService $notificationService
     ): void {
         $department->update($updateDepartmentRequest->only('name', 'svg_name'));
 
@@ -105,14 +86,15 @@ class DepartmentService
             if (!$previousTeamMemberIds->contains($currentTeamMemberId)) {
                 $this->sendAddedToDepartmentNotification(
                     $department,
-                    $this->userService->findUser($currentTeamMemberId)
+                    $userService->findUser($currentTeamMemberId),
+                    $notificationService
                 );
             }
         }
 
         foreach ($previousTeamMemberIds as $previousTeamMemberId) {
             if (!$currentTeamMemberIds->contains($previousTeamMemberId)) {
-                $user = $this->userService->findUser($previousTeamMemberId);
+                $user = $userService->findUser($previousTeamMemberId);
                 $this->sendTeamNotification(
                     //'Du wurdest aus Team ' . $department->name . ' gelöscht',
                     __('notification.department.remove', ['department' => $department->name], $user->language),
@@ -120,7 +102,8 @@ class DepartmentService
                     2,
                     'error',
                     $department->id,
-                    $user
+                    $user,
+                    $notificationService
                 );
             }
         }
@@ -128,11 +111,7 @@ class DepartmentService
         $this->broadcastDepartmentUpdated();
     }
 
-    /**
-     * @param Department $department
-     * @return void
-     */
-    public function deleteDepartment(Department $department): void
+    public function deleteDepartment(Department $department, NotificationService $notificationService): void
     {
         foreach ($this->departmentRepository->getDepartmentUsers($department) as $user) {
             $this->sendTeamNotification(
@@ -141,7 +120,8 @@ class DepartmentService
                 2,
                 'error',
                 $department->id,
-                $user
+                $user,
+                $notificationService
             );
         }
 
@@ -150,68 +130,52 @@ class DepartmentService
         $this->broadcastDepartmentUpdated();
     }
 
-    /**
-     * @param Department $department
-     * @param User $user
-     * @return void
-     */
-    public function sendAddedToDepartmentNotification(Department $department, User $user): void
-    {
+    public function sendAddedToDepartmentNotification(
+        Department $department,
+        User $user,
+        NotificationService $notificationService
+    ): void {
         $this->sendTeamNotification(
             __('notification.department.add', ['department' => $department->name], $user->language),
             'green',
             3,
             'success',
             $department->id,
-            $user
+            $user,
+            $notificationService
         );
     }
 
-    /**
-     * @param string $notificationTitle
-     * @param string $icon
-     * @param int $priority
-     * @param string $broadcastType
-     * @param int $departmentId
-     * @param User $user
-     * @return void
-     */
     private function sendTeamNotification(
         string $notificationTitle,
         string $icon,
         int $priority,
         string $broadcastType,
         int $departmentId,
-        User $user
+        User $user,
+        NotificationService $notificationService
     ): void {
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon($icon);
-        $this->notificationService->setPriority($priority);
-        $this->notificationService->setDepartmentId($departmentId);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TEAM);
-        $this->notificationService->setBroadcastMessage(
+        $notificationService->setTitle($notificationTitle);
+        $notificationService->setIcon($icon);
+        $notificationService->setPriority($priority);
+        $notificationService->setDepartmentId($departmentId);
+        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TEAM);
+        $notificationService->setBroadcastMessage(
             [
                 'id' => rand(10, 1000000),
                 'type' => $broadcastType,
                 'message' => $notificationTitle
             ]
         );
-        $this->notificationService->setNotificationTo($user);
-        $this->notificationService->createNotification();
+        $notificationService->setNotificationTo($user);
+        $notificationService->createNotification();
     }
 
-    /**
-     * @return void
-     */
     public function broadcastDepartmentUpdated(): void
     {
         broadcast(new DepartmentUpdated())->toOthers();
     }
 
-    /**
-     * @param Department $department
-     * @return DepartmentShowResource
-     */
     public function createDepartmentShowResource(Department $department): DepartmentShowResource
     {
         return new DepartmentShowResource($department);

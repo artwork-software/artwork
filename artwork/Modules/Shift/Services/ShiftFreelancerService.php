@@ -3,8 +3,9 @@
 namespace Artwork\Modules\Shift\Services;
 
 use App\Models\Freelancer;
-use Artwork\Core\Database\Traits\ReceivesNewHistoryServiceTrait;
+use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -16,19 +17,14 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 
-class ShiftFreelancerService
+readonly class ShiftFreelancerService
 {
-    use ReceivesNewHistoryServiceTrait;
-
     public function __construct(
-        private readonly ShiftRepository $shiftRepository,
-        private readonly ShiftUserRepository $shiftUserRepository,
-        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
-        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private readonly ShiftCountService $shiftCountService,
-        private readonly VacationConflictService $vacationConflictService,
-        private readonly AvailabilityConflictService $availabilityConflictService
+        private ShiftRepository $shiftRepository,
+        private ShiftUserRepository $shiftUserRepository,
+        private ShiftFreelancerRepository $shiftFreelancerRepository,
+        private ShiftServiceProviderRepository $shiftServiceProviderRepository,
+        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
     ) {
     }
 
@@ -36,7 +32,12 @@ class ShiftFreelancerService
         Shift $shift,
         int $freelancerId,
         int $shiftQualificationId,
-        array|null $seriesShiftData = null
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService,
+        array|null $seriesShiftData = null,
     ): void {
         $shiftFreelancerPivot = $this->shiftFreelancerRepository->createForShift(
             $shift->id,
@@ -44,13 +45,17 @@ class ShiftFreelancerService
             $shiftQualificationId
         );
 
-        $this->shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancerId);
+        $shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancerId);
 
         if ($shift->is_committed) {
             $this->handleAssignedToShift(
                 $shift,
                 $shiftFreelancerPivot->freelancer,
-                $shiftFreelancerPivot->shiftQualification
+                $shiftFreelancerPivot->shiftQualification,
+                $notificationService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
             );
         }
 
@@ -65,7 +70,12 @@ class ShiftFreelancerService
                 Carbon::parse($seriesShiftData['end'])->endOfDay(),
                 $seriesShiftData['dayOfWeek'],
                 $freelancerId,
-                $shiftQualificationId
+                $shiftQualificationId,
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
             );
         }
     }
@@ -73,28 +83,38 @@ class ShiftFreelancerService
     private function handleAssignedToShift(
         Shift $shift,
         Freelancer $freelancer,
-        ShiftQualification $shiftQualification
+        ShiftQualification $shiftQualification,
+        NotificationService $notificationService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
-        $this->createAssignedToShiftHistoryEntry($shift, $freelancer, $shiftQualification);
-        $this->checkVacationConflicts($shift, $freelancer);
-        $this->checkAvailabilityConflicts($shift, $freelancer);
-    }
-
-    private function createAssignedToShiftHistoryEntry(
-        Shift $shift,
-        Freelancer $freelancer,
-        ShiftQualification $shiftQualification
-    ): void {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'Freelancer was added to the shift as',
-            [
-                $freelancer->getNameAttribute(),
-                $shift->craft->abbreviation,
-                $shift->event->eventName,
-                $shiftQualification->name
-            ],
-            'shift'
+        $changeService->saveFromBuilder(
+            $changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Freelancer was added to the shift as')
+                ->setTranslationKeyPlaceholderValues([
+                    $freelancer->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName,
+                    $shiftQualification->name
+                ])
+        );
+        $vacationConflictService->checkVacationConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
+        );
+        $availabilityConflictService->checkAvailabilityConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
         );
     }
 
@@ -104,7 +124,12 @@ class ShiftFreelancerService
         Carbon $end,
         string $dayOfWeek,
         int $freelancerId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
     ): void {
         /** @var Shift $shiftBetweenDates */
         foreach (
@@ -149,7 +174,16 @@ class ShiftFreelancerService
             ) {
                 //call assignToShift without seriesShiftData to make sure only this user is assigned to shift and same
                 //logic is applied for each user
-                $this->assignToShift($shiftBetweenDates, $freelancerId, $shiftQualificationId, null);
+                $this->assignToShift(
+                    $shiftBetweenDates,
+                    $freelancerId,
+                    $shiftQualificationId,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
             }
         }
     }
@@ -170,8 +204,15 @@ class ShiftFreelancerService
         );
     }
 
-    public function removeFromShift(ShiftFreelancer|int $freelancersPivot, bool $removeFromSingleShift): void
-    {
+    public function removeFromShift(
+        ShiftFreelancer|int $freelancersPivot,
+        bool $removeFromSingleShift,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
         $shiftFreelancerPivot = !$freelancersPivot instanceof ShiftFreelancer ?
             $this->shiftFreelancerRepository->getById($freelancersPivot) :
             $freelancersPivot;
@@ -182,10 +223,17 @@ class ShiftFreelancerService
         $freelancer = $shiftFreelancerPivot->freelancer;
 
         $this->forceDelete($shiftFreelancerPivot);
-        $this->shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancer->id);
+        $shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancer->id);
 
         if ($shift->is_committed) {
-            $this->handleRemovedFromShift($shift, $freelancer);
+            $this->handleRemovedFromShift(
+                $shift,
+                $freelancer,
+                $notificationService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            );
         }
 
         if (!$removeFromSingleShift) {
@@ -202,61 +250,106 @@ class ShiftFreelancerService
                     $freelancer->id
                 );
                 if ($shiftFreelancerPivotByUuid instanceof ShiftFreelancer) {
-                    $this->removeFromShift($shiftFreelancerPivotByUuid, true);
+                    $this->removeFromShift(
+                        $shiftFreelancerPivotByUuid,
+                        true,
+                        $notificationService,
+                        $shiftCountService,
+                        $vacationConflictService,
+                        $availabilityConflictService,
+                        $changeService
+                    );
                 }
             }
         }
     }
 
-    public function removeAllFreelancersFromShift(Shift $shift): void
-    {
+    public function removeAllFreelancersFromShift(
+        Shift $shift,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
         $shift->freelancer()->each(
-            function (Freelancer $freelancer): void {
-                $this->removeFromShift($freelancer->pivot, true);
+            function (Freelancer $freelancer) use (
+                $notificationService,
+                $shiftCountService,
+                $vacationConflictService,
+                $availabilityConflictService,
+                $changeService
+            ): void {
+                $this->removeFromShift(
+                    $freelancer->pivot,
+                    true,
+                    $notificationService,
+                    $shiftCountService,
+                    $vacationConflictService,
+                    $availabilityConflictService,
+                    $changeService
+                );
             }
         );
     }
 
-    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): void
-    {
+    public function removeFromShiftByUserIdAndShiftId(
+        int $freelancerId,
+        int $shiftId,
+        NotificationService $notificationService,
+        ShiftCountService $shiftCountService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
         $this->removeFromShift(
             $this->shiftFreelancerRepository->findByUserIdAndShiftId(
                 $freelancerId,
                 $shiftId
             ),
-            true
+            true,
+            $notificationService,
+            $shiftCountService,
+            $vacationConflictService,
+            $availabilityConflictService,
+            $changeService
         );
     }
 
-    private function handleRemovedFromShift(Shift $shift, Freelancer $freelancer): void
-    {
-        $this->createRemovedFromShiftHistoryEntry($shift, $freelancer);
-        $this->checkVacationConflicts($shift, $freelancer);
-        $this->checkAvailabilityConflicts($shift, $freelancer);
-    }
-
-    private function createRemovedFromShiftHistoryEntry(Shift $shift, Freelancer $freelancer): void
-    {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'Freelancer was removed from shiftFreelancer',
-            [
-                $freelancer->getNameAttribute(),
-                $shift->craft->abbreviation,
-                $shift->event->eventName
-            ],
-            'shift'
+    private function handleRemovedFromShift(
+        Shift $shift,
+        Freelancer $freelancer,
+        NotificationService $notificationService,
+        VacationConflictService $vacationConflictService,
+        AvailabilityConflictService $availabilityConflictService,
+        ChangeService $changeService
+    ): void {
+        $changeService->saveFromBuilder(
+            $changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Freelancer was removed from shift')
+                ->setTranslationKeyPlaceholderValues([
+                    $freelancer->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName
+                ])
         );
-    }
-
-    private function checkVacationConflicts(Shift $shift, Freelancer $freelancer): void
-    {
-        $this->vacationConflictService->checkVacationConflictsShifts($shift, null, $freelancer);
-    }
-
-    private function checkAvailabilityConflicts(Shift $shift, Freelancer $freelancer): void
-    {
-        $this->availabilityConflictService->checkAvailabilityConflictsShifts($shift, null, $freelancer);
+        $vacationConflictService->checkVacationConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
+        );
+        $availabilityConflictService->checkAvailabilityConflictsShifts(
+            $shift,
+            $notificationService,
+            null,
+            $freelancer
+        );
     }
 
     public function delete(ShiftFreelancer $shiftFreelancer): bool

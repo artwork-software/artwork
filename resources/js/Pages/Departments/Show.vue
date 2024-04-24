@@ -32,7 +32,7 @@
                         </transition>
                     </Menu>
                     <div class="relative w-full ml-8 mt-8 w-3/4 max-w-xl">
-                        <input id="teamName" v-model="teamForm.name" type="text"
+                        <input id="teamName" v-model="teamForm.name" @focusout="editTeam" type="text"
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="teamName"
@@ -94,20 +94,6 @@
                             </MenuItems>
                         </transition>
                     </Menu>
-                </div>
-                <div class="pt-12">
-                    <div class="mt-4 items-center">
-                        <FormButton
-                            v-if="!showSuccess"
-                            @click="editTeam"
-                            :text="$t('Save changes')"
-                            />
-                        <button v-else
-                                class="px-20 rounded-full items-center py-1 border bg-success focus:outline-none border-transparent"
-                        >
-                            <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
-                        </button>
-                    </div>
                 </div>
                 <div class="flex mt-12">
                     <span @click="openDeleteTeamModal()" class="xsLight cursor-pointer">{{ $t('Delete team permanently')}}</span>

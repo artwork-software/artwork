@@ -304,16 +304,6 @@ export default {
                 eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
             }
         },
-        getRoute(pathName) {
-            switch (pathName) {
-                case 'dashboard':
-                    return route('dashboard')
-                case 'events':
-                    return route('events')
-                case 'projects':
-                    return route('projects.show.shift', { project: window.location.pathname.split('/')[2]})
-            }
-        },
         reloadChanges() {
             Inertia.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
                 rooms: this.arrayToIds(this.filterArray.rooms),

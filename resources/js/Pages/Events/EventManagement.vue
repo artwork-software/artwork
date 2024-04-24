@@ -14,6 +14,7 @@
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
+                        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                     />
                 </div>
             </div>
@@ -30,6 +31,8 @@
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
                     @change-at-a-glance="changeAtAGlance"
+                    :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -47,6 +50,8 @@
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
                     @change-at-a-glance="changeAtAGlance"
+                    :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
             </div>
         </div>
@@ -62,7 +67,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import {useForm, usePage} from "@inertiajs/inertia-vue3";
+import {usePage} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 
@@ -88,7 +93,9 @@ export default defineComponent({
         'filterOptions',
         'personalFilters',
         'user_filters',
-        'events'
+        'events',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     methods: {
         usePage,

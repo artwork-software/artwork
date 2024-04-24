@@ -28,13 +28,16 @@
                     <div v-if="saving">
                         <div class="flex">
                             <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
-                                   class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
+                                   class="w-48 shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                    placeholder="Name des Filters"/>
                             <button
                                 class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label @click="saveFilter"
                                        class="cursor-pointer text-white text-xs">{{$t('Save')}}</label>
                             </button>
+                        </div>
+                        <div v-if="this.hasInvalidFilterName" class="pt-2 errorText">
+                            {{ $t('Enter filter name') }}
                         </div>
                         <hr class="border-gray-500 mt-4 mb-4">
                     </div>
@@ -335,6 +338,7 @@ export default {
                 eventAttributes: {},
             },
             saving: false,
+            hasInvalidFilterName: false
         }
     },
     methods: {
@@ -405,6 +409,11 @@ export default {
             })
         },
         async saveFilter() {
+            if (this.filterName === null || this.filterName === '') {
+                this.hasInvalidFilterName = true;
+                return;
+            }
+
             const filterIds = this.getFilterFields();
             await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds}).then(() => {
                 this.filterName = ""
@@ -576,16 +585,6 @@ export default {
                     value: 'has_no_audience',
                     name: this.$t('without audience'),
                 },
-            }
-        },
-        getRoute(pathName) {
-            switch (pathName) {
-                case 'dashboard':
-                    return route('dashboard')
-                case 'events':
-                    return route('events')
-                case 'projects':
-                    return route('projects.show.calendar', {project: window.location.pathname.split('/')[2]})
             }
         },
         reloadChanges() {

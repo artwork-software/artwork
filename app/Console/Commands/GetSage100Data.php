@@ -2,7 +2,12 @@
 
 namespace App\Console\Commands;
 
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\SageAssignedDataService;
+use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Command;
 
 class GetSage100Data extends Command
@@ -17,11 +22,21 @@ class GetSage100Data extends Command
         parent::__construct();
     }
 
-    public function handle(): int
-    {
+    public function handle(
+        ProjectService $projectService,
+        ColumnService $columnService,
+        SageApiSettingsService $sageApiSettingsService,
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService
+    ): int {
         return $this->sage100Service->importDataToBudget(
             $this->argument('count'),
-            $this->argument('specificDay')
+            $this->argument('specificDay'),
+            $projectService,
+            $columnService,
+            $sageApiSettingsService,
+            $sageAssignedDataService,
+            $sageNotAssignedDataService
         );
     }
 }

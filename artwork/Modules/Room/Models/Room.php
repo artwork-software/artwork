@@ -39,6 +39,16 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
+ * @property \Illuminate\Support\Collection<Room> $adjoining_rooms
+ * @property \Illuminate\Support\Collection<Room> $main_rooms
+ * @property \Illuminate\Support\Collection<RoomCategory> $categories
+ * @property \Illuminate\Support\Collection<RoomAttribute> $attributes
+ * @property \Illuminate\Support\Collection<User> $users
+ * @property \Illuminate\Support\Collection<User> $admins
+ *
+ *
+ *
+ *
  */
 class Room extends Model
 {

@@ -31,6 +31,7 @@
                         :event="event"
                         :event-types="eventTypes"
                         @open-edit-event-modal="openEditEventModal"
+                        :first_project_tab_id="this.first_project_tab_id"
                     />
                 </div>
             </div>
@@ -54,6 +55,7 @@
         :wantedRoomId="wantedRoom"
         :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -64,6 +66,7 @@
         :rooms="rooms"
         :eventsWithoutRoom="this.eventsWithoutRoom"
         :isAdmin="this.hasAdminRole()"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <div v-show="multiEdit"
@@ -139,7 +142,9 @@ export default {
         'project',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     emits:['changeAtAGlance'],
     methods: {

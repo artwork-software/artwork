@@ -44,7 +44,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
                                                       :name="$t('Rooms & room booking requests')" :rooms="rooms"
@@ -54,7 +58,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                         <!-- Aufgaben -->
                         <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
                                                       :rooms="rooms" :projects="projects" :event-types="eventTypes"
@@ -63,7 +71,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
                                                       :name="$t('Projects & Teams')" :rooms="rooms" :projects="projects"
@@ -73,7 +85,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
                                                       :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
@@ -82,7 +98,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                         <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
                                                       :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
@@ -91,7 +111,11 @@
                                                       :event="event"
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
-                                                      :room-collisions="roomCollisions"/>
+                                                      :room-collisions="roomCollisions"
+                                                      :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                      :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                        />
                     </div>
                     <div  class="col-span-4 pr-8">
                         <div v-if="globalNotification.image_url || globalNotification.title">
@@ -178,8 +202,6 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
-import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
@@ -188,10 +210,12 @@ import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequest
 import Permissions from "@/mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
+import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        NotificationBlock,
         SecondaryButton,
         GlobalNotificationModal,
         NotificationPushSettings,
@@ -230,9 +254,7 @@ export default defineComponent({
         XCircleIcon,
         Link,
         InputComponent,
-        EventTypeIconCollection,
         ChevronRightIcon,
-        NotificationEventInfoRow,
         NotificationUserIcon,
         AnswerEventRequestComponent,
     },
@@ -250,7 +272,10 @@ export default defineComponent({
         'project',
         'wantedSplit',
         'roomCollisions',
-        'globalNotification'
+        'globalNotification',
+        'first_project_shift_tab_id',
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

@@ -36,13 +36,7 @@ export default {
                     multiple: false
                 }, {
                     preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        console.log('success');
-                    },
-                    onError: () => {
-                        console.log('error');
-                    }
+                    preserveScroll: true
                 });
             }
 
@@ -69,7 +63,7 @@ export default {
 
 <template>
     <div  @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave">
-        {{ value}}
+        {{ value }}
     </div>
     <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" :cell-data="DataSelect" :cell="cell" type="dropOnValue"/>
 </template>

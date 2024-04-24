@@ -111,13 +111,13 @@
                     <div class="col-span-3">
                         <label for="first_name" class="xxsLight">{{$t('First name')}}</label>
                         <div>
-                            <input  type="text" v-model="freelancerData.first_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
+                            <input  type="text" v-model="freelancerData.first_name" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
                         </div>
                     </div>
                     <div class="col-span-4">
                         <label for="last_name" class="xxsLight">{{$t('Last name')}}</label>
                         <div>
-                            <input type="text" v-model="freelancerData.last_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="last_name" id="last_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Nachname" />
+                            <input type="text" v-model="freelancerData.last_name" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="last_name" id="last_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Nachname" />
                         </div>
                     </div>
                 </div>
@@ -126,29 +126,28 @@
                         <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Freelancer" disabled value="Freelancer (extern)" />
                     </div>
                     <div class="col-span-1">
-                        <input type="text" v-model="freelancerData.position" :disabled="checkCanEdit" :readonly="checkCanEdit" name="position" id="position" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Position')" />
+                        <input type="text" v-model="freelancerData.position" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="position" id="position" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Position')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.email" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
+                        <input type="email" v-model="freelancerData.email" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.phone_number" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
+                        <input type="email" v-model="freelancerData.phone_number" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.street" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
+                        <input type="email" v-model="freelancerData.street" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
                     </div>
                     <div class="col-span-1"></div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.zip_code" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
+                        <input type="email" v-model="freelancerData.zip_code" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.location" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
+                        <input type="email" v-model="freelancerData.location" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
                     </div>
                     <div class="col-span-full">
-                        <textarea rows="4" v-model="freelancerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Note')" />
+                        <textarea rows="4" v-model="freelancerData.note" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Note')" />
                     </div>
                 </div>
-                <FormButton class="mt-5 !ml-0" :text="$t('Save changes')" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
             </div>
             <div v-if="currentTab === 3">
                 <UserTermsTab user_type="freelancer" :user_to_edit="freelancer"></UserTermsTab>
@@ -257,14 +256,16 @@ export default {
             })
         },
         saveFreelancer(){
-            this.freelancerData.patch(route('freelancer.update', this.freelancer.id), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.openSuccessModal();
+            if (this.freelancerData.isDirty){
+                this.freelancerData.patch(route('freelancer.update', this.freelancer.id), {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.openSuccessModal();
 
-                }
-            })
+                    }
+                })
+            }
         },
         openSuccessModal() {
             this.showSuccessModal = true;

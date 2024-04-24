@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exports;
+namespace Artwork\Modules\Budget\Exports;
 
 use App\Enums\BudgetTypesEnum;
 use Artwork\Modules\Budget\Models\Table;
@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
+class BudgetExport implements FromView, ShouldAutoSize, WithStyles
 {
     use Exportable;
 

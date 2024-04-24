@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exports;
+namespace Artwork\Modules\Project\Exports;
 
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithStyles
+class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithStyles
 {
     use Exportable;
 
@@ -58,8 +58,8 @@ class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, 
                 ];
                 continue;
             }
-            $lastColumnId = $lastColumn->id;
 
+            $lastColumnId = $lastColumn->id;
             //get sums of last column which is not a sum or difference column
             $costSumOfLastColumn = $projectBudgetTable->costSums[$lastColumnId];
             $earningSumOfLastColumn = $projectBudgetTable->earningSums[$lastColumnId];

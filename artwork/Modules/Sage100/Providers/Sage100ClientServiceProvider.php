@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Providers;
+namespace Artwork\Modules\Sage100\Providers;
 
 use Artwork\Modules\Sage100\Clients\Sage100Client;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Support\ServiceProvider;
 
-class Sage100ServiceProvider extends ServiceProvider
+class Sage100ClientServiceProvider extends ServiceProvider
 {
     /**
      * @return void
@@ -15,6 +15,7 @@ class Sage100ServiceProvider extends ServiceProvider
     {
         $this->app->bind(Sage100Client::class, function () {
             $sageApiSettings = app(SageApiSettingsService::class)->getFirst();
+
             return new Sage100Client(
                 $sageApiSettings?->host,
                 $sageApiSettings?->endpoint,

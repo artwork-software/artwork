@@ -2,12 +2,12 @@
 
 namespace Tests\Unit\App\Exports;
 
-use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Illuminate\Support\Facades\View;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Tests\TestCase;
 
-class ProjectBudgetsByBudgetDeadlineExportTest extends TestCase
+class BudgetsByBudgetDeadlineExportTest extends TestCase
 {
     public function testView(): void
     {
@@ -24,7 +24,7 @@ class ProjectBudgetsByBudgetDeadlineExportTest extends TestCase
             })
             ->andReturn($viewMock);  // Return the mock instead of the View facade itself
 
-        $export = new ProjectBudgetsByBudgetDeadlineExport('2022-01-01', '2022-12-31');
+        $export = new BudgetsByBudgetDeadlineExport('2022-01-01', '2022-12-31');
         $view = $export->view();
 
         $this->assertInstanceOf(\Illuminate\Contracts\View\View::class, $view);
@@ -32,7 +32,7 @@ class ProjectBudgetsByBudgetDeadlineExportTest extends TestCase
 
     public function testStyles(): void
     {
-        $export = new ProjectBudgetsByBudgetDeadlineExport('2022-01-01', '2022-12-31');
+        $export = new BudgetsByBudgetDeadlineExport('2022-01-01', '2022-12-31');
         $styles = $export->styles(new Worksheet());
 
         $this->assertIsArray($styles);

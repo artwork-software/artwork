@@ -2,18 +2,18 @@
 
 namespace Tests\Unit\App\Exports;
 
-use App\Exports\ProjectBudgetExport;
+use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Tests\TestCase;
 
-class ProjectBudgetExportTest extends TestCase
+class BudgetExportTest extends TestCase
 {
     public function testView(): void
     {
         $project = Project::factory()->create();
         $table = Table::factory(['project_id' => $project->id])->create();
-        $projectBudgetExport = new ProjectBudgetExport($project);
+        $projectBudgetExport = new BudgetExport($project);
         $view = $projectBudgetExport->view();
 
         $this->assertEquals('exports.projectBudget', $view->name());
@@ -26,7 +26,7 @@ class ProjectBudgetExportTest extends TestCase
     {
         $project = Project::factory()->create();
         $table = Table::factory(['project_id' => $project->id])->create();
-        $projectBudgetExport = new ProjectBudgetExport($project);
+        $projectBudgetExport = new BudgetExport($project);
 
         $data = $projectBudgetExport->getData();
 
@@ -41,7 +41,7 @@ class ProjectBudgetExportTest extends TestCase
     public function testStyles(): void
     {
         $project = Project::factory()->create();
-        $projectBudgetExport = new ProjectBudgetExport($project);
+        $projectBudgetExport = new BudgetExport($project);
 
         $styles = $projectBudgetExport->styles(new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet());
 

@@ -7,8 +7,6 @@ use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Enums\TabComponentEnums;
-use App\Exports\ProjectBudgetExport;
-use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -18,6 +16,7 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\UserResourceWithoutShifts;
+use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
@@ -70,6 +69,7 @@ use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -3151,7 +3151,7 @@ class ProjectController extends Controller
 
     public function projectBudgetExport(Project $project): BinaryFileResponse
     {
-        return (new ProjectBudgetExport($project))
+        return (new BudgetExport($project))
             ->download(
                 sprintf(
                     '%s_budget_stand_%s.xlsx',
@@ -3166,7 +3166,7 @@ class ProjectController extends Controller
         string $startBudgetDeadline,
         string $endBudgetDeadline
     ): BinaryFileResponse {
-        return (new ProjectBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+        return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
             ->download(
                 sprintf(
                     'budgets_export_%s-%s_stand_%s.xlsx',

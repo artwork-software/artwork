@@ -18,18 +18,6 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\UserResourceWithoutShifts;
-use App\Models\Category;
-use App\Models\CollectingSociety;
-use App\Models\CompanyType;
-use App\Models\ContractType;
-use App\Models\CostCenter;
-use App\Models\Currency;
-use App\Models\EventType;
-use App\Models\Freelancer;
-use App\Models\Genre;
-use App\Models\MoneySource;
-use App\Models\Sector;
-use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Support\Services\MoneySourceThresholdReminderService;
 use App\Support\Services\NotificationService;
@@ -62,12 +50,26 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\ContractType\Services\ContractTypeService;
+use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -79,6 +81,9 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -115,7 +120,7 @@ class ProjectController extends Controller
 {
     public function __construct(
         private readonly NotificationService $notificationService,
-        private readonly SchedulingController $schedulingController,
+        private readonly SchedulingService $schedulingService,
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
@@ -1797,7 +1802,11 @@ class ProjectController extends Controller
         ShiftQualificationService $shiftQualificationService,
         RoomService $roomService,
         CalendarController $calendarController,
-        SageApiSettingsService $sageApiSettingsService
+        SageApiSettingsService $sageApiSettingsService,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService,
+        CollectingSocietyService $collectingSocietyService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1872,8 +1881,6 @@ class ProjectController extends Controller
 
                 // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
                 // is true to the headerObject for the ProjectShowHeaderComponent
-
-
                 $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
@@ -1936,9 +1943,12 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
-                $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
+                $loadedProjectInformation['BudgetInformation'] = $this->projectTabService->getBudgetInformationDto(
                     $project,
-                    $loadedProjectInformation
+                    $contractTypeService,
+                    $companyTypeService,
+                    $currencyService,
+                    $collectingSocietyService
                 );
             }
         }
@@ -2076,7 +2086,7 @@ class ProjectController extends Controller
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
-            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
+            $this->schedulingService->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
         return Redirect::back();
     }
@@ -2332,7 +2342,7 @@ class ProjectController extends Controller
         $project = Project::find($projectId);
         $projectUsers = $project->users()->get();
         foreach ($projectUsers as $projectUser) {
-            $this->schedulingController->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
+            $this->schedulingService->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
         }
     }
 

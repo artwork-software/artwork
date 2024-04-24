@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Invitation;
+use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 

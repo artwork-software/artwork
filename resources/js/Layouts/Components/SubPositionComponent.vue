@@ -387,12 +387,12 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],

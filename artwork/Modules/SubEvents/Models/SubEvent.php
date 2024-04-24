@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\SubEvents\Models;
 
-use App\Models\EventType;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Models\EventType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

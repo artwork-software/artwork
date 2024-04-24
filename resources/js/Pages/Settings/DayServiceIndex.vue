@@ -3,7 +3,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import AddEditDayServiceModal from "@/Pages/Settings/Components/AddEditDayServiceModal.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "DayServiceIndex",

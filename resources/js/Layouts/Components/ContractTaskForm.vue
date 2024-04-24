@@ -81,8 +81,8 @@
 
 <script>
 import {XIcon} from "@heroicons/vue/outline";
-import Permissions from "@/mixins/Permissions.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ContractTaskForm",

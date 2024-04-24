@@ -293,11 +293,11 @@ import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceCompon
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],

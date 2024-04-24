@@ -48,7 +48,7 @@
 
 
 <script>
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {XIcon} from "@heroicons/vue/outline";

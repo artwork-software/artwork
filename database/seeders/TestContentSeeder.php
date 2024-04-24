@@ -2,19 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
-use App\Models\EventType;
-use App\Models\Genre;
-use App\Models\Sector;
-use App\Models\Task;
 use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
 

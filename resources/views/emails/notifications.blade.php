@@ -71,7 +71,7 @@
                             <p>
                                 @if($body['body']['type'] === 'ROOM_REQUEST')
                                     {{ \Room::find($body['body']['event']['room_id'])->first()->name }}
-                                    | {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
+                                    | {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
@@ -82,7 +82,7 @@
                                     -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
                                 @endif
                                 @if($body['body']['type'] === 'NOTIFICATION_UPSERT_ROOM_REQUEST')
-                                    {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
+                                    {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
@@ -94,7 +94,7 @@
                                 @endif
                                 @if($body['body']['type'] === 'NOTIFICATION_CONFLICT')
                                     {{ \Room::find($body['body']['conflict']['event']['room_id'])->first()->name }}
-                                    | {{ \App\Models\EventType::find($body['body']['conflict']['event']['event_type_id'])->first()->name }}
+                                    | {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['conflict']['event']['event_type_id'])->first()->name }}
                                     ,
                                     {{ $body['body']['conflict']['event']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['event']['project_id']))
@@ -107,7 +107,7 @@
                                 @if($body['body']['type'] === 'NOTIFICATION_EVENT_CHANGED')
                                     @if(!empty($body['body']['event']['room_id']))
                                         {{ \Room::find($body['body']['event']['room_id'])->first()->name }} |
-                                    @endif {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
+                                    @endif {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['event']['project_id']))
@@ -120,7 +120,7 @@
                                 @if($body['body']['type'] === 'NOTIFICATION_LOUD_ADJOINING_EVENT')
                                     @if(!empty($body['body']['event']['room_id']))
                                         {{ \Room::find($body['body']['event']['room_id'])->first()->name }} |
-                                    @endif {{ \App\Models\EventType::find($body['body']['conflict']['event_type_id'])->first()->name }}
+                                    @endif {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['conflict']['event_type_id'])->first()->name }}
                                     ,
                                     {{ $body['body']['conflict']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['project_id']))

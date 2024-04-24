@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ServiceProvider;
-use App\Models\ServiceProviderContacts;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class ServiceProviderContactsController extends Controller
 {

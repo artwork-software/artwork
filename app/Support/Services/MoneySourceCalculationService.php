@@ -2,11 +2,11 @@
 
 namespace App\Support\Services;
 
-use App\Models\MoneySource;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 
 class MoneySourceCalculationService
 {

@@ -15,15 +15,8 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftPlanResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserShiftPlanResource;
-use App\Models\Craft;
-use App\Models\EventType;
-use App\Models\Filter;
-use App\Models\Freelancer;
-use App\Models\SeriesEvents;
-use App\Models\ServiceProvider;
-use App\Models\Task;
+use Artwork\Modules\Craft\Models\Craft;
 use App\Models\User;
-use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
@@ -35,10 +28,16 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Filter\Models\Filter;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -47,7 +46,9 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -77,7 +78,7 @@ class EventController extends Controller
         private readonly TimelineService $timelineService,
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingService $schedulingService
     ) {
     }
 
@@ -1342,10 +1343,10 @@ class EventController extends Controller
     {
         if (!empty($event->project)) {
             foreach ($event->project->users->all() as $eventUser) {
-                $this->schedulingController->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+                $this->schedulingService->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $this->schedulingController->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+            $this->schedulingService->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 

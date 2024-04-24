@@ -7,7 +7,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 
-class ProjectRepository extends BaseRepository
+readonly class ProjectRepository extends BaseRepository
 {
     public function findManagers(Project $project): Collection
     {

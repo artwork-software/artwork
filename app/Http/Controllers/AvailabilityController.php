@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Freelancer;
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Https\Requests\UpdateAvailabilityRequest;
@@ -12,6 +11,8 @@ use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
@@ -26,7 +27,7 @@ class AvailabilityController extends Controller
         private readonly VacationConflictService $vacationConflictService,
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController,
+        private readonly SchedulingService $schedulingService,
         private readonly NotificationService $notificationService
     ) {
     }
@@ -46,7 +47,7 @@ class AvailabilityController extends Controller
                             $this->vacationConflictService,
                             $this->vacationSeriesService,
                             $this->changeService,
-                            $this->schedulingController,
+                            $this->schedulingService,
                             $this->notificationService
                         );
                     } elseif ($availability->available_type === Freelancer::class) {
@@ -56,7 +57,7 @@ class AvailabilityController extends Controller
                             $this->vacationConflictService,
                             $this->vacationSeriesService,
                             $this->changeService,
-                            $this->schedulingController,
+                            $this->schedulingService,
                             $this->notificationService
                         );
                     }

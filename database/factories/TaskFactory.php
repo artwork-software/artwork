@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Task;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

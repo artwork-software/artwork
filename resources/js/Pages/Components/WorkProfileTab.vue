@@ -137,7 +137,7 @@
 </template>
 
 <script>
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";

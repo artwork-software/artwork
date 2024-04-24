@@ -3,15 +3,14 @@
 namespace App\Console;
 
 use App\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
-use App\Console\Commands\DailyDeleteCalendarExportPDFs;
-use App\Console\Commands\DeadLine;
-use App\Console\Commands\DeleteExpiredNotificationForAll;
-use App\Console\Commands\DeleteNotifications;
-use App\Console\Commands\GetSage100Data;
-use App\Console\Commands\NotificationScheduling;
-use App\Console\Commands\RemoveExpiredInvitations;
-use App\Console\Commands\RemoveTempRooms;
-use App\Console\Commands\SendNotificationEmailSummaries;
+use App\Console\Commands\SendDeadlineNotificationsCommand;
+use App\Console\Commands\DeleteExpiredNotificationsForAllCommand;
+use App\Console\Commands\DeleteOldNotificationsCommand;
+use App\Console\Commands\ImportSage100ApiDataCommand;
+use App\Console\Commands\SendScheduledNotificationsCommand;
+use App\Console\Commands\RemoveExpiredInvitationsCommand;
+use App\Console\Commands\RemoveTemporaryRoomsCommand;
+use App\Console\Commands\SendNotificationsEmailSummariesCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -32,29 +31,28 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
-        $schedule->command(NotificationScheduling::class)->everyTenMinutes();
-        $schedule->command(DeadLine::class)->dailyAt('09:00');
-        $schedule->command(RemoveTempRooms::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(DeleteNotifications::class)->dailyAt('07:00');
-        $schedule->command(DeleteExpiredNotificationForAll::class)->everyFiveMinutes()->runInBackground();
-        $schedule->command(DailyDeleteCalendarExportPDFs::class)->dailyAt('01:00')->runInBackground();
-        $schedule->command(SendNotificationEmailSummaries::class, ['daily'])
+        $schedule->command(SendScheduledNotificationsCommand::class)->everyTenMinutes();
+        $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
+        $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
+        $schedule->command(DeleteOldNotificationsCommand::class)->dailyAt('07:00');
+        $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
+        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['daily'])
             ->dailyAt('9:00');
-        $schedule->command(SendNotificationEmailSummaries::class, ['weekly_once'])
+        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['weekly_once'])
             ->weekly()
             ->mondays()
             ->at('9:00');
-        $schedule->command(SendNotificationEmailSummaries::class, ['weekly_twice'])
+        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['weekly_twice'])
             ->days([Schedule::MONDAY, Schedule::THURSDAY])
             ->at('9:00');
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
-        $schedule->command(RemoveExpiredInvitations::class)->dailyAt('01:00')->runInBackground();
+        $schedule->command(RemoveExpiredInvitationsCommand::class)->dailyAt('01:00')->runInBackground();
 
         $sageApiSettings = $this->sageApiSettingsService->getFirst();
         if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {
-            $schedule->command(GetSage100Data::class)
+            $schedule->command(ImportSage100ApiDataCommand::class)
                 ->dailyAt($sageApiSettings->fetchTime ?? '08:00')
                 ->runInBackground();
         }

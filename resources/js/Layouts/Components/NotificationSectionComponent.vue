@@ -130,7 +130,7 @@ import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default  {
     name: 'NotificationSectionComponent',

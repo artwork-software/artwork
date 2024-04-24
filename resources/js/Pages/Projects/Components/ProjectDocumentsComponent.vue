@@ -63,8 +63,8 @@
 <script>
 import {defineComponent} from "vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 

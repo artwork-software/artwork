@@ -71,11 +71,10 @@ import {defineComponent} from 'vue';
 import {CheckIcon} from "@heroicons/vue/outline";
 import VueMathjax from "vue-mathjax-next";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
-import Helper from "../../../mixins/Helper.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import {Inertia} from "@inertiajs/inertia";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     components: {
@@ -103,7 +102,7 @@ export default defineComponent({
         'shiftQualifications'
     ],
     emits: ['dropFeedback'],
-    mixins: [Helper, IconLib],
+    mixins: [IconLib],
     data() {
         return {
             showChooseUserSeriesShiftModal: false,

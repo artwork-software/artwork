@@ -108,7 +108,7 @@ import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
 import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",

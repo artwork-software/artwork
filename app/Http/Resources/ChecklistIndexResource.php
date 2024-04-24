@@ -2,11 +2,9 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Task;
-use App\Models\User;
+use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\MissingValue;
 
 class ChecklistIndexResource extends JsonResource
 {

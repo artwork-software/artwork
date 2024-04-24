@@ -12,7 +12,7 @@
 
 <script>
 import {PencilAltIcon} from '@heroicons/vue/outline';
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ShiftInformationModal from "@/Layouts/Components/ShiftInformationModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";

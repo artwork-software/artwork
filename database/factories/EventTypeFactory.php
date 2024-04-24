@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\EventType;
+use Artwork\Modules\EventType\Models\EventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

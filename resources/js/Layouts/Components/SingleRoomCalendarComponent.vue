@@ -72,7 +72,7 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 
 export default {

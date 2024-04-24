@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Models\UserCalendarSettings;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserCalendarSettingsFactory extends Factory

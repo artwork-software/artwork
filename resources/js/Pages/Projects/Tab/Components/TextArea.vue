@@ -1,6 +1,6 @@
 <script>
 import {nextTick} from "vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: "TextArea",

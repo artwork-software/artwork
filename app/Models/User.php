@@ -8,18 +8,25 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
+use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
-use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\ProjectTab\Models\ComponentUser;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -38,7 +45,6 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
-use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
@@ -72,10 +78,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\App\Models\Checklist> private_checklists
  * @property Collection<\Room> created_rooms
  * @property Collection<\Room> admin_rooms
- * @property Collection<\App\Models\Task> done_tasks
+ * @property Collection<\Artwork\Modules\Task\Models\Task> done_tasks
  * @property Collection<\Artwork\Modules\Event\Models\Event> events
- * @property Collection<\App\Models\Task> $privateTasks
-
+ * @property Collection<\Artwork\Modules\Task\Models\Task> $privateTasks
  *
  * What is this sorcery?
  * @property string $profile_photo_url

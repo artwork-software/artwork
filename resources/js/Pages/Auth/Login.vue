@@ -134,7 +134,7 @@ import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from "@/Jetstream/InputError.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 

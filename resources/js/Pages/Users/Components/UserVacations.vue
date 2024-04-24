@@ -31,7 +31,7 @@ import {defineComponent} from 'vue'
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import SingleUserVacation from "@/Pages/Users/Components/SingleUserVacation.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "UserVacations",

@@ -43,7 +43,7 @@
 
 <script>
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";
 

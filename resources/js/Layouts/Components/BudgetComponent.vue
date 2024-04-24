@@ -746,10 +746,10 @@ import Button from "@/Jetstream/Button.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: 'BudgetComponent',

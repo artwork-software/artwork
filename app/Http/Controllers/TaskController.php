@@ -6,13 +6,14 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
-use App\Models\MoneySourceTask;
-use App\Models\Task;
 use App\Models\User;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ class TaskController extends Controller
 {
     public function __construct(
         private readonly ChangeService $changeService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingService $schedulingService
     ) {
     }
 
@@ -109,10 +110,10 @@ class TaskController extends Controller
                 $uniqueTaskUsers[$checklistUser->id] = $checklistUser->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser) {
-                $this->schedulingController->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
+                $this->schedulingService->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
             }
         } else {
-            $this->schedulingController->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
+            $this->schedulingService->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
         }
     }
 
@@ -194,10 +195,10 @@ class TaskController extends Controller
                 $uniqueTaskUsers[$user->id] = $user->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser) {
-                $this->schedulingController->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
+                $this->schedulingService->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
             }
         } else {
-            $this->schedulingController->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
+            $this->schedulingService->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
         }
     }
 

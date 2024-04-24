@@ -949,12 +949,12 @@ import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     mixins: [Permissions, IconLib],

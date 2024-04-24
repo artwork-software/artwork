@@ -42,11 +42,10 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
-import Permissions from "@/mixins/Permissions.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import Permissions from "@/Mixins/Permissions.vue";
 import {nextTick} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
 
 export default{

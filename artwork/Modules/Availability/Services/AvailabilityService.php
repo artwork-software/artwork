@@ -2,14 +2,14 @@
 
 namespace Artwork\Modules\Availability\Services;
 
-use App\Http\Controllers\SchedulingController;
-use App\Models\Freelancer;
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Repositories\AvailabilityRepository;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -29,7 +29,7 @@ readonly class AvailabilityService
         AvailabilityConflictService $availabilityConflictService,
         AvailabilitySeriesService $availabilitySeriesService,
         ChangeService $changeService,
-        SchedulingController $schedulingController
+        SchedulingService $schedulingService
     ): Available|Model {
         /** @var Availability $firstAvailable */
         $firstAvailable = $available->availabilities()->create([
@@ -109,7 +109,7 @@ readonly class AvailabilityService
         }
 
         $this->createHistory($firstAvailable, $changeService, 'Availability added');
-        $this->announceChanges($firstAvailable, $schedulingController);
+        $this->announceChanges($firstAvailable, $schedulingService);
 
         return $firstAvailable;
     }
@@ -163,12 +163,12 @@ readonly class AvailabilityService
 
     private function announceChanges(
         Availability $availability,
-        SchedulingController $schedulingController
+        SchedulingService $schedulingService
     ): void {
         if (!$availability->available instanceof User) {
             return;
         }
-        $schedulingController->create(
+        $schedulingService->create(
             $availability->available_id,
             'VACATION_CHANGES',
             'USER_VACATIONS',

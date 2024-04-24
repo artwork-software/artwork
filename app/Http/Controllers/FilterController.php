@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EventType;
-use App\Models\Filter;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Filter\Models\Filter;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Models\RoomAttribute;
-use Artwork\Modules\Room\Models\RoomCategory;
 
 class FilterController extends Controller
 {
@@ -100,7 +100,7 @@ class FilterController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Filter  $filter
+     * @param  \Artwork\Modules\Filter\Models\Filter  $filter
      * @return RedirectResponse
      */
     public function destroy(Filter $filter): RedirectResponse

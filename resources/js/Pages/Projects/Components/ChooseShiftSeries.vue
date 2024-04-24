@@ -78,7 +78,7 @@ import {
     SwitchLabel
 } from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {

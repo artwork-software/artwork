@@ -5,7 +5,7 @@ namespace Artwork\Modules\ShiftQualification\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 
-class UserShiftQualificationRepository extends BaseRepository
+readonly class UserShiftQualificationRepository extends BaseRepository
 {
     public function removeByUserIdAndShiftQualificationId(int $userId, int $shiftQualificationId): void
     {

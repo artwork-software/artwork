@@ -1,7 +1,7 @@
 <script>
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import { PlusCircleIcon } from '@heroicons/vue/outline'
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "AddButtonBase",

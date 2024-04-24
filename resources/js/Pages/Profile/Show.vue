@@ -314,7 +314,7 @@ import {Inertia} from "@inertiajs/inertia";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 

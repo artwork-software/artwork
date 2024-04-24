@@ -19,7 +19,7 @@ return new class extends Migration
 
         DB::table('freelancer_vacations')
             ->orderBy('id')->each(function (\stdClass $vacation): void {
-                $this->insertToVacation($vacation, \App\Models\Freelancer::class);
+                $this->insertToVacation($vacation, \Artwork\Modules\Freelancer\Models\Freelancer::class);
             });
     }
 

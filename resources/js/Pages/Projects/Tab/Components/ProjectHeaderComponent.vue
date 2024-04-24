@@ -6,8 +6,8 @@ import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponen
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import IconLib from "@/mixins/IconLib.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {

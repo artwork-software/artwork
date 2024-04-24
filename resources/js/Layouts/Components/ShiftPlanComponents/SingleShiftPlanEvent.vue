@@ -35,11 +35,11 @@
 <script>
 
 import {defineComponent} from 'vue'
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {CheckIcon} from "@heroicons/vue/outline";
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],

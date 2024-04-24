@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Sector;
+use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

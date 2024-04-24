@@ -71,7 +71,7 @@
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon, DownloadIcon, ChevronDownIcon} from "@heroicons/vue/outline";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";

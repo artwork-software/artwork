@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Shift\Models;
 
-use App\Models\EventType;
 use App\Models\User;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

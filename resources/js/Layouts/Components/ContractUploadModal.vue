@@ -378,10 +378,10 @@ import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons
 import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Input from "@/Jetstream/Input.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ContractUploadModal",

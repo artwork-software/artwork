@@ -219,7 +219,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {

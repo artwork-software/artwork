@@ -131,7 +131,7 @@ import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {

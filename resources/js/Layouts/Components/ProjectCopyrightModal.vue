@@ -99,7 +99,7 @@ import {
     ListboxOptions,
     ListboxButton
 } from "@headlessui/vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {

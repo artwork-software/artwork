@@ -207,7 +207,7 @@ import NotificationFrequencySettings from "@/Layouts/Components/NotificationFreq
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";

@@ -2,8 +2,7 @@
 
 namespace Artwork\Modules\Contract\Models\Traits;
 
-use App\Models\Contract;
-use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Contract\Models\Contract;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToContract

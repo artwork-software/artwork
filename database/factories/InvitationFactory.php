@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Invitation;
+use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;

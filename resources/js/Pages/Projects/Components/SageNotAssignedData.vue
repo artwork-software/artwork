@@ -83,7 +83,7 @@
 <script>
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SageDataDragElement from "@/Pages/Projects/Components/SageDataDragElement.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: "SageNotAssignedData",

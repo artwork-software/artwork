@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Freelancer;
-use App\Models\FreelancerVacation;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FreelancerVacationFactory extends Factory

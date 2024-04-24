@@ -2,22 +2,22 @@
 
 namespace Tests\Feature\Event;
 
-use App\Models\Freelancer;
-use App\Models\FreelancerVacation;
-use App\Models\Task;
 use App\Models\User;
-use App\Models\UserCalendarFilter;
-use App\Models\UserCalendarSettings;
-use App\Models\UserShiftCalendarFilter;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventComment\Models\EventComment;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Models\Timeline;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Inertia\Testing\AssertableInertia;

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MoneySource;
-use App\Models\MoneySourceFile;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
 use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;

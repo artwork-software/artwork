@@ -140,11 +140,11 @@ import SingleShiftEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vu
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
 import Input from "@/Jetstream/Input.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     name: "ShiftTab",

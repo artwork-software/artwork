@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;

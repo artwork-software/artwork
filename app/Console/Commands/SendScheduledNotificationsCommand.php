@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Support\Services\NotificationService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Illuminate\Console\Command;

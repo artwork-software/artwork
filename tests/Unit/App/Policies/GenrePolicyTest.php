@@ -3,7 +3,7 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\GenrePolicy;
+use Artwork\Modules\Genre\Policies\GenrePolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

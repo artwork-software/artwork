@@ -3,8 +3,8 @@
 namespace Artwork\Modules\Scheduling\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;

@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Enums\NotificationConstEnum;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Exception;

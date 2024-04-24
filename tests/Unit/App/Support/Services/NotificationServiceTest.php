@@ -4,7 +4,7 @@ namespace Tests\Unit\App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Notifications\ShiftNotification;
-use App\Support\Services\NotificationService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;

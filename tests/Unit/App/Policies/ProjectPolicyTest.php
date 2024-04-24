@@ -3,8 +3,8 @@
 namespace Tests\Unit\App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Policies\ProjectPolicy;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 

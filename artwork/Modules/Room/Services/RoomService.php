@@ -4,10 +4,10 @@ namespace Artwork\Modules\Room\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;

@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Enums\NotificationConstEnum;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;

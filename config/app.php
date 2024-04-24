@@ -1,8 +1,6 @@
 <?php
 
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\Facades\Storage;
 
 
 return [
@@ -180,7 +178,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
-        App\Providers\Sage100ServiceProvider::class,
+        \Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class
     ],

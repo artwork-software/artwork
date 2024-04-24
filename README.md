@@ -258,7 +258,15 @@ Feel free to use these commands to interact with the project and execute the nec
 
 ----------------
 
-Feel free to explore the features of Artwork and manage your projects effectively!
+## Branch Structure
+
+- **`dev` Branch**: This is where developers test their building blocks. It serves as the primary development branch for integrating new features and experiments.
+
+- **`staging` Branch**: This branch acts as the test server environment and can be considered as the Beta version. It is used for pre-release testing to ensure stability before deployment to production.
+
+- **`main` Branch**: This is our stable branch and should serve as the basis for all production systems. It contains the most reliable and tested version of our code.
+
+----------------
 
 # Test Instance
 If you use the docker installation and filled the database with dummy data you can use the following credentials to login to the test instance:
@@ -276,3 +284,5 @@ a full documentation of all features will be released and found here, when we ha
 To be able to invite new Users you need to update the .env file with your mail credentials and the APP_URL
 
 If you have questions, feel free to open an issue :) 
+
+Feel free to explore the features of Artwork and manage your projects effectively!

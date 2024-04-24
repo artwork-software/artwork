@@ -1,8 +1,7 @@
 <?php
 
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
-use Inertia\Testing\AssertableInertia as Assert;
+use Artwork\Modules\User\Models\User;
 
 beforeEach(function() {
 

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\User;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

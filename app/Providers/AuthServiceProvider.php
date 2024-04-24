@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Enums\RoleNameEnum;
-use App\Models\User;
 use App\Policies\AreaPolicy;
 use App\Policies\CategoryPolicy;
 use App\Policies\ChecklistPolicy;
@@ -51,6 +50,7 @@ use Artwork\Modules\ServiceProvider\Models\ServiceProvider as ServiceProviderMod
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 

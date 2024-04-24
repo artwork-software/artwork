@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use Artwork\Modules\Project\Models\Project;
-use App\Policies\ProjectPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\ProjectPolicy;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ProjectPolicyTest extends TestCase

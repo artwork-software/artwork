@@ -4,7 +4,6 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventType\Models\EventType;
@@ -14,6 +13,7 @@ use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\SubEvents\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;

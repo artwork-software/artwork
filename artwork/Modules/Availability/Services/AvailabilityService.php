@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Availability\Services;
 
-use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\Available;
@@ -10,6 +9,7 @@ use Artwork\Modules\Availability\Repositories\AvailabilityRepository;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;

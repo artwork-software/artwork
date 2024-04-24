@@ -3,7 +3,7 @@
 namespace Artwork\Modules\BudgetManagementCostUnit\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 
 class BudgetManagementCostUnitPolicy
 {

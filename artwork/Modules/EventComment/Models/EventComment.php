@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\EventComment\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

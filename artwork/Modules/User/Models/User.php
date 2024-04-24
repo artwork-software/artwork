@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\User\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -31,6 +32,12 @@ use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,7 +45,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -71,22 +78,28 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $project_management
  * @property boolean $can_work_shifts
  * @property string $language
- *
- * @property Collection<\Artwork\Modules\Department\Models\Department> departments
- * @property Collection<\Artwork\Modules\Project\Models\Project> projects
- * @property Collection<\Artwork\Modules\Project\Models\Comment> comments
- * @property Collection<\App\Models\Checklist> private_checklists
- * @property Collection<\Room> created_rooms
- * @property Collection<\Room> admin_rooms
- * @property Collection<\Artwork\Modules\Task\Models\Task> done_tasks
- * @property Collection<\Artwork\Modules\Event\Models\Event> events
- * @property Collection<\Artwork\Modules\Task\Models\Task> $privateTasks
- *
- * What is this sorcery?
  * @property string $profile_photo_url
+ * @property Collection<Department> $departments
+ * @property Collection<Project> $projects
+ * @property Collection<Comment> $comments
+ * @property Collection<Checklist> $private_checklists
+ * @property Collection<Room> $created_rooms
+ * @property Collection<Room> $admin_rooms
+ * @property Collection<Task> $done_tasks
+ * @property Collection<Task> $privateTasks
+ * @property Collection<Event> $events
  */
-class User extends Authenticatable implements Vacationer, Available
+class User extends Model implements
+    AuthenticatableContract,
+    AuthorizableContract,
+    CanResetPasswordContract,
+    Vacationer,
+    Available
 {
+    use Authenticatable;
+    use Authorizable;
+    use CanResetPassword;
+    use MustVerifyEmail;
     use HasApiTokens;
     use HasFactory;
     use HasRoles;
@@ -404,11 +417,11 @@ class User extends Authenticatable implements Vacationer, Available
         // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
 
         $shiftsInDateRange = $this->shifts()
-            ->where(function ($query) use ($startDate, $endDate) {
+            ->where(function ($query) use ($startDate, $endDate): void {
                 $query->whereBetween('start_date', [$startDate, $endDate])
                     ->orWhereBetween('end_date', [$startDate, $endDate]);
             })
-            ->orWhere(function ($query) use ($startDate, $endDate) {
+            ->orWhere(function ($query) use ($startDate, $endDate): void {
                 $query->where('start_date', '<', $startDate)
                     ->where('end_date', '>', $endDate);
             })

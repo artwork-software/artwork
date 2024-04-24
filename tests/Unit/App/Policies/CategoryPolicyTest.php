@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\CategoryPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\CategoryPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class CategoryPolicyTest extends TestCase

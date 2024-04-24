@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -15,6 +14,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
 

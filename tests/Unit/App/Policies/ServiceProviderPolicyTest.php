@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\ServiceProviderPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\ServiceProviderPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ServiceProviderPolicyTest extends TestCase

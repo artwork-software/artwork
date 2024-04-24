@@ -2,12 +2,12 @@
 
 namespace Artwork\Modules\Department\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

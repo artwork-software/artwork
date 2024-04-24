@@ -3,10 +3,10 @@
 namespace Artwork\Modules\Vacation\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
 use Carbon\Carbon;

@@ -3,12 +3,11 @@
 namespace Tests\Unit\App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\User;
 use App\Notifications\ShiftNotification;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
-use Artwork\Modules\Notification\Models\Notification as ArtworkNotification;
 use Tests\TestCase;
 
 class NotificationServiceTest extends TestCase

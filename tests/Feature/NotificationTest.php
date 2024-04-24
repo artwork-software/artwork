@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\User;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 

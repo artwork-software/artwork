@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ChecklistPolicy

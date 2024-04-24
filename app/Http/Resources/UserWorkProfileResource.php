@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use Artwork\Modules\Craft\Models\Craft;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**

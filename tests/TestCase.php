@@ -3,7 +3,7 @@
 namespace Tests;
 
 use App\Enums\RoleNameEnum;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -16,7 +16,7 @@ abstract class TestCase extends BaseTestCase
     use WithFaker;
 
     /**
-     * @return \App\Models\User
+     * @return \Artwork\Modules\User\Models\User
      */
     public function adminUser(User $user = null): User
     {

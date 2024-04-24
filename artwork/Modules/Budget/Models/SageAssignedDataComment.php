@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use Artwork\Modules\User\Models\BelongsToUser;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**

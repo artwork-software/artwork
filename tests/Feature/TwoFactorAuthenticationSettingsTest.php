@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 
 test('two factor authentication can be enabled', function () {
     $this->actingAs($user = User::factory()->create());

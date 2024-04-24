@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\InvitationPolicy;
 use App\Enums\PermissionNameEnum;
+use App\Policies\InvitationPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class InvitationPolicyTest extends TestCase

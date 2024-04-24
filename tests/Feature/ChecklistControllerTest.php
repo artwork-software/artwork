@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ChecklistControllerTest extends TestCase

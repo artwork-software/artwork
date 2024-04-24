@@ -2,8 +2,8 @@
 
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Event as EventFacade;
 
 beforeEach(function (): void {

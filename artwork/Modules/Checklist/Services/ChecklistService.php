@@ -4,7 +4,6 @@ namespace Artwork\Modules\Checklist\Services;
 
 use App\Http\Resources\ChecklistIndexResource;
 use App\Http\Resources\ChecklistTemplateIndexResource;
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -14,6 +13,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Tasks\Services\TaskService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;

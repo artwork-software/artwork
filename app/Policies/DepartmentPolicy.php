@@ -3,10 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\User;
-use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 
 class DepartmentPolicy
 {

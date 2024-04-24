@@ -4,10 +4,10 @@ namespace Tests\Feature\InvitationController;
 
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;

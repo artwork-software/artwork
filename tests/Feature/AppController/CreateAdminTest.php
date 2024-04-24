@@ -3,8 +3,8 @@
 namespace Tests\Feature\AppController;
 
 use App\Enums\RoleNameEnum;
-use App\Models\User;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\User\Models\User;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 

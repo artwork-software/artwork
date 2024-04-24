@@ -1,9 +1,9 @@
 <?php
 
 use App\Mail\InvitationCreated;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 

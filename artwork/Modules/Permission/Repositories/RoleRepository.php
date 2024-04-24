@@ -7,7 +7,7 @@ use Artwork\Modules\Permission\Models\Role;
 use Spatie\Permission\Contracts\Role as RoleContract;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 
-class RoleRepository extends BaseRepository
+readonly class RoleRepository extends BaseRepository
 {
     public function getByName(string $name): RoleContract|null
     {

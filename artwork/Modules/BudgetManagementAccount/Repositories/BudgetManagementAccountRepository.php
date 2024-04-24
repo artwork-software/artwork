@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Illuminate\Database\Eloquent\Collection;
 
-class BudgetManagementAccountRepository extends BaseRepository
+readonly class BudgetManagementAccountRepository extends BaseRepository
 {
     public function getAllOrderedByIsAccountForRevenue(): Collection
     {

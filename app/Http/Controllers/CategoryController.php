@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
-use App\Models\CollectingSociety;
-use App\Models\CompanyType;
-use App\Models\ContractType;
-use App\Models\Currency;
 use App\Models\Genre;
 use App\Models\Sector;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

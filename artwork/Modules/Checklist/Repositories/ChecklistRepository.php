@@ -4,6 +4,6 @@ namespace Artwork\Modules\Checklist\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-class ChecklistRepository extends BaseRepository
+readonly class ChecklistRepository extends BaseRepository
 {
 }

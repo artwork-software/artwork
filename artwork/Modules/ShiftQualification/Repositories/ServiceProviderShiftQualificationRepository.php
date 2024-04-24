@@ -5,7 +5,7 @@ namespace Artwork\Modules\ShiftQualification\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 
-class ServiceProviderShiftQualificationRepository extends BaseRepository
+readonly class ServiceProviderShiftQualificationRepository extends BaseRepository
 {
     public function removeByServiceProviderIdAndShiftQualificationId(
         int $serviceProviderId,

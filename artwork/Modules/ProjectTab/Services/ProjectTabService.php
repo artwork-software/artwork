@@ -13,8 +13,14 @@ use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
+use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Artwork\Modules\ProjectTab\DTOs\ShiftsDto;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
@@ -22,7 +28,6 @@ use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -209,5 +214,24 @@ readonly class ProjectTabService
                     ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
             )
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
+    }
+
+    public function getBudgetInformationDto(
+        Project $project,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService,
+        CollectingSocietyService $collectingSocietyService
+    ): BudgetInformationDto {
+        return BudgetInformationDto::newInstance()
+            ->setAccessBudget($project->access_budget)
+            ->setContracts($project->contracts)
+            ->setProjectFiles($project->project_files)
+            ->setProjectMoneySources($project->moneySources)
+            ->setProjectManagerIds($project->managerUsers->pluck('user_id'))
+            ->setContractTypes($contractTypeService->getAll())
+            ->setCompanyTypes($companyTypeService->getAll())
+            ->setCurrencies($currencyService->getAll())
+            ->setCollectingSocieties($collectingSocietyService->getAll());
     }
 }

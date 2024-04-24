@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

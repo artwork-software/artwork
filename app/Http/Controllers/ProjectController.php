@@ -19,11 +19,7 @@ use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
-use App\Models\CollectingSociety;
-use App\Models\CompanyType;
-use App\Models\ContractType;
 use App\Models\CostCenter;
-use App\Models\Currency;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Genre;
@@ -64,6 +60,14 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\ContractType\Services\ContractTypeService;
+use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -1797,7 +1801,11 @@ class ProjectController extends Controller
         ShiftQualificationService $shiftQualificationService,
         RoomService $roomService,
         CalendarController $calendarController,
-        SageApiSettingsService $sageApiSettingsService
+        SageApiSettingsService $sageApiSettingsService,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService,
+        CollectingSocietyService $collectingSocietyService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1872,8 +1880,6 @@ class ProjectController extends Controller
 
                 // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
                 // is true to the headerObject for the ProjectShowHeaderComponent
-
-
                 $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
@@ -1936,8 +1942,12 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
-                $loadedProjectInformation['BudgetInformation'] = $this->budgetService->getBudgetInformationDto(
-                    $project
+                $loadedProjectInformation['BudgetInformation'] = $this->projectTabService->getBudgetInformationDto(
+                    $project,
+                    $contractTypeService,
+                    $companyTypeService,
+                    $currencyService,
+                    $collectingSocietyService
                 );
             }
         }

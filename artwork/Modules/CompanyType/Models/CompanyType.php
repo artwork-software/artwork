@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\CompanyType\Models;
 
+use App\Models\Contract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -15,15 +17,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $updated_at
  * @property string $deleted_at
  */
-class CollectingSociety extends Model
+class CompanyType extends Model
 {
     use HasFactory;
     use SoftDeletes;
     use Prunable;
 
     protected $fillable = [
-        'name'
+      'name'
     ];
+
+    public function contracts(): BelongsToMany
+    {
+        return $this->belongsToMany(Contract::class);
+    }
 
     public function prunable(): Builder
     {

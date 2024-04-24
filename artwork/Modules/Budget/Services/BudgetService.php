@@ -3,10 +3,6 @@
 namespace Artwork\Modules\Budget\Services;
 
 use App\Enums\BudgetTypesEnum;
-use App\Models\CollectingSociety;
-use App\Models\CompanyType;
-use App\Models\ContractType;
-use App\Models\Currency;
 use App\Models\MoneySource;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
@@ -18,8 +14,11 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -355,19 +354,5 @@ readonly class BudgetService
         }
 
         return $recentlyCreatedSageAssignedDataComment;
-    }
-
-    public function getBudgetInformationDto(Project $project): BudgetInformationDto
-    {
-        return BudgetInformationDto::newInstance()
-            ->setProjectManagerIds($project->managerUsers()->pluck('user_id'))
-            ->setProjectFiles($project->project_files)
-            ->setContracts($project->contracts()->with(['tasks', 'company_type', 'contract_type', 'currency'])->get())
-            ->setAccessBudget($project->access_budget)
-            ->setProjectMoneySources($project->moneySources()->get())
-            ->setContractTypes(ContractType::all())
-            ->setCompanyTypes(CompanyType::all())
-            ->setCurrencies(Currency::all())
-            ->setCollectingSocieties(CollectingSociety::all());
     }
 }

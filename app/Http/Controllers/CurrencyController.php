@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CollectingSociety;
-use App\Models\Currency;
+use Artwork\Modules\Currency\Models\Currency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -26,7 +25,7 @@ class CurrencyController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Models\Currency $currency
+     * @param \Artwork\Modules\Currency\Models\Currency $currency
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Currency $currency): \Illuminate\Http\RedirectResponse

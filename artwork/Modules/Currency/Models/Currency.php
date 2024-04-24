@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Currency\Models;
 
+use App\Models\Contract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,14 +17,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $updated_at
  * @property string $deleted_at
  */
-class CompanyType extends Model
+class Currency extends Model
 {
     use HasFactory;
     use SoftDeletes;
     use Prunable;
 
     protected $fillable = [
-      'name'
+        'name',
     ];
 
     public function contracts(): BelongsToMany

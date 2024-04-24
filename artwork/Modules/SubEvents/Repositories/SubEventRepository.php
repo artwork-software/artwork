@@ -4,6 +4,6 @@ namespace Artwork\Modules\SubEvents\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-class SubEventRepository extends BaseRepository
+readonly class SubEventRepository extends BaseRepository
 {
 }

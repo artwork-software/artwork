@@ -153,9 +153,9 @@ import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal.vue"
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import { Link } from '@inertiajs/inertia-vue3';
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     mixins: [Permissions, IconLib],

@@ -34,7 +34,7 @@ import {
     ListboxButton
 } from "@headlessui/vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: "ProjectCollectingSocietiesMenu",

@@ -167,7 +167,7 @@ import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";

@@ -98,7 +98,7 @@ import {
     XCircleIcon,
     XIcon
 } from "@heroicons/vue/solid";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {
     Dialog,
     DialogPanel,

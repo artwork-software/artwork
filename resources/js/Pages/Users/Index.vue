@@ -407,7 +407,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";

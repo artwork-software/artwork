@@ -1,7 +1,7 @@
 <script>
 
 
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import draggable from "vuedraggable";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";

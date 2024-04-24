@@ -91,7 +91,7 @@
 import {Switch, Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],

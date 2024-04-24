@@ -86,7 +86,7 @@
 import {XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 export default {
     name: "ProjectSettingState",
     mixins: [Permissions],

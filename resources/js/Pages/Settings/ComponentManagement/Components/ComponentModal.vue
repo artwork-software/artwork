@@ -375,7 +375,7 @@
 
 <script>
 import {defineComponent, reactive} from "vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {
     Dialog,

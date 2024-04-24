@@ -194,10 +194,10 @@ import MoneySourceCategoriesModal from "@/Layouts/Components/MoneySourceCategori
 import {ChevronDownIcon} from "@heroicons/vue/solid";
 import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjectsToMoneySourcesComponent.vue";
 import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     mixins: [Permissions, IconLib],

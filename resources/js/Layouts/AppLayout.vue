@@ -176,8 +176,7 @@ import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon
 import {SearchIcon} from '@heroicons/vue/solid'
 import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import {isAdmin} from "@/Helper/PermissionHelper";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {
     IconAdjustmentsAlt, IconBell,
     IconCalendarMonth,
@@ -187,7 +186,7 @@ import {
     IconListCheck, IconTrash,
     IconUsers
 } from "@tabler/icons-vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},

@@ -36,7 +36,7 @@ import draggable from "vuedraggable";
 import {IconCopy, IconDotsVertical, IconEdit, IconTrash} from "@tabler/icons-vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import Tabs from "@/Pages/Areas/Components/Tabs.vue";
 
 export default {

@@ -133,7 +133,7 @@ import ContractListItem from "@/Layouts/Components/ContractListItem";
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
 import ContractFilter from "@/Layouts/Components/ContractFilter";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";

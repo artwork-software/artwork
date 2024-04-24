@@ -29,8 +29,8 @@
 
 <script>
 import {TrashIcon} from "@heroicons/vue/solid";
-import IconLib from "@/mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
     name: "SageDataDragElement",

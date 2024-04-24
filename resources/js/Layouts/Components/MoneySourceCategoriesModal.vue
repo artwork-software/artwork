@@ -68,7 +68,7 @@
 </template>
 
 <script>
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";

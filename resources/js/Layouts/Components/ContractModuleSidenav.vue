@@ -40,8 +40,8 @@ import {
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal";
 import {usePage} from "@inertiajs/inertia-vue3";
-import Permissions from "@/mixins/Permissions.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ContractModuleSidenav",

@@ -283,7 +283,7 @@
 <script>
 
 import AppLayout from '@/Layouts/AppLayout.vue'
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {ChevronDownIcon, LightBulbIcon} from "@heroicons/vue/outline";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";

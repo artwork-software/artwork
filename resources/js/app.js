@@ -6,7 +6,6 @@ import { createInertiaApp } from '@inertiajs/inertia-vue3';
 import { InertiaProgress } from '@inertiajs/progress';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import Permissions from './mixins/Permissions';
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n'
 import PrimeVue from 'primevue/config';

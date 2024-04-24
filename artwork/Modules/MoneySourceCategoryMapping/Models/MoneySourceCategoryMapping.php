@@ -3,10 +3,10 @@
 namespace Artwork\Modules\MoneySourceCategoryMapping\Models;
 
 use App\Models\MoneySource;
-use App\Models\MoneySourceCategory;
+use Artwork\Core\Database\Models\Pivot;
+use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Artwork\Core\Database\Models\Pivot;
 
 class MoneySourceCategoryMapping extends Pivot
 {

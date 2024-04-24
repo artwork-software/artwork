@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySourceCategory\Models;
 
+use App\Models\MoneySource;
 use Artwork\Modules\MoneySourceCategoryMapping\Models\MoneySourceCategoryMapping;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class MoneySourceCategory extends Model

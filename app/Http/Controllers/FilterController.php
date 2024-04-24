@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EventType;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\EventType\Models;
 
 use Artwork\Modules\Event\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**

@@ -4,10 +4,10 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
-use App\Models\EventType;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\EventComment\Models\EventComment;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;

@@ -4,12 +4,12 @@ namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
 use App\Enums\TabComponentEnums;
-use App\Models\EventType;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;

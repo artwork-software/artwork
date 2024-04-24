@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\UserCalendarSettings\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -46,6 +47,6 @@ class UserCalendarSettings extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 }

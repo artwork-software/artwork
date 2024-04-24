@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\ShiftQualification\Models;
 
-use App\Models\Freelancer;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Illuminate\Database\Eloquent\Builder;

@@ -3,7 +3,7 @@
 namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\UserResourceWithoutShifts;
-use App\Models\Freelancer;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;

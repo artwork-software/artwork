@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\FreelancerVacation\Models;
 
-use App\Models\Freelancer;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**

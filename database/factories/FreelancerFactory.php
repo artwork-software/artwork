@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Freelancer;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FreelancerFactory extends Factory

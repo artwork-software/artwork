@@ -6,7 +6,6 @@ use App\Enums\RoleNameEnum;
 use App\Models\Category;
 use App\Models\ChecklistTemplate;
 use App\Models\Contract;
-use App\Models\Freelancer;
 use App\Models\User;
 use App\Policies\AreaPolicy;
 use App\Policies\CategoryPolicy;
@@ -39,6 +38,7 @@ use Artwork\Modules\BudgetManagementCostUnit\Policies\BudgetManagementCostUnitPo
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\GeneralSettings\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Genre\Models\Genre;

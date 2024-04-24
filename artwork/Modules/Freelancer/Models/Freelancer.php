@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Freelancer\Models;
 
+use App\Models\Craft;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;
@@ -13,7 +14,7 @@ use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Craft;
-use App\Models\Freelancer;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualificationRepository;

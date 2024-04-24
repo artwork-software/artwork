@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Event;
 
-use App\Models\Freelancer;
 use App\Models\User;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventComment\Models\EventComment;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;

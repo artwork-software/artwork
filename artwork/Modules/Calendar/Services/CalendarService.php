@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Models\Freelancer;
 use App\Models\User;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Psr\Container\ContainerExceptionInterface;

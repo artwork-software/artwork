@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ShiftQualification\Services;
 
-use App\Models\Freelancer;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateFreelancerShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualificationRepository;

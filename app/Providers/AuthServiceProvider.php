@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Enums\RoleNameEnum;
-use App\Models\Category;
 use App\Models\User;
 use App\Policies\AreaPolicy;
 use App\Policies\CategoryPolicy;
@@ -33,6 +32,7 @@ use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Policies\BudgetManagementAccountPolicy;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Policies\BudgetManagementCostUnitPolicy;
+use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Contract\Models\Contract;

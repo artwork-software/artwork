@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Genre;
+use Artwork\Modules\Genre\Models\Genre;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\FreelancerVacation\Models;
 
+use App\Models\Freelancer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -26,6 +27,11 @@ class FreelancerVacation extends Model
 
     public function freelancer(): BelongsTo
     {
-        return $this->belongsTo(Freelancer::class);
+        return $this->belongsTo(
+            Freelancer::class,
+            'freelancer_id',
+            'id',
+            'freelancers'
+        );
     }
 }

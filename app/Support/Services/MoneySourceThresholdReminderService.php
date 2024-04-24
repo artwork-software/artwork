@@ -3,7 +3,7 @@
 namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Illuminate\Database\Eloquent\Collection;
 

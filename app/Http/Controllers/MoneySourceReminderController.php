@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MoneySource;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Illuminate\Http\Request;
 

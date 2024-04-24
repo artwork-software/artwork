@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Budget\Services;
 
 use App\Enums\BudgetTypesEnum;
-use App\Models\MoneySource;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -18,6 +17,7 @@ use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;

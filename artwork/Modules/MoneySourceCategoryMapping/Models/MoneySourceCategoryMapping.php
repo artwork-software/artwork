@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\MoneySourceCategoryMapping\Models;
 
-use App\Models\MoneySource;
 use Artwork\Core\Database\Models\Pivot;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

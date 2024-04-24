@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\MoneySource\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use App\Models\User;
 use Artwork\Modules\Budget\Models\SumMoneySource;
 use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
 use Artwork\Modules\MoneySourceCategoryMapping\Models\MoneySourceCategoryMapping;
@@ -13,7 +14,7 @@ use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
@@ -89,17 +90,6 @@ class MoneySource extends Model
         return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function toSearchableArray(): array
-    {
-        return [
-            'name' => $this->name,
-            'is_group' => $this->is_group
-        ];
-    }
-
     public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
@@ -120,5 +110,16 @@ class MoneySource extends Model
     public function reminder(): HasMany
     {
         return $this->hasMany(MoneySourceReminder::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'is_group' => $this->is_group
+        ];
     }
 }

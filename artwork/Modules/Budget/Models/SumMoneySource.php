@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\MoneySource;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

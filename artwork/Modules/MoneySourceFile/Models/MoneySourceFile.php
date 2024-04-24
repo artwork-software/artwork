@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\MoneySourceFile\Models;
 
-use App\Models\MoneySource;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Comment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;

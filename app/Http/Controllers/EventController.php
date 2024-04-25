@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EventStoreRequest;
-use App\Http\Requests\EventUpdateRequest;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
@@ -21,6 +19,8 @@ use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
+use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
@@ -2031,6 +2031,7 @@ class EventController extends Controller
 
     public function restore(int $id): RedirectResponse
     {
+        /** @var Event $event */
         $event = Event::onlyTrashed()->findOrFail($id);
         $event->subEvents()->restore();
         $event->restore();

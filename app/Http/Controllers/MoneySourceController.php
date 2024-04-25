@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchRequest;
 use App\Http\Resources\MoneySourceFileResource;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;

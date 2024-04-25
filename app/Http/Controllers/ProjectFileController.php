@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FileUpload;
+use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;

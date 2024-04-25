@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Project\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectService;

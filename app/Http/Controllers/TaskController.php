@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -12,6 +11,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;

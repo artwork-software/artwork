@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use App\Http\Requests\UserCreateRequest;
 use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;

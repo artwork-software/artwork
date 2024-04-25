@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
 use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\Contract\Http\Requests\ContractUpdateRequest;
 use Artwork\Modules\Contract\Models\Contract;
 use Artwork\Modules\ContractModule\Models\ContractModule;
 use Artwork\Modules\ContractType\Models\ContractType;

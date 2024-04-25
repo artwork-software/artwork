@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Checklist\Http\Requests;
 
-use App\Http\Requests\EventStoreOrUpdateRequest;
+use Artwork\Modules\Event\Http\Requests\EventStoreOrUpdateRequest;
 
 class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
 {

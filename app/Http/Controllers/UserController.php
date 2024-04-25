@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Http\Resources\UserWorkProfileResource;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;

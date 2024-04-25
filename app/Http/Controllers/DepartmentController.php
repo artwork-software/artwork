@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchRequest;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;

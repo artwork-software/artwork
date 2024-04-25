@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchRequest;
-use App\Http\Requests\StoreProjectRequest;
-use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\UserResourceWithoutShifts;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -68,6 +66,8 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
+use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;

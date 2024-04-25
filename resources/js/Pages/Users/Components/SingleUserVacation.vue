@@ -120,7 +120,7 @@ import {defineComponent} from 'vue'
 import Button from "@/Jetstream/Button.vue";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
 export default defineComponent({
     name: "SingleUserVacation",

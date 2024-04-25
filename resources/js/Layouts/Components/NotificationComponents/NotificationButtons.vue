@@ -78,7 +78,7 @@
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import {XIcon} from "@heroicons/vue/solid";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "NotificationButtons",

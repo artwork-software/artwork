@@ -60,8 +60,8 @@ import {defineComponent} from 'vue';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 
 export default defineComponent({

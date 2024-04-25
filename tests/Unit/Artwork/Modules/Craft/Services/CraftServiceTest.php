@@ -2,11 +2,11 @@
 
 namespace Tests\Unit\Artwork\Modules\Craft\Services;
 
-use App\Models\User;
 use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Tests\TestCase;
 

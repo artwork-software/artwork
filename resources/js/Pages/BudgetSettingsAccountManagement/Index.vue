@@ -260,7 +260,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     mixins: [IconLib],

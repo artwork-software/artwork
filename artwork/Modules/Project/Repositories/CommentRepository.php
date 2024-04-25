@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 
-class CommentRepository extends BaseRepository
+readonly class CommentRepository extends BaseRepository
 {
     public function findForProject(Project $project): Collection
     {

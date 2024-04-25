@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Collection;
 
-class RoomRepository extends BaseRepository
+readonly class RoomRepository extends BaseRepository
 {
     public function allWithoutTrashed(): Collection
     {

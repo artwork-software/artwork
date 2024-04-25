@@ -72,10 +72,10 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
-use App\Http\Middleware\CanEditMoneySource;
-use App\Http\Middleware\CanEditProject;
-use App\Http\Middleware\CanViewProject;
-use App\Http\Middleware\CanViewRoom;
+use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
+use Artwork\Modules\Project\Http\Middleware\CanEditProject;
+use Artwork\Modules\Project\Http\Middleware\CanViewProject;
+use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 

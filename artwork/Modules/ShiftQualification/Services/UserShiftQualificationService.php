@@ -5,7 +5,7 @@ namespace Artwork\Modules\ShiftQualification\Services;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 
 readonly class UserShiftQualificationService
 {

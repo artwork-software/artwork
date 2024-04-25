@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\BudgetManagementCostUnit\Policies;
 
-use App\Enums\PermissionNameEnum;
-use App\Models\User;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 
 class BudgetManagementCostUnitPolicy
 {
@@ -11,8 +11,8 @@ class BudgetManagementCostUnitPolicy
     {
         return $user->canAny(
             [
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
             ]
         );
     }
@@ -21,8 +21,8 @@ class BudgetManagementCostUnitPolicy
     {
         return $user->canAny(
             [
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
             ]
         );
     }
@@ -31,8 +31,8 @@ class BudgetManagementCostUnitPolicy
     {
         return $user->canAny(
             [
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-                PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
+                PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value
             ]
         );
     }

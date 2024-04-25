@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\ComponentPermissionNameEnum;
-use App\Enums\TabComponentEnums;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,42 +19,42 @@ return new class extends Migration
             $table->enum(
                 'type',
                 [
-                    TabComponentEnums::TEXT_AREA->value,
-                    TabComponentEnums::TEXT_FIELD->value,
-                    TabComponentEnums::CHECKBOX->value,
-                    TabComponentEnums::DROPDOWN->value,
-                    TabComponentEnums::TITLE->value,
-                    TabComponentEnums::CALENDAR->value,
-                    TabComponentEnums::PROJECT_STATUS->value,
-                    TabComponentEnums::CHECKLIST->value,
-                    TabComponentEnums::PROJECT_TEAM->value,
-                    TabComponentEnums::PROJECT_GROUP->value,
-                    TabComponentEnums::PROJECT_ATTRIBUTES->value,
-                    TabComponentEnums::SHIFT_TAB->value,
-                    TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING->value,
-                    TabComponentEnums::SHIFT_CONTACT_PERSONS->value,
-                    TabComponentEnums::GENERAL_SHIFT_INFORMATION->value,
-                    TabComponentEnums::BUDGET->value,
-                    TabComponentEnums::PROJECT_BUDGET_DEADLINE->value,
-                    TabComponentEnums::COMMENT_TAB->value,
-                    TabComponentEnums::PROJECT_DOCUMENTS->value,
-                    TabComponentEnums::PROJECT_TITLE->value,
-                    TabComponentEnums::SEPARATOR->value,
-                    TabComponentEnums::COMMENT_ALL_TAB->value,
-                    TabComponentEnums::PROJECT_ALL_DOCUMENTS->value,
-                    TabComponentEnums::CHECKLIST_ALL->value,
-                    TabComponentEnums::BUDGET_INFORMATIONS->value
+                    ProjectTabComponentEnum::TEXT_AREA->value,
+                    ProjectTabComponentEnum::TEXT_FIELD->value,
+                    ProjectTabComponentEnum::CHECKBOX->value,
+                    ProjectTabComponentEnum::DROPDOWN->value,
+                    ProjectTabComponentEnum::TITLE->value,
+                    ProjectTabComponentEnum::CALENDAR->value,
+                    ProjectTabComponentEnum::PROJECT_STATUS->value,
+                    ProjectTabComponentEnum::CHECKLIST->value,
+                    ProjectTabComponentEnum::PROJECT_TEAM->value,
+                    ProjectTabComponentEnum::PROJECT_GROUP->value,
+                    ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value,
+                    ProjectTabComponentEnum::SHIFT_TAB->value,
+                    ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value,
+                    ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value,
+                    ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value,
+                    ProjectTabComponentEnum::BUDGET->value,
+                    ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE->value,
+                    ProjectTabComponentEnum::COMMENT_TAB->value,
+                    ProjectTabComponentEnum::PROJECT_DOCUMENTS->value,
+                    ProjectTabComponentEnum::PROJECT_TITLE->value,
+                    ProjectTabComponentEnum::SEPARATOR->value,
+                    ProjectTabComponentEnum::COMMENT_ALL_TAB->value,
+                    ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value,
+                    ProjectTabComponentEnum::CHECKLIST_ALL->value,
+                    ProjectTabComponentEnum::BUDGET_INFORMATIONS->value
                 ]
-            )->default(TabComponentEnums::TEXT_FIELD->value);
+            )->default(ProjectTabComponentEnum::TEXT_FIELD->value);
             $table->json('data')->nullable();
             $table->boolean('special')->default(false);
             $table->boolean('sidebar_enabled')->default(true);
             $table->enum(
                 'permission_type',
                 [
-                    ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value,
-                    ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_SOME_EDIT->value,
-                    ComponentPermissionNameEnum::PERMISSION_TYPE_SOME_SEE_SOME_EDIT->value
+                    ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value,
+                    ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_SOME_EDIT->value,
+                    ProjectTabComponentPermissionEnum::PERMISSION_TYPE_SOME_SEE_SOME_EDIT->value
                 ]
             )->nullable();
             $table->timestamps();

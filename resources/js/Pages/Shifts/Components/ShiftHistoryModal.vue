@@ -48,7 +48,7 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import dayjs from "dayjs";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 

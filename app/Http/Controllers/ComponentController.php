@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TabComponentEnums;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,7 +12,7 @@ class ComponentController extends Controller
 {
     public function index(): Response
     {
-        $tabComponentTypes = TabComponentEnums::getValues();
+        $tabComponentTypes = ProjectTabComponentEnum::getValues();
         return Inertia::render('Settings/ComponentManagement/Index', [
             'components' => Component::notSpecial()->get()->groupBy('type'),
             'componentsSpecial' => Component::isSpecial()->get(),

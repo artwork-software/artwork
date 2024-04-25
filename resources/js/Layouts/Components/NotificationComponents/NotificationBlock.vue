@@ -159,7 +159,7 @@ import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogCo
 import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 export default {
     name: "NotificationBlock",
     components: {

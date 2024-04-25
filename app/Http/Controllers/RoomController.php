@@ -9,11 +9,11 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\EventType;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
@@ -21,6 +21,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -28,7 +29,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -37,7 +37,7 @@ class RoomController extends Controller
     public function __construct(
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService,
-        private readonly SchedulingController $schedulingController
+        private readonly SchedulingService $schedulingService
     ) {
     }
 
@@ -298,7 +298,7 @@ class RoomController extends Controller
 
         $roomId = $room->id;
         foreach ($room->users()->wherePivot('is_admin', true)->get() as $user) {
-            $this->schedulingController->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
+            $this->schedulingService->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
         return Redirect::back();

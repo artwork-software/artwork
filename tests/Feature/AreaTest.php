@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -10,7 +10,7 @@ beforeEach(function () {
 
     $this->auth_user = User::factory()->create();
     $this->area = Area::factory()->create();
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::ROOM_UPDATE->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::ROOM_UPDATE->value);
     $this->actingAs($this->auth_user);
     $this->room = Room::factory()->create();
 

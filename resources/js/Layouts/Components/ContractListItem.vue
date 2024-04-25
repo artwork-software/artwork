@@ -76,11 +76,11 @@
 import {
     DownloadIcon, DuplicateIcon, PencilAltIcon, TrashIcon
 } from '@heroicons/vue/outline';
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {IconCopy} from "@tabler/icons-vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ContractListItem",

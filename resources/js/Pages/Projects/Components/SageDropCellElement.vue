@@ -1,6 +1,6 @@
 <script>
 import {Inertia} from "@inertiajs/inertia";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import SageDropMultipleDataSelectModal from "@/Pages/Projects/Components/SageDropMultipleDataSelectModal.vue";
 
 export default {

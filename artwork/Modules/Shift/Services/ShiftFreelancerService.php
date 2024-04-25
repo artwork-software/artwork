@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use App\Models\Freelancer;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;

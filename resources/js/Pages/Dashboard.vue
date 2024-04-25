@@ -255,7 +255,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";

@@ -3,10 +3,10 @@
 namespace Tests\Unit\App\Support\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use App\Models\User;
 use Artwork\Modules\Change\Repositories\ChangeRepository;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ChangeServiceTest extends TestCase

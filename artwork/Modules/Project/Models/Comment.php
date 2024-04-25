@@ -2,13 +2,11 @@
 
 namespace Artwork\Modules\Project\Models;
 
-use App\Models\Contract;
-use App\Models\MoneySourceFile;
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Contract\Models\Traits\BelongsToContract;
+use Artwork\Modules\MoneySourceFile\Models\MoneySourceFile;
 use Artwork\Modules\Project\Models\Traits\BelongsToProject;
-use Artwork\Modules\User\Models\BelongsToUser;
+use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

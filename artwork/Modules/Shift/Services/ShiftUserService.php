@@ -2,12 +2,11 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use App\Enums\NotificationConstEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\User;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -16,6 +15,7 @@ use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 
@@ -149,7 +149,7 @@ readonly class ShiftUserService
         $notificationService->setTitle($notificationTitle);
         $notificationService->setIcon('green');
         $notificationService->setPriority(3);
-        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -177,7 +177,7 @@ readonly class ShiftUserService
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
         $notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
 
         $notificationService->setButtons(['change_shift_conflict']);
         $usersWhichGotNotification = [];
@@ -228,7 +228,7 @@ readonly class ShiftUserService
             $notificationService->setIcon('blue');
             $notificationService->setPriority(1);
             $notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $notificationService->setBroadcastMessage([
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -267,10 +267,10 @@ readonly class ShiftUserService
 
             $notificationService->setPriority(1);
             $notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
-            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
+            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
                 $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setDescription([
@@ -360,7 +360,7 @@ readonly class ShiftUserService
             $notificationService->setIcon('red');
             $notificationService->setPriority(2);
             $notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $notificationService->setBroadcastMessage([
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -399,11 +399,11 @@ readonly class ShiftUserService
             $notificationService->setIcon('blue');
             $notificationService->setPriority(1);
             $notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
 
             $notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
-            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
+            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
                 $notificationTitle = __('notification.shift.worker_more_than_ten_days', [], $adminUser->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
@@ -727,7 +727,7 @@ readonly class ShiftUserService
         $notificationService->setTitle($notificationTitle);
         $notificationService->setIcon('red');
         $notificationService->setPriority(2);
-        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $notificationService->setBroadcastMessage([
             'id' => rand(1, 1000000),
             'type' => 'success',

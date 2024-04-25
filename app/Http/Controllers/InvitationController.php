@@ -2,25 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Events\UserUpdated;
-use App\Http\Requests\AcceptInvitationRequest;
-use App\Http\Requests\StoreInvitationRequest;
-use App\Mail\InvitationCreated;
-use App\Models\Invitation;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Invitation\Http\Requests\AcceptInvitationRequest;
+use Artwork\Modules\Invitation\Http\Requests\StoreInvitationRequest;
+use Artwork\Modules\Invitation\Mail\InvitationCreated;
+use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\User\Events\UserUpdated;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
@@ -69,7 +70,7 @@ class InvitationController extends Controller
         $roles = $request->roles;
 
         foreach ($request->user_emails as $email) {
-            $token = createToken();
+            $token = $this->createToken();
 
             $invitation = Invitation::create([
                 'email' => $email,
@@ -112,7 +113,7 @@ class InvitationController extends Controller
         $invitation->update($request->only('email'));
 
         if ($newMail !== $oldEmail) {
-            $token = createToken();
+            $token = $this->createToken();
             Mail::to($newMail)->send(new InvitationCreated($invitation, Auth::user(), $token['plain']));
             $invitation->update(['token' => $token['hash']]);
         }
@@ -146,7 +147,7 @@ class InvitationController extends Controller
         /** @var User $user */
         $user = User::create($request->userData());
 
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
@@ -169,5 +170,21 @@ class InvitationController extends Controller
         broadcast(new UserUpdated())->toOthers();
 
         return Redirect::route('dashboard');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function createToken(): array
+    {
+        do {
+            $tokenPlain = Str::random(20);
+            $hashedToken = Hash::make($tokenPlain);
+        } while (Invitation::where('token', $hashedToken)->first());
+
+        return [
+            'plain' => $tokenPlain,
+            'hash' => $hashedToken
+        ];
     }
 }

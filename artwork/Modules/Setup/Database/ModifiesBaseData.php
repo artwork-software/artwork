@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Setup\Database;
 
 use Artwork\Modules\Permission\Services\PermissionService;
-use Artwork\Modules\Permission\Services\RoleService;
+use Artwork\Modules\Role\Services\RoleService;
 use Artwork\Modules\Setup\DataProvider\RoleAndPermissionDataProvider;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;

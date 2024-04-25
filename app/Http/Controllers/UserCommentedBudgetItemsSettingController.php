@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\UserCommentedBudgetItemsSetting;
+use Artwork\Modules\User\Models\User;
+use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
 use Illuminate\Http\Request;
 
 class UserCommentedBudgetItemsSettingController extends Controller

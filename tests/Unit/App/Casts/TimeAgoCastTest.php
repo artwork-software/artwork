@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\App\Casts;
 
-use App\Casts\TimeAgoCast;
+use Artwork\Core\Casts\TimeAgoCast;
 use Carbon\Carbon;
 use Tests\TestCase;
 

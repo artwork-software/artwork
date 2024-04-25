@@ -4,6 +4,6 @@ namespace Artwork\Modules\Vacation\Repository;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-class VacationConflictRepository extends BaseRepository
+readonly class VacationConflictRepository extends BaseRepository
 {
 }

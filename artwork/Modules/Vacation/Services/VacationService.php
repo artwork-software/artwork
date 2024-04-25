@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\Vacation\Services;
 
-use App\Http\Controllers\SchedulingController;
-use App\Models\Freelancer;
-use App\Models\User;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Vacation\Repository\VacationRepository;
@@ -27,7 +27,7 @@ readonly class VacationService
         VacationConflictService $vacationConflictService,
         VacationSeriesService $vacationSeriesService,
         ChangeService $changeService,
-        SchedulingController $schedulingController,
+        SchedulingService $schedulingService,
         NotificationService $notificationService
     ): Vacation|Model {
         /** @var Vacation $firstVacation */
@@ -70,7 +70,7 @@ readonly class VacationService
         }
 
         $this->createHistory($firstVacation, 'Availability added', $changeService);
-        $this->announceChanges($firstVacation, $schedulingController);
+        $this->announceChanges($firstVacation, $schedulingService);
 
         return $firstVacation;
     }
@@ -194,12 +194,12 @@ readonly class VacationService
         );
     }
 
-    protected function announceChanges(Vacation $vacation, SchedulingController $schedulingController): void
+    protected function announceChanges(Vacation $vacation, SchedulingService $schedulingService): void
     {
         if (!$vacation->vacationer instanceof User) {
             return;
         }
-        $schedulingController->create(
+        $schedulingService->create(
             $vacation->vacationer_id,
             'VACATION_CHANGES',
             'USER_VACATIONS',

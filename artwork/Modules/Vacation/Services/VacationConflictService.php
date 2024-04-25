@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\Vacation\Services;
 
-use App\Enums\NotificationConstEnum;
-use App\Models\Freelancer;
-use App\Models\User;
-use App\Support\Services\NotificationService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Repository\VacationConflictRepository;
 use Carbon\Carbon;
@@ -86,7 +86,7 @@ readonly class VacationConflictService
                 $notificationService->setIcon('red');
                 $notificationService->setPriority(2);
                 $notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setDescription($notificationDescription);
                 $notificationService->setButtons(['see_shift']);
@@ -190,7 +190,7 @@ readonly class VacationConflictService
             $notificationService->setTitle($notificationTitle);
             $notificationService->setIcon('red');
             $notificationService->setPriority(2);
-            $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
             $notificationService->setBroadcastMessage($broadcastMessage);
             $notificationService->setDescription($notificationDescription);
             $notificationService->setButtons(['see_shift']);

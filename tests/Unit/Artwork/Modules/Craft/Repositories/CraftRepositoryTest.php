@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Artwork\Modules\Craft\Repositories;
 
-use App\Models\User;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Tests\TestCase;
 

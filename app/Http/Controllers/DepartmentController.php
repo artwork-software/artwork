@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchRequest;
-use App\Support\Services\NotificationService;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Services\DepartmentService;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;

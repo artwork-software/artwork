@@ -125,7 +125,7 @@ import {Head, Link} from '@inertiajs/inertia-vue3';
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/solid";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 
 export default defineComponent({

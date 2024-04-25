@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Console\Commands\GetSage100Data;
+use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -65,7 +65,7 @@ class ToolSettingsInterfacesController extends Controller
 
     public function initializeSage(): RedirectResponse
     {
-        if (Artisan::call(GetSage100Data::class) === 0) {
+        if (Artisan::call(ImportSage100ApiDataCommand::class) === 0) {
             return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
         }
 
@@ -74,7 +74,7 @@ class ToolSettingsInterfacesController extends Controller
 
     public function initializeSageSpecificDay(Request $request): RedirectResponse
     {
-        if (Artisan::call(GetSage100Data::class, ['specificDay' => $request->get('specificDay')]) === 0) {
+        if (Artisan::call(ImportSage100ApiDataCommand::class, ['specificDay' => $request->get('specificDay')]) === 0) {
             return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
         }
 

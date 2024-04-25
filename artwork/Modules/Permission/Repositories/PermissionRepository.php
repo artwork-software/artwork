@@ -11,7 +11,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Contracts\Permission as PermissionContract;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
-class PermissionRepository extends BaseRepository
+readonly class PermissionRepository extends BaseRepository
 {
     public function getPermissionsGroupedByPermissionGroup(): Collection
     {

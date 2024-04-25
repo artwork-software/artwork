@@ -2,8 +2,8 @@
 
 namespace App\Http\Resources;
 
-use App\Models\TaskTemplate;
-use App\Models\User;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ChecklistTemplateIndexResource extends JsonResource

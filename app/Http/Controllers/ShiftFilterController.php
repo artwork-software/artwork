@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\EventType;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Barryvdh\Debugbar\Facades\Debugbar;

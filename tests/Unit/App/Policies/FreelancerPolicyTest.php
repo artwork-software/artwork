@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\FreelancerPolicy;
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Freelancer\Policies\FreelancerPolicy;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class FreelancerPolicyTest extends TestCase
@@ -12,7 +12,7 @@ class FreelancerPolicyTest extends TestCase
     public function testUpdateWorkProfile(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new FreelancerPolicy();
 
@@ -22,7 +22,7 @@ class FreelancerPolicyTest extends TestCase
     public function testUpdateTerms(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new FreelancerPolicy();
 

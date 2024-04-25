@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleNameEnum;
-use App\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Project\Http\Requests\StoreCommentRequest;
 use Artwork\Modules\Project\Models\Comment;
-use App\Models\User;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class CommentController extends Controller
         $user = Auth::user();
         $comment = null;
         if (
-            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ||
+            $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ||
             $this->projectService->getUsersForProject($project)->contains($user) ||
             $this->projectService->isManagerForProject($user, $project)
         ) {

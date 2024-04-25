@@ -398,7 +398,7 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
@@ -408,7 +408,7 @@ import {IconPin} from "@tabler/icons-vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 
 export default defineComponent({

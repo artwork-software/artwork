@@ -195,7 +195,7 @@ import ShiftQualificationModal from "@/Layouts/Components/ShiftQualificationModa
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 
 export default defineComponent({

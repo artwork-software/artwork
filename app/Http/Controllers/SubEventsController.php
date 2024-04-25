@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\SubEvents\Models\SubEvent;
 use Illuminate\Http\Request;
 
@@ -50,7 +50,7 @@ class SubEventsController extends Controller
             $this->notificationService->setPriority(2);
             $this->notificationService->setEventId($event);
             $this->notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->createNotification();
         }

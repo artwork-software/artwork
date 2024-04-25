@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\DepartmentPolicy;
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Department\Policies\DepartmentPolicy;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class DepartmentPolicyTest extends TestCase
@@ -12,7 +12,7 @@ class DepartmentPolicyTest extends TestCase
     public function testViewAny(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
         $policy = new DepartmentPolicy();
 
@@ -22,7 +22,7 @@ class DepartmentPolicyTest extends TestCase
     public function testView(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
         $policy = new DepartmentPolicy();
 
@@ -32,7 +32,7 @@ class DepartmentPolicyTest extends TestCase
     public function testCreate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
         $policy = new DepartmentPolicy();
 
@@ -42,7 +42,7 @@ class DepartmentPolicyTest extends TestCase
     public function testUpdate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
         $policy = new DepartmentPolicy();
 
@@ -52,7 +52,7 @@ class DepartmentPolicyTest extends TestCase
     public function testDelete(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
         $policy = new DepartmentPolicy();
 

@@ -4,6 +4,6 @@ namespace Artwork\Modules\Budget\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-class SumMoneySourceRepository extends BaseRepository
+readonly class SumMoneySourceRepository extends BaseRepository
 {
 }

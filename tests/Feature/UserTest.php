@@ -1,9 +1,9 @@
 <?php
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Event as EventFacade;
 
 beforeEach(function (): void {
@@ -15,7 +15,7 @@ test('users can update update other users', function (): void {
     $department = Department::factory()->create();
 
     $user_to_edit = User::factory()->create();
-    $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($user);
 
     $response = $this->patch(route('user.update', [$user_to_edit->id]), [
@@ -23,7 +23,7 @@ test('users can update update other users', function (): void {
         "last_name" => "Willems",
         "position" => "CEO",
         "phone_number" => "1337",
-        "permissions" => [PermissionNameEnum::ROOM_UPDATE->value],
+        "permissions" => [PermissionEnum::ROOM_UPDATE->value],
         "departments" => [$department]
     ]);
 
@@ -47,18 +47,18 @@ test('users can update update other users', function (): void {
 test('user can update another users permissions and roles', function (): void {
     $user = User::factory()->create();
     $user_to_edit = User::factory()->create();
-    $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($user);
 
     $permissionsToGrant = [];
-    foreach (PermissionNameEnum::cases() as $permissionNameEnum) {
+    foreach (PermissionEnum::cases() as $permissionNameEnum) {
         $permissionsToGrant[] = $permissionNameEnum->value;
     }
     $permissionNotToGrant = array_pop($permissionsToGrant);
 
     $response = $this->patch(route('user.update.permissions-and-roles', [$user_to_edit->id]), [
         "permissions" => $permissionsToGrant,
-        "roles" => [RoleNameEnum::ARTWORK_ADMIN->value]
+        "roles" => [RoleEnum::ARTWORK_ADMIN->value]
     ]);
 
     $response->assertRedirect();
@@ -71,7 +71,7 @@ test('user can update another users permissions and roles', function (): void {
 
     $this->assertFalse($updated_user->hasPermissionTo($permissionNotToGrant));
 
-    $this->assertTrue($updated_user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value));
+    $this->assertTrue($updated_user->hasRole(RoleEnum::ARTWORK_ADMIN->value));
 });
 
 test('users cannot update users without permission', function (): void {
@@ -79,7 +79,7 @@ test('users cannot update users without permission', function (): void {
     $user = User::factory()->create([
         'first_name' => 'updater user'
     ]);
-    $user->revokePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+    $user->revokePermissionTo(PermissionEnum::TEAM_UPDATE->value);
 
     $user_to_edit = User::factory()->create([
         'first_name' => 'updated user'

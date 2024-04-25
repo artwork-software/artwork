@@ -114,9 +114,9 @@ import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Dropdown from "@/Jetstream/Dropdown.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',

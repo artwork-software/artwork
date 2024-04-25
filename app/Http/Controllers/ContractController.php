@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Models\CompanyType;
-use App\Models\Contract;
-use App\Models\ContractModule;
-use App\Models\ContractType;
-use App\Models\Currency;
-use App\Models\Task;
-use App\Models\User;
-use App\Support\Services\NotificationService;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\Contract\Http\Requests\ContractUpdateRequest;
+use Artwork\Modules\Contract\Models\Contract;
+use Artwork\Modules\ContractModule\Models\ContractModule;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,7 +104,7 @@ class ContractController extends Controller
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
 
         foreach ($contractUsers as $contractUser) {
             $notificationTitle = __(
@@ -185,7 +185,7 @@ class ContractController extends Controller
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
 
 
         foreach ($contractUsers as $contractUser) {
@@ -288,7 +288,7 @@ class ContractController extends Controller
             $this->notificationService->setPriority(2);
             $this->notificationService->setProjectId($project->id);
             $this->notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($contractUser);

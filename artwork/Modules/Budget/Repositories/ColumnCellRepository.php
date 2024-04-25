@@ -4,6 +4,6 @@ namespace Artwork\Modules\Budget\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-class ColumnCellRepository extends BaseRepository
+readonly class ColumnCellRepository extends BaseRepository
 {
 }

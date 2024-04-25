@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomRoomCategoryMapping;
+use Artwork\Modules\Room\Models\RoomCategory;
+use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\RoomCategory;
 
 class RoomCategoryController extends Controller
 {

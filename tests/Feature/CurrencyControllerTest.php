@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\Currency;
+use Artwork\Modules\Currency\Models\Currency;
 use Tests\TestCase;
 
 class CurrencyControllerTest extends TestCase

@@ -3,9 +3,9 @@
 namespace Artwork\Modules\Change\Builders;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use App\Models\User;
 use Artwork\Modules\Change\Interfaces\Builder;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
 

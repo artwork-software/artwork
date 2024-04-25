@@ -1,5 +1,7 @@
 <?php
 
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
@@ -14,12 +16,12 @@ return new class extends Migration
     {
         DB::table('user_vacations')
             ->orderBy('id')->each(function (\stdClass $vacation): void {
-                $this->insertToVacation($vacation, \App\Models\User::class);
+                $this->insertToVacation($vacation, User::class);
             });
 
         DB::table('freelancer_vacations')
             ->orderBy('id')->each(function (\stdClass $vacation): void {
-                $this->insertToVacation($vacation, \App\Models\Freelancer::class);
+                $this->insertToVacation($vacation, Freelancer::class);
             });
     }
 

@@ -92,7 +92,7 @@
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

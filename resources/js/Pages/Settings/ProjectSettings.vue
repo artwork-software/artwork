@@ -163,7 +163,7 @@ import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
 import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 
 export default {

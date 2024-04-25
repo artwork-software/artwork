@@ -17,7 +17,7 @@
 <script>
 import {defineComponent} from 'vue';
 import {Link} from "@inertiajs/inertia-vue3";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "UserTabs",

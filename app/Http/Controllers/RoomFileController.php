@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\FileUpload;
+use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomFile;

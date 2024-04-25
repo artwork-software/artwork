@@ -28,8 +28,8 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
-import Permissions from "@/mixins/Permissions.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
 

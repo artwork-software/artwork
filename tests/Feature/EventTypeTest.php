@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\EventType;
+use Artwork\Modules\EventType\Models\EventType;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {

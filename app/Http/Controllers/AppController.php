@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use App\Enums\NotificationConstEnum;
-use App\Enums\RoleNameEnum;
-use App\Http\Requests\UserCreateRequest;
-use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Http\Requests\UserCreateRequest;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
@@ -137,7 +137,7 @@ class AppController extends Controller
         /** @var User $user */
         $user = User::create($request->userData());
 
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
@@ -146,7 +146,7 @@ class AppController extends Controller
             ]);
         }
 
-        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();

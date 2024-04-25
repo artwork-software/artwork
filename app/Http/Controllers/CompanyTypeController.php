@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CompanyType;
+use Artwork\Modules\CompanyType\Models\CompanyType;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Redirect;
-
-use function Pest\Laravel\delete;
 
 class CompanyTypeController extends Controller
 {
@@ -28,7 +25,7 @@ class CompanyTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CompanyType  $companyType
+     * @param  \Artwork\Modules\CompanyType\Models\CompanyType  $companyType
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(CompanyType $companyType): \Illuminate\Http\RedirectResponse

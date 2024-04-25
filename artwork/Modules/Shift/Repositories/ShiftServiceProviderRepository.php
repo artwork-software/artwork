@@ -5,7 +5,7 @@ namespace Artwork\Modules\Shift\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 
-class ShiftServiceProviderRepository extends BaseRepository
+readonly class ShiftServiceProviderRepository extends BaseRepository
 {
     public function createForShift(
         int $shiftId,

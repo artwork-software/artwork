@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResourceWithoutShifts extends JsonResource
@@ -26,7 +26,7 @@ class UserResourceWithoutShifts extends JsonResource
             'position' => $this->position,
             'business' => $this->business,
             'phone_number' => $this->phone_number,
-            'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+            'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
             'pivot_access_budget' => (bool)$this->pivot?->access_budget,
             'pivot_is_manager' => (bool)$this->pivot?->is_manager,
             'pivot_can_write' => (bool)$this->pivot?->can_write,

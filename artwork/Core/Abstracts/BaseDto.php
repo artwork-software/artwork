@@ -8,6 +8,15 @@ use JsonSerializable;
 
 abstract class BaseDto implements JsonSerializable, Arrayable
 {
+    final public function __construct()
+    {
+    }
+
+    final public static function newInstance(): static
+    {
+        return new static();
+    }
+
     /**
      * To pass the object as response argument which automatically is encoded to json then
      * @return array<string, mixed>

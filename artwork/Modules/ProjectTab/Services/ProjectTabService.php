@@ -2,27 +2,31 @@
 
 namespace Artwork\Modules\ProjectTab\Services;
 
-use App\Enums\TabComponentEnums;
 use App\Http\Controllers\CalendarController;
 use App\Http\Resources\FreelancerDropResource;
 use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
-use App\Models\Filter;
-use App\Models\Freelancer;
-use App\Models\ServiceProvider;
-use App\Models\User;
+use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
+use Artwork\Modules\CompanyType\Services\CompanyTypeService;
+use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Currency\Services\CurrencyService;
+use Artwork\Modules\Filter\Models\Filter;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Artwork\Modules\ProjectTab\DTOs\ShiftsDto;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,22 +43,22 @@ readonly class ProjectTabService
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::SHIFT_TAB);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::SHIFT_TAB);
     }
 
     public function findFirstProjectTabWithTasksComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CHECKLIST);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::CHECKLIST);
     }
 
     public function findFirstProjectTabWithBudgetComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::BUDGET);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::BUDGET);
     }
 
     public function findFirstProjectTabWithCalendarComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CALENDAR);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::CALENDAR);
     }
 
     public function getCalendarTab(
@@ -83,11 +87,19 @@ readonly class ProjectTabService
                     ->get()
             )->collection->groupBy('room.id');
         }
-        return $this->createCalendarDto(
-            $calendarData,
-            $eventsAtAGlance,
-            $roomService->filterRooms($startDate, $endDate)->get(),
-            new CalendarEventCollectionResourceModel(
+
+        return CalendarDto::newInstance()
+            ->setCalendar($calendarData['roomsWithEvents'])
+            ->setDateValue($calendarData['dateValue'])
+            ->setDays($calendarData['days'])
+            ->setSelectedDate($calendarData['selectedDate'])
+            ->setFilterOptions($calendarData["filterOptions"])
+            ->setPersonalFilters($calendarData['personalFilters'])
+            ->setEventsWithoutRoom($calendarData['eventsWithoutRoom'])
+            ->setUserFilters($calendarData['user_filters'])
+            ->setEventsAtAGlance($eventsAtAGlance)
+            ->setRooms($roomService->filterRooms($startDate, $endDate)->get())
+            ->setEvents(new CalendarEventCollectionResourceModel(
                 $calendarData['filterOptions']['areas'],
                 $calendarData['filterOptions']['projects'],
                 $calendarData['filterOptions']['eventTypes'],
@@ -95,31 +107,7 @@ readonly class ProjectTabService
                 $calendarData['filterOptions']['roomAttributes'],
                 $calendarController->getEventsOfInterval($startDate, $endDate, $project),
                 Filter::query()->where('user_id', Auth::id())->get(),
-            )
-        );
-    }
-
-    public function createCalendarDto(
-        array $calendarData,
-        Collection $eventsAtAGlance,
-        EloquentCollection $filteredRooms,
-        CalendarEventCollectionResourceModel $calendarEventCollectionResourceModel
-    ): CalendarDto {
-        $calendarDto = new CalendarDto();
-
-        $calendarDto->setCalendar($calendarData['roomsWithEvents']);
-        $calendarDto->setDateValue($calendarData['dateValue']);
-        $calendarDto->setDays($calendarData['days']);
-        $calendarDto->setSelectedDate($calendarData['selectedDate']);
-        $calendarDto->setFilterOptions($calendarData["filterOptions"]);
-        $calendarDto->setPersonalFilters($calendarData['personalFilters']);
-        $calendarDto->setEventsWithoutRoom($calendarData['eventsWithoutRoom']);
-        $calendarDto->setUserFilters($calendarData['user_filters']);
-        $calendarDto->setEventsAtAGlance($eventsAtAGlance);
-        $calendarDto->setRooms($filteredRooms);
-        $calendarDto->setEvents($calendarEventCollectionResourceModel);
-
-        return $calendarDto;
+            ));
     }
 
     public function getShiftTab(
@@ -213,36 +201,36 @@ readonly class ProjectTabService
             ];
         }
 
-        return $this->createShiftsDto(
-            $usersWithPlannedWorkingHours,
-            $freelancersWithPlannedWorkingHours,
-            $serviceProvidersWithPlannedWorkingHours,
-            $eventsWithRelevant,
-            Craft::all(),
-            Auth::user()->crafts->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            $shiftQualificationService->getAllOrderedByCreationDateAscending()
-        );
+        return ShiftsDto::newInstance()
+            ->setUsersForShifts($usersWithPlannedWorkingHours)
+            ->setFreelancersForShifts($freelancersWithPlannedWorkingHours)
+            ->setServiceProvidersForShifts($serviceProvidersWithPlannedWorkingHours)
+            ->setEventsWithRelevant($eventsWithRelevant)
+            ->setCrafts(Craft::all())
+            ->setCurrentUserCrafts(
+                Auth::user()
+                    ->crafts
+                    ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
+            )
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
     }
 
-    public function createShiftsDto(
-        array $usersWithPlannedWorkingHours,
-        array $freelancersWithPlannedWorkingHours,
-        array $serviceProvidersWithPlannedWorkingHours,
-        array $eventsWithRelevant,
-        EloquentCollection $crafts,
-        EloquentCollection $currentUserCrafts,
-        EloquentCollection $shiftQualifications
-    ): ShiftsDto {
-        $shiftsDto = new ShiftsDto();
-
-        $shiftsDto->setUsersForShifts($usersWithPlannedWorkingHours);
-        $shiftsDto->setFreelancersForShifts($freelancersWithPlannedWorkingHours);
-        $shiftsDto->setServiceProvidersForShifts($serviceProvidersWithPlannedWorkingHours);
-        $shiftsDto->setEventsWithRelevant($eventsWithRelevant);
-        $shiftsDto->setCrafts($crafts);
-        $shiftsDto->setCurrentUserCrafts($currentUserCrafts);
-        $shiftsDto->setShiftQualifications($shiftQualifications);
-
-        return $shiftsDto;
+    public function getBudgetInformationDto(
+        Project $project,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService,
+        CollectingSocietyService $collectingSocietyService
+    ): BudgetInformationDto {
+        return BudgetInformationDto::newInstance()
+            ->setAccessBudget($project->access_budget)
+            ->setContracts($project->contracts)
+            ->setProjectFiles($project->project_files)
+            ->setProjectMoneySources($project->moneySources)
+            ->setProjectManagerIds($project->managerUsers->pluck('user_id'))
+            ->setContractTypes($contractTypeService->getAll())
+            ->setCompanyTypes($companyTypeService->getAll())
+            ->setCurrencies($currencyService->getAll())
+            ->setCollectingSocieties($collectingSocietyService->getAll());
     }
 }

@@ -3,8 +3,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 

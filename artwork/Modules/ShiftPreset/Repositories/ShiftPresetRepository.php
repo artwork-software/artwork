@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Illuminate\Database\Eloquent\Collection;
 
-class ShiftPresetRepository extends BaseRepository
+readonly class ShiftPresetRepository extends BaseRepository
 {
     public function getAll(): Collection
     {

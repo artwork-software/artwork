@@ -95,7 +95,7 @@ import {Menu, MenuItems, MenuItem, MenuButton} from "@headlessui/vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",

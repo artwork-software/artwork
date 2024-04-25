@@ -1,13 +1,13 @@
 <?php
 
-use App\Enums\RoleNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Genre;
-use App\Models\Sector;
-use App\Models\Task;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -37,7 +37,7 @@ beforeEach(function (): void {
 
 test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function (): void {
 
-    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
 
     $this->assigned_department->users()->attach($this->auth_user);
 
@@ -95,7 +95,7 @@ test('users that are assigned to a checklist can create tasks without a deadline
         'project_id' => $this->project->id
     ]);
 
-    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 
     $this->post('/tasks', [
@@ -142,7 +142,7 @@ test('users that are assigned to a checklist can create tasks with a deadline fo
 
 test('users that are admins can create tasks for any checklist in any project', function (): void {
 
-    $this->auth_user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 
     $this->post('/tasks', [

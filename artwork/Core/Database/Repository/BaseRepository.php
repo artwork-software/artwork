@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Throwable;
 
-abstract class BaseRepository
+abstract readonly class BaseRepository
 {
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
     {
         $model->save();
+
         return $model;
     }
 
@@ -53,6 +54,7 @@ abstract class BaseRepository
     public function update(Model|Pivot|CanSubstituteBaseModel $model, array $attributes): Model|Pivot
     {
         $model->update($attributes);
+
         return $model;
     }
 
@@ -62,6 +64,7 @@ abstract class BaseRepository
     public function updateOrFail(Model|Pivot|CanSubstituteBaseModel $model, array $attributes): Model|Pivot
     {
         $model->updateOrFail($attributes);
+
         return $model;
     }
 

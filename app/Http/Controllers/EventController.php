@@ -42,7 +42,7 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Services\TimelineService;

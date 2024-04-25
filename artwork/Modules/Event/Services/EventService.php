@@ -20,7 +20,7 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;

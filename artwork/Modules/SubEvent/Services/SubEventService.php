@@ -1,9 +1,9 @@
 <?php
 
-namespace Artwork\Modules\SubEvents\Services;
+namespace Artwork\Modules\SubEvent\Services;
 
 use Artwork\Modules\SubEvent\Models\SubEvent;
-use Artwork\Modules\SubEvents\Repositories\SubEventRepository;
+use Artwork\Modules\SubEvent\Repositories\SubEventRepository;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class SubEventService

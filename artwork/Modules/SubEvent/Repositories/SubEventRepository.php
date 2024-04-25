@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\SubEvents\Repositories;
+namespace Artwork\Modules\SubEvent\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 

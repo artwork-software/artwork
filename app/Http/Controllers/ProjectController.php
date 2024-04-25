@@ -89,7 +89,7 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;

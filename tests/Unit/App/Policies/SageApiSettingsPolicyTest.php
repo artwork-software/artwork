@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\SageApiSettings\Policies\SageApiSettingsPolicy;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
@@ -15,7 +15,7 @@ class SageApiSettingsPolicyTest extends TestCase
     public function testView(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::SETTINGS_UPDATE->value);
 
         $policy = new SageApiSettingsPolicy();
 
@@ -25,7 +25,7 @@ class SageApiSettingsPolicyTest extends TestCase
     public function testUpdateInterfaceSettings(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::SETTINGS_UPDATE->value);
 
         $policy = new SageApiSettingsPolicy();
 

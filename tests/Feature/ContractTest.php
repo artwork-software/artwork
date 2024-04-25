@@ -13,7 +13,7 @@ beforeEach(function (): void {
 
 test('contracts can be created with the correct variables', function (): void {
 
-    $this->user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($this->user);
 
@@ -34,7 +34,7 @@ test('contracts can be created with the correct variables', function (): void {
 
 test('contracts can be updated', function (): void {
 
-    $this->user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
     $this->project->contracts()->save($this->contract);
 
     $this->actingAs($this->user);
@@ -57,7 +57,7 @@ test('contracts can be updated', function (): void {
 
 test('contracts can be deleted', function (): void {
 
-    $this->user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
     $this->project->contracts()->save($this->contract);
 
     $this->actingAs($this->user);

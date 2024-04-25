@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use App\Enums\NotificationConstEnum;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -96,7 +96,7 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
-            NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION
+            NotificationEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION
         );
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setModelId($moneySource->id);

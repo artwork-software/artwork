@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use App\Enums\NotificationFrequency;
-use App\Enums\NotificationGroupEnum;
 use App\Mail\NotificationSummary;
+use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
+use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -19,8 +19,8 @@ class SendNotificationsEmailSummariesCommand extends Command
     {
         $frequency = $this->argument('frequency');
 
-        if (is_null(NotificationFrequency::tryFrom($frequency))) {
-            $this->error('Argument "frequency" must be type of ' . NotificationFrequency::class);
+        if (is_null(NotificationFrequencyEnum::tryFrom($frequency))) {
+            $this->error('Argument "frequency" must be type of ' . NotificationFrequencyEnum::class);
 
             return 1;
         }

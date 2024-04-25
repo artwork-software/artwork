@@ -6,7 +6,7 @@ use Artwork\Modules\User\Models\User;
 beforeEach(function() {
 
     $this->auth_user = User::factory()->create();
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 });
 

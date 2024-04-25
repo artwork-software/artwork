@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,8 +24,8 @@ class CanViewProject
         $project = $request->route('project');
 
         if (
-            Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
-            || (Auth::user()->hasPermissionTo(PermissionNameEnum::PROJECT_VIEW->value)
+            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || (Auth::user()->hasPermissionTo(PermissionEnum::PROJECT_VIEW->value)
                 || $project->users()->where('users.id', Auth::id())->first())
         ) {
             return $next($request);

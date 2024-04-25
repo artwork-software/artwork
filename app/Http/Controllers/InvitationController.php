@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -147,7 +147,7 @@ class InvitationController extends Controller
         /** @var User $user */
         $user = User::create($request->userData());
 
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,

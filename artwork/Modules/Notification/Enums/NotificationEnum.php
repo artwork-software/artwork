@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Notification\Enums;
 
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
@@ -13,7 +13,7 @@ use App\Notifications\ShiftNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
 
-enum NotificationConstEnum: string
+enum NotificationEnum: string
 {
     case NOTIFICATION_ROOM_REQUEST = 'ROOM_REQUEST';
 

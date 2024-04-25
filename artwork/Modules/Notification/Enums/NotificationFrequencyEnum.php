@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Notification\Enums;
 
-enum NotificationFrequency: string
+enum NotificationFrequencyEnum: string
 {
     case IMMEDIATELY = 'immediately';
     case DAILY       = 'daily';

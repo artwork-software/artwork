@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Budget\Enums;
 
-enum BudgetTypesEnum : string
+enum BudgetTypeEnum : string
 {
     case BUDGET_TYPE_COST = 'BUDGET_TYPE_COST';
     case BUDGET_TYPE_EARNING = 'BUDGET_TYPE_EARNING';

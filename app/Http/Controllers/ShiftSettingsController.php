@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ class ShiftSettingsController extends Controller
         return Inertia::render('Settings/ShiftSettings', [
             'crafts' => Craft::all(),
             'eventTypes' => EventType::all(),
-            'usersWithPermission' => User::permission(PermissionNameEnum::SHIFT_PLANNER->value)->get(),
+            'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get(),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
         ]);
     }

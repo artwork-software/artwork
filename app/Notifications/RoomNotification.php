@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
-use App\Enums\NotificationFrequency;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -43,7 +43,7 @@ class RoomNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
+        if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequencyEnum::IMMEDIATELY) {
             $channels[] = 'mail';
         }
 

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
@@ -15,9 +13,11 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
@@ -290,14 +290,14 @@ class UserController extends Controller
 
     public function updateUserDetails(Request $request, User $user): RedirectResponse
     {
-        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
         $user->update(
             $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
         );
 
-        if (Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
+        if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
             $user->departments()->sync(
                 collect($request->departments)
                     ->map(function ($department) {
@@ -314,7 +314,7 @@ class UserController extends Controller
     public function updateUserPermissionsAndRoles(Request $request, User $user): RedirectResponse
     {
         //only add permissions which are also existing to the array which gets synced with user
-        $availablePermissions = PermissionNameEnum::cases();
+        $availablePermissions = PermissionEnum::cases();
         $permissionsToGrant = [];
         foreach ($request->permissions as $permissionToGrant) {
             foreach ($availablePermissions as $availablePermission) {
@@ -325,7 +325,7 @@ class UserController extends Controller
         }
 
         //only add roles which are also existing to the array which gets synced with user
-        $availableRoles = RoleNameEnum::cases();
+        $availableRoles = RoleEnum::cases();
         $rolesToGrant = [];
         foreach ($request->roles as $roleToGrant) {
             foreach ($availableRoles as $availableRole) {

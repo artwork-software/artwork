@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Project\Policies;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -28,12 +28,12 @@ class ProjectPolicy
         return $user->projects->contains($project->id) ||
             $project->users->contains($user->id) ||
             $isTeamMember ||
-            $user->can(PermissionNameEnum::PROJECT_VIEW->value);
+            $user->can(PermissionEnum::PROJECT_VIEW->value);
     }
 
     public function create(User $user): bool
     {
-        return $user->can(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value);
+        return $user->can(PermissionEnum::ADD_EDIT_OWN_PROJECT->value);
     }
 
     public function createProperties(User $user, Project $project): bool
@@ -74,7 +74,7 @@ class ProjectPolicy
             }
         }
 
-        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) || $isCreator;
+        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) || $isCreator;
     }
 
     public function delete(User $user, Project $project): bool
@@ -85,6 +85,6 @@ class ProjectPolicy
                 $isCreator = true;
             }
         }
-        return $user->can(PermissionNameEnum::PROJECT_DELETE->value) || $isCreator;
+        return $user->can(PermissionEnum::PROJECT_DELETE->value) || $isCreator;
     }
 }

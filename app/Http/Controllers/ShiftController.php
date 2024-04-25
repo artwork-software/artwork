@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Enums\RoleNameEnum;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -124,13 +124,13 @@ class ShiftController extends Controller
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
             $this->notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
 
             $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
             $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
             $this->notificationService->setEventId($shift->event()->first()->id);
             $this->notificationService->setShiftId($shift->id);
-            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
+            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
                 $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
@@ -232,7 +232,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
 
             foreach ($shift->users()->get() as $user) {
                 $notificationTitle = __(
@@ -354,7 +354,7 @@ class ShiftController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationTo($user);
@@ -367,7 +367,7 @@ class ShiftController extends Controller
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CONFLICT);
         $this->notificationService->setButtons(['see_shift']);
         $this->notificationService->setShiftId($shift->id);
     }
@@ -612,7 +612,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_CHANGED);
 
             foreach ($shift->users()->get() as $user) {
                 if (Auth::id() !== $user->id) {

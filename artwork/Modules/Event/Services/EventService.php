@@ -2,12 +2,12 @@
 
 namespace Artwork\Modules\Event\Services;
 
-use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
@@ -296,7 +296,7 @@ readonly class EventService
 
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
-        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
 
         foreach ($event->project->managerUsers as $projectManager) {
             if ($projectManager->id === $event->creator->id) {
@@ -351,7 +351,7 @@ readonly class EventService
     ): void {
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
-        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
         $notificationTitle = __('notification.event.deleted', [], $event->creator->language);
         $notificationService->setTitle($notificationTitle);
         $notificationService->setBroadcastMessage([

@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,9 +24,9 @@ class CanEditMoneySource
         $project = $request->route('project');
 
         if (
-            Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
-            || Auth::user()->hasPermissionTo(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value)
-            || Auth::user()->hasPermissionTo(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value)
+            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || Auth::user()->hasPermissionTo(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value)
+            || Auth::user()->hasPermissionTo(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value)
         ) {
             return $next($request);
         }

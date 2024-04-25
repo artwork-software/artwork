@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Budget\Services;
 
-use App\Enums\BudgetTypesEnum;
+use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -78,19 +78,19 @@ readonly class BudgetService
 
             $costMainPosition = $mainPositionService->createMainPosition(
                 table: $table,
-                budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_COST,
+                budgetTypesEnum: BudgetTypeEnum::BUDGET_TYPE_COST,
                 name: 'Hauptpostion',
                 position: $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)
+                    ->where('type', BudgetTypeEnum::BUDGET_TYPE_COST)
                     ->max('position') + 1
             );
 
             $earningMainPosition = $mainPositionService->createMainPosition(
                 table: $table,
-                budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_EARNING,
+                budgetTypesEnum: BudgetTypeEnum::BUDGET_TYPE_EARNING,
                 name: 'Hauptpostion',
                 position: $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)
+                    ->where('type', BudgetTypeEnum::BUDGET_TYPE_EARNING)
                     ->max('position') + 1
             );
 

@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Scheduling\Services;
 
-use App\Enums\NotificationConstEnum;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -81,7 +81,7 @@ readonly class SchedulingService
                     $notificationService->setTitle($notificationTitle);
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_NEW_TASK);
+                    $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_NEW_TASK);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setNotificationTo($user);
                     $notificationService->createNotification();
@@ -101,7 +101,7 @@ readonly class SchedulingService
                     $notificationService->setTitle($notificationTitle);
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
-                    $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
+                    $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PROJECT);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setShowHistory(true);
                     $notificationService->setHistoryType('project');
@@ -126,7 +126,7 @@ readonly class SchedulingService
                     $notificationService->setIcon('blue');
                     $notificationService->setPriority(1);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_CHANGED);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setTaskId($task->id);
                     $notificationService->setButtons(['showInTasks']);
@@ -149,7 +149,7 @@ readonly class SchedulingService
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setRoomId($room->id);
                     $notificationService->setNotificationTo($user);
@@ -202,7 +202,7 @@ readonly class SchedulingService
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_EVENT_CHANGED);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setShowHistory(true);
                     $notificationService->setHistoryType('event');
@@ -228,7 +228,7 @@ readonly class SchedulingService
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setProjectId($project->id);
                     $notificationService->setShowHistory(true);
@@ -253,7 +253,7 @@ readonly class SchedulingService
                     $notificationService->setIcon('green');
                     $notificationService->setPriority(3);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setShowHistory(true);
                     $notificationService->setHistoryType('vacations');

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Category\Policies\CategoryPolicy;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
@@ -12,7 +12,7 @@ class CategoryPolicyTest extends TestCase
     public function testViewAny(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_SETTINGS_UPDATE->value);
 
         $policy = new CategoryPolicy();
 
@@ -22,7 +22,7 @@ class CategoryPolicyTest extends TestCase
     public function testCreate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_SETTINGS_UPDATE->value);
 
         $policy = new CategoryPolicy();
 
@@ -32,7 +32,7 @@ class CategoryPolicyTest extends TestCase
     public function testUpdate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_SETTINGS_UPDATE->value);
 
         $policy = new CategoryPolicy();
 
@@ -42,7 +42,7 @@ class CategoryPolicyTest extends TestCase
     public function testDelete(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_SETTINGS_UPDATE->value);
 
         $policy = new CategoryPolicy();
 

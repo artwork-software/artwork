@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\ProjectTab\Enums;
 
-enum ComponentPermissionNameEnum: string
+enum ProjectTabComponentPermissionEnum: string
 {
     case PERMISSION_TYPE_ALL_SEE_AND_EDIT = 'allSeeAndEdit';
 

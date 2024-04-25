@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Policies\UserPolicy;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +47,7 @@ class UserPolicyTest extends TestCase
     public function testUpdateWorkProfile(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new UserPolicy();
 
@@ -57,7 +57,7 @@ class UserPolicyTest extends TestCase
     public function testUpdateTerms(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new UserPolicy();
 

@@ -25,7 +25,7 @@ beforeEach(function () {
         'checklist_template_id' => $this->checklist_template->id,
         'name' => 'TaskTemplateTest'
     ]);
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
     $this->actingAs($this->auth_user);
 });
 

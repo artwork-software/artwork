@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +22,8 @@ class CanEditProject
         $project = $request->route('project');
 
         if (
-            Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
-            || Auth::user()->hasPermissionTo(PermissionNameEnum::WRITE_PROJECTS->value)
+            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || Auth::user()->hasPermissionTo(PermissionEnum::WRITE_PROJECTS->value)
         ) {
             return $next($request);
         }

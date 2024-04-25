@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use App\Enums\RoleNameEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -21,8 +21,8 @@ abstract class TestCase extends BaseTestCase
     public function adminUser(User $user = null): User
     {
         $user = $user ?? User::factory()->create();
-        Role::firstOrCreate(['name' => RoleNameEnum::ARTWORK_ADMIN->value]);
-        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        Role::firstOrCreate(['name' => RoleEnum::ARTWORK_ADMIN->value]);
+        $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
 
         return $user;
     }

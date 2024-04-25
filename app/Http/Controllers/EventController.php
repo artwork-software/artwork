@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -29,6 +28,7 @@ use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -571,7 +571,7 @@ class EventController extends Controller
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
 
             $userIdHasGetNotification = [];
             // Loop over the shifts and set is_committed to true
@@ -701,7 +701,7 @@ class EventController extends Controller
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService->setEventId($conflict->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationTo($user);
@@ -751,7 +751,7 @@ class EventController extends Controller
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService->setEventId($conflict->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationTo($user);
@@ -769,7 +769,7 @@ class EventController extends Controller
         $this->notificationService->setEventId($collision['event']->id);
         $this->notificationService->setProjectId($collision['event']->project_id);
         $this->notificationService->setRoomId($collision['event']->room_id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONFLICT);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_CONFLICT);
 
 
         if (!empty($collision['created_by'])) {
@@ -861,7 +861,7 @@ class EventController extends Controller
         $this->notificationService->setPriority(1);
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setRoomId($room->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
 
         $this->notificationService->setButtons(['accept', 'decline']);
         if (!empty($admins)) {
@@ -992,7 +992,7 @@ class EventController extends Controller
 
                 $this->notificationService->setIcon('blue');
                 $this->notificationService->setPriority(1);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+                $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
 
                 $this->notificationService->setRoomId($room->id);
                 $this->notificationService->setEventId($event->id);
@@ -1108,7 +1108,7 @@ class EventController extends Controller
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+            $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
             $this->notificationService->setRoomId($event->room_id);
             $this->notificationService->setEventId($event->id);
 
@@ -1372,7 +1372,7 @@ class EventController extends Controller
 
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
+        $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_REQUEST);
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setButtons(['accept', 'decline']);
@@ -1518,7 +1518,7 @@ class EventController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
@@ -1652,7 +1652,7 @@ class EventController extends Controller
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
             $this->notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
             $this->notificationService->setRoomId($event->room_id);
             $this->notificationService->setEventId($event->id);
             $this->notificationService->setProjectId($event->project_id);
@@ -1770,7 +1770,7 @@ class EventController extends Controller
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
         $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);

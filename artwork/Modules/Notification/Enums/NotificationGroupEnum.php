@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Notification\Enums;
 
 enum NotificationGroupEnum: string
 {

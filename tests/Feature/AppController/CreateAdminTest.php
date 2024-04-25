@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\AppController;
 
-use App\Enums\RoleNameEnum;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -14,7 +14,7 @@ class CreateAdminTest extends TestCase
 
     public function testAbortsInvalidTokens()
     {
-        Role::firstOrCreate(['name' => RoleNameEnum::ARTWORK_ADMIN->value]);
+        Role::firstOrCreate(['name' => RoleEnum::ARTWORK_ADMIN->value]);
 
         $this->post('/setup', [
             'first_name' => 'Benjamin',
@@ -35,7 +35,7 @@ class CreateAdminTest extends TestCase
         /** @var User $user */
         $user = User::where('email', 'admin@example.com',)->first();
 
-        $this->assertTrue($user->refresh()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value));
+        $this->assertTrue($user->refresh()->hasRole(RoleEnum::ARTWORK_ADMIN->value));
         $this->assertTrue(app(GeneralSettings::class)->setup_finished);
     }
 }

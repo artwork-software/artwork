@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Permission\Enums;
 
-enum PermissionNameEnum : string
+enum PermissionEnum : string
 {
     case PROJECT_MANAGEMENT = 'management projects';
     case PROJECT_DELETE = 'delete projects';

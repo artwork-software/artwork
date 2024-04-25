@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,8 +22,8 @@ class CanViewRoom
         $room = $request->route('room');
 
         if (
-            Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
-            || Auth::user()->hasPermissionTo(PermissionNameEnum::ROOM_UPDATE->value)
+            Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value)
+            || Auth::user()->hasPermissionTo(PermissionEnum::ROOM_UPDATE->value)
         ) {
             return $next($request);
         }

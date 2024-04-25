@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\Role\Enums;
 
-enum RoleNameEnum: string
+enum RoleEnum: string
 {
     case ARTWORK_ADMIN = 'artwork admin';
 

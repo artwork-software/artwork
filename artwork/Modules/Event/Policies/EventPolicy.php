@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Event\Policies;
 
-use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -13,12 +13,12 @@ class EventPolicy
 
     public function create(User $user): bool
     {
-        return $user->can([PermissionNameEnum::EVENT_REQUEST->value]);
+        return $user->can([PermissionEnum::EVENT_REQUEST->value]);
     }
 
     public function update(User $user, Event $event): bool
     {
-        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||
             $event->room?->users()
                 ->wherePivot('is_admin', true)
                 ->where('user_id', $user->id)
@@ -28,7 +28,7 @@ class EventPolicy
 
     public function delete(User $user, Event $event): bool
     {
-        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+        return $user->can(PermissionEnum::PROJECT_MANAGEMENT->value) ||
             $event->room?->users()
                 ->wherePivot('is_admin', true)
                 ->where('user_id', $user->id)

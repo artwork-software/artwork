@@ -2,8 +2,8 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use App\Enums\NotificationConstEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -52,7 +52,7 @@ class SendDeadlineNotificationsCommand extends Command
                         $notificationService->setIcon('red');
                         $notificationService->setPriority(2);
                         $notificationService
-                            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
                         $notificationService->setBroadcastMessage($broadcastMessage);
                         $notificationService->setTaskId($privateChecklistTask->id);
                         $notificationService->setNotificationTo($user);
@@ -73,7 +73,7 @@ class SendDeadlineNotificationsCommand extends Command
                         $notificationService->setIcon('red');
                         $notificationService->setPriority(2);
                         $notificationService
-                            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                            ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
                         $notificationService->setBroadcastMessage($broadcastMessage);
                         $notificationService->setTaskId($privateChecklistTask->id);
                         $notificationService->setNotificationTo($user);
@@ -133,7 +133,7 @@ class SendDeadlineNotificationsCommand extends Command
                     $notificationService->setIcon('red');
                     $notificationService->setPriority(2);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setTaskId($task->id);
                     $notificationService->setNotificationTo($user);
@@ -154,7 +154,7 @@ class SendDeadlineNotificationsCommand extends Command
                     $notificationService->setIcon('red');
                     $notificationService->setPriority(2);
                     $notificationService
-                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TASK_REMINDER);
                     $notificationService->setBroadcastMessage($broadcastMessage);
                     $notificationService->setTaskId($task->id);
                     $notificationService->setNotificationTo($user);

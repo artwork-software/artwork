@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Department\Services;
 
-use App\Enums\NotificationConstEnum;
 use App\Events\DepartmentUpdated;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\DepartmentShowResource;
@@ -11,6 +10,7 @@ use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Repositories\DepartmentRepository;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
@@ -159,7 +159,7 @@ readonly class DepartmentService
         $notificationService->setIcon($icon);
         $notificationService->setPriority($priority);
         $notificationService->setDepartmentId($departmentId);
-        $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TEAM);
+        $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_TEAM);
         $notificationService->setBroadcastMessage(
             [
                 'id' => rand(10, 1000000),

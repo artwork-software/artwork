@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Enums;
+namespace Artwork\Modules\ProjectTab\Enums;
 
-enum TabComponentEnums: string
+enum ProjectTabComponentEnum: string
 {
     // custom tab component types
     case CHECKBOX = 'Checkbox';

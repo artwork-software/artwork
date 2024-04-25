@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Illuminate\Support\Collection;
 

@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Notification\Models;
 
-use App\Enums\NotificationConstEnum;
-use App\Models\User;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\User\Models\User;
 
 class Notification
 {
@@ -13,7 +13,7 @@ class Notification
 
     public array|null $description = [];
 
-    public ?NotificationConstEnum $notificationConstEnum = null;
+    public ?NotificationEnum $notificationConstEnum = null;
 
     public string $icon = 'green';
 
@@ -74,12 +74,12 @@ class Notification
         $this->description = $description;
     }
 
-    public function getNotificationConstEnum(): ?NotificationConstEnum
+    public function getNotificationConstEnum(): ?NotificationEnum
     {
         return $this->notificationConstEnum;
     }
 
-    public function setNotificationConstEnum(?NotificationConstEnum $notificationConstEnum): void
+    public function setNotificationConstEnum(?NotificationEnum $notificationConstEnum): void
     {
         $this->notificationConstEnum = $notificationConstEnum;
     }

@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Task;
 use Artwork\Modules\Project\Models\Project;
-use App\Models\User;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ContractResource extends JsonResource

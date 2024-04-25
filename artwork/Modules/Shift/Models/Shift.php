@@ -3,13 +3,13 @@
 namespace Artwork\Modules\Shift\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Casts\TimeWithoutSeconds;
-use App\Models\Freelancer;
-use App\Models\ServiceProvider;
-use App\Models\User;
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;

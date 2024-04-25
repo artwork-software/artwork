@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Illuminate\Database\Eloquent\Collection;
 
-class SageNotAssignedDataRepository extends BaseRepository
+readonly class SageNotAssignedDataRepository extends BaseRepository
 {
     public function getTrashed(): Collection
     {

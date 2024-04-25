@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\ProjectTab\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Pivot;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ComponentUser extends Pivot

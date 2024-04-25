@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\EventType;
-use App\Models\User;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;

@@ -5,7 +5,7 @@ namespace Artwork\Modules\Shift\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\ShiftUser;
 
-class ShiftUserRepository extends BaseRepository
+readonly class ShiftUserRepository extends BaseRepository
 {
     public function createForShift(
         int $shiftId,

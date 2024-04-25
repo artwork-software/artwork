@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\SageApiSettings\Services;
 
-use App\Sage100\Sage100;
+use Artwork\Modules\Sage100\Clients\Sage100Client;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Repositories\SageApiSettingsRepository;
@@ -44,7 +44,7 @@ readonly class SageApiSettingsService
 
     public function testConnection(): bool
     {
-        return app(Sage100::class)->testConnection();
+        return app(Sage100Client::class)->testConnection();
     }
 
     public function updateBookingDate(Carbon $carbon): void

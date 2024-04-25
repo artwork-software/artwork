@@ -38,8 +38,8 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
-import Permissions from "@/mixins/Permissions.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',

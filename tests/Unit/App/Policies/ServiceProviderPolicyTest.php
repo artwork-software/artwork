@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
-use App\Policies\ServiceProviderPolicy;
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\ServiceProvider\Policies\ServiceProviderPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ServiceProviderPolicyTest extends TestCase
@@ -12,7 +12,7 @@ class ServiceProviderPolicyTest extends TestCase
     public function testUpdateWorkProfile(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new ServiceProviderPolicy();
 
@@ -22,7 +22,7 @@ class ServiceProviderPolicyTest extends TestCase
     public function testUpdateTerms(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::MA_MANAGER->value);
+        $user->givePermissionTo(PermissionEnum::MA_MANAGER->value);
 
         $policy = new ServiceProviderPolicy();
 

@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MoneySource;
-use App\Models\MoneySourceTask;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class MoneySourceTaskController extends Controller
 {

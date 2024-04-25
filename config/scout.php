@@ -133,7 +133,7 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY', null),
         'settings' => [
-            \App\Models\MoneySource::class => [
+            \Artwork\Modules\MoneySource\Models\MoneySource::class => [
                 'updateFilterableAttributes' => ['is_group'],
             ],
         ],

@@ -1,7 +1,7 @@
 <script>
 import { Menu, MenuButton, MenuItem, MenuItems,Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from '@headlessui/vue'
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 export default {
     name: "DropDown",
     mixins: [IconLib],

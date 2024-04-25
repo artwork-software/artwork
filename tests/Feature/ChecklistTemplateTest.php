@@ -1,11 +1,11 @@
 <?php
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\ChecklistTemplate;
-use App\Models\Task;
-use App\Models\TaskTemplate;
-use App\Models\User;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -25,7 +25,7 @@ beforeEach(function () {
         'checklist_template_id' => $this->checklist_template->id,
         'name' => 'TaskTemplateTest'
     ]);
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
     $this->actingAs($this->auth_user);
 });
 

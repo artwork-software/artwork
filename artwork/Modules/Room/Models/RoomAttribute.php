@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Room\Models;
 
-use App\Models\RoomRoomAttributeMapping;
+use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

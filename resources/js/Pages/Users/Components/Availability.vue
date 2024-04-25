@@ -38,7 +38,7 @@ import {defineComponent} from 'vue'
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
 import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 import TemporarilyHired from "@/Pages/Users/Components/TemporarilyHired.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import dayjs from "dayjs";
 
 export default defineComponent({

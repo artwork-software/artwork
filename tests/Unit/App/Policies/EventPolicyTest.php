@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
 use Artwork\Modules\Event\Models\Event;
-use App\Policies\EventPolicy;
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Event\Policies\EventPolicy;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class EventPolicyTest extends TestCase
@@ -13,7 +13,7 @@ class EventPolicyTest extends TestCase
     public function testCreate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::EVENT_REQUEST->value);
+        $user->givePermissionTo(PermissionEnum::EVENT_REQUEST->value);
 
         $policy = new EventPolicy();
 
@@ -23,7 +23,7 @@ class EventPolicyTest extends TestCase
     public function testUpdate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_MANAGEMENT->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value);
         $event = Event::factory()->create(['user_id' => $user->id]);
 
         $policy = new EventPolicy();
@@ -34,7 +34,7 @@ class EventPolicyTest extends TestCase
     public function testDelete(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::PROJECT_MANAGEMENT->value);
+        $user->givePermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value);
         $event = Event::factory()->create(['user_id' => $user->id]);
 
         $policy = new EventPolicy();

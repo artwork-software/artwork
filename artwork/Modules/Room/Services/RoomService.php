@@ -2,17 +2,16 @@
 
 namespace Artwork\Modules\Room\Services;
 
-use App\Builders\EventBuilder;
-use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
-use App\Models\User;
-use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -363,7 +362,7 @@ readonly class RoomService
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setIcon('green');
                 $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();
@@ -395,7 +394,7 @@ readonly class RoomService
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setIcon('red');
                 $notificationService->setPriority(2);
-                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();
@@ -461,11 +460,11 @@ readonly class RoomService
                         ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
                 });
             })
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
+            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
+            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(EventBuilder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
+                fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
                     ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
                     ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
                     ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
@@ -571,11 +570,11 @@ readonly class RoomService
             })
             // Weitere Bedingungen und Filter wie vorher
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
+            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
+            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(EventBuilder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
+                fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
 
                     ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('id', $roomIds))
                     ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
@@ -596,10 +595,10 @@ readonly class RoomService
                         });
                 });
             })
-            ->unless(!$hasAudience, fn(EventBuilder $builder) => $builder->where('audience', true))
-            ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
-            ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))
-            ->unless(!$isNotLoud, fn(EventBuilder $builder) => $builder->where('is_loud', false))
+            ->unless(!$hasAudience, fn(Builder $builder) => $builder->where('audience', true))
+            ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
+            ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
+            ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
                 foreach ($event->shifts as $shift) {
                     // Berechne den Zeitraum für jede Schicht innerhalb der gewünschten Periode

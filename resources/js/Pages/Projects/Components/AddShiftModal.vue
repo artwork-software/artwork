@@ -222,7 +222,7 @@
 <script>
 import {defineComponent, reactive} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import {
     Dialog,
     DialogPanel,

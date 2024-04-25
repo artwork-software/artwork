@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\EventType\Repositories;
 
-use App\Models\EventType;
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\EventType\Models\EventType;
 use Illuminate\Database\Eloquent\Collection;
 
-class EventTypeRepository extends BaseRepository
+readonly class EventTypeRepository extends BaseRepository
 {
     public function getAll(): Collection
     {

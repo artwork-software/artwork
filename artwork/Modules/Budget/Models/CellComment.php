@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use Artwork\Modules\User\Models\BelongsToUser;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\User\Models\Traits\BelongsToUser;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**

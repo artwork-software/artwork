@@ -2,8 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Craft;
-use Illuminate\Http\Request;
+use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ServiceProviderShowResource extends JsonResource

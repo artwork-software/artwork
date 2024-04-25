@@ -162,9 +162,9 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     mixins: [Permissions, IconLib],

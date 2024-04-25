@@ -1,6 +1,6 @@
 <script>
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import {
     Dialog,
     DialogPanel,

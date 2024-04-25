@@ -16,7 +16,7 @@
 import {ChevronRightIcon} from "@heroicons/vue/solid";
 import ProjectHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],

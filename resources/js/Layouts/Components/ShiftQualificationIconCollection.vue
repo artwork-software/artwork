@@ -28,7 +28,7 @@ import {
     EyeIcon,
     FilmIcon
 } from "@heroicons/vue/outline";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "ShiftQualificationIconCollection",

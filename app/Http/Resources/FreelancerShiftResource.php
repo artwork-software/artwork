@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\PermissionNameEnum;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 

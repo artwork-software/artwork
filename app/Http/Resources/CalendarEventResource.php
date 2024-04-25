@@ -2,8 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\UserCalendarSettings;
-use Carbon\Carbon;
+use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

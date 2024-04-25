@@ -50,7 +50,7 @@
 
 <script>
 
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 
 import AppLayout from '@/Layouts/AppLayout.vue'

@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Policies;
 
-use App\Models\User;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Models\Project;
-use App\Policies\ProjectPolicy;
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Project\Policies\ProjectPolicy;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ProjectPolicyTest extends TestCase
@@ -30,7 +30,7 @@ class ProjectPolicyTest extends TestCase
     public function testCreate(): void
     {
         $user = User::factory()->create();
-        $user->givePermissionTo(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value);
+        $user->givePermissionTo(PermissionEnum::ADD_EDIT_OWN_PROJECT->value);
 
         $policy = new ProjectPolicy();
 

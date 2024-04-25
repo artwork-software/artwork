@@ -39,8 +39,8 @@
 <script>
 import {defineComponent} from "vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
 
 export default defineComponent({

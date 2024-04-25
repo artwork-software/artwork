@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

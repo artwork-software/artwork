@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\CollectingSociety;
-use App\Models\CompanyType;
-use App\Models\ContractType;
-use App\Models\Currency;
-use App\Models\Genre;
-use App\Models\Sector;
+use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
+use Artwork\Modules\CompanyType\Models\CompanyType;
+use Artwork\Modules\ContractType\Models\ContractType;
+use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;

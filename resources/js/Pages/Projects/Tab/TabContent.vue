@@ -27,7 +27,7 @@ import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocume
 import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
 import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
 import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
 export default {
     name: "TabContent",

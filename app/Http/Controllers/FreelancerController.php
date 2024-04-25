@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerShowResource;
-use App\Models\Craft;
-use App\Models\EventType;
-use App\Models\Freelancer;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateFreelancerShiftQualificationRequest;

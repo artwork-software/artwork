@@ -2,15 +2,15 @@
 
 namespace Artwork\Modules\ShiftPreset\Models;
 
-use App\Models\EventType;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Searchable;
 
 /**

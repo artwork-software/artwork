@@ -157,10 +157,10 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 
 export default {

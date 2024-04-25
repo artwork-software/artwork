@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MoneySourceCategory;
-use App\Models\MoneySourceCategoryMapping;
+use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
+use Artwork\Modules\MoneySourceCategoryMapping\Models\MoneySourceCategoryMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
-use JetBrains\PhpStorm\NoReturn;
 
 class MoneySourceCategoryController extends Controller
 {

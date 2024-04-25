@@ -2,9 +2,9 @@
 
 namespace Database\Factories\Artwork\Modules\Room\Models;
 
-use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RoomFactory extends Factory

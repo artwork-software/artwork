@@ -238,11 +238,11 @@ import {Link} from "@inertiajs/inertia-vue3";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import InputComponent from "@/Layouts/Components/InputComponent";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     mixins: [Permissions, IconLib],

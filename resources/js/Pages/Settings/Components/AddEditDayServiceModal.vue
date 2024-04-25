@@ -135,9 +135,9 @@ import {
     TransitionChild,
     TransitionRoot
 } from '@headlessui/vue'
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import Label from "@/Jetstream/Label.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {ChevronDownIcon} from "@heroicons/vue/outline";

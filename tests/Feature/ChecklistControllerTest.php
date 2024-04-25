@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\User\Models\User;
 use Tests\TestCase;
 
 class ChecklistControllerTest extends TestCase
@@ -34,7 +34,7 @@ class ChecklistControllerTest extends TestCase
             'assigned_department_ids' => [$department->id]
         ])->assertForbidden();
 
-        $user->givePermissionTo(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+        $user->givePermissionTo(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
 
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
             ->assertFound();

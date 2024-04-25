@@ -63,7 +63,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import SingleComponent from "@/Pages/Settings/ComponentManagement/Components/SingleComponent.vue";
 import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";

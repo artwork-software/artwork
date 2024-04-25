@@ -2,14 +2,13 @@
 
 namespace Tests\Feature\InvitationController;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\Invitation;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Artwork\Modules\Invitation\Models\Invitation;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -65,16 +64,16 @@ class UserInvitationAcceptTest extends TestCase
     public function testUsersCanAcceptTtheInvitation()
     {
         $validPlainToken = 'validToken0123456789';
-        Role::firstOrCreate(['name' => RoleNameEnum::USER->value]);
-        Permission::firstOrCreate(['name' => PermissionNameEnum::SETTINGS_UPDATE->value]);
+        Role::firstOrCreate(['name' => RoleEnum::USER->value]);
+        Permission::firstOrCreate(['name' => PermissionEnum::SETTINGS_UPDATE->value]);
 
         $department = Department::factory()->create();
 
         $invitation = Invitation::factory()->create([
             'email' => 'user@example.com',
             'token' => Hash::make($validPlainToken),
-            'roles' => [RoleNameEnum::USER->value],
-            'permissions' => [PermissionNameEnum::SETTINGS_UPDATE->value]
+            'roles' => [RoleEnum::USER->value],
+            'permissions' => [PermissionEnum::SETTINGS_UPDATE->value]
         ]);
 
         $department->invitations()->attach($invitation->id);
@@ -108,8 +107,8 @@ class UserInvitationAcceptTest extends TestCase
         ]);
 
         $this->assertTrue(Hash::check($password, $user->password));
-        $this->assertTrue($user->hasRole(RoleNameEnum::USER->value));
-        $this->assertTrue($user->can(PermissionNameEnum::SETTINGS_UPDATE->value));
+        $this->assertTrue($user->hasRole(RoleEnum::USER->value));
+        $this->assertTrue($user->can(PermissionEnum::SETTINGS_UPDATE->value));
         $this->assertModelMissing($invitation);
         $this->assertAuthenticated();
     }

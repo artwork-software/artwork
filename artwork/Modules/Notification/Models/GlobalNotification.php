@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Notification\Models;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

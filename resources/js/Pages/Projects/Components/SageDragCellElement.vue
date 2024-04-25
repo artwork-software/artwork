@@ -1,5 +1,5 @@
 <script>
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "SageDragCellElement",

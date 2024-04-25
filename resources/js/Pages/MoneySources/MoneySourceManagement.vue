@@ -425,7 +425,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import {IconPin} from '@tabler/icons-vue';
@@ -436,8 +436,8 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import CurrencyFloatToStringFormatter from "@/mixins/CurrencyFloatToStringFormatter.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 
 export default defineComponent({

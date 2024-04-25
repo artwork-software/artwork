@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UploadBrandingGraphicRequest;
+use Artwork\Modules\GeneralSettings\Http\Requests\UploadBrandingGraphicRequest;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;

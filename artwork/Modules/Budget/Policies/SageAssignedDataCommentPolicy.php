@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Budget\Policies;
 
-use App\Models\User;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SageAssignedDataCommentPolicy

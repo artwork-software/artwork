@@ -46,7 +46,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import {ChevronDownIcon, ChevronUpIcon, SearchIcon, XIcon} from "@heroicons/vue/solid";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import BudgetSettingsHeader from "@/Pages/BudgetSettings/BudgetSettingsHeader.vue";
 
 

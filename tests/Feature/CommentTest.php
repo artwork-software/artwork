@@ -1,12 +1,11 @@
 <?php
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\Project\Models\Comment;
-use App\Models\Task;
-use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
-use Inertia\Testing\AssertableInertia as Assert;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Models\User;
 
 beforeEach(function (): void {
 

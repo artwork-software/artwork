@@ -119,7 +119,7 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
-import Permissions from "@/mixins/Permissions.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {

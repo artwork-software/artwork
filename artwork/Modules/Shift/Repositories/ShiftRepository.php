@@ -10,7 +10,7 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-class ShiftRepository extends BaseRepository
+readonly class ShiftRepository extends BaseRepository
 {
     public function getById(int $shiftId): Shift|null
     {

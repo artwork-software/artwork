@@ -39,7 +39,7 @@ import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import {XIcon} from "@heroicons/vue/solid";
 import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
 import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     name: "TimeLineShiftsComponent",

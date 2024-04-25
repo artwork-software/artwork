@@ -3,7 +3,7 @@ import draggable from "vuedraggable";
 import DropNewComponent from "@/Pages/Settings/Components/DropNewComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import IconLib from "@/mixins/IconLib.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";

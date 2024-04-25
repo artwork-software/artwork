@@ -2,15 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Enums\NotificationConstEnum;
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\Craft;
-use App\Models\User;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -78,7 +78,7 @@ class AuthUserSeeder extends Seeder
             $user->assignedCrafts()->sync(Craft::all()->pluck('id'));
         }
 
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
@@ -90,7 +90,7 @@ class AuthUserSeeder extends Seeder
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();
-        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
 
         $user = User::create([
             'first_name' => 'Lisa',
@@ -116,16 +116,16 @@ class AuthUserSeeder extends Seeder
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();
         $user->givePermissionTo([
-            PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
+            PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
             //PermissionNameEnum::PROJECT_VIEW->value,
-            PermissionNameEnum::EVENT_REQUEST->value,
-            PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
-            PermissionNameEnum::SHIFT_PLANNER->value,
-            PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value
+            PermissionEnum::EVENT_REQUEST->value,
+            PermissionEnum::CONTRACT_SEE_DOWNLOAD->value,
+            PermissionEnum::SHIFT_PLANNER->value,
+            PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value
             //PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
         ]);
 
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
@@ -161,11 +161,11 @@ class AuthUserSeeder extends Seeder
                 'shift_qualification_id' => $masterShiftQualificationId
             ])
         );
-        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();
         $user->calendar_settings()->create();
-        foreach (NotificationConstEnum::cases() as $notificationType) {
+        foreach (NotificationEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,

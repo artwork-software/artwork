@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Http\Requests\FileUpload;
-use App\Support\Services\NotificationService;
+use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
@@ -88,7 +88,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
-            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+            NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
 
         $this->notificationService->setProjectId($project->id);
@@ -172,7 +172,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
-            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+            NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
         $this->notificationService->setProjectId($project->id);
 
@@ -233,7 +233,7 @@ class ProjectFileController extends Controller
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(
-            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+            NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
         $this->notificationService->setProjectId($project->id);
 

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MoneySource;
-use App\Models\MoneySourceReminder;
+use Artwork\Modules\MoneySource\Models\MoneySource;
+use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Illuminate\Http\Request;
 
 class MoneySourceReminderController extends Controller

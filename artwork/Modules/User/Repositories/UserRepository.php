@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\User\Repositories;
 
-use App\Models\User;
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Collection;
 
-class UserRepository extends BaseRepository
+readonly class UserRepository extends BaseRepository
 {
     /**
      * @return Collection

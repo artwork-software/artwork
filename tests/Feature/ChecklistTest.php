@@ -1,13 +1,12 @@
 <?php
 
-use App\Models\ChecklistTemplate;
-use App\Models\Task;
-use App\Models\TaskTemplate;
-use App\Models\User;
+use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Checklist\Models\Checklist;
-use Inertia\Testing\AssertableInertia as Assert;
+use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\User\Models\User;
 
 beforeEach(function () {
 
@@ -34,7 +33,7 @@ beforeEach(function () {
         'name' => 'TaskTemplateTest'
     ]);
 
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
 
     $this->actingAs($this->auth_user);
 });

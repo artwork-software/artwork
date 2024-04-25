@@ -1,9 +1,7 @@
 <?php
 
-use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\Facades\Storage;
-
 
 return [
 
@@ -173,14 +171,13 @@ return [
         /*
          * Application Service Providers...
          */
-        App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
-        App\Providers\Sage100ServiceProvider::class,
+        Sage100ClientServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class
     ],

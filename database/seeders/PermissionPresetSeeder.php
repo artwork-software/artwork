@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Repositories\PermissionRepository;
 use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
 use Artwork\Modules\PermissionPresets\Repositories\PermissionPresetRepository;
@@ -28,10 +28,10 @@ class PermissionPresetSeeder extends Seeder
             new PermissionPreset([
                 'name' => 'Standard User',
                 'permissions' => [
-                    $permissionRepository->getIdByName(PermissionNameEnum::PROJECT_VIEW->value),
-                    $permissionRepository->getIdByName(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value),
-                    $permissionRepository->getIdByName(PermissionNameEnum::EVENT_REQUEST->value),
-                    $permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value)
+                    $permissionRepository->getIdByName(PermissionEnum::PROJECT_VIEW->value),
+                    $permissionRepository->getIdByName(PermissionEnum::ADD_EDIT_OWN_PROJECT->value),
+                    $permissionRepository->getIdByName(PermissionEnum::EVENT_REQUEST->value),
+                    $permissionRepository->getIdByName(PermissionEnum::CONTRACT_SEE_DOWNLOAD->value)
                 ]
             ])
         );
@@ -40,9 +40,9 @@ class PermissionPresetSeeder extends Seeder
             new PermissionPreset([
                 'name' => 'Vertrags- & Dokumentenadmin',
                 'permissions' => [
-                    $permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),
+                    $permissionRepository->getIdByName(PermissionEnum::CONTRACT_EDIT_UPLOAD->value),
                     $permissionRepository
-                        ->getIdByName(PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value)
+                        ->getIdByName(PermissionEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value)
                 ]
             ])
         );
@@ -51,9 +51,9 @@ class PermissionPresetSeeder extends Seeder
             new PermissionPreset([
                 'name' => 'Budgetadmin',
                 'permissions' => [
-                    $permissionRepository->getIdByName(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value),
+                    $permissionRepository->getIdByName(PermissionEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value),
                     $permissionRepository
-                        ->getIdByName(PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value)
+                        ->getIdByName(PermissionEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value)
                 ]
             ])
         );
@@ -62,7 +62,7 @@ class PermissionPresetSeeder extends Seeder
             new PermissionPreset([
                 'name' => 'Disponent*in',
                 'permissions' => [
-                    $permissionRepository->getIdByName(PermissionNameEnum::ROOM_UPDATE->value)
+                    $permissionRepository->getIdByName(PermissionEnum::ROOM_UPDATE->value)
                 ]
             ])
         );
@@ -71,8 +71,8 @@ class PermissionPresetSeeder extends Seeder
             new PermissionPreset([
                 'name' => 'Finanzierungsquellenadmin',
                 'permissions' => [
-                    $permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value),
-                    $permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_DELETE->value)
+                    $permissionRepository->getIdByName(PermissionEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value),
+                    $permissionRepository->getIdByName(PermissionEnum::MONEY_SOURCE_EDIT_DELETE->value)
                 ]
             ])
         );

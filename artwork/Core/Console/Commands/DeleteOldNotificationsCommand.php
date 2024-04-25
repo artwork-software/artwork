@@ -9,7 +9,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class DeleteOldNotificationsCommand extends Command
 {
-    protected $signature = 'app:delete-old-notifications';
+    protected $signature = 'artwork:delete-old-notifications';
 
     protected $description = 'Deletes notifications that were archived 7 or more days ago';
 

@@ -9,7 +9,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class RemoveTemporaryRoomsCommand extends Command
 {
-    protected $signature = 'app:remove-temporary-rooms';
+    protected $signature = 'artwork:remove-temporary-rooms';
 
     protected $description = 'This Command delete all rooms where are temporary';
 

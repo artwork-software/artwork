@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class ChangeEventTypeSvgToHexCommand extends Command
 {
 
-    protected $signature = 'app:change-event-type-svg-to-hex';
+    protected $signature = 'artwork:change-event-type-svg-to-hex';
 
     protected $description = 'Change event type svg to hex';
 

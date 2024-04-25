@@ -13,7 +13,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
 {
-    protected $signature = 'app:create-money-source-expiration-reminder-notifications';
+    protected $signature = 'artwork:create-money-source-expiration-reminder-notifications';
 
     protected $description = 'Creates Notifications, based on money_source_reminders-table for money_source_users';
 

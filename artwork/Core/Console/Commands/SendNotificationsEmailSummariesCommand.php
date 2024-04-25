@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Mail;
 
 class SendNotificationsEmailSummariesCommand extends Command
 {
-    protected $signature = 'app:send-notifications-email-summaries {frequency=daily}';
+    protected $signature = 'artwork:send-notifications-email-summaries {frequency=daily}';
 
     protected $description = 'Sends summaries of notifications to all users.';
 

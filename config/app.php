@@ -1,7 +1,7 @@
 <?php
 
+use Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider;
 use Illuminate\Support\Facades\Facade;
-
 
 return [
 
@@ -178,7 +178,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
-        \Artwork\Modules\Sage100\Providers\Sage100ClientServiceProvider::class,
+        Sage100ClientServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Artwork\Modules\Setup\SetupServiceProvider::class
     ],

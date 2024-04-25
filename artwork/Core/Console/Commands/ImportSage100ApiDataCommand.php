@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
 
 class ImportSage100ApiDataCommand extends Command
 {
-    protected $signature = 'app:import-sage100-api-data {count?} {specificDay?}';
+    protected $signature = 'artwork:import-sage100-api-data {count?} {specificDay?}';
 
     protected $description = 'Get data from Sage100 and import it to budget.';
 

@@ -10,7 +10,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class SendScheduledNotificationsCommand extends Command
 {
-    protected $signature = 'app:send-scheduled-notifications';
+    protected $signature = 'artwork:send-scheduled-notifications';
 
     protected $description = 'Send User Task Notification if task older than 30 minutes';
 

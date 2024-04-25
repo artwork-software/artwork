@@ -8,7 +8,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class DeleteExpiredNotificationsForAllCommand extends Command
 {
-    protected $signature = 'app:delete-expired-notifications-for-all';
+    protected $signature = 'artwork:delete-expired-notifications-for-all';
 
     protected $description = 'This command deletes the expired Notification for all';
 

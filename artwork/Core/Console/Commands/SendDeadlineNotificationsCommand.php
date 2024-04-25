@@ -13,7 +13,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class SendDeadlineNotificationsCommand extends Command
 {
-    protected $signature = 'app:send-deadline-notifications';
+    protected $signature = 'artwork:send-deadline-notifications';
 
     protected $description = 'Create Deadline Notification';
 

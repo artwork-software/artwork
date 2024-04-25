@@ -13,7 +13,7 @@ class RemoveExpiredInvitationsCommand extends Command
      * @var string
      */
     //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
-    protected $signature = 'app:remove-expired-invitations';
+    protected $signature = 'artwork:remove-expired-invitations';
 
     /**
      * The console command description.

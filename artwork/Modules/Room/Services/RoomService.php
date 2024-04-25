@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\Room\Services;
 
-use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -362,7 +362,7 @@ readonly class RoomService
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setIcon('green');
                 $notificationService->setPriority(3);
-                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();
@@ -394,7 +394,7 @@ readonly class RoomService
                 $notificationService->setTitle($notificationTitle);
                 $notificationService->setIcon('red');
                 $notificationService->setPriority(2);
-                $notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_CHANGED);
                 $notificationService->setBroadcastMessage($broadcastMessage);
                 $notificationService->setNotificationTo($user);
                 $notificationService->createNotification();

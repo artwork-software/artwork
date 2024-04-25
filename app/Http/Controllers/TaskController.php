@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RoleNameEnum;
-use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -11,7 +9,9 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -64,7 +64,7 @@ class TaskController extends Controller
         $created = false;
         $user = User::where('id', Auth::id())->first();
         $isManager = $user->projects()->find($checklist->project->id)?->pivot?->is_manager === 1;
-        $isAdmin = Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $isAdmin = Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value);
         if ($isAdmin || $isManager) {
             $authorized = true;
             $this->createTask($request);

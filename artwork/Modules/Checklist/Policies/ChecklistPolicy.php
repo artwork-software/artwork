@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Checklist\Policies;
 
-use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -13,7 +13,7 @@ class ChecklistPolicy
 
     public function view(User $user, Checklist $checklist): bool
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
+        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
             $checklist->departments->users->contains($user->id);
     }
 
@@ -24,11 +24,11 @@ class ChecklistPolicy
 
     public function update(User $user): bool
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     public function delete(User $user): bool
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
+        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 }

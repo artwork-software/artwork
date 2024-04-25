@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\SageApiSettings\Policies;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -12,11 +12,11 @@ class SageApiSettingsPolicy
 
     public function view(User $user): bool
     {
-        return $user->can(PermissionNameEnum::SETTINGS_UPDATE->value);
+        return $user->can(PermissionEnum::SETTINGS_UPDATE->value);
     }
 
     public function updateInterfaceSettings(User $user): bool
     {
-        return $user->can(PermissionNameEnum::SETTINGS_UPDATE->value);
+        return $user->can(PermissionEnum::SETTINGS_UPDATE->value);
     }
 }

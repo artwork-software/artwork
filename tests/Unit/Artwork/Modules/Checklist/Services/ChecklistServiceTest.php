@@ -5,7 +5,7 @@ namespace Tests\Unit\Artwork\Modules\Checklist\Services;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\Tasks\Services\TaskService;
+use Artwork\Modules\Task\Services\TaskService;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 

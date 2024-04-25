@@ -2,10 +2,7 @@
 
 namespace Artwork\Modules\Checklist\Http\Requests;
 
-use App\Enums\PermissionNameEnum;
-use App\Http\Requests\EventStoreOrUpdateRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
+use Artwork\Modules\Event\Http\Requests\EventStoreOrUpdateRequest;
 
 class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
 {

@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Event;
 
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventComment\Models\EventComment;
@@ -11,6 +9,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Notifications\RoomNotification;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -29,7 +29,7 @@ use function Pest\Laravel\assertSoftDeleted;
 beforeEach(function () {
 
     $this->auth_user = User::factory()->create();
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
     setupCalendar($this->auth_user);
 });
@@ -406,7 +406,7 @@ test('force delete', function (Event $event) {
     $response = $this->delete(route('events.force', $event->id));
     if ($event->deleted_at !== null) {
         $response->assertRedirect(route('events.trashed'));
-        EventFacade::assertDispatched(\App\Events\OccupancyUpdated::class);
+        EventFacade::assertDispatched(\Artwork\Modules\Event\Events\OccupancyUpdated::class);
         assertDatabaseMissing((new Event())->getTable(), ['id' => $event->id]);
     } else {
         $response->assertNotFound();
@@ -431,7 +431,7 @@ test('restore event', function (Event $event) {
     $response = $this->patch(route('events.restore', $event->id));
     if ($event->deleted_at !== null) {
         $response->assertRedirect(route('events.trashed'));
-        EventFacade::assertDispatched(\App\Events\OccupancyUpdated::class);
+        EventFacade::assertDispatched(\Artwork\Modules\Event\Events\OccupancyUpdated::class);
         assertDatabaseHas((new Event())->getTable(), ['id' => $event->id, 'deleted_at' => null]);
     } else {
         $response->assertNotFound();

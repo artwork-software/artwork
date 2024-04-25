@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ComponentPermissionNameEnum;
-use App\Enums\TabComponentEnums;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
@@ -19,165 +19,165 @@ class DefaultComponentSeeder extends Seeder
         $components = [
             [
                 'name' => 'Project Status',
-                'type' => TabComponentEnums::PROJECT_STATUS,
+                'type' => ProjectTabComponentEnum::PROJECT_STATUS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Group',
-                'type' => TabComponentEnums::PROJECT_GROUP,
+                'type' => ProjectTabComponentEnum::PROJECT_GROUP,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Team',
-                'type' => TabComponentEnums::PROJECT_TEAM,
+                'type' => ProjectTabComponentEnum::PROJECT_TEAM,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Attributes',
-                'type' => TabComponentEnums::PROJECT_ATTRIBUTES,
+                'type' => ProjectTabComponentEnum::PROJECT_ATTRIBUTES,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Calendar',
-                'type' => TabComponentEnums::CALENDAR,
+                'type' => ProjectTabComponentEnum::CALENDAR,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Checklist',
-                'type' => TabComponentEnums::CHECKLIST,
+                'type' => ProjectTabComponentEnum::CHECKLIST,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'All Checklists',
-                'type' => TabComponentEnums::CHECKLIST_ALL,
+                'type' => ProjectTabComponentEnum::CHECKLIST_ALL,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false
             ],
             [
                 'name' => 'Shift Tab',
-                'type' => TabComponentEnums::SHIFT_TAB,
+                'type' => ProjectTabComponentEnum::SHIFT_TAB,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Relevant Dates For Shift Planning',
-                'type' => TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING,
+                'type' => ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Shift Contact Persons',
-                'type' => TabComponentEnums::SHIFT_CONTACT_PERSONS,
+                'type' => ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'General Shift Information',
-                'type' => TabComponentEnums::GENERAL_SHIFT_INFORMATION,
+                'type' => ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Budget',
-                'type' => TabComponentEnums::BUDGET,
+                'type' => ProjectTabComponentEnum::BUDGET,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Budget Deadline',
-                'type' => TabComponentEnums::PROJECT_BUDGET_DEADLINE,
+                'type' => ProjectTabComponentEnum::PROJECT_BUDGET_DEADLINE,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Comment Tab',
-                'type' => TabComponentEnums::COMMENT_TAB,
+                'type' => ProjectTabComponentEnum::COMMENT_TAB,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'All Comment Tab',
-                'type' => TabComponentEnums::COMMENT_ALL_TAB,
+                'type' => ProjectTabComponentEnum::COMMENT_ALL_TAB,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Documents',
-                'type' => TabComponentEnums::PROJECT_DOCUMENTS,
+                'type' => ProjectTabComponentEnum::PROJECT_DOCUMENTS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'All Project Documents',
-                'type' => TabComponentEnums::PROJECT_ALL_DOCUMENTS,
+                'type' => ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Project Title',
-                'type' => TabComponentEnums::PROJECT_TITLE,
+                'type' => ProjectTabComponentEnum::PROJECT_TITLE,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Separator 10 Pixel',
-                'type' => TabComponentEnums::SEPARATOR,
+                'type' => ProjectTabComponentEnum::SEPARATOR,
                 'data' => [
                     'height' => '10',
                     'showLine' => true
                 ],
                 'special' => false,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
                 'name' => 'Budgetinformationen',
-                'type' => TabComponentEnums::BUDGET_INFORMATIONS,
+                'type' => ProjectTabComponentEnum::BUDGET_INFORMATIONS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => true,
-                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]
         ];
 
@@ -202,21 +202,21 @@ class DefaultComponentSeeder extends Seeder
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::PROJECT_TEAM->value)
+                ->where('type', ProjectTabComponentEnum::PROJECT_TEAM->value)
                 ->first()
                 ->id,
             'order' => 1,
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->where('type', ProjectTabComponentEnum::SEPARATOR->value)
                 ->first()
                 ->id,
             'order' => 2,
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::PROJECT_ATTRIBUTES->value)
+                ->where('type', ProjectTabComponentEnum::PROJECT_ATTRIBUTES->value)
                 ->first()
                 ->id,
             'order' => 3,
@@ -232,35 +232,35 @@ class DefaultComponentSeeder extends Seeder
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING->value)
+                ->where('type', ProjectTabComponentEnum::RELEVANT_DATES_FOR_SHIFT_PLANNING->value)
                 ->first()
                 ->id,
             'order' => 1,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->where('type', ProjectTabComponentEnum::SEPARATOR->value)
                 ->first()
                 ->id,
             'order' => 2,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SHIFT_CONTACT_PERSONS->value)
+                ->where('type', ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value)
                 ->first()
                 ->id,
             'order' => 3,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->where('type', ProjectTabComponentEnum::SEPARATOR->value)
                 ->first()
                 ->id,
             'order' => 4,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::GENERAL_SHIFT_INFORMATION->value)
+                ->where('type', ProjectTabComponentEnum::GENERAL_SHIFT_INFORMATION->value)
                 ->first()
                 ->id,
             'order' => 5,
@@ -276,7 +276,7 @@ class DefaultComponentSeeder extends Seeder
         ]);
         $budgetInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::BUDGET_INFORMATIONS)
+                ->where('type', ProjectTabComponentEnum::BUDGET_INFORMATIONS)
                 ->first()
                 ->id,
             'order' => 1,
@@ -293,14 +293,14 @@ class DefaultComponentSeeder extends Seeder
 
         $shortDescriptionLabel = Component::create([
             'name' => 'Short Description',
-            'type' => TabComponentEnums::TITLE,
+            'type' => ProjectTabComponentEnum::TITLE,
             'data' => [
                 'title' => 'Short Description',
                 'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -312,7 +312,7 @@ class DefaultComponentSeeder extends Seeder
         /** @var Component $shortDescriptionComponent */
         $shortDescriptionComponent = Component::create([
             'name' => 'Short Description',
-            'type' => TabComponentEnums::TEXT_AREA,
+            'type' => ProjectTabComponentEnum::TEXT_AREA,
             'data' => [
                 'label' => '',
                 'text' => '',
@@ -320,7 +320,7 @@ class DefaultComponentSeeder extends Seeder
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -331,14 +331,14 @@ class DefaultComponentSeeder extends Seeder
 
         $websiteTextTitleComponent = Component::create([
             'name' => 'Website-Text',
-            'type' => TabComponentEnums::TITLE,
+            'type' => ProjectTabComponentEnum::TITLE,
             'data' => [
                 'title' => 'Website-Text',
                 'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -349,7 +349,7 @@ class DefaultComponentSeeder extends Seeder
 
         $websiteTextComponent = Component::create([
             'name' => 'Website-Text',
-            'type' => TabComponentEnums::TEXT_AREA,
+            'type' => ProjectTabComponentEnum::TEXT_AREA,
             'data' => [
                 'label' => '',
                 'text' => '',
@@ -357,7 +357,7 @@ class DefaultComponentSeeder extends Seeder
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -368,14 +368,14 @@ class DefaultComponentSeeder extends Seeder
 
         $oeaTitleComponent = Component::create([
             'name' => 'ÖA',
-            'type' => TabComponentEnums::TITLE,
+            'type' => ProjectTabComponentEnum::TITLE,
             'data' => [
                 'title' => 'ÖA',
                 'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -386,7 +386,7 @@ class DefaultComponentSeeder extends Seeder
 
         $oeaComponent = Component::create([
             'name' => 'ÖA',
-            'type' => TabComponentEnums::TEXT_AREA,
+            'type' => ProjectTabComponentEnum::TEXT_AREA,
             'data' => [
                 'label' => '',
                 'text' => '',
@@ -394,7 +394,7 @@ class DefaultComponentSeeder extends Seeder
             ],
             'special' => false,
             'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+            'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
         ]);
 
         $projectInformationTab->components()->create([
@@ -405,7 +405,7 @@ class DefaultComponentSeeder extends Seeder
 
         $projectInformationTab->components()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::PROJECT_DOCUMENTS)
+                ->where('type', ProjectTabComponentEnum::PROJECT_DOCUMENTS)
                 ->first()
                 ?->id,
             'order' => 7,

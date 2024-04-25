@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Enums\RoleNameEnum;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Policies\AreaPolicy;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
@@ -39,6 +38,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\CommentPolicy;
 use Artwork\Modules\Project\Policies\ProjectPolicy;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Policies\SageApiSettingsPolicy;
 use Artwork\Modules\Sector\Models\Sector;
@@ -90,7 +90,7 @@ class AuthServiceProvider extends ServiceProvider
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
         Gate::before(function ($user) {
-            return $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ? true : null;
+            return $user->hasRole(RoleEnum::ARTWORK_ADMIN->value) ? true : null;
         });
     }
 }

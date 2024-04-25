@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Support\Services;
 
-use App\Enums\NotificationConstEnum;
-use App\Notifications\ShiftNotification;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -31,7 +31,7 @@ class NotificationServiceTest extends TestCase
         $service->setNotificationTo($targetUser);
         $service->setTitle('Test Title');
         $service->setDescription(['Test Description']);
-        $service->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED);
+        $service->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_LOCKED);
         $service->setIcon('green');
         $service->setButtons([]);
         $service->setShowHistory(false);

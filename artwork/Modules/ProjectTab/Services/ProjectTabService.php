@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\ProjectTab\Services;
 
-use App\Enums\TabComponentEnums;
 use App\Http\Controllers\CalendarController;
 use App\Http\Resources\FreelancerDropResource;
 use App\Http\Resources\ProjectCalendarShowEventResource;
@@ -20,6 +19,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Artwork\Modules\ProjectTab\DTOs\ShiftsDto;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\Room\Services\RoomService;
@@ -43,22 +43,22 @@ readonly class ProjectTabService
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::SHIFT_TAB);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::SHIFT_TAB);
     }
 
     public function findFirstProjectTabWithTasksComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CHECKLIST);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::CHECKLIST);
     }
 
     public function findFirstProjectTabWithBudgetComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::BUDGET);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::BUDGET);
     }
 
     public function findFirstProjectTabWithCalendarComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CALENDAR);
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum::CALENDAR);
     }
 
     public function getCalendarTab(

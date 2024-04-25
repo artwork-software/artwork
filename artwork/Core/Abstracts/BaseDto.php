@@ -8,6 +8,10 @@ use JsonSerializable;
 
 abstract class BaseDto implements JsonSerializable, Arrayable
 {
+    final public function __construct()
+    {
+    }
+
     final public static function newInstance(): static
     {
         return new static();

@@ -121,7 +121,7 @@ test('users without the permission cant create projects', function () {
 
 test('users with the permission can update projects and change the role of assigned users', function () {
 
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::PROJECT_MANAGEMENT->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::PROJECT_MANAGEMENT->value);
     $this->actingAs($this->auth_user);
 
     $this->project->users()->attach($this->auth_user);
@@ -158,7 +158,7 @@ test('users with the permission can duplicate projects', function() {
     $old_project->users()->attach($this->assigned_user);
     $old_project->departments()->attach($this->department);
 
-    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->auth_user->assignRole(\Artwork\Modules\Role\Enums\RoleEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
 
     $res = $this->post("/projects/{$old_project->id}/duplicate");

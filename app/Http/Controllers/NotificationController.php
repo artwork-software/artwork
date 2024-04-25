@@ -2,30 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Enums\NotificationFrequency;
-use App\Enums\NotificationGroupEnum;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\NotificationProjectResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Notifications\BudgetVerified;
-use App\Notifications\ConflictNotification;
-use App\Notifications\DeadlineNotification;
-use App\Notifications\EventNotification;
-use App\Notifications\MoneySourceNotification;
-use App\Notifications\ProjectNotification;
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
-use App\Notifications\TaskNotification;
-use App\Notifications\TeamNotification;
+use Artwork\Modules\Budget\Notifications\BudgetVerified;
+use Artwork\Modules\Department\Notifications\TeamNotification;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Notifications\ConflictNotification;
+use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
+use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Notifications\RoomNotification;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
+use Artwork\Modules\Task\Notifications\DeadlineNotification;
+use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
@@ -132,10 +132,10 @@ class NotificationController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => NotificationProjectResource::collection(Project::all())->resolve(),
             'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
-            'notificationFrequencies' => array_map(fn (NotificationFrequency $frequency) => [
+            'notificationFrequencies' => array_map(fn (NotificationFrequencyEnum $frequency) => [
                 'title' => $frequency->title(),
                 'value' => $frequency->value,
-            ], NotificationFrequency::cases()),
+            ], NotificationFrequencyEnum::cases()),
             'groupTypes' => collect(NotificationGroupEnum::cases())->reduce(
                 function ($groupTypes, $type) {
                     $groupTypes[$type->value] = [
@@ -157,7 +157,7 @@ class NotificationController extends Controller
     public function create($user, object $notificationData, ?array $broadcastMessage = []): void
     {
         switch ($notificationData->type) {
-            case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
+            case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
                 $notificationBody = [
                     'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
@@ -168,7 +168,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
+            case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
                 $notificationBody = [
                     'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
@@ -179,7 +179,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
+            case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
                 $historyArray = [];
                 $historyComplete = [];
                 if ($notificationData->event) {
@@ -205,7 +205,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new EventNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
+            case NotificationEnum::NOTIFICATION_TASK_CHANGED:
                 $notificationBody = [
                     'groupType' => 'TASKS',
                     'type' => $notificationData->type,
@@ -218,7 +218,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_PROJECT:
+            case NotificationEnum::NOTIFICATION_PROJECT:
                 $notificationBody = [
                     'groupType' => 'PROJECTS',
                     'type' => $notificationData->type,
@@ -231,7 +231,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new ProjectNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_TEAM:
+            case NotificationEnum::NOTIFICATION_TEAM:
                 $notificationBody = [
                     'groupType' => 'PROJECTS',
                     'type' => $notificationData->type,
@@ -245,7 +245,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new TeamNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
+            case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
                 $room = $notificationData->room->id;
                 $historyArray = [];
                 $historyComplete = Room::find($room)->historyChanges()->all();
@@ -267,8 +267,8 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new RoomNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_CONFLICT:
-            case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
+            case NotificationEnum::NOTIFICATION_CONFLICT:
+            case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
                 $notificationBody = [
                     'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
@@ -278,7 +278,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new ConflictNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
+            case NotificationEnum::NOTIFICATION_TASK_REMINDER:
                 $notificationBody = [
                     'groupType' => 'TASKS',
                     'type' => $notificationData->type,
@@ -287,7 +287,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new DeadlineNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_NEW_TASK:
+            case NotificationEnum::NOTIFICATION_NEW_TASK:
                 $notificationBody = [
                     'groupType' => 'TASKS',
                     'type' => $notificationData->type,
@@ -295,7 +295,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
+            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
                 $notificationBody = [
                     'groupType' => 'BUDGET',
                     'type' => $notificationData->type,
@@ -304,7 +304,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new MoneySourceNotification($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
+            case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
                 $notificationBody = [
                     'groupType' => 'BUDGET',
                     'type' => $notificationData->type,
@@ -318,7 +318,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new BudgetVerified($notificationBody, $broadcastMessage));
                 break;
-            case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
+            case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
                 $project = $notificationData->project->id;
                 $historyArray = [];
                 $projectFind = Project::find($project);

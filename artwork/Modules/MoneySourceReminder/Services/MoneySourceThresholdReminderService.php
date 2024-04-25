@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\MoneySourceReminder\Services;
 
-use App\Enums\NotificationConstEnum;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -115,7 +115,7 @@ readonly class MoneySourceThresholdReminderService
         $notificationService->setIcon('red');
         $notificationService->setPriority(3);
         $notificationService->setNotificationConstEnum(
-            NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED
+            NotificationEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED
         );
         $notificationService->setBroadcastMessage($broadcastMessage);
         $notificationService->setModelId($moneySource->id);

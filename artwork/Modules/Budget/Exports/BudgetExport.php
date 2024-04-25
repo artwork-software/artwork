@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Budget\Exports;
 
-use App\Enums\BudgetTypesEnum;
+use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Contracts\View\View;
@@ -52,18 +52,18 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
             'budgetTable' => $budgetTable,
             'budgetTypeCost' => $this->getMainPositionsByBudgetType(
                 $budgetTable,
-                BudgetTypesEnum::BUDGET_TYPE_COST
+                BudgetTypeEnum::BUDGET_TYPE_COST
             ),
             'budgetTypeEarning' => $this->getMainPositionsByBudgetType(
                 $budgetTable,
-                BudgetTypesEnum::BUDGET_TYPE_EARNING
+                BudgetTypeEnum::BUDGET_TYPE_EARNING
             )
         ];
     }
 
     private function getMainPositionsByBudgetType(
         Model $budgetTable,
-        BudgetTypesEnum $mainPositionBudgetType
+        BudgetTypeEnum $mainPositionBudgetType
     ): Collection {
         return $budgetTable->mainPositions->filter(
             fn($mainPosition) => $mainPosition->type === $mainPositionBudgetType->value

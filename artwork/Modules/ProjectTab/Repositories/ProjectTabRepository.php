@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\ProjectTab\Repositories;
 
-use App\Enums\TabComponentEnums;
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 
 readonly class ProjectTabRepository extends BaseRepository
@@ -16,7 +16,7 @@ readonly class ProjectTabRepository extends BaseRepository
         return $projectTab;
     }
 
-    public function findFirstProjectTabByComponentsComponentType(TabComponentEnums $type): ProjectTab|null
+    public function findFirstProjectTabByComponentsComponentType(ProjectTabComponentEnum $type): ProjectTab|null
     {
         /** @var ProjectTab $projectTab */
         $projectTab = ProjectTab::query()

@@ -13,7 +13,6 @@ test('find Collisions', function (Room $room, int $expectation): void {
     $roomService = app()->get(RoomService::class);
     $roomService->getAllWithoutTrashed();
     $collisions = $collisionService->findCollisionCountForRoom($room, now(), now());
-
     expect($expectation)->toBe($collisions);
 })->with([
     'no collisions' => [
@@ -50,6 +49,7 @@ test('find Collisions', function (Room $room, int $expectation): void {
                 'start_time' => now(),
                 'end_time' => now()
             ]);
+
             return $room;
         },
         2

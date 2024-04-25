@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Budget\Services;
 
-use App\Enums\BudgetTypesEnum;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\MainPositionVerified;
@@ -18,10 +18,10 @@ readonly class MainPositionService
     }
 
     public function createMainPosition(
-        Table $table,
-        BudgetTypesEnum $budgetTypesEnum,
-        string $name,
-        int $position
+        Table          $table,
+        BudgetTypeEnum $budgetTypesEnum,
+        string         $name,
+        int            $position
     ): MainPosition|Model {
         $mainPosition = new MainPosition();
         $mainPosition->table_id = $table->id;

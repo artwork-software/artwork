@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\NotificationConstEnum;
-use App\Http\Requests\SearchRequest;
 use App\Http\Resources\MoneySourceFileResource;
+use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
@@ -19,6 +18,7 @@ use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceCategory\Models\MoneySourceCategory;
 use Artwork\Modules\MoneySourceReminder\Models\MoneySourceReminder;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -136,7 +136,7 @@ class MoneySourceController extends Controller
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(
-                NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
             );
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setNotificationTo($user);
@@ -611,7 +611,7 @@ class MoneySourceController extends Controller
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(
-                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                    NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($user->id));
@@ -691,7 +691,7 @@ class MoneySourceController extends Controller
                 $this->notificationService->setIcon('green');
                 $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(
-                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                    NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
@@ -724,7 +724,7 @@ class MoneySourceController extends Controller
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(
-                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                    NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);

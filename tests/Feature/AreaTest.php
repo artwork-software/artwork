@@ -10,7 +10,7 @@ beforeEach(function () {
 
     $this->auth_user = User::factory()->create();
     $this->area = Area::factory()->create();
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::ROOM_UPDATE->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::ROOM_UPDATE->value);
     $this->actingAs($this->auth_user);
     $this->room = Room::factory()->create();
 

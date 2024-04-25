@@ -2,19 +2,19 @@
 
 namespace Artwork\Modules\Notification\Services;
 
-use App\Enums\NotificationConstEnum;
-use App\Notifications\BudgetVerified;
-use App\Notifications\ConflictNotification;
-use App\Notifications\DeadlineNotification;
-use App\Notifications\EventNotification;
-use App\Notifications\MoneySourceNotification;
-use App\Notifications\ProjectNotification;
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
-use App\Notifications\ShiftNotification;
-use App\Notifications\TaskNotification;
-use App\Notifications\TeamNotification;
+use Artwork\Modules\Budget\Notifications\BudgetVerified;
+use Artwork\Modules\Department\Notifications\TeamNotification;
+use Artwork\Modules\Event\Notifications\ConflictNotification;
+use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
+use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Project\Notifications\ProjectNotification;
+use Artwork\Modules\Room\Notifications\RoomNotification;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
+use Artwork\Modules\Task\Notifications\DeadlineNotification;
+use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +30,7 @@ class NotificationService
 
     public array|null $description = [];
 
-    public ?NotificationConstEnum $notificationConstEnum = null;
+    public ?NotificationEnum $notificationConstEnum = null;
 
     public string $icon = 'green';
 
@@ -115,12 +115,12 @@ class NotificationService
         $this->description = $description;
     }
 
-    public function getNotificationConstEnum(): ?NotificationConstEnum
+    public function getNotificationConstEnum(): ?NotificationEnum
     {
         return $this->notificationConstEnum;
     }
 
-    public function setNotificationConstEnum(?NotificationConstEnum $notificationConstEnum): void
+    public function setNotificationConstEnum(?NotificationEnum $notificationConstEnum): void
     {
         $this->notificationConstEnum = $notificationConstEnum;
     }
@@ -311,9 +311,9 @@ class NotificationService
         $body->notificationKey = $this->getNotificationKey();
         $body->shiftId = $this->getShiftId();
         switch ($this->getNotificationConstEnum()) {
-            case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
-            case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
-            case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
+            case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
+            case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
+            case NotificationEnum::NOTIFICATION_ROOM_ANSWER:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -321,7 +321,7 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
+            case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
                 if ($this->getNotificationTo() !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -329,8 +329,8 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_NEW_TASK:
-            case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
+            case NotificationEnum::NOTIFICATION_NEW_TASK:
+            case NotificationEnum::NOTIFICATION_TASK_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -338,8 +338,8 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_PROJECT:
-            case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
+            case NotificationEnum::NOTIFICATION_PROJECT:
+            case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -347,7 +347,7 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_TEAM:
+            case NotificationEnum::NOTIFICATION_TEAM:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -355,7 +355,7 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
+            case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -363,8 +363,8 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_CONFLICT:
-            case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
+            case NotificationEnum::NOTIFICATION_CONFLICT:
+            case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -372,7 +372,7 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
+            case NotificationEnum::NOTIFICATION_TASK_REMINDER:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -380,8 +380,8 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
-            case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
+            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
+            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -389,15 +389,15 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
-            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED:
+            case NotificationEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
+            case NotificationEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED:
                 Notification::send(
                     $this->getNotificationTo(),
                     new MoneySourceNotification($body, $this->getBroadcastMessage())
                 );
                 break;
-            case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
-            case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
+            case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
+            case NotificationEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -405,12 +405,12 @@ class NotificationService
                     );
                 }
                 break;
-            case NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED:
-            case NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE:
-            case NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED:
-            case NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT:
-            case NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
-            case NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
+            case NotificationEnum::NOTIFICATION_SHIFT_LOCKED:
+            case NotificationEnum::NOTIFICATION_SHIFT_AVAILABLE:
+            case NotificationEnum::NOTIFICATION_SHIFT_CHANGED:
+            case NotificationEnum::NOTIFICATION_SHIFT_CONFLICT:
+            case NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
+            case NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
@@ -481,7 +481,7 @@ class NotificationService
     {
         $notificationCollection = DB::table('notifications')
             ->where('type', EventNotification::class)
-            ->where('data->type', NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST)
+            ->where('data->type', NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST)
             ->where('data->eventId', $eventId)
             ->get('id');
 

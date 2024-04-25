@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;

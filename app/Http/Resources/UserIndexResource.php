@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\PermissionNameEnum;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserIndexResource extends JsonResource
@@ -26,7 +26,7 @@ class UserIndexResource extends JsonResource
             'position' => $this->position,
             'business' => $this->business,
             'phone_number' => $this->phone_number,
-            'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+            'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
             'shifts' => $this->getShiftsAttribute(),
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),

@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->room = Room::factory()->create(['area_id' => $this->area->id]);
 
     $this->room_file = RoomFile::factory()->create(['room_id' => $this->room->id]);
-    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::ROOM_UPDATE->value);
+    $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::ROOM_UPDATE->value);
     $this->actingAs($this->auth_user);
 });
 

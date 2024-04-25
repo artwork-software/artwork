@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BudgetTypesEnum;
-use App\Enums\TabComponentEnums;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
@@ -13,6 +12,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
@@ -87,7 +87,7 @@ class WalidRaadSeeder extends Seeder
 
         $firstChecklistTabWithChecklistComponentId = ProjectTab::query()
             ->where('name', 'Checklists')
-            ->whereRelation('components.component', 'type', TabComponentEnums::CHECKLIST->value)
+            ->whereRelation('components.component', 'type', ProjectTabComponentEnum::CHECKLIST->value)
             ->first()
             ->id;
         /**
@@ -232,7 +232,7 @@ class WalidRaadSeeder extends Seeder
 
         $firstCommentsTabWithCommentsComponentId = ProjectTab::query()
             ->where('name', 'Comments')
-            ->whereRelation('components.component', 'type', TabComponentEnums::COMMENT_TAB->value)
+            ->whereRelation('components.component', 'type', ProjectTabComponentEnum::COMMENT_TAB->value)
             ->first()
             ->id;
 
@@ -759,10 +759,10 @@ class WalidRaadSeeder extends Seeder
 
         // COST TABLE
         $costMainPosition = $table->mainPositions()->create([
-            'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
+            'type' => BudgetTypeEnum::BUDGET_TYPE_COST,
             'name' => 'Gesamtkosten Produktion',
             'position' => $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1
+                    ->where('type', BudgetTypeEnum::BUDGET_TYPE_COST)->max('position') + 1
         ]);
 
         $costMainPosition->mainPositionSumDetails()->create([
@@ -1147,11 +1147,11 @@ class WalidRaadSeeder extends Seeder
         ]);
 
         $costMainPosition2 = $table->mainPositions()->create([
-            'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
+            'type' => BudgetTypeEnum::BUDGET_TYPE_COST,
             'name' => 'Gesamtkosten Technik',
             'position' => $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1,
-            'is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED
+                    ->where('type', BudgetTypeEnum::BUDGET_TYPE_COST)->max('position') + 1,
+            'is_verified' => BudgetTypeEnum::BUDGET_VERIFIED_TYPE_REQUESTED
         ]);
 
         $costMainPosition2->mainPositionSumDetails()->create([
@@ -1386,10 +1386,10 @@ class WalidRaadSeeder extends Seeder
 
         // EARNING TABLE
         $earningMainPosition = $table->mainPositions()->create([
-            'type' => BudgetTypesEnum::BUDGET_TYPE_EARNING,
+            'type' => BudgetTypeEnum::BUDGET_TYPE_EARNING,
             'name' => 'Einnahmen mit Budgetposten',
             'position' => $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
+                    ->where('type', BudgetTypeEnum::BUDGET_TYPE_EARNING)->max('position') + 1
         ]);
 
         $earningMainPosition->mainPositionSumDetails()->create([

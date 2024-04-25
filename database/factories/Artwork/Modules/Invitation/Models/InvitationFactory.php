@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Invitation\Models;
 
 use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
  */
 class InvitationFactory extends Factory
 {
+    protected $model = Invitation::class;
+
     /**
      * Define the model's default state.
      *

@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\ContractModule\Models;
 
 use Artwork\Modules\ContractModule\Models\ContractModule;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ContractModuleFactory extends Factory
 {
+    protected $model = ContractModule::class;
+
     /**
      * Define the model's default state.
      *

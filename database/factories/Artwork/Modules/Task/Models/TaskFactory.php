@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Task\Models;
 
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Task\Models\Task;
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class TaskFactory extends Factory
 {
+    protected $model = Task::class;
+
     /**
      * Define the model's default state.
      *

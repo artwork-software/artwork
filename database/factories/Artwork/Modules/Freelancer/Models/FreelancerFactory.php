@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Freelancer\Models;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Illuminate\Database\Eloquent\Factories\Factory;

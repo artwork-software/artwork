@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Category\Models;
 
 use Artwork\Modules\Category\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CategoryFactory extends Factory
 {
+    protected $model = Category::class;
+
     /**
      * Define the model's default state.
      *

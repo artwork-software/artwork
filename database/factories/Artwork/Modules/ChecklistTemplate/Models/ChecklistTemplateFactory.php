@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\ChecklistTemplate\Models;
 
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ChecklistTemplateFactory extends Factory
 {
+    protected $model = ChecklistTemplate::class;
+
     /**
      * Define the model's default state.
      *

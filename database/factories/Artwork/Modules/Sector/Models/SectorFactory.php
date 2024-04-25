@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Sector\Models;
 
 use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SectorFactory extends Factory
 {
+    protected $model = Sector::class;
+
     /**
      * Define the model's default state.
      *

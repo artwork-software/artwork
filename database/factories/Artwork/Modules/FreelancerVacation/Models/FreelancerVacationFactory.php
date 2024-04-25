@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\FreelancerVacation\Models;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;

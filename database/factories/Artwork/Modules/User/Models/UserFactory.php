@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\User\Models;
 
 use App\Models\Team;
 use Artwork\Modules\User\Models\User;

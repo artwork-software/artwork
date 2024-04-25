@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\EventType\Models;
 
 use Artwork\Modules\EventType\Models\EventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class EventTypeFactory extends Factory
 {
+    protected $model = EventType::class;
+
     /**
      * Define the model's default state.
      *

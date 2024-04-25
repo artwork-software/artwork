@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\UserCalendarFilter\Models;
 
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;

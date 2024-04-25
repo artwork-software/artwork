@@ -1,15 +1,14 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Currency\Models;
 
-use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Currency\Models\Currency;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<Genre>
- */
-class GenreFactory extends Factory
+class CurrencyFactory extends Factory
 {
+    protected $model = Currency::class;
+
     /**
      * Define the model's default state.
      *
@@ -18,7 +17,7 @@ class GenreFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Genre ' . $this->faker->colorName
+            'name' => $this->faker->name,
         ];
     }
 }

@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\UserShiftCalendarFilter\Services;
 
-use Artwork\Modules\UserShiftCalendarFilter\Repositories\UserCommentedBudgetItemsSettingRepository;
+use Artwork\Modules\UserShiftCalendarFilter\Repositories\UserShiftCalendarFilterRepository;
 
 readonly class UserShiftCalendarFilterService
 {
-    public function __construct(private UserCommentedBudgetItemsSettingRepository $userShiftCalendarFilterRepository)
+    public function __construct(private UserShiftCalendarFilterRepository $userShiftCalendarFilterRepository)
     {
     }
 }

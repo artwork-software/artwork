@@ -77,7 +77,7 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <a   :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
                             <div class="flex items-center">
                                 <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
@@ -98,8 +98,8 @@
                         </div>
                     </a>
                     <Menu as="div" class="flex flex-col items-center">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.userNavigation) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
-                            <div class="flex items-center" :class="fullSidenav ? '' : ''">
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="xxsLight hover:bg-primaryHover hover:text-secondaryHover group w-full py-3 rounded-md flex flex-col items-center">
+                            <div class="flex items-center">
                                 <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
                                 <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                     Hallo
@@ -130,13 +130,6 @@
                         </transition>
                     </Menu>
                 </div>
-                <!-- TODO: Hier noch Link zu Über uns Page
-                <div class=" absolute bottom-0 mb-10 text-secondary subpixel-antialiased text-sm tracking-wide">
-                    <a href="">
-                        Über das Tool
-                    </a>
-                </div>
-                -->
             </div>
         </div>
 
@@ -412,13 +405,11 @@ export default {
         toggle_hints() {
             this.$inertia.post(route('toggle.hints'))
         },
-
         logout() {
-            this.$i18n.locale = this.$page.props.default_language; // Für VueI18n 9.x und Vue 3
+            this.$i18n.locale = this.$page.props.default_language;
             document.documentElement.lang = this.$page.props.default_language;
             this.$inertia.post(route('logout'))
         },
-
         openSideBarOnMobile() {
             document.querySelector(".sidebar").classList.toggle("hidden");
             document.querySelector(".main").classList.toggle("hidden");

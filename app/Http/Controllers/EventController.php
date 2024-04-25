@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\OccupancyUpdated;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
 use App\Http\Resources\CalendarEventResource;
@@ -21,6 +20,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Events;
+namespace Artwork\Modules\Project\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;

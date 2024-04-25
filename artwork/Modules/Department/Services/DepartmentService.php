@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Department\Services;
 
-use App\Events\DepartmentUpdated;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\DepartmentShowResource;
 use App\Http\Resources\UserIndexResource;
+use Artwork\Modules\Department\Events\DepartmentUpdated;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
 use Artwork\Modules\Department\Models\Department;

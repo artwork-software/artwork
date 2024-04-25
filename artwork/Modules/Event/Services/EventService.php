@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Event\Services;
 
-use App\Events\OccupancyUpdated;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Services\EventCommentService;

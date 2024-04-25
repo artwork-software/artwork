@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
@@ -24,6 +23,7 @@ use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificatio
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
+use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;

@@ -406,7 +406,7 @@ test('force delete', function (Event $event) {
     $response = $this->delete(route('events.force', $event->id));
     if ($event->deleted_at !== null) {
         $response->assertRedirect(route('events.trashed'));
-        EventFacade::assertDispatched(\App\Events\OccupancyUpdated::class);
+        EventFacade::assertDispatched(\Artwork\Modules\Event\Events\OccupancyUpdated::class);
         assertDatabaseMissing((new Event())->getTable(), ['id' => $event->id]);
     } else {
         $response->assertNotFound();
@@ -431,7 +431,7 @@ test('restore event', function (Event $event) {
     $response = $this->patch(route('events.restore', $event->id));
     if ($event->deleted_at !== null) {
         $response->assertRedirect(route('events.trashed'));
-        EventFacade::assertDispatched(\App\Events\OccupancyUpdated::class);
+        EventFacade::assertDispatched(\Artwork\Modules\Event\Events\OccupancyUpdated::class);
         assertDatabaseHas((new Event())->getTable(), ['id' => $event->id, 'deleted_at' => null]);
     } else {
         $response->assertNotFound();

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
-use App\Mail\InvitationCreated;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Invitation\Mail\InvitationCreated;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Permission\Models\Permission;

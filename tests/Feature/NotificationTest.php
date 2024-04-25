@@ -1,7 +1,7 @@
 <?php
 
-use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;

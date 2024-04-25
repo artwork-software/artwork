@@ -1,7 +1,7 @@
 <?php
 
-use App\Mail\InvitationCreated;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Invitation\Mail\InvitationCreated;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Mail;

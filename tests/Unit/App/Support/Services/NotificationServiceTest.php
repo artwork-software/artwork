@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\App\Support\Services;
 
-use App\Notifications\ShiftNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;

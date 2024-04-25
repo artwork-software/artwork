@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\Event\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class ProjectNotification extends Notification implements ShouldBroadcast
+class EventNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 

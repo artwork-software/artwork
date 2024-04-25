@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\Room\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class ConflictNotification extends Notification implements ShouldBroadcast
+class RoomNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -19,7 +19,7 @@ class ConflictNotification extends Notification implements ShouldBroadcast
 
     protected array $broadcastMessage = [];
 
-    public function __construct($notificationData, array $broadcastMessage = [])
+    public function __construct($notificationData, $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;
@@ -66,8 +66,8 @@ class ConflictNotification extends Notification implements ShouldBroadcast
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
-    public function toArray(): stdClass
+    public function toArray(): object
     {
-        return $this->notificationData;
+        return (object)$this->notificationData;
     }
 }

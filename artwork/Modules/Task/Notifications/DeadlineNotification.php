@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\Task\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class ShiftNotification extends Notification implements ShouldBroadcast
+class DeadlineNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -19,7 +19,7 @@ class ShiftNotification extends Notification implements ShouldBroadcast
 
     protected array $broadcastMessage = [];
 
-    public function __construct($notificationData, $broadcastMessage = [])
+    public function __construct($notificationData, array $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;
@@ -46,7 +46,6 @@ class ShiftNotification extends Notification implements ShouldBroadcast
         if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequencyEnum::IMMEDIATELY) {
             $channels[] = 'mail';
         }
-
 
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';

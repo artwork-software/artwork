@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\Budget\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;

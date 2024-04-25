@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\Project\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class DeadlineNotification extends Notification implements ShouldBroadcast
+class ProjectNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -19,7 +19,7 @@ class DeadlineNotification extends Notification implements ShouldBroadcast
 
     protected array $broadcastMessage = [];
 
-    public function __construct($notificationData, array $broadcastMessage = [])
+    public function __construct($notificationData, $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;

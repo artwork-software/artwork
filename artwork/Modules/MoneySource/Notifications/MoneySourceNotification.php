@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace Artwork\Modules\MoneySource\Notifications;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use stdClass;
 
-class TaskNotification extends Notification implements ShouldBroadcast
+class MoneySourceNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
@@ -46,6 +46,7 @@ class TaskNotification extends Notification implements ShouldBroadcast
         if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequencyEnum::IMMEDIATELY) {
             $channels[] = 'mail';
         }
+
 
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';

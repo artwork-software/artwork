@@ -11,7 +11,7 @@ use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\Tasks\Services\TaskService;
+use Artwork\Modules\Task\Services\TaskService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

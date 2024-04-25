@@ -12,7 +12,7 @@ use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\Tasks\Services\TaskService;
+use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;

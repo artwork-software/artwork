@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Event;
 
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventComment\Models\EventComment;
@@ -11,6 +9,8 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\FreelancerVacation\Models\FreelancerVacation;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Notifications\RoomNotification;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Models\Timeline;

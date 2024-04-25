@@ -2,19 +2,19 @@
 
 namespace Artwork\Modules\Notification\Services;
 
-use App\Notifications\BudgetVerified;
-use App\Notifications\ConflictNotification;
-use App\Notifications\DeadlineNotification;
-use App\Notifications\EventNotification;
-use App\Notifications\MoneySourceNotification;
-use App\Notifications\ProjectNotification;
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
-use App\Notifications\ShiftNotification;
-use App\Notifications\TaskNotification;
-use App\Notifications\TeamNotification;
+use Artwork\Modules\Budget\Notifications\BudgetVerified;
+use Artwork\Modules\Department\Notifications\TeamNotification;
+use Artwork\Modules\Event\Notifications\ConflictNotification;
+use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
+use Artwork\Modules\Project\Notifications\ProjectNotification;
+use Artwork\Modules\Room\Notifications\RoomNotification;
+use Artwork\Modules\Room\Notifications\RoomRequestNotification;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Notifications\ShiftNotification;
+use Artwork\Modules\Task\Notifications\DeadlineNotification;
+use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;

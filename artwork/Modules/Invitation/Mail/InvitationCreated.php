@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Mail;
+namespace Artwork\Modules\Invitation\Mail;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Invitation\Models\Invitation;

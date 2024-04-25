@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use App\Mail\NotificationSummary;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
+use Artwork\Modules\Notification\Mail\NotificationSummary;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;

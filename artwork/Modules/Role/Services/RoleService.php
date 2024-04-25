@@ -1,9 +1,9 @@
 <?php
 
-namespace Artwork\Modules\Permission\Services;
+namespace Artwork\Modules\Role\Services;
 
-use Artwork\Modules\Permission\Models\Role;
-use Artwork\Modules\Permission\Repositories\RoleRepository;
+use Artwork\Modules\Role\Models\Role;
+use Artwork\Modules\Role\Repositories\RoleRepository;
 use Illuminate\Support\Facades\DB;
 
 readonly class RoleService

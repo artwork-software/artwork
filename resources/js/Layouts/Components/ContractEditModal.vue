@@ -159,8 +159,8 @@
                             <ListboxButton
                                 class="pl-1 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block w-12 truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency.name }}</span>
+                                <span class="w-12 truncate items-center ml-3 flex">
+                                    <span>{{ selectedCurrency.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -368,10 +368,8 @@ export default {
     mixins: [Permissions, IconLib],
     props: {
         show: Boolean,
-        contract: Object,
         closeModal: Function,
-        projectId: Number,
-        extraSettings: Array,
+        contract: Object,
         currencies: Array,
         companyTypes: Array,
         contractTypes: Array,

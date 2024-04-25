@@ -72,16 +72,16 @@
                             @click="openContractUploadModal"/>
                 <ContractUploadModal
                     :show="showContractUploadModal"
-                    @close-modal="closeContractUploadModal"
                     :project-id="project.id"
                     :budget-access="this.loadedProjectInformation['BudgetInformation'].access_budget"
                     :contract-types="this.loadedProjectInformation['BudgetInformation'].contract_types"
                     :company-types="this.loadedProjectInformation['BudgetInformation'].company_types"
                     :currencies="this.loadedProjectInformation['BudgetInformation'].currencies"
+                    @close-modal="closeContractUploadModal"
                 />
             </div>
             <div v-if="showContracts">
-                <div v-if="this.loadedProjectInformation['BudgetInformation'].contracts?.length > 0">
+                <div v-if="this.loadedProjectInformation['BudgetInformation'].contracts.length > 0">
                     <div v-for="contract in this.loadedProjectInformation['BudgetInformation'].contracts">
                         <div
                             v-if="contract.accessibleUsers?.filter(user => user.id === $page.props.user.id).length > 0 || hasAdminRole()"
@@ -96,7 +96,11 @@
                             <ContractEditModal v-if="showContractEditModal"
                                                :show="showContractEditModal === contract?.id"
                                                :close-modal="closeContractEditModal"
-                                               :contract="contract"/>
+                                               :contract="contract"
+                                               :currencies="this.loadedProjectInformation['BudgetInformation'].currencies"
+                                               :company-types="this.loadedProjectInformation['BudgetInformation'].company_types"
+                                               :contract-types="this.loadedProjectInformation['BudgetInformation'].contract_types"
+                            />
                             <IconCircleX class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>
@@ -115,7 +119,7 @@
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
                 <div v-if="showMoneySources">
-                    <div v-if="this.loadedProjectInformation['BudgetInformation'].project_money_sources?.length > 0">
+                    <div v-if="this.loadedProjectInformation['BudgetInformation'].project_money_sources.length > 0">
                         <div class="w-full flex items-center mb-2 text-secondary"
                              v-for="moneySource in this.loadedProjectInformation['BudgetInformation'].project_money_sources">
                             <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"

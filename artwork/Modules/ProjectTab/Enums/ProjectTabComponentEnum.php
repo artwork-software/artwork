@@ -38,7 +38,7 @@ enum ProjectTabComponentEnum: string
 
     /**
      * Get all available values
-     * @return array[]
+     * @return array<string, mixed>
      */
     public static function getValues(): array
     {

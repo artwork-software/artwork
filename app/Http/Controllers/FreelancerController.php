@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerShowResource;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Freelancer\Http\Resources\FreelancerShowResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;

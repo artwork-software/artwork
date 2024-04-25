@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Http\Resources\RoomPdfResource;
+use Artwork\Modules\Event\DTOs\CalendarEventDto;
+use Artwork\Modules\Filter\Models\Filter;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Http\Resources\RoomPdfResource;
 use Artwork\Modules\Room\Models\Room;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportPDFController extends Controller
 {
@@ -45,15 +46,14 @@ class ExportPDFController extends Controller
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
-            'events' => new CalendarEventCollectionResourceModel(
-                areas: $showCalendar['filterOptions']['areas'],
-                projects: new Collection(),
-                eventTypes: $showCalendar['filterOptions']['eventTypes'],
-                roomCategories: $showCalendar['filterOptions']['roomCategories'],
-                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: new Collection(),
-                filter: new Collection(),
-            ),
+            'events' => CalendarEventDto::newInstance()
+                ->setAreas($showCalendar['filterOptions']['areas'])
+                ->setProjects(new Collection())
+                ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                ->setEvents(new Collection())
+                ->setFilter(new Collection())
         ])
             ->setPaper($request->input('paperSize'), $request->input('paperOrientation'))
             ->setOptions(['dpi' => $request->input('dpi'), 'defaultFont' => 'sans-serif']);

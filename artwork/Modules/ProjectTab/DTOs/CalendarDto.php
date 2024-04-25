@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\ProjectTab\DTOs;
 
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use Artwork\Core\Abstracts\BaseDto;
+use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -22,7 +22,7 @@ class CalendarDto extends BaseDto
 
     public ?Collection $rooms = null;
 
-    public ?CalendarEventCollectionResourceModel $events = null;
+    public ?CalendarEventDto $events = null;
 
     public ?array $filterOptions = null;
 
@@ -74,7 +74,7 @@ class CalendarDto extends BaseDto
         return $this;
     }
 
-    public function setEvents(?CalendarEventCollectionResourceModel $events): self
+    public function setEvents(?CalendarEventDto $events): self
     {
         $this->events = $events;
 

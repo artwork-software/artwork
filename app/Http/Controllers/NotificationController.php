@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\NotificationProjectResource;
-use App\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Budget\Notifications\BudgetVerified;
 use Artwork\Modules\Department\Notifications\TeamNotification;
+use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
+use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Notifications\RoomNotification;
 use Artwork\Modules\Room\Notifications\RoomRequestNotification;

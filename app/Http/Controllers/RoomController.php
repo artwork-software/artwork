@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\AdjoiningRoomIndexResource;
-use App\Http\Resources\AttributeIndexResource;
-use App\Http\Resources\CategoryIndexResource;
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectIndexAdminResource;
-use App\Http\Resources\RoomCalendarResource;
-use App\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
+use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
+use Artwork\Modules\Room\Http\Resources\AttributeIndexResource;
+use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
+use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;

@@ -3,18 +3,16 @@
 namespace Artwork\Modules\ProjectTab\Services;
 
 use App\Http\Controllers\CalendarController;
-use App\Http\Resources\FreelancerDropResource;
-use App\Http\Resources\ProjectCalendarShowEventResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Http\Resources\ServiceProviderDropResource;
-use App\Http\Resources\UserDropResource;
 use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Currency\Services\CurrencyService;
+use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Filter\Models\Filter;
+use Artwork\Modules\Freelancer\Http\Resources\FreelancerDropResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Project\Http\Resources\ProjectCalendarShowEventResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
 use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
@@ -23,8 +21,10 @@ use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderDropResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -99,15 +99,16 @@ readonly class ProjectTabService
             ->setUserFilters($calendarData['user_filters'])
             ->setEventsAtAGlance($eventsAtAGlance)
             ->setRooms($roomService->filterRooms($startDate, $endDate)->get())
-            ->setEvents(new CalendarEventCollectionResourceModel(
-                $calendarData['filterOptions']['areas'],
-                $calendarData['filterOptions']['projects'],
-                $calendarData['filterOptions']['eventTypes'],
-                $calendarData['filterOptions']['roomCategories'],
-                $calendarData['filterOptions']['roomAttributes'],
-                $calendarController->getEventsOfInterval($startDate, $endDate, $project),
-                Filter::query()->where('user_id', Auth::id())->get(),
-            ));
+            ->setEvents(
+                CalendarEventDto::newInstance()
+                    ->setAreas($calendarData['filterOptions']['areas'])
+                    ->setProjects($calendarData['filterOptions']['projects'])
+                    ->setEventTypes($calendarData['filterOptions']['eventTypes'])
+                    ->setRoomCategories($calendarData['filterOptions']['roomCategories'])
+                    ->setRoomAttributes($calendarData['filterOptions']['roomAttributes'])
+                    ->setEvents($calendarController->getEventsOfInterval($startDate, $endDate, $project))
+                    ->setFilter(Filter::query()->where('user_id', Auth::id())->get())
+            );
     }
 
     public function getShiftTab(

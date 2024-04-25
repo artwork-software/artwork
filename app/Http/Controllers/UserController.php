@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\UserIndexResource;
-use App\Http\Resources\UserShowResource;
-use App\Http\Resources\UserWorkProfileResource;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
@@ -24,6 +21,9 @@ use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
 use Artwork\Modules\User\Events\UserUpdated;
+use Artwork\Modules\User\Http\Resources\UserIndexResource;
+use Artwork\Modules\User\Http\Resources\UserShowResource;
+use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;

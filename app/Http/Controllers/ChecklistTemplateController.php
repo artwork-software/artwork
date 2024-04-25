@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ChecklistTemplate\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Illuminate\Http\RedirectResponse;

@@ -2,14 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\EventShowResource;
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerShiftPlanResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Http\Resources\ServiceProviderShiftPlanResource;
-use App\Http\Resources\TaskDashboardResource;
-use App\Http\Resources\UserShiftPlanResource;
 use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
@@ -18,15 +10,20 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
+use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
+use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -36,6 +33,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
+use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -44,9 +42,11 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\SubEvent\Services\SubEventService;
+use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
@@ -71,14 +71,14 @@ class EventController extends Controller
 
     public function __construct(
         private readonly EventCollisionService $collisionService,
-        private readonly NotificationService   $notificationService,
-        private readonly BudgetService         $budgetService,
-        private readonly EventService          $eventService,
-        private readonly ShiftService          $shiftService,
-        private readonly TimelineService       $timelineService,
-        private readonly ProjectTabService     $projectTabService,
-        private readonly ChangeService         $changeService,
-        private readonly SchedulingService     $schedulingService
+        private readonly NotificationService $notificationService,
+        private readonly BudgetService $budgetService,
+        private readonly EventService $eventService,
+        private readonly ShiftService $shiftService,
+        private readonly TimelineService $timelineService,
+        private readonly ProjectTabService $projectTabService,
+        private readonly ChangeService $changeService,
+        private readonly SchedulingService $schedulingService
     ) {
     }
 
@@ -114,15 +114,14 @@ class EventController extends Controller
                 );
             }
 
-            $events = new CalendarEventCollectionResourceModel(
-                areas: $showCalendar['filterOptions']['areas'],
-                projects: $showCalendar['filterOptions']['projects'],
-                eventTypes: $showCalendar['filterOptions']['eventTypes'],
-                roomCategories: $showCalendar['filterOptions']['roomCategories'],
-                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $eventsOfDay,
-                filter: Filter::where('user_id', Auth::id())->get(),
-            );
+            $events = CalendarEventDto::newInstance()
+                ->setAreas($showCalendar['filterOptions']['areas'])
+                ->setProjects($showCalendar['filterOptions']['projects'])
+                ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                ->setEvents($eventsOfDay)
+                ->setFilter(Filter::query()->where('user_id', Auth::id())->get());
         } else {
             $showCalendar = $calendarController->createCalendarData();
         }
@@ -1316,7 +1315,6 @@ class EventController extends Controller
                     ]);
                 }
                 // date shifts with date
-
             }
         }
 
@@ -2299,7 +2297,6 @@ class EventController extends Controller
                         if ($request->type === 1) {
                             $event->start_time = $startDate->subHours($request->value);
                             $event->end_time = $endDate->subHours($request->value);
-
                         }
                         // Tage
                         if ($request->type === 2) {

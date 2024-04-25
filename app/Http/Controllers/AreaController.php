@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\RoomIndexResource;
-use App\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Room\Http\Resources\RoomIndexResource;
+use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\Room\Services\RoomService;

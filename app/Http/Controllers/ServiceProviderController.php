@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ServiceProviderShowResource;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShowResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateServiceProviderShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;

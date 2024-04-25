@@ -2,16 +2,16 @@
 
 namespace Artwork\Modules\Department\Services;
 
-use App\Http\Resources\DepartmentIndexResource;
-use App\Http\Resources\DepartmentShowResource;
-use App\Http\Resources\UserIndexResource;
 use Artwork\Modules\Department\Events\DepartmentUpdated;
 use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
 use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
+use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
+use Artwork\Modules\Department\Http\Resources\DepartmentShowResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Department\Repositories\DepartmentRepository;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Database\Eloquent\Collection;

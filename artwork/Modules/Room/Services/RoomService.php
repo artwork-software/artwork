@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Room\Services;
 
-use App\Http\Resources\CalendarShowEventResource;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;

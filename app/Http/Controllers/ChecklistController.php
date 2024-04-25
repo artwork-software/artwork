@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
+use Artwork\Modules\Checklist\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;

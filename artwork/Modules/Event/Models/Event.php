@@ -10,7 +10,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\SubEvents\Models\SubEvent;
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;

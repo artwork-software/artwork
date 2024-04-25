@@ -2,12 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\DepartmentIndexResource;
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectEditResource;
-use App\Http\Resources\ProjectIndexResource;
-use App\Http\Resources\ProjectIndexShowResource;
-use App\Http\Resources\UserResourceWithoutShifts;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
@@ -52,10 +46,12 @@ use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
+use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Genre\Models\Genre;
@@ -68,6 +64,9 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
+use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -94,6 +93,7 @@ use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -210,7 +210,7 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => UserResourceWithoutShifts::collection(User::nameOrLastNameLike($query)->get())->resolve()
+            'users' => UserWithoutShiftsResource::collection(User::nameOrLastNameLike($query)->get())->resolve()
         ];
     }
 

@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers\Calendar;
 
-use App\Http\Resources\ResourceMappers\SimpleMapping;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 
 class FilterProvider
 {
-    use SimpleMapping;
-
     /**
      * @return array<string, mixed>
      */
@@ -53,5 +52,13 @@ class FilterProvider
                 'attributes' => $room->attributes
             ]),
         ];
+    }
+
+    private function map(Collection $collection): Collection|\Illuminate\Support\Collection
+    {
+        return $collection->map(fn(Model $model) => [
+            'id' => $model->id,
+            'name' => $model->name,
+        ]);
     }
 }

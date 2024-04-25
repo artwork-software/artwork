@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Artwork\Core\Console\Commands;
 
 use Database\Seeders\ChangeEventTypeSvgToHexSeed;
 use Illuminate\Console\Command;

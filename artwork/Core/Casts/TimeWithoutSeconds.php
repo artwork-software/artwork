@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Casts;
+namespace Artwork\Core\Casts;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;

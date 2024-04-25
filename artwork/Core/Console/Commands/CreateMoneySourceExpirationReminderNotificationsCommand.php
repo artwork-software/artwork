@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Artwork\Core\Console\Commands;
 
 use App\Enums\NotificationConstEnum;
 use Artwork\Modules\MoneySource\Models\MoneySource;

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Casts\TimeAgoCast;
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
 use App\Http\Requests\EventStoreRequest;
@@ -15,6 +14,7 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftPlanResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserShiftPlanResource;
+use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\MainPositionService;

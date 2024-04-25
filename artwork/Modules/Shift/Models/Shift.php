@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Shift\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Casts\TimeWithoutSeconds;
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;

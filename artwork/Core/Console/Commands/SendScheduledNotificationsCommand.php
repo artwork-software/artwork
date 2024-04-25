@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;

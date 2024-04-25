@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Invitation\Models\Invitation;
 use Illuminate\Console\Command;

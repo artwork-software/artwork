@@ -2,15 +2,15 @@
 
 namespace App\Console;
 
-use App\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
-use App\Console\Commands\SendDeadlineNotificationsCommand;
-use App\Console\Commands\DeleteExpiredNotificationsForAllCommand;
-use App\Console\Commands\DeleteOldNotificationsCommand;
-use App\Console\Commands\ImportSage100ApiDataCommand;
-use App\Console\Commands\SendScheduledNotificationsCommand;
-use App\Console\Commands\RemoveExpiredInvitationsCommand;
-use App\Console\Commands\RemoveTemporaryRoomsCommand;
-use App\Console\Commands\SendNotificationsEmailSummariesCommand;
+use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
+use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
+use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;
+use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
+use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
+use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
+use Artwork\Core\Console\Commands\SendNotificationsEmailSummariesCommand;
+use Artwork\Core\Console\Commands\SendScheduledNotificationsCommand;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Events\Dispatcher;

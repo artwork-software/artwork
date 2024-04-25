@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\PresetShift\Models;
 
-use App\Casts\TimeWithoutSeconds;
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;

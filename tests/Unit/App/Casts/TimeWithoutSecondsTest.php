@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\App\Casts;
 
-use App\Casts\TimeWithoutSeconds;
+use Artwork\Core\Casts\TimeWithoutSeconds;
 use Carbon\Carbon;
 use Tests\TestCase;
 

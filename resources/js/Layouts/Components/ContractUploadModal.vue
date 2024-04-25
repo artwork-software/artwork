@@ -390,7 +390,6 @@ export default {
     props: [
         'show',
         'projectId',
-        'extraSettings',
         'budgetAccess',
         'contractTypes',
         'companyTypes',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\Permission\Models;
+namespace Artwork\Modules\Role\Models;
 
 use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use BadMethodCallException;

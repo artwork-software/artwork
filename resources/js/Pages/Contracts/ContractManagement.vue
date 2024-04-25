@@ -97,8 +97,12 @@
                                     />
                                     <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
                                                          :close-modal="closeContractDeleteModal" :contract="contract"/>
-                                    <ContractEditModal :contract-types="contract_types" :currencies="currencies" :company-types="company_types" :show="showContractEditModal === contract?.id"
-                                                       :close-modal="closeContractEditModal" :contract="contract"/>
+                                    <ContractEditModal :contract-types="contract_types"
+                                                       :currencies="currencies"
+                                                       :company-types="company_types"
+                                                       :show="showContractEditModal === contract?.id"
+                                                       :close-modal="closeContractEditModal" :contract="contract"
+                                    />
                                     <hr class="text-secondary">
                                 </div>
 

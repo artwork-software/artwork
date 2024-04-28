@@ -4,6 +4,7 @@ namespace Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -20,6 +21,7 @@ use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 
 readonly class ProjectService
@@ -61,7 +63,7 @@ readonly class ProjectService
 
     public function findById(int $id): Project
     {
-        return $this->projectRepository->findById($id);
+        return $this->projectRepository->findOrFailById($id);
     }
 
     public function softDelete(
@@ -401,5 +403,76 @@ readonly class ProjectService
     private function deleteMoneySources(Project $project): void
     {
         $project->moneySources()->detach();
+    }
+
+    /**
+     * @return array<string, mixed>
+     * @throws ModelNotFoundException
+     */
+    public function getEventsWithRelevantShifts(int|Project $project): array
+    {
+        if (!$project instanceof Project) {
+            $project = $this->projectRepository->findOrFailById($project);
+        }
+
+        $eventsWithRelevant = [];
+        foreach (
+            $project
+                ->events()
+                ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
+                ->with(['timelines', 'shifts', 'event_type', 'room'])
+                ->get() as $event
+        ) {
+            $timeline = $event->timelines()->get()->toArray();
+
+            foreach ($timeline as &$singleTimeLine) {
+                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
+            }
+
+            usort($timeline, function ($a, $b) {
+                if ($a['start'] === null && $b['start'] === null) {
+                    return 0;
+                } elseif ($a['start'] === null) {
+                    return 1; // $a should come later in the array
+                } elseif ($b['start'] === null) {
+                    return -1; // $b should come later in the array
+                }
+
+                // Compare the 'start' values for ascending order
+                return strtotime($a['start']) - strtotime($b['start']);
+            });
+
+
+            foreach ($event->shifts as $shift) {
+                $shift->load('shiftsQualifications');
+            }
+
+            $eventsWithRelevant[$event->id] = [
+                'event' => $event,
+                'timeline' => $timeline,
+                'shifts' => $event->shifts,
+                'event_type' => $event->event_type,
+                'room' => $event->room,
+            ];
+        }
+        rsort($eventsWithRelevant);
+
+        return $eventsWithRelevant;
+    }
+
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function getFirstEventInProject(int|Project $project): Event|null
+    {
+        return $this->projectRepository->getFirstEvent($project);
+    }
+
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function getLastEventInProject(int|Project $project): Event|null
+    {
+        return $this->projectRepository->getLastEvent($project);
     }
 }

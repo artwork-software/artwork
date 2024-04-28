@@ -9,6 +9,7 @@ use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
@@ -154,5 +155,10 @@ class ServiceProvider extends Model
         }
 
         return $plannedWorkingHours;
+    }
+
+    public function scopeCanWorkShifts(Builder $builder): Builder
+    {
+        return $builder->where('can_work_shifts', true);
     }
 }

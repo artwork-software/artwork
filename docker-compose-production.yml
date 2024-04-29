@@ -68,13 +68,6 @@ services:
       test: [ "CMD", "redis-cli", "ping" ]
       retries: 3
       timeout: 5s
-  node:
-    build:
-      context: .
-      dockerfile: dockerfiles/node/Dockerfile
-    volumes:
-      - "./:/app:cached"
-      - "js:/app/public/js"
   meilisearch:
     image: 'getmeili/meilisearch:latest'
     ports:
@@ -92,13 +85,6 @@ services:
         - 'http://localhost:7700/health'
       retries: 3
       timeout: 5s
-  mailpit:
-    image: 'axllent/mailpit:latest'
-    ports:
-      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
-      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
-    networks:
-      - artwork
 networks:
   artwork:
     driver: bridge

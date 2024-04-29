@@ -44,6 +44,7 @@ use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
@@ -54,6 +55,7 @@ use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
@@ -83,6 +85,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -95,6 +98,7 @@ use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -1815,7 +1819,12 @@ class ProjectController extends Controller
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
         CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService
+        CollectingSocietyService $collectingSocietyService,
+        ProjectService $projectService,
+        UserService $userService,
+        FreelancerService $freelancerService,
+        ServiceProviderService $serviceProviderService,
+        CraftService $craftService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1942,7 +1951,12 @@ class ProjectController extends Controller
 
                 $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab(
                     $project,
-                    $shiftQualificationService
+                    $shiftQualificationService,
+                    $projectService,
+                    $userService,
+                    $freelancerService,
+                    $serviceProviderService,
+                    $craftService
                 );
             }
 

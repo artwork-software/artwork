@@ -348,4 +348,9 @@ class Event extends Model
             ->whereDate('start_time', '<=', $carbon)
             ->whereDate('end_time', '>=', $carbon);
     }
+
+    public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
+    {
+        return $builder->orderBy('start_time', $direction);
+    }
 }

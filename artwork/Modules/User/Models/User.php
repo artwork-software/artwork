@@ -89,6 +89,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Task> $privateTasks
  * @property Collection<Event> $events
  * @property Collection<Craft> $crafts
+ * @property UserShiftCalendarFilter $shift_calendar_filter
+ * @property UserCalendarFilter $calendar_filter
  */
 class User extends Model implements
     AuthenticatableContract,

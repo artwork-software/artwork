@@ -47,4 +47,41 @@ readonly class UserRepository extends BaseRepository
 
         return $user->availabilities()->betweenDates($startDate, $endDate)->get()->groupBy('formatted_date');
     }
+
+    public function getUserVacationsByDateOrderedByDateAsc(User|int $user, Carbon $selectedDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->vacations()
+            ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getUserAvailabilitiesByDateOrderedByDateAsc(User|int $user, Carbon $selectedDate): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUserOrFail($user);
+        }
+
+        return $user->availabilities()
+            ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getShiftsOrderedByStartAscending(int|User $user): Collection
+    {
+        if (!$user instanceof User) {
+            $user = $this->findUser($user);
+        }
+
+        return $user
+            ->shifts()
+            ->with(['event', 'event.project', 'event.room'])
+            ->orderedByStart()
+            ->get();
+    }
 }

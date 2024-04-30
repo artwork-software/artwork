@@ -6,18 +6,22 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Filter\Models\Filter;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Models\RoomAttribute;
-use Artwork\Modules\Room\Models\RoomCategory;
+use Artwork\Modules\RoomAttribute\Models\RoomAttribute;
+use Artwork\Modules\RoomCategory\Models\RoomCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
+/**
+ * @todo: Use FilterService and its FilterRepository
+ */
 class FilterController extends Controller
 {
-    public function index()
+    public function index(): Collection
     {
-        return Filter::where('user_id', Auth::id())->get()->map(fn (Filter $filter) => [
+        return Filter::query()->where('user_id', Auth::id())->get()->map(fn (Filter $filter) => [
             'id' => $filter->id,
             'name' => $filter->name,
             'rooms' => $filter->rooms->map(fn (Room $room) => [

@@ -7,12 +7,18 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Repositories\AreaRepository;
 use Artwork\Modules\Room\Services\RoomService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 readonly class AreaService
 {
     public function __construct(private AreaRepository $areaRepository)
     {
+    }
+
+    public function getAll(): Collection
+    {
+        return $this->areaRepository->getAll();
     }
 
     public function updateByRequest(Area $area, Request $request): Area|Model

@@ -12,4 +12,13 @@ readonly class ServiceProviderRepository extends BaseRepository
     {
         return ServiceProvider::query()->canWorkShifts()->get();
     }
+
+    public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection
+    {
+        return $serviceProvider
+            ->shifts()
+            ->with(['event', 'event.project', 'event.room'])
+            ->orderedByStart()
+            ->get();
+    }
 }

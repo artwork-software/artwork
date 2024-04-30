@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\RoomRoomCategoryMapping\Models;
 
+use Artwork\Core\Database\Models\Pivot;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Models\RoomCategory;
+use Artwork\Modules\RoomCategory\Models\RoomCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Artwork\Core\Database\Models\Pivot;
 
 class RoomRoomCategoryMapping extends Pivot
 {

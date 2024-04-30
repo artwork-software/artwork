@@ -63,7 +63,7 @@ readonly class ProjectService
 
     public function findById(int $id): Project
     {
-        return $this->projectRepository->findOrFailById($id);
+        return $this->projectRepository->findOrFail($id);
     }
 
     public function softDelete(
@@ -412,7 +412,7 @@ readonly class ProjectService
     public function getEventsWithRelevantShifts(int|Project $project): array
     {
         if (!$project instanceof Project) {
-            $project = $this->projectRepository->findOrFailById($project);
+            $project = $this->projectRepository->findOrFail($project);
         }
 
         $eventsWithRelevant = [];
@@ -474,5 +474,10 @@ readonly class ProjectService
     public function getLastEventInProject(int|Project $project): Event|null
     {
         return $this->projectRepository->getLastEvent($project);
+    }
+
+    public function getProjectsWithAccessBudgetAndManagerUsers(): Collection
+    {
+        return $this->projectRepository->getProjects(['access_budget', 'managerUsers']);
     }
 }

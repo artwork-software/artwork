@@ -2,16 +2,36 @@
 
 namespace Artwork\Modules\Room\Services;
 
+use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\DTOs\ShowDto;
+use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
+use Artwork\Modules\Room\Http\Resources\AttributeIndexResource;
+use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
+use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
+use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,92 +67,21 @@ readonly class RoomService
         return $new_room;
     }
 
-    public function filterRooms($startDate, $endDate, $shiftPlan = false): Builder
-    {
-        $user = Auth::user();
-        if (!$shiftPlan) {
-            $calendarFilter = $user->calendar_filter()->first();
-        } else {
-            $calendarFilter = $user->shift_calendar_filter()->first();
-        }
-
-        $roomIds = $calendarFilter->rooms ?? null;
-        $areaIds = $calendarFilter->areas ?? null;
-        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter->room_categories ?? null;
-        $adjoiningNoAudience = $calendarFilter->adjoining_no_audience ?? null;
-        $adjoiningNotLoud = $calendarFilter->adjoining_not_loud ?? null;
-
-        return Room::query()
-            ->unless(
-                is_null($roomIds),
-                fn(Builder $builder) => $builder->whereIn('id', $roomIds)
-            )
-            ->unless(
-                is_null($roomAttributeIds),
-                fn(Builder $builder) => $builder->whereHas(
-                    'attributes',
-                    function ($query) use ($roomAttributeIds): void {
-                        $query->whereIn('room_attributes.id', $roomAttributeIds);
-                    }
-                )
-            )
-            ->unless(
-                is_null($areaIds),
-                fn(Builder $builder) => $builder->whereIn('area_id', $areaIds)
-            )
-            ->unless(
-                is_null($roomCategoryIds),
-                fn(Builder $builder) => $builder->whereHas(
-                    'categories',
-                    function ($query) use ($roomCategoryIds): void {
-                        $query->whereIn('room_categories.id', $roomCategoryIds);
-                    }
-                )
-            )
-            ->when(
-                ($adjoiningNotLoud || $adjoiningNoAudience),
-                function (Builder $builder) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
-                    $builder->whereRelation(
-                        'adjoining_rooms',
-                        function (Builder $builder) use (
-                            $adjoiningNoAudience,
-                            $adjoiningNotLoud,
-                            $startDate,
-                            $endDate
-                        ): void {
-                            $builder->whereRelation(
-                                'events',
-                                function (Builder $builder) use (
-                                    $adjoiningNoAudience,
-                                    $adjoiningNotLoud,
-                                    $startDate,
-                                    $endDate
-                                ): void {
-                                    $builder->when(
-                                        ($startDate && $endDate),
-                                        fn(Builder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate)
-                                    )
-                                    ->when(
-                                        $adjoiningNotLoud,
-                                        fn(Builder $builder) => $builder->where(
-                                            'events.is_loud',
-                                            false
-                                        )
-                                    )
-                                    ->when(
-                                        $adjoiningNoAudience,
-                                        fn(Builder $builder) => $builder->where(
-                                            'events.audience',
-                                            false
-                                        )
-                                    );
-                                }
-                            )->orWhereDoesntHave('events');
-                        }
-                    )->orWhereDoesntHave('adjoining_rooms');
-                }
-            )->orderBy('position');
+    public function getFilteredRooms(
+        Carbon $startDate,
+        Carbon $endDate,
+        UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter
+    ): EloquentCollection {
+        return $this->roomRepository->getFilteredRoomsBy(
+            $calendarFilter?->rooms,
+            $calendarFilter?->room_attributes,
+            $calendarFilter?->areas,
+            $calendarFilter?->room_categories,
+            $calendarFilter?->adjoining_not_loud,
+            $calendarFilter?->adjoining_no_audience,
+            $startDate,
+            $endDate
+        );
     }
 
     public function checkTemporaryChanges(
@@ -415,9 +364,9 @@ readonly class RoomService
         $this->roomRepository->deleteByReference($area, 'rooms');
     }
 
-    public function getAllWithoutTrashed(): EloquentCollection
+    public function getAllWithoutTrashed(array $with = []): EloquentCollection
     {
-        return $this->roomRepository->allWithoutTrashed();
+        return $this->roomRepository->allWithoutTrashed($with);
     }
 
     //@todo: fix phpcs error - complexity too high
@@ -684,5 +633,92 @@ readonly class RoomService
             ];
         }
         return $eventsForRoom;
+    }
+
+
+    public function getRoomsNotIdIn(array $ids): EloquentCollection
+    {
+        return $this->roomRepository->getRoomsNotIdIn($ids);
+    }
+
+    public function getRoomCategoryIds(int|Room $room): Collection
+    {
+        return $this->roomRepository->getRoomCategoryIds($room);
+    }
+
+    public function getRoomAttributeIds(int|Room $room): Collection
+    {
+        return $this->roomRepository->getRoomAttributeIds($room);
+    }
+
+    public function getAdjoiningRoomIds(int|Room $room): Collection
+    {
+        return $this->roomRepository->getAdjoiningRoomIds($room);
+    }
+
+    public function isUserRoomAdmin(Room $room, User $user): bool
+    {
+        return $this->roomRepository->getUserWhereIsAdmin($room, $user->id)->count() > 0;
+    }
+
+    public function createShowDto(
+        UserService $userService,
+        Room $room,
+        CalendarService $calendarService,
+        FilterService $filterService,
+        FilterController $filterController,
+        ProjectTabService $projectTabService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        AreaService $areaService,
+    ): ShowDto {
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
+
+        $calendarData = $calendarService->createCalendarData(
+            $startDate,
+            $endDate,
+            $userService,
+            $filterService,
+            $filterController,
+            $this,
+            $roomCategoryService,
+            $roomAttributeService,
+            $eventTypeService,
+            $areaService,
+            $projectService,
+            $room
+        );
+
+        return ShowDto::newInstance()
+            ->setCalendar($calendarData['roomsWithEvents'])
+            ->setDays($calendarData['days'])
+            ->setEventsWithoutRoom($calendarData['eventsWithoutRoom'])
+            ->setFilterOptions($calendarData['filterOptions'])
+            ->setDateValue($calendarData['dateValue'])
+            ->setPersonalFilters($calendarData['personalFilters'])
+            ->setCalendarType($calendarData['calendarType'])
+            ->setSelectedDate($calendarData['selectedDate'])
+            ->setUserFilters($calendarData['user_filters'])
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
+            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id)
+            ->setAvailableCategories($roomCategoryService->getAll())
+            ->setAvailableAttributes($roomAttributeService->getAll())
+            ->setIsRoomAdmin($this->isUserRoomAdmin($room, $userService->getAuthUser()))
+            ->setAvailableRooms($this->getRoomsNotIdIn([$room->id]))
+            ->setRoomCategoryIds($this->getRoomCategoryIds($room))
+            ->setRoomAttributeIds($this->getRoomAttributeIds($room))
+            ->setAdjoiningRoomIds($this->getAdjoiningRoomIds($room))
+            ->setRoom(RoomCalendarResource::make($room))
+            ->setRoomCategories(CategoryIndexResource::collection($room->categories)->resolve())
+            ->setRoomAttributes(AttributeIndexResource::collection($room->attributes)->resolve())
+            ->setAdjoiningRooms(AdjoiningRoomIndexResource::collection($room->adjoining_rooms)->resolve())
+            ->setRooms(RoomIndexWithoutEventsResource::collection($this->getAllWithoutTrashed())->resolve())
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setProjects(
+                ProjectIndexAdminResource::collection($projectService->getProjectsWithAccessBudgetAndManagerUsers())
+                    ->resolve()
+            );
     }
 }

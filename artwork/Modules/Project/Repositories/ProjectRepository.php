@@ -23,7 +23,7 @@ readonly class ProjectRepository extends BaseRepository
     /**
      * @throws ModelNotFoundException
      */
-    public function findOrFailById(int $id): Project
+    public function findOrFail(int $id): Project
     {
         return Project::findOrFail($id);
     }
@@ -52,7 +52,7 @@ readonly class ProjectRepository extends BaseRepository
     public function getFirstEvent(int|Project $project): Event|null
     {
         if (!$project instanceof Project) {
-            $project = $this->findOrFailById($project);
+            $project = $this->findOrFail($project);
         }
 
         /** @var Event|null $firstEvent */
@@ -67,12 +67,23 @@ readonly class ProjectRepository extends BaseRepository
     public function getLastEvent(int|Project $project): Event|null
     {
         if (!$project instanceof Project) {
-            $project = $this->findOrFailById($project);
+            $project = $this->findOrFail($project);
         }
 
         /** @var Event|null $lastEvent */
         $lastEvent = $project->events()->orderByStartTime('DESC')->limit(1)->first();
 
         return $lastEvent;
+    }
+
+    public function getProjects(array $with = []): Collection
+    {
+        $query = Project::query();
+
+        if (count($with) > 0) {
+            $query->with($with);
+        }
+
+        return $query->get();
     }
 }

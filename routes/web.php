@@ -185,7 +185,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/money_source_search', [UserController::class, 'moneySourceSearch'])
         ->name('users.money_source_search');
     Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
-    Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftplan'])->name('user.edit.shiftplan');
+    Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftPlan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
         ->name('user.edit.permissions');
@@ -974,7 +974,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/multi-edit', [EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
 
     // Calendar
-    Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');
+    Route::get(
+        '/calendars/filters',
+        [CalendarController::class, 'getCalendarFilterDefinitions']
+    )->name('calendar.filters');
 
     // Freelancer
     Route::get('/freelancer/{freelancer}', [FreelancerController::class, 'show'])->name('freelancer.show');

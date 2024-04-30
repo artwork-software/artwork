@@ -7,6 +7,9 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 
 class BaseDataProvider implements RoleAndPermissionDataProvider
 {
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getPermissions(): array
     {
         return [
@@ -15,8 +18,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Leserechte für alle Projekte",
                 'translation_key' => "Read permissions for all projects",
                 'group' => 'Projects',
-                'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch die ' .
-                    'Belegungen im Kalender.',
+                'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch' .
+                    ' die Belegungen im Kalender.',
                 'tooltipKey' => "User can view all projects including project details and calendar bookings.",
                 'checked' => false
             ],
@@ -25,9 +28,10 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Eigene Projekte anlegen & bearbeiten",
                 'translation_key' => "Create and edit own projects",
                 'group' => 'Projects',
-                'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen – dadurch ist er/sie automatisch ' .
-                    'Projektadmin des neu angelegten Projekts.',
-                'tooltipKey' => "User can create, edit, and delete projects, automatically becoming project admin of the created project.",
+                'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen – dadurch ist ' .
+                    'er/sie automatisch Projektadmin des neu angelegten Projekts.',
+                'tooltipKey' => "User can create, edit, and delete projects, automatically becoming " .
+                    "project admin of the created project.",
                 'checked' => false
             ],
             [
@@ -65,7 +69,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Room bookings',
                 'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die ' .
                     'eigenen Anfragen editieren & löschen.',
-                'tooltipKey' => "User can request room bookings for their own projects and edit or delete their own requests.",
+                'tooltipKey' => "User can request room bookings for their own projects and edit or delete " .
+                    "their own requests.",
                 'checked' => false
             ],
             [
@@ -93,7 +98,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung ' .
                     'von Finanzierungsquellen eingeladen werden.',
-                'tooltipKey' => "User is allowed to create their own funding sources and be invited for viewing & managing funding sources.",
+                'tooltipKey' => "User is allowed to create their own funding sources and be invited " .
+                    "for viewing & managing funding sources.",
                 'checked' => false
             ],
             [
@@ -107,22 +113,27 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
             ],
             [
                 'name' => PermissionEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value,
-                'name_de' => "Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, bearbeiten und löschen",
-                'translation_key' => "Allowed to view, edit, and delete all budget documents & contracts from all projects",
+                'name_de' => "Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, " .
+                    "bearbeiten und löschen",
+                'translation_key' => "Allowed to view, edit, and delete all budget documents & " ,
+                    "contracts from all projects",
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Nutzer*in darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, ' .
                     'bearbeiten und löschen.',
-                'tooltipKey' => "User is allowed to view, edit, and delete all budget documents & contracts from all projects.",
+                'tooltipKey' => "User is allowed to view, edit, and delete all budget documents & contracts " .
+                    "from all projects.",
                 'checked' => false
             ],
             [
                 'name' => PermissionEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value,
-                'name_de' => "Darf zusätzlich sämtliche verifizierungs-, oder festgeschriebenen Status aufheben oder gesperrte Spalten entsperren.",
+                'name_de' => "Darf zusätzlich sämtliche verifizierungs-, oder festgeschriebenen Status " .
+                    "aufheben oder gesperrte Spalten entsperren.",
                 'translation_key' => "Allowed to remove any verification or fixed statuses and unlock locked columns",
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Nutzer*in darf zusätzlich sämtliche verifizierungs-, oder festgeschriebenen Status ' .
                     'aufheben oder gesperrte Spalten entsperren.',
-                'tooltipKey' => "User is allowed to remove any verification or fixed statuses and unlock locked columns.",
+                'tooltipKey' => "User is allowed to remove any verification or fixed statuses " .
+                    "and unlock locked columns.",
                 'checked' => false
             ],
             [
@@ -130,9 +141,10 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Tooleinstellungen editieren",
                 'translation_key' => "Edit tool settings",
                 'group' => 'System settings',
-                'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, ' .
-                    'Impressum definieren etc.',
-                'tooltipKey' => "User is allowed to edit the basic settings of the tool, such as replacing logos, defining legal notice, etc.",
+                'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. ' .
+                    'Logos austauschen, Impressum definieren etc.',
+                'tooltipKey' => "User is allowed to edit the basic settings of the tool, such as " .
+                    "replacing logos, defining legal notice, etc.",
                 'checked' => false
             ],
             [
@@ -140,9 +152,10 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Teamverwaltung",
                 'translation_key' => "Team management",
                 'group' => 'System settings',
-                'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. Diese Teams ' .
-                    'können anschließend z.B. Projekten zugeordnet werden.',
-                'tooltipKey' => "User can create, edit, and delete teams (departments) in the system. These teams can then be assigned to projects, for example.",
+                'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. ' .
+                    'Diese Teams können anschließend z.B. Projekten zugeordnet werden.',
+                'tooltipKey' => "User can create, edit, and delete teams (departments) in the system. " .
+                    "These teams can then be assigned to projects, for example.",
                 'checked' => false
             ],
             [
@@ -161,7 +174,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche ' .
                     'definieren, bearbeiten & löschen.',
-                'tooltipKey' => "User can define, edit, and delete project categories, genres, and areas in the system settings.",
+                'tooltipKey' => "User can define, edit, and delete project categories, genres, and areas " .
+                    "in the system settings.",
                 'checked' => false
             ],
             [
@@ -169,7 +183,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name_de' => "Systemeinstellungen für Termine definieren",
                 'translation_key' => "Define system settings for appointments",
                 'group' => 'System settings',
-                'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen definieren, editieren & löschen.',
+                'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen ' .
+                    'definieren, editieren & löschen.',
                 'tooltipKey' => "User can define, edit, and delete types of appointments in the system settings.",
                 'checked' => false
             ],
@@ -180,7 +195,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen ' .
                     'können anschließend von allen anderen Usern verwendet werden.',
-                'tooltipKey' => "User can create, edit, and delete checklist templates. All templates can then be used by all other users.",
+                'tooltipKey' => "User can create, edit, and delete checklist templates. All templates can then ' .
+                    'be used by all other users.",
                 'checked' => false
             ],
             [
@@ -190,7 +206,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf Systemnachrichten anlegen, editieren und löschen. Diese ' .
                     'Benachrichtigungen werden allen Usern angezeigt.',
-                'tooltipKey' => "User can create, edit, and delete system notifications. These notifications are displayed to all users.",
+                'tooltipKey' => "User can create, edit, and delete system notifications. ' .
+                    'These notifications are displayed to all users.",
                 'checked' => false
             ],
             [
@@ -236,7 +253,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
                     'Projekten einsehen ohne dabei die Dokumente sehen zu können.',
-                'tooltipKey' => "User has budget access to all projects, meaning they can view budget planning of all projects without accessing the documents.",
+                'tooltipKey' => "User has budget access to all projects, meaning they can view budget planning ' .
+                    'of all projects without accessing the documents.",
                 'checked' => false
             ],
             [
@@ -246,7 +264,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
                     'Projekten einsehen und kann auch alle Dokumente der Projekte sehen.',
-                'tooltipKey' => "User has budget access to all projects, meaning they can view both budget planning and documents of all projects.",
+                'tooltipKey' => "User has budget access to all projects, meaning they can view both budget planning ' .
+                'and documents of all projects.",
                 'checked' => false
             ],
             [
@@ -288,6 +307,9 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
         ];
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getRoles(): array
     {
         return [
@@ -295,17 +317,25 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name' => RoleEnum::ARTWORK_ADMIN->value,
                 'name_de' => "artwork-Admin",
                 'translation_key' => "artwork admin",
-                'tooltipText' => 'Der Admin hat alle Berechtigungen im System und kann somit alles sehen und bearbeiten.',
-                'tooltipKey' => "The admin has all permissions in the system and can therefore see and edit everything.",
+                'tooltipText' => 'Der Admin hat alle Berechtigungen im System und kann somit alles ' .
+                    'sehen und bearbeiten.',
+                'tooltipKey' => "The admin has all permissions in the system and can therefore see ' .
+                    'and edit everything.",
             ],
         ];
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getExcludedPermissionColumns(): array
     {
         return ['id', 'guard_name', 'created_at', 'updated_at'];
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function getExcludedRoleColumns(): array
     {
         return ['id', 'guard_name', 'created_at', 'updated_at'];

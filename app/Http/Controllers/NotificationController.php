@@ -41,7 +41,7 @@ class NotificationController extends Controller
     {
     }
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function index(ProjectTabService $projectTabService): Response|ResponseFactory
     {
         $historyObjects = [];

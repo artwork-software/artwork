@@ -37,4 +37,9 @@ class ProjectStatesController extends Controller
 
         return Redirect::route('projects.settings.trashed');
     }
+
+    public function update(Request $request, ProjectStates $projectStates): void
+    {
+        $projectStates->update($request->only(['name', 'color']));
+    }
 }

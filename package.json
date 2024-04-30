@@ -45,6 +45,7 @@
         "vue-i18n": "^9.9.1",
         "vue-mathjax-next": "^0.0.4",
         "vue-tailwind-datepicker": "^1.4.3",
+        "vue3-colorpicker": "^2.3.0",
         "vuedraggable": "^4.1.0",
         "ziggy": "^2.4.0"
     }

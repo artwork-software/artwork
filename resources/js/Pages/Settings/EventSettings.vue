@@ -118,7 +118,7 @@
                     <div class="mt-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
-                                <input type="color" placeholder="Farbe" v-model="eventTypeForm.hex_code" class="rounded-full focus:outline-none h-14 w-14 object-cover" >
+                                <ColorPickerComponent @updateColor="addColor" />
                             </div>
 
                             <div class="relative my-auto w-full ml-8 mr-12">
@@ -174,7 +174,7 @@
                     <div class="mt-12">
                         <div class="flex">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
-                                <input type="color" v-model="editEventTypeForm.hex_code" class="rounded-full focus:outline-none h-14 w-14" >
+                                <ColorPickerComponent @updateColor="updateColor" :color="editEventTypeForm.hex_code" />
                             </div>
                             <div class="relative my-auto w-full ml-8 mr-12">
                                 <input id="editCategoryName" v-model="editEventTypeForm.name" type="text"
@@ -278,6 +278,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ColorPicker from 'primevue/colorpicker';
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default {
     mixins: [Permissions],
@@ -318,6 +319,7 @@ export default {
         }
     },
     components: {
+        ColorPickerComponent,
         FormButton,
         AddButtonBig,
         AppLayout,
@@ -366,6 +368,12 @@ export default {
         }
     },
     methods: {
+        addColor(color) {
+            this.eventTypeForm.hex_code = color;
+        },
+        updateColor(color) {
+            this.editEventTypeForm.hex_code = color;
+        },
         openAddEventTypeModal() {
             this.addingEventType = true;
         },

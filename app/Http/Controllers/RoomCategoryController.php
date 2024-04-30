@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Room\Models\RoomCategory;
+use Artwork\Modules\RoomCategory\Models\RoomCategory;
 use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

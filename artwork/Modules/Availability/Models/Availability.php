@@ -99,4 +99,14 @@ class Availability extends Model
     ): Builder {
         return $builder->whereBetween('date', [$startDate, $endDate]);
     }
+
+    public function scopeByDate(Builder $builder, Carbon $date): Builder
+    {
+        return $builder->where('date', $date);
+    }
+
+    public function scopeOrderedByDate(Builder $builder, string $direction = 'ASC'): Builder
+    {
+        return $builder->orderBy('date', $direction);
+    }
 }

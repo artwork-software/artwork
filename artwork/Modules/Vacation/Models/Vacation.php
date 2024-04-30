@@ -5,6 +5,7 @@ namespace Artwork\Modules\Vacation\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -82,5 +83,15 @@ class Vacation extends Model
     public function getHasConflictsAttribute(): bool
     {
         return $this->conflicts()->exists();
+    }
+
+    public function scopeByDate(Builder $builder, Carbon $date): Builder
+    {
+        return $builder->where('date', $date);
+    }
+
+    public function scopeOrderedByDate(Builder $builder, string $direction = 'ASC'): Builder
+    {
+        return $builder->orderBy('date', $direction);
     }
 }

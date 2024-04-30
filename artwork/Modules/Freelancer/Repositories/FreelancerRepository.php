@@ -14,7 +14,7 @@ readonly class FreelancerRepository extends BaseRepository
         return Freelancer::query()->canWorkShifts()->get();
     }
 
-    public function findFreelancerOrFail($freelancerId): Freelancer
+    public function findOrFail($freelancerId): Freelancer
     {
         return Freelancer::findOrFail($freelancerId);
     }
@@ -25,9 +25,52 @@ readonly class FreelancerRepository extends BaseRepository
         Carbon $endDate
     ): Collection {
         if (!$freelancer instanceof Freelancer) {
-            $freelancer = $this->findFreelancerOrFail($freelancer);
+            $freelancer = $this->findOrFail($freelancer);
         }
 
         return $freelancer->availabilities()->betweenDates($startDate, $endDate)->get()->groupBy('formatted_date');
+    }
+
+    public function getVacationsByDateOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $selectedDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->vacations()
+            ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getAvailabilitiesByDateOrderedByDateAscending(
+        int|Freelancer $freelancer,
+        Carbon $selectedDate
+    ): Collection {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return $freelancer
+            ->availabilities()
+            ->byDate($selectedDate)
+            ->orderedByDate()
+            ->get();
+    }
+
+    public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection
+    {
+        if (!$freelancer instanceof Freelancer) {
+            $freelancer = $this->findOrFail($freelancer);
+        }
+
+        return  $freelancer
+            ->shifts()
+            ->with(['event', 'event.project', 'event.room'])
+            ->orderedByStart()
+            ->get();
     }
 }

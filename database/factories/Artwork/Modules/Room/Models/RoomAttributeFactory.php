@@ -2,11 +2,12 @@
 
 namespace Database\Factories\Artwork\Modules\Room\Models;
 
-use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\RoomAttribute\Models\RoomAttribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Room>
+ * @extends Factory<Room>
  *
  * @method RoomAttribute createOne(array $attributes = [])
  * @method RoomAttribute[] create(array $attributes = [])

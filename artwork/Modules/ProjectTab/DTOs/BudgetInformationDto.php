@@ -88,4 +88,49 @@ class BudgetInformationDto extends BaseDto
 
         return $this;
     }
+
+    public function getProjectManagerIds(): ?Collection
+    {
+        return $this->projectManagerIds;
+    }
+
+    public function getProjectFiles(): ?EloquentCollection
+    {
+        return $this->project_files;
+    }
+
+    public function getContracts(): ?EloquentCollection
+    {
+        return $this->contracts;
+    }
+
+    public function getAccessBudget(): ?EloquentCollection
+    {
+        return $this->accessBudget;
+    }
+
+    public function getProjectMoneySources(): ?EloquentCollection
+    {
+        return $this->projectMoneySources;
+    }
+
+    public function getContractTypes(): ?EloquentCollection
+    {
+        return $this->contractTypes;
+    }
+
+    public function getCompanyTypes(): ?EloquentCollection
+    {
+        return $this->companyTypes;
+    }
+
+    public function getCurrencies(): ?EloquentCollection
+    {
+        return $this->currencies;
+    }
+
+    public function getCollectingSocieties(): ?EloquentCollection
+    {
+        return $this->collectingSocieties;
+    }
 }

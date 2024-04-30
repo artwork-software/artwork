@@ -72,7 +72,7 @@
                 <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="freelancer" :date-value="dateValue"
                                :days-with-events="daysWithEvents"
                                :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                               :vacations="vacations"></UserShiftPlan>
+                               :vacations="vacations" :shift-qualifications="this.shiftQualifications"></UserShiftPlan>
                 <Availability type="freelancer"
                               :create-show-date="createShowDate"
                               :show-vacations-and-availabilities-date="showVacationsAndAvailabilitiesDate"

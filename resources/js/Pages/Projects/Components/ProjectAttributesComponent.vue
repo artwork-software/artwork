@@ -9,16 +9,16 @@
         </div>
         <div class="flex mt-3">
             <div>
-                <SidebarTagComponent v-for="category in projectCategories"
-                                     :displayed-text="category.name" :property="category"
+                <SidebarTagComponent v-for="category in projectCategoriesWithColor"
+                                     :item="category" :property="category"
                                      :hide-x="true"
                 />
-                <SidebarTagComponent v-for="genre in projectGenres"
-                                     :displayed-text="genre.name" :property="genre"
+                <SidebarTagComponent v-for="genre in projectGenresWithColor"
+                                     :item="genre" :property="genre"
                                      :hide-x="true"
                 />
-                <SidebarTagComponent v-for="sector in projectSectors"
-                                     :displayed-text="sector.name" :property="sector"
+                <SidebarTagComponent v-for="sector in projectSectorsWithColor"
+                                     :item="sector" :property="sector"
                                      :hide-x="true"
                 />
             </div>
@@ -71,6 +71,32 @@ export default defineComponent({
             showAttributeEditModal: false,
         };
     },
+    computed: {
+        projectCategoriesWithColor(){
+            return this.projectCategories.map(category => {
+                return {
+                    ...category,
+                    color: category.color ? category.color : '#ffffff'
+                }
+            })
+        },
+        projectGenresWithColor(){
+            return this.projectGenres.map(genre => {
+                return {
+                    ...genre,
+                    color: genre.color ? genre.color : '#ffffff'
+                }
+            })
+        },
+        projectSectorsWithColor(){
+            return this.projectSectors.map(sector => {
+                return {
+                    ...sector,
+                    color: sector.color ? sector.color : '#ffffff'
+                }
+            })
+        }
+    },
     methods: {
         openProjectAttributeEditModal() {
             this.showAttributeEditModal = true;
@@ -94,6 +120,7 @@ export default defineComponent({
             )
             return canWriteArray.includes(this.$page.props.user.id);
         },
+
     }
 });
 </script>

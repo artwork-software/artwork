@@ -25,6 +25,7 @@ class Currency extends Model
 
     protected $fillable = [
         'name',
+        'color'
     ];
 
     public function contracts(): BelongsToMany

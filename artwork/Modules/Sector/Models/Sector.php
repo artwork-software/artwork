@@ -24,7 +24,8 @@ class Sector extends Model
     use Prunable;
 
     protected $fillable = [
-        'name'
+        'name',
+        'color'
     ];
 
     public function projects(): BelongsToMany

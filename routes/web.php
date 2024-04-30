@@ -353,14 +353,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
-    Route::patch('/genres/{genre}', [GenreController::class, 'update']);
+    Route::patch('/genres/{genre}', [GenreController::class, 'update'])->name('genres.update');
     Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
     Route::patch('/genres/{genre}/restore', [GenreController::class, 'restore']);
     Route::delete('/genres/{id}/force', [GenreController::class, 'forceDelete'])->name('genres.force');
 
     //Sectors
     Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
-    Route::patch('/sectors/{sector}', [SectorController::class, 'update']);
+    Route::patch('/sectors/{sector}', [SectorController::class, 'update'])->name('sectors.update');
     Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);
     Route::patch('/sectors/{sector}/restore', [SectorController::class, 'restore']);
     Route::delete('/sectors/{id}/force', [SectorController::class, 'forceDelete'])->name('sectors.force');
@@ -911,6 +911,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('contract_types.restore');
     Route::delete('/contract_types/{id}/force', [ContractTypeController::class, 'forceDelete'])
         ->name('contract_types.force');
+    Route::patch('/contract_types/{contract_type}/update', [ContractTypeController::class, 'update'])
+        ->name('contract_types.update');
 
     // CompanyTypes
     Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
@@ -921,6 +923,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('company_types.restore');
     Route::delete('/company_types/{id}/force', [CompanyTypeController::class, 'forceDelete'])
         ->name('company_types.force');
+    Route::patch('/company_types/{company_type}/update', [CompanyTypeController::class, 'update'])
+        ->name('company_types.update');
 
     // Collecting Societies
     Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])
@@ -935,12 +939,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('collecting_societies.restore');
     Route::delete('/collecting_societies/{id}/force', [CollectingSocietyController::class, 'forceDelete'])
         ->name('collecting_societies.force');
-
+    Route::patch(
+        '/collecting_societies/{collecting_society}/update',
+        [CollectingSocietyController::class, 'update']
+    )->name('collecting_societies.update');
     // Currencies
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
     Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
     Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])->name('currencies.restore');
+    Route::patch('/currencies/{currency}/update', [CurrencyController::class, 'update'])->name('currencies.update');
     Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])->name('currencies.force');
 
     // Project States
@@ -949,6 +957,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('update.project.state');
     Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
+    Route::patch('/states/{projectStates}/update', [ProjectStatesController::class, 'update'])->name('state.update');
     Route::delete('/states/{id}/force', [ProjectStatesController::class, 'forceDelete'])->name('state.force');
 
     // Project Settings

@@ -1,18 +1,19 @@
 <template>
     <div class="mt-16 max-w-2xl">
-        <h2 class="headline2 my-2">{{ props.title }}</h2>
+        <h2 class="headline2 my-2">{{ title }}</h2>
         <div class="xsLight">
-            {{ props.description }}
+            {{ description }}
         </div>
     </div>
-    <div class="mt-8 flex w-full flex-wrap">
+    <div class="mt-8 flex w-full flex-wrap gap-x-1">
+        <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
+            <ColorPickerComponent @update-color="UpdateColor"  />
+        </div>
+
         <div class="relative flex max-w-lg w-full">
-            <input :id="props.inputLabel" v-model="input" type="text" @keyup.enter="add"
-                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                   placeholder="placeholder"/>
-            <label :for="props.inputLabel"
-                   class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
-                {{ props.inputLabel }}
+            <input :id="inputLabel" v-model="input" type="text" @keyup.enter="add" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder"/>
+            <label :for="inputLabel" class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                {{ inputLabel }}
             </label>
             <div class="m-2 -ml-8 -mt-1">
                 <button
@@ -22,103 +23,103 @@
                 </button>
             </div>
         </div>
-        <div class="flex flex-wrap w-full max-w-xl">
+        <div class="flex flex-wrap w-full max-w-xl mt-2">
             <div v-if="itemStyle === 'tag'">
-                        <span v-for="item in props.items"
-                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ item.name }}
-                                            <button type="button" @click="emit('openDeleteModal', item)">
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                        </span>
+                <EditableTagComponent v-for="item in itemsWithColor" :key="item.id" :item="item" @openDeleteModal="$emit('openDeleteModal', item)" @openEditModal="update" />
             </div>
-            <div v-else>
-                <draggable ghost-class="opacity-50"
-                           key="draggableKey"
-                           item-key="draggableID" :list="items"
-                           @start="dragging=true" @end="dragging=false"
-                           @change="updateItemOrder(items)">
-                    <template #item="{element}" :key="element.id">
-                        <div class="flex"
-                             @mouseover="showEditIcons = element.id"
-                             @mouseout="showEditIcons = null"
-                             :key="element.id"
-                        >
-                            <div class="mt-4 w-full"
-                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex pr-12">
-                                    <div class="flex -mt-1 items-center">
-                                        <DotsVerticalIcon
-                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
-                                        <DotsVerticalIcon
-                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
-                                    </div>
-                                    <p class="ml-4 my-auto text-lg font-black">
-                                        {{ element.name }}</p>
-                                    <button v-show="showEditIcons === element.id" type="button" class="ml-6" @click="emit('openEditModal', element)">
-                                        <PencilIcon class="h-4 w-4 hover:text-primary" />
-                                    </button>
-                                    <button v-show="showEditIcons === element.id" type="button" class="ml-3" @click="emit('openDeleteModal', element)">
-                                        <XCircleIcon class="h-4 w-4 hover:text-error" />
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </template>
-                </draggable>
-            </div>
-
         </div>
     </div>
 </template>
 
-<script setup>
+<script>
 import {XIcon, XCircleIcon, PencilIcon} from "@heroicons/vue/outline"
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ref} from "vue";
 import draggable from "vuedraggable";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
+import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 
-const props = defineProps({
-    title: String,
-    description: String,
-    items: Array,
-    inputLabel: String,
-    itemStyle: {
-        type: String,
-        default: 'tag'
-    }
-})
+export default {
+    name: "ProjectSettingsItem",
+    components: {
+        EditableTagComponent,
+        ColorPickerComponent,
+        draggable,
+        XIcon,
+        XCircleIcon,
+        PencilIcon,
+        CheckIcon,
+        DotsVerticalIcon
+    },
+    props: {
+        title: String,
+        description: String,
+        items: Array,
+        inputLabel: String,
+        itemStyle: {
+            type: String,
+            default: 'tag'
+        }
+    },
+    emits: ['openEditModal', 'openDeleteModal', 'add'],
+    data() {
+        return {
+            showEditIcons: null,
+            input: '',
+            dragging: false,
+            hex_code: '#ffffff',
+        }
+    },
+    computed: {
+        itemsWithColor(){
+            return this.items.map(item => {
+                return {
+                    ...item,
+                    color: item.color ? item.color : '#ffffff'
+                }
+            })
+        }
+    },
+    methods: {
+        add() {
+            this.$emit('add', this.input, this.hex_code)
+            this.input = ''
+        },
+        updateItemOrder(items) {
+            items.map((item, index) => {
+                item.order = index + 1
+            })
 
-const emit = defineEmits(['openEditModal', 'openDeleteModal', 'add'])
+            this.itemOrderForm.headlines = items
 
-const showEditIcons = ref(null)
-const input = ref('')
-const dragging = ref(false)
-
-const itemOrderForm = useForm({
-    headlines: []
-})
-
-const add = () => {
-    emit('add', input.value)
-    input.value = ''
+            this.itemOrderForm.put('/project_headlines/order')
+        },
+        UpdateColor(color) {
+            this.hex_code = color
+        },
+        update(itemCopy) {
+            this.$emit('openEditModal', itemCopy)
+        }
+    },
 }
 
-const updateItemOrder = (items) => {
-    items.map((item, index) => {
-        item.order = index + 1
-    })
-
-    itemOrderForm.headlines = items
-
-    itemOrderForm.put('/project_headlines/order')
-}
 
 </script>
+<style>
+input[type=color] {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
 
-<style scoped>
+input[type=color]::-webkit-color-swatch {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
+
+input[type=color]::-webkit-color-swatch-wrapper {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
 
 </style>

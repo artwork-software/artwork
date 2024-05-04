@@ -101,4 +101,6 @@ RUN chown -R www-data:www-data /var/www/html
 
 RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
 
+USER root
+
 ENTRYPOINT ["/bin/bash", "/opt/init.sh"]

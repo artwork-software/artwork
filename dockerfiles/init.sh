@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 #If no APP_KEY exists in the env we generate one
 if [ -n "$APP_KEY" ]; then \
     php /var/www/html/artisan key:generate --force; \
@@ -7,4 +9,4 @@ fi
 php /var/www/html/artisan migrate --force
 php /var/www/html/artisan db:seed:production
 
-sudo start-container
+start-container

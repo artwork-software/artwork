@@ -1,7 +1,7 @@
 FROM node:20-bookworm as node-compiler
 
-ARG BRANCH
-ARG TAG
+ARG BRANCH=''
+ARG TAG=''
 
 WORKDIR '/app'
 

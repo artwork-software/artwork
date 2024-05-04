@@ -5,6 +5,6 @@ fi
 
 #Run migrations
 php /var/www/html/artisan migrate --force
-php /var/www/html/artisan db:seed:production --force
+php /var/www/html/artisan db:seed:production
 
 start-container

@@ -2,7 +2,8 @@ services:
   artwork: &php
     image: endlezz/artwork:${ARTWORK_VERSION:-latest}
     pull_policy: always
-    user: "1000:1000"
+    depends_on:
+      - mysql
     env_file:
       - .env
     ports:
@@ -11,7 +12,7 @@ services:
     networks:
       - artwork
     volumes:
-      - '.:/var/www/html'
+      - '.env:/var/www/html/.env'
     extra_hosts:
       - "host.docker.internal:host-gateway"
   php-queue-worker:

@@ -1,8 +1,10 @@
 name: Publish to docker hub
 on:
   push:
-    branches: ["main", "staging", "dev"]
-    tags: ["v*"]
+    branches:
+      - *
+    tags:
+      - v*
 
 jobs:
   push_to_registry:

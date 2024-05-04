@@ -33,7 +33,7 @@ ENV TZ=UTC
 ARG BRANCH
 ARG TAG
 
-COPY dockerfiles/start-container /usr/local/bin/start-container
+COPY dockerfiles/start-container /usr/bin/start-container
 COPY dockerfiles/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 COPY dockerfiles/init.sh /opt/init.sh
 

@@ -39,7 +39,7 @@ jobs:
             TAG=$GIT_TAG_NAME
             BRANCH=${{ github.head_ref || github.ref_name }}
           context: .
-          file: ./dockerfiles/release.Dockerfile
+          file: dockerfiles/release.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

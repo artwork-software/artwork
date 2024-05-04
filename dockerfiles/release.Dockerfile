@@ -35,6 +35,7 @@ ARG TAG
 
 COPY dockerfiles/start-container /usr/local/bin/start-container
 COPY dockerfiles/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+COPY dockerfiles/init.sh /opt/init.sh
 
 WORKDIR /var/www/html
 
@@ -100,4 +101,4 @@ RUN chown -R www-data:www-data /var/www/html
 
 RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
 
-ENTRYPOINT ["start-container"]
+ENTRYPOINT ["/bin/bash", "/opt/init.sh"]

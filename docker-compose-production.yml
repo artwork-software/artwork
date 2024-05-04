@@ -1,7 +1,7 @@
-version: '3'
 services:
   artwork: &php
-    image: endlezz/artwork:${ARTWORK-VERSION:-latest}
+    image: endlezz/artwork:${ARTWORK_VERSION:-latest}
+    pull_policy: always
     user: "1000:1000"
     env_file:
       - .env

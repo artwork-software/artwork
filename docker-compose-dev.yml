@@ -1,4 +1,3 @@
-version: '3'
 services:
     php: &php
       image: endlezz/php-dev

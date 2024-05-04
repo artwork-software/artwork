@@ -45,6 +45,7 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     wget \
     curl \
     git \
+    sudo \
     gosu \
     cron \
     build-essential \
@@ -100,7 +101,5 @@ COPY --from=node-compiler /app/public/js /var/www/html/public/js
 RUN chown -R www-data:www-data /var/www/html
 
 RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
-
-USER root
 
 ENTRYPOINT ["/bin/bash", "/opt/init.sh"]

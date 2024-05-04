@@ -33,8 +33,8 @@ ENV TZ=UTC
 ARG BRANCH
 ARG TAG
 
-COPY start-container /usr/local/bin/start-container
-COPY supervisor.conf /etc/supervisor/conf.d/supervisord.conf
+COPY dockerfiles/start-container /usr/local/bin/start-container
+COPY dockerfiles/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /var/www/html
 

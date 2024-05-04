@@ -17,9 +17,11 @@ services:
       - "host.docker.internal:host-gateway"
   php-queue-worker:
     <<: *php
+    ports: []
     command: 'php artisan horizon'
   php-scheduler:
     <<: *php
+    ports: []
     command: 'command: yacron -c schedule.yaml'
   mysql:
     image: 'mysql/mysql-server:8.0'

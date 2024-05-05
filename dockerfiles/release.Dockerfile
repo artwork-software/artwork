@@ -1,28 +1,3 @@
-FROM node:20-bookworm as node-compiler
-
-ARG BRANCH=''
-ARG TAG=''
-
-WORKDIR '/app'
-
-ENV DEBIAN_FRONTEND noninteractive
-ENV TZ=UTC
-
-RUN apt-get update && apt-get install -y ca-certificates
-
-RUN apt-get update && apt-get install -y git \
-    && git clone https://github.com/artwork-software/artwork.git .
-
-RUN if [ -n "$BRANCH"]; then \
-     git checkout $BRANCH; \
-    elif [ -n "$TAG" ]; then  \
-      git checkout tags/$TAG; \
-    fi
-
-
-RUN npm -g install cross-env webpack
-RUN npm install && npm run dev && npm run prod
-
 FROM ubuntu:22.04 as base
 
 MAINTAINER "Caldero Systems GmbH"
@@ -53,7 +28,6 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     gnupg \
     mysql-client \
     redis \
-    nginx \
     openssl \
     unzip \
     libpng-dev \
@@ -91,12 +65,9 @@ RUN if [ -n "$BRANCH"]; then \
       git checkout tags/$TAG; \
     fi
 
-RUN cp -rf /var/www/html/.install/artwork.vhost.conf /etc/nginx/sites-available/default
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
 RUN php /var/www/html/artisan storage:link
-
-COPY --from=node-compiler /app/public/js /var/www/html/public/js
 
 RUN chown -R www-data:www-data /var/www/html
 

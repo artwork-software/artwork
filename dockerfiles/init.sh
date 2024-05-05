@@ -11,5 +11,3 @@ echo "Running migrations"
 sudo php /var/www/html/artisan migrate --force
 echo "Seed the database if needed"
 sudo php /var/www/html/artisan db:seed:production
-
-sudo /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

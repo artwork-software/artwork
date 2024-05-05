@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     python2 \
     dnsutils \
     librsvg2-bin \
-     python3 \
+    python3 \
     python3-pip
 
 

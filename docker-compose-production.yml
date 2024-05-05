@@ -19,7 +19,11 @@ services:
   php-scheduler:
     <<: *php
     ports: []
-    command: 'command: yacron -c schedule.yaml'
+    command: 'yacron -c schedule.yaml'
+  php-updater:
+    <<: *php
+    ports: []
+    command: 'sh'
   nginx:
     build:
       context: .

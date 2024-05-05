@@ -6,6 +6,7 @@ use Spatie\LaravelSettings\Settings;
 
 class GeneralSettings extends Settings
 {
+    public string $page_title;
     public string $company_name;
 
     public bool $setup_finished;

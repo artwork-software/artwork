@@ -1,5 +1,5 @@
 <template>
-    <UserHeader>
+    <UserHeader :title="$t('All permission presets')">
         <div class="xl:max-w-screen-xl mt-12 flex flex-col">
             <div class="flex items-center">
                 <h2 class="headline1">{{ $t('All permission presets')}}</h2>

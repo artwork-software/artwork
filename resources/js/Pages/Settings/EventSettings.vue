@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Event Settings')">
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
                 <h2 class="headline1">{{$t('Event Settings')}}</h2>
@@ -49,57 +49,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex">
-                        <Menu as="div" class="my-auto relative">
-                            <div class="flex" v-if="index !== 0">
-                                <MenuButton
-                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                    <div class="flex items-center">
+                        <BaseMenu v-if="index !== 0">
+                            <MenuItem v-slot="{ active }">
+                                <a href="#" @click="openEditEventTypeModal(eventType)"
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <PencilAltIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                         aria-hidden="true"/>
-                                </MenuButton>
-                                <div v-if="this.$page.props.show_hints && index === 0" class="absolute flex w-40 ml-6">
-                                    <div>
-                                        <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                    </div>
-                                    <div class="flex" v-if="index === 1">
-                                        <span
-                                            class="hind ml-2 text-secondary tracking-tight text-lg">{{$t('Edit an event type')}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="z-10 origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem v-slot="{ active }">
-                                            <a href="#" @click="openEditEventTypeModal(eventType)"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PencilAltIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
-                                                {{$t('Edit event type')}}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a href="#" @click="openDeleteEventTypeModal(eventType)"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
-                                                {{$t('Delete event type')}}
-                                            </a>
-                                        </MenuItem>
-                                    </div>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
-
+                                    {{$t('Edit event type')}}
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a href="#" @click="openDeleteEventTypeModal(eventType)"
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <TrashIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    {{$t('Delete event type')}}
+                                </a>
+                            </MenuItem>
+                        </BaseMenu>
                     </div>
                 </li>
             </ul>
@@ -279,6 +249,7 @@ import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue"
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ColorPicker from 'primevue/colorpicker';
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     mixins: [Permissions],
@@ -319,6 +290,7 @@ export default {
         }
     },
     components: {
+        BaseMenu,
         ColorPickerComponent,
         FormButton,
         AddButtonBig,

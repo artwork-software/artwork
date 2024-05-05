@@ -28,47 +28,27 @@
                 {{ contract.description }}
             </div>
         </div>
-        <Menu as="div" class="my-auto mt-3 relative">
-            <div class="flex items-center -mt-1">
-                <MenuButton
-                    class="flex bg-tagBg p-0.5 rounded-full">
-                    <IconDotsVertical stroke-width="1.5"
-                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                        aria-hidden="true"/>
-                </MenuButton>
-            </div>
-            <transition enter-active-class="transition ease-out duration-100"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-75"
-                        leave-from-class="transform opacity-100 scale-100"
-                        leave-to-class="transform opacity-0 scale-95">
-                <MenuItems
-                    class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                    <div class="py-1">
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="$emit('openEditContractModal', contract)"
-                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconEdit stroke-width="1.5"
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem
-                            v-slot="{ active }">
-                            <a @click="$emit('openDeleteContractModal', contract)"
-                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <IconTrash stroke-width="1.5"
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Delete') }}
-                            </a>
-                        </MenuItem>
-                    </div>
-                </MenuItems>
-            </transition>
-        </Menu>
+        <BaseMenu class="mt-3">
+            <MenuItem v-slot="{ active }">
+                <a href="#" @click="$emit('openEditContractModal', contract)"
+                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                    <IconEdit stroke-width="1.5"
+                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                              aria-hidden="true"/>
+                    {{ $t('Edit')}}
+                </a>
+            </MenuItem>
+            <MenuItem
+                v-slot="{ active }">
+                <a @click="$emit('openDeleteContractModal', contract)"
+                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                    <IconTrash stroke-width="1.5"
+                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                               aria-hidden="true"/>
+                    {{ $t('Delete') }}
+                </a>
+            </MenuItem>
+        </BaseMenu>
     </div>
 </template>
 
@@ -81,6 +61,7 @@ import {DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {IconCopy} from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     name: "ContractListItem",
@@ -88,6 +69,7 @@ export default {
     props: ['contract', 'first_project_tab_id'],
     emits: ['openDeleteContractModal', 'openEditContractModal'],
     components: {
+        BaseMenu,
         IconCopy,
         Menu,
         MenuItem,

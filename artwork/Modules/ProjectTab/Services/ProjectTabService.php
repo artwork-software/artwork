@@ -177,6 +177,7 @@ readonly class ProjectTabService
             ->setContractTypes($contractTypeService->getAll())
             ->setCompanyTypes($companyTypeService->getAll())
             ->setCurrencies($currencyService->getAll())
-            ->setCollectingSocieties($collectingSocietyService->getAll());
+            ->setCollectingSocieties($collectingSocietyService->getAll())
+            ->setCostCenter($project->costCenter);
     }
 }

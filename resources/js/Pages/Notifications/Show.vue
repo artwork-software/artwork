@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Notifications')">
         <div class="flex">
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">

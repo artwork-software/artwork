@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="emit('close')">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="$emit('close')" v-if="show" modal-image="/Svgs/Overlays/illu_room_admin_edit.svg">
             <div class="mx-3">
                 <div class="headline1 mt-2 mb-6">
                     {{$t('Access to room')}}
                 </div>
-                <XIcon @click="emit('close')"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="xsLight">
                     {{ $t('Define who can edit the room and release bookings (room admin), and who can request the room.')}}
                 </div>
@@ -90,10 +85,7 @@
                 </div>
 
             </div>
-
-        </template>
-
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script setup>
@@ -102,6 +94,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {onMounted, ref, watch} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 const props = defineProps({
     show: Boolean,

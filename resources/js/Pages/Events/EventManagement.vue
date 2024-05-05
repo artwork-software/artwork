@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Calendar')">
         <div>
             <div v-if="calendarType && calendarType === 'daily'">
                 <div class="mr-4">

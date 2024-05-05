@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout title="Startseite">
         <div class="max-w-screen-2xl mb-40 ml-14 mr-40">
             <div class="headline1 mb-10">
                 Dashboard

@@ -1,67 +1,38 @@
 <template>
-    <app-layout>
+    <app-layout :title="room.name">
         <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
-                <div class="flex">
+                <div class="flex items-center">
                     <h2 class="headline1">{{ room.name }}</h2>
-                    <Menu as="div" class="my-auto relative ml-2">
-                        <div class="flex"
-                             v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                    aria-hidden="true"/>
-                            </MenuButton>
-                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="ml-2 hind mt-1">{{$t('Edit the room')}}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openEditRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                            <IconEdit stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{$t('edit')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateRoom(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconCopy stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Duplicate')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openSoftDeleteRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconTrash  stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{$t('In the recycle bin')}}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu :right="false" v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin" class="ml-2">
+                        <MenuItem v-slot="{ active }">
+                            <a @click="openEditRoomModal(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                <IconEdit stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{$t('edit')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="duplicateRoom(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconCopy stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Duplicate')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a @click="openSoftDeleteRoomModal(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconTrash  stroke-width="1.5"
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                {{$t('In the recycle bin')}}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
                 <div v-if="room.room_history[0]"
                      class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
@@ -497,6 +468,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 
 export default {
@@ -530,6 +502,7 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseMenu,
         FormButton,
         SuccessModal,
         ConfirmationComponent,

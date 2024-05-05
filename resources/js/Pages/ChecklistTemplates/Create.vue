@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Checklist template') + ' ' + $t('Create')">
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
@@ -97,15 +97,11 @@
 
         </div>
         <!-- Add Task Modal-->
-        <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
-            <template #content>
+        <BaseModal @closed="closeAddTaskModal" v-if="addingTask" :show-image="false">
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         {{ $t('New task')}}
                     </div>
-                    <XIcon @click="closeAddTaskModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="mt-12">
                         <div class="flex">
                             <div class="relative flex w-full mr-4">
@@ -129,20 +125,13 @@
                     </div>
 
                 </div>
-
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Change Teams Modal -->
-        <jet-dialog-modal :show="showChangeUsersModal" @close="closeChangeUsersModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
+        <BaseModal @closed="closeChangeUsersModal" v-if="showChangeUsersModal" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         {{ $t('Assign checklist template')}}
                     </div>
-                    <XIcon @click="closeChangeUsersModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
                         {{ $t('Type the name of the user to whom you want to assign the checklist template.')}}
                     </div>
@@ -200,8 +189,7 @@
                         @click="closeChangeUsersModal"
                         :text="$t('Assign')" />
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 </template>
 
@@ -221,12 +209,14 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {
+        BaseModal,
         FormButton,
         Button,
         TeamIconCollection,

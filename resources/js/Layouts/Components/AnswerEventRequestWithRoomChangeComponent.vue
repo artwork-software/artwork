@@ -1,7 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_appointment.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment.svg">
             <div class="mx-4">
                 <div class="headline1 mt-2 mb-8">
                     {{ $t('Event')}}
@@ -94,8 +92,7 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -109,11 +106,13 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         XIcon,

@@ -1,5 +1,5 @@
 <template>
-    <ToolSettingsHeader>
+    <ToolSettingsHeader :title="$t('Sage interface')">
         <h2 class="headline2">{{ $t('Sage interface') }}</h2>
         <div class="grid grid-cols-12">
             <div class="xsLight mt-4 col-span-9">

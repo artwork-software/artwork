@@ -66,7 +66,7 @@ export default {
 </script>
 
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Day Services')">
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
                 <h2 class="headline1">{{$t('Day Services')}}</h2>

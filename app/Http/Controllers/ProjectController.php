@@ -1939,6 +1939,22 @@ class ProjectController extends Controller
                     $sageAssignedDataCommentService,
                     $sageApiSettingsService
                 );
+                $headerObject->project->users = $project->users->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
+                    'email' => $user->email,
+                    'departments' => $user->departments,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'phone_number' => $user->phone_number,
+                    'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
+                    'pivot_access_budget' => (bool)$user->pivot?->access_budget,
+                    'pivot_is_manager' => (bool)$user->pivot?->is_manager,
+                    'pivot_can_write' => (bool)$user->pivot?->can_write,
+                    'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+                ]);
             }
 
             if ($component->type === ProjectTabComponentEnum::SHIFT_TAB->value) {
@@ -1966,6 +1982,9 @@ class ProjectController extends Controller
             }
 
             if ($component->type === ProjectTabComponentEnum::BUDGET_INFORMATIONS->value) {
+                $headerObject->project->cost_center = $project->costCenter;
+                $headerObject->project->collecting_society = $project->collectingSociety;
+
                 $loadedProjectInformation['BudgetInformation'] = $this->projectTabService->getBudgetInformationDto(
                     $project,
                     $contractTypeService,
@@ -1975,7 +1994,6 @@ class ProjectController extends Controller
                 );
             }
         }
-
         if (!$project->is_group) {
             $group = DB::table('project_groups')
                 ->select('*')

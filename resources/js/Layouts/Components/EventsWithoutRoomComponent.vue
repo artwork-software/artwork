@@ -1,9 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <IconX stroke-width="1.5" @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
             <div class="mx-4">
                 <!--    Heading    -->
                 <div>
@@ -475,8 +471,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 
     <!-- Event löschen Modal -->
     <confirmation-component
@@ -520,11 +515,13 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import Permissions from "@/Mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         Switch,
         SwitchGroup,
         SwitchLabel,

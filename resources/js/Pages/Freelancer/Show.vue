@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Freelancer">
+    <AppLayout :title="$t('Freelancer') + ' ' + freelancer.first_name + ' ' + freelancer.last_name + ' ' + $t('edit')">
         <div class="w-full mt-12 ml-14 mr-40">
             <div class="flex justify-between w-full items-center">
                 <div class="group block flex-shrink-0">
@@ -15,45 +15,26 @@
                     </div>
                 </div>
                 <div>
-                    <Menu as="div" class="my-auto relative">
-                        <div>
-                            <MenuButton class="flex">
-                                <DotsVerticalIcon class="mr-3 ml-6 flex-shrink-0 h-6 w-6 text-gray-600 my-auto bg-buttonBlue/10 rounded-full" aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
-                                <div>
-
-                                    <MenuItem v-slot="{ active }">
-
-                                        <a href="#" @click="openChangeTeamsModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit team membership')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="deleteFromAllDepartments"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Remove user from all teams')}}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="openChangeTeamsModal"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <PencilAltIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Edit team membership')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="deleteFromAllDepartments"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <TrashIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Remove user from all teams')}}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
             </div>
             <div class="mt-10">
@@ -174,11 +155,13 @@ import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPla
 import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        BaseMenu,
         FormButton,
         SuccessModal,
         WorkProfileTab,

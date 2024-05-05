@@ -21,70 +21,41 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <Menu as="div" class="my-auto relative"
-                              v-if="this.$can('edit budget templates') || !table.is_template">
-                            <div class="flex">
-                                <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
-                                    <IconDotsVertical stroke-width="1.5"
-                                                      class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                      aria-hidden="true"/>
-                                </MenuButton>
-                            </div>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="z-50 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem
-                                            v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                            v-slot="{ active }"
-                                            v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                            <span @click="fixSubPosition(subPosition.id)"
-                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLock stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                          aria-hidden="true"/>
-                                                {{ $t('Commitment') }}
-                                            </span>
-                                        </MenuItem>
-                                        <MenuItem
-                                            v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
-                                            v-slot="{ active }"
-                                            v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
-                                            <span @click="unfixSubPosition(subPosition.id)"
-                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLockOpen stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                              aria-hidden="true"/>
-                                                {{ $t('Canceling a fixed term') }}
-                                            </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteSubPositionModal(subPosition)"
-                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconTrash stroke-width="1.5"
-                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                           aria-hidden="true"/>
-                                                {{ $t('Delete') }}
-                                            </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a @click="duplicateSubpostion(subPosition.id)"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconCopy stroke-width="1.5"
-                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                          aria-hidden="true"/>
-                                                {{ $t('Duplicate') }}
-                                            </a>
-                                        </MenuItem>
-                                    </div>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
+                        <BaseMenu v-if="this.$can('edit budget templates') || !table.is_template">
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
+                                <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                    {{ $t('Commitment') }}
+                                </span>
+                            </MenuItem>
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
+                                <span @click="unfixSubPosition(subPosition.id)"
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconLockOpen stroke-width="1.5"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  aria-hidden="true"/>
+                                    {{ $t('Canceling a fixed term') }}
+                                </span>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <span @click="openDeleteSubPositionModal(subPosition)"
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconTrash stroke-width="1.5"
+                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                               aria-hidden="true"/>
+                                    {{ $t('Delete') }}
+                                </span>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click="duplicateSubpostion(subPosition.id)"
+                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconCopy stroke-width="1.5"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              aria-hidden="true"/>
+                                    {{ $t('Duplicate') }}
+                                </a>
+                            </MenuItem>
+                        </BaseMenu>
                     </div>
                 </div>
             </div>
@@ -96,7 +67,7 @@
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
-                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-buttonBlue ' : '']"
+                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                     class="bg-secondaryHover flex justify-between items-center border-2">
                     <div class="flex items-center">
@@ -207,11 +178,9 @@
                                            class="my-2 xsDark  appearance-none z-10" type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
                                            v-model="cell.value"
-                                           @keypress="isNumber($event, index)"
+                                           @keyup="isNumber($event, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2"
-                                                    @click="openCellDetailModal(cell)"
-                                                    class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
                                 <div
                                     :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
@@ -226,104 +195,75 @@
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
-                                                    @click="openCellDetailModal(cell)"
-                                                    class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
                                 </div>
                             </div>
                         </td>
                     </div>
-                    <Menu as="div"
-                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']"
-                          v-if="this.$can('edit budget templates') || !table.is_template">
-                        <div class="flex">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                                  class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                  aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition ease-out duration-100"
-                            enter-from-class="transform opacity-0 scale-95"
-                            enter-to-class="transform opacity-100 scale-100"
-                            leave-active-class="transition ease-in duration-75"
-                            leave-from-class="transform opacity-100 scale-100"
-                            leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="z-20 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }"
-                                              v-if="row.commented === false"
-                                              @click="updateRowCommented(row.id, true)">
+                    <BaseMenu dots-color="text-artwork-buttons-context" :class="[hoveredRow === row.id ? '' : 'hidden', 'mr-0.5']"
+                    v-if="this.$can('edit budget templates') || !table.is_template">
+                        <MenuItem v-slot="{ active }"
+                                  v-if="row.commented === false"
+                                  @click="updateRowCommented(row.id, true)">
                                         <span
                                             @click=""
-                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconLock stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                      aria-hidden="true"/>
+                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
+                                            <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                             {{ $t('Exclude') }}
                                         </span>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }"
-                                              v-else
-                                              @click="updateRowCommented(row.id, false)">
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }"
+                                  v-else
+                                  @click="updateRowCommented(row.id, false)">
                                         <span
-                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconLockOpen stroke-width="1.5"
                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                           aria-hidden="true"/>
                                             {{ $t('Include positions') }}
                                         </span>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
                                         <span
                                             @click="duplicateRow(row.id)"
-                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconCopy stroke-width="1.5"
                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                       aria-hidden="true"/>
                                             {{ $t('Duplicate') }}
                                         </span>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
                                         <span
                                             @click="openDeleteRowModal(row)"
-                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-artwork-navigation-color/10' : '', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased text-artwork-context-light']">
                                             <IconTrash stroke-width="1.5"
                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                        aria-hidden="true"/>
                                             {{ $t('Delete') }}
                                         </span>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                        </MenuItem>
+                    </BaseMenu>
                 </tr>
                 <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)"
                      v-if="this.$can('edit budget templates') || !table.is_template"
-                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
-                    <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
+                    <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                         {{ $t('Row') }}
-                        <IconCirclePlus stroke-width="1.5"
-                                        class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"/>
+                        <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                     </div>
                 </div>
             </div>
             <div v-else @click="addRowToSubPosition(subPosition)"
                  v-if="this.$can('edit budget templates') || !table.is_template"
-                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+                <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                     {{ $t('Row') }}
-                    <IconCirclePlus stroke-width="1.5"
-                                    class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"/>
+                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-white bg-artwork-buttons-create rounded-full"/>
                 </div>
             </div>
-            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
-                                 :sub-position-id="subPosition.id"/>
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id" :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
@@ -393,11 +333,13 @@ import IconLib from "@/Mixins/IconLib.vue";
 import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
 import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "SubPositionComponent",
     components: {
+        BaseMenu,
         SageDragCellElement,
         SageDropCellElement,
         SageDataDropElement,
@@ -701,6 +643,7 @@ export default {
             });
         },
         openCellDetailModal(cell) {
+            console.log('openCellDetailModal', cell)
             this.$emit('openCellDetailModal', cell)
         },
         openSubPositionSumDetailModal(subPosition, column, type = 'comment') {
@@ -743,6 +686,7 @@ export default {
                 if (this.alreadyCellClicked && cell.clicked !== true) {
                     return;
                 }
+
                 cell.clicked = !cell.clicked
 
                 if (cell.clicked) {

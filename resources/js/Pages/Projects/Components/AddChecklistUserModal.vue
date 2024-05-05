@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="editingChecklistTeams" @close="emitClose">
-        <template #content>
-            <img alt="" src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="emitClose" v-if="editingChecklistTeams" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
                     {{ $t('Assign users') }}
                 </div>
-                <XIcon @click="emitClose"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Enter the name of the user to whom you want to assign the checklist.') }}
                 </div>
@@ -60,8 +55,7 @@
                     class="mt-8" />
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -70,11 +64,13 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AddChecklistUserModal',
     mixins: [Permissions],
     components: {
+        BaseModal,
         FormButton,
         XIcon,
         XCircleIcon,

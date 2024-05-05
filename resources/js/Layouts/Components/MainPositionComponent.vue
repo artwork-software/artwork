@@ -1,5 +1,5 @@
 <template>
-    <th class="p-0 rounded-t-lg" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
+    <th class="p-0" :class="[mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-update' : 'bg-primary', mainPosition.closed ? 'rounded-lg' : 'rounded-t-lg']">
         <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id" @mouseout="showMenu = null">
             <div class="pl-2 xsWhiteBold flex w-full items-center h-10" v-if="!mainPosition.clicked">
                 <div @click="mainPosition.clicked = !mainPosition.clicked">
@@ -35,61 +35,50 @@
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
-                            <div class="flex">
-                                <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
-                                    <IconDotsVertical stroke-width="1.5" class=" flex-shrink-0 h-6 w-6 text-secondaryHover my-auto" aria-hidden="true"/>
-                                </MenuButton>
-                            </div>
-                            <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems class="z-50 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
-                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                        <BaseMenu  v-if="this.$can('edit budget templates') || !table.is_template" dots-color="text-artwork-context-light">
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
+                                            <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
                                                 {{ $t('Get verified by user') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
-                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            </MenuItem>
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
+                                            <span @click="removeVerification(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
                                                 {{ $t('Cancel verification') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
-                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            </MenuItem>
+                            <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
+                                            <span @click="requestRemove(mainPosition, 'main')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
                                                 {{ $t('Withdraw verification request') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
-                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
+                                            <span @click="fixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
                                                 {{ $t('Commitment') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
-                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
+                                            <span @click="unfixMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLockOpen class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5"  />
                                                 {{ $t('Canceling a fixed term') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                            <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5" aria-hidden="true"/>
                                                 {{ $t('Delete') }}
                                             </span>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5" aria-hidden="true"/>
-                                                {{ $t('Duplicate') }}
-                                            </a>
-                                        </MenuItem>
-                                    </div>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" stroke-width="1.5" aria-hidden="true"/>
+                                    {{ $t('Duplicate') }}
+                                </a>
+                            </MenuItem>
+                        </BaseMenu>
                     </div>
                 </div>
             </div>
@@ -161,12 +150,14 @@ import Permissions from "@/Mixins/Permissions.vue";
 import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     name: "MainPositionComponent",
     components: {
+        BaseMenu,
         SageAssignedDataModal,
         SubPositionComponent,
         PlusCircleIcon,

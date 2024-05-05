@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Sources of funding')">
         <div class="">
             <div class="max-w-screen-xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -249,67 +249,47 @@
                                         <IconPinned  stroke-width="1.5" class="h-5 w-5 mr-4 text-primary"/>
                                     </div>
                                     <div class="flex">
-                                        <Menu as="div" class="my-auto relative">
-                                            <div class="flex">
-                                                <MenuButton
-                                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                                    <IconDotsVertical stroke-width="1.5"
-                                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                        <BaseMenu>
+                                            <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                <a :href="getEditHref(moneySource)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                    <IconEdit stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                    {{ $t('edit')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                <a @click="duplicateMoneySource(moneySource)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconCopy stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                    {{ $t('Duplicate')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                <a @click="pinMoneySource(moneySource)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconPin
+                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                </MenuButton>
-                                            </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                    <div class="py-1">
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }">
-                                                            <a :href="getEditHref(moneySource)"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                <IconEdit stroke-width="1.5"
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                {{ $t('edit')}}
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                            <a @click="duplicateMoneySource(moneySource)"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <IconCopy stroke-width="1.5"
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                {{ $t('Duplicate')}}
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                            <a @click="pinMoneySource(moneySource)"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <IconPin
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? $t('Undo pinning') : $t('Pin')}}
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
-                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                            <a @click="openDeleteSourceModal(moneySource)"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <IconTrash stroke-width="1.5"
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                {{ $t('Delete')}}
-                                                            </a>
-                                                        </MenuItem>
-                                                    </div>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
+                                                    {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? $t('Undo pinning') : $t('Pin')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                      v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                <a @click="openDeleteSourceModal(moneySource)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconTrash stroke-width="1.5"
+                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                               aria-hidden="true"/>
+                                                    {{ $t('Delete')}}
+                                                </a>
+                                            </MenuItem>
+                                        </BaseMenu>
                                     </div>
                                 </div>
                                 <div class="flex xxsLight items-center subpixel-antialiased">
@@ -359,13 +339,7 @@
         @closed="afterConfirm(false)"
         @delete="afterConfirm(true)"/>
 
-    <jet-dialog-modal :show="timeSpanFilterModalVisible" @close="closeTimeSpanFilterModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4"
-                 alt="Illustration Projekt bearbeiten"/>
-            <XIcon @click="closeTimeSpanFilterModal()"
-                   class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeTimeSpanFilterModal" v-if="timeSpanFilterModalVisible" modal-image="/Svgs/Overlays/illu_project_edit.svg" >
             <div class="mx-4">
                 <h1 class="my-1 flex">
                     <div class="flex-grow headline1">
@@ -385,8 +359,7 @@
                                @click="activateTimeSpanFilter"/>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 
     <MoneySourceHistoryComponent
         @closed="closeMoneySourceHistoryModal"
@@ -438,11 +411,15 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 
 export default defineComponent({
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        BaseModal,
+        BaseMenu,
         FormButton,
         AddButtonSmall,
         NewUserToolTip,

@@ -9,11 +9,13 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
+        BaseMenu,
         UserPopoverTooltip,
         JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal,
         Link,
@@ -33,6 +35,10 @@ export default {
             required: false
         },
         project: {
+            type: Object,
+            required: true
+        },
+        currentTab: {
             type: Object,
             required: true
         },
@@ -95,8 +101,7 @@ export default {
 </script>
 
 <template>
-    <AppLayout>
-
+    <AppLayout :title="project?.name + ' (' + currentTab.name + ')'">
         <!-- Project Header -->
         <div class="ml-14 pr-14">
             <div class="flex flex-col">
@@ -132,60 +137,39 @@ export default {
                             {{ project?.state?.name }}
                         </span>
                     </h2>
-                    <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
-                        <div class="flex items-center -mt-1">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                                  class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                  aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem
-                                        v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
-                                        v-slot="{ active }">
-                                        <a @click="openEditProjectModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconEdit stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Edit basic data') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconCopy stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Duplicate') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem
-                                        v-if="headerObject.projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
-                                        v-slot="{ active }">
-                                        <a @click="openDeleteProjectModal(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconTrash stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                       aria-hidden="true"/>
-                                            {{ $t('Put in the trash') }}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu class="mt-3" v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
+                        <MenuItem
+                            v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
+                            v-slot="{ active }">
+                            <a @click="openEditProjectModal"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconEdit stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Edit basic data') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="duplicateProject(this.project)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconCopy stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Duplicate') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem
+                            v-if="headerObject.projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
+                            v-slot="{ active }">
+                            <a @click="openDeleteProjectModal(this.project)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconTrash stroke-width="1.5"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           aria-hidden="true"/>
+                                {{ $t('Put in the trash') }}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
                 <div class="mt-3" v-if="headerObject.projectGroups.length > 0">
                     <TagComponent v-for="projectGroup in headerObject.projectGroups" :method="deleteProjectFromGroup"
@@ -235,7 +219,7 @@ export default {
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <Link v-for="tab in headerObject.tabs" :key="tab?.name"
                                   :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
-                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-4 px-1 border-b-2 font-black']"
                                   :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
                                 {{ tab.name }}
                             </Link>

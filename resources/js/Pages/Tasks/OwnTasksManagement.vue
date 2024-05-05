@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('My tasks')">
         <div class="max-w-screen-xl ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">

@@ -108,53 +108,32 @@
                     </div>
                 </div>
 
-                <Menu as="div" class="my-auto relative">
-                    <div class="flex">
-                        <MenuButton
-                            class="flex bg-tagBg p-0.5 rounded-full">
-                            <DotsVerticalIcon
-                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                <BaseMenu>
+                    <MenuItem v-slot="{ active }">
+                        <Link as="button" method="patch"
+                              :href="route('projects.restore', { id: project.id })"
+                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' :
+                                          'text-secondary',
+                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
+                            <RefreshIcon
+                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                 aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-                    <transition enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                        <MenuItems
-                            class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <Link as="button" method="patch"
-                                          :href="route('projects.restore', { id: project.id })"
-                                          :class="[active ? 'bg-primaryHover text-white' :
+                            {{  $t('Restore') }}
+                        </Link>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <Link as="button" method="delete"
+                              :href="route('projects.force', { id: project.id })"
+                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' :
                                           'text-secondary',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                        <RefreshIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        {{  $t('Restore') }}
-                                    </Link>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <Link as="button" method="delete"
-                                          :href="route('projects.force', { id: project.id })"
-                                          :class="[active ? 'bg-primaryHover text-white' :
-                                          'text-secondary',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                        <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        {{ $t('Delete permanently')}}
-                                    </Link>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-
+                            <TrashIcon
+                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                aria-hidden="true"/>
+                            {{ $t('Delete permanently')}}
+                        </Link>
+                    </MenuItem>
+                </BaseMenu>
             </div>
 
         </div>
@@ -215,6 +194,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     props: ['trashed_projects'],
@@ -255,6 +235,7 @@ export default {
         }
     },
     components: {
+        BaseMenu,
         UserPopoverTooltip,
         Input, SearchIcon,
         ProjectHistoryComponent,

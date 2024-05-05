@@ -140,46 +140,26 @@
                                             :iconName="team.svg_name"
                         />
                     </span>
-                    <Menu v-show="this.$can('teammanagement')" as="div" class="my-auto relative ml-5">
-                        <div>
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5">
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="openChangeTeamsModal"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <PencilAltIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
-                                <div>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="openChangeTeamsModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit team membership')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="deleteFromAllDepartments"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Remove user from all teams') }}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                                {{ $t('Edit team membership')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="deleteFromAllDepartments"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <TrashIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Remove user from all teams') }}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
             </div>
         </div>
@@ -290,9 +270,11 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     components: {
+        BaseMenu,
         BaseButton,
         SecondaryButton,
         FormButton,

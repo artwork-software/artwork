@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as base
+FROM php:8.2-fpm-bullseye
 
 MAINTAINER "Caldero Systems GmbH"
 
@@ -8,8 +8,6 @@ ENV TZ=UTC
 ARG BRANCH
 ARG TAG
 
-COPY dockerfiles/start-container /usr/bin/start-container
-COPY dockerfiles/supervisor.conf /etc/supervisor/conf.d/supervisord.conf
 COPY dockerfiles/init.sh /opt/init.sh
 
 WORKDIR /var/www/html
@@ -22,6 +20,7 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     git \
     sudo \
     gosu \
+    nano \
     cron \
     build-essential \
     ca-certificates \
@@ -31,26 +30,19 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     openssl \
     unzip \
     libpng-dev \
-    supervisor \
     python2 \
     dnsutils \
-    librsvg2-bin
+    librsvg2-bin \
+     python3 \
+    python3-pip
+
 
 RUN mkdir -p /etc/apt/keyrings \
-    && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list \
-    && echo "deb [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " | tee /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && echo "deb-src [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " >> /etc/apt/sources.list.d/ppa_ondrej_php.list
+    && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list
 
-RUN apt-get update \
-    && apt-get install -y php8.2-cli php8.2-dev \
-       php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
-       php8.2-curl \
-       php8.2-imap php8.2-mysql php8.2-mbstring \
-       php8.2-xml php8.2-zip php8.2-bcmath php8.2-soap \
-       php8.2-intl php8.2-readline \
-       php8.2-ldap \
-       php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
-       php8.2-memcached
+RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem pcntl gd mysqli sockets exif
+
+COPY fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 RUN git init  \
     && git remote add origin https://github.com/artwork-software/artwork.git  \
@@ -65,12 +57,9 @@ RUN if [ -n "$BRANCH"]; then \
       git checkout tags/$TAG; \
     fi
 
+RUN pecl install redis imagick && docker-php-ext-enable redis imagick
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
 RUN php /var/www/html/artisan storage:link
 
 RUN chown -R www-data:www-data /var/www/html
-
-RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
-
-ENTRYPOINT ["/bin/bash", "/opt/init.sh"]

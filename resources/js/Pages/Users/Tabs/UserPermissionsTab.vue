@@ -91,16 +91,11 @@
         </div>
     </div>
     <!-- Nutzer*in löschen Modal -->
-    <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Delete user')}}
                 </div>
-                <XIcon @click="closeDeleteUserModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="errorText">
                     {{ $t('re you sure you want to delete {last_name}, {first_name} from the system?', {last_name: user_to_edit.last_name, first_name: user_to_edit.first_name})}}
                 </div>
@@ -116,10 +111,7 @@
                     </div>
                 </div>
             </div>
-
-        </template>
-
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -140,9 +132,11 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import {reactive} from "vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     components: {
+        BaseModal,
         ToolTipDefault,
         JetDialogModal,
         CheckIcon,

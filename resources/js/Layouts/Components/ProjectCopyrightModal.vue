@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="$emit('closeModal')">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{$t('Cost units & copyright')}}
                 </div>
-                <XIcon @click="$emit('closeModal')"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary w-full mt-2">
                     {{$t('Define a cost unit and copyright regulations for your project.')}}
                 </div>
@@ -84,8 +79,7 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -101,6 +95,7 @@ import {
 } from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
@@ -109,6 +104,7 @@ export default {
         'show', 'project', 'collectingSocieties'
     ],
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         XIcon,

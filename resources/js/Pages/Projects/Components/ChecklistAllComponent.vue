@@ -404,16 +404,11 @@
         :editingChecklistTeams="editingChecklistTeams"
         @closed="closeEditChecklistTeamsModal"
     />
-    <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeAddTaskModal" v-if="addingTask" modal-image="/Svgs/Overlays/illu_task_new.svg">
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
                     {{ $t('New task') }}
                 </div>
-                <XIcon @click="closeAddTaskModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Create a new task. You can also add a deadline and a comment.') }}
                 </div>
@@ -510,19 +505,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeEditTaskModal" v-if="editingTask" modal-image="/Svgs/Overlays/illu_task_edit.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('Edit task') }}
                 </div>
-                <XIcon @click="closeEditTaskModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"
-                />
                 <div class="mt-12">
                     <div class="mb-2">
                         <div class="relative flex w-full">
@@ -607,18 +595,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeDeleteChecklistModal" v-if="deletingChecklist" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ $t('Delete checklist') }}
                 </div>
-                <XIcon @click="closeDeleteChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
                     {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
                 </div>
@@ -635,18 +617,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeEditChecklistModal" v-if="editingChecklist" modal-image="/Svgs/Overlays/illu_checklist_edit.svg">
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     {{ $t('Edit checklist') }}
                 </div>
-                <XIcon @click="closeEditChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Edit your checklist') }}
                 </div>
@@ -691,18 +667,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeAddChecklistModal" v-if="addingChecklist" modal-image="/Svgs/Overlays/illu_checklist_new.svg">
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     {{ $t('New checklist') }}
                 </div>
-                <XIcon @click="closeAddChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.') }}
                 </div>
@@ -806,8 +776,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -866,6 +835,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -879,6 +849,7 @@ export default {
         'canEditComponent'
     ],
     components: {
+        BaseModal,
         BaseMenu,
         AddButtonBig,
         FormButton,

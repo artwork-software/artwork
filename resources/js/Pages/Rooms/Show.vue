@@ -107,16 +107,11 @@
         </div>
 
         <!-- Raum Bearbeiten-->
-        <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
                 <div class="mx-3">
                     <div class="headline1 my-2">
                         {{$t('Edit room')}}
                     </div>
-                    <XIcon @click="closeEditRoomModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="mt-4">
                         <div class="flex mt-10 relative">
                             <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
@@ -179,8 +174,7 @@
 
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :title="successHeading"
@@ -189,16 +183,11 @@
             @closed="closeSuccessModal"
         />
         <!-- Approve Request Modal -->
-        <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Confirm room occupancy')}}
                     </div>
-                    <XIcon @click="closeApproveRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="successText">
                         {{$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')}}
                     </div>
@@ -285,19 +274,13 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Decline Request Modal -->
-        <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Cancel room reservation')}}
                     </div>
-                    <XIcon @click="closeDeclineRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
@@ -384,8 +367,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -469,6 +451,7 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 
 export default {
@@ -502,6 +485,7 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseModal,
         BaseMenu,
         FormButton,
         SuccessModal,

@@ -75,16 +75,11 @@
             </ul>
         </div>
         <!-- Termintyp erstellen Modal-->
-        <jet-dialog-modal :show="addingEventType" @close="closeAddEventTypeModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
+        <BaseModal @closed="closeAddEventTypeModal" v-if="addingEventType" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{$t('New event type')}}
                     </div>
-                    <XIcon @click="closeAddEventTypeModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="mt-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
@@ -128,19 +123,13 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Termintyp bearbeiten Modal-->
-        <jet-dialog-modal :show="editingEventType" @close="closeEditEventTypeModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
+        <BaseModal @closed="closeEditEventTypeModal" v-if="editingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{$t('Edit event type')}}
                     </div>
-                    <XIcon @click="closeEditEventTypeModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="mt-12">
                         <div class="flex">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
@@ -184,18 +173,13 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Termintyp löschen Modal -->
-        <jet-dialog-modal :show="deletingEventType" @close="closeDeleteEventTypeModal">
-            <template #content>
+        <BaseModal @closed="closeDeleteEventTypeModal" v-if="deletingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg" :show-image="false">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{$t('Delete event type')}}
                     </div>
-                    <XIcon @click="closeDeleteEventTypeModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to "undefined".', {eventType: eventTypeToDelete.name})}}
                     </div>
@@ -211,17 +195,12 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
-        <jet-dialog-modal :show="deletingUndefined" @close="closeDeletingUndefined">
-            <template #content>
+        </BaseModal>
+        <BaseModal @closed="closeDeletingUndefined" v-if="deletingUndefined" modal-image="/Svgs/Overlays/illu_appointment_edit.svg" :show-image="false">
                 <div class="mx-4">
                     <div class="headline1">
                         {{$t('Delete event type')}}
                     </div>
-                    <XIcon @click="closeDeletingUndefined"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventTypeToDelete.name})}}
                     </div>
@@ -232,8 +211,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 </template>
 
@@ -250,6 +228,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ColorPicker from 'primevue/colorpicker';
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
@@ -290,6 +269,7 @@ export default {
         }
     },
     components: {
+        BaseModal,
         BaseMenu,
         ColorPickerComponent,
         FormButton,

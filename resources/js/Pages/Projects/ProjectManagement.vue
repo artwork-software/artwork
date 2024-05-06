@@ -244,16 +244,11 @@
             :project-groups="this.projectGroups"
             @close-create-project-modal="closeCreateProjectModal"
         />
-        <jet-dialog-modal v-if="deletingProject" :show="deletingProject" @close="closeDeleteProjectModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         {{ $t('Delete project') }}
                     </div>
-                    <XIcon @click="closeDeleteProjectModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                     </div>
@@ -271,8 +266,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Success Modal - Delete project -->
         <SuccessModal
             v-if="showSuccessModal"
@@ -385,9 +379,11 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     components: {
+        BaseModal,
         BaseMenu,
         PlusButton,
         AddButtonSmall,

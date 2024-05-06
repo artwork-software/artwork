@@ -1,12 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <img v-else alt="Belegung kommentieren" src="/Svgs/Overlays/illu_appointment_edit.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal(false)" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal" v-if="true" :modal-image="!this.event?.id ? '/Svgs/Overlays/illu_appointment_new.svg' : '/Svgs/Overlays/illu_appointment_edit.svg'">
             <div class="mx-4">
                 <!--   Heading   -->
                 <div>
@@ -422,8 +415,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 
@@ -453,11 +445,13 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        BaseModal,
         NewUserToolTip,
         ListboxLabel,
         SwitchLabel,

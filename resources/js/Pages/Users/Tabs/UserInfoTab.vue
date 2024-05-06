@@ -172,16 +172,11 @@
             </div>
         </div>
     </div>
-    <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeChangeTeamsModal" v-if="showChangeTeamsModal" modal-image="/Svgs/Overlays/illu_team_user.svg">
             <div class="mx-3">
                 <div class="headline1 my-2">
                      {{$t('Team membership')}}
                 </div>
-                <XIcon @click="closeChangeTeamsModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="mt-4 xsLight">
                     {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.')}}
                 </div>
@@ -207,10 +202,8 @@
                     <FormButton @click="saveNewTeams" :text="$t('Save')"/>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="showChangePictureModal" @close="closeChangePictureModal">
-        <template #content>
+    </BaseModal>
+    <BaseModal @closed="closeChangePictureModal" v-if="showChangePictureModal" modal-image="/Svgs/Overlays/illu_team_user.svg" :show-image="false">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
                     {{ $t('Change profile picture')}}
@@ -218,9 +211,6 @@
                 <span class="text-secondary my-auto">
                     {{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}}
                 </span>
-                <XIcon @click="closeChangePictureModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <!-- New Profile Photo Preview -->
                 <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
                 <div class="flex">
@@ -246,8 +236,7 @@
                         @click="validateTypeAndChange" />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
     <SuccessModal v-if="showSuccessModal"
                   :title="$t('User successfully edited')"
                   :description="$t('The changes have been saved successfully.')"
@@ -271,9 +260,11 @@ import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } f
 import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     components: {
+        BaseModal,
         BaseMenu,
         BaseButton,
         SecondaryButton,

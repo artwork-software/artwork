@@ -245,9 +245,7 @@
             </div>
         </div>
         <!-- Nutzer*in löschen Modal -->
-        <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         <span v-if="userToDelete.type === 'user'">
@@ -260,9 +258,6 @@
                             {{ $t('Delete service provider')}}
                         </span>
                     </div>
-                    <XIcon @click="closeDeleteUserModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
                             {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: userToDelete.last_name, first_name: userToDelete.first_name}) }}
@@ -279,10 +274,7 @@
                         </div>
                     </div>
                 </div>
-
-            </template>
-
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :open="showSuccessModal"
@@ -350,10 +342,12 @@ import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseModal,
         BaseMenu,
         FormButton,
         SuccessModal,

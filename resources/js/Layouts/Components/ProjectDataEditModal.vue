@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Edit basic data') }}
                 </div>
-                <XIcon @click="closeModal(false)"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="group">
                     <div
                         class=" flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
@@ -162,8 +157,7 @@
                 <FormButton :text="$t('Save')" :disabled="name.length < 1"
                             @click="updateProjectData"/>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -187,6 +181,7 @@ import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [
@@ -202,6 +197,7 @@ export default {
         states: Array
     },
     components: {
+        BaseModal,
         FormButton,
         Input,
         ListboxOption,

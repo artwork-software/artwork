@@ -10,11 +10,13 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         BaseMenu,
         UserPopoverTooltip,
         JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal,
@@ -249,16 +251,11 @@ export default {
             :project_history="headerObject.project_history"
             :access_budget="headerObject.project.access_budget"
         />
-        <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         {{ $t('Delete project') }}
                     </div>
-                    <XIcon @click="closeDeleteProjectModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                     </div>
@@ -276,8 +273,7 @@ export default {
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </AppLayout>
 </template>
 

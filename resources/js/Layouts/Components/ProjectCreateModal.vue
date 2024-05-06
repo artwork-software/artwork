@@ -1,7 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="this.$emit('closeCreateProjectModal')">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="this.$emit('closeCreateProjectModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_new.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('New project') }}
@@ -20,9 +18,6 @@
                         </div>
                     </div>
                 </div>
-                <XIcon @click="this.$emit('closeCreateProjectModal')"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div v-if="isCreateProjectTab">
                     <div class="mt-2">
                         <div class="mb-2">
@@ -447,8 +442,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -472,10 +466,12 @@ import {
     MenuItems
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectCreateModal',
     components: {
+        BaseModal,
         FormButton,
         ListboxOption,
         ListboxOptions,

@@ -1,15 +1,10 @@
 <template>
-    <jet-dialog-modal @close="this.close()">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="this.close()" v-if="true" modal-image="/Svgs/Overlays/illu_project_new.svg">
             <div class="mx-4">
                 <div>
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         {{ $t('Export project budgets') }}
                     </div>
-                    <XIcon @click="this.close()"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                 </div>
                 <div class="mt-4">
                     <span class="text-sm xsLight">
@@ -44,8 +39,7 @@
                     </button>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -56,10 +50,12 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DocumentReportIcon, XIcon} from "@heroicons/vue/outline";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectExportBudgetsByBudgetDeadlineModal',
     components: {
+        BaseModal,
         DocumentReportIcon,
         DisclosurePanel,
         DisclosureButton,

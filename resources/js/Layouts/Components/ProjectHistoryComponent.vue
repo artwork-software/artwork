@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('Project process') }}
                 </div>
-                <XIcon @click="closeModal()"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary subpixel-antialiased">
                     {{ $t('Here you can see what was changed by whom and when.') }}
                 </div>
@@ -72,8 +67,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
 </template>
 
 <script>
@@ -84,11 +78,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectHistoryComponent',
     mixins: [Permissions],
     components: {
+        BaseModal,
         UserPopoverTooltip,
         NewUserToolTip,
         JetDialogModal,

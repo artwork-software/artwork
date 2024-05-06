@@ -7,7 +7,7 @@
                     <div class="flex gap-5 items-center">
                         <h4 class="sDark">{{ notification.data.title }}</h4>
                         <div class="" v-if="notification.data.showHistory">
-                            <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-buttonBlue">
+                            <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-artwork-buttons-create">
                                 <ChevronRightIcon class="h-3 w-3"/>
                                 <span>
                                     {{ $t('View history')}}

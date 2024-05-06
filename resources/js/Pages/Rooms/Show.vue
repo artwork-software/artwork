@@ -45,10 +45,10 @@
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-artwork-buttons-create"
                             @click="openRoomHistoryModal()">
                         <ChevronRightIcon
-                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                            class="-mr-0.5 h-4 w-4 group-hover:text-white"
                             aria-hidden="true"/>
                         {{$t('View history')}}
                     </button>

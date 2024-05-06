@@ -202,7 +202,7 @@ export default {
                     <span class="ml-2 subpixel-antialiased">
                     {{ headerObject.project_history[0]?.created_at }}
                 </span>
-                    <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                    <button class="ml-4 subpixel-antialiased text-artwork-buttons-create flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">
                         <IconChevronRight
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"

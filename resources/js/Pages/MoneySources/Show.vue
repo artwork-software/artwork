@@ -45,7 +45,7 @@
                         <UserPopoverTooltip v-if="moneySource.creator" :user="moneySource.creator" :id="moneySource.creator?.id"
                                             :height="7" :width="7" class="ml-2"/>
                     </div>
-                    <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
+                    <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
                             @click="openMoneySourceHistoryModal()">
                         <IconChevronRight stroke-width="1.5"
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"

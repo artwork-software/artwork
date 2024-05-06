@@ -89,7 +89,6 @@ export default {
     data() {
         return {
             showEventsWithoutRoomComponent: false,
-            eventsWithoutRoom: [],
             selectedEvent: null,
             createEventComponentIsVisible: false,
             wantedRoom: null,

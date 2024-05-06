@@ -64,8 +64,6 @@ RUN mkdir -p /etc/apt/keyrings \
                && apt-get install -y nodejs \
                && npm install -g npm
 
-RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem pcntl gd mysqli sockets exif
-
 COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 RUN git config --global --add safe.directory /var/www/html
@@ -82,8 +80,6 @@ RUN if [ -n "$BRANCH"]; then \
     elif [ -n "$TAG" ]; then  \
       git checkout tags/$TAG; \
     fi
-
-RUN pecl install redis imagick && docker-php-ext-enable redis imagick
 
 RUN npm -g install cross-env webpack soketi
 RUN npm install && npm run dev && npm run prod

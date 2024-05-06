@@ -22,7 +22,7 @@ services:
     command: 'php artisan queue:work'
   php-updater:
     <<: *php
-    command: 'php artwork:container-update'
+    command: 'sudo php artisan artwork:container-update'
   nginx:
     build:
       context: .

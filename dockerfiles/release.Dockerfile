@@ -1,3 +1,27 @@
+FROM node:20-bookworm as node-compiler
+
+ARG BRANCH=''
+ARG TAG=''
+
+WORKDIR '/app'
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV TZ=UTC
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+RUN apt-get update && apt-get install -y git \
+    && git clone https://github.com/artwork-software/artwork.git .
+
+RUN if [ -n "$BRANCH"]; then \
+     git checkout $BRANCH; \
+    elif [ -n "$TAG" ]; then  \
+      git checkout tags/$TAG; \
+    fi
+
+RUN npm -g install cross-env webpack
+RUN npm install && npm run dev && npm run prod
+
 FROM php:8.2-fpm-bullseye
 
 MAINTAINER "Caldero Systems GmbH"
@@ -65,7 +89,11 @@ RUN if [ -n "$BRANCH"]; then \
 
 RUN pecl install redis imagick && docker-php-ext-enable redis imagick
 
+COPY --from=node-compiler /app/public/js /var/www/html/public/js
+
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
+
 RUN php /var/www/html/artisan storage:link
 
 RUN chown -R www-data:www-data /var/www/html
+

@@ -11,7 +11,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - "artwork:/var/www/html/:cached"
+      - "artwork:/var/www/html"
   php-queue-worker:
     <<: *php
     command: 'php artisan schedule:work'

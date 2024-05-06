@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     python3 \
     python3-pip
 
+RUN pip install yacron
 
 RUN mkdir -p /etc/apt/keyrings \
     && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list

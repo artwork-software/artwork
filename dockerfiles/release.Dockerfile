@@ -95,6 +95,6 @@ RUN php /var/www/html/artisan storage:link
 RUN chown -R www-data:www-data /var/www/html
 
 COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY php.ini /etc/php/8.2/cli/conf.d/99-sail.ini
+COPY dockerfiles/php/php.ini /etc/php/8.2/cli/conf.d/99-artwork.ini
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

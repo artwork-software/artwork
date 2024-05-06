@@ -81,7 +81,7 @@ RUN if [ -n "$BRANCH"]; then \
       git checkout tags/$TAG; \
     fi
 
-RUN npm -g install cross-env webpack soketi
+RUN npm -g install cross-env webpack @soketi/soketi
 RUN npm install && npm run dev && npm run prod
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install

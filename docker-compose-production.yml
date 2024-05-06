@@ -4,6 +4,7 @@ services:
     pull_policy: always
     depends_on:
       - mysql
+      - redis
     env_file:
       - .env
     networks:
@@ -12,17 +13,16 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - "artwork:/var/www/html"
+      - '.env:/var/www/html/.env'
   php-queue-worker:
     <<: *php
     command: 'php artisan schedule:work'
   php-scheduler:
     <<: *php
-    command: 'yacron -c schedule.yaml'
+    command: 'php artisan queue:work'
   php-updater:
     <<: *php
-    command: 'sh dockerfiles/php/update.sh'
-    volumes:
-      - '.env:/var/www/html/.env'
+    command: 'php artwork:container-update'
   nginx:
     build:
       context: .

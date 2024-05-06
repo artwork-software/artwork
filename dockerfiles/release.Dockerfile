@@ -1,28 +1,4 @@
-FROM node:20-bookworm as node-compiler
-
-ARG BRANCH=''
-ARG TAG=''
-
-WORKDIR '/app'
-
-ENV DEBIAN_FRONTEND noninteractive
-ENV TZ=UTC
-
-RUN apt-get update && apt-get install -y ca-certificates
-
-RUN apt-get update && apt-get install -y git \
-    && git clone https://github.com/artwork-software/artwork.git .
-
-RUN if [ -n "$BRANCH"]; then \
-     git checkout $BRANCH; \
-    elif [ -n "$TAG" ]; then  \
-      git checkout tags/$TAG; \
-    fi
-
-RUN npm -g install cross-env webpack
-RUN npm install && npm run dev && npm run prod
-
-FROM php:8.2-fpm-bullseye
+FROM ubuntu:22.04
 
 MAINTAINER "Caldero Systems GmbH"
 
@@ -47,6 +23,8 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     gnupg \
     redis \
     libxml2-dev \
+    mysql-client \
+    mysql-server \
     openssl \
     unzip \
     libxml2-dev \
@@ -57,16 +35,18 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     libmagickwand-dev \
     wget \
     htop \
+    nginx \
     python2 \
+    supervisor \
     dnsutils \
     librsvg2-bin \
     python3 \
     python3-pip
 
-RUN pip install yacron
-
 RUN mkdir -p /etc/apt/keyrings \
-    && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list
+    && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list \
+    && echo "deb [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " | tee /etc/apt/sources.list.d/ppa_ondrej_php.list \
+    && echo "deb-src [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " >> /etc/apt/sources.list.d/ppa_ondrej_php.list
 
 RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem pcntl gd mysqli sockets exif
 
@@ -89,7 +69,8 @@ RUN if [ -n "$BRANCH"]; then \
 
 RUN pecl install redis imagick && docker-php-ext-enable redis imagick
 
-COPY --from=node-compiler /app/public/js /var/www/html/public/js
+RUN npm -g install cross-env webpack soketi
+RUN npm install && npm run dev && npm run prod
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
 
@@ -97,3 +78,6 @@ RUN php /var/www/html/artisan storage:link
 
 RUN chown -R www-data:www-data /var/www/html
 
+COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

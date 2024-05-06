@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     ca-certificates \
     gnupg \
     redis \
+    libxml2-dev \
     openssl \
     unzip \
     libpng-dev \

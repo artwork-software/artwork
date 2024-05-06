@@ -47,6 +47,8 @@ RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem p
 
 COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
+RUN git config --global --add safe.directory /var/www/html
+
 RUN git init  \
     && git remote add origin https://github.com/artwork-software/artwork.git  \
     && git pull origin main  \

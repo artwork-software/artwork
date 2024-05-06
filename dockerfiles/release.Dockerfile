@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     curl \
     git \
     sudo \
-    yacron \
     gosu \
     nano \
     cron \

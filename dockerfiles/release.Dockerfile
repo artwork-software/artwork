@@ -11,9 +11,7 @@ ARG TAG
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y ca-certificates  \
-    python3 \
     gcc \
-    wget \
     curl \
     git \
     sudo \
@@ -27,7 +25,14 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     libxml2-dev \
     openssl \
     unzip \
+    libxml2-dev \
     libpng-dev \
+    libzip-dev \
+    libxslt-dev \
+    imagemagick\
+    libmagickwand-dev \
+    wget \
+    htop \
     python2 \
     dnsutils \
     librsvg2-bin \

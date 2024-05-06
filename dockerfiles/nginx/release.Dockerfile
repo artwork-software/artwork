@@ -19,7 +19,6 @@ RUN if [ -n "$BRANCH"]; then \
       git checkout tags/$TAG; \
     fi
 
-
 RUN npm -g install cross-env webpack
 RUN npm install && npm run dev && npm run prod
 

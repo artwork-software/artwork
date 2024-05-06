@@ -10,6 +10,8 @@ services:
       - artwork
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - "artwork:/var/www/html/:cached"
   php-queue-worker:
     <<: *php
     command: 'php artisan schedule:work'
@@ -30,6 +32,8 @@ services:
       - '${FORWARD_ARTWORK_SSL_PORT:-443}:443'
     depends_on:
       - php
+    volumes:
+      - "artwork:/var/www/html/:cached"
     networks:
       - artwork
   mysql:
@@ -107,3 +111,5 @@ volumes:
     driver: local
   artwork-redis:
     driver: local
+  artwork:
+

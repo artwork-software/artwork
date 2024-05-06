@@ -40,7 +40,7 @@ RUN mkdir -p /etc/apt/keyrings \
 
 RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem pcntl gd mysqli sockets exif
 
-COPY dockerfiles/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 RUN git init  \
     && git remote add origin https://github.com/artwork-software/artwork.git  \

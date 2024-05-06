@@ -1,11 +1,6 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeUserModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="closeUserModal" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <IconX stroke-width="1.5" @click="closeUserModal(false)"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
-                       aria-hidden="true"/>
                 <div class="mt-8 headline1">
                     {{ $t('Invite users') }}
                 </div>
@@ -198,8 +193,7 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
 </template>
 <script>
 
@@ -217,11 +211,13 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "InviteUsersModal",
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         ToolTipDefault,
         FormButton,
         AddButtonSmall,

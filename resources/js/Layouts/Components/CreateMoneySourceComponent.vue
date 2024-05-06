@@ -1,10 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-        <template #content>
-            <img alt="Finanzierungsquelle erstellen" src="/Svgs/Overlays/illu_money_source_create.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
                 <!--   Heading   -->
                 <div class="my-1">
@@ -402,8 +397,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 
 </template>
 
@@ -433,11 +427,13 @@ import {Inertia} from "@inertiajs/inertia";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         BaseButton,
         Input,

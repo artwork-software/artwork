@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{$t('Edit document')}}
                 </div>
-                <XIcon @click="closeModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="flex items-center cursor-pointer" @click="downloadMoneySourceFile(file)">
                     <DownloadIcon class="w-4 h-4 mr-2 text-buttonBlue"/>
                     <div class="text-buttonBlue text-sm my-6">{{ file.name }}</div>
@@ -59,10 +54,7 @@
                     </div>
                 </div>
             </div>
-
-        </template>
-
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -72,6 +64,7 @@ import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
@@ -83,6 +76,7 @@ export default {
         file: Object
     },
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         JetInputError,

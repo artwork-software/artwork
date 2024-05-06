@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ titel }}
                 </div>
-                <IconX stroke-width="1.5" @click="closeModal(false)"
-                    class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                    aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
                     {{ description }}
                 </div>
@@ -16,8 +11,7 @@
                     <FormButton @click="closeModal(true)" :text="confirm ?? $t('Yes')"/>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -28,11 +22,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: 'ErrorComponent',
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         XIcon,

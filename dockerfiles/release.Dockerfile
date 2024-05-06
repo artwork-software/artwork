@@ -59,12 +59,10 @@ RUN mkdir -p /etc/apt/keyrings \
            php8.2-memcached php8.2-pcov \
            meilisearch \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-               && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
+               && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
                && apt-get update \
                && apt-get install -y nodejs \
                && npm install -g npm
-
-COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 RUN git config --global --add safe.directory /var/www/html
 
@@ -75,10 +73,10 @@ RUN git init  \
 
 RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-RUN if [ -n "$BRANCH"]; then \
-     git checkout $BRANCH; \
-    elif [ -n "$TAG" ]; then  \
+RUN if [ -n "$TAG" ]; then \
       git checkout tags/$TAG; \
+    elif [ -n "$BRANCH" ]; then  \
+     git checkout $BRANCH; \
     fi
 
 RUN npm -g install cross-env webpack @soketi/soketi
@@ -92,5 +90,9 @@ RUN chown -R www-data:www-data /var/www/html
 
 COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY dockerfiles/php/php.ini /etc/php/8.2/cli/conf.d/99-artwork.ini
+COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY dockerfiles/redis.conf /etc/redis/redis.conf
+
+CMD ["nginx", "-g", "daemon off;"]
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

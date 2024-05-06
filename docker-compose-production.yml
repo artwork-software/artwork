@@ -8,22 +8,19 @@ services:
       - .env
     networks:
       - artwork
-    volumes:
-      - '.env:/var/www/html/.env'
     extra_hosts:
       - "host.docker.internal:host-gateway"
   php-queue-worker:
     <<: *php
-    ports: []
-    command: 'php artisan horizon'
+    command: 'php artisan schedule:work'
   php-scheduler:
     <<: *php
-    ports: []
     command: 'yacron -c schedule.yaml'
   php-updater:
     <<: *php
-    ports: []
-    command: 'sh'
+    command: 'sh dockerfiles/php/update.sh'
+    volumes:
+      - '.env:/var/www/html/.env'
   nginx:
     build:
       context: .

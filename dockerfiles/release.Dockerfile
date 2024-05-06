@@ -8,8 +8,6 @@ ENV TZ=UTC
 ARG BRANCH
 ARG TAG
 
-COPY dockerfiles/init.sh /opt/init.sh
-
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y ca-certificates  \
@@ -42,7 +40,7 @@ RUN mkdir -p /etc/apt/keyrings \
 
 RUN docker-php-ext-install pdo_mysql bcmath dom intl zip xsl simplexml sysvsem pcntl gd mysqli sockets exif
 
-COPY fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY dockerfiles/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 
 RUN git init  \
     && git remote add origin https://github.com/artwork-software/artwork.git  \

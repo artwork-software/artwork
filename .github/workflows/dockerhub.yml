@@ -2,7 +2,9 @@ name: Publish to docker hub
 on:
   push:
     branches:
-      - 'feature/**'
+      - 'dev'
+      - 'main'
+      - 'staging'
     tags:
       - 'v*'
 

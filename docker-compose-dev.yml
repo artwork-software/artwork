@@ -10,7 +10,7 @@ services:
         - "host.docker.internal:host-gateway"
     php-queue-worker:
         <<: *php
-        command: 'php artisan horizon'
+        command: 'php artisan schedule'
     php-scheduler:
         <<: *php
         command: 'command: yacron -c schedule.yaml'

@@ -80,13 +80,9 @@ RUN if [ -n "$TAG" ]; then \
 
 RUN npm -g install cross-env webpack @soketi/soketi
 
-RUN npm install && npm run dev && npm run prod
-
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
 
 RUN php /var/www/html/artisan storage:link
-
-RUN chown -R www-data:www-data /var/www/html
 
 COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY dockerfiles/php/php.ini /etc/php/8.2/cli/conf.d/99-artwork.ini
@@ -94,5 +90,9 @@ COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 COPY dockerfiles/redis.conf /etc/redis/redis.conf
 
 RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
+
+RUN npm install
+
+RUN chown -R www-data:www-data /var/www/html
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

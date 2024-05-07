@@ -35,7 +35,6 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     libmagickwand-dev \
     wget \
     htop \
-    nginx \
     python2 \
     supervisor \
     dnsutils \
@@ -80,6 +79,7 @@ RUN if [ -n "$TAG" ]; then \
     fi
 
 RUN npm -g install cross-env webpack @soketi/soketi
+
 RUN npm install && npm run dev && npm run prod
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
@@ -93,6 +93,6 @@ COPY dockerfiles/php/php.ini /etc/php/8.2/cli/conf.d/99-artwork.ini
 COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 COPY dockerfiles/redis.conf /etc/redis/redis.conf
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | crontab -
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

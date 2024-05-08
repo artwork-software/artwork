@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -34,6 +35,7 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
@@ -54,6 +56,8 @@ use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
@@ -80,6 +84,8 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
+use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -1809,12 +1815,12 @@ class ProjectController extends Controller
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
+        Request $request,
         Project $project,
         ProjectTab $projectTab,
         SageAssignedDataCommentService $sageAssignedDataCommentService,
         ShiftQualificationService $shiftQualificationService,
         RoomService $roomService,
-        CalendarController $calendarController,
         SageApiSettingsService $sageApiSettingsService,
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
@@ -1824,7 +1830,14 @@ class ProjectController extends Controller
         UserService $userService,
         FreelancerService $freelancerService,
         ServiceProviderService $serviceProviderService,
-        CraftService $craftService
+        CraftService $craftService,
+        CalendarService $calendarService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        EventTypeService $eventTypeService,
+        AreaService $areaService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1926,9 +1939,24 @@ class ProjectController extends Controller
 
             if ($component->type === ProjectTabComponentEnum::CALENDAR->value) {
                 $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
+                    $request->get('startDate') && $request->get('endDate') ?
+                        Carbon::create($request->get('startDate'))->startOfDay() :
+                        Carbon::now()->startOfDay(),
+                    $request->get('startDate') && $request->get('endDate') ?
+                        Carbon::create($request->get('endDate'))->endOfDay() :
+                        Carbon::now()->addWeeks()->endOfDay(),
                     $project,
                     $roomService,
-                    $calendarController
+                    $calendarService,
+                    $projectService,
+                    $userService,
+                    $filterService,
+                    $filterController,
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $request->boolean('atAGlance')
                 );
             }
 

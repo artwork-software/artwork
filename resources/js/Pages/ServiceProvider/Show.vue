@@ -55,7 +55,7 @@
                 <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
                                :days-with-events="daysWithEvents"
                                :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                               :vacations="vacations"></UserShiftPlan>
+                               :vacations="vacations" :shift-qualifications="this.shiftQualifications"></UserShiftPlan>
             </div>
             <div v-if="currentTab === 2">
                 <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>

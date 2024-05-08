@@ -130,7 +130,7 @@ export default {
                 let createdBy = event.created_by;
                 let projectLeaders = event.projectLeaders;
 
-                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                if (createdBy.id === 1 || projectLeaders?.some((leader) => leader.id === 1)) {
                     return true;
                 }
                 return false;

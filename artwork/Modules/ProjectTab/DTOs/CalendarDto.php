@@ -108,4 +108,71 @@ class CalendarDto extends BaseDto
 
         return $this;
     }
+
+    public function getEventsAtAGlance(): ?SupportCollection
+    {
+        return $this->eventsAtAGlance;
+    }
+
+    public function getCalendar(): ?SupportCollection
+    {
+        return $this->calendar;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getDateValue(): ?array
+    {
+        return $this->dateValue;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getDays(): ?array
+    {
+        return $this->days;
+    }
+
+    public function getSelectedDate(): ?string
+    {
+        return $this->selectedDate;
+    }
+
+    public function getRooms(): ?Collection
+    {
+        return $this->rooms;
+    }
+
+    public function getEvents(): ?CalendarEventDto
+    {
+        return $this->events;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getFilterOptions(): ?array
+    {
+        return $this->filterOptions;
+    }
+
+    public function getPersonalFilters(): ?SupportCollection
+    {
+        return $this->personalFilters;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getEventsWithoutRoom(): ?array
+    {
+        return $this->eventsWithoutRoom;
+    }
+
+    public function getUserFilters(): ?UserCalendarFilter
+    {
+        return $this->userFilters;
+    }
 }

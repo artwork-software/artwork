@@ -3,32 +3,30 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Area\Models\Area;
-use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
+use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
-use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
-use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
-use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
-use Artwork\Modules\Room\Http\Resources\AttributeIndexResource;
-use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Models\RoomAttribute;
-use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
+use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\User\Services\UserService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -126,46 +124,35 @@ class RoomController extends Controller
     }
 
     public function show(
+        UserService $userService,
         Room $room,
-        CalendarController $calendarController,
-        ProjectTabService $projectTabService
+        CalendarService $calendarService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomService $roomService,
+        ProjectTabService $projectTabService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        AreaService $areaService
     ): Response|ResponseFactory {
-        $room->load('creator');
-        $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
-
-        $showCalendar = $calendarController->createCalendarData('', null, $room);
-        return inertia('Rooms/Show', [
-            'room' => new RoomCalendarResource($room),
-            'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'is_room_admin' => $room->users()
-                ->wherePivot('is_admin', true)
-                ->wherePivot('user_id', '=', Auth::id())->count() > 0,
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
-
-            'available_categories' => RoomCategory::all(),
-            'roomCategoryIds' => $room->categories()->pluck('room_category_id'),
-            'roomCategories' => CategoryIndexResource::collection($room->categories),
-
-            'available_attributes' => RoomAttribute::all(),
-            'roomAttributeIds' => $room->attributes()->pluck('room_attribute_id'),
-            'roomAttributes' => AttributeIndexResource::collection($room->attributes),
-
-            'available_rooms' => Room::where('id', '!=', $room->id)->get(),
-            'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
-            'adjoiningRooms' => AdjoiningRoomIndexResource::collection($room->adjoining_rooms),
-            'calendar' => $showCalendar['roomsWithEvents'],
-            'days' => $showCalendar['days'],
-            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'filterOptions' => $showCalendar['filterOptions'],
-            'dateValue' => $showCalendar['dateValue'],
-            'personalFilters' => $showCalendar['personalFilters'],
-            'calendarType' => $showCalendar['calendarType'],
-            'selectedDate' => $showCalendar['selectedDate'],
-            'user_filters' => $showCalendar['user_filters'],
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
-        ]);
+        return Inertia::render(
+            'Rooms/Show',
+            $roomService->createShowDto(
+                $userService,
+                $room,
+                $calendarService,
+                $filterService,
+                $filterController,
+                $projectTabService,
+                $eventTypeService,
+                $projectService,
+                $roomCategoryService,
+                $roomAttributeService,
+                $areaService
+            )
+        );
     }
 
     public function getMoveRooms(): Response|ResponseFactory

@@ -125,7 +125,31 @@ SSL should be configured like you would your regular nginx instance https://ngin
 
 Soketi, the websocket service, also needs to be configured. See the official documentation https://docs.soketi.app/getting-started/ssl-configuration on how to achieve this.
 
-# Docker installation
+# Docker installation Standalone
+
+Artwork offers a stand alone containerized version of the application. This is useful if you want to run the application on a dedicated server or in a cloud environment.
+
+## Prerequisites
+
+[Docker](https://www.docker.com/) and the .env of the repository. It is advised to use the `.env.prod.example` file and rename it to `.env`
+
+## Installation
+
+To boot the container you can simply run the following command:
+
+`docker compose -f docker-compose-production.yml up -d`
+
+The application needs an app key variable set. For this please run the command ``docker compose -f docker-compose-production.yml exec artwork php artisan key:generate --show``
+This will output a key. Copy this key and paste it into the .env file under the APP_KEY variable. Restart the container afterwards.
+
+Feel free to modify the .env file to your needs, e.g. with E-Mail credentials.
+
+## Updates
+
+You can modify the `$ARTWORK_VERSION` variable in the .env file. By default it is set to `main` which is the latest stable version of Artwork.
+The always pull policy ensures, that it will automatically update to the latest version on the next restart. It will also automatically migrate the database if necessary.
+
+# Docker installation (Laravel Sail)
 
 ## Prerequisites
 Laravel Sail is supported on macOS, Linux, and Windows (via [WSL2](https://learn.microsoft.com/en-us/windows/wsl/about)).

@@ -19,8 +19,6 @@ class CalendarEventDto extends BaseDto
 
     public ?Collection $events = null;
 
-    public ?Collection $filter = null;
-
     public function setAreas(Collection $areas): self
     {
         $this->areas = $areas;
@@ -63,11 +61,34 @@ class CalendarEventDto extends BaseDto
         return $this;
     }
 
-    public function setFilter(Collection $filter): self
+    public function getAreas(): ?Collection
     {
-        $this->filter = $filter;
+        return $this->areas;
+    }
 
-        return $this;
+    public function getProjects(): ?Collection
+    {
+        return $this->projects;
+    }
+
+    public function getEventTypes(): ?Collection
+    {
+        return $this->eventTypes;
+    }
+
+    public function getRoomCategories(): ?Collection
+    {
+        return $this->roomCategories;
+    }
+
+    public function getRoomAttributes(): ?Collection
+    {
+        return $this->roomAttributes;
+    }
+
+    public function getEvents(): ?Collection
+    {
+        return $this->events;
     }
 
     /**

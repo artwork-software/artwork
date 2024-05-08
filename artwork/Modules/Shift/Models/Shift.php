@@ -149,6 +149,9 @@ class Shift extends Model
             ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getFormattedDatesAttribute(): array
     {
         return [
@@ -159,7 +162,11 @@ class Shift extends Model
         ];
     }
 
-    public function getDaysOfShiftAttribute(){
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDaysOfShiftAttribute(): array
+    {
         if (!$this->start_date || !$this->end_date) {
             return [];
         }
@@ -249,5 +256,10 @@ class Shift extends Model
     public function scopeEventIdInArray(Builder $builder, array $eventIds): Builder
     {
         return $builder->whereIntegerInRaw('event_id', $eventIds);
+    }
+
+    public function scopeOrderedByStart(Builder $builder, string $direction = 'asc'): Builder
+    {
+        return $builder->orderBy('start', $direction);
     }
 }

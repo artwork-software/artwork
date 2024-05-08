@@ -1,8 +1,9 @@
 <?php
 
-namespace Artwork\Modules\Room\Models;
+namespace Artwork\Modules\RoomCategory\Models;
 
-use Artwork\Modules\RoomRoomAttributeMapping\Models\RoomRoomAttributeMapping;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\RoomRoomCategoryMapping\Models\RoomRoomCategoryMapping;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $created_at
  * @property string $updated_at
  */
-class RoomAttribute extends Model
+class RoomCategory extends Model
 {
     use HasFactory;
 
@@ -23,6 +24,6 @@ class RoomAttribute extends Model
 
     public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(Room::class)->using(RoomRoomAttributeMapping::class);
+        return $this->belongsToMany(Room::class)->using(RoomRoomCategoryMapping::class);
     }
 }

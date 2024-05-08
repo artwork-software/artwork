@@ -69,4 +69,51 @@ class ShiftsDto extends BaseDto
 
         return $this;
     }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getUsersForShifts(): ?array
+    {
+        return $this->usersForShifts;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getFreelancersForShifts(): ?array
+    {
+        return $this->freelancersForShifts;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getServiceProvidersForShifts(): ?array
+    {
+        return $this->serviceProvidersForShifts;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getEventsWithRelevant(): ?array
+    {
+        return $this->eventsWithRelevant;
+    }
+
+    public function getCrafts(): ?Collection
+    {
+        return $this->crafts;
+    }
+
+    public function getCurrentUserCrafts(): ?Collection
+    {
+        return $this->currentUserCrafts;
+    }
+
+    public function getShiftQualifications(): ?Collection
+    {
+        return $this->shiftQualifications;
+    }
 }

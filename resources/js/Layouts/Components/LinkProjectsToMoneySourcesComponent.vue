@@ -54,7 +54,7 @@
                                 </div>
                                 <button type="button" @click="deleteProjectFromArray(project)">
                                     <span class="sr-only">{{$t('Remove user from team')}}</span>
-                                    <IconCircleX stroke-width="1.5" class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                    <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
                             </span>

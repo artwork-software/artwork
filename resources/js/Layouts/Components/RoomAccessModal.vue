@@ -20,7 +20,7 @@
                                 leave-from-class="opacity-100"
                                 leave-to-class="opacity-0">
                         <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                             class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                             <div class="border-gray-200">

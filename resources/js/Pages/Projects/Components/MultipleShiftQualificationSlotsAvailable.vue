@@ -11,7 +11,7 @@
                     <input v-for="availableShiftQualificationSlot in this.availableShiftQualificationSlots"
                            type="button"
                            :value="$t('Use as {0}', [availableShiftQualificationSlot.name])"
-                           class="text-wrap cursor-pointer bg-buttonBlue text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-buttonHover"
+                           class="text-wrap cursor-pointer bg-artwork-buttons-create text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-artwork-buttons-hover"
                            @click="this.close(null, this.droppedUser, availableShiftQualificationSlot.id)"
                     />
                 </div>

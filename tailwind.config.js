@@ -40,7 +40,7 @@ module.exports = {
                 checkBoxBg: '#474459',
                 silverGray:'#CECDD8',
                 userBg: '#EDEDEC',
-                colorOfAction: '#E8E4f5',
+                colorOfAction: '#e4eef5',
                 menuButtonBlue: '#3017AD',
                 shiftText: '#82818A',
                 linkOnDarkColor: '#BDB6F0',

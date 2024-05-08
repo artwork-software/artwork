@@ -23,7 +23,7 @@
                             v-if="(department_and_user_search_results.users
                                 || department_and_user_search_results.departments)
                                  && department_and_user_query.length > 0"
-                            class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                            class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                             <div class="border-gray-200">
@@ -73,7 +73,7 @@
                             </div>
                             <button type="button" @click="deleteUserFromProjectTeam(user)">
                                 <span class="sr-only">{{ $t('Remove user from team') }}</span>
-                                <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
                         <div class="flex justify-between items-center my-1.5 h-5 w-80">

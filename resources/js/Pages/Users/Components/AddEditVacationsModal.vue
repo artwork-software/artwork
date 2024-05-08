@@ -96,7 +96,7 @@
                                             <div>
                                                 <label for="start_time" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('Start time')}}</label>
                                                 <div class="mt-1">
-                                                    <input type="time" v-model="vacation.start_time" name="start_time" id="start_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <input type="time" v-model="vacation.start_time" name="start_time" id="start_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
                                                     <div v-show="helpText.start_time" class="mt-1 text-red-500 text-xs">
                                                         {{ helpText.start_time }}
                                                     </div>
@@ -105,7 +105,7 @@
                                             <div>
                                                 <label for="end_time" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('End time')}}</label>
                                                 <div class="mt-1">
-                                                    <input type="time" v-model="vacation.end_time" name="end_time" id="end_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <input type="time" v-model="vacation.end_time" name="end_time" id="end_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
                                                     <div v-show="helpText.end_time" class="mt-1 text-red-500 text-xs">
                                                         {{ helpText.end_time }}
                                                     </div>
@@ -141,7 +141,7 @@
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <label for="email" class="block text-xs font-medium leading-6 text-gray-600">{{  $t('Repetition') }}</label>
-                                                <select id="location" v-model="vacation.series_repeat" name="location" class="mt-1 block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="{'!bg-gray-200' : vacation?.id}" :disabled="vacation?.id">
+                                                <select id="location" v-model="vacation.series_repeat" name="location" class="mt-1 block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" :class="{'!bg-gray-200' : vacation?.id}" :disabled="vacation?.id">
                                                     <option value="weekly" selected>{{  $t('Weekly') }}</option>
                                                     <option value="daily">{{ $t('Daily')}}</option>
                                                 </select>
@@ -149,7 +149,7 @@
                                             <div>
                                                 <label for="email" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('Ends')}}</label>
                                                 <div class="mt-1">
-                                                    <input type="date" v-model="vacation.series_repeat_until" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :disabled="vacation?.id" :class="{'!bg-gray-100' : vacation?.id}" />
+                                                    <input type="date" v-model="vacation.series_repeat_until" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" :disabled="vacation?.id" :class="{'!bg-gray-100' : vacation?.id}" />
                                                     <div v-show="helpText.series_repeat_until" class="mt-1 text-red-500 text-xs">
                                                         {{ helpText.series_repeat_until }}
                                                     </div>
@@ -163,7 +163,7 @@
                                     <div>
                                         <div>
                                             <div class="mt-1">
-                                                <input type="text" v-model="vacation.comment" name="comment" id="comment" :placeholder="$t('Comment')" maxlength="20" max="20" class="block w-full border-0 py-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                <input type="text" v-model="vacation.comment" name="comment" id="comment" :placeholder="$t('Comment')" maxlength="20" max="20" class="block w-full border-0 py-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
                                                 <div v-show="helpText.comment" class="mt-1 text-red-500 text-xs">
                                                     {{ helpText.comment }}
                                                 </div>

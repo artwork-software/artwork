@@ -17,7 +17,7 @@
                                class="pl-2 h-12 w-full focus:border-primary border border-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary"
                         />
                     </div>
-                    <div class="absolute max-h-60 bg-primary shadow-lg text-sm flex flex-col w-9/12">
+                    <div class="absolute max-h-60 bg-artwork-navigation-background shadow-lg text-sm flex flex-col w-9/12">
                         <button v-for="(user, index) in searchedUsers"
                                 :key="index"
                                 class="flex items-center cursor-pointer p-4 font-bold text-white text-left hover:border-l-4 hover:border-l-success border-l-4 border-l-primary"
@@ -45,7 +45,7 @@
                     </div>
                     <button type="button" @click="removeUser(user)">
                         <span class="sr-only">{{ $t('Remove user from checklist') }}</span>
-                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
+                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>
                     </button>
                 </div>
 

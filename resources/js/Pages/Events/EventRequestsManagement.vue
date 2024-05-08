@@ -48,11 +48,11 @@
                                             {{eventRequest.name}}
                                         </div>
                                         <button v-if="this.hasAdminRole()" @click="openApproveRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create  focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                         <button v-if="this.hasAdminRole()" @click="openDeclineRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                     </div>
@@ -179,7 +179,7 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
                             {{$t('Commitments')}}

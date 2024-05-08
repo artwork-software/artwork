@@ -33,7 +33,7 @@
                         <input v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
                                type="button"
                                :value="$t('Insert as {0}',[ availableShiftQualificationSlot.name])"
-                               class="cursor-pointer bg-buttonBlue text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-buttonHover"
+                               class="cursor-pointer bg-artwork-buttons-create text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-artwork-buttons-hover"
                                @click="this.handleShift(this.currentShiftToAssign.shift.id, availableShiftQualificationSlot.id)"
                         />
                     </div>

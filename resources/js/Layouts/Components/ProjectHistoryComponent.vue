@@ -14,7 +14,7 @@
                                  aria-label="Tabs">
                                 <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
                                    :key="tab.name"
-                                   :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                   :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
                                    :aria-current="tab.current ? 'page' : undefined">
                                     {{ tab.name }}
                                 </a>

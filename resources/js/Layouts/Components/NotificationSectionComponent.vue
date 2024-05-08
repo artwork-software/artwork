@@ -1,6 +1,6 @@
 <template>
     <div class="flex w-full mb-5">
-        <button class="bg-buttonBlue flex relative w-6" @click="showSection = !showSection">
+        <button class="bg-artwork-buttons-create flex relative w-6" @click="showSection = !showSection">
             <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
             <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
         </button>

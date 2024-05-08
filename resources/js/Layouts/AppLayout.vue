@@ -11,7 +11,7 @@
                 <div class="w-full">
                     <div class="flex items-center justify-center" :class="fullSidenav ? 'w-full' : ''">
                         <div class="group relative">
-                            <div class="cursor-pointer absolute group-hover:block hidden bg-primary/70 z-10 h-full w-full" @click="changeSidenavMode()">
+                            <div class="cursor-pointer absolute group-hover:block hidden bg-artwork-navigation-background/70 z-10 h-full w-full" @click="changeSidenavMode()">
                                 <div class="flex items-center justify-center h-full w-full">
                                     <IconChevronsRight v-if="!fullSidenav" class="h-6 w-6 text-white" aria-hidden="true"/>
                                     <IconChevronsLeft v-else class="h-6 w-6 text-white" aria-hidden="true"/>

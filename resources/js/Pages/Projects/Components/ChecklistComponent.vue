@@ -24,7 +24,7 @@
                 <div class="flex w-full flex-wrap">
                     <div v-for="checklist in project.public_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"/>
@@ -227,7 +227,7 @@
                     </div>
                     <div v-for="checklist in project.private_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp  stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"
@@ -451,7 +451,7 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                     <div class="border-gray-200">
@@ -481,7 +481,7 @@
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
                                         <XIcon
-                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -548,7 +548,7 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
@@ -575,7 +575,7 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
-                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -604,8 +604,8 @@
                     {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                    <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                             @click="deleteChecklistFromProject()">
                         {{ $t('Delete') }}
                     </button>
@@ -694,16 +694,16 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    class="absolute z-10 mt-1 w-full bg-artwork-navigation-background shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    :key="'keineVorlage'"
                                                    :value="{name:'',id:null}"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ $t('No template') }}
                                             </span>
-                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                            <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                              class="h-5 w-5 flex text-success"
                                                              aria-hidden="true"
@@ -716,12 +716,12 @@
                                                    :key="template.id"
                                                    :value="template"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
                                                 :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ template.name }}
                                             </span>
-                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                            <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                              class="h-5 w-5 flex text-success"
                                                              aria-hidden="true"

@@ -5,8 +5,8 @@
                     {{$t('Edit document')}}
                 </div>
                 <div class="flex items-center cursor-pointer" @click="downloadProjectFile(file)">
-                    <DownloadIcon class="w-4 h-4 mr-2 text-buttonBlue"/>
-                    <div class="text-buttonBlue text-sm my-6">{{ file.name }}</div>
+                    <DownloadIcon class="w-4 h-4 mr-2 text-artwork-buttons-create"/>
+                    <div class="text-artwork-buttons-create text-sm my-6">{{ file.name }}</div>
                 </div>
                 <div class="text-secondary text-sm my-2">
                     {{$t('Replace document')}}
@@ -21,8 +21,8 @@
                     />
                     <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">
+                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-artwork-buttons-create font-bold text-center">
                             {{ $t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
@@ -46,7 +46,7 @@
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
@@ -76,7 +76,7 @@
                                             <button type="button" @click="deleteUserFromFileUserArray(index)">
                                                 <span class="sr-only">{{$t('Remove user from contract')}}</span>
                                                 <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                             </button>
                                         </div>
 

@@ -241,7 +241,7 @@
                                                             </span>
                                                         </div>
                                                         <button type="button" @click="this.removeUser(user)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                     <div v-for="department in this.modulePermissions.departments"
@@ -254,7 +254,7 @@
                                                             </span>
                                                         </div>
                                                         <button type="button" @click="this.removeDepartment(department)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -325,7 +325,7 @@
                                                             </div>
                                                         </div>
                                                         <button type="button" @click="this.removeUser(user)">
-                                                            <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                                            <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                                                         </button>
                                                     </div>
                                                     <div v-for="department in this.modulePermissions.departments"
@@ -345,7 +345,7 @@
                                                             </div>
                                                         </div>
                                                         <button type="button" @click="this.removeDepartment(department)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                 </div>

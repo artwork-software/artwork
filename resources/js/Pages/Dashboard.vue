@@ -58,7 +58,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to calendar")}}</a>
+                            <a :href="route('events')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to calendar")}}</a>
                         </div>
                     </div>
                     <div>
@@ -107,7 +107,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
+                            <a :href="route('shifts.plan')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
                     </div>
                 </div>
@@ -166,7 +166,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('notifications.index')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
+                            <a :href="route('notifications.index')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
                         </div>
                     </div>
                     <div>
@@ -227,7 +227,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
+                            <a :href="route('tasks.own')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
                         </div>
                     </div>
                 </div>

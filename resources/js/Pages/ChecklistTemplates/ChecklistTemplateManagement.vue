@@ -135,7 +135,7 @@
                     {{ $t('Are you sure you want to delete the checklist template {0}?', [templateToDelete.name])}}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                    <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteTemplate">
                         {{  $t('Delete') }}

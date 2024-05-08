@@ -23,8 +23,8 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="rounded-2xl max-h-56 overflow-y-auto bg-primary border-none mt-2">
+                            class="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="rounded-2xl max-h-56 overflow-y-auto bg-artwork-navigation-background border-none mt-2">
                                 <BaseFilterDisclosure :title="$t('Category')">
                                     <div v-if="categories?.length > 0"
                                          v-for="category in categories"

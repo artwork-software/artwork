@@ -16,7 +16,7 @@
                                                     <label class="text-xs">{{ $t('Reset') }}</label>
                                                 </button>
                                             </div>
-                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-artwork-navigation-background border-none mt-2">
                                                 <BaseFilterDisclosure :title="$t('Additional costs')">
                                                     <div v-for="(filter, index) in filter.costsFilter">
                                                         <div class="relative flex items-center">

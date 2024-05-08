@@ -41,7 +41,7 @@
                     <div class="flex w-full mt-12">
                         <div class="">
                             <button @click="openAddTaskModal()" type="button"
-                                    class="flex hover:bg-success my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex hover:bg-success my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -148,7 +148,7 @@
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">

@@ -133,7 +133,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-64 z-10 mt-12 bg-primary shadow-lg max-h-48 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    class="absolute w-64 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-48 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    :value="null"
                                                    v-slot="{ active, selected }">
@@ -186,7 +186,7 @@
                             <div class="project">
                                 <div class="text-gray-400"><a
                                     :href="getProjectHref(position.project)"
-                                    class="text-buttonBlue ">{{ position.project.name }}</a> |<span
+                                    class="text-artwork-buttons-create ">{{ position.project.name }}</a> |<span
                                     class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
                                 <div class="text-gray-400 text-sm mt-2 flex">{{ position.mainPositionName }} <div class="flex px-1" v-if="position.subPositionName?.length > 0">|</div>
                                     {{ position.subPositionName }}
@@ -228,7 +228,7 @@
         :title="$t('Delete funding source/group')"
         :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete.name])"
         @closed="afterConfirm(false)"
-    @delete="afterConfirm(true)"/>
+        @delete="afterConfirm(true)"/>
 
     <MoneySourceHistoryComponent
         @closed="closeMoneySourceHistoryModal"

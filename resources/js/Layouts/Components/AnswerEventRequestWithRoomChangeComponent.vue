@@ -69,9 +69,9 @@
                                 </div>
                                 <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxOptions class="w-10/12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOptions class="w-10/12 bg-artwork-navigation-background max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="roomOption in rooms"
-                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                               class="hover:bg-artwork-buttons-hover text-secondary cursor-pointer p-2 flex justify-between "
                                                :key="roomOption.name"
                                                :value="roomOption"
                                                v-slot="{ active, selected }">

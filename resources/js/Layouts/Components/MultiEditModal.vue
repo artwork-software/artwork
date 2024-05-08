@@ -25,11 +25,11 @@
                                     </div>
                                 </ListboxButton>
 
-                                <ListboxOptions class="absolute w-full bg-primary shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
                                     <ListboxOption as="template" class="p-2 text-sm"
                                                    :value="null"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                             <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                 {{ $t('No room displacement')}}
                                             </div>
@@ -43,7 +43,7 @@
                                                    :key="room.id"
                                                    :value="room"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                             <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                 {{ room.name }}
                                             </div>
@@ -67,13 +67,13 @@
                                             <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                         </div>
                                     </ListboxButton>
-                                    <ListboxOptions class="absolute w-full bg-primary shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none  z-10">
+                                    <ListboxOptions class="absolute w-full bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none  z-10">
                                         <ListboxOption as="template" class="p-2 text-sm"
                                                        v-for="calculation in calculationTypes"
                                                        :key="calculation.id"
                                                        :value="calculation"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                                 <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                     {{ calculation.type }}
                                                 </div>
@@ -103,13 +103,13 @@
                                         </div>
                                     </ListboxButton>
 
-                                    <ListboxOptions class="absolute bg-primary shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
+                                    <ListboxOptions class="absolute bg-artwork-navigation-background shadow-lg max-h-32 overflow-y-scroll rounded-md focus:outline-none z-10">
                                         <ListboxOption as="template" class="p-2 text-sm"
                                                        v-for="time in timeTypes"
                                                        :key="time.id"
                                                        :value="time"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                                 <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                                     {{ time.value }}
                                                 </div>

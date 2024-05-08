@@ -13,7 +13,7 @@
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -88,7 +88,7 @@
                                             </ListboxButton>
                                             <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                                 <ListboxOption v-for="type in linkTypes"
-                                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                               class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
                                                                :key="type.name"
                                                                :value="type"
                                                                v-slot="{ active, selected }">

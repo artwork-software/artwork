@@ -184,8 +184,8 @@
                         {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to "undefined".', {eventType: eventTypeToDelete.name})}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-buttonBlue hover:bg-buttonHover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                                 @click="deleteEventType">
                             {{$t('Delete')}}
                         </button>

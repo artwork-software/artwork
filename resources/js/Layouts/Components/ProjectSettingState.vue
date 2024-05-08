@@ -63,7 +63,7 @@
             </div>
             <div class="m-2 -ml-8 -mt-1">
                 <button
-                    :class="[input === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                    :class="[input === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                     @click="add" :disabled="!input">
                     <CheckIcon class="h-5 w-5"></CheckIcon>
                 </button>

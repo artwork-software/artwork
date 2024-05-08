@@ -20,7 +20,7 @@
                         <jet-input-error :message="form.error" class="mt-2"/>
                         <div class="flex m-2">
                             <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[emailInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                             </button>

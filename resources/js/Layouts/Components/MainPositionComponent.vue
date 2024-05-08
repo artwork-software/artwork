@@ -83,10 +83,10 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+        <div @click="addSubPosition(mainPosition.id)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
             <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                 {{ $t('Sub position') }}
-                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
+                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
             </div>
         </div>
         <table v-if="!mainPosition.closed" class="w-full">
@@ -106,7 +106,7 @@
                                       :project-managers="projectManagers"
                 />
             </tr>
-            <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
+            <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
                 <td class="w-72">SUM</td>
@@ -118,16 +118,16 @@
                         <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}</span>
                         <span v-else>{{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}</span>
                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
-                            <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                            <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                         </div>
                     </div>
                 </td>
             </tr>
             </thead>
-            <div @click="addMainPosition(mainPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div @click="addMainPosition(mainPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     {{ $t('Main position') }}
-                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
+                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
                 </div>
             </div>
         </table>

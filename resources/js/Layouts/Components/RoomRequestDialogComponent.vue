@@ -232,7 +232,7 @@
                                     <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
                                     </div>
                                 </label>
                                 <span class="ml-4 text-sm"
@@ -327,7 +327,7 @@
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
@@ -408,7 +408,7 @@
                     <div class="flex justify-center w-full py-4">
                         <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || newComment === ''"
                                 :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || newComment === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white"
                                 @click="updateAndAnswerEvent()">
                             {{$t('Send answer')}}
                         </button>

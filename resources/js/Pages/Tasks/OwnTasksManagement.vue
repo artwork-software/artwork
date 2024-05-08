@@ -13,13 +13,13 @@
                                 </div>
                             </ListboxButton>
 
-                            <ListboxOptions class="absolute w-56 bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
+                            <ListboxOptions class="absolute w-56 bg-artwork-navigation-background shadow-lg max-h-32 rounded-md focus:outline-none">
                                 <ListboxOption as="template" class="p-2 text-sm"
                                     v-for="filter in filters"
                                     :key="filter.name"
                                     :value="filter"
                                     v-slot="{ active, selected }">
-                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                    <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                         <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                             {{ filter.name }}
                                         </div>

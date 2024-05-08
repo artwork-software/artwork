@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-2" id="datePicker">
             <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="checkDatePickerState">
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="this.showDateRangePicker = !this.showDateRangePicker">
                     <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                 </div>
                 <input v-model="dateValueArray[0]"
@@ -15,7 +15,7 @@
                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg" />
             </div>
             <div class="relative rounded-md">
-                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="checkDatePickerState">
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="this.showDateRangePicker = !this.showDateRangePicker">
                     <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                 </div>
                 <input v-model="dateValueArray[1]"
@@ -174,11 +174,6 @@ export default {
             ]}
     },
     methods: {
-        checkDatePickerState() {
-            if (!this.showDateRangePicker) {
-                this.showDateRangePicker = true;
-            }
-        },
         updateTimes() {
             const startDate = new Date(this.dateValueArray[0]);
             const endDate = new Date(this.dateValueArray[1]);

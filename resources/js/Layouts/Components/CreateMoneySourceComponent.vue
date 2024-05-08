@@ -15,7 +15,7 @@
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -122,7 +122,7 @@
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
                                                 <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                             </button>
                                         </div>
                                         </span>
@@ -215,7 +215,7 @@
                                     </div>
                                     <div class="flex flex-row items-center w-fit" @click="addExpirationReminder()">
                                         <IconCirclePlus class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
+                                        <span class="text-xs underline text-artwork-buttons-create cursor-pointer">
                                             {{ $t('Add another reminder')}}
                                         </span>
                                     </div>
@@ -266,7 +266,7 @@
                                     </div>
                                     <div class="flex flex-row items-center w-fit" @click="addThresholdReminder()">
                                         <IconCirclePlus stroke-width="1.5" class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
+                                        <span class="text-xs underline text-artwork-buttons-create cursor-pointer">
                                                {{ $t('Add another reminder')}}
                                         </span>
                                     </div>
@@ -332,7 +332,7 @@
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from money source')}}</span>
                                                 <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                             </button>
                                         </div>
 

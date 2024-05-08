@@ -33,7 +33,7 @@
                 <div class="mt-5 mb-3 w-full grid justify-items-center">
                     <button @click="downloadExportProjectBudgetsByBudgetDeadline()"
                             type="button"
-                            class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                            class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-artwork-buttons-create focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                         <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
                         <p class="text-sm">{{ $t('Export') }}</p>
                     </button>

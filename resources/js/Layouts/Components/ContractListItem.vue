@@ -2,11 +2,11 @@
     <div class="flex">
         <div class="w-full">
             <div class="flex items-center">
-                <div @click="download" class="text-buttonBlue cursor-pointer underline text-sm">{{ contract.name }}</div>
+                <div @click="download" class="text-artwork-buttons-create cursor-pointer underline text-sm">{{ contract.name }}</div>
                 <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-primary text-sm">{{ contract.partner }}</div>
                 <hr class="border-l border-l-primary h-5 mx-2">
-                <div class="text-buttonBlue text-sm"><a
+                <div class="text-artwork-buttons-create text-sm"><a
                     :href="getEditHref(contract.project)">{{ contract.project?.name }}</a></div>
                 <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-primary text-sm">{{ contract.amount }}€</div>

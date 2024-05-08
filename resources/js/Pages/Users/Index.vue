@@ -20,13 +20,13 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                        class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="filter in displayFilters"
                                                        :key="filter.name"
                                                        :value="filter"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span
                                                         :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                                         {{ filter.name }}
@@ -38,7 +38,7 @@
                             </Listbox>
                             <div class="flex" v-if="this.$can('can manage workers') || this.hasAdminRole()">
                                 <button @click="openSelectAddUsersModal = true" type="button"
-                                        class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                                        class="rounded-full bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
                                     <PlusIcon class="h-4 w-4" aria-hidden="true"/>
                                 </button>
                                 <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -89,7 +89,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -181,7 +181,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-artwork-navigation-background rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>

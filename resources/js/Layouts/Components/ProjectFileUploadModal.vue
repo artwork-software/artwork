@@ -18,8 +18,8 @@
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">
+                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-artwork-buttons-create font-bold text-center">
                             {{$t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
@@ -76,7 +76,7 @@
                                             <button type="button" @click="deleteUserFromFileUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from contract')}}</span>
                                                 <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                             </button>
                                         </div>
 

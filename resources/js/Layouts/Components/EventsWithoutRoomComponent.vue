@@ -14,8 +14,8 @@
                 </div>
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
-                    <div class="flex w-full border border-2 border-gray-300">
-                        <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-buttonBlue w-6"
+                    <div class="flex w-full border-2 border-gray-300">
+                        <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-artwork-buttons-create w-6"
                                 @click="event.opened = !event.opened">
                             <IconChevronUp  stroke-width="1.5" v-if="event.opened"
                                            class="h-6 w-6 text-white my-auto"></IconChevronUp>
@@ -33,7 +33,7 @@
                                     <div v-if="event?.canDelete"
                                          class="flex  justify-end">
                                         <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
-                                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full"
+                                            <img class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover h-8 w-8 p-1 rounded-full"
                                                  src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                                         </div>
                                     </div>
@@ -87,7 +87,7 @@
                                         <transition leave-active-class="transition ease-in duration-100"
                                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                                             <ListboxOptions
-                                                class="absolute w-64 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                                class="absolute w-64 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                                 <ListboxOption as="template" class="max-h-8"
                                                                v-for="eventType in eventTypes"
                                                                :key="eventType.name"
@@ -151,7 +151,7 @@
                             <SwitchGroup as="div" class="flex items-center">
                                 <Switch v-model="event.allDay"
                                         @update:modelValue="checkChanges(event)"
-                                        :class="[event.allDay ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                        :class="[event.allDay ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                                     <span aria-hidden="true"
                                           :class="[event.allDay ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                 </Switch>
@@ -226,7 +226,7 @@
                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions
-                                        class="w-[80%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-20">
+                                        class="w-[80%] bg-artwork-navigation-background max-h-32 overflow-y-auto text-sm absolute z-20">
                                         <ListboxOption v-for="room in rooms"
                                                        class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                        :key="room.name"
@@ -396,7 +396,7 @@
                                 <button
                                     :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
                                     :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"
-                                    class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                    class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white"
                                     @click="updateOrCreateEvent(event)"
                                 >
                                     {{

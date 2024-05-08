@@ -60,7 +60,7 @@
                         </div>
                     </template>
                     <template #today-button>
-                        <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
+                        <div class="flex w-24 xsDark text-artwork-buttons-create" v-if="currentView === 'year'">
                             {{ $t('Current year')}}
                         </div>
                     </template>

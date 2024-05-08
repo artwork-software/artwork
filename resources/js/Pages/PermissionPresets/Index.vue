@@ -6,7 +6,7 @@
                 <div class="flex items-center">
                     <button @click="openPermissionPresetModal('create')"
                             type="button"
-                            class="rounded-full bg-buttonBlue p-1 mx-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                            class="rounded-full bg-artwork-buttons-create p-1 mx-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
                         <PlusIcon class="h-4 w-4" aria-hidden="true"/>
                     </button>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -30,7 +30,7 @@
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon
-                                        class="flex-shrink-0 h-6 w-6 text-menuButtonBlue"
+                                        class="flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create"
                                         aria-hidden="true"/>
                                 </MenuButton>
                                 <div v-if="this.$page.props.show_hints && index === 0"

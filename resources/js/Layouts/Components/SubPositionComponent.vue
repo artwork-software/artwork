@@ -105,7 +105,7 @@
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @click="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
@@ -119,7 +119,7 @@
                                                 </div>
                                             </div>
                                             <div v-else
-                                                 class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                                 class="text-nowrap p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white">
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
@@ -129,7 +129,7 @@
                                                  class="flex flex-col"
                                             >
                                                 <div
-                                                    class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                    class="p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white"
                                                     @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
                                                     <div class="flex">
                                                         <div class="w-1/2 text-left truncate">
@@ -142,7 +142,7 @@
                                                 </div>
                                             </div>
                                             <div v-else
-                                                 class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                                 class="text-nowrap p-3 cursor-pointer bg-artwork-navigation-background hover:bg-artwork-buttons-hover text-white">
                                                 {{ $t('No Cost Units found') }}
                                             </div>
                                         </div>
@@ -170,17 +170,17 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex items-center"
+                                <div class="flex items-center relative"
                                      :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
                                      v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                     <input :ref="`cell-${cell.id}`"
                                            :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                           class="my-2 xsDark  appearance-none z-10" type="text"
+                                           class="my-2 xsDark  appearance-none z-10 " type="text"
                                            :disabled="!this.$can('edit budget templates') && table.is_template"
                                            v-model="cell.value"
                                            @keyup="isNumber($event, index)"
                                            @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 " @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 absolute right-4 translate-x-1/2 z-50 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
                                 <div
                                     :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
@@ -195,7 +195,7 @@
                                     <img v-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : this.toCurrencyString(cell.value) }}
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full"/>
                                 </div>
                             </div>
                         </td>
@@ -294,7 +294,7 @@
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
                                  v-if="this.$can('edit budget templates') || !table.is_template">
                                 <IconCirclePlus stroke-width="1.5"
-                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full "/>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                             </div>
                         </div>
                     </div>
@@ -304,11 +304,11 @@
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)"
              v-if="this.$can('edit budget templates') || !table.is_template"
-             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                 {{ $t('Sub position') }}
                 <IconCirclePlus stroke-width="1.5"
-                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"/>
+                                class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full"/>
             </div>
         </div>
     </th>
@@ -616,16 +616,18 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
+
+
             let onFinish = () => {
                 cell.clicked = false;
-                this.alreadyCellClicked = false;
-                this.editedCellOriginalValue = null;
+                //this.alreadyCellClicked = false;
+                //this.editedCellOriginalValue = null;
             };
 
-            if (cell.value === this.editedCellOriginalValue) {
+            /*if (cell.value === this.editedCellOriginalValue) {
                 onFinish();
                 return;
-            }
+            }*/
 
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
@@ -683,15 +685,15 @@ export default {
                 this.$emit('openCellDetailModal', cell, 'calculation')
             } else {
                 //if already a cell is clicked and another one is also clicked do nothing
-                if (this.alreadyCellClicked && cell.clicked !== true) {
+                /*if (this.alreadyCellClicked && cell.clicked !== true) {
                     return;
-                }
+                }*/
 
                 cell.clicked = !cell.clicked
 
                 if (cell.clicked) {
-                    this.alreadyCellClicked = true;
-                    this.editedCellOriginalValue = cell.value;
+                    //this.alreadyCellClicked = true;
+                    //this.editedCellOriginalValue = cell.value;
 
                     await nextTick()
 

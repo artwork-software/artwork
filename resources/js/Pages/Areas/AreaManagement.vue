@@ -39,7 +39,7 @@
 
                                         <div class="m-2">
                                             <button
-                                                :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                 @click="addRoomCategory" :disabled="!roomCategoryInput">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
@@ -77,7 +77,7 @@
 
                                         <div class="m-2">
                                             <button
-                                                :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                 @click="addRoomAttribute" :disabled="!roomAttributeInput">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
@@ -447,12 +447,12 @@
                     >
 
                         <MenuItems
-                            class="absolute right-0 px-4 py-2  mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-primary border-none">
+                            class="absolute right-0 px-4 py-2  mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black text-white opacity-100 z-50">
+                            <div class="mx-auto w-full rounded-2xl bg-artwork-navigation-background border-none">
                                 <!-- Room Categories Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room categories')}}</span>
                                         <ChevronDownIcon
@@ -482,7 +482,7 @@
 
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Adjoining rooms')}}</span>
                                         <ChevronDownIcon
@@ -517,7 +517,7 @@
                                 <!-- Room Attributes Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room properties')}}</span>
                                         <ChevronDownIcon
@@ -671,12 +671,12 @@
                     >
 
                         <MenuItems
-                            class="absolute right-0 px-4 py-2  mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-primary border-none">
+                            class="absolute right-0 px-4 py-2  mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black text-white opacity-100 z-50">
+                            <div class="mx-auto w-full rounded-2xl bg-artwork-navigation-background border-none">
                                 <!-- Room Categories Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Room categories')}}</span>
                                         <ChevronDownIcon
@@ -707,7 +707,7 @@
 
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Adjoining rooms')}}</span>
                                         <ChevronDownIcon
@@ -742,7 +742,7 @@
                                 <!-- Room Attributes Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
-                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                        class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                     >
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Room properties')}}</span>
                                         <ChevronDownIcon

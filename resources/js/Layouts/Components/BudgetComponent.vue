@@ -24,25 +24,18 @@
             </div>
         </div>
         <div class="w-full flex flex-row-reverse mb-4 items-center">
-            <button v-if="!table.is_template"
-                    @click="downloadBudgetExport(project.id)"
-                    type="button"
-                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+            <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
             </button>
             <div v-if="!table.is_template">
                 <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IconZoomOut v-else
-                             @click="$emit('changeProjectHeaderVisualisation',false)"
-                             class="h-7 w-7 mx-2 cursor-pointer"
+                <IconZoomOut v-else @click="$emit('changeProjectHeaderVisualisation',false)" class="h-7 w-7 mx-2 cursor-pointer"
                 />
             </div>
             <SwitchGroup as="div" v-if="!table.is_template">
-                <Switch v-model="userExcludeCommentedBudgetItems"
-                        :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
-                        <span aria-hidden="true"
-                              :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                <Switch v-model="userExcludeCommentedBudgetItems" :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
+                        <span aria-hidden="true" :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span">
                     <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
@@ -304,7 +297,7 @@
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
-                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
                                     </div>
                                 </td>
@@ -389,7 +382,7 @@
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
-                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
                                     </div>
                                 </td>
@@ -521,7 +514,7 @@
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
                                     <IconX stroke-width="1.5"
-                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                 </button>
                             </div>
                         </span>
@@ -529,7 +522,7 @@
                 </div>
                 <div class="mt-6 flex justify-center">
                     <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
                             @click="submitVerifiedModal">
                         {{ $t('Request verification') }}
                     </button>
@@ -546,7 +539,7 @@
                 </p>
                 <div class="mt-6">
                     <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
                             @click="submitVerifiedModalWithBudgetAccess">
                         {{ $t('Issue requests & budget access') }}
                     </button>

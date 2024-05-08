@@ -69,7 +69,7 @@
                                             </div>
                                         </div>
                                         <div class="hidden group-hover:block ml-3">
-                                            <XCircleIcon @click="showAddTimeLineForm = false" class="mt-2 h-5 w-5 text-buttonBlue hover:text-error cursor-pointer"/>
+                                            <XCircleIcon @click="showAddTimeLineForm = false" class="mt-2 h-5 w-5 text-artwork-buttons-create hover:text-error cursor-pointer"/>
                                         </div>
                                     </div>
                                     <div class="h-1">

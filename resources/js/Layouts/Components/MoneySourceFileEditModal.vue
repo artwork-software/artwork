@@ -5,8 +5,8 @@
                     {{$t('Edit document')}}
                 </div>
                 <div class="flex items-center cursor-pointer" @click="downloadMoneySourceFile(file)">
-                    <DownloadIcon class="w-4 h-4 mr-2 text-buttonBlue"/>
-                    <div class="text-buttonBlue text-sm my-6">{{ file.name }}</div>
+                    <DownloadIcon class="w-4 h-4 mr-2 text-artwork-buttons-create"/>
+                    <div class="text-artwork-buttons-create text-sm my-6">{{ file.name }}</div>
                 </div>
                 <div class="text-secondary text-sm my-2">
                     {{ $t('Replace document')}}
@@ -21,8 +21,8 @@
                     />
                     <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">{{ $t('Drag document here to upload or click in the field')}}
+                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-artwork-buttons-create font-bold text-center">{{ $t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>

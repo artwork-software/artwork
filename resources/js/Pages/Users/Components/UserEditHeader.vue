@@ -24,7 +24,7 @@
                             <div class="">
                                 <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
                                     <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
-                                         :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
+                                         :class="[tab.current ? 'border-artwork-buttons-create text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
                                          :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
                                     </div>
                                 </nav>

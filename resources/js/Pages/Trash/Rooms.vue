@@ -21,7 +21,7 @@
     </div>
     <div v-for="area in filteredTrashedRooms" class="w-full">
         <div v-if="area.rooms.length > 0" class="flex w-full bg-white my-2 border border-gray-200">
-            <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="area.hidden = !area.hidden">
+            <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="area.hidden = !area.hidden">
                 <ChevronUpIcon v-if="area.hidden !== true"
                                class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                 <ChevronDownIcon v-else

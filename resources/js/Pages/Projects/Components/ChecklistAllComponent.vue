@@ -24,7 +24,7 @@
                 <div class="flex w-full flex-wrap">
                     <div v-for="checklist in project.public_all_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"/>
@@ -228,7 +228,7 @@
                     </div>
                     <div v-for="checklist in project.private_all_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp  stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"
@@ -482,7 +482,7 @@
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
                                         <XIcon
-                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -576,7 +576,7 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
-                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -605,8 +605,8 @@
                     {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                    <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                             @click="deleteChecklistFromProject()">
                         {{ $t('Delete') }}
                     </button>

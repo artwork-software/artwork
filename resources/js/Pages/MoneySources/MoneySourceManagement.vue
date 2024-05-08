@@ -24,13 +24,13 @@
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                                         <ListboxOptions
-                                            class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                            class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
                                             <ListboxOption as="template" class="max-h-8"
                                                            v-for="filter in moneySourceFilters"
                                                            :key="filter.name"
                                                            :value="filter"
                                                            v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                         <span
                                                             :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                                             {{ filter.name }}
@@ -59,10 +59,10 @@
                                     <IconFilter stroke-width="1.5" @click="showMoneySourceFilters = !showMoneySourceFilters"
                                           class="h-6 w-6 mx-2 cursor-pointer"/>
                                     <div v-if="showMoneySourceFilters"
-                                         class="w-72 absolute top-10 h-auto bg-primary p-2 flex flex-col z-50">
+                                         class="w-72 absolute top-10 h-auto bg-artwork-navigation-background p-2 flex flex-col z-50">
                                         <Disclosure v-slot="{ open }">
                                             <DisclosureButton
-                                                class="flex w-full py-2 px-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                                                class="flex w-full py-2 px-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                                                 <span
                                                     :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('All categories')}}</span>
                                                 <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''"
@@ -142,11 +142,11 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('name')"
-                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Alphabetical')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'name' && sortOrder === 'descending'"
@@ -159,7 +159,7 @@
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_start_date')"
-                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Start date')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
@@ -172,7 +172,7 @@
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_end_date')"
-                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('End date')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
@@ -185,7 +185,7 @@
                                                 </MenuItem>
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('created_at')"
-                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{ $t('Created on')}}
                                                         <IconSortDescending
                                                             v-if="sortType === 'created_at' && sortOrder === 'descending'"

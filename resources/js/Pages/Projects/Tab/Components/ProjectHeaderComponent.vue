@@ -113,7 +113,7 @@ export default {
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-buttonBlue ml-1">
+                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-artwork-buttons-create ml-1">
                         {{ headerObject.currentGroup?.name }}</a>
                     </div>
                 </div>
@@ -260,8 +260,8 @@ export default {
                         {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                                 @click="deleteProject">
                             {{ $t('Delete') }}
                         </button>

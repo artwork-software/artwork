@@ -26,7 +26,7 @@
                                             <input v-on:keyup.enter=addRoomCategory id="roomCategory"
                                                    v-model="roomCategoryInput"
                                                    type="text"
-                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-artwork-navigation-background placeholder-secondary placeholder-transparent"
                                                    placeholder="placeholder"/>
                                             <label for="roomCategory"
                                                    class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all
@@ -64,7 +64,7 @@
                                             <input v-on:keyup.enter=addRoomAttribute id="roomAttribute"
                                                    v-model="roomAttributeInput"
                                                    type="text"
-                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-artwork-navigation-background placeholder-secondary placeholder-transparent"
                                                    placeholder="placeholder"/>
                                             <label for="roomAttribute"
                                                    class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all

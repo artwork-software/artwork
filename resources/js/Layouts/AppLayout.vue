@@ -5,7 +5,7 @@
     </Head>
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
-        <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'"
+        <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'" id="sidebar"
              class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
             <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between overflow-auto">
                 <div class="w-full">
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="pl-2 flex flex-col">
+        <div class="pl-2 flex flex-col min-h-screen" @click="fullSidenav = !fullSidenav">
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -153,7 +153,7 @@
                 </div>
             </div>
 
-            <main class="main my-5 mx-5" @click="fullSidenav = false">
+            <main class="main my-5 mx-5">
                 <slot></slot>
             </main>
         </div>
@@ -449,6 +449,7 @@ export default {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
             });
+        
     },
     data() {
         return {

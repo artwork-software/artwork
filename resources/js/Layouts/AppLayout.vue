@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="pl-2 flex flex-col min-h-screen" @click="fullSidenav = !fullSidenav">
+        <div class="pl-2 flex flex-col min-h-screen" @click="fullSidenav = false">
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -449,7 +449,7 @@ export default {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
             });
-        
+
     },
     data() {
         return {

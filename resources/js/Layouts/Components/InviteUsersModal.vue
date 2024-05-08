@@ -29,6 +29,9 @@
                     <ul v-if="showInvalidEmailErrorText" class="mt-4">
                         <li class="errorText">{{ $t('This is not a valid e-mail address.')}}</li>
                     </ul>
+                    <span v-if="helpText.length > 0" class="text-red-500 text-xs mt-1">
+                        {{ helpText }}
+                    </span>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center sDark">
                             {{ email }}
@@ -193,6 +196,7 @@
                     />
                 </div>
             </div>
+
         </BaseModal>
 </template>
 <script>
@@ -241,7 +245,9 @@ export default {
         all_permissions: Object,
         departments: Array,
         roles: Array,
-        permission_presets: Array
+        permission_presets: Array,
+        users: Array,
+        invitedUsers: Array,
     },
     data() {
         return {
@@ -263,7 +269,8 @@ export default {
             }),
             showGlobalRoles: true,
             showInvalidEmailErrorText: false,
-            usedPermissionPresets: []
+            usedPermissionPresets: [],
+            helpText: "",
         }
     },
     computed: {
@@ -337,6 +344,29 @@ export default {
             if (!emailRegex.test(this.emailInput)) {
                 this.showInvalidEmailErrorText = true;
                 return;
+            }
+
+            if(this.form.user_emails?.includes(this.emailInput)){
+                this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                return;
+            }
+
+            // check if email is already in users
+            if (this.users) {
+                const user = this.users.find(user => user.email === this.emailInput);
+                if (user) {
+                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                    return;
+                }
+            }
+
+            // check if email is already in invited users
+            if (this.invitedUsers) {
+                const user = this.invitedUsers.find(user => user.email === this.emailInput);
+                if (user) {
+                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                    return;
+                }
             }
 
             this.showInvalidEmailErrorText = false;

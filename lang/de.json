@@ -1735,5 +1735,6 @@
     "Enter filter name": "Bitte Name eingeben.",
     "Page Title": "Seitentitel",
     "All Departments": "Alle Teams",
-    "User account": "Nutzerkonto"
+    "User account": "Nutzerkonto",
+    "This e-mail address already exists in the system. {0}": "Diese E-Mail-Adresse existiert bereits im System. \"{0}\""
 }

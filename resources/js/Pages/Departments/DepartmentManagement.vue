@@ -240,6 +240,9 @@
                                     {{ $t('Name of the team*')}}</label>
                             </div>
                         </div>
+                        <span class="text-red-500 text-xs mt-2" v-if="form.svg_name === ''">
+                            Icon auswählen notwendig*
+                        </span>
                         <div class="mt-12">
                             <div class="headline2 my-2">
                                 {{ $t('Add users')}}

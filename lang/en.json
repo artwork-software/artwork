@@ -1735,5 +1735,6 @@
     "Enter filter name": "Please enter a name.",
     "Page Title": "Page Title",
     "All Departments": "All Departments",
-    "User account": "User account"
+    "User account": "User account",
+    "This e-mail address already exists in the system. {0}": "This e-mail address already exists in the system. \"{0}\""
 }

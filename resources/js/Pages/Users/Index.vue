@@ -293,6 +293,8 @@
         :departments="departments"
         :roles="roles"
         :permission_presets="permission_presets"
+        :users="users"
+        :invited-users="invitedUsers"
     />
 
     <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false"
@@ -401,7 +403,8 @@ export default defineComponent({
         'roles',
         'freelancers',
         'serviceProviders',
-        'permission_presets'
+        'permission_presets',
+        'invitedUsers',
     ],
     data() {
         return {

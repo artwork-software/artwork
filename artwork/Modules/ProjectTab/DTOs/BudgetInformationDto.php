@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 class BudgetInformationDto extends BaseDto
 {
     public ?CostCenter $costCenter = null;
-    
+
     public ?Collection $projectManagerIds = null;
 
     public ?EloquentCollection $project_files = null;

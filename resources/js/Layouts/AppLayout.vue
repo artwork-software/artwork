@@ -7,7 +7,7 @@
     <div class="my-auto w-full">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'"
              class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
-            <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between">
+            <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between overflow-auto">
                 <div class="w-full">
                     <div class="flex items-center justify-center" :class="fullSidenav ? 'w-full' : ''">
                         <div class="group relative">
@@ -153,7 +153,7 @@
                 </div>
             </div>
 
-            <main class="main my-5 mx-5">
+            <main class="main my-5 mx-5" @click="fullSidenav = false">
                 <slot></slot>
             </main>
         </div>

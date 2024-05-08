@@ -1,27 +1,39 @@
 <template>
     <div v-if="!project">
-        <div class="flex items-center gap-x-2">
-            <IconCalendar class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
-            <input v-model="dateValueArray[0]"
-                   @change="this.updateTimes"
-                   id="startDate"
-                   type="date"
-                   :disabled="!!project"
-                   placeholder="Start"
-                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg"/>
-            <input v-model="dateValueArray[1]"
-                   @change="this.updateTimes"
-                   :disabled="!!project"
-                   id="endDate"
-                   type="date"
-                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg"/>
+        <div class="flex items-center gap-x-2" id="datePicker">
+            <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <div class="relative rounded-md">
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="checkDatePickerState">
+                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                </div>
+                <input v-model="dateValueArray[0]"
+                       @change="this.updateTimes"
+                       id="startDate"
+                       type="date"
+                       :disabled="!!project"
+                       placeholder="Start"
+                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg" />
+            </div>
+            <div class="relative rounded-md">
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer" @click="checkDatePickerState">
+                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                </div>
+                <input v-model="dateValueArray[1]"
+                       @change="this.updateTimes"
+                       id="endDate"
+                       type="date"
+                       :disabled="!!project"
+                       placeholder="Ende"
+                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg" />
+            </div>
 
         </div>
         <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker && dateValuePicker" no-input
                                  :shortcuts="customShortcuts"
-                                 :placeholder="dateValuePicker[0] - dateValuePicker[1]" separator=" - " :formatter="formatter"
+                                  separator=" - " :formatter="formatter"
                                  :options="this.datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
-                                 v-model="dateValuePicker"/>
+                                 v-model="dateValuePicker">
+        </vue-tailwind-datepicker>
     </div>
     <div class="font-medium text-gray-900" v-else>
         {{$t('Project period')}}: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
@@ -91,6 +103,12 @@ export default {
         }
     },
     mounted() {
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('#datePicker') && this.showDateRangePicker) {
+                this.showDateRangePicker = false;
+            }
+        });
+
         this.customShortcuts = () => {
             return [
                 {
@@ -156,6 +174,11 @@ export default {
             ]}
     },
     methods: {
+        checkDatePickerState() {
+            if (!this.showDateRangePicker) {
+                this.showDateRangePicker = true;
+            }
+        },
         updateTimes() {
             const startDate = new Date(this.dateValueArray[0]);
             const endDate = new Date(this.dateValueArray[1]);
@@ -207,5 +230,11 @@ export default {
 </script>
 
 <style scoped>
+input::-webkit-calendar-picker-indicator{
+    display: none;
+}
 
+input[type="date"]::-webkit-input-placeholder{
+    visibility: hidden !important;
+}
 </style>

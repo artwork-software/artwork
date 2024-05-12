@@ -5,6 +5,7 @@ on:
       - 'dev'
       - 'main'
       - 'staging'
+      - 'feature/86byhzyn2-docker-hub-release'
     tags:
       - 'v*'
 

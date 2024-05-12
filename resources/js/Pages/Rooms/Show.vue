@@ -109,11 +109,19 @@
             <div>
                 <div v-if="calendarType && calendarType === 'daily'">
                     <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                        <CalendarComponent :selected-date="selectedDate"
+                        <CalendarComponent initial-view="day"
+                                           :project="null"
+                                           :atAGlance="false"
+                                           :room="this.room"
+                                           :personal-filters="personalFilters"
+                                           :filter-options="filterOptions"
+                                           :eventsWithoutRoom="eventsWithoutRoom"
+                                           :events="this.calendar[this.formatSelectedDate(this.selectedDate)]?.events?.data ?? []"
                                            :dateValue="dateValue"
                                            :eventTypes=this.event_types
-                                           initial-view="day"
+                                           :rooms="rooms"
                                            :user_filters="user_filters"
+                                           :selected-date="selectedDate"
                                            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                         />
                     </div>
@@ -124,7 +132,7 @@
                                                   :eventsWithoutRoom="eventsWithoutRoom"
                                                   :dateValue="dateValue"
                                                   :eventTypes=this.event_types
-                                                 :calendarData="calendar"
+                                                  :calendarData="calendar"
                                                   :days="days"
                                                   :rooms="rooms"
                                                   :user_filters="user_filters"
@@ -674,6 +682,10 @@ export default {
         }
     },
     methods: {
+        formatSelectedDate(selectedDate) {
+            let parts = selectedDate.split('-');
+            return parts[2] + '.' + parts[1] + '.' + parts[0];
+        },
         getGermanWeekdayAbbreviation(englishWeekday) {
             switch (englishWeekday) {
                 case 'Monday':

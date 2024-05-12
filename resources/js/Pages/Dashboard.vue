@@ -248,13 +248,10 @@ import {
     DotsHorizontalIcon,
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
-import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
@@ -285,9 +282,10 @@ export default defineComponent({
     components: {
         DashboardCard,
         NotificationBlock,
-        NotificationButtons, NewUserToolTip,
-        CheckIcon, VueMathjax,
-        IndividualCalendarAtGlanceComponent,
+        NotificationButtons,
+        NewUserToolTip,
+        CheckIcon,
+        VueMathjax,
         AppLayout,
         CalendarIcon,
         ChevronRightIcon,
@@ -298,11 +296,9 @@ export default defineComponent({
         ChevronLeftIcon,
         DotsHorizontalIcon,
         ChevronDownIcon,
-        CalendarComponent,
         TeamIconCollection,
         Link,
         TeamTooltip,
-        IndividualCalendarComponent
     },
     created() {
         Echo.private('events')
@@ -322,9 +318,6 @@ export default defineComponent({
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
-        },
-        changeAtAGlance() {
-            this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
             return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});

@@ -25,4 +25,9 @@ readonly class CraftRepository extends BaseRepository
     {
         return Craft::all();
     }
+
+    public function getAssignableByAllCrafts(): Collection
+    {
+        return Craft::query()->isAssignableByAll()->get();
+    }
 }

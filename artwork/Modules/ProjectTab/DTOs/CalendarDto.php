@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\ProjectTab\DTOs;
 
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use Artwork\Core\Abstracts\BaseDto;
+use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -22,7 +22,7 @@ class CalendarDto extends BaseDto
 
     public ?Collection $rooms = null;
 
-    public ?CalendarEventCollectionResourceModel $events = null;
+    public ?CalendarEventDto $events = null;
 
     public ?array $filterOptions = null;
 
@@ -74,7 +74,7 @@ class CalendarDto extends BaseDto
         return $this;
     }
 
-    public function setEvents(?CalendarEventCollectionResourceModel $events): self
+    public function setEvents(?CalendarEventDto $events): self
     {
         $this->events = $events;
 
@@ -107,5 +107,72 @@ class CalendarDto extends BaseDto
         $this->userFilters = $userFilters;
 
         return $this;
+    }
+
+    public function getEventsAtAGlance(): ?SupportCollection
+    {
+        return $this->eventsAtAGlance;
+    }
+
+    public function getCalendar(): ?SupportCollection
+    {
+        return $this->calendar;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getDateValue(): ?array
+    {
+        return $this->dateValue;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getDays(): ?array
+    {
+        return $this->days;
+    }
+
+    public function getSelectedDate(): ?string
+    {
+        return $this->selectedDate;
+    }
+
+    public function getRooms(): ?Collection
+    {
+        return $this->rooms;
+    }
+
+    public function getEvents(): ?CalendarEventDto
+    {
+        return $this->events;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getFilterOptions(): ?array
+    {
+        return $this->filterOptions;
+    }
+
+    public function getPersonalFilters(): ?SupportCollection
+    {
+        return $this->personalFilters;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getEventsWithoutRoom(): ?array
+    {
+        return $this->eventsWithoutRoom;
+    }
+
+    public function getUserFilters(): ?UserCalendarFilter
+    {
+        return $this->userFilters;
     }
 }

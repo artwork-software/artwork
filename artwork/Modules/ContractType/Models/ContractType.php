@@ -24,7 +24,8 @@ class ContractType extends Model
     use Prunable;
 
     protected $fillable = [
-        'name'
+        'name',
+        'color'
     ];
 
     public function contracts(): BelongsToMany

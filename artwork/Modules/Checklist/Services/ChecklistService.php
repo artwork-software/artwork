@@ -2,12 +2,12 @@
 
 namespace Artwork\Modules\Checklist\Services;
 
-use App\Http\Resources\ChecklistIndexResource;
-use App\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
+use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
+use Artwork\Modules\ChecklistTemplate\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;

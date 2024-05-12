@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\DepartmentIndexResource;
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectEditResource;
-use App\Http\Resources\ProjectIndexResource;
-use App\Http\Resources\ProjectIndexShowResource;
-use App\Http\Resources\UserResourceWithoutShifts;
 use Artwork\Core\Http\Requests\SearchRequest;
+use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -40,6 +35,7 @@ use Artwork\Modules\Budget\Services\SumCommentService;
 use Artwork\Modules\Budget\Services\SumMoneySourceService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
@@ -50,14 +46,20 @@ use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
+use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
+use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
@@ -68,6 +70,9 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
+use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
+use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -79,22 +84,27 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
+use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Artwork\Modules\SubEvents\Services\SubEventService;
+use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
+use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -210,7 +220,7 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => UserResourceWithoutShifts::collection(User::nameOrLastNameLike($query)->get())->resolve()
+            'users' => UserWithoutShiftsResource::collection(User::nameOrLastNameLike($query)->get())->resolve()
         ];
     }
 
@@ -1805,17 +1815,29 @@ class ProjectController extends Controller
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
+        Request $request,
         Project $project,
         ProjectTab $projectTab,
         SageAssignedDataCommentService $sageAssignedDataCommentService,
         ShiftQualificationService $shiftQualificationService,
         RoomService $roomService,
-        CalendarController $calendarController,
         SageApiSettingsService $sageApiSettingsService,
         ContractTypeService $contractTypeService,
         CompanyTypeService $companyTypeService,
         CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService
+        CollectingSocietyService $collectingSocietyService,
+        ProjectService $projectService,
+        UserService $userService,
+        FreelancerService $freelancerService,
+        ServiceProviderService $serviceProviderService,
+        CraftService $craftService,
+        CalendarService $calendarService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        EventTypeService $eventTypeService,
+        AreaService $areaService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1917,9 +1939,24 @@ class ProjectController extends Controller
 
             if ($component->type === ProjectTabComponentEnum::CALENDAR->value) {
                 $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
+                    $request->get('startDate') && $request->get('endDate') ?
+                        Carbon::create($request->get('startDate'))->startOfDay() :
+                        Carbon::now()->startOfDay(),
+                    $request->get('startDate') && $request->get('endDate') ?
+                        Carbon::create($request->get('endDate'))->endOfDay() :
+                        Carbon::now()->addWeeks()->endOfDay(),
                     $project,
                     $roomService,
-                    $calendarController
+                    $calendarService,
+                    $projectService,
+                    $userService,
+                    $filterService,
+                    $filterController,
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $request->boolean('atAGlance')
                 );
             }
 
@@ -1942,7 +1979,12 @@ class ProjectController extends Controller
 
                 $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab(
                     $project,
-                    $shiftQualificationService
+                    $shiftQualificationService,
+                    $projectService,
+                    $userService,
+                    $freelancerService,
+                    $serviceProviderService,
+                    $craftService
                 );
             }
 

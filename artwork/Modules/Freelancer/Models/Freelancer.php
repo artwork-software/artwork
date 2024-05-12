@@ -12,6 +12,7 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
@@ -167,5 +168,10 @@ class Freelancer extends Model implements Vacationer, Available
         }
 
         return $plannedWorkingHours;
+    }
+
+    public function scopeCanWorkShifts(Builder $builder): Builder
+    {
+        return $builder->where('can_work_shifts', true);
     }
 }

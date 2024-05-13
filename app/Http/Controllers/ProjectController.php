@@ -1573,7 +1573,7 @@ class ProjectController extends Controller
             $subPositionRow->cells()->create([
                 'column_id' => $firstThreeColumn->id,
                 'sub_position_row_id' => $subPositionRow->id,
-                'value' => '0,00',
+                'value' => '-',
                 'linked_money_source_id' => null,
                 'verified_value' => ''
             ]);

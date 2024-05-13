@@ -47,15 +47,12 @@
                                 <div>
                                     <label for="componentName" class="xsLight">{{$t('Name of the component')}}</label>
                                     <div class="mt-2">
-                                        <input :disabled="this.componentToEdit?.special"
+                                        <input
                                                type="text"
                                                v-model="componentName"
                                                id="componentName"
                                                :class="[
-                                                   this.componentToEdit?.special ?
-                                                        'bg-gray-200 cursor-not-allowed' :
-                                                        '',
-                                                        'h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300'
+                                                   'h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300'
                                                ]"
                                         />
                                     </div>

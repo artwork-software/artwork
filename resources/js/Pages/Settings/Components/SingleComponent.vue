@@ -39,12 +39,7 @@ export default {
                         <div class="col-span-6 flex items-center gap-x-3">
                             <ComponentIcons :type="element.component.type" />
                             <div class="">
-                                <span v-if="element.component.special">
-                                    {{ $t(element.component.name) }}
-                                </span>
-                                <span v-else>
-                                    {{element.component.name }}
-                                </span>
+                                {{element.component.name }}
                                 <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
                                     {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
                                 </div>

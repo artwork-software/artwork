@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
-* @property int $id
+ * @property int $id
  * @property string $frequency
  * @property Carbon $end_date
  * */

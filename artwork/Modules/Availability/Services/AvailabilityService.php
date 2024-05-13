@@ -14,9 +14,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
-readonly class AvailabilityService
+class AvailabilityService
 {
-    public function __construct(private AvailabilityRepository $availabilityRepository)
+    public function __construct(private readonly AvailabilityRepository $availabilityRepository)
     {
     }
 

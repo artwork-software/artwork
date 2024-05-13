@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
-* @property int $id
+ * @property int $id
  * @property string $available_type
  * @property int $available_id
  * @property Carbon $start_time
@@ -94,9 +94,10 @@ class Availability extends Model
 
     public function scopeBetweenDates(
         Builder $builder,
-        Carbon $startDate,
-        Carbon $endDate
-    ): Builder {
+        Carbon  $startDate,
+        Carbon  $endDate
+    ): Builder
+    {
         return $builder->whereBetween('date', [$startDate, $endDate]);
     }
 

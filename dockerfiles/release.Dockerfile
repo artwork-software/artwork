@@ -68,7 +68,8 @@ RUN git config --global --add safe.directory /var/www/html
 RUN git init  \
     && git remote add origin https://github.com/artwork-software/artwork.git  \
     && git pull origin main  \
-    && git checkout main
+    && git checkout main \
+    && git fetch --all
 
 RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 

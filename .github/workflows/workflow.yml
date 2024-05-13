@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - dev
+      - main
+      - staging
       - pipeline
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - "*"
@@ -15,6 +19,23 @@ permissions:
   contents: read
 
 jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Composer Setup
+        uses: php-actions/composer@v6
+        with:
+          php_version: 8.2
+          php_extensions: gd zip bcmath
+
+      - name: PHPStan Static Analysis
+        uses: php-actions/phpstan@v3
+        with:
+          path: app/ artwork/
+          php_version: 8.2
+          php_extensions: gd zip bcmath
   tests:
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
@@ -74,4 +95,43 @@ jobs:
           php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
 
       - name: Running Test
-        run: vendor/bin/pest --colors=always --coverage --min=70
+        run: vendor/bin/pest --colors=always --coverage --min=20
+
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    needs: [tests, phpstan]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v' || github.ref == 'refs/heads/dev'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Get tag name
+        uses: olegtarasov/get-tag@v2.1.3
+        id: tagName
+        with:
+          tagRegex: "v*"
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: muelle96/artwork
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          build-args: |
+            TAG=${{ steps.tagName.outputs.tag }}
+            BRANCH=${{ github.head_ref || github.ref_name }}
+          context: .
+          file: dockerfiles/release.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

@@ -1,16 +1,42 @@
 <?php
 
-namespace Tests\Feature\AppController;
+namespace Tests\Feature;
 
+use App\Http\Controllers\AppController;
+use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
-class CreateAdminTest extends TestCase
+class AppControllerTest extends TestCase
 {
+    use WithoutMiddleware;
 
+    private AppController $appController;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->appController = app(AppController::class);
+    }
+
+    public function testIndex(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(302);
+    }
+
+    public function testShowSetupPage(): void
+    {
+        $response = $this->get('/setup');
+
+        $response->assertStatus(200);
+    }
 
     public function testAbortsInvalidTokens()
     {

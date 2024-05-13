@@ -11,7 +11,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 
-readonly class AvailabilityConflictService
+class AvailabilityConflictService
 {
     public function __construct(private AvailabilityConflictRepository $availabilityConflictRepository)
     {
@@ -47,7 +47,6 @@ readonly class AvailabilityConflictService
                 ->availabilities()
                 ->get();
         }
-
 
         foreach ($shifts as $shift) {
             $shiftCommittedBy = $shift->committedBy()->first();

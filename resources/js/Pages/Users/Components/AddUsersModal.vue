@@ -29,7 +29,7 @@
                                         <fieldset class="mt-4">
                                             <div class="space-y-4">
                                                 <div v-for="addMethod in addMethods" :key="addMethod.id" class="flex items-center">
-                                                    <input v-model="selectedMethod" :key="addMethod.id" :value="addMethod" :id="addMethod.id" name="notification-method" type="radio" :checked="addMethod.id === 'intern'" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+                                                    <input v-model="selectedMethod" :key="addMethod.id" :value="addMethod" :id="addMethod.id" name="notification-method" type="radio" :checked="addMethod.id === 'intern'" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-indigo-600" />
                                                     <label :for="addMethod.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">{{ addMethod.title }}</label>
                                                 </div>
                                             </div>

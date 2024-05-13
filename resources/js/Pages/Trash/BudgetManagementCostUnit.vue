@@ -16,7 +16,7 @@
     </div>
     <div v-for="trashedCostUnit in this.filteredTrashedCostUnits"
          class="flex w-full bg-white my-2 border border-gray-200">
-        <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
+        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
             <ChevronUpIcon v-if="trashedCostUnit.hidden === true"
                            class="h-6 w-6 text-white my-auto"
             />
@@ -37,7 +37,7 @@
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
                                 <DotsVerticalIcon
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    class=" flex-shrink-0 h-6 w-6 text-menuartwork-buttons-create my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
                         </div>

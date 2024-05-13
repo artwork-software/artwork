@@ -26,7 +26,7 @@
                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="bufferForReturn.onlyThisDay ? 'text-gray-400' : 'font-bold'">
                                         {{ $t('On this and other days') }}
                                     </SwitchLabel>
-                                    <Switch v-model="bufferForReturn.onlyThisDay " :class="[bufferForReturn.onlyThisDay ? 'bg-indigo-600' : 'bg-indigo-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                                    <Switch v-model="bufferForReturn.onlyThisDay " :class="[bufferForReturn.onlyThisDay ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                                         <span aria-hidden="true" :class="[bufferForReturn.onlyThisDay  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                     </Switch>
                                     <SwitchLabel as="span" class="ml-3 text-sm" :class="bufferForReturn.onlyThisDay ? 'font-bold' : 'text-gray-400'">

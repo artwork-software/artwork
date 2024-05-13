@@ -60,7 +60,7 @@
                         </div>
                     </template>
                     <template #today-button>
-                        <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
+                        <div class="flex w-24 xsDark text-artwork-buttons-create" v-if="currentView === 'year'">
                             {{ $t('Current year')}}
                         </div>
                     </template>
@@ -80,7 +80,7 @@
                         </Link>
                     </template>
                     <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: event.event_type?.hex_code}">
+                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: backgroundColorWithOpacity(event.event_type?.hex_code), color: TextColorWithDarken(event.event_type?.hex_code)}">
                             <div class="flex w-full justify-between items-center">
                                 <div v-if="!project" class="flex eventHeader truncate mx-1">
                                     <div v-if="event.event_type.abbreviation" class="mr-1">
@@ -497,6 +497,14 @@ export default {
         }
     },
     methods: {
+        backgroundColorWithOpacity(eventColor) {
+            const color = eventColor;
+            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
+        },
+        TextColorWithDarken(eventColor) {
+            const color = eventColor;
+            return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
+        },
         initializeCalendar({view = null, startDate = null, endDate = null}) {
             this.currentView = 'day';
 

@@ -25,8 +25,8 @@
                                 </p>
                             </div>
                             <div class="flex justify-center mt-5 gap-4">
-                                <button @click="allElement()" type="button" class=" hover:bg-indigo-600 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-buttonBlue'">{{ $t('Apply to all')}}</button>
-                                <button @click="singleElement()" type="button" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white">{{ $t('Only apply to this event')}}</button>
+                                <button @click="allElement()" type="button" class=" hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-artwork-buttons-create'">{{ $t('Apply to all')}}</button>
+                                <button @click="singleElement()" type="button" class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white">{{ $t('Only apply to this event')}}</button>
                             </div>
                         </DialogPanel>
                     </TransitionChild>

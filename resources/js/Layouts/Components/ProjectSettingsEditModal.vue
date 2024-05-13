@@ -1,7 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="emit('closeModal')">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
                 <div class="font-bold text-primary text-2xl my-2">
                     {{ title }}
@@ -29,8 +27,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script setup>
@@ -38,6 +35,7 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 const props = defineProps({
     show: Boolean,

@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal">
-        <template #content>
-            <img alt="Freigabe" src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-3">
                 <div class="font-black font-lexend text-primary text-3xl my-6">
                     {{ $t('Manage release')}}
                 </div>
-                <IconX stroke-width="1.5" @click="closeModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="xsLight">
                     {{ $t('Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source.')}}
                 </div>
@@ -54,7 +49,7 @@
                             </div>
                             <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
                                 <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                <IconCircleX stroke-width="1.5" class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
                         <div class="col-span-3 flex">
@@ -98,9 +93,7 @@
                     />
                 </div>
             </div>
-        </template>
-
-    </jet-dialog-modal>
+    </BaseModal>
 
 </template>
 
@@ -117,11 +110,13 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         Dropdown,
         JetDialogModal,

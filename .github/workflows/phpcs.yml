@@ -31,15 +31,6 @@ jobs:
       - name: Sniff
         uses: tinovyatkin/action-php-codesniffer@v1
         with:
-          files: "**.php" # you may customize glob as needed
+          files: "**.php"
           phpcs_path: php vendor/bin/phpcs
           standard: phpcs.xml
-
-#      - name: Create Merge Request
-#        uses: peter-evans/create-pull-request@v3
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          branch: fix-phpcs-violations
-#          commit-message: 'Fix PHPCS violations'
-#          title: 'Fix PHPCS Violations'
-#          body: 'This pull request fixes PHPCS violations found in the codebase.'

@@ -1,5 +1,5 @@
 <template>
-    <ToolSettingsHeader>
+    <ToolSettingsHeader :title="$t('Sage interface')">
         <h2 class="headline2">{{ $t('Sage interface') }}</h2>
         <div class="grid grid-cols-12">
             <div class="xsLight mt-4 col-span-9">
@@ -13,7 +13,7 @@
                 <RefreshIcon :class="[
                                 !this.sageInterfaceIsConfigured() || this.importProcessing ?
                                     'bg-gray-600 cursor-not-allowed' :
-                                    'bg-buttonBlue cursor-pointer',
+                                    'bg-artwork-buttons-create cursor-pointer',
                                 'w-10 h-10 rounded-full text-white p-2'
                              ]"
                              @click="this.initializeSageImport()"
@@ -65,7 +65,6 @@
                 </div>
             </div>
             <FormButton  classes="text-center justify-center" :text="$t('Save interface settings')" @click="this.showConfirmationComponent = true;" />
-
         </div>
         <div class="flex flex-col space-y-4">
             <hr class="mt-5"/>
@@ -90,13 +89,14 @@
                                 this.importProcessing ||
                                 this.specificDayImportDate === null || this.specificDayImportDate === '' ?
                                     'bg-gray-600 cursor-not-allowed' :
-                                    'bg-buttonBlue cursor-pointer',
+                                    'bg-artwork-buttons-create cursor-pointer',
                                 'w-10 h-10 rounded-full text-white p-2'
                              ]"
                              @click="this.initializeSageImportForSpecificDay()"
                 />
             </div>
         </div>
+
     </ToolSettingsHeader>
     <confirmation-component v-if="this.showConfirmationComponent"
                             :titel="$t('Interface changes')"

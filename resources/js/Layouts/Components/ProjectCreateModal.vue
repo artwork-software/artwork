@@ -1,7 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="this.$emit('closeCreateProjectModal')">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="this.$emit('closeCreateProjectModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_new.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('New project') }}
@@ -12,7 +10,7 @@
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                  aria-label="Tabs">
                                 <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                   :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                   :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                    :aria-current="tab.current ? 'page' : undefined">
                                     {{ tab.name }}
                                 </a>
@@ -20,9 +18,6 @@
                         </div>
                     </div>
                 </div>
-                <XIcon @click="this.$emit('closeCreateProjectModal')"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div v-if="isCreateProjectTab">
                     <div class="mt-2">
                         <div class="mb-2">
@@ -206,7 +201,7 @@
                                         {{ $t('No project group has been created yet') }}
                                     </ListboxOption>
                                     <ListboxOption v-for="projectGroup in this.projectGroups"
-                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
                                                    :key="projectGroup.id"
                                                    :value="projectGroup"
                                                    v-slot="{ active, selected }">
@@ -447,8 +442,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -472,10 +466,12 @@ import {
     MenuItems
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectCreateModal',
     components: {
+        BaseModal,
         FormButton,
         ListboxOption,
         ListboxOptions,

@@ -158,17 +158,17 @@
         :linkedProjects="linkedProjects"
     />
 
-    <MoneySourceFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"
+    <MoneySourceFileUploadModal v-if="showFileUploadModal" :close-modal="closeFileUploadModal"
                                 :money-source-id="money_source.id"/>
 
-    <MoneySourceFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
+    <MoneySourceFileEditModal v-if="showFileEditModal" :close-modal="closeFileEditModal"
                               :file="moneySourceFileToEdit"/>
 
-    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :money-source-id="money_source.id"
+    <MoneySourceFileDeleteModal v-if="showFileDeleteModal" :money-source-id="money_source.id"
                                 :close-modal="closeFileDeleteModal"
                                 :file="moneySourceFileToDelete"/>
 
-    <MoneySourceCategoriesModal :show="showMoneySourceCategoriesModal"
+    <MoneySourceCategoriesModal v-if="showMoneySourceCategoriesModal"
                                 :money-source-id="money_source.id"
                                 :money-source-categories="moneySourceCategories"
                                 :money-source-current-categories="money_source.categories"

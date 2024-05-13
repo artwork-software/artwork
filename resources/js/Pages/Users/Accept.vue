@@ -16,7 +16,7 @@
                         id="first_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="last_name" class="text-sm font-bold text-secondary">Name</label>
@@ -25,7 +25,7 @@
                         id="last_name"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="email" class="text-sm font-bold text-secondary">Email</label>
@@ -35,7 +35,7 @@
                         id="email"
                         type="email"
                         required
-                        class="bg-gray-100 focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="bg-gray-100 focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="phoneNumber" class="text-sm font-bold text-secondary">{{$t('Phone number')}}</label>
@@ -43,7 +43,7 @@
                         v-model="form.phone_number"
                         id="phoneNumber"
                         type="text"
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="phoneNumber" class="text-sm font-bold text-secondary">{{$t('Company')}}</label>
@@ -52,7 +52,7 @@
                         id="business"
                         type="text"
                         :placeholder="$page.props.businessName"
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="position" class="text-sm font-bold text-secondary">Position</label>
@@ -61,7 +61,7 @@
                         id="position"
                         type="text"
                         required
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                        class="focus:ring-black focus:border-artwork-buttons-create border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -98,7 +98,7 @@
                 </div>
             </div>
             <button :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
-                    class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
+                    class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create hover:shadow-artwork-buttons-create hover:bg-artwork-buttons-hoverfocus:outline-none">
                 {{ $t('Register')}}
             </button>
         </form>

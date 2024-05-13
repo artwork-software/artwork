@@ -1,11 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-        <template #content>
-            <img alt="Details" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <IconX stroke-width="1.5" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"
-                   @click="closeModal()"
-            />
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
             <div class="mx-4">
                 <div>
                     <h1 class="my-1 flex">
@@ -20,7 +14,7 @@
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -275,8 +269,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
     <ConfirmDeleteModal
         v-if="showConfirmCalculationModal"
         :title="$t('Save calculation')"
@@ -309,11 +302,13 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         ConfirmDeleteModal,
         ConfirmationComponent,

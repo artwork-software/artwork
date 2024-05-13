@@ -10,11 +10,13 @@ import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSide
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
 import SidebarConfigElement from "@/Pages/Settings/Components/Sidebar/SidebarConfigElement.vue";
 import SingleComponent from "@/Pages/Settings/Components/SingleComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     name: "SingleTabComponent",
     mixins: [IconLib],
     components: {
+        BaseMenu,
         SingleComponent,
         SidebarConfigElement,
         AddEditSidebarTab,
@@ -80,46 +82,26 @@ export default {
             <IconChevronDown v-if="tabClosed" class="h-5 w-5 text-gray-600" />
             <IconChevronUp v-else class="h-5 w-5 text-gray-600" />
         </div>
-        <Menu as="div" class="my-auto relative">
-            <div class="flex">
-                <MenuButton
-                    class="flex">
-                    <IconDotsVertical stroke-width="1.5"
-                                      class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                      aria-hidden="true"/>
-                </MenuButton>
-            </div>
-            <transition enter-active-class="transition ease-out duration-100"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-75"
-                        leave-from-class="transform opacity-100 scale-100"
-                        leave-to-class="transform opacity-0 scale-95">
-                <MenuItems
-                    class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                    <div class="py-1">
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="editTab"
-                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconEdit stroke-width="1.5"
-                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                          aria-hidden="true"/>
-                                {{ $t('Edit') }}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="removeTab"
-                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <IconTrash stroke-width="1.5"
-                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                           aria-hidden="true"/>
-                                {{ $t('Delete') }}
-                            </a>
-                        </MenuItem>
-                    </div>
-                </MenuItems>
-            </transition>
-        </Menu>
+        <BaseMenu>
+            <MenuItem v-slot="{ active }">
+                <a href="#" @click="editTab"
+                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                    <IconEdit stroke-width="1.5"
+                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                              aria-hidden="true"/>
+                    {{ $t('Edit') }}
+                </a>
+            </MenuItem>
+            <MenuItem v-slot="{ active }">
+                <a href="#" @click="removeTab"
+                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                    <IconTrash stroke-width="1.5"
+                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                               aria-hidden="true"/>
+                    {{ $t('Delete') }}
+                </a>
+            </MenuItem>
+        </BaseMenu>
     </div>
     <div v-if="!tabClosed">
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

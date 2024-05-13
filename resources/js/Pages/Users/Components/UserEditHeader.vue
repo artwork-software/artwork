@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="title">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
                 <div class="max-w-screen-lg pl-14 pr-4">
@@ -24,7 +24,7 @@
                             <div class="">
                                 <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
                                     <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
-                                         :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
+                                         :class="[tab.current ? 'border-artwork-buttons-create text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
                                          :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
                                     </div>
                                 </nav>
@@ -75,6 +75,7 @@ export default {
                 {id: 4, name: this.$t('User permissions'), href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
                 {id: 5, name: this.$t('Work profile'), href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
             ],
+            title: null
         }
     },
     methods: {
@@ -93,6 +94,13 @@ export default {
                 Inertia.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
             }
         },
+    },
+    mounted() {
+        if(this.user_to_edit.id === this.$page.props.user.id){
+            this.title = this.$t('My account')
+        } else {
+            this.title = this.$t('User account') + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
+        }
     }
 }
 </script>

@@ -10,7 +10,7 @@
                     leave-active-class="transition duration-150 ease-in"
                     leave-from-class="translate-y-0 opacity-100"
                     leave-to-class="translate-y-1 opacity-0">
-            <PopoverPanel class="absolute left-1/2 z-50 mt-2 -translate-x-1/2 transform sm:px-0 bg-primary ring-0 py-3 px-5">
+            <PopoverPanel class="absolute left-1/2 z-50 mt-2 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5">
                 <div class="shadow-lg ring-1 ring-black ring-opacity-5">
                     <div class="grid grid-cols-4 w-96">
                         <div class="col-span-1 shrink-0 ml-3 flex items-center justify-center">

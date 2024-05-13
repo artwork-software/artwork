@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Notifications')">
         <div class="flex">
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
@@ -13,19 +13,19 @@
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            :class="[openTab === 'notifications' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                             @click="openTab = 'notifications'">{{$t('Notifications')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            :class="[openTab === 'mailSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                             @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            :class="[openTab === 'pushSettings' ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
                             @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
                         </button>
                     </li>

@@ -17,7 +17,7 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                primary:'#27233C',
+                primary: '#222', //'#27233C',
                 primaryHover:'#372F60',
                 success:'#1FC687',
                 error:'#FD6D73',
@@ -40,7 +40,7 @@ module.exports = {
                 checkBoxBg: '#474459',
                 silverGray:'#CECDD8',
                 userBg: '#EDEDEC',
-                colorOfAction: '#E8E4f5',
+                colorOfAction: '#e4eef5',
                 menuButtonBlue: '#3017AD',
                 shiftText: '#82818A',
                 linkOnDarkColor: '#BDB6F0',
@@ -48,6 +48,10 @@ module.exports = {
                 "vtd-secondary": colors.gray,
                 // Artwork colors
                 artwork: {
+                    navigation: {
+                        background: '#222',
+                        color: '#eee'
+                    },
                     messages: {
                         success: '#25cd0e',
                         waring: '#ecce00',
@@ -55,26 +59,26 @@ module.exports = {
                         info: '#a7a6b1'
                     },
                     buttons: {
-                        create: '#3073ae',
                         context: '#6f6f6f',
-                        hover: '#1c77d7',
+                        create: '#3073ae',
                         default: '#2a3d75',
-                        update: '#2a3d75',
+                        hover: '#1c77d7',
+                        update: '#2a3d75'
                     },
                     context: {
                         light: '#e8e8e8',
                         dark: '#6f6f6f'
                     },
                     project: {
-                        background: '#eee',
+                        background: '#eee'
                     },
                     calendar: {
 
                     },
                     icons: {
                         default: {
-                            background: 'rgba(48,23,173,0.1)',
-                            color: '#3017AD'
+                            background: 'rgba(48,115,174,0.1)',
+                            color: '#3073ae'
                         },
                         darkGreen: {
                             background: 'rgba(56,173,23,0.1)',

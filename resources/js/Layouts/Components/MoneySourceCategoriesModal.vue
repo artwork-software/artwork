@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Manage source categories')}}
                 </div>
-                <XIcon @click="closeModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
             </div>
             <div class="mx-4">
                 <Menu class="relative">
@@ -63,8 +58,7 @@
             <div class="justify-center flex w-full my-6">
                 <FormButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" @click="attachCategories"/>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -77,11 +71,13 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Inertia} from "@inertiajs/inertia";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceCategoriesModal",
     components: {
+        BaseModal,
         FormButton,
         TagComponent,
         MenuItem,

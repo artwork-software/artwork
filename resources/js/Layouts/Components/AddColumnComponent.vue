@@ -1,9 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-        <template #content>
-            <img alt="Neue Spalte" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
             <div class="mx-4">
                 <!--   Heading   -->
                 <div>
@@ -139,8 +135,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -161,11 +156,13 @@ import {
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AddColumnComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         ListboxOptions,
         ListboxOption,

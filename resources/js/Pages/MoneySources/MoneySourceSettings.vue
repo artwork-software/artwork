@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Sources of funding')">
         <div class="">
             <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -34,7 +34,7 @@
 
                                         <div class="m-2">
                                             <button
-                                                :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                 @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>

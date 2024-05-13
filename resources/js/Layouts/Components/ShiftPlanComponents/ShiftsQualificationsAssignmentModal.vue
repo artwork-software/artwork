@@ -1,11 +1,6 @@
 <template>
-    <jet-dialog-modal :show="this.show" @close="this.close(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="close(false)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <IconX stroke-width="1.5" @click="this.close(false)"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
-                       aria-hidden="true"/>
                 <div class="mt-8 flex flex-col">
                     <span class="xsLight">
                         {{ $t('Shift')}} {{ this.getCurrentShiftCount() }}/{{ this.getMaxShiftCount() }}
@@ -38,7 +33,7 @@
                         <input v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
                                type="button"
                                :value="$t('Insert as {0}',[ availableShiftQualificationSlot.name])"
-                               class="cursor-pointer bg-buttonBlue text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-buttonHover"
+                               class="cursor-pointer bg-artwork-buttons-create text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-artwork-buttons-hover"
                                @click="this.handleShift(this.currentShiftToAssign.shift.id, availableShiftQualificationSlot.id)"
                         />
                     </div>
@@ -51,8 +46,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -61,11 +55,13 @@ import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsAssignmentModal',
     mixins: [IconLib],
     components: {
+        BaseModal,
         UserPopoverTooltip,
         XIcon,
         JetDialogModal

@@ -9,11 +9,15 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
+        BaseMenu,
         UserPopoverTooltip,
         JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal,
         Link,
@@ -33,6 +37,10 @@ export default {
             required: false
         },
         project: {
+            type: Object,
+            required: true
+        },
+        currentTab: {
             type: Object,
             required: true
         },
@@ -95,8 +103,7 @@ export default {
 </script>
 
 <template>
-    <AppLayout>
-
+    <AppLayout :title="project?.name + ' (' + currentTab.name + ')'">
         <!-- Project Header -->
         <div class="ml-14 pr-14">
             <div class="flex flex-col">
@@ -106,7 +113,7 @@ export default {
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-buttonBlue ml-1">
+                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-artwork-buttons-create ml-1">
                         {{ headerObject.currentGroup?.name }}</a>
                     </div>
                 </div>
@@ -132,60 +139,39 @@ export default {
                             {{ project?.state?.name }}
                         </span>
                     </h2>
-                    <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
-                        <div class="flex items-center -mt-1">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                                  class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                  aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem
-                                        v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
-                                        v-slot="{ active }">
-                                        <a @click="openEditProjectModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconEdit stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Edit basic data') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconCopy stroke-width="1.5"
-                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                      aria-hidden="true"/>
-                                            {{ $t('Duplicate') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem
-                                        v-if="headerObject.projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
-                                        v-slot="{ active }">
-                                        <a @click="openDeleteProjectModal(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconTrash stroke-width="1.5"
-                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                       aria-hidden="true"/>
-                                            {{ $t('Put in the trash') }}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu class="mt-3" v-if="$can('write projects') || $role('artwork admin') || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.projectWriteIds.includes(this.$page.props.user.id)">
+                        <MenuItem
+                            v-if="$role('artwork admin') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
+                            v-slot="{ active }">
+                            <a @click="openEditProjectModal"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconEdit stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Edit basic data') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="duplicateProject(this.project)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconCopy stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Duplicate') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem
+                            v-if="headerObject.projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
+                            v-slot="{ active }">
+                            <a @click="openDeleteProjectModal(this.project)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                <IconTrash stroke-width="1.5"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           aria-hidden="true"/>
+                                {{ $t('Put in the trash') }}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
                 <div class="mt-3" v-if="headerObject.projectGroups.length > 0">
                     <TagComponent v-for="projectGroup in headerObject.projectGroups" :method="deleteProjectFromGroup"
@@ -216,7 +202,7 @@ export default {
                     <span class="ml-2 subpixel-antialiased">
                     {{ headerObject.project_history[0]?.created_at }}
                 </span>
-                    <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                    <button class="ml-4 subpixel-antialiased text-artwork-buttons-create flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">
                         <IconChevronRight
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"
@@ -235,7 +221,7 @@ export default {
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <Link v-for="tab in headerObject.tabs" :key="tab?.name"
                                   :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
-                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                  :class="[tab.id === headerObject.currentTabId ? 'border-artwork-buttons-hover text-artwork-buttons-hover' : 'border-transparent hover:text-gray-600 hover:border-gray-300 text-artwork-context-dark', 'whitespace-nowrap py-4 px-1 border-b-2 font-black']"
                                   :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
                                 {{ tab.name }}
                             </Link>
@@ -265,22 +251,17 @@ export default {
             :project_history="headerObject.project_history"
             :access_budget="headerObject.project.access_budget"
         />
-        <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         {{ $t('Delete project') }}
                     </div>
-                    <XIcon @click="closeDeleteProjectModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                                 @click="deleteProject">
                             {{ $t('Delete') }}
                         </button>
@@ -292,8 +273,7 @@ export default {
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </AppLayout>
 </template>
 

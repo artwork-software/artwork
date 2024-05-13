@@ -41,7 +41,7 @@
         <hr class="mb-2">
         <SwitchGroup as="div" class="flex items-center">
             <Switch v-model="craftSettingsForm.canBeAssignedToShifts"
-                    :class="[craftSettingsForm.canBeAssignedToShifts ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                    :class="[craftSettingsForm.canBeAssignedToShifts ? 'bg-artwork-buttons-create' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span aria-hidden="true"
                       :class="[craftSettingsForm.canBeAssignedToShifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
@@ -56,7 +56,7 @@
         <SwitchGroup v-for="shiftQualification in computedShiftQualifications" as="div" class="flex items-center">
             <Switch v-model="shiftQualification.toggled"
                     @update:modelValue="this.updateUserShiftQualification(shiftQualification)"
-                    :class="[shiftQualification.toggled ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                    :class="[shiftQualification.toggled ? 'bg-artwork-buttons-create' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span aria-hidden="true"
                       :class="[shiftQualification.toggled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
@@ -104,15 +104,15 @@
                     </div>
                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                 </ListboxButton>
-                <ListboxOptions class="bg-primary w-full max-h-32 overflow-y-auto text-sm absolute">
+                <ListboxOptions class="bg-artwork-navigation-background w-full max-h-32 overflow-y-auto text-sm absolute">
                     <ListboxOption v-if="this.user.assignableCrafts.length === 0" :key="0" :value="null"
-                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between ">
+                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between ">
                         <div class="h-5 text-gray-300">
                             {{ $t('There are no other crafts that can be assigned.') }}
                         </div>
                     </ListboxOption>
                     <ListboxOption v-else v-for="assignableCraft in this.user.assignableCrafts"
-                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
                                    :key="assignableCraft.id"
                                    :value="assignableCraft.id"
                                    v-slot="{ active, selected }">

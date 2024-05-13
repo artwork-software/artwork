@@ -10,8 +10,8 @@
             <button :class="[
                         budgetColumnSetting.column_name === '' ?
                             'bg-secondary':
-                            'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
-                        'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover'
+                            'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none',
+                        'rounded-full ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white'
                     ]"
                 :disabled="budgetColumnSetting.column_name === ''"
                 @click="this.saveBudgetColumnSetting(budgetColumnSetting)">

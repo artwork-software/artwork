@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Project Settings')">
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>

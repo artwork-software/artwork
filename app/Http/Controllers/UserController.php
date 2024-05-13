@@ -9,6 +9,7 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
@@ -118,7 +119,8 @@ class UserController extends Controller
             'roles' => Role::all(),
             'freelancers' => Freelancer::all(),
             'serviceProviders' => ServiceProvider::all(),
-            'permission_presets' => $permissionPresetService->getPermissionPresets()
+            'permission_presets' => $permissionPresetService->getPermissionPresets(),
+            'invitedUsers' => Invitation::all()
         ]);
     }
 

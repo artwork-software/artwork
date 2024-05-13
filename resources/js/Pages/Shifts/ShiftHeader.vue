@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Duty rosters & shift templates')">
         <div class="ml-9">
            <div class="px-5" v-if="showHeadLine">
                <div class="flex items-center justify-between ">

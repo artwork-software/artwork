@@ -42,9 +42,9 @@
                                         <Switch v-model="presetForm.all"
                                                 :class="[
                                                     presetForm.all ?
-                                                        'bg-indigo-600' :
+                                                        'bg-artwork-buttons-create' :
                                                         'bg-gray-200',
-                                                    'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                                    'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2'
                                                 ]"
                                         >
                                             <span aria-hidden="true"
@@ -80,7 +80,7 @@
                                                         leave-from-class="opacity-100"
                                                         leave-to-class="opacity-0">
                                                 <div v-if="template_search_result.length > 0 && template_query.length > 0"
-                                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                     class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                                     <div class="border-gray-200">

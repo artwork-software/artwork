@@ -17,9 +17,9 @@ export default {
         :text="text"
         :disabled="disabled"
         horizontalPadding="px-8"
-        textColor="text-buttonBlue"
+        textColor="text-artwork-buttons-create"
         borderWidth="border-2"
-        borderColor="border-buttonBlue"
+        borderColor="border-artwork-buttons-create"
         backgroundColor="bg-transparent"
         class="hover:text-white"
     />

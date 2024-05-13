@@ -1,11 +1,11 @@
 <template>
-    <UserHeader>
+    <UserHeader :title="$t('All Departments')">
         <div class="">
             <div class="max-w-screen-xl mb-40 my-12 flex flex-row">
                 <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
-                        <div class="flex">
-                            <h2 class="headline1 flex">Alle Teams</h2>
+                    <div class="w-full flex my-auto gap-x-4 justify-between">
+                        <div class="flex w-full justify-between items-center">
+                            <h2 class="headline1 flex">{{ $t('All Departments')}}</h2>
                             <AddButtonBig class="mt-0" @click="openAddTeamModal" :text="$t('Create Team')"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -27,7 +27,7 @@
                     <ul role="list" class="mt-5 w-full">
                         <li v-if="department_query.length < 1" v-for="(department,index) in departments"
                             :key="department.id"
-                            class="py-5 flex justify-between">
+                            class="py-5 flex justify-between items-center">
                             <div class="flex">
                                 <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name
                                                     alt="TeamIcon"/>
@@ -37,9 +37,9 @@
                                     </div>
                                 </Link>
                             </div>
-                            <div class="flex">
-                                <div class="flex mr-8">
-                                    <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
+                            <div class="flex items-center">
+                                <div class="flex items-center mr-8">
+                                    <div class="my-auto flex items-center -mr-3" v-for="user in department.users.slice(0,9)">
                                         <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
@@ -57,10 +57,10 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
-                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                              :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <img class="h-9 w-9 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
@@ -74,67 +74,35 @@
                                         </Menu>
                                     </div>
                                 </div>
-
-                                <Menu as="div" class="my-auto relative">
-                                    <div class="flex">
-                                        <MenuButton
-                                            class="flex bg-tagBg p-0.5 rounded-full">
-                                            <DotsVerticalIcon
-                                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                <BaseMenu class="-mt-1.5">
+                                    <MenuItem v-slot="{ active }">
+                                        <a :href="getEditHref(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <PencilAltIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                        </MenuButton>
-                                        <div v-if="this.$page.props.show_hints && index === 0"
-                                             class="absolute flex w-40 ml-6">
-                                            <div>
-                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                            </div>
-                                            <div class="flex">
-                                                <span
-                                                    class="ml-2 mt-1 hind">{{ $t('Edit your team') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Edit team')}}
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click="openDeleteAllTeamMembersModal(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Remove all team members')}}
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click="openDeleteTeamModal(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Delete Team') }}
-                                                    </a>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-
+                                            {{ $t('Edit team')}}
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a href="#" @click="openDeleteAllTeamMembersModal(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <TrashIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            {{ $t('Remove all team members')}}
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a href="#" @click="openDeleteTeamModal(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <TrashIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            {{ $t('Delete Team') }}
+                                        </a>
+                                    </MenuItem>
+                                </BaseMenu>
                             </div>
                         </li>
                         <li v-else v-for="(department,index) in department_search_results" :key="department.id"
@@ -168,10 +136,10 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 rounded-lg origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
-                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                              :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <img class="h-9 w-9 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
@@ -185,67 +153,35 @@
                                         </Menu>
                                     </div>
                                 </div>
-
-                                <Menu as="div" class="my-auto relative">
-                                    <div class="flex">
-                                        <MenuButton
-                                            class="flex bg-tagBg p-0.5 rounded-full">
-                                            <DotsVerticalIcon
-                                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                <BaseMenu>
+                                    <MenuItem v-slot="{ active }">
+                                        <a :href="getEditHref(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <PencilAltIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                        </MenuButton>
-                                        <div v-if="this.$page.props.show_hints && index === 0"
-                                             class="absolute flex w-40 ml-6">
-                                            <div>
-                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                            </div>
-                                            <div class="flex">
-                                                <span
-                                                    class="ml-2 mt-1 hind">{{ $t('Edit your team') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Edit team')}}
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click="openDeleteAllTeamMembersModal(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Remove all team members')}}
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click="openDeleteTeamModal(department)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        {{ $t('Delete Team') }}
-                                                    </a>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-
+                                            {{ $t('Edit team')}}
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a href="#" @click="openDeleteAllTeamMembersModal(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <TrashIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            {{ $t('Remove all team members')}}
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a href="#" @click="openDeleteTeamModal(department)"
+                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <TrashIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            {{ $t('Delete Team') }}
+                                        </a>
+                                    </MenuItem>
+                                </BaseMenu>
                             </div>
                         </li>
                     </ul>
@@ -255,15 +191,11 @@
             </div>
         </div>
         <!-- Team erstellen Modal-->
-        <jet-dialog-modal :show="addingTeam" @close="closeAddTeamModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeAddTeamModal" v-if="addingTeam" modal-image="/Svgs/Overlays/illu_team_new.svg" >
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Create New Team')}}
                     </div>
-                    <XIcon @click="closeAddTeamModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="xsLight subpixel-antialiased mt-4">
                         {{ $t('Create a fixed team/department.')}}
                     </div>
@@ -287,10 +219,10 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        class="z-40 origin-top-right absolute rounded-lg h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div @click="form.svg_name = item.iconName"
-                                                 :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary',
+                                                 :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary',
                                                   'group px-3 py-2 text-sm subpixel-antialiased']">
                                                 <TeamIconCollection class="h-14 w-14" :iconName=item.iconName
                                                                     alt="TeamIcon"/>
@@ -308,6 +240,9 @@
                                     {{ $t('Name of the team*')}}</label>
                             </div>
                         </div>
+                        <span class="text-red-500 text-xs mt-2" v-if="form.svg_name === ''">
+                            Icon auswählen notwendig*
+                        </span>
                         <div class="mt-12">
                             <div class="headline2 my-2">
                                 {{ $t('Add users')}}
@@ -329,7 +264,7 @@
                                             leave-from-class="opacity-100"
                                             leave-to-class="opacity-0">
                                     <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                         class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                         <div class="border-gray-200">
@@ -374,26 +309,18 @@
                     </div>
 
                 </div>
-
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Alle Mitglieder aus Team löschen Modal -->
-        <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteAllTeamMembersModal" v-if="deletingAllTeamMembers" modal-image="/Svgs/Overlays/illu_warning.svg" >
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{$t('Delete all team members')}}
                     </div>
-
-                    <XIcon @click="closeDeleteAllTeamMembersModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText mt-4">
                         {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: teamToDeleteAllMembers.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteAllTeamMembers">
                             {{ $t('Delete')}}
@@ -404,26 +331,18 @@
                         </div>
                     </div>
                 </div>
-
-            </template>
-
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Team löschen Modal -->
-        <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteTeamModal" v-if="deletingTeam" modal-image="/Svgs/Overlays/illu_warning.svg" >
                 <div class="mx-4 bg-secondaryHover">
                     <div class="headline1 mt-6 my-2">
                         {{ $t('Delete Team')}}
                     </div>
-                    <XIcon @click="closeDeleteTeamModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: teamToDelete.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteTeam">
                             {{ $t('Delete all team members')}}
@@ -434,10 +353,7 @@
                         </div>
                     </div>
                 </div>
-
-            </template>
-
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :show="showSuccess"
@@ -494,6 +410,8 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -529,6 +447,8 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseModal,
+        BaseMenu,
         FormButton,
         AddButtonBig,
         SuccessModal,

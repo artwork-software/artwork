@@ -11,7 +11,7 @@
             </Link>
             <Link v-else
                 :href="route('rooms.show',{room: this.event.room_id})"
-                class="text-buttonBlue text-xs cursor-pointer flex items-center"
+                class="text-artwork-buttons-create text-xs cursor-pointer flex items-center"
                 v-if="this.event.room_id">
                 {{
                     this.rooms.find(room => room.id === this.event.room_id).name
@@ -27,7 +27,7 @@
             </div>
             <Link v-if="this.event.project_id"
                 :href="route('projects.tab',{project: this.event.project_id, projectTab: this.first_project_calendar_tab_id})"
-                class="text-buttonBlue text-xs cursor-pointer flex items-center">
+                class="text-artwork-buttons-create text-xs cursor-pointer flex items-center">
                 <p class="mx-1 xxsLight">|</p>
                 {{ this.projects.find(project => project.id === this.event.project_id)?.name }}
             </Link>

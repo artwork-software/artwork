@@ -13,16 +13,16 @@
                         </div>
                     </ListboxButton>
                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                        <ListboxOptions class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                        <ListboxOptions class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
                             <ListboxOption as="template" class="max-h-8" key="0" :value="{name: 'Alle Vorlagen', id: 0}" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                 <span :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                     {{$t('All shift templates')}}
                                 </span>
                                 </li>
                             </ListboxOption>
                             <ListboxOption as="template" class="max-h-8" v-for="filter in event_types" :key="filter.name" :value="filter"  v-show="filter.id !== 1" v-slot="{ active, selected }">
-                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                 <span :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                     {{ filter.name }}
                                 </span>
@@ -31,7 +31,7 @@
                         </ListboxOptions>
                     </transition>
                 </Listbox>
-                <button @click="showAddShiftPresetModal = true" type="button" class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                <button @click="showAddShiftPresetModal = true" type="button" class="rounded-full bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-hover">
                     <PlusIcon class="h-4 w-4" aria-hidden="true" />
                 </button>
                 <div v-if="this.$page.props.show_hints" class="flex mt-1">

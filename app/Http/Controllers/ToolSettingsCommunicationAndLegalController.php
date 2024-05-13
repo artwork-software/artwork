@@ -30,6 +30,7 @@ class ToolSettingsCommunicationAndLegalController extends Controller
         $this->authorize('updateEmailSettings', $generalSettings);
 
         $generalSettings->business_name = $request->get('businessName') ?? '';
+        $generalSettings->page_title = $request->get('page_title') ?? '';
         $generalSettings->impressum_link = $request->get('impressumLink') ?? '';
         $generalSettings->privacy_link = $request->get('privacyLink') ?? '';
         $generalSettings->email_footer = $request->get('emailFooter') ?? '';

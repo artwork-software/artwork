@@ -32,7 +32,7 @@
                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                    :placeholder="$t('Name of the filter')"/>
                             <button
-                                class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label @click="saveFilter"
                                        class="cursor-pointer text-white text-xs">{{ $t('Save')}}</label>
                             </button>
@@ -40,7 +40,7 @@
                         <hr class="border-gray-500 mt-4 mb-4">
                     </div>
                     <button
-                        class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
+                        class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1"
                         v-for="filter in localPersonalFilters">
                         <label @click="applyFilter(filter)"
                                class="cursor-pointer text-white">{{ filter.name }}</label>

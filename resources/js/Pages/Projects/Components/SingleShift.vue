@@ -11,7 +11,7 @@
             <div class="h-9 flex items-center">
                 {{ shift.craft.abbreviation }} ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
             </div>
-            <div class="absolute flex items-center right-0">
+            <div class="flex items-center justify-between">
                 <div
                     v-if="this.computedMaxWorkerCount === this.computedUsedWorkerCount"
                     class="h-9 flex items-center w-fit right-0 p-3">
@@ -23,56 +23,37 @@
                 <div v-if="shift.infringement || anyoneHasVacation" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                     <IconExclamationCircle class="h-5 w-5" stroke-width="1.5" />
                 </div>
+
                 <div>
-                    <Menu as="div" class="relative">
-                        <div class="flex p-0.5 rounded-full">
-                            <MenuButton
-                                class="flex p-0.5 rounded-full">
-                                <IconDotsVertical
-                                    class=" flex-shrink-0 h-4 w-4 my-auto"
+                    <BaseMenu dots-size="h-4 w-4">
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="editShift"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconEdit
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="editShift"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconEdit
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Edit') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="this.clearShiftUsers(shift)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconCircleX
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Clear') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="deleteShift(shift.id)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconTrash
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Delete') }}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                                {{ $t('Edit') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="this.clearShiftUsers(shift)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconCircleX
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Clear') }}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="deleteShift(shift.id)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconTrash
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Delete') }}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
             </div>
         </div>
@@ -187,6 +168,10 @@
                                 @close-modal="this.closeDeleteUserModal"
                                 @returnBuffer="deleteUserWithSeriesShiftData"
     />
+
+    <pre>
+        {{ shift }}
+    </pre>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -212,10 +197,12 @@ import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQ
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {Inertia} from "@inertiajs/inertia";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        BaseMenu,
         ShiftQualificationIconCollection,
         ShiftsQualificationsDropElement,
         ChooseDeleteUserShiftModal,

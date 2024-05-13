@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_project_history.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('Project process') }}
                 </div>
-                <XIcon @click="closeModal()"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary subpixel-antialiased">
                     {{ $t('Here you can see what was changed by whom and when.') }}
                 </div>
@@ -19,7 +14,7 @@
                                  aria-label="Tabs">
                                 <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
                                    :key="tab.name"
-                                   :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
+                                   :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
                                    :aria-current="tab.current ? 'page' : undefined">
                                     {{ tab.name }}
                                 </a>
@@ -72,8 +67,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
 </template>
 
 <script>
@@ -84,11 +78,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectHistoryComponent',
     mixins: [Permissions],
     components: {
+        BaseModal,
         UserPopoverTooltip,
         NewUserToolTip,
         JetDialogModal,

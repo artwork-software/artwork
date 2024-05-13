@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="title ?? $t('Users & teams')">
         <div class=" ml-14 mr-10">
             <h2 class="headline1">{{ $t('Users & teams')}}</h2>
 
@@ -17,7 +17,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 
 export default defineComponent({
     name: "UserHeader",
-
+    props: ['title'],
     components: {UserTabs, AppLayout}
 })
 </script>

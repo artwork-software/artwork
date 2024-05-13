@@ -49,7 +49,8 @@ class ColumnCell extends Model
     ];
 
     protected $appends = [
-        'sage_value'
+        'sage_value',
+        'current_value',
     ];
 
     public function subPositionRow(): BelongsTo
@@ -87,5 +88,10 @@ class ColumnCell extends Model
             return $this->sageAssignedData->sum('buchungsbetrag');
         }
         return null;
+    }
+
+    public function getCurrentValueAttribute(): ?string
+    {
+        return $this->value;
     }
 }

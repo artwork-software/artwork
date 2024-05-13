@@ -71,7 +71,7 @@
             <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
                                      viewBox="0 0 14.123 6.519">
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-primary"
+                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
                             :title="$t('Hold and drag to change the size')">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <SelectorIcon class="h-3 w-6 text-gray-400" />
@@ -97,7 +97,7 @@
                     </div>
                 <div v-show="showUserOverview"
                      ref="userOverview"
-                     class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll"
+                     class="w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
                      :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
@@ -107,7 +107,7 @@
                                 <th class="flex items-center pl-2 py-1">
                                     <Switch @click="toggleHighlightMode"
                                             :class="[highlightMode ?
-                                        'bg-indigo-500' :
+                                        'bg-artwork-buttons-create' :
                                         'bg-gray-300',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true"
@@ -120,7 +120,7 @@
                                 <th class="flex items-center pl-2 py-1">
                                     <Switch @click="toggleMultiEditMode"
                                             :class="[multiEditMode ?
-                                        'bg-indigo-500' :
+                                        'bg-artwork-buttons-create' :
                                         'bg-gray-300',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true"
@@ -252,7 +252,7 @@
                 <div>
                     <button type="button"
                             @click="multiEditMode = false"
-                            class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
                         {{ $t('Cancel')}}
                     </button>
                 </div>
@@ -263,8 +263,8 @@
                             :class="[
                                 this.userForMultiEdit === null && this.checkedShiftsForMultiEdit.length === 0 ?
                                 'bg-gray-600' :
-                                'cursor-pointer bg-buttonBlue hover:bg-buttonHover',
-                                'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
+                                'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                             ]">
                         {{ $t('Save') }}
                     </button>

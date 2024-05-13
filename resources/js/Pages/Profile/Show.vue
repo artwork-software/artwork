@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('My account')">
         <div>
             <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
@@ -214,16 +214,12 @@
         </div>
         <!-- Change Profile Picture Modal -->
 
-        <jet-dialog-modal :show="showChangePictureModal" @close="closeChangePictureModal">
-            <template #content>
+        <BaseModal @closed="closeChangePictureModal" v-if="showChangePictureModal" modal-image="/Svgs/Overlays/illu_project_history.svg" :show-image="false">
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         {{ $t('Change profile picture') }}
                     </div>
                     <span class="text-secondary my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}} </span>
-                    <XIcon @click="closeChangePictureModal"
-                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                        aria-hidden="true"/>
                     <!-- New Profile Photo Preview -->
                     <h2 class="" v-show="photoPreview">{{$t('Preview new profile picture:')}}</h2>
                     <div class="flex">
@@ -254,26 +250,18 @@
                             @click="validateTypeAndChange" />
                     </div>
                 </div>
-
-            </template>
-
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Nutzer*in löschen Modal -->
-        <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeleteUserModal" v-if="deletingUser" modal-image="/Svgs/Overlays/illu_warning.svg">
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         {{ $t('Delete account permanently')}}
                     </div>
-                    <XIcon @click="closeDeleteUserModal"
-                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                        aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.')}}
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteUser">
                             {{$t('Delete account')}}
@@ -284,10 +272,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-
-
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 </template>
 
@@ -317,9 +302,11 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     components: {
+        BaseModal,
         BaseButton,
         FormButton,
         TeamTooltip,

@@ -104,8 +104,7 @@ export default defineComponent({
             Inertia.reload({
                 data: {
                     atAGlance: this.atAGlance,
-                },
-                only: ['calendar', 'eventsAtAGlance']
+                }
             })
         }
     },

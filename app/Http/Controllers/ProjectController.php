@@ -1956,7 +1956,7 @@ class ProjectController extends Controller
                     $roomAttributeService,
                     $eventTypeService,
                     $areaService,
-                    $request->boolean('atAGlance')
+                    request('atAGlance') ?? false
                 );
             }
 

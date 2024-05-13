@@ -100,7 +100,7 @@ jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     needs: [tests, phpstan]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v' || github.ref == 'refs/heads/dev'))
+    if:  github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo

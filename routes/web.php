@@ -1256,4 +1256,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('sidebar.tab.reorder');
         });
     });
+
+    Route::group(['prefix' => 'user'], function (): void {
+        Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])->name('user.operationPlan');
+    });
 });

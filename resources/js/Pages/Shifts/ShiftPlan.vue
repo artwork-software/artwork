@@ -68,7 +68,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight} : {height: 20 + 'px'}">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
@@ -147,6 +147,7 @@
                                                      :expected-hours="user.expectedWorkingHours"
                                                      :planned-hours="user.plannedWorkingHours"
                                                      :type="user.type"
+                                                     :color="craft.color"
                                         />
                                         <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                            :item="user.element"
@@ -433,7 +434,8 @@ export default {
             return this.crafts.map(craft => ({
                 name: craft.name,
                 id: craft.id,
-                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id))
+                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
+                color: craft.color
             }));
         },
         usersWithNoCrafts() {

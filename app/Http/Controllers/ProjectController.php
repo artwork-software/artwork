@@ -1814,7 +1814,7 @@ class ProjectController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function projectTab(
+    /*public function projectTab(
         Request $request,
         Project $project,
         ProjectTab $projectTab,
@@ -2092,7 +2092,255 @@ class ProjectController extends Controller
                 ->findFirstProjectTabWithCalendarComponent()?->id,
             'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
+    }*/
+
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    public function projectTab(
+        Request $request,
+        Project $project,
+        ProjectTab $projectTab,
+        SageAssignedDataCommentService $sageAssignedDataCommentService,
+        ShiftQualificationService $shiftQualificationService,
+        RoomService $roomService,
+        SageApiSettingsService $sageApiSettingsService,
+        ContractTypeService $contractTypeService,
+        CompanyTypeService $companyTypeService,
+        CurrencyService $currencyService,
+        CollectingSocietyService $collectingSocietyService,
+        ProjectService $projectService,
+        UserService $userService,
+        FreelancerService $freelancerService,
+        ServiceProviderService $serviceProviderService,
+        CraftService $craftService,
+        CalendarService $calendarService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        EventTypeService $eventTypeService,
+        AreaService $areaService
+    ): Response|ResponseFactory {
+        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
+        $headerObject->project = $project;
+        $loadedProjectInformation = [];
+
+        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
+        }, 'components' => function ($query): void {
+            $query->orderBy('order');
+        }, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
+        }]);
+
+        $projectTabComponents = $projectTab->components()->with('component')->get()->concat(
+            $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')
+        );
+
+        foreach ($projectTabComponents as $componentInTab) {
+            $component = $componentInTab->component;
+
+            switch ($component->type) {
+                case ProjectTabComponentEnum::CHECKLIST->value:
+                    $headerObject = $this->checklistService
+                        ->getProjectChecklists($project, $headerObject, $componentInTab);
+                    break;
+                case ProjectTabComponentEnum::CHECKLIST_ALL->value:
+                    $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
+                    break;
+                case ProjectTabComponentEnum::COMMENT_TAB->value:
+                    $headerObject->project->comments = $project->comments()
+                        ->whereIn('tab_id', $componentInTab->scope)->with('user')->get();
+                    break;
+                case ProjectTabComponentEnum::COMMENT_ALL_TAB->value:
+                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
+                    break;
+                case ProjectTabComponentEnum::PROJECT_DOCUMENTS->value:
+                    $headerObject->project->project_files_tab = $project->project_files()
+                        ->whereIn('tab_id', $componentInTab->scope)->get();
+                    break;
+                case ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value:
+                    $headerObject->project->project_files_all = $project->project_files;
+                    break;
+                case ProjectTabComponentEnum::PROJECT_STATUS->value:
+                    $headerObject->project->state = ProjectStates::find($project->state);
+                    break;
+                case ProjectTabComponentEnum::PROJECT_TEAM->value:
+                    $this->loadProjectTeamData($headerObject, $project);
+                    break;
+                case ProjectTabComponentEnum::CALENDAR->value:
+                    $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
+                        $request->get('startDate') ? Carbon::create($request->get('startDate'))
+                            ->startOfDay() : Carbon::now()->startOfDay(),
+                        $request->get('endDate') ? Carbon::create($request->get('endDate'))
+                            ->endOfDay() : Carbon::now()->addWeeks()->endOfDay(),
+                        $project,
+                        $roomService,
+                        $calendarService,
+                        $projectService,
+                        $userService,
+                        $filterService,
+                        $filterController,
+                        $roomCategoryService,
+                        $roomAttributeService,
+                        $eventTypeService,
+                        $areaService,
+                        $request->get('atAGlance') ?? false
+                    );
+                    break;
+                case ProjectTabComponentEnum::BUDGET->value:
+                    $loadedProjectInformation = $this->budgetService
+                        ->getBudgetForProjectTab(
+                            $project,
+                            $loadedProjectInformation,
+                            $sageAssignedDataCommentService,
+                            $sageApiSettingsService
+                        );
+                    $headerObject->project->users = $this->mapProjectUsers($project);
+                    break;
+                case ProjectTabComponentEnum::SHIFT_TAB->value:
+                    $this->loadShiftTabData($headerObject, $project);
+                    $loadedProjectInformation["ShiftTab"] = $this->projectTabService
+                        ->getShiftTab(
+                            $project,
+                            $shiftQualificationService,
+                            $projectService,
+                            $userService,
+                            $freelancerService,
+                            $serviceProviderService,
+                            $craftService
+                        );
+                    break;
+                case ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value:
+                    $headerObject->project->shift_contacts = $project->shift_contact;
+                    $headerObject->project->project_managers = $project->managerUsers;
+                    break;
+                case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
+                    $headerObject->project->cost_center = $project->costCenter;
+                    $headerObject->project->collecting_society = $project->collectingSociety;
+                    $loadedProjectInformation['BudgetInformation'] = $this->projectTabService
+                        ->getBudgetInformationDto(
+                            $project,
+                            $contractTypeService,
+                            $companyTypeService,
+                            $currencyService,
+                            $collectingSocietyService
+                        );
+                    break;
+            }
+        }
+
+        $groupOutput = $project->is_group ? '' : $this->getGroupOutput($project);
+
+        $this->addHistoryToHeaderObject($headerObject, $project);
+
+        $headerObject->firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $headerObject->lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
+        $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
+        $headerObject->states = ProjectStates::all();
+        $headerObject->projectGroups = $project->groups;
+        $headerObject->groupProjects = Project::where('is_group', 1)->get();
+        $headerObject->categories = Category::all();
+        $headerObject->projectCategories = $project->categories;
+        $headerObject->genres = Genre::all();
+        $headerObject->projectGenres = $project->genres;
+        $headerObject->sectors = Sector::all();
+        $headerObject->projectSectors = $project->sectors;
+        $headerObject->projectState = $project->state;
+        $headerObject->access_budget = $project->access_budget;
+        $headerObject->tabs = ProjectTab::orderBy('order')->get();
+        $headerObject->currentTabId = $projectTab->id;
+        $headerObject->currentGroup = $groupOutput;
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
+        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+
+        return inertia('Projects/Tab/TabContent', [
+            'currentTab' => $projectTab,
+            'headerObject' => $headerObject,
+            'loadedProjectInformation' => $loadedProjectInformation,
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->findFirstProjectTabWithCalendarComponent()?->id,
+            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+        ]);
     }
+
+    private function loadProjectTeamData(&$headerObject, $project): void
+    {
+        $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'email' => $user->email,
+            'departments' => $user->departments,
+            'position' => $user->position,
+            'business' => $user->business,
+            'phone_number' => $user->phone_number,
+            'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
+            'pivot_access_budget' => (bool)$user->pivot?->access_budget,
+            'pivot_is_manager' => (bool)$user->pivot?->is_manager,
+            'pivot_can_write' => (bool)$user->pivot?->can_write,
+            'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+        ]);
+
+        $headerObject->project->departments = DepartmentIndexResource::collection($project->departments)->resolve();
+        $headerObject->project->project_managers = $project->managerUsers;
+        $headerObject->project->write_auth = $project->writeUsers;
+        $headerObject->project->delete_permission_users = $project->delete_permission_users;
+    }
+
+    private function loadShiftTabData(&$headerObject, $project): void
+    {
+        $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+        $headerObject->project->shift_contacts = $project->shift_contact;
+        $headerObject->project->project_managers = $project->managerUsers;
+        $headerObject->project->shiftDescription = $project->shift_description;
+        $headerObject->project->freelancers = Freelancer::all();
+        $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
+    }
+
+    private function mapProjectUsers($project)
+    {
+        return $project->users->map(fn (User $user) => [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'profile_photo_url' => $user->profile_photo_url,
+            'email' => $user->email,
+            'departments' => $user->departments,
+            'position' => $user->position,
+            'business' => $user->business,
+            'phone_number' => $user->phone_number,
+            'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
+            'pivot_access_budget' => (bool)$user->pivot?->access_budget,
+            'pivot_is_manager' => (bool)$user->pivot?->is_manager,
+            'pivot_can_write' => (bool)$user->pivot?->can_write,
+            'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+        ]);
+    }
+
+    private function getGroupOutput($project)
+    {
+        $group = DB::table('project_groups')->select('*')->where('project_id', $project->id)->first();
+        return $group ? Project::find($group->group_id) : '';
+    }
+
+    private function addHistoryToHeaderObject(&$headerObject, $project): void
+    {
+        $historyComplete = $project->historyChanges()->all();
+        $headerObject->project_history = array_map(fn($history) => [
+            'changes' => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
+            'created_at' => $history->created_at->diffInHours() < 24 ? $history->created_at
+                ->diffForHumans() : $history->created_at->format('d.m.Y, H:i'),
+        ], $historyComplete);
+    }
+
 
     public function addTimeLineRow(Event $event, Request $request): void
     {

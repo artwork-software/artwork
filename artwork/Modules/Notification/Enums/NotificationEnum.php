@@ -57,6 +57,9 @@ enum NotificationEnum: string
 
     case NOTIFICATION_SHIFT_CHANGED = 'NOTIFICATION_SHIFT_CHANGED';
 
+    //demand
+    case NOTIFICATION_SHIFT_OPEN_DEMAND = 'NOTIFICATION_SHIFT_OPEN_DEMAND';
+
     case NOTIFICATION_SHIFT_OWN_INFRINGEMENT = 'NOTIFICATION_SHIFT_OWN_INFRINGEMENT';
 
     case NOTIFICATION_SHIFT_INFRINGEMENT = 'NOTIFICATION_SHIFT_INFRINGEMENT';
@@ -100,6 +103,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
         };
     }
@@ -133,6 +137,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_INFRINGEMENT,
             self::NOTIFICATION_SHIFT_LOCKED,
             self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND,
             self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }

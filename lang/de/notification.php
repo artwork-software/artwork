@@ -52,6 +52,10 @@ return [
         'more_than_ten_days' => 'Du wurdest mehr als 10 Tage am Stück eingeplant',
         'worker_more_than_ten_days' => 'Mitarbeiter*in mehr als 10 Tage am Stück eingeplant',
         'shift_staffing_deleted' => 'Schichtbesetzung gelöscht :projectName :craftAbbreviation',
+        'open_demand' => 'Der Termin :event hat noch :count offene Stellen',
+        // 'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift_start - :shift_end',
+        'open_demand_description' =>
+            'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift',
     ],
     'event' => [
         'with_adjoining_audience' => 'Termin mit Publikum im Nebenraum',

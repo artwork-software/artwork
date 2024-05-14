@@ -411,6 +411,7 @@ class NotificationService
             case NotificationEnum::NOTIFICATION_SHIFT_CONFLICT:
             case NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
             case NotificationEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
+            case NotificationEnum::NOTIFICATION_SHIFT_OPEN_DEMAND:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),

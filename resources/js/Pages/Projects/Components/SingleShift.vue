@@ -168,10 +168,6 @@
                                 @close-modal="this.closeDeleteUserModal"
                                 @returnBuffer="deleteUserWithSeriesShiftData"
     />
-
-    <pre>
-        {{ shift }}
-    </pre>
 </template>
 <script>
 import {defineComponent} from 'vue'

@@ -1,6 +1,6 @@
 
 <template>
-    <div class="drag-item w-full p-2 my-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart">
+    <div class="drag-item w-full p-2 my-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10)}">
         <div class="">
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>
@@ -37,10 +37,12 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default defineComponent({
     name: "DragElement",
-    props: ['item', 'type', 'plannedHours', 'expectedHours'],
+    mixins: [ColorHelper],
+    props: ['item', 'type', 'plannedHours', 'expectedHours', 'color'],
     methods: {
         onDragStart(event) {
             event.dataTransfer.setData(

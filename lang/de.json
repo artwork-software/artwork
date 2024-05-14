@@ -404,6 +404,7 @@
     "Permission presets" : "Rechte-Presets",
     "My account" : "Mein Konto",
     "Operational plan" : "Einsatzplan",
+    "My Operational plan" : "Mein Einsatzplan",
     "Conditions" : "Konditionen",
     "Personal data" : "Persönliche Daten",
     "User permissions" : "Nutzerrechte",
@@ -1736,5 +1737,9 @@
     "Page Title": "Seitentitel",
     "All Departments": "Alle Teams",
     "User account": "Nutzerkonto",
-    "This e-mail address already exists in the system. {0}": "Diese E-Mail-Adresse existiert bereits im System. \"{0}\""
+    "This e-mail address already exists in the system. {0}": "Diese E-Mail-Adresse existiert bereits im System. \"{0}\"",
+    "Days until notification if shift not fully staffed": "Tage bis Benachrichtigung, wenn Schicht nicht voll besetzt",
+    "Notification of shifts with open demand is sent {0} day(s) before the start of the shift": "Benachrichtigung über Schichten mit offenem Bedarf erfolgt {0} Tage vor Schichtbeginn",
+    "Notification of shifts that are not fully staffed takes place on the same day as the shift starts": "Benachrichtigung von Schichten, die nicht voll besetzt sind, erfolgt am selben Tag wie der Schichtbeginn",
+    "Open Project": "Zum Projekt"
 }

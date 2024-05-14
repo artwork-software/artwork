@@ -530,4 +530,9 @@ class UserController extends Controller
             )
         );
     }
+
+    public function compactMode(User $user, Request $request): void
+    {
+        $user->update($request->only('compact_mode'));
+    }
 }

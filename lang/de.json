@@ -1741,5 +1741,6 @@
     "Days until notification if shift not fully staffed": "Tage bis Benachrichtigung, wenn Schicht nicht voll besetzt",
     "Notification of shifts with open demand is sent {0} day(s) before the start of the shift": "Benachrichtigung über Schichten mit offenem Bedarf erfolgt {0} Tage vor Schichtbeginn",
     "Notification of shifts that are not fully staffed takes place on the same day as the shift starts": "Benachrichtigung von Schichten, die nicht voll besetzt sind, erfolgt am selben Tag wie der Schichtbeginn",
-    "Open Project": "Zum Projekt"
+    "Open Project": "Zum Projekt",
+    "Compact Mode": "Kompaktmodus"
 }

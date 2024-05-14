@@ -46,8 +46,7 @@
                     leave-active-class="transition ease-in duration-75"
                     leave-from-class="transform opacity-100 scale-100"
                     leave-to-class="transform opacity-0 scale-95">
-                    <div
-                        class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    <div class="z-50 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
@@ -58,6 +57,19 @@
                                 <span v-else>
                                     <IconChevronUp class="h-5 w-5 text-white"/>
                                 </span>
+                            </div>
+                            <div class="flex items-center pl-2 py-1">
+                                <Switch @click="toggleCompactMode"
+                                        :class="[this.$page.props.user.compact_mode ?
+                                        'bg-artwork-buttons-create' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                </Switch>
+                                <div :class="[this.$page.props.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                    {{$t('Compact Mode')}}
+                                </div>
                             </div>
                             <div>
                                 <IconX class="h-5 w-5 text-white" @click="userWindow = !userWindow"/>
@@ -145,6 +157,7 @@ import {usePage} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -270,6 +283,14 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        toggleCompactMode() {
+            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
+                compact_mode: !this.$page.props.user.compact_mode
+            }, {
+                preserveScroll: true,
+                preserveState: true
+            });
+        },
         checkCommitted(){
             return this.loadedProjectInformation['ShiftTab'].events_with_relevant?.length > 0;
         },

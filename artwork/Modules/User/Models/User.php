@@ -136,7 +136,8 @@ class User extends Model implements
         'salary_description',
         'language',
         'zoom_factor',
-        'is_sidebar_opened'
+        'is_sidebar_opened',
+        'compact_mode'
     ];
 
     protected $casts = [
@@ -147,7 +148,8 @@ class User extends Model implements
         'temporary' => 'boolean',
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
-        'is_sidebar_opened' => 'boolean'
+        'is_sidebar_opened' => 'boolean',
+        'compact_mode' => 'boolean',
     ];
 
     protected $hidden = [

@@ -130,6 +130,19 @@
                                         {{$t('Multi-Edit')}}
                                     </div>
                                 </th>
+                                <th class="flex items-center pl-2 py-1">
+                                    <Switch @click="toggleCompactMode"
+                                            :class="[this.$page.props.user.compact_mode ?
+                                        'bg-artwork-buttons-create' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                    </Switch>
+                                    <div :class="[this.$page.props.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                        {{$t('Compact Mode')}}
+                                    </div>
+                                </th>
                             </tr>
                             <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
                                 <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
@@ -157,6 +170,7 @@
                                                            :userForMultiEdit="userForMultiEdit"
                                                            :multiEditMode="multiEditMode"
                                                            @addUserToMultiEdit="addUserToMultiEdit"
+                                                           :color="craft.color"
                                         />
                                         <HighlightUserCell v-else
                                                            :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -165,11 +179,12 @@
                                                            :planned-hours="user.plannedWorkingHours"
                                                            :type="user.type"
                                                            @highlightShiftsOfUser="highlightShiftsOfUser"
+                                                           :color="craft.color"
                                         />
                                     </th>
                                     <td v-for="day in days">
-                                        <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
-                                            class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                        <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
+                                            class="w-[12.375rem] p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden"
                                             @click="openShowUserShiftModal(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
@@ -178,6 +193,14 @@
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
+                                            </span>
+                                            <span v-if="user.availabilities">
+                                                <span v-for="availability in user.availabilities[day.full_day]">
+                                                    <span class="text-green-500">
+                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                    </span>
+                                                </span>
+
                                             </span>
                                         </div>
                                     </td>
@@ -198,6 +221,7 @@
                                                      :expected-hours="user.expectedWorkingHours"
                                                      :planned-hours="user.plannedWorkingHours"
                                                      :type="user.type"
+                                                     :color="craft.color"
                                         />
                                         <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                            :item="user.element"
@@ -207,6 +231,7 @@
                                                            :userForMultiEdit="userForMultiEdit"
                                                            :multiEditMode="multiEditMode"
                                                            @addUserToMultiEdit="addUserToMultiEdit"
+                                                           :color="craft.color"
                                         />
                                         <HighlightUserCell v-else
                                                            :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -214,10 +239,11 @@
                                                            :expected-hours="user.expectedWorkingHours"
                                                            :planned-hours="user.plannedWorkingHours"
                                                            :type="user.type"
-                                                           @highlightShiftsOfUser="highlightShiftsOfUser"/>
+                                                           @highlightShiftsOfUser="highlightShiftsOfUser"
+                                                           :color="craft.color"/>
                                     </th>
                                     <td v-for="day in days">
-                                        <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
+                                        <div class="w-[12.375rem] p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)" :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
@@ -225,6 +251,13 @@
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
+                                            </span>
+                                            <span v-if="user.availabilities">
+                                                <span v-for="availability in user.availabilities[day.full_day]">
+                                                    <span class="text-green-500">
+                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                    </span>
+                                                </span>
                                             </span>
                                         </div>
                                     </td>
@@ -546,6 +579,14 @@ export default {
         toggleMultiEditMode() {
             this.highlightMode = false;
             this.multiEditMode = !this.multiEditMode;
+        },
+        toggleCompactMode() {
+            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
+                compact_mode: !this.$page.props.user.compact_mode
+            }, {
+                preserveScroll: true,
+                preserveState: true
+            });
         },
         highlightShiftsOfUser(id, type) {
             this.idToHighlight = id;

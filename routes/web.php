@@ -1259,5 +1259,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'user'], function (): void {
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])->name('user.operationPlan');
+        Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])->name('user.compact.mode.toggle');
     });
 });

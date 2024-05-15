@@ -1258,7 +1258,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'user'], function (): void {
-        Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])->name('user.operationPlan');
-        Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])->name('user.compact.mode.toggle');
+        Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
+            ->name('user.operationPlan');
+        Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
+            ->name('user.compact.mode.toggle');
+    });
+
+    Route::group(['prefix' => 'project-roles'], function (): void {
+        Route::get('index', [\App\Http\Controllers\ProjectRoleController::class, 'index'])
+            ->name('project-roles.index');
+        //project-roles.store
+        Route::post('store', [\App\Http\Controllers\ProjectRoleController::class, 'store'])
+            ->name('project-roles.store');
+        //project-roles.update
+        Route::patch('{projectRole}/update', [\App\Http\Controllers\ProjectRoleController::class, 'update'])
+            ->name('project-roles.update');
+        //project-roles.destroy
+        Route::delete('{projectRole}/destroy', [\App\Http\Controllers\ProjectRoleController::class, 'destroy'])
+            ->name('project-roles.destroy');
     });
 });

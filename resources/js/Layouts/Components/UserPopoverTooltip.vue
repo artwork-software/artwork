@@ -1,7 +1,7 @@
 <template>
     <Popover v-slot="{ open }" class="relative !ring-0">
         <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0">
-            <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full !ring-0" :class="['h-' + this.height, 'w-' + this.width]">
+            <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full !ring-0" :class="['h-' + this.height, 'w-' + this.width, classes]">
         </PopoverButton>
 
         <transition enter-active-class="transition duration-200 ease-out"
@@ -55,12 +55,24 @@ export default {
         PopoverButton,
         PopoverPanel
     },
-    props: [
-        'user',
-        'id',
-        'height',
-        'width',
-    ]
+    props: {
+        user: {
+            type: Object,
+            required: true
+        },
+        height: {
+            type: String,
+            default: '12'
+        },
+        width: {
+            type: String,
+            default: '12'
+        },
+        classes: {
+            type: String,
+            default: ''
+        }
+    }
 }
 </script>
 

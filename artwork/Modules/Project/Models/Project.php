@@ -123,7 +123,7 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->using(ProjectUserPivot::class)
-            ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
+            ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission', 'roles');
     }
 
     //@todo: fix phpcs error - refactor function name to accessBudget

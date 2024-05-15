@@ -74,6 +74,7 @@ use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
@@ -2287,12 +2288,14 @@ class ProjectController extends Controller
             'pivot_is_manager' => (bool)$user->pivot?->is_manager,
             'pivot_can_write' => (bool)$user->pivot?->can_write,
             'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+            'pivot_roles' => (array)$user->pivot?->roles
         ]);
 
         $headerObject->project->departments = DepartmentIndexResource::collection($project->departments)->resolve();
         $headerObject->project->project_managers = $project->managerUsers;
         $headerObject->project->write_auth = $project->writeUsers;
         $headerObject->project->delete_permission_users = $project->delete_permission_users;
+        $headerObject->project->projectRoles = ProjectRole::all();
     }
 
     private function loadShiftTabData(&$headerObject, $project): void

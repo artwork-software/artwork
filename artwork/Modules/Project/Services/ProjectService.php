@@ -11,6 +11,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -20,6 +21,7 @@ use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -447,10 +449,17 @@ readonly class ProjectService
                 $shift->load('shiftsQualifications');
             }
 
+
+            $shiftsToReturn = $event->shifts->map(function ($shift) use ($event) {
+                $shift->margin_top = $this->getMarginTopForShift($event, $shift);
+                return $shift;
+            });
+
+
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
                 'timeline' => $timeline,
-                'shifts' => $event->shifts,
+                'shifts' => $shiftsToReturn,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
             ];
@@ -458,6 +467,31 @@ readonly class ProjectService
         rsort($eventsWithRelevant);
 
         return $eventsWithRelevant;
+    }
+
+    private function getMarginTopForShift(Event $event, Shift $shift): float
+    {
+
+        // get difference between $event->earliest_start_datetime and $shift->start_date + $shift->start
+        $eventEarliestStartDateTime = Carbon::parse($event->earliest_start_datetime);
+        $startDate = Carbon::parse($shift->start_date);
+        $startTime = Carbon::parse($shift->start);
+        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
+        //$shiftStartDateTime = Carbon::parse($shift->start_date- . ' ' . $shift->start);
+
+        // calculate the difference
+        $diff = $eventEarliestStartDateTime->diffInMinutes($shiftStartDateTime);
+        $pixelHeight = $diff / 60 * 180;
+
+        // if the calculated height is null or 0 than return 36
+        if ($pixelHeight === null || $pixelHeight === 0) {
+            return 36;
+        }
+
+        if ($pixelHeight > 8640) {
+            return 8640;
+        }
+        return $pixelHeight;
     }
 
     /**

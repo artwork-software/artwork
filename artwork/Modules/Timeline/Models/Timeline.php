@@ -27,16 +27,23 @@ class Timeline extends Model
 
     protected $fillable = [
         'event_id',
+        'start_date',
+        'end_date',
         'start',
         'end',
         'description',
     ];
 
     protected $casts = [
+        'start_date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
     ];
 
+    protected $appends = [
+        'time_line_height',
+    ];
     public function event(): BelongsTo
     {
         return $this->belongsTo(
@@ -45,5 +52,14 @@ class Timeline extends Model
             'id',
             'events'
         );
+    }
+
+    public function getTimeLineHeightAttribute(): float|int
+    {
+        $start = strtotime($this->start);
+        $end = strtotime($this->end);
+        $diff = $end - $start;
+        $minutes = $diff / 60;
+        return $minutes / 60 * 180;
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full" :class="highlight">
+    <div class="h-full" :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
         <div class="rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-1 h-[calc(100%-2.7rem)] rounded-b-lg bg-gray-200 px-1 py-2">
+        <div class="mt-1 min-h-[144px] overflow-x-scroll rounded-b-lg bg-gray-200 px-1 py-2" :style="{height: shift.shift_height + 'px'}">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} - {{ shift.formatted_dates.end }}
@@ -68,7 +68,7 @@
                 {{ shift.start }} - {{ shift.end }}
                 <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
             </p>
-            <p class="text-xs mb-3">{{ shift.description }}</p>
+            <p class="text-xs mb-3 truncate">{{ shift.description }}</p>
             <div v-for="user in shift.users">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">

@@ -96,7 +96,8 @@ class Shift extends Model
         'infringement',
         'formatted_dates',
         'days_of_shift',
-        'max_users'
+        'max_users',
+        'shift_height',
     ];
 
     public function committedBy(): BelongsTo
@@ -272,4 +273,22 @@ class Shift extends Model
     {
         return $this->shiftsQualifications->sum('value');
     }
+
+    public function getShiftHeightAttribute(): int
+    {
+        $start = strtotime($this->start);
+        $end = strtotime($this->end);
+        $diff = $end - $start;
+        $minutes = $diff / 60;
+        $sum = $minutes / 60 * 144;
+        // minimum height of 181px to make it readable
+        if ($sum < 144) {
+            return 144;
+        }
+        return $sum;
+    }
+
+
+
+
 }

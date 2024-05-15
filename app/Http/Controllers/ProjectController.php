@@ -138,7 +138,8 @@ class ProjectController extends Controller
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
         private readonly ChecklistService $checklistService,
         private readonly ProjectTabService $projectTabService,
-        private readonly ChangeService $changeService
+        private readonly ChangeService $changeService,
+        private readonly EventService $eventService,
     ) {
     }
 
@@ -2350,12 +2351,18 @@ class ProjectController extends Controller
         $event->timelines()->create(
             $request->validate(
                 [
+                    'start_date' => 'required',
+                    'end_date' => 'required',
                     'start' => 'required',
                     'end' => 'required',
                     'description' => 'nullable'
                 ]
             )
         );
+        $event->update([
+            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
+            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
+        ]);
     }
 
     public function updateTimeLines(Request $request): void
@@ -2363,9 +2370,16 @@ class ProjectController extends Controller
         foreach ($request->timelines as $timeline) {
             $findTimeLine = Timeline::find($timeline['id']);
             $findTimeLine->update([
+                'start_date' => $timeline['start_date'],
+                'end_date' => $timeline['end_date'],
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
                 'description' => nl2br($timeline['description_without_html'])
+            ]);
+            $event = $findTimeLine->event()->first();
+            $event->update([
+                'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
+                'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
             ]);
         }
     }

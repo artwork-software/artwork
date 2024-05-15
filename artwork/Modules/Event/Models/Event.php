@@ -43,6 +43,8 @@ use Illuminate\Support\Collection;
  * @property int $project_id
  * @property bool $is_series
  * @property int $series_id
+ * @property Carbon $earliest_start_datetime
+ * @property Carbon $latest_end_datetime
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -59,6 +61,7 @@ use Illuminate\Support\Collection;
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts
+ * @property-read int $shift_container_height
  */
 class Event extends Model
 {
@@ -91,7 +94,9 @@ class Event extends Model
         'accepted',
         'option_string',
         'declined_room_id',
-        'allDay'
+        'allDay',
+        'latest_end_datetime',
+        'earliest_start_datetime'
     ];
 
     protected $guarded = [
@@ -106,7 +111,9 @@ class Event extends Model
         'end_time' => 'datetime:d. M Y H:i',
         'is_series' => 'boolean',
         'accepted' => 'boolean',
-        'allDay' => 'boolean'
+        'allDay' => 'boolean',
+        'earliest_start_datetime' => 'datetime',
+        'latest_end_datetime' => 'datetime',
     ];
 
     protected $appends = [
@@ -114,7 +121,8 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'days_of_shifts'
+        'days_of_shifts',
+        'shift_container_height',
     ];
 
     public function comments(): HasMany
@@ -352,5 +360,23 @@ class Event extends Model
     public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
     {
         return $builder->orderBy('start_time', $direction);
+    }
+
+    public function getShiftContainerHeightAttribute(): int
+    {
+        $earliestStartTime = $this->earliest_start_datetime;
+        $latestEndTime = $this->latest_end_datetime;
+
+        $diff = $latestEndTime->diffInMinutes($earliestStartTime);
+        $pixelHeight = $diff * 3;
+
+        if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
+            return 540;
+        }
+
+        if ($pixelHeight > 8640) {
+            return 8640;
+        }
+        return $pixelHeight;
     }
 }

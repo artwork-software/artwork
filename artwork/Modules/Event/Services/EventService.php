@@ -813,4 +813,55 @@ readonly class EventService
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
     }
+
+    public function getEarliestStartTime(Event $event): Carbon
+    {
+        $earliestStartTime = $event->start_time;
+
+        foreach ($event->timelines as $timeline) {
+            $timelineStart = Carbon::parse($timeline->start)->format('H:i:s');
+            $startDateTime = Carbon::parse($timeline->start_date->format('Y-m-d') . '
+             ' . $timelineStart);
+            if ($startDateTime->isBefore($earliestStartTime)) {
+                $earliestStartTime = $startDateTime;
+            }
+        }
+
+        foreach ($event->shifts as $shift) {
+            $shiftStart = Carbon::parse($shift->start)->format('H:i:s');
+            $shiftStartDate = Carbon::parse($shift->start_date)->format('Y-m-d');
+            $startDateTime = Carbon::parse($shiftStartDate . ' ' . $shiftStart);
+            if ($startDateTime->isBefore($earliestStartTime)) {
+                $earliestStartTime = $startDateTime;
+            }
+        }
+
+        return $earliestStartTime;
+    }
+
+    // get latest end time of all timelines and shifts of an event
+
+    public function getLatestEndTime(Event $event): Carbon
+    {
+        $latestEndTime = $event->end_time;
+
+        foreach ($event->timelines as $timeline) {
+            $timelineEnd = Carbon::parse($timeline->end)->format('H:i:s');
+            $endDateTime = Carbon::parse($timeline->end_date->format('Y-m-d') . ' ' . $timelineEnd);
+            if ($endDateTime->isAfter($latestEndTime)) {
+                $latestEndTime = $endDateTime;
+            }
+        }
+
+        foreach ($event->shifts as $shift) {
+            $shiftEnd = Carbon::parse($shift->end)->format('H:i:s');
+            $shiftEndDate = Carbon::parse($shift->end_date)->format('Y-m-d');
+            $endDateTime = Carbon::parse($shiftEndDate . ' ' . $shiftEnd);
+            if ($endDateTime->isAfter($latestEndTime)) {
+                $latestEndTime = $endDateTime;
+            }
+        }
+
+        return $latestEndTime;
+    }
 }

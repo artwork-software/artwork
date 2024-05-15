@@ -10,8 +10,9 @@
                          :shift-qualifications="shiftQualifications"
             />
         </div>
+
         <!-- Empty -->
-        <div class="w-[175px] rounded-lg flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
+        <div class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
             <IconCirclePlus class="h-6 w-6 rounded-full bg-artwork-buttons-create text-white p-0.5 hover:bg-artwork-buttons-hover cursor-pointer transition-all" />
         </div>
     </div>

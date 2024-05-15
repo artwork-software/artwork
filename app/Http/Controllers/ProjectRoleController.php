@@ -3,16 +3,23 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Project\Models\ProjectRole;
+use Artwork\Modules\Project\Services\ProjectRoleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ProjectRoleController extends Controller
 {
+
+    public function __construct(
+        private readonly ProjectRoleService $projectRoleService
+    ) {
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): \Inertia\Response
     {
         return Inertia::render('Settings/ProjectRoles', [
             'projectRoles' => ProjectRole::all()
@@ -22,7 +29,7 @@ class ProjectRoleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -30,15 +37,15 @@ class ProjectRoleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
-        ProjectRole::create($request->only(['name']));
+        $this->projectRoleService->createByRequest($request->all());
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ProjectRole $projectRole)
+    public function show(ProjectRole $projectRole): void
     {
         //
     }
@@ -46,7 +53,7 @@ class ProjectRoleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ProjectRole $projectRole)
+    public function edit(ProjectRole $projectRole): void
     {
         //
     }
@@ -54,21 +61,16 @@ class ProjectRoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProjectRole $projectRole)
+    public function update(Request $request, ProjectRole $projectRole): void
     {
-        $projectRole->update($request->only(['name']));
+        $this->projectRoleService->updateByRequest($projectRole, $request->all());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ProjectRole $projectRole)
+    public function destroy(ProjectRole $projectRole): void
     {
-        // remove the project role form all project users
-        DB::table('project_user')->whereJsonContains('roles', $projectRole->id)->update([
-            'roles' => DB::raw('JSON_REMOVE(roles, "$[0]")')
-        ]);
-
-        $projectRole->delete();
+        $this->projectRoleService->delete($projectRole);
     }
 }

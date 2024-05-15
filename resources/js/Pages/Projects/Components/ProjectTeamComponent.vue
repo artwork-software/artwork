@@ -13,11 +13,7 @@
                 {{ $t('Project management') }}
             </span>
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in project.project_managers">
-                <img :data-tooltip-target="user.id"
-                     :src="user.profile_photo_url"
-                     :alt="user.name"
-                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                <UserTooltip :user="user"/>
+                <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
             </div>
         </div>
         <div class="mb-3">
@@ -29,8 +25,7 @@
                      <div class="flex">
                          <div class="flex mt-2" v-for="(user, index) in project.usersArray">
                              <div class="" v-if="user?.pivot_roles?.includes(role.id)" :class="index !== 0 ? '' : '-mr-3'">
-                                 <ToolTipDefault tooltip-text="alhgkasghakjghaksjgkajshfgkjahfgkahjfdlkghdfakjghkdaflhgfkldahgkdahglkadhfglkhfaldkhgakdjhgjadfhglkadfghflkdahgklhdfgkhadflkghdakfjhgdlakfghlkdafhgklad" :top="true" />
-                                 <UserPopoverTooltip :user="user" width="11" height="11" />
+                                 <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
                              </div>
                          </div>
                      </div>
@@ -52,11 +47,7 @@
                     </div>
                 </div>
                 <div class="flex -mr-3 mt-2" v-for="user in this.onlyTeamMember">
-                    <img :data-tooltip-target="user.id"
-                         :src="user.profile_photo_url"
-                         :alt="user.name"
-                         class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
-                    <UserTooltip :user="user"/>
+                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
                 </div>
             </div>
         </div>

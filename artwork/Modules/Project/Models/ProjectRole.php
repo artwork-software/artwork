@@ -2,9 +2,13 @@
 
 namespace Artwork\Modules\Project\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $name
+ */
 class ProjectRole extends Model
 {
     use HasFactory;

@@ -535,4 +535,9 @@ class UserController extends Controller
     {
         $user->update($request->only('compact_mode'));
     }
+
+    public function updateShowCrafts(User $user, Request $request): void
+    {
+        $user->update($request->only('show_crafts'));
+    }
 }

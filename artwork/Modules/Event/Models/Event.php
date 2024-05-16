@@ -374,6 +374,11 @@ class Event extends Model
             return 540;
         }
 
+
+        if ($pixelHeight < 540) {
+            return 540;
+        }
+
         if ($pixelHeight > (int)config('shift.max_shift_height')) {
             return (int)config('shift.max_shift_height');
         }

@@ -27,7 +27,7 @@ class ServiceProviderShiftPlanResource extends JsonResource
             'shifts' => $this->getShiftsAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
             'shift_ids' => $this->getShiftIdsBetweenStartDateAndEndDate($this->startDate, $this->endDate),
-            'shift_qualifications' => $this->shiftQualifications
+            'shift_qualifications' => $this->shiftQualifications,
         ];
     }
 

@@ -37,6 +37,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
+                    :crafts="crafts"
                 />
 
             </div>
@@ -103,7 +104,8 @@ export default {
         'allShiftsCommitted',
         'personalFilters',
         'rooms',
-        'user_filters'
+        'user_filters',
+        'crafts'
     ],
     emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal'],
     data() {

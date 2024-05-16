@@ -14,11 +14,11 @@
             </div>
             <div v-for="(time) in timeLine">
                 <div @click="showAddTimeLineModal = true" class="text-xs bg-gray-900 p-2 text-white my-1" :style="{height: time.time_line_height + 'px'}" v-if="time.start !== null && time.end !== null">
-                    <p>
-                        {{ time.start_date }} - {{ time.end_date }}
+                    <p v-if="time.start_date === time.end_date">
+                        {{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.end }}
                     </p>
-                    <p>
-                        {{ time.start }} - {{ time.end }}
+                    <p v-else>
+                        {{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.formatted_dates.end_date }} {{ time.end }}
                     </p>
                     <p class="text-xs" v-html="time.description"></p>
                 </div>

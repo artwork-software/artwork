@@ -12,6 +12,7 @@
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
+                                      :crafts="crafts"
                 />
             </div>
 
@@ -46,7 +47,7 @@
                                     <td v-for="day in days" style="width:200px;" class="max-h-28 overflow-y-auto cell">
                                         <div v-for="event in room[day.full_day].events.data" class="mb-1">
                                             <SingleShiftPlanEvent
-                                                v-if="event.shifts.length > 0"
+                                                v-if="checkIfEventHasShiftsToDisplay(event)"
                                                 :multiEditMode="multiEditMode"
                                                 :user-for-multi-edit="userForMultiEdit"
                                                 :highlightMode="highlightMode"
@@ -102,8 +103,15 @@
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
-                            <tr class="flex w-full py-1">
-                                <th class="w-44"></th>
+                            <tr class="flex w-full py-2">
+                                <th class="w-44">
+                                    <BaseFilter onlyIcon="true" left="true">
+                                        <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
+                                            <CraftFilter :crafts="crafts" is_tiny/>
+                                        </div>
+                                    </BaseFilter>
+
+                                </th>
                                 <th class="flex items-center pl-2 py-1">
                                     <Switch @click="toggleHighlightMode"
                                             :class="[highlightMode ?
@@ -221,7 +229,7 @@
                                                      :expected-hours="user.expectedWorkingHours"
                                                      :planned-hours="user.plannedWorkingHours"
                                                      :type="user.type"
-                                                     :color="craft.color"
+                                                     :color="null"
                                         />
                                         <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                            :item="user.element"
@@ -231,7 +239,7 @@
                                                            :userForMultiEdit="userForMultiEdit"
                                                            :multiEditMode="multiEditMode"
                                                            @addUserToMultiEdit="addUserToMultiEdit"
-                                                           :color="craft.color"
+                                                           :color="null"
                                         />
                                         <HighlightUserCell v-else
                                                            :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -240,7 +248,7 @@
                                                            :planned-hours="user.plannedWorkingHours"
                                                            :type="user.type"
                                                            @highlightShiftsOfUser="highlightShiftsOfUser"
-                                                           :color="craft.color"/>
+                                                           :color="null"/>
                                     </th>
                                     <td v-for="day in days">
                                         <div class="w-[12.375rem] p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)" :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
@@ -341,11 +349,16 @@ import TableHead from "@/Components/Table/TableHead.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
 import { SelectorIcon } from "@heroicons/vue/solid";
 import ShiftsQualificationsAssignmentModal from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import {IconChevronDown, IconFileText, IconX} from "@tabler/icons-vue";
+import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        CraftFilter,
+        IconChevronDown, IconX, IconFileText, BaseFilter,
         ShiftsQualificationsAssignmentModal,
         TableBody,
         TableHead,
@@ -464,12 +477,21 @@ export default {
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            return this.crafts.map(craft => ({
-                name: craft.name,
-                id: craft.id,
-                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
-                color: craft.color
-            }));
+            if (this.$page.props.user.show_crafts.length === 0){
+                return this.crafts.map(craft => ({
+                    name: craft.name,
+                    id: craft.id,
+                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
+                    color: craft?.color
+                }));
+            } else {
+                return this.crafts.filter(craft => this.$page.props.user.show_crafts.includes(craft.id)).map(craft => ({
+                    name: craft.name,
+                    id: craft.id,
+                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
+                    color: craft?.color
+                }));
+            }
         },
         usersWithNoCrafts() {
             return this.dropUsers.filter(user =>
@@ -478,6 +500,13 @@ export default {
         },
     },
     methods: {
+        checkIfEventHasShiftsToDisplay(event) {
+            if(this.$page.props.user.show_crafts.length === 0){
+                return event.shifts.length > 0;
+            } else {
+                return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts.includes(shift.craft.id));
+            }
+        },
         showDropFeedback(feedback) {
             this.dropFeedback = feedback;
             setTimeout(() => {

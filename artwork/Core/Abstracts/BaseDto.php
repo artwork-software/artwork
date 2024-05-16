@@ -8,8 +8,11 @@ use JsonSerializable;
 
 abstract class BaseDto implements JsonSerializable, Arrayable
 {
-    final public function __construct()
+    final public function __construct(array $data = [])
     {
+        foreach($data as $key => $value) {
+            $this->{$key} = $value;
+        }
     }
 
     final public static function newInstance(): static

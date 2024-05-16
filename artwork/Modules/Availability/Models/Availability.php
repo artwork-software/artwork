@@ -4,12 +4,15 @@ namespace Artwork\Modules\Availability\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
-* @property int $id
+ * @property int $id
  * @property string $available_type
  * @property int $available_id
  * @property Carbon $start_time
@@ -79,13 +82,32 @@ class Availability extends Model
         return $this->conflicts()->exists();
     }
 
-    public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function series(): HasOne
     {
         return $this->hasOne(AvailabilitySeries::class, 'id', 'series_id');
     }
 
-    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function conflicts(): HasMany
     {
         return $this->hasMany(AvailabilitiesConflict::class, 'availability_id', 'id');
+    }
+
+    public function scopeBetweenDates(
+        Builder $builder,
+        Carbon  $startDate,
+        Carbon  $endDate
+    ): Builder
+    {
+        return $builder->whereBetween('date', [$startDate, $endDate]);
+    }
+
+    public function scopeByDate(Builder $builder, Carbon $date): Builder
+    {
+        return $builder->where('date', $date);
+    }
+
+    public function scopeOrderedByDate(Builder $builder, string $direction = 'ASC'): Builder
+    {
+        return $builder->orderBy('date', $direction);
     }
 }

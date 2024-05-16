@@ -11,8 +11,8 @@
                              :templates="budget?.templates ?? loadedProjectInformation['BudgetTab']?.budget.templates"
                              :selected-sum-detail="budget?.selectedSumDetail ?? loadedProjectInformation['BudgetTab']?.budget.selectedSumDetail"
                              :money-sources="moneySources ?? loadedProjectInformation['BudgetTab']?.moneySources"
-                             :budget-access="projectWriteIds ?? headerObject?.projectWriteIds"
-                             :project-manager="projectManagerIds ?? headerObject?.projectManagerIds"
+                             :budget-access="project.access_budget ?? headerObject?.access_budget"
+                             :project-manager="project.managerUsers ?? headerObject?.managerUsers"
                              :first_project_budget_tab_id="this.first_project_budget_tab_id"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
             />

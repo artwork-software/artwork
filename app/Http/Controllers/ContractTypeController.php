@@ -27,7 +27,8 @@ class ContractTypeController extends Controller
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         ContractType::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'color' => $request->color
         ]);
         return Redirect::back();
     }
@@ -60,5 +61,12 @@ class ContractTypeController extends Controller
         $contractType->restore();
 
         return Redirect::route('projects.settings.trashed');
+    }
+
+    public function update(Request $request, ContractType $contractType): \Illuminate\Http\RedirectResponse
+    {
+        $contractType->update($request->only(['name', 'color']));
+
+        return Redirect::back();
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Shift Settings')">
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
                 <h2 class="headline1">{{$t('Shift Settings')}}</h2>
@@ -39,48 +39,26 @@
                         </div>
                     </div>
                     <div class="hidden sm:flex sm:flex-col sm:items-end">
-                        <Menu as="div" class="my-auto mt-3 relative">
-                            <div class="flex items-center -mt-1">
-                                <MenuButton
-                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                    <IconDotsVertical stroke-width="1.5"
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                        aria-hidden="true"/>
-                                </MenuButton>
-                            </div>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="cursor-pointer z-30 origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem @click="updateCraft(craft)"
-                                            v-slot="{ active }">
-                                            <a
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconEdit stroke-width="1.5"
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
-                                                {{$t('Edit')}}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem @click="openDeleteCraftModal(craft)"
-                                            v-slot="{ active }">
-                                            <a
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconTrash stroke-width="1.5"
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
-                                                {{$t('Delete')}}
-                                            </a>
-                                        </MenuItem>
-                                    </div>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
+                        <BaseMenu class="mt-3">
+                            <MenuItem @click="updateCraft(craft)"
+                                      v-slot="{ active }">
+                                <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconEdit stroke-width="1.5"
+                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                              aria-hidden="true"/>
+                                    {{$t('Edit')}}
+                                </a>
+                            </MenuItem>
+                            <MenuItem @click="openDeleteCraftModal(craft)"
+                                      v-slot="{ active }">
+                                <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <IconTrash stroke-width="1.5"
+                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                               aria-hidden="true"/>
+                                    {{$t('Delete')}}
+                                </a>
+                            </MenuItem>
+                        </BaseMenu>
                     </div>
                 </li>
             </ul>
@@ -102,9 +80,9 @@
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="type in notRelevantEventTypes" :key="type.id" :value="type" v-slot="{ active, selected }">
-                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                        <li @click="addRelevantEventType(type)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
-                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
                                             </span>
                                         </li>
@@ -197,11 +175,13 @@ import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib],
     components: {
+        BaseMenu,
         TabComponent,
         AddButtonSmall,
         ErrorComponent,

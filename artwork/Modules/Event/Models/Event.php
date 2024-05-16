@@ -10,7 +10,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\SubEvents\Models\SubEvent;
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
@@ -347,5 +347,10 @@ class Event extends Model
         return $builder
             ->whereDate('start_time', '<=', $carbon)
             ->whereDate('end_time', '>=', $carbon);
+    }
+
+    public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
+    {
+        return $builder->orderBy('start_time', $direction);
     }
 }

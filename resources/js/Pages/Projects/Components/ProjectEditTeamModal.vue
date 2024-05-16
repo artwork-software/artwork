@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_team.svg">
             <div class="mx-3">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ $t('Assign project team') }}
                 </div>
-                <XIcon @click="closeModal(false)"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="xsLight">
                     {{ $t('Type the name of the users you want to add to the team. The users receive read access to this project. Only the project manager can grant further rights.') }}
                 </div>
@@ -28,7 +23,7 @@
                             v-if="(department_and_user_search_results.users
                                 || department_and_user_search_results.departments)
                                  && department_and_user_query.length > 0"
-                            class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                            class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                             <div class="border-gray-200">
@@ -78,7 +73,7 @@
                             </div>
                             <button type="button" @click="deleteUserFromProjectTeam(user)">
                                 <span class="sr-only">{{ $t('Remove user from team') }}</span>
-                                <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
                         <div class="flex justify-between items-center my-1.5 h-5 w-80">
@@ -152,8 +147,7 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -165,11 +159,13 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "ProjectEditTeamModal",
     components: {
+        BaseModal,
         FormButton,
         Dropdown,
         JetDialogModal,

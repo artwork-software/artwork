@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ServiceProviderShowResource;
 use Artwork\Modules\Craft\Models\Craft;
-use Artwork\Modules\EventType\Models\EventType;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateServiceProviderShiftQualificationRequest;
-use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\ServiceProviderShiftQualificationService;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,14 +24,6 @@ use Inertia\Response;
 
 class ServiceProviderController extends Controller
 {
-    public function index(): void
-    {
-    }
-
-    public function create(): void
-    {
-    }
-
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $serviceProvider = ServiceProvider::create(
@@ -42,30 +35,26 @@ class ServiceProviderController extends Controller
 
     public function show(
         ServiceProvider $serviceProvider,
-        CalendarController $shiftPlan,
-        ShiftQualificationRepository $shiftQualificationRepository
+        ServiceProviderService $serviceProviderService,
+        UserService $userService,
+        EventService $eventService,
+        RoomService $roomService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
+        ShiftQualificationService $shiftQualificationService
     ): Response {
-        $showCalendar = $shiftPlan->createCalendarDataForServiceProviderShiftPlan($serviceProvider);
-
-        return Inertia::render('ServiceProvider/Show', [
-            'serviceProvider' => new ServiceProviderShowResource($serviceProvider),
-            'dateValue' => $showCalendar['dateValue'],
-            'daysWithEvents' => $showCalendar['daysWithEvents'],
-            'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
-            'rooms' => Room::all(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => Project::all(),
-            'shifts' => $serviceProvider
-                ->shifts()
-                ->with(['event', 'event.project', 'event.room'])
-                ->orderBy('start', 'ASC')
-                ->get(),
-            'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
-        ]);
-    }
-
-    public function edit(ServiceProvider $serviceProvider): void
-    {
+        return Inertia::render(
+            'ServiceProvider/Show',
+            $serviceProviderService->createShowDto(
+                $serviceProvider,
+                $userService,
+                $eventService,
+                $roomService,
+                $eventTypeService,
+                $projectService,
+                $shiftQualificationService
+            )
+        );
     }
 
     public function update(Request $request, ServiceProvider $serviceProvider): void

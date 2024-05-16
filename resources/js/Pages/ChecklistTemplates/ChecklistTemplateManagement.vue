@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Checklist templates')">
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="flex flex-1 flex-wrap">
                 <div class="flex justify-between w-full">
@@ -43,65 +43,35 @@
                     </div>
                     <div class="flex">
                         <div class="flex mr-8 items-center">
-                            <Menu as="div" class="my-auto relative">
-                                <div class="flex">
-                                    <MenuButton
-                                        class="flex">
-                                        <IconDotsVertical stroke-width="1.5"
-                                            class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                            aria-hidden="true"/>
-                                    </MenuButton>
-                                    <div v-if="this.$page.props.show_hints && index === 0"
-                                         class="absolute flex w-40 ml-6">
-                                        <div>
-                                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
-                                        </div>
-                                        <div class="flex">
-                                                    <span
-                                                        class="ml-2 hind mt-2">{{ $t('Edit a template')}}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                        <div class="py-1">
-                                            <MenuItem v-slot="{ active }">
-                                                <a :href="getEditHref(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                    <IconEdit  stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{ $t('edit')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="duplicateTemplate(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconCopy  stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{$t('Duplicate')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="openDeleteTemplateModal(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{ $t('Delete') }}
-                                                </a>
-                                            </MenuItem>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
+                            <BaseMenu>
+                                <MenuItem v-slot="{ active }">
+                                    <a :href="getEditHref(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                        <IconEdit  stroke-width="1.5"
+                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                   aria-hidden="true"/>
+                                        {{ $t('edit')}}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="duplicateTemplate(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconCopy  stroke-width="1.5"
+                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                   aria-hidden="true"/>
+                                        {{$t('Duplicate')}}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="openDeleteTemplateModal(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash stroke-width="1.5"
+                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                   aria-hidden="true"/>
+                                        {{ $t('Delete') }}
+                                    </a>
+                                </MenuItem>
+                            </BaseMenu>
                         </div>
                     </div>
                 </li>
@@ -121,100 +91,62 @@
                     </div>
                     <div class="flex">
                         <div class="flex mr-8 items-center">
-                            <Menu as="div" class="my-auto relative">
-                                <div class="flex">
-                                    <MenuButton
-                                        class="flex">
-                                        <IconDotsVertical stroke-width="1.5"
-                                            class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                            aria-hidden="true"/>
-                                    </MenuButton>
-                                    <div v-if="this.$page.props.show_hints && index === 0"
-                                         class="absolute flex w-40 ml-6">
-                                        <div>
-                                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
-                                        </div>
-                                        <div class="flex">
-                                                    <span
-                                                        class="ml-2 hind mt-2">{{ $t('Edit a template')}}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                        <div class="py-1">
-                                            <MenuItem v-slot="{ active }">
-                                                <a :href="getEditHref(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                    <IconEdit stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{ $t('edit')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="duplicateTemplate(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconCopy stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{$t('Duplicate')}}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="openDeleteTemplateModal(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    {{ $t('Delete') }}
-                                                </a>
-                                            </MenuItem>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
+                            <BaseMenu>
+                                <MenuItem v-slot="{ active }">
+                                    <a :href="getEditHref(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                        <IconEdit stroke-width="1.5"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  aria-hidden="true"/>
+                                        {{ $t('edit')}}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="duplicateTemplate(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconCopy stroke-width="1.5"
+                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                  aria-hidden="true"/>
+                                        {{$t('Duplicate')}}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="openDeleteTemplateModal(template)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash stroke-width="1.5"
+                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                   aria-hidden="true"/>
+                                        {{ $t('Delete') }}
+                                    </a>
+                                </MenuItem>
+                            </BaseMenu>
                         </div>
                     </div>
                 </li>
             </ul>
         </div>
         <!-- Delete Project Modal -->
-        <jet-dialog-modal :show="showDeleteTemplateModal" @close="closeDeleteTemplateModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{$t('Delete checklist template')}}
-                    </div>
-                    <XIcon @click="closeDeleteTemplateModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="errorText">
-                        {{ $t('Are you sure you want to delete the checklist template {0}?', [templateToDelete.name])}}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+        <BaseModal @closed="closeDeleteTemplateModal" v-if="showDeleteTemplateModal" modal-image="/Svgs/Overlays/illu_warning.svg">
+            <div class="mx-4">
+                <div class="headline1 my-2">
+                    {{$t('Delete checklist template')}}
+                </div>
+                <div class="errorText">
+                    {{ $t('Are you sure you want to delete the checklist template {0}?', [templateToDelete.name])}}
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteTemplate">
-                            {{  $t('Delete') }}
-                        </button>
-                        <div class="flex my-auto">
+                            @click="deleteTemplate">
+                        {{  $t('Delete') }}
+                    </button>
+                    <div class="flex my-auto">
                             <span @click="closeDeleteTemplateModal()"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
-                        </div>
                     </div>
                 </div>
-
-            </template>
-
-        </jet-dialog-modal>
+            </div>
+        </BaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :show="showSuccessModal"
@@ -243,12 +175,16 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        BaseModal,
+        BaseMenu,
         AddButtonSmall,
         SuccessModal,
         UserPopoverTooltip,

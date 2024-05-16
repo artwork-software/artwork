@@ -74,7 +74,7 @@
         <FormButton :text="$t('Move events')"
                    @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"
-                   class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
+                   class="!border-2 !border-artwork-buttons-create bg-transparent !text-artwork-buttons-create hover:!text-white hover:!bg-artwork-buttons-hover !hover:border-transparent resize-none"
                    :text="$t('Delete events')"/>
     </div>
 

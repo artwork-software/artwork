@@ -17,7 +17,7 @@
             </div>
 
             <div class="ml-5 flex items-center" >
-                <button class="subpixel-antialiased flex items-center linkText cursor-pointer"
+                <button class="subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
                         @click="openHistoryModal()">
                     <IconChevronRight stroke-width="1.5"
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"

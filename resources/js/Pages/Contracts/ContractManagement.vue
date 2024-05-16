@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Contracts')">
         <div class="">
             <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -16,7 +16,7 @@
                                                     <label class="text-xs">{{ $t('Reset') }}</label>
                                                 </button>
                                             </div>
-                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-artwork-navigation-background border-none mt-2">
                                                 <BaseFilterDisclosure :title="$t('Additional costs')">
                                                     <div v-for="(filter, index) in filter.costsFilter">
                                                         <div class="relative flex items-center">

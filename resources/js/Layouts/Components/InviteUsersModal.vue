@@ -1,11 +1,6 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeUserModal(false)">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="closeUserModal" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <IconX stroke-width="1.5" @click="closeUserModal(false)"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
-                       aria-hidden="true"/>
                 <div class="mt-8 headline1">
                     {{ $t('Invite users') }}
                 </div>
@@ -25,7 +20,7 @@
                         <jet-input-error :message="form.error" class="mt-2"/>
                         <div class="flex m-2">
                             <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[emailInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
                                 <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                             </button>
@@ -34,6 +29,9 @@
                     <ul v-if="showInvalidEmailErrorText" class="mt-4">
                         <li class="errorText">{{ $t('This is not a valid e-mail address.')}}</li>
                     </ul>
+                    <span v-if="helpText.length > 0" class="text-red-500 text-xs mt-1">
+                        {{ helpText }}
+                    </span>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center sDark">
                             {{ email }}
@@ -198,8 +196,8 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+
+        </BaseModal>
 </template>
 <script>
 
@@ -217,11 +215,13 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "InviteUsersModal",
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         ToolTipDefault,
         FormButton,
         AddButtonSmall,
@@ -245,7 +245,9 @@ export default {
         all_permissions: Object,
         departments: Array,
         roles: Array,
-        permission_presets: Array
+        permission_presets: Array,
+        users: Array,
+        invitedUsers: Array,
     },
     data() {
         return {
@@ -267,7 +269,8 @@ export default {
             }),
             showGlobalRoles: true,
             showInvalidEmailErrorText: false,
-            usedPermissionPresets: []
+            usedPermissionPresets: [],
+            helpText: "",
         }
     },
     computed: {
@@ -341,6 +344,29 @@ export default {
             if (!emailRegex.test(this.emailInput)) {
                 this.showInvalidEmailErrorText = true;
                 return;
+            }
+
+            if(this.form.user_emails?.includes(this.emailInput)){
+                this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                return;
+            }
+
+            // check if email is already in users
+            if (this.users) {
+                const user = this.users.find(user => user.email === this.emailInput);
+                if (user) {
+                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                    return;
+                }
+            }
+
+            // check if email is already in invited users
+            if (this.invitedUsers) {
+                const user = this.invitedUsers.find(user => user.email === this.emailInput);
+                if (user) {
+                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
+                    return;
+                }
             }
 
             this.showInvalidEmailErrorText = false;

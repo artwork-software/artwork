@@ -48,6 +48,19 @@ use Laravel\Scout\Searchable;
  * @property Collection<MoneySource> $moneySources
  * @property Collection<User> $access_budget
  * @property Collection<Contract> $contracts
+ * @property Collection<EventType> $shiftRelevantEventTypes
+ * @property Collection<Event> $events
+ * @property Collection<Department> $departments
+ * @property Collection<Checklist> $checklists
+ * @property Collection<User> $shift_contact
+ * @property Collection<User> $users
+ * @property Collection<User> $writeUsers
+ * @property Collection<User> $delete_permission_users
+ * @property Collection<Sector> $sectors
+ * @property Collection<Category> $categories
+ * @property Collection<Genre> $genres
+ * @property Collection<Room> $rooms
+ * @property CostCenter $costCenter
  */
 class Project extends Model
 {

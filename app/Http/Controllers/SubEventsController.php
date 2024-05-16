@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\SubEvents\Models\SubEvent;
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Illuminate\Http\Request;
 
 class SubEventsController extends Controller

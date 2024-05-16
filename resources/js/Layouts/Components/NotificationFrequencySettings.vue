@@ -11,7 +11,7 @@
         <div v-for="(settings, groupType) in notificationSettings" class="mt-10 pb-10 border-b-secondary border-b">
 
             <div class="flex items-start">
-                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-buttonBlue' :
+                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-artwork-buttons-create' :
                                     'bg-gray-300',
             'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                 <span aria-hidden="true"
@@ -27,7 +27,7 @@
             <div v-if="!groupDisabled(settings)">
                 <div v-for="type in settings">
                     <div class="flex justify-between mt-6 ml-9 items-start">
-                        <Switch @click="toggleEmail(type)" :class="[type.enabled_email ? 'bg-buttonBlue' :
+                        <Switch @click="toggleEmail(type)" :class="[type.enabled_email ? 'bg-artwork-buttons-create' :
                                                 'bg-gray-300',
                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                             <span aria-hidden="true"
@@ -56,7 +56,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute z-10 mt-10 bg-primary shadow-lg max-h-64 p-1 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    class="absolute z-10 mt-10 bg-artwork-navigation-background shadow-lg max-h-64 p-1 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <div>
                                         <ListboxOption
                                             @click="changeFrequency(type, frequency)"
@@ -66,11 +66,11 @@
                                             v-for="frequency in notificationFrequencies"
                                             :key="frequency.value"
                                         >
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span :class="[frequency.value === type.frequency ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                          {{$t(frequency.title)}}
                                                     </span>
-                                                <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                             <CheckIcon v-if="frequency.value === type.frequency" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                     </span>
                                             </li>

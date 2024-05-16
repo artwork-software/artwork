@@ -1,15 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img v-if="type === 'accept'" src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-            <img v-else-if="type === 'decline'" src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="true" :modal-image="type === 'accept' ? '/Svgs/Overlays/illu_success.svg' : '/Svgs/Overlays/illu_warning.svg'">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Room request')}} {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}
                 </div>
-                <IconX stroke-width="1.5" @click="closeModal(false)"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="w-10/12" :class="type === 'accept' ? 'successText' : 'errorText'">
                     {{ $t('Would you like to submit a room request for')}} {{ this.rooms.find(room => room.id === request.room_id).name}} | {{this.eventTypes.find(eventType => eventType.id === request.event_type_id).name}},
                     {{request.eventName}}  {{ request.project_id ? '|' : ''}} {{this.projects.find(project => project.id === request.project_id)?.name}} | {{formatDate(request.start_time)}} - {{ formatDate(request.end_time)}}
@@ -23,8 +17,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -36,11 +29,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'AnswerEventRequestComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         XIcon,

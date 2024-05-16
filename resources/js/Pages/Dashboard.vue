@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout title="Startseite">
         <div class="max-w-screen-2xl mb-40 ml-14 mr-40">
             <div class="headline1 mb-10">
                 Dashboard
@@ -58,7 +58,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to calendar")}}</a>
+                            <a :href="route('events')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to calendar")}}</a>
                         </div>
                     </div>
                     <div>
@@ -107,7 +107,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
+                            <a :href="route('shifts.plan')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
                     </div>
                 </div>
@@ -166,7 +166,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('notifications.index')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
+                            <a :href="route('notifications.index')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
                         </div>
                     </div>
                     <div>
@@ -227,7 +227,7 @@
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
+                            <a :href="route('tasks.own')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
                         </div>
                     </div>
                 </div>
@@ -248,13 +248,10 @@ import {
     DotsHorizontalIcon,
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
-import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
@@ -285,9 +282,10 @@ export default defineComponent({
     components: {
         DashboardCard,
         NotificationBlock,
-        NotificationButtons, NewUserToolTip,
-        CheckIcon, VueMathjax,
-        IndividualCalendarAtGlanceComponent,
+        NotificationButtons,
+        NewUserToolTip,
+        CheckIcon,
+        VueMathjax,
         AppLayout,
         CalendarIcon,
         ChevronRightIcon,
@@ -298,11 +296,9 @@ export default defineComponent({
         ChevronLeftIcon,
         DotsHorizontalIcon,
         ChevronDownIcon,
-        CalendarComponent,
         TeamIconCollection,
         Link,
         TeamTooltip,
-        IndividualCalendarComponent
     },
     created() {
         Echo.private('events')
@@ -322,9 +318,6 @@ export default defineComponent({
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
-        },
-        changeAtAGlance() {
-            this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
             return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});

@@ -24,7 +24,7 @@
                 <div class="flex w-full flex-wrap">
                     <div v-for="checklist in project.public_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"/>
@@ -49,98 +49,75 @@
                                                 alt=""/>
                                         </div>
                                     </div>
-                                    <Menu
-                                        v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
-                                        as="div" class="my-auto relative">
-                                        <div class="flex">
-                                            <MenuButton
-                                                class="flex bg-tagBg p-0.5 rounded-full">
-                                                <IconDotsVertical stroke-width="1.5"
-                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                    aria-hidden="true"/>
-                                            </MenuButton>
-                                        </div>
-                                        <transition
-                                            enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                            <MenuItems
-                                                class="z-40 origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                <div class="py-1">
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openEditChecklistTeamsModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconUserPlus stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Assign users') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openEditChecklistModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconEdit stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Edit') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }"
-                                                              v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
-                                                        <a @click="checkAllTasks(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconListCheck stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Mark all tasks as completed') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }"
-                                                              v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
-                                                        <a @click="uncheckAllTasks(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconListDetails stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Mark all tasks as unfinished') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        v-slot="{ active }">
-                                                        <a @click="createTemplateFromChecklist(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconFilePlus stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Save as template') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a href="#"
-                                                           @click="duplicateChecklist(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconCopy stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Duplicate') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openDeleteChecklistModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconTrash stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Delete') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                </div>
-                                            </MenuItems>
-                                        </transition>
-                                    </Menu>
+                                    <BaseMenu v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))">
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="openEditChecklistTeamsModal(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconUserPlus stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                {{ $t('Assign users') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="openEditChecklistModal(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconEdit stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
+                                                {{ $t('Edit') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
+                                            <a @click="checkAllTasks(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconListCheck stroke-width="1.5"
+                                                               class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
+                                                               aria-hidden="true"/>
+                                                {{ $t('Mark all tasks as completed') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
+                                            <a @click="uncheckAllTasks(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconListDetails stroke-width="1.5"
+                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
+                                                                 aria-hidden="true"/>
+                                                {{ $t('Mark all tasks as unfinished') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem
+                                            v-slot="{ active }">
+                                            <a @click="createTemplateFromChecklist(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconFilePlus stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                {{ $t('Save as template') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a href="#"
+                                               @click="duplicateChecklist(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconCopy stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
+                                                {{ $t('Duplicate') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="openDeleteChecklistModal(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconTrash stroke-width="1.5"
+                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                           aria-hidden="true"/>
+                                                {{ $t('Delete') }}
+                                            </a>
+                                        </MenuItem>
+                                    </BaseMenu>
                                 </div>
                             </div>
                             <div class="flex w-full mt-6"
@@ -216,50 +193,26 @@
                                                             />
                                                         </span>
                                                     </span>
-                                                    <Menu
-                                                        v-if="this.canEditComponent && (this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin'))"
-                                                        as="div" class="ml-3 relative z-10"
-                                                        v-show="showMenu === element.id">
-                                                        <div class="flex items-center">
-                                                            <MenuButton
-                                                                class="flex bg-tagBg p-0.5 rounded-full">
-                                                                <IconDotsVertical stroke-width="1.5"
-                                                                    class="flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                                    aria-hidden="true"/>
-                                                            </MenuButton>
-                                                        </div>
-                                                        <transition
-                                                            enter-active-class="transition ease-out duration-100"
-                                                            enter-from-class="transform opacity-0 scale-95"
-                                                            enter-to-class="transform opacity-100 scale-100"
-                                                            leave-active-class="transition ease-in duration-75"
-                                                            leave-from-class="transform opacity-100 scale-100"
-                                                            leave-to-class="transform opacity-0 scale-95">
-                                                            <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                <div class="py-1">
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditTaskModal(element, false)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <IconEdit stroke-width="1.5"
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            {{ $t('Edit') }}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="deleteTask(element)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <IconTrash stroke-width="1.5"
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            {{ $t('Delete') }}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                </div>
-                                                            </MenuItems>
-                                                        </transition>
-                                                    </Menu>
+                                                    <BaseMenu class="ml-3" v-if="this.canEditComponent && (this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin'))" v-show="showMenu === element.id">
+                                                        <MenuItem v-slot="{ active }">
+                                                            <a @click="openEditTaskModal(element, false)"
+                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <IconEdit stroke-width="1.5"
+                                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                          aria-hidden="true"/>
+                                                                {{ $t('Edit') }}
+                                                            </a>
+                                                        </MenuItem>
+                                                        <MenuItem v-slot="{ active }">
+                                                            <a @click="deleteTask(element)"
+                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <IconTrash stroke-width="1.5"
+                                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                           aria-hidden="true"/>
+                                                                {{ $t('Delete') }}
+                                                            </a>
+                                                        </MenuItem>
+                                                    </BaseMenu>
                                                 </div>
                                                 <div class="ml-16 text-sm text-secondary subpixel-antialiased"
                                                      :class="element.done ? 'text-secondary line-through' : 'text-primary'">
@@ -274,7 +227,7 @@
                     </div>
                     <div v-for="checklist in project.private_checklists"
                          class="flex w-full bg-white my-2 inputMain">
-                        <button class="bg-buttonBlue flex"
+                        <button class="bg-artwork-buttons-create flex"
                                 @click="changeChecklistStatus(checklist)">
                             <IconChevronUp  stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"
@@ -295,76 +248,54 @@
                                     <img class="h-9 w-9 rounded-full object-cover mr-3"
                                          :src="$page.props.user.profile_photo_url"
                                          alt=""/>
-                                    <Menu as="div" class="my-auto relative">
-                                        <div class="flex">
-                                            <MenuButton
-                                                class="flex bg-tagBg p-0.5 rounded-full">
-                                                <IconDotsVertical stroke-width="1.5"
-                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                    aria-hidden="true"
-                                                />
-                                            </MenuButton>
-                                        </div>
-                                        <transition
-                                            enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                            <MenuItems
-                                                class="origin-top-right z-30 absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                <div class="py-1">
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openEditChecklistModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconEdit  stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Edit') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="checkAllTasks(checklist.tasks)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconListCheck stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Mark all tasks as completed') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="createTemplateFromChecklist(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconFilePlus stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Save as template') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a href="#"
-                                                           @click="duplicateChecklist(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconCopy stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Duplicate') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openDeleteChecklistModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconTrash  stroke-width="1.5"
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            {{ $t('Delete') }}
-                                                        </a>
-                                                    </MenuItem>
-                                                </div>
-                                            </MenuItems>
-                                        </transition>
-                                    </Menu>
+                                    <BaseMenu>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="openEditChecklistModal(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconEdit  stroke-width="1.5"
+                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                           aria-hidden="true"/>
+                                                {{ $t('Edit') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="checkAllTasks(checklist.tasks)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconListCheck stroke-width="1.5"
+                                                               class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
+                                                               aria-hidden="true"/>
+                                                {{ $t('Mark all tasks as completed') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="createTemplateFromChecklist(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconFilePlus stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                {{ $t('Save as template') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a href="#"
+                                               @click="duplicateChecklist(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconCopy stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
+                                                {{ $t('Duplicate') }}
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="openDeleteChecklistModal(checklist)"
+                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconTrash  stroke-width="1.5"
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                {{ $t('Delete') }}
+                                            </a>
+                                        </MenuItem>
+                                    </BaseMenu>
                                 </div>
                             </div>
                             <div class="flex w-full mt-6"
@@ -429,49 +360,27 @@
                                                             />
                                                         </span>
                                                     </span>
-                                                    <Menu as="div" class="my-auto relative ml-3 z-10"
-                                                          v-show="showMenu === element.id">
-                                                        <div class="flex">
-                                                            <MenuButton
-                                                                class="flex bg-tagBg p-0.5 rounded-full">
-                                                                <IconDotsVertical stroke-width="1.5"
-                                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                                    aria-hidden="true"/>
-                                                            </MenuButton>
-                                                        </div>
-                                                        <transition
-                                                            enter-active-class="transition ease-out duration-100"
-                                                            enter-from-class="transform opacity-0 scale-95"
-                                                            enter-to-class="transform opacity-100 scale-100"
-                                                            leave-active-class="transition ease-in duration-75"
-                                                            leave-from-class="transform opacity-100 scale-100"
-                                                            leave-to-class="transform opacity-0 scale-95">
-                                                            <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                <div class="py-1">
-                                                                    <MenuItem v-slot="{ active }">
+                                                    <BaseMenu class="ml-3" v-show="showMenu === element.id">
+                                                        <MenuItem v-slot="{ active }">
                                                                         <span
                                                                             @click="openEditTaskModal(element, true)"
-                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <IconEdit stroke-width="1.5"
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
+                                                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                      aria-hidden="true"/>
                                                                             {{ $t('Edit') }}
                                                                         </span>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="deleteTask(element)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <IconTrash stroke-width="1.5"
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            {{ $t('Delete') }}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                </div>
-                                                            </MenuItems>
-                                                        </transition>
-                                                    </Menu>
+                                                        </MenuItem>
+                                                        <MenuItem v-slot="{ active }">
+                                                            <a @click="deleteTask(element)"
+                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <IconTrash stroke-width="1.5"
+                                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                           aria-hidden="true"/>
+                                                                {{ $t('Delete') }}
+                                                            </a>
+                                                        </MenuItem>
+                                                    </BaseMenu>
                                                 </div>
                                                 <div v-if="!element.done"
                                                      class="ml-16 text-sm text-secondary subpixel-antialiased">
@@ -494,16 +403,11 @@
         :editingChecklistTeams="editingChecklistTeams"
         @closed="closeEditChecklistTeamsModal"
     />
-    <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeAddTaskModal" v-if="addingTask" modal-image="/Svgs/Overlays/illu_task_new.svg">
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
                     {{ $t('New task') }}
                 </div>
-                <XIcon @click="closeAddTaskModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Create a new task. You can also add a deadline and a comment.') }}
                 </div>
@@ -547,7 +451,7 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                     <div class="border-gray-200">
@@ -577,7 +481,7 @@
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
                                         <XIcon
-                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -600,19 +504,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeEditTaskModal" v-if="editingTask" modal-image="/Svgs/Overlays/illu_task_edit.svg">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{ $t('Edit task') }}
                 </div>
-                <XIcon @click="closeEditTaskModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"
-                />
                 <div class="mt-12">
                     <div class="mb-2">
                         <div class="relative flex w-full">
@@ -651,7 +548,7 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
@@ -678,7 +575,7 @@
                                     </span>
                                     <button type="button" @click="deleteUserFromTask(index)">
                                         <span class="sr-only">{{ $t('Remove user from the task') }}</span>
-                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                     </button>
                                 </div>
                             </span>
@@ -697,24 +594,18 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeDeleteChecklistModal" v-if="deletingChecklist" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ $t('Delete checklist') }}
                 </div>
-                <XIcon @click="closeDeleteChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
                     {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                    <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
                             @click="deleteChecklistFromProject()">
                         {{ $t('Delete') }}
                     </button>
@@ -725,18 +616,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeEditChecklistModal" v-if="editingChecklist" modal-image="/Svgs/Overlays/illu_checklist_edit.svg">
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     {{ $t('Edit checklist') }}
                 </div>
-                <XIcon @click="closeEditChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Edit your checklist') }}
                 </div>
@@ -781,18 +666,12 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    </BaseModal>
+    <BaseModal @closed="closeAddChecklistModal" v-if="addingChecklist" modal-image="/Svgs/Overlays/illu_checklist_new.svg">
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     {{ $t('New checklist') }}
                 </div>
-                <XIcon @click="closeAddChecklistModal"
-                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     {{ $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.') }}
                 </div>
@@ -815,16 +694,16 @@
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    class="absolute z-10 mt-1 w-full bg-artwork-navigation-background shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    :key="'keineVorlage'"
                                                    :value="{name:'',id:null}"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ $t('No template') }}
                                             </span>
-                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                            <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                              class="h-5 w-5 flex text-success"
                                                              aria-hidden="true"
@@ -837,12 +716,12 @@
                                                    :key="template.id"
                                                    :value="template"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
                                                 :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ template.name }}
                                             </span>
-                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                            <span :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                   <IconCircleCheckFilled v-if="selected"
                                                              class="h-5 w-5 flex text-success"
                                                              aria-hidden="true"
@@ -896,8 +775,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -956,6 +834,8 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -969,6 +849,8 @@ export default {
         'canEditComponent'
     ],
     components: {
+        BaseModal,
+        BaseMenu,
         AddButtonBig,
         FormButton,
         AddButtonSmall,

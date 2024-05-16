@@ -1,15 +1,9 @@
 <template>
-    <jet-dialog-modal :show="showModal" @close="closeModal(false)">
-        <template #content>
-            <img v-if="mode === 'warning'" src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <img v-else src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal(false)" v-if="showModal" :modal-image="mode === 'warning' ? '/Svgs/Overlays/illu_warning.svg' : '/Svgs/Overlays/illu_success.svg'">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{$t('Room request')}} {{ mode === 'warning' ? $t('Confirm') : $t('Reject')}}
                 </div>
-                <IconX stroke-width="1.5" @click="closeModal(false)"
-                    class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                    aria-hidden="true"/>
                 <div :class="[mode === 'warning' ? 'text-error' : 'text-success']">
                     {{$t('Would you like to submit a room request for')}} {{requestToApprove.room.name}} | {{requestToApprove.eventType.name}}, {{requestToApprove.eventName}} | {{requestToApprove.project.name}} | {{requestToApprove.start}} - {{requestToApprove.end}} {{ mode === 'warning' ? $t('Confirm') : $t('Reject')}}?
                 </div>
@@ -22,8 +16,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -35,11 +28,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ConfirmationComponent',
     mixins: [Permissions, IconLib],
     components: {
+        BaseModal,
         FormButton,
         JetDialogModal,
         XIcon,

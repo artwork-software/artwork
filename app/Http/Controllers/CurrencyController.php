@@ -17,7 +17,8 @@ class CurrencyController extends Controller
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         Currency::create([
-            'name' => $request->get('name')
+            'name' => $request->get('name'),
+            'color' => $request->color
         ]);
         return Redirect::back();
     }
@@ -50,5 +51,12 @@ class CurrencyController extends Controller
         $currency->restore();
 
         return Redirect::route('projects.settings.trashed');
+    }
+
+    public function update(Request $request, Currency $currency): \Illuminate\Http\RedirectResponse
+    {
+        $currency->update($request->only(['name', 'color']));
+
+        return Redirect::back();
     }
 }

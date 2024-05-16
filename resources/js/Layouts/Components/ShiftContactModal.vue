@@ -1,11 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="$emit('closeModal')">
-        <template #content>
-            <img alt="Schichtinformation festlegen" src="/Svgs/Overlays/illu_appointment_edit.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="$emit('closeModal')"
-                   class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="$emit('closeModal')" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
             <div class="headline1">
                 {{ $t('Contact persons') }}
             </div>
@@ -84,8 +78,7 @@
             <div class="flex justify-center mt-2">
                 <FormButton :text="$t('Save')" @click="changeShiftContacts"/>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -96,6 +89,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],
@@ -107,6 +101,7 @@ export default {
         'projectManagers'
     ],
     components: {
+        BaseModal,
         FormButton,
         XCircleIcon,
         UserTooltip,

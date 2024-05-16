@@ -1,5 +1,5 @@
 <template>
-    <AppLayout>
+    <AppLayout :title="$t('Sort rooms')">
         <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
                 <div class="flex mb-2">

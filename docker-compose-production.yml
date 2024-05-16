@@ -1,0 +1,29 @@
+services:
+  artwork:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/release.Dockerfile
+    pull_policy: always
+    ports:
+      - '${APP_PORT:-80}:80'
+      - '${PUSHER_PORT:-6001}:6001'
+      - '${PUSHER_METRICS_PORT:-9601}:9601'
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "artwork-files:/var/www/html/storage"
+      - 'artwork-db:/var/lib/mysql'
+      - 'artwork-redis:/data'
+      - 'artwork-meilisearch:/meili_data_v2'
+volumes:
+  artwork-db:
+    driver: local
+  artwork-meilisearch:
+    driver: local
+  artwork-redis:
+    driver: local
+  artwork-files:
+    driver: local

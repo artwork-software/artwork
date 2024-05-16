@@ -45,4 +45,9 @@ readonly class CraftService
         $this->craftRepository->detachUsers($craft);
         $this->craftRepository->delete($craft);
     }
+
+    public function getAssignableByAllCrafts(): Collection
+    {
+        return $this->craftRepository->getAssignableByAllCrafts();
+    }
 }

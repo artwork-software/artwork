@@ -1,15 +1,10 @@
 <template>
-    <jet-dialog-modal @close="this.close()">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="this.close()" v-if="true" modal-image="/Svgs/Overlays/illu_project_new.svg">
             <div class="mx-4">
                 <div>
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         {{ $t('Export project budgets') }}
                     </div>
-                    <XIcon @click="this.close()"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
                 </div>
                 <div class="mt-4">
                     <span class="text-sm xsLight">
@@ -38,14 +33,13 @@
                 <div class="mt-5 mb-3 w-full grid justify-items-center">
                     <button @click="downloadExportProjectBudgetsByBudgetDeadline()"
                             type="button"
-                            class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                            class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-artwork-buttons-create focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                         <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
                         <p class="text-sm">{{ $t('Export') }}</p>
                     </button>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -56,10 +50,12 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DocumentReportIcon, XIcon} from "@heroicons/vue/outline";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'ProjectExportBudgetsByBudgetDeadlineModal',
     components: {
+        BaseModal,
         DocumentReportIcon,
         DisclosurePanel,
         DisclosureButton,

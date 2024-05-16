@@ -1,67 +1,38 @@
 <template>
-    <app-layout>
+    <app-layout :title="room.name">
         <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
-                <div class="flex">
+                <div class="flex items-center">
                     <h2 class="headline1">{{ room.name }}</h2>
-                    <Menu as="div" class="my-auto relative ml-2">
-                        <div class="flex"
-                             v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                    aria-hidden="true"/>
-                            </MenuButton>
-                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="ml-2 hind mt-1">{{$t('Edit the room')}}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openEditRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                            <IconEdit stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{$t('edit')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateRoom(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconCopy stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Duplicate')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openSoftDeleteRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconTrash  stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{$t('In the recycle bin')}}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu :right="false" v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin" class="ml-2">
+                        <MenuItem v-slot="{ active }">
+                            <a @click="openEditRoomModal(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                <IconEdit stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{$t('edit')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a href="#" @click="duplicateRoom(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconCopy stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Duplicate')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a @click="openSoftDeleteRoomModal(room)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconTrash  stroke-width="1.5"
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                {{$t('In the recycle bin')}}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
                 <div v-if="room.room_history[0]"
                      class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
@@ -74,10 +45,10 @@
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer text-artwork-buttons-create"
                             @click="openRoomHistoryModal()">
                         <ChevronRightIcon
-                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                            class="-mr-0.5 h-4 w-4 group-hover:text-white"
                             aria-hidden="true"/>
                         {{$t('View history')}}
                     </button>
@@ -109,11 +80,19 @@
             <div>
                 <div v-if="calendarType && calendarType === 'daily'">
                     <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                        <CalendarComponent :selected-date="selectedDate"
+                        <CalendarComponent initial-view="day"
+                                           :project="null"
+                                           :atAGlance="false"
+                                           :room="this.room"
+                                           :personal-filters="personalFilters"
+                                           :filter-options="filterOptions"
+                                           :eventsWithoutRoom="eventsWithoutRoom"
+                                           :events="this.calendar[this.formatSelectedDate(this.selectedDate)]?.events?.data ?? []"
                                            :dateValue="dateValue"
                                            :eventTypes=this.event_types
-                                           initial-view="day"
+                                           :rooms="rooms"
                                            :user_filters="user_filters"
+                                           :selected-date="selectedDate"
                                            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                         />
                     </div>
@@ -124,7 +103,7 @@
                                                   :eventsWithoutRoom="eventsWithoutRoom"
                                                   :dateValue="dateValue"
                                                   :eventTypes=this.event_types
-                                                 :calendarData="calendar"
+                                                  :calendarData="calendar"
                                                   :days="days"
                                                   :rooms="rooms"
                                                   :user_filters="user_filters"
@@ -136,16 +115,11 @@
         </div>
 
         <!-- Raum Bearbeiten-->
-        <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
                 <div class="mx-3">
                     <div class="headline1 my-2">
                         {{$t('Edit room')}}
                     </div>
-                    <XIcon @click="closeEditRoomModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="mt-4">
                         <div class="flex mt-10 relative">
                             <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
@@ -208,8 +182,7 @@
 
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Success Modal -->
         <SuccessModal
             :title="successHeading"
@@ -218,16 +191,11 @@
             @closed="closeSuccessModal"
         />
         <!-- Approve Request Modal -->
-        <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Confirm room occupancy')}}
                     </div>
-                    <XIcon @click="closeApproveRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="successText">
                         {{$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')}}
                     </div>
@@ -303,7 +271,7 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
                             {{$t('Commitments')}}
@@ -314,19 +282,13 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Decline Request Modal -->
-        <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Cancel room reservation')}}
                     </div>
-                    <XIcon @click="closeDeclineRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
@@ -413,8 +375,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -497,6 +458,8 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 
 export default {
@@ -530,6 +493,8 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        BaseModal,
+        BaseMenu,
         FormButton,
         SuccessModal,
         ConfirmationComponent,
@@ -674,6 +639,10 @@ export default {
         }
     },
     methods: {
+        formatSelectedDate(selectedDate) {
+            let parts = selectedDate.split('-');
+            return parts[2] + '.' + parts[1] + '.' + parts[0];
+        },
         getGermanWeekdayAbbreviation(englishWeekday) {
             switch (englishWeekday) {
                 case 'Monday':

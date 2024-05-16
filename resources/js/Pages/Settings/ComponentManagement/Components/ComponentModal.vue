@@ -47,15 +47,12 @@
                                 <div>
                                     <label for="componentName" class="xsLight">{{$t('Name of the component')}}</label>
                                     <div class="mt-2">
-                                        <input :disabled="this.componentToEdit?.special"
+                                        <input
                                                type="text"
                                                v-model="componentName"
                                                id="componentName"
                                                :class="[
-                                                   this.componentToEdit?.special ?
-                                                        'bg-gray-200 cursor-not-allowed' :
-                                                        '',
-                                                        'h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300'
+                                                   'h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300'
                                                ]"
                                         />
                                     </div>
@@ -241,7 +238,7 @@
                                                             </span>
                                                         </div>
                                                         <button type="button" @click="this.removeUser(user)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                     <div v-for="department in this.modulePermissions.departments"
@@ -254,7 +251,7 @@
                                                             </span>
                                                         </div>
                                                         <button type="button" @click="this.removeDepartment(department)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -325,7 +322,7 @@
                                                             </div>
                                                         </div>
                                                         <button type="button" @click="this.removeUser(user)">
-                                                            <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                                            <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                                                         </button>
                                                     </div>
                                                     <div v-for="department in this.modulePermissions.departments"
@@ -345,7 +342,7 @@
                                                             </div>
                                                         </div>
                                                         <button type="button" @click="this.removeDepartment(department)">
-                                                            <XCircleIcon class="text-buttonBlue h-5 w-5 hover:text-error"/>
+                                                            <XCircleIcon class="text-artwork-buttons-create h-5 w-5 hover:text-error"/>
                                                         </button>
                                                     </div>
                                                 </div>

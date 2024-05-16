@@ -1,14 +1,9 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeDeclineRequestModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeDeclineRequestModal" v-if="true" modal-image="/Svgs/Overlays/illu_warning.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Cancel booking')}}
                 </div>
-                <IconX stroke-width="1.5" @click="closeDeclineRequestModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="flex flex-wrap w-full items-center">
                     <div class="w-full items-center flex-wrap">
 
@@ -89,8 +84,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -106,6 +100,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "DeclineEventModal",
@@ -116,6 +111,7 @@ export default {
         }
     },
     components: {
+        BaseModal,
         FormButton,
         UserPopoverTooltip,
         NewUserToolTip,

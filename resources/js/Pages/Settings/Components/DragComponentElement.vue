@@ -31,10 +31,7 @@ export default {
                 <ComponentIcons :type="component.type" />
             </div>
             <div class="text-center text-sm font-bold w-20">
-                <div v-if="component.special" class="truncate">
-                    {{ $t(component.name) }}
-                </div>
-                <div v-else class="w-20 truncate">
+                <div class="w-20 truncate">
                     {{ component.name }}
                     <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
                         {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>

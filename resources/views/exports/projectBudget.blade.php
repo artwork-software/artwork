@@ -1,4 +1,4 @@
-@inject("formulaService", "App\Support\Services\ProjectBudgetExportFormulaService")
+@inject("formulaService", "Artwork\Modules\Budget\Services\BudgetExportFormulaService")
 <table>
     <thead>
     <tr>

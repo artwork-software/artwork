@@ -18,6 +18,7 @@ class GenreController extends Controller
     {
         Genre::create([
             'name' => $request->name,
+            'color' => $request->color
         ]);
         return Redirect::back();
     }
@@ -31,7 +32,7 @@ class GenreController extends Controller
      */
     public function update(Request $request, Genre $genre): RedirectResponse
     {
-        $genre->update($request->only('name'));
+        $genre->update($request->only(['name', 'color']));
 
         return Redirect::back();
     }

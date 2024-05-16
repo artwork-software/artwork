@@ -3,67 +3,39 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-                <Menu as="div" class="ml-4" v-if="this.$can('edit budget templates')">
-                    <div class="flex">
-                        <MenuButton
-                            class="flex bg-tagBg p-0.5 rounded-full">
-                            <IconDotsVertical
-                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                <BaseMenu class="ml-4" v-if="this.$can('edit budget templates')">
+                    <MenuItem v-slot="{ active }">
+                        <a @click="openRenameTableModal()"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <TrashIcon
+                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                 aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition ease-out duration-100"
-                        enter-from-class="transform opacity-0 scale-95"
-                        enter-to-class="transform opacity-100 scale-100"
-                        leave-active-class="transition ease-in duration-75"
-                        leave-from-class="transform opacity-100 scale-100"
-                        leave-to-class="transform opacity-0 scale-95">
-                        <MenuItems
-                            class="z-50 absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a @click="openRenameTableModal()"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        {{ $t('Rename') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-if="table.is_template" v-slot="{ active }">
-                                    <a @click="deleteBudgetTemplate()"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                        {{ $t('Delete') }}
-                                    </a>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
+                            {{ $t('Rename') }}
+                        </a>
+                    </MenuItem>
+                    <MenuItem v-if="table.is_template" v-slot="{ active }">
+                        <a @click="deleteBudgetTemplate()"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                            {{ $t('Delete') }}
+                        </a>
+                    </MenuItem>
+                </BaseMenu>
             </div>
         </div>
         <div class="w-full flex flex-row-reverse mb-4 items-center">
-            <button v-if="!table.is_template"
-                    @click="downloadBudgetExport(project.id)"
-                    type="button"
-                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+            <button v-if="!table.is_template" @click="downloadBudgetExport(project.id)" type="button" class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
                 <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
             </button>
             <div v-if="!table.is_template">
                 <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IconZoomOut v-else
-                             @click="$emit('changeProjectHeaderVisualisation',false)"
-                             class="h-7 w-7 mx-2 cursor-pointer"
+                <IconZoomOut v-else @click="$emit('changeProjectHeaderVisualisation',false)" class="h-7 w-7 mx-2 cursor-pointer"
                 />
             </div>
             <SwitchGroup as="div" v-if="!table.is_template">
-                <Switch v-model="userExcludeCommentedBudgetItems"
-                        :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
-                        <span aria-hidden="true"
-                              :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                <Switch v-model="userExcludeCommentedBudgetItems" :class="[userExcludeCommentedBudgetItems ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-artwork-buttons-hover focus:ring-offset-2']">
+                        <span aria-hidden="true" :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span">
                     <span class="pl-1" :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
@@ -109,7 +81,7 @@
                                             <transition leave-active-class="transition ease-in duration-100"
                                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                 <ListboxOptions :static="column.showColorMenu"
-                                                    class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                    class="absolute w-24 z-10 mt-12 rounded-lg bg-artwork-navigation-background shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                                     <ListboxOption as="template" class=""
                                                                    v-for="color in colors"
                                                                    :key="color"
@@ -149,82 +121,61 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <Menu as="div" v-show="showMenu === column.id" v-if="this.$can('edit budget templates') || !table.is_template">
-                                <div class="flex">
-                                    <MenuButton
-                                        class="flex bg-tagBg p-0.5 rounded-full">
-                                        <IconDotsVertical
-                                            class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                            aria-hidden="true"/>
-                                    </MenuButton>
-                                </div>
-                                <transition
-                                    enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                        <div class="py-1">
-                                            <MenuItem v-slot="{ active }">
-                                                <a @click="column.showColorMenu = true"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-                                                    </svg>
-                                                    {{ $t('Coloring') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="!column.is_locked">
-                                                <a @click="lockColumn(column.id)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                    </svg>
-                                                    {{ $t('Lock') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="column.is_locked">
-                                                <a @click="unlockColumn(column.id)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconLockOpen stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                    {{ $t('Unlock') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a v-show="index > 2" @click="deleteColumn(column.id)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                    {{ $t('Delete') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a v-show="index > 2" @click="duplicateColumn(column.id)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                    {{ $t('Duplicate') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
-                                                <a @click="updateColumnCommented(column.id, false)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
-                                                    {{ $t('Include column') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
-                                                <a @click="updateColumnCommented(column.id, true)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
-                                                    {{ $t('Exclude column') }}
-                                                </a>
-                                            </MenuItem>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
+                            <BaseMenu dots-color="text-artwork-context-dark" v-show="showMenu === column.id" v-if="this.$can('edit budget templates') || !table.is_template">
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="column.showColorMenu = true"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                                        </svg>
+                                        {{ $t('Coloring') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="!column.is_locked">
+                                    <a @click="lockColumn(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                        </svg>
+                                        {{ $t('Lock') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="column.is_locked">
+                                    <a @click="unlockColumn(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconLockOpen stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Unlock') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="index > 2" @click="deleteColumn(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Delete') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="index > 2" @click="duplicateColumn(column.id)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Duplicate') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
+                                    <a @click="updateColumnCommented(column.id, false)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        {{ $t('Include column') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
+                                    <a @click="updateColumnCommented(column.id, true)"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        {{ $t('Exclude column') }}
+                                    </a>
+                                </MenuItem>
+                            </BaseMenu>
                             <div v-if="showMenu !== column.id" class="w-5"></div>
                         </div>
                     </th>
@@ -234,7 +185,7 @@
                         {{ $t('New column') }}
                     </div>
                         <button v-if="this.$can('edit budget templates') || !table.is_template"
-                                class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover"
+                                class="font-bold mr-2 ml-2 text-xl hover:bg-artwork-buttons-hover p-1 mt-3 bg-secondary border-white border-2 rounded-full items-center uppercase shadow-sm text-secondaryHover transition-all duration-150"
                                 @click="openAddColumnModal()">
                             <IconPlus stroke-width="1.5" class="h-4 w-4"/>
                         </button>
@@ -260,74 +211,53 @@
                                 <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
-                        <Menu v-if="!table.is_template" as="div" class="">
-                            <div class="flex">
-                                <MenuButton
-                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                    <IconDotsVertical stroke-width="1.5"
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                        aria-hidden="true"/>
-                                </MenuButton>
-                            </div>
-                            <transition
-                                enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="absolute w-56 -translate-x-full shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                    <div class="py-1">
-                                        <MenuItem v-slot="{ active }">
-                                            <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                {{ $t('Import template') }}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                {{ $t('Import from project') }}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconFilePlus class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                {{ $t('Save as template') }}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconRestore
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
-                                                {{ $t('Reset') }}
-                                            </a>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a v-show="table.is_template" @click="deleteBudgetTemplate()"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                {{ $t('Delete') }}
-                                            </a>
-                                        </MenuItem>
-                                    </div>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
+                            <BaseMenu dots-color="text-artwork-context-dark" v-if="!table.is_template">
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Import template') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Import from project') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconFilePlus class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Save as template') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconRestore
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        {{ $t('Reset') }}
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="table.is_template" @click="deleteBudgetTemplate()"
+                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                        {{ $t('Delete') }}
+                                    </a>
+                                </MenuItem>
+                            </BaseMenu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
                              v-if="this.$can('edit budget templates') || !table.is_template"
-                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+                            <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                                 {{ $t('Main position') }}
                                 <IconCirclePlus
-                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></IconCirclePlus>
+                                    class="h-6 w-6 ml-12 text-secondaryHover bg-artwork-buttons-create rounded-full"></IconCirclePlus>
                             </div>
                         </div>
                         <table class="w-[97%] mb-6">
@@ -367,7 +297,7 @@
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
-                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
                                     </div>
                                 </td>
@@ -452,7 +382,7 @@
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
-                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
                                     </div>
                                 </td>
@@ -516,16 +446,11 @@
             </div>
         </div>
     </div>
-    <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeSuccessModal" v-if="showSuccessModal" modal-image="/Svgs/Overlays/illu_success.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ successHeading }}
                 </div>
-                <IconX stroke-width="1.5" @click="closeSuccessModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="successText">
                     {{ successDescription }}
                 </div>
@@ -537,18 +462,12 @@
                     </button>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="showVerifiedModal" @close="closeVerifiedModal">
-        <template #content>
-            <img :alt="$t('New column')" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+        </BaseModal>
+    <BaseModal @closed="closeVerifiedModal" v-if="showVerifiedModal" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ verifiedTexts.title }} <span class="xsDark">{{ verifiedTexts.positionTitle }}</span>
                 </div>
-                <IconX stroke-width="1.5" @click="closeVerifiedModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="mb-3 xsLight" v-html="verifiedTexts.description"></div>
                 <div class="mb-2">
                     <div class="relative w-full">
@@ -566,14 +485,14 @@
                                                         overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
                                     <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
+                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess?.includes(user.id)">
                                             <p @click="addUserToVerifiedUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
                                             </p>
                                         </div>
                                         <!-- Project Members -->
-                                        <div class="flex-1 text-sm py-4" v-if="projectMembers.includes(user.id) && !budgetAccess.includes(user.id)">
+                                        <div class="flex-1 text-sm py-4" v-if="projectMembers?.includes(user.id) && !budgetAccess?.includes(user.id)">
                                             <p @click="addUserToVerifiedUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
@@ -595,7 +514,7 @@
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
                                     <IconX stroke-width="1.5"
-                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
                                 </button>
                             </div>
                         </span>
@@ -603,17 +522,14 @@
                 </div>
                 <div class="mt-6 flex justify-center">
                     <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
                             @click="submitVerifiedModal">
                         {{ $t('Request verification') }}
                     </button>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
-    <jet-dialog-modal :show="showBudgetAccessModal" @close="closeBudgetAccessModal">
-        <template #content>
-            <img :alt="$t('New column')" src="/Svgs/Overlays/illu_budget_access.svg" class="-ml-6 -mt-8 mb-4"/>
+        </BaseModal>
+    <BaseModal @closed="closeBudgetAccessModal" v-if="showBudgetAccessModal" modal-image="/Svgs/Overlays/illu_budget_access.svg">
             <div class="mx-4">
                 <div class="headline1 my-2">
                     {{ $t('Grant budget access') }}
@@ -621,19 +537,15 @@
                 <p>
                     {{ $t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?') }}
                 </p>
-                <IconX stroke-width="1.5" @click="closeBudgetAccessModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
                 <div class="mt-6">
                     <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
-                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
                             @click="submitVerifiedModalWithBudgetAccess">
                         {{ $t('Issue requests & budget access') }}
                     </button>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
     <add-column-component
         v-if="showAddColumnModal"
         :project="project"
@@ -704,6 +616,7 @@
                      :confirm="$t('Close message')"
                      @closed="this.$page.props.flash.error = null;"
     />
+
 </template>
 
 <script>
@@ -750,11 +663,15 @@ import Permissions from "@/Mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        BaseModal,
+        BaseMenu,
         SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,
         SwitchGroup,
@@ -905,7 +822,7 @@ export default {
         },
         projectMembers: function () {
             let projectMemberArray = [];
-            this.project.users.forEach(member => {
+            this.project.users?.forEach(member => {
                     projectMemberArray.push(member.id)
                 }
             )
@@ -1253,6 +1170,7 @@ export default {
             });
         },
         openCellDetailModal(cell, type) {
+            console.log('hier');
             Inertia.get(
                 route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {

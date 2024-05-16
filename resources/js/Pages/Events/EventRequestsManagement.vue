@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Occupancy requests')">
         <div class="">
             <div class="max-w-screen-lg mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -48,11 +48,11 @@
                                             {{eventRequest.name}}
                                         </div>
                                         <button v-if="this.hasAdminRole()" @click="openApproveRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create  focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                         <button v-if="this.hasAdminRole()" @click="openDeclineRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-artwork-buttons-create focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                     </div>
@@ -100,16 +100,11 @@
             </div>
         </div>
         <!-- Approve Request Modal -->
-        <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal" modal-image="/Svgs/Overlays/illu_success.svg" >
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{ $t('Confirm room occupancy')}}
                     </div>
-                    <XIcon @click="closeApproveRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="successText">
                         {{ $t('Are you sure you want to accept the room allocation?')}}
                     </div>
@@ -184,7 +179,7 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
                             {{$t('Commitments')}}
@@ -195,19 +190,13 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
         <!-- Decline Request Modal -->
-        <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" modal-image="/Svgs/Overlays/illu_warning.svg" >
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         {{$t('Cancel room reservation')}}
                     </div>
-                    <XIcon @click="closeDeclineRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
                     <div class="errorText">
                         {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
@@ -293,8 +282,7 @@
                         </div>
                     </div>
                 </div>
-            </template>
-        </jet-dialog-modal>
+        </BaseModal>
     </app-layout>
 </template>
 
@@ -332,11 +320,13 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseModal,
         FormButton,
         UserPopoverTooltip,
         ListboxLabel,

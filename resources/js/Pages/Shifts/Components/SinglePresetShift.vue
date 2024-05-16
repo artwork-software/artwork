@@ -15,46 +15,26 @@
                 </svg>
             </div>
             <div>
-                <Menu as="div" class="relative">
-                    <div class="flex p-0.5 rounded-full">
-                        <MenuButton
-                            class="flex p-0.5 rounded-full">
-                            <IconDotsVertical
-                                stroke-width="1.5" class=" flex-shrink-0 h-4 w-4 my-auto"
-                                aria-hidden="true"/>
-                        </MenuButton>
-                    </div>
-                    <transition enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                        <MenuItems
-                            class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                            <div class="py-1">
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="showEditShiftModal = true"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                        <IconEdit stroke-width="1.5"
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        {{  $t('edit') }}
-                                    </a>
-                                </MenuItem>
-                                <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="deleteShift(presetShift.id)"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <IconTrash  stroke-width="1.5"
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        {{ $t('Delete') }}
-                                    </a>
-                                </MenuItem>
-                            </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
+                <BaseMenu dots-size="h-4 w-4">
+                    <MenuItem v-slot="{ active }">
+                        <a href="#" @click="showEditShiftModal = true"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                            <IconEdit stroke-width="1.5"
+                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                      aria-hidden="true"/>
+                            {{  $t('edit') }}
+                        </a>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <a href="#" @click="deleteShift(presetShift.id)"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                            <IconTrash  stroke-width="1.5"
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                            {{ $t('Delete') }}
+                        </a>
+                    </MenuItem>
+                </BaseMenu>
             </div>
         </div>
     </div>
@@ -96,6 +76,7 @@ import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPrese
 import {Inertia} from "@inertiajs/inertia";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",
@@ -106,6 +87,7 @@ export default defineComponent({
         }
     },
     components: {
+        BaseMenu,
         ShiftQualificationIconCollection,
         AddEditShiftPresetModal,
         AddShiftModal,

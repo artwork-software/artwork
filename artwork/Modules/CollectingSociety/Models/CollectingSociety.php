@@ -22,7 +22,8 @@ class CollectingSociety extends Model
     use Prunable;
 
     protected $fillable = [
-        'name'
+        'name',
+        'color'
     ];
 
     public function prunable(): Builder

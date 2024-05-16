@@ -1,7 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
-        <template #content>
-            <img alt="Neue Spalte" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
+    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
             <div class="mx-4">
                 <div class="headline1 my-2" v-if="!this.subEventToEdit">
                     {{$t('New sub-event')}}
@@ -15,10 +13,6 @@
                 <p>
                     {{ $t('Please note that the appointment must take place within the appointment group period.')}}
                 </p>
-
-                <IconX stroke-width="1.5" @click="closeModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
 
                 <div class="mt-6">
                     <div class="flex w-full py-2 gap-1">
@@ -231,8 +225,7 @@
                         :text="$t('Vouchers')"
                         />
                 </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -256,6 +249,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: "AddSubEventModal",
@@ -272,6 +266,7 @@ export default {
 
     },
     components: {
+        BaseModal,
         FormButton,
         SwitchLabel,
         Switch,

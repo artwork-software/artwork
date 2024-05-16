@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Project Settings')">
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>
@@ -19,6 +19,7 @@
                     :items="genres"
                     @add="addGenre"
                     @openDeleteModal="openDeleteGenreModal"
+                    @openEditModal="openEditGenreModal"
                 />
 
                 <ProjectSettingsItem
@@ -28,6 +29,7 @@
                     :items="categories"
                     @add="addCategory"
                     @openDeleteModal="openDeleteCategoryModal"
+                    @openEditModal="openEditCategoryModal"
                 />
 
                 <ProjectSettingsItem
@@ -37,15 +39,17 @@
                     :items="sectors"
                     @add="addSector"
                     @openDeleteModal="openDeleteSectorModal"
+                    @openEditModal="openEditSectorModal"
                 />
 
-                <ProjectSettingState
+                <ProjectSettingsItem
                     :title="$t('Project Status')"
                     :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')"
                     :input-label="$t('Enter Status')"
                     :items="states"
                     @add="addState"
                     @openDeleteModal="openDeleteStateModal"
+                    @openEditModal="openEditStateModal"
                 />
 
                 <ProjectSettingsItem
@@ -55,6 +59,7 @@
                     :items="contractTypes"
                     @add="addContractType"
                     @openDeleteModal="openDeleteContractTypeModal"
+                    @openEditModal="openEditContractTypeModal"
                 />
 
                 <ProjectSettingsItem
@@ -64,6 +69,7 @@
                     :items="companyTypes"
                     @add="addCompanyType"
                     @openDeleteModal="openDeleteCompanyTypeModal"
+                    @openEditModal="openEditCompanyTypeModal"
                 />
 
                 <ProjectSettingsItem
@@ -73,6 +79,7 @@
                     :items="collectingSocieties"
                     @add="addCollectingSociety"
                     @openDeleteModal="openDeleteCollectingSocietyModal"
+                    @openEditModal="openEditCollectingSocietyModal"
                 />
 
                 <ProjectSettingsItem
@@ -82,6 +89,7 @@
                     :items="currencies"
                     @add="addCurrency"
                     @openDeleteModal="openDeleteCurrencyModal"
+                    @openEditModal="openEditCurrencyModal"
                 />
             </div>
         </div>
@@ -161,7 +169,6 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
-import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
 import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
@@ -170,7 +177,6 @@ export default {
     mixins: [Permissions],
     components: {
         ProjectTabs,
-        ProjectSettingsEditModal,
         ProjectSettingState,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
@@ -221,9 +227,35 @@ export default {
         }
     },
     methods: {
-        addGenre(genreInput) {
+        openEditGenreModal(genre) {
+            this.$inertia.patch(route('genres.update', genre.id), {name: genre.name, color: genre.color}, { preserveScroll: true});
+        },
+        openEditCategoryModal(category) {
+            this.$inertia.patch(route('categories.update', category.id), {name: category.name, color: category.color}, { preserveScroll: true});
+        },
+        openEditSectorModal(sector) {
+            this.$inertia.patch(route('sectors.update', sector.id), {name: sector.name, color: sector.color}, { preserveScroll: true});
+        },
+        openEditContractTypeModal(contractType) {
+            this.$inertia.patch(route('contract_types.update', contractType.id), {name: contractType.name, color: contractType.color}, { preserveScroll: true});
+        },
+        openEditCompanyTypeModal(companyType) {
+            this.$inertia.patch(route('company_types.update', companyType.id), {name: companyType.name, color: companyType.color}, { preserveScroll: true});
+        },
+        openEditCollectingSocietyModal(collectingSociety) {
+            this.$inertia.patch(route('collecting_societies.update', collectingSociety.id), {name: collectingSociety.name, color: collectingSociety.color}, { preserveScroll: true});
+        },
+        openEditCurrencyModal(currency) {
+            this.$inertia.patch(route('currencies.update', currency.id), {name: currency.name, color: currency.color}, { preserveScroll: true});
+        },
+        openEditStateModal(state) {
+            console.log(state)
+            this.$inertia.patch(route('state.update', {projectStates: state.id}), {name: state.name, color: state.color}, { preserveScroll: true});
+        },
+
+        addGenre(genreInput, color) {
             if (genreInput !== '') {
-                this.$inertia.post(route('genres.store'), {name: genreInput}, { preserveScroll: true});
+                this.$inertia.post(route('genres.store'), {name: genreInput, color: color}, { preserveScroll: true});
             }
         },
         deleteGenre() {
@@ -239,9 +271,9 @@ export default {
             this.genreToDelete = null;
         },
 
-        addCategory(categoryInput) {
+        addCategory(categoryInput, color) {
             if (categoryInput !== '') {
-                this.$inertia.post(route('categories.store'), {name: categoryInput}, { preserveScroll: true});
+                this.$inertia.post(route('categories.store'), {name: categoryInput, color: color}, { preserveScroll: true});
             }
         },
         deleteCategory() {
@@ -257,9 +289,9 @@ export default {
             this.categoryToDelete = null;
         },
 
-        addSector(sectorInput) {
+        addSector(sectorInput, color) {
             if (sectorInput !== '') {
-                this.$inertia.post(route('sectors.store'), {name: sectorInput}, { preserveScroll: true});
+                this.$inertia.post(route('sectors.store'), {name: sectorInput, color: color}, { preserveScroll: true});
             }
         },
         deleteSector() {
@@ -275,9 +307,9 @@ export default {
             this.sectorToDelete = null;
         },
 
-        addContractType(contractTypeInput) {
+        addContractType(contractTypeInput,color) {
             if (contractTypeInput !== '') {
-                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput}, { preserveScroll: true});
+                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput, color: color}, { preserveScroll: true});
             }
         },
         deleteContractType() {
@@ -293,9 +325,9 @@ export default {
             this.contractTypeToDelete = null
         },
 
-        addCompanyType(companyTypeInput) {
+        addCompanyType(companyTypeInput, color) {
             if (companyTypeInput !== '') {
-                this.$inertia.post(route('company_types.store'), {name: companyTypeInput}, { preserveScroll: true});
+                this.$inertia.post(route('company_types.store'), {name: companyTypeInput, color: color}, { preserveScroll: true});
             }
         },
         deleteCompanyType() {
@@ -311,9 +343,9 @@ export default {
             this.companyTypeToDelete = null
         },
 
-        addCollectingSociety(collectingSocietyInput) {
+        addCollectingSociety(collectingSocietyInput, color) {
             if (collectingSocietyInput !== '') {
-                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput}, { preserveScroll: true});
+                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput, color: color}, { preserveScroll: true});
             }
         },
         deleteCollectingSociety() {
@@ -328,9 +360,9 @@ export default {
             this.deletingCollectingSociety = false
             this.collectingSocietyToDelete = null
         },
-        addCurrency(currencyInput){
+        addCurrency(currencyInput, color){
           if(currencyInput !== ''){
-              this.$inertia.post(route('currencies.store'), {name: currencyInput}, { preserveScroll: true});
+              this.$inertia.post(route('currencies.store'), {name: currencyInput, color: color}, { preserveScroll: true});
           }
         },
         openDeleteCurrencyModal(currency){

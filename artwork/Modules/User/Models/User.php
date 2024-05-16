@@ -88,6 +88,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Task> $done_tasks
  * @property Collection<Task> $privateTasks
  * @property Collection<Event> $events
+ * @property Collection<Craft> $crafts
+ * @property UserShiftCalendarFilter $shift_calendar_filter
+ * @property UserCalendarFilter $calendar_filter
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -449,5 +452,10 @@ class User extends Model implements
         return $builder
             ->where('first_name', 'like', $name . '%')
             ->orWhere('last_name', 'like', $name . '%');
+    }
+
+    public function scopeCanWorkShifts(Builder $builder): Builder
+    {
+        return $builder->where('can_work_shifts', true);
     }
 }

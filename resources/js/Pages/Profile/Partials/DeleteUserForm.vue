@@ -20,6 +20,7 @@
             </div>
 
             <!-- Delete Account Confirmation Modal -->
+            <!-- TODO: Edit Modal -->
             <jet-dialog-modal :show="confirmingUserDeletion" @close="closeModal">
                 <template #title>
                     {{$t('Delete Account')}}
@@ -60,9 +61,11 @@
     import JetInput from '@/Jetstream/Input.vue'
     import JetInputError from '@/Jetstream/InputError.vue'
     import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
+    import BaseModal from "@/Components/Modals/BaseModal.vue";
 
     export default defineComponent({
         components: {
+            BaseModal,
             JetActionSection,
             JetDangerButton,
             JetDialogModal,

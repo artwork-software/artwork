@@ -1,11 +1,6 @@
 <template>
-    <jet-dialog-modal :show="show" @close="this.close">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <XIcon @click="this.close"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
-                       aria-hidden="true"/>
                 <div class="mt-8 headline1">
                     {{this.mode === 'create' ? $t('Create permission preset') : $t('Edit permission preset')}}
                 </div>
@@ -73,8 +68,7 @@
                     />
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
 </template>
 
 <script>
@@ -85,9 +79,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
 import Label from "@/Jetstream/Label.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     components: {
+        BaseModal,
         FormButton,
         Label,
         TextToolTip,

@@ -99,7 +99,7 @@ export default {
 </script>
 
 <template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project">
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab">
         <div class="my-10 w-full">
             <div v-for="component in currentTab.components"  :class="removeML(component.component?.type)">
                 <Component
@@ -140,7 +140,7 @@ export default {
                         <div class="border-gray-200">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                                 <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name" @click="currentSideBarTab = index"
-                                      :class="[index === currentSideBarTab ? 'text-artwork-buttons-create border-artwork-buttons-create' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-medium font-semibold cursor-pointer']"
+                                      :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
                                       :aria-current="index === currentSideBarTab ? 'page' : undefined">
                                     {{ tab.name }}
                                 </div>

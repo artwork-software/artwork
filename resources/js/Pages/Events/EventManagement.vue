@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <app-layout :title="$t('Calendar')">
         <div>
             <div v-if="calendarType && calendarType === 'daily'">
                 <div class="mr-4">
@@ -104,8 +104,7 @@ export default defineComponent({
             Inertia.reload({
                 data: {
                     atAGlance: this.atAGlance,
-                },
-                only: ['calendar', 'eventsAtAGlance']
+                }
             })
         }
     },

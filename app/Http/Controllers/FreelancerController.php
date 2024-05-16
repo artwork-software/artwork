@@ -2,34 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerShowResource;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateFreelancerShiftQualificationRequest;
-use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\FreelancerShiftQualificationService;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Config\Repository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Session\SessionManager;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class FreelancerController extends Controller
 {
-    public function __construct(
-        private readonly CalendarService $calendarService
-    ) {
-    }
-
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $freelancer = Freelancer::create(
@@ -39,57 +39,52 @@ class FreelancerController extends Controller
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function show(
+        Request $request,
+        SessionManager $sessionManager,
+        Repository $config,
         Freelancer $freelancer,
-        CalendarController $shiftPlan,
-        ShiftQualificationRepository $shiftQualificationRepository
+        FreelancerService $freelancerService,
+        UserService $userService,
+        EventService $eventService,
+        CalendarService $calendarService,
+        RoomService $roomService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
+        ShiftQualificationService $shiftQualificationService,
     ): Response {
-        $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
-        $availabilityData = $this->calendarService
-            ->getAvailabilityData(freelancer: $freelancer, month: request('month'));
+        $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
+        $vacationMonth = $request->get('vacationMonth');
+        $selectedDate = $showVacationsAndAvailabilities ?
+            Carbon::parse($showVacationsAndAvailabilities) :
+            Carbon::today();
+        $selectedPeriodDate = $vacationMonth ?
+            Carbon::parse($vacationMonth) :
+            Carbon::today();
 
-        $selectedDate = Carbon::today();
-        $selectedPeriodDate = Carbon::today();
+        $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
-        // get vacations of the selected date (request('showVacationsAndAvailabilities'))
-        if (request('showVacationsAndAvailabilities')) {
-            $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
-            $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
-        }
-
-        return inertia('Freelancer/Show', [
-            'freelancer' => new FreelancerShowResource($freelancer),
-            //needed for availability calendar
-            'calendarData' => $availabilityData['calendarData'],
-            'dateToShow' => $availabilityData['dateToShow'],
-            'vacations' => $freelancer->vacations()
-                ->where('date', $selectedDate)
-                ->orderBy('date', 'ASC')->get(),
-            'vacationSelectCalendar' => $this->calendarService
-                ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
-            'createShowDate' => [
-                $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))
-                    ->isoFormat('MMMM YYYY'),
-                $selectedPeriodDate->copy()->startOfMonth()->toDate()
-            ],
-            'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
-            //needed for UserShiftPlan
-            'dateValue' => $showCalendar['dateValue'],
-            'daysWithEvents' => $showCalendar['daysWithEvents'],
-            'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
-            'rooms' => Room::all(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => Project::all(),
-            'shifts' => $freelancer
-                ->shifts()
-                ->with(['event', 'event.project', 'event.room'])
-                ->orderBy('start', 'ASC')
-                ->get(),
-            'availabilities' => $freelancer->availabilities()
-                ->where('date', $selectedDate)
-                ->orderBy('date', 'ASC')->get(),
-            'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
-        ]);
+        return Inertia::render(
+            'Freelancer/Show',
+            $freelancerService->createShowDto(
+                $freelancer,
+                $userService,
+                $eventService,
+                $calendarService,
+                $roomService,
+                $eventTypeService,
+                $projectService,
+                $shiftQualificationService,
+                $selectedDate,
+                $selectedPeriodDate,
+                $request->get('month'),
+                $vacationMonth
+            )
+        );
     }
 
     public function update(Request $request, Freelancer $freelancer): void

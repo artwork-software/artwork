@@ -1,72 +1,43 @@
 <template>
-    <app-layout>
+    <app-layout :title="moneySource.name">
         <div class="max-w-screen-2xl pl-14 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
-                <div class="flex items-center">
+                <div class="flex items-center justify-between">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ moneySource.name }}</h2>
-                    <Menu as="div" class="my-auto ml-4 relative"
-                          v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
-                        <div class="flex items-center -mt-1">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <IconDotsVertical stroke-width="1.5"
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                    aria-hidden="true"/>
-                            </MenuButton>
-                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="hind ml-2 text-secondary tracking-tight text-lg">{{$t('Edit the basic data')}}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="cursor-pointer origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem
-                                        v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
-                                        v-slot="{ active }">
-                                        <a @click="openEditMoneySourceModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconEdit stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{$t('Edit basic data')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconCopy stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Duplicate')}}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem
-                                        v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
-                                        v-slot="{ active }">
-                                        <a @click="openDeleteSourceModal(this.moneySource)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconTrash stroke-width="1.5"
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Delete')}}
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <BaseMenu class="ml-4" v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
+                        <MenuItem
+                            v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                            v-slot="{ active }">
+                            <a @click="openEditMoneySourceModal"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconEdit stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{$t('Edit basic data')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconCopy stroke-width="1.5"
+                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                          aria-hidden="true"/>
+                                {{ $t('Duplicate')}}
+                            </a>
+                        </MenuItem>
+                        <MenuItem
+                            v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
+                            v-slot="{ active }">
+                            <a @click="openDeleteSourceModal(this.moneySource)"
+                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <IconTrash stroke-width="1.5"
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           aria-hidden="true"/>
+                                {{ $t('Delete')}}
+                            </a>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
                 <div class="flex items-center w-full justify-between mt-4">
                     <div class="flex mt-2 xsDark items-center">
@@ -74,7 +45,7 @@
                         <UserPopoverTooltip v-if="moneySource.creator" :user="moneySource.creator" :id="moneySource.creator?.id"
                                             :height="7" :width="7" class="ml-2"/>
                     </div>
-                    <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
+                    <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
                             @click="openMoneySourceHistoryModal()">
                         <IconChevronRight stroke-width="1.5"
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"
@@ -162,7 +133,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-64 z-10 mt-12 bg-primary shadow-lg max-h-48 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    class="absolute w-64 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-48 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    :value="null"
                                                    v-slot="{ active, selected }">
@@ -215,7 +186,7 @@
                             <div class="project">
                                 <div class="text-gray-400"><a
                                     :href="getProjectHref(position.project)"
-                                    class="text-buttonBlue ">{{ position.project.name }}</a> |<span
+                                    class="text-artwork-buttons-create ">{{ position.project.name }}</a> |<span
                                     class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
                                 <div class="text-gray-400 text-sm mt-2 flex">{{ position.mainPositionName }} <div class="flex px-1" v-if="position.subPositionName?.length > 0">|</div>
                                     {{ position.subPositionName }}
@@ -257,7 +228,7 @@
         :title="$t('Delete funding source/group')"
         :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete.name])"
         @closed="afterConfirm(false)"
-    @delete="afterConfirm(true)"/>
+        @delete="afterConfirm(true)"/>
 
     <MoneySourceHistoryComponent
         @closed="closeMoneySourceHistoryModal"
@@ -298,6 +269,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
@@ -312,6 +284,7 @@ export default {
         'first_project_budget_tab_id'
     ],
     components: {
+        BaseMenu,
         UserPopoverTooltip,
         ConfirmDeleteModal,
         MoneySourceSidenav,

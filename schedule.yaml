@@ -1,0 +1,8 @@
+jobs:
+  - name: laravel-scheduler
+    command: php artisan schedule:run
+    concurrencyPolicy: Forbid
+    captureStdout: true
+    captureStderr: true
+    schedule:
+      minute: "*"

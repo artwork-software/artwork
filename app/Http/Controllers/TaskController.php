@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\TaskIndexResource;
-use App\Http\Resources\TaskShowResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
@@ -12,6 +10,8 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
+use Artwork\Modules\Task\Http\Resources\TaskIndexResource;
+use Artwork\Modules\Task\Http\Resources\TaskShowResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;

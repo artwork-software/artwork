@@ -1,6 +1,6 @@
 <template>
     <div @click="openProjectHistoryModal(notification.history)"
-         class="xxsLight cursor-pointer items-center flex text-buttonBlue">
+         class="xxsLight cursor-pointer items-center flex text-artwork-buttons-create">
         <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
         Verlauf ansehen
     </div>

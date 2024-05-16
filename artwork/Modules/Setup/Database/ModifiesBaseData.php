@@ -40,6 +40,9 @@ trait ModifiesBaseData
         return DB::table('permissions')->count() > 0;
     }
 
+    /**
+     * @return array<int, mixed>
+     */
     private function getValidKeys(array $tableFields, array $exclusionKeys): array
     {
         $keys = [];

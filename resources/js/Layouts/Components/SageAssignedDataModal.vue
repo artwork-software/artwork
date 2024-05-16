@@ -1,11 +1,6 @@
 <template>
-    <jet-dialog-modal :show="this.show" @close="this.close">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
+    <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <IconX @click="this.close"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
-                       aria-hidden="true"/>
                 <div class="mt-8 headline1">
                     {{ $t('Booking details') }}
                 </div>
@@ -127,8 +122,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 </template>
 
 <script>
@@ -142,9 +136,11 @@ import {Inertia} from "@inertiajs/inertia";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default defineComponent({
     components: {
+        BaseModal,
         FormButton,
         UserPopoverTooltip,
         JetDialogModal,

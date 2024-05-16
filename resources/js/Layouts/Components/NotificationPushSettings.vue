@@ -11,7 +11,7 @@
         <div v-for="(settings, groupType) in notificationSettings" class="mt-10 pb-10 border-b-secondary border-b">
 
             <div class="flex items-start">
-                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-buttonBlue' :
+                <Switch @click="toggleGroup(settings,groupType)" :class="[!groupDisabled(settings) ? 'bg-artwork-buttons-create' :
                                     'bg-gray-300',
             'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                 <span aria-hidden="true"
@@ -27,7 +27,7 @@
             <div v-if="!groupDisabled(settings)">
                 <div v-for="type in settings">
                     <div class="flex justify-between mt-6 ml-9 items-start">
-                        <Switch @click="togglePush(type)" :class="[type.enabled_push ? 'bg-buttonBlue' :
+                        <Switch @click="togglePush(type)" :class="[type.enabled_push ? 'bg-artwork-buttons-create' :
                                                 'bg-gray-300',
                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none mt-1']">
                             <span aria-hidden="true"

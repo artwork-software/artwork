@@ -18,16 +18,17 @@ readonly class MainPositionService
     }
 
     public function createMainPosition(
-        Table          $table,
+        Table $table,
         BudgetTypeEnum $budgetTypesEnum,
-        string         $name,
-        int            $position
+        string $name,
+        int $position
     ): MainPosition|Model {
         $mainPosition = new MainPosition();
         $mainPosition->table_id = $table->id;
         $mainPosition->type = $budgetTypesEnum->value;
         $mainPosition->name = $name;
         $mainPosition->position = $position;
+
         return $this->mainPositionRepository->save($mainPosition);
     }
 

@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
                     Storage::disk('public')->url($generalSettings->banner_path) :
                     null,
                 'businessName' => $generalSettings->business_name,
+                'page_title' => $generalSettings->page_title ?? config('app.name'),
                 'impressumLink' => $generalSettings->impressum_link,
                 'privacyLink' => $generalSettings->privacy_link,
                 'emailFooter' => $generalSettings->email_footer,

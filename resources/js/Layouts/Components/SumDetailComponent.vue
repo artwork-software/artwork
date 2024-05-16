@@ -1,10 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
-
-        <template #content>
-            <img alt="Details" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
             <div class="mx-4">
                 <div>
                     <h1 class="my-1 flex">
@@ -18,7 +13,7 @@
                                 <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
                                      aria-label="Tabs">
                                     <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                        :aria-current="tab.current ? 'page' : undefined">
                                         {{ tab.name }}
                                     </a>
@@ -93,7 +88,7 @@
                                             </ListboxButton>
                                             <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                                 <ListboxOption v-for="type in linkTypes"
-                                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                               class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
                                                                :key="type.name"
                                                                :value="type"
                                                                v-slot="{ active, selected }">
@@ -154,8 +149,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+        </BaseModal>
 </template>
 
 <script>
@@ -168,10 +162,12 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 export default {
     name: 'SumDetailComponent',
     mixins: [Permissions],
     components: {
+        BaseModal,
         FormButton,
         NewUserToolTip,
         UserTooltip,

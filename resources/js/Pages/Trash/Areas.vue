@@ -21,7 +21,7 @@
     </div>
     <div v-for="area in filteredTrashedAreas"
          class="flex w-full bg-white my-2 border border-gray-200">
-        <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="area.hidden = !area.hidden">
+        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover flex" @click="area.hidden = !area.hidden">
             <ChevronUpIcon v-if="area.hidden !== true"
                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
             <ChevronDownIcon v-else
@@ -35,53 +35,32 @@
                                         </span>
                 </div>
                 <div class="flex items-center">
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                    <BaseMenu>
+                        <MenuItem v-slot="{ active }">
+                            <Link as="button" method="patch"
+                                  :href="route('areas.restore', { id: area.id })"
+                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' :
+                                          'text-secondary',
+                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
+                                <RefreshIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition ease-out duration-100"
-                            enter-from-class="transform opacity-0 scale-95"
-                            enter-to-class="transform opacity-100 scale-100"
-                            leave-active-class="transition ease-in duration-75"
-                            leave-from-class="transform opacity-100 scale-100"
-                            leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <Link as="button" method="patch"
-                                              :href="route('areas.restore', { id: area.id })"
-                                              :class="[active ? 'bg-primaryHover text-white' :
+                                {{  $t('Restore') }}
+                            </Link>
+                        </MenuItem>
+                        <MenuItem v-slot="{ active }">
+                            <Link as="button" method="delete"
+                                  :href="route('areas.force', { id: area.id })"
+                                  :class="[active ? 'bg-artwork-navigation-color/10 text-white' :
                                           'text-secondary',
                                           'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <RefreshIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{  $t('Restore') }}
-                                        </Link>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <Link as="button" method="delete"
-                                              :href="route('areas.force', { id: area.id })"
-                                              :class="[active ? 'bg-primaryHover text-white' :
-                                          'text-secondary',
-                                          'group flex items-center px-4 py-2 w-full text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            {{ $t('Delete permanently')}}
-                                        </Link>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                                <TrashIcon
+                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                {{ $t('Delete permanently')}}
+                            </Link>
+                        </MenuItem>
+                    </BaseMenu>
                 </div>
             </div>
             <div class="mt-6 mb-12" v-if="!area.hidden">
@@ -151,12 +130,14 @@ import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/inertia-vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 export default {
     name: "Projects",
     layout: [AppLayout, TrashLayout],
     props: ['trashed_areas'],
     components: {
+        BaseMenu,
         Input, XIcon, SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,

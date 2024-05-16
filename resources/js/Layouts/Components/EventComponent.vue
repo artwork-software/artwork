@@ -1,13 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
-        <template #content>
-            <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg"
-                 class="-ml-6 -mt-8 mb-4"/>
-            <IconX stroke-width="1.5" @click="closeModal(false)"
-                   class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+    <BaseModal @closed="closeModal" v-if="true" :modal-image="!this.event?.id ? '/Svgs/Overlays/illu_appointment_new.svg' : '/Svgs/Overlays/illu_appointment_edit.svg'">
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="this.isRoomAdmin || this.hasAdminRole()">
@@ -395,7 +387,7 @@
                                                 <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
                                                 </div>
                                             </label>
                                             <span class="ml-4 text-sm"
@@ -462,7 +454,7 @@
                                     <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
                                     </div>
                                 </label>
                                 <span class="ml-2 text-sm"
@@ -481,7 +473,7 @@
                                         <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
                                         </div>
                                     </label>
                                     <span class="ml-2 text-sm"
@@ -615,8 +607,7 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </jet-dialog-modal>
+    </BaseModal>
 
     <!-- Event löschen Modal -->
     <confirmation-component
@@ -692,6 +683,7 @@ import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'EventComponent',
@@ -699,6 +691,7 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        BaseModal,
         FormButton,
         UserPopoverTooltip,
         NewUserToolTip,

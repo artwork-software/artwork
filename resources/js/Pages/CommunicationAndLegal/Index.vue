@@ -1,5 +1,5 @@
 <template>
-    <ToolSettingsHeader>
+    <ToolSettingsHeader :title="$t('Communication & Legal')">
         <div v-if="this.$page.props.flash.success"
              class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
@@ -9,6 +9,11 @@
             {{ $t("Define the footer text for all system emails here, and provide the links to your company's legal notice and privacy policy pages. Additionally, you can specify an email address to be used for sending emails.") }}
         </div>
         <div class="mt-4">
+            <div class="mt-4 col-span-9 grid grid-cols-9">
+                <div class="sm:col-span-3">
+                    <inputComponent @focusout="changeEmailData" v-model="mailForm.page_title" :placeholder="$t('Page Title')"/>
+                </div>
+            </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
                     <inputComponent @focusout="changeEmailData" v-model="mailForm.businessName" :placeholder="$t('Our Organization')"/>
@@ -72,6 +77,7 @@ export default defineComponent({
         return {
             mailForm: useForm({
                 businessName: this.$page.props.businessName,
+                page_title: this.$page.props.page_title,
                 impressumLink: this.$page.props.impressumLink,
                 privacyLink: this.$page.props.privacyLink,
                 emailFooter: this.$page.props.emailFooter,

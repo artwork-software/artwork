@@ -4,6 +4,7 @@ namespace Artwork\Modules\ContractModule\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+
 /**
  * @property int $id
  * @property string $name

@@ -46,7 +46,7 @@
                                             </div>
                                         </ListboxButton>
                                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                            <ListboxOptions class="absolute w-full z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                            <ListboxOptions class="absolute w-full z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                                 <ListboxOption as="template" class="max-h-8" v-for="eventType in event_types" :key="eventType.name" :value="eventType" v-show="eventType.id !== 1" v-slot="{ active, selected }">
                                                     <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 text-sm subpixel-antialiased']">
                                                         <div class="flex">

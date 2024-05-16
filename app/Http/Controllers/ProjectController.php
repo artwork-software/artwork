@@ -1466,7 +1466,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = $firstColumn->value + $secondColumn->value;
+                $sum = (float)$firstColumn->value + (float)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1492,7 +1492,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = $firstColumn->value - $secondColumn->value;
+                $sum = (float)$firstColumn->value - (float)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,

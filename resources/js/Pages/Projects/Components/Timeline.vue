@@ -13,7 +13,7 @@
                 </p>
             </div>
             <div v-for="(time) in timeLine">
-                <div @click="showAddTimeLineModal = true" class="text-xs bg-gray-900 p-2 text-white my-1" :class="['h-[' + time.time_line_height + 'px]']" v-if="time.start !== null && time.end !== null">
+                <div @click="showAddTimeLineModal = true" class="text-xs bg-gray-900 p-2 text-white my-1" :style="{height: time.time_line_height + 'px'}" v-if="time.start !== null && time.end !== null">
                     <p>
                         {{ time.start_date }} - {{ time.end_date }}
                     </p>

@@ -177,6 +177,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_INFRINGEMENT => "Warning regarding legal regulations (shift planning)",
             self::NOTIFICATION_SHIFT_LOCKED => "Shift schedule lock-in",
             self::NOTIFICATION_SHIFT_AVAILABLE => "Availabilities",
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Open demands",
             self::NOTIFICATION_SHIFT_CONFLICT => "Availabilities & Conflicts",
         };
     }
@@ -214,6 +215,7 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_LOCKED => "Find out whether shift schedules conflict with legal regulations,e.g. employees have been scheduled with too few breaks.",
             self::NOTIFICATION_SHIFT_AVAILABLE => "Find out if someone has made changes to your availability.",
             self::NOTIFICATION_SHIFT_CONFLICT => "Find out if an employee has a new availability or you need to fill someone new.",
+            self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Find out if there are any open demands for your shifts.",
         };
     }
     // @codingStandardsIgnoreEnd

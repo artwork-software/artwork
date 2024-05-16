@@ -403,7 +403,7 @@ export default defineComponent({
     position: sticky;
     position: -webkit-sticky;
     display: block;
-    top: 60px;
+    top: 0;
     z-index: 21;
     background-color: #F5F5F3;
 }

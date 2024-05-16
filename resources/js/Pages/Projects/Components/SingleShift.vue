@@ -1,5 +1,5 @@
 <template>
-    <div class="h-full" :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
+    <div  :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
         <div class="rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?

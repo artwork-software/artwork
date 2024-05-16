@@ -276,16 +276,25 @@ class Shift extends Model
 
     public function getShiftHeightAttribute(): int
     {
-        $start = strtotime($this->start);
-        $end = strtotime($this->end);
-        $diff = $end - $start;
-        $minutes = $diff / 60;
-        $sum = $minutes / 60 * 144;
-        // minimum height of 181px to make it readable
-        if ($sum < 144) {
-            return 144;
-        }
-        return $sum;
+        /*
+         * $startDate = Carbon::parse($shift->start_date);
+        $startTime = Carbon::parse($shift->start);
+        $endDate = Carbon::parse($shift->end_date);
+        $endTime = Carbon::parse($shift->end);
+        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
+        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
+         */
+
+        $startDate = Carbon::parse($this->start_date);
+        $startTime = Carbon::parse($this->start);
+        $endDate = Carbon::parse($this->end_date);
+        $endTime = Carbon::parse($this->end);
+        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
+        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
+        $diff = $shiftStartDateTime->diffInMinutes($shiftEndDateTime);
+        $maxShiftHeight = config('shift.max_shift_height');
+        $shiftHeight = $diff / 60 * 180;
+        return min($shiftHeight, $maxShiftHeight - 144);
     }
 
 

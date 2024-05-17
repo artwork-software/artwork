@@ -32,7 +32,7 @@
                                  :shortcuts="customShortcuts"
                                   separator=" - " :formatter="formatter"
                                  :options="this.datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
-                                 v-model="dateValuePicker">
+                                 v-model="dateValuePicker" id="datePicker">
         </vue-tailwind-datepicker>
     </div>
     <div class="font-medium text-gray-900" v-else>

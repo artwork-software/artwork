@@ -13,21 +13,19 @@
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
                                       :crafts="crafts"
+                                      @go-to-day="goToDay"
+                                      @go-to-month="goToMonth"
+                                      @go-to-week="goToWeek"
                 />
             </div>
-
-            <pre>
-
-            </pre>
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
-                            <TableHead>
+                            <TableHead id="stickyTableHead" ref="stickyTableHead">
                                 <th class="z-0" style="width:164px;"></th>
-                                <th v-for="day in days" style="width:200px;" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                <th  v-for="day in days" style="width:200px;" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                                     <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                         {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                     </div>
@@ -161,7 +159,7 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1"
+                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right -mt-2 pr-1"
                                         :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
@@ -347,8 +345,9 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import Table from "@/Components/Table/Table.vue";
 import TableHead from "@/Components/Table/TableHead.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
-import { SelectorIcon } from "@heroicons/vue/solid";
-import ShiftsQualificationsAssignmentModal from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
+import {SelectorIcon} from "@heroicons/vue/solid";
+import ShiftsQualificationsAssignmentModal
+    from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {IconChevronDown, IconFileText, IconX} from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
@@ -432,6 +431,8 @@ export default {
             showShiftsQualificationsAssignmentModalShifts: [],
             shiftsAreChecked: [],
             shiftsToRemoveCheckState: [],
+            firstDayPosition: this.days ? this.days[0].full_day : null,
+            currentDayOnView: this.days ? this.days[0] : null
         }
     },
     mounted() {
@@ -500,6 +501,29 @@ export default {
         },
     },
     methods: {
+        /*goToNextDay(howManyDays) {
+            const firstDay = document.getElementById(this.days[0].full_day);
+            const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+
+
+            if (firstDay && scrollableContainer) {
+                // Calculate the scroll position to bring nextDay to the position of firstDay
+                const scrollPosition = (firstDay.offsetWidth * howManyDays);
+                // Scroll the container
+                scrollableContainer.scrollLeft += scrollPosition;
+            }
+        },
+        goToPreviousDay(howManyDays) {
+            const firstDay = document.getElementById(this.days[0].full_day);
+            const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+
+            if (firstDay && scrollableContainer) {
+                // Calculate the scroll position to bring previousDay to the position of firstDay
+                const scrollPosition = (firstDay.offsetWidth * howManyDays);
+                // Scroll the container
+                scrollableContainer.scrollLeft -= scrollPosition;
+            }
+        },*/
         checkIfEventHasShiftsToDisplay(event) {
             if(this.$page.props.user.show_crafts.length === 0){
                 return event.shifts.length > 0;
@@ -588,12 +612,76 @@ export default {
             if (this.$refs.userOverview) {
                 // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
+
+                // update the current day on view with the day that is currently visible
+                const firstDay = document.getElementById(this.days[0].full_day);
+                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                const scrollPosition = scrollableContainer.scrollLeft;
+                const dayIndex = Math.floor(scrollPosition / firstDay.offsetWidth);
+                this.currentDayOnView = this.days[dayIndex];
+
+            }
+        },
+        goToWeek(type = 'next'){
+            if (type === 'next') {
+                const nextKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number + 1);
+
+                // bring the new kw in the scroll position of the currentDayOnView
+                const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextKwDay);
+            } else {
+                const previousKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number - 1);
+
+                // bring the new kw in the scroll position of the currentDayOnView
+                const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousKwDay);
+            }
+        },
+        goToDay(type = 'next') {
+            if (type === 'next') {
+                const nextDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
+                const nextDayIndex = this.days.indexOf(nextDay) + 1;
+                if (nextDayIndex < this.days.length) {
+                    const nextDay = this.days[nextDayIndex];
+                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                    scrollableContainer.scrollLeft = firstDay.offsetWidth * nextDayIndex;
+                }
+            } else {
+                const previousDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
+                const previousDayIndex = this.days.indexOf(previousDay) - 1;
+                if (previousDayIndex >= 0) {
+                    const previousDay = this.days[previousDayIndex];
+                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                    scrollableContainer.scrollLeft = firstDay.offsetWidth * previousDayIndex;
+                }
+            }
+        },
+        goToMonth(type = 'next'){
+            if (type === 'next') {
+                const nextMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number + 1);
+
+                // bring the new month in the scroll position of the currentDayOnView
+                const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextMonthDay);
+            } else {
+                const previousMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number - 1);
+
+                // bring the new month in the scroll position of the currentDayOnView
+                const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
+                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousMonthDay);
             }
         },
         syncScrollUserOverview(event) {
             if (this.$refs.shiftPlan) {
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
+
             }
         },
         openShowUserShiftModal(user, day) {

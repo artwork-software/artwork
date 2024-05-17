@@ -26,6 +26,31 @@
                 </button>
             </div>
 
+            <div class="mx-3 flex gap-x-1 divide-x divide-gray-700 text-xs">
+                <div class="flex items-center divide-x divide-gray-700">
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToMonth', 'prev')">
+                        -1 M
+                    </button>
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToWeek', 'prev')">
+                        -1 KW
+                    </button>
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToDay', 'prev')">
+                        -1 T
+                    </button>
+                </div>
+
+                <div class="flex items-center divide-x divide-gray-700">
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToDay', 'next')">
+                        +1 T
+                    </button>
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToWeek', 'next')">
+                        +1 KW
+                    </button>
+                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToMonth', 'next')">
+                        +1 M
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="flex items-center">
@@ -75,7 +100,14 @@ import {Inertia} from "@inertiajs/inertia";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
-
+import {
+    Combobox,
+    ComboboxButton,
+    ComboboxInput,
+    ComboboxLabel,
+    ComboboxOption,
+    ComboboxOptions,
+} from '@headlessui/vue'
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
@@ -96,6 +128,12 @@ export default {
         SwitchLabel,
         Switch,
         DatePickerComponent,
+        Combobox,
+        ComboboxButton,
+        ComboboxInput,
+        ComboboxLabel,
+        ComboboxOption,
+        ComboboxOptions,
     },
     props: [
         'dateValue',
@@ -107,11 +145,12 @@ export default {
         'user_filters',
         'crafts'
     ],
-    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal'],
+    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal', 'goToWeek', 'goToDay', 'goToMonth'],
     data() {
         return {
             //activeFilters: [],
             showConfirmCommitModal: false,
+            scrollDays: 1,
         }
     },
     computed: {
@@ -151,6 +190,14 @@ export default {
                 preserveScroll: true,
             });
         },
+        scrollToNextDay(){
+            this.$emit('goToNextDay', this.scrollDays)
+        },
+
+        scrollToPreviousDay(){
+            this.$emit('goToPreviousDay', this.scrollDays)
+        },
+
         enterFullscreenMode() {
             this.$emit('enterFullscreenMode')
         },

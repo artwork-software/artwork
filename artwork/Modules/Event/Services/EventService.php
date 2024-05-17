@@ -468,6 +468,7 @@ readonly class EventService
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
+                'month_number' => $date->month,
             ];
 
             $totalPlannedWorkingHours += $plannedWorkingHours;
@@ -542,6 +543,7 @@ readonly class EventService
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
+                'month_number' => $date->month,
             ];
 
             $totalPlannedWorkingHours += $plannedWorkingHours;
@@ -596,6 +598,7 @@ readonly class EventService
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
+                'month_number' => $date->month,
             ];
             $totalPlannedWorkingHours += $plannedWorkingHours;
         }
@@ -647,6 +650,8 @@ readonly class EventService
                 'without_format' => $period->format('Y-m-d'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
             ];
         }
 

@@ -125,7 +125,7 @@ export default defineComponent({
         return {
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
-            showShift: parseInt(this.$page.props.urlParameters?.eventId) === parseInt(this.event.event.id),
+            showShift: this.$page.props.urlParameters?.eventId ? parseInt(this.$page.props.urlParameters?.eventId) === parseInt(this.event.event.id) : true,
             showImportShiftTemplateModal: false,
         }
     },

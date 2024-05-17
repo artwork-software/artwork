@@ -501,29 +501,6 @@ export default {
         },
     },
     methods: {
-        /*goToNextDay(howManyDays) {
-            const firstDay = document.getElementById(this.days[0].full_day);
-            const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-
-
-            if (firstDay && scrollableContainer) {
-                // Calculate the scroll position to bring nextDay to the position of firstDay
-                const scrollPosition = (firstDay.offsetWidth * howManyDays);
-                // Scroll the container
-                scrollableContainer.scrollLeft += scrollPosition;
-            }
-        },
-        goToPreviousDay(howManyDays) {
-            const firstDay = document.getElementById(this.days[0].full_day);
-            const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-
-            if (firstDay && scrollableContainer) {
-                // Calculate the scroll position to bring previousDay to the position of firstDay
-                const scrollPosition = (firstDay.offsetWidth * howManyDays);
-                // Scroll the container
-                scrollableContainer.scrollLeft -= scrollPosition;
-            }
-        },*/
         checkIfEventHasShiftsToDisplay(event) {
             if(this.$page.props.user.show_crafts.length === 0){
                 return event.shifts.length > 0;
@@ -1025,24 +1002,6 @@ export default {
     overflow: overlay;
 }
 
-::-webkit-scrollbar {
-    width: 16px;
-}
-
-::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background-color: #A7A6B170;
-    border-radius: 16px;
-    border: 6px solid transparent;
-    background-clip: content-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background-color: #a8bbbf;
-}
 
 .stickyHeader {
     position: sticky;

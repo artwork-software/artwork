@@ -26,29 +26,17 @@
                 </button>
             </div>
 
-            <div class="mx-3 flex gap-x-1 divide-x divide-gray-700 text-xs">
-                <div class="flex items-center divide-x divide-gray-700">
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToMonth', 'prev')">
-                        -1 M
-                    </button>
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToWeek', 'prev')">
-                        -1 KW
-                    </button>
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToDay', 'prev')">
-                        -1 T
-                    </button>
+            <div class="mx-3 flex gap-x-1 text-xs">
+                <div class="flex items-center gap-x-1">
+                    <BaseButton class="w-20 text-center justify-center" text="-1 M" @click="$emit('goToMonth', 'prev')" />
+                    <BaseButton class="w-20 text-center justify-center" text="-1 KW" @click="$emit('goToWeek', 'prev')" />
+                    <BaseButton class="w-20 text-center justify-center" text="-1 T" @click="$emit('goToDay', 'prev')" />
                 </div>
 
-                <div class="flex items-center divide-x divide-gray-700">
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToDay', 'next')">
-                        +1 T
-                    </button>
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToWeek', 'next')">
-                        +1 KW
-                    </button>
-                    <button class="text-artwork-buttons-create px-2" @click="$emit('goToMonth', 'next')">
-                        +1 M
-                    </button>
+                <div class="flex items-center gap-x-1 ">
+                    <BaseButton class="w-20 text-center justify-center" text="+1 T" @click="$emit('goToDay', 'next')" />
+                    <BaseButton class="w-20 text-center justify-center" text="+1 KW" @click="$emit('goToWeek', 'next')" />
+                    <BaseButton class="w-20 text-center justify-center" text="+1 M" @click="$emit('goToMonth', 'next')" />
                 </div>
             </div>
         </div>
@@ -108,10 +96,14 @@ import {
     ComboboxOption,
     ComboboxOptions,
 } from '@headlessui/vue'
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        BaseButton,
+        AddButtonSmall,
         SecondaryButton,
         ConfirmDeleteModal,
         BaseFilterTag,

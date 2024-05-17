@@ -925,4 +925,11 @@ class ShiftController extends Controller
 
         return Redirect::back();
     }
+
+    public function updateDescription(Request $request, Shift $shift): RedirectResponse
+    {
+        $shift->update($request->only(['description']));
+
+        return Redirect::back();
+    }
 }

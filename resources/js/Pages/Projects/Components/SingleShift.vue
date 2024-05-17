@@ -68,7 +68,7 @@
 
                 <span v-if="shift.break_minutes"> | {{ shift.break_formatted }}</span>
             </p>
-            <p class="text-xs mb-3 truncate">{{ shift.description }}</p>
+            <ShiftNoteComponent :shift="shift" />
             <div v-for="user in shift.users">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
@@ -195,10 +195,12 @@ import {Inertia} from "@inertiajs/inertia";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        ShiftNoteComponent,
         UserPopoverTooltip,
         BaseMenu,
         ShiftQualificationIconCollection,

@@ -155,7 +155,8 @@ class User extends Model implements
         'zoom_factor',
         'is_sidebar_opened',
         'compact_mode',
-        'show_crafts'
+        'show_crafts',
+        'goto_mode'
     ];
 
     protected $casts = [

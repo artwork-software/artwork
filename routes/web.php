@@ -1267,6 +1267,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
+        //user.calendar.go.to.stepper
+        Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
+            ->name('user.calendar.go.to.stepper');
     });
 
     Route::group(['prefix' => 'project-roles'], function (): void {

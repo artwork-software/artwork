@@ -540,4 +540,9 @@ class UserController extends Controller
     {
         $user->update($request->only('show_crafts'));
     }
+
+    public function calendarGoToStepper(User $user, Request $request): void
+    {
+        $user->update($request->only('goto_mode'));
+    }
 }

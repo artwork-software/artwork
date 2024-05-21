@@ -2,7 +2,42 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
-            <div class="flex items-center">
+            <div class="flex items-center mx-4 gap-x-1">
+                <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
+                <Menu as="div" class="relative inline-block text-left">
+                    <div class="flex items-center">
+                        <MenuButton class="">
+                            <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'month'"/>
+                            <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'week'"/>
+                            <IconCalendar stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context" v-if="$page.props.user.goto_mode === 'day'"/>
+                        </MenuButton>
+                    </div>
+
+                    <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems class="absolute right-0 z-10 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div class="py-1">
+                                <MenuItem v-slot="{ active }">
+                                    <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                        <IconCalendar stroke-width="1.5" class="h-5 w-5 text-white"/>
+                                    </div>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <div @click="changeUserSelectedGoTo('week')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                        <IconCalendarWeek stroke-width="1.5" class="h-5 w-5 text-white"/>
+                                    </div>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <div @click="changeUserSelectedGoTo('month')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
+                                        <IconCalendarMonth stroke-width="1.5" class="h-5 w-5 text-white"/>
+                                    </div>
+                                </MenuItem>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+                <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
+            </div>
+            <div class="items-center hidden">
                 <div class="flex items-center">
                     <button  class="ml-2 text-black" @click="previousTimeRange">
                         <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
@@ -24,20 +59,6 @@
                         aria-hidden="true"/>
                     {{ $t('View history')}}
                 </button>
-            </div>
-
-            <div class="mx-3 flex gap-x-1 text-xs">
-                <div class="flex items-center gap-x-1">
-                    <BaseButton class="w-20 text-center justify-center" text="-1 M" @click="$emit('goToMonth', 'prev')" />
-                    <BaseButton class="w-20 text-center justify-center" text="-1 KW" @click="$emit('goToWeek', 'prev')" />
-                    <BaseButton class="w-20 text-center justify-center" text="-1 T" @click="$emit('goToDay', 'prev')" />
-                </div>
-
-                <div class="flex items-center gap-x-1 ">
-                    <BaseButton class="w-20 text-center justify-center" text="+1 T" @click="$emit('goToDay', 'next')" />
-                    <BaseButton class="w-20 text-center justify-center" text="+1 KW" @click="$emit('goToWeek', 'next')" />
-                    <BaseButton class="w-20 text-center justify-center" text="+1 M" @click="$emit('goToMonth', 'next')" />
-                </div>
             </div>
         </div>
 
@@ -87,6 +108,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 
 import {
     Combobox,
@@ -126,6 +148,7 @@ export default {
         ComboboxLabel,
         ComboboxOption,
         ComboboxOptions,
+        Menu, MenuButton, MenuItem, MenuItems
     },
     props: [
         'dateValue',
@@ -137,7 +160,7 @@ export default {
         'user_filters',
         'crafts'
     ],
-    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal', 'goToWeek', 'goToDay', 'goToMonth'],
+    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal', 'selectGoToNextMode', 'selectGoToPreviousMode'],
     data() {
         return {
             //activeFilters: [],
@@ -164,6 +187,13 @@ export default {
         }
     },
     methods: {
+        changeUserSelectedGoTo(type){
+            Inertia.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+                goto_mode: type,
+            }, {
+                preserveScroll: true,
+            });
+        },
         removeFilter(filter){
             if(filter.value === 'rooms'){
                 this.user_filters.rooms.splice(this.user_filters.rooms.indexOf(filter.id), 1);
@@ -183,11 +213,11 @@ export default {
             });
         },
         scrollToNextDay(){
-            this.$emit('goToNextDay', this.scrollDays)
+            this.$emit('selectGoToNextMode')
         },
 
         scrollToPreviousDay(){
-            this.$emit('goToPreviousDay', this.scrollDays)
+            this.$emit('selectGoToPreviousMode')
         },
 
         enterFullscreenMode() {

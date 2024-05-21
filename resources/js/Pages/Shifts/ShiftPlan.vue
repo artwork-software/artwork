@@ -13,9 +13,8 @@
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
                                       :crafts="crafts"
-                                      @go-to-day="goToDay"
-                                      @go-to-month="goToMonth"
-                                      @go-to-week="goToWeek"
+                                      @select-go-to-next-mode="selectGoToNextMode"
+                                        @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
@@ -197,7 +196,7 @@
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
                                             </span>
-                                            <span v-else class="h-full flex justify-center items-center">
+                                            <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
                                                 {{ $t('not available')}}
                                             </span>
                                             <span v-if="user.availabilities">
@@ -255,7 +254,7 @@
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
                                             </span>
-                                            <span v-else class="h-full flex justify-center items-center">
+                                            <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
                                                 {{ $t('not available')}}
                                             </span>
                                             <span v-if="user.availabilities">
@@ -597,6 +596,24 @@ export default {
                 const dayIndex = Math.floor(scrollPosition / firstDay.offsetWidth);
                 this.currentDayOnView = this.days[dayIndex];
 
+            }
+        },
+        selectGoToNextMode(){
+            if (this.$page.props.user.goto_mode === 'day'){
+                this.goToDay('next')
+            } else if (this.$page.props.user.goto_mode === 'week'){
+                this.goToWeek('next')
+            } else if (this.$page.props.user.goto_mode === 'month'){
+                this.goToMonth('next')
+            }
+        },
+        selectGoToPreviousMode(){
+            if (this.$page.props.user.goto_mode === 'day'){
+                this.goToDay('previous')
+            } else if (this.$page.props.user.goto_mode === 'week'){
+                this.goToWeek('previous')
+            } else if (this.$page.props.user.goto_mode === 'month'){
+                this.goToMonth('previous')
             }
         },
         goToWeek(type = 'next'){

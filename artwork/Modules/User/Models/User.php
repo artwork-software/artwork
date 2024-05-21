@@ -27,6 +27,7 @@ use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
+use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -187,11 +188,16 @@ class User extends Model implements
         'assigned_craft_ids'
     ];
 
-    protected $with = ['calendar_settings'];
+    protected $with = ['calendar_settings', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
         return 'user';
+    }
+
+    public function shiftCalendarAbo(): hasOne
+    {
+        return $this->hasOne(UserShiftCalendarAbo::class, 'user_id', 'id');
     }
 
     public function getProfilePhotoUrlAttribute(): string

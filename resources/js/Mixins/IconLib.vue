@@ -108,11 +108,13 @@ import {
     IconInfoSquare,
     IconSeparator,
     IconDeviceFloppy,
-    IconNote
+    IconNote,
+    IconCalendarStar,
 
 } from "@tabler/icons-vue";
 export default {
     components: {
+        IconCalendarStar,
         IconAdjustmentsAlt,
         IconArrowsDiagonal,
         IconCalendarMonth,

@@ -5,7 +5,8 @@
                 <UserShiftPlanFunctionBar :type="type" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="weeklyWorkingHours"
                                           @previousTimeRange="previousTimeRange"
                                           @next-time-range="nextTimeRange"
-                                          :dateValue="dateValue"></UserShiftPlanFunctionBar>
+                                          :dateValue="dateValue"
+                :eventTypes="eventTypes"></UserShiftPlanFunctionBar>
             </div>
             <div class="overflow-x-auto flex">
                 <div class="w-full grid grid-cols-7">
@@ -44,6 +45,10 @@
             </div>
         </div>
     </div>
+
+    <pre>
+        {{ $page.props.user }}
+    </pre>
 </template>
 
 <script>

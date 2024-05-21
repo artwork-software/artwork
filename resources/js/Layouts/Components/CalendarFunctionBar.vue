@@ -151,7 +151,7 @@
 
     </div>
 
-    <div class="my-3 w-full">
+    <div class="w-full overflow-y-scroll" :class="activeFilters.length > 0 ? 'mt-10' : 'my-3'">
         <div class="mb-1 ml-4 max-w-7xl">
             <div class="flex">
                 <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>

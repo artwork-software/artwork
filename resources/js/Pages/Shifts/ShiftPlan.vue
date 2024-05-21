@@ -419,7 +419,7 @@ export default {
             multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
-            userOverviewHeight: 400,
+            userOverviewHeight: 480,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,

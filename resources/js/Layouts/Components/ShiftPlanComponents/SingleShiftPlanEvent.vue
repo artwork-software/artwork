@@ -14,7 +14,8 @@
         <div class="bg-backgroundGray" :class="userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray'">
             <div v-for="shift in event.shifts" class="flex justify-between px-1">
                 <!-- Drop Element --->
-                <ShiftDropElement :multiEditMode="multiEditMode"
+                <ShiftDropElement
+                    :multiEditMode="multiEditMode"
                                   :craft-id="shift.craft.id"
                                   :userForMultiEdit="userForMultiEdit"
                                   :highlight-mode="highlightMode"
@@ -70,7 +71,12 @@ export default defineComponent({
             return event.shifts.every(shift => shift.is_committed);
         },
         checkIfShiftInDayString(shift) {
-            return shift.days_of_shift?.includes(this.dayString['full_day']);
+            if(this.$page.props.user.show_crafts.length === 0){
+                return shift.days_of_shift?.includes(this.dayString['full_day']);
+            } else {
+                return shift.days_of_shift?.includes(this.dayString['full_day']) && this.$page.props.user.show_crafts.includes(shift.craft.id);
+            }
+
         }
     },
     emits: ['dropFeedback'],

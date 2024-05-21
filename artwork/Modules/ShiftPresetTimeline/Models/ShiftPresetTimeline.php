@@ -25,12 +25,16 @@ class ShiftPresetTimeline extends Model
         'shift_preset_id',
         'start',
         'end',
+        'start_date',
+        'end_date',
         'description',
     ];
 
     protected $casts = [
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function shiftPreset(): BelongsTo

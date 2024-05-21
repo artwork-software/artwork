@@ -37,6 +37,27 @@
                                         <div v-if="showAddTimeLineForm" class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
                                             <div>
                                                 <input type="text"
+                                                       onfocus="(this.type='date')"
+                                                       :placeholder="$t('Start*')"
+                                                       v-model="addTimeLineForm.start_date"
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       required
+                                                       @focusout="checkTime()"
+                                                />
+                                            </div>
+                                            <div>
+                                                <input type="text"
+                                                       onfocus="(this.type='date')"
+                                                       :placeholder="$t('End*')"
+                                                       v-model="addTimeLineForm.end_date"
+                                                       maxlength="3"
+                                                       required
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       @focusout="checkTime()"
+                                                />
+                                            </div>
+                                            <div>
+                                                <input type="text"
                                                        onfocus="(this.type='time')"
                                                        :placeholder="$t('Start*')"
                                                        v-model="addTimeLineForm.start"
@@ -138,6 +159,8 @@ export default defineComponent({
             helpText: '',
             showAddTimeLineForm: this.timeLine.length === 0,
             addTimeLineForm: useForm({
+                start_date: null,
+                end_date: null,
                 start: null,
                 end: null,
                 description: null

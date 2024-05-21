@@ -32,7 +32,8 @@ readonly class CraftService
 
     public function updateByRequest(CraftUpdateRequest $craftUpdateRequest, Craft $craft): void
     {
-        $craft->update($craftUpdateRequest->only(['name', 'abbreviation', 'assignable_by_all']));
+        $craft->update($craftUpdateRequest
+            ->only(['name', 'abbreviation', 'assignable_by_all', 'color', 'notify_days']));
         if (!$craftUpdateRequest->boolean('assignable_by_all')) {
             $this->craftRepository->syncUsers($craft, $craftUpdateRequest->get('users'));
         } else {

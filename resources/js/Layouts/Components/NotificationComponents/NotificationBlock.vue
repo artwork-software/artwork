@@ -54,6 +54,7 @@
                                      @deleteNotification="setOnRead"
                                      @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
                                      @showInTask="openProjectTasks(notification.data?.taskId)"
+                                     @show-project="openProject(notification.data?.projectId)"
                 />
             </div>
         </div>
@@ -346,6 +347,12 @@ export default {
                     }
                 );
             }
+        },
+        openProject(projectId) {
+            window.location.href = route('projects.tab', {
+                project: projectId,
+                projectTab: 1
+            });
         },
         openProjectShift(projectId, eventId, shiftId) {
             if (this.first_project_shift_tab_id) {

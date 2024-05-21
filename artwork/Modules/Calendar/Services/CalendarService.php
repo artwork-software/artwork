@@ -182,6 +182,7 @@ readonly class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
             ];
         }
 

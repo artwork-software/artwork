@@ -3,6 +3,7 @@ import {
     IconAdjustmentsAlt,
     IconArrowsDiagonal,
     IconCalendarMonth,
+    IconCalendarWeek,
     IconCalendarUser,
     IconChevronDown,
     IconChevronUp,
@@ -106,7 +107,8 @@ import {
     IconAddressBook,
     IconInfoSquare,
     IconSeparator,
-    IconDeviceFloppy
+    IconDeviceFloppy,
+    IconNote
 
 } from "@tabler/icons-vue";
 export default {
@@ -114,6 +116,7 @@ export default {
         IconAdjustmentsAlt,
         IconArrowsDiagonal,
         IconCalendarMonth,
+        IconCalendarWeek,
         IconCalendarUser,
         IconChevronDown,
         IconChevronUp,
@@ -217,7 +220,8 @@ export default {
         IconAddressBook,
         IconInfoSquare,
         IconSeparator,
-        IconDeviceFloppy
+        IconDeviceFloppy,
+        IconNote
     }
 }
 </script>

@@ -1,9 +1,10 @@
 <template>
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
-        <div class="flex justify-center">
+        <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="filteredEvents?.length > 0">
+                 v-if="filteredEvents?.length > 0"
+                >
 
                 <IconAlertTriangle class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>

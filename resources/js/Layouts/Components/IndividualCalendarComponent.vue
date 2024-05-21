@@ -1,10 +1,11 @@
 <template>
     <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
-            <div class="flex justify-center w-full bg-white">
+            <div class="flex justify-center w-full bg-white" :class="filteredEvents?.length ? 'mt-10' : ''">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
-                     v-if="filteredEvents?.length > 0">
+                     v-if="filteredEvents?.length > 0"
+                     >
                     <IconAlertTriangle class="h-6  mr-2"/>
                     {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>

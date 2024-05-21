@@ -1,6 +1,7 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
+            <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <div class="relative rounded-md">
                 <input v-model="dateValueArray[0]"
                        @change="this.updateTimes"
@@ -11,7 +12,7 @@
                        placeholder="Start"
                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
                 <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-50 h-8 top-1" @click="toggleDateRangePicker">
-                    <CalendarIcon class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                 </div>
             </div>
             <div class="relative rounded-md">
@@ -24,7 +25,7 @@
                        placeholder="Ende"
                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
                     <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-50 h-8 top-1" @click="toggleDateRangePicker">
-                        <CalendarIcon class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                        <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                     </div>
             </div>
         </div>
@@ -39,14 +40,13 @@
     <div class="font-medium text-gray-900" v-else>
         {{ $t('Project period') }}: {{ new Date(dateValueArray[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValueArray[1]).format("DD.MM.YYYY") }}
     </div>
-    <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
+    <div v-if="hasError" class="text-error mt-1 mx-2" :class="errorMessage.length > 0 ? 'mt-10' : ''" >{{ errorMessage }}</div>
 </template>
 
 <script>
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
-import {CalendarIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -58,7 +58,7 @@ const formatter = ref({
 export default {
     mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
-    components: {VueTailwindDatepicker, CalendarIcon},
+    components: {VueTailwindDatepicker},
     props: ['dateValueArray', 'project', 'is_shift_plan'],
     data() {
         return {

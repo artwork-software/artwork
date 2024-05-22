@@ -1,6 +1,6 @@
 <template>
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
-        <div>
+        <div class="flex items-center gap-x-3">
             <div class="inline-flex items-center">
                 <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
                 <div class="flex items-center">
@@ -14,13 +14,14 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="flex items-center" v-if="checkIfThisIsMe">
-            <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm hover:text-artwork-buttons-hover duration-150 transition-all ease-in-out cursor-pointer">
-                <IconCalendarStar class="h-5 w-5"/>
-                Kalender Abonnieren
+            <div class="flex items-center" v-if="checkIfThisIsMe">
+                <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
+                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                    {{ $t('Subscribe to shift calendar') }}
+                </div>
             </div>
         </div>
+
         <div v-if="type !== 'freelancer' && type !== 'service_provider'">
             {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}
         </div>

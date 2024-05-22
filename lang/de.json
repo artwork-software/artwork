@@ -1759,5 +1759,17 @@
     "Activate calendar notifications": "Kalender-Benachrichtigungen aktivieren",
     "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.": "Erhalte rechtzeitige Benachrichtigungen über bevorstehende Termine. Aktiviere diese Option, um Erinnerungen und Warnungen für deine geplanten Termine zu erhalten und sicherzustellen, dass du keine wichtigen Ereignisse verpasst.",
     "Notification settings": "Benachrichtigungseinstellungen",
-    "Show instructions": "Anleitung anzeigen"
+    "Show instructions": "Anleitung anzeigen",
+    "Instructions for subscribing to the calendar": "Anleitung zum Abonnieren des Kalenders",
+    "Here you will find detailed instructions on how to subscribe to the calendar in various applications. Follow the appropriate links for your favorite calendar application to complete the subscription process and stay up to date with your appointments. You can also manually import the calendar into your calendar application by downloading the ICS file.": "Hier findest du detaillierte Anleitungen, wie du den Kalender in verschiedenen Anwendungen abonnieren kannst. Folge den entsprechenden Links für deine bevorzugte Kalenderanwendung, um den Abonnierungsprozess abzuschließen und über deine Termine auf dem Laufenden zu bleiben. Du kannst den Kalender auch manuell in deine Kalenderanwendung importieren, indem du die ICS-Datei herunterlädst.",
+    "Calendar URL": "Kalender-URL",
+    "Use the following URL to import the calendar into your calendar application and stay up to date:": "Verwende die folgende URL, um den Kalender in deine Kalenderanwendung zu importieren und auf dem Laufenden zu bleiben:",
+    "Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.": "Klicke auf „Kopieren“, um die URL in die Zwischenablage zu kopieren und in die gewünschte Kalenderanwendung einzufügen.",
+    "Download the ICS file to manually import the calendar directly into your application:": "Lade die ICS-Datei herunter, um den Kalender manuell direkt in deine Anwendung zu importieren:",
+    "Download ICS file": "ICS-Datei herunterladen",
+    "Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.": "Achtung - Die ICS-Datei wird nicht automatisch aktualisiert. Du musst die Datei regelmäßig neu importieren, um sie auf dem neuesten Stand zu halten.",
+    "Subscribe": "Abonnieren",
+    "Copy": "Kopieren",
+    "Copied": "Kopiert",
+    "Subscribe to shift calendar": "Schichtkalender abonnieren"
 }

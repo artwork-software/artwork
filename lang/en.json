@@ -1759,5 +1759,17 @@
     "Activate calendar notifications": "Activate calendar notifications",
     "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.": "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.",
     "Notification settings": "Notification settings",
-    "Show instructions": "Show instructions"
+    "Show instructions": "Show instructions",
+    "Instructions for subscribing to the calendar": "Instructions for subscribing to the calendar",
+    "Here you will find detailed instructions on how to subscribe to the calendar in various applications. Follow the appropriate links for your favorite calendar application to complete the subscription process and stay up to date with your appointments. You can also manually import the calendar into your calendar application by downloading the ICS file.": "Here you will find detailed instructions on how to subscribe to the calendar in various applications. Follow the appropriate links for your favorite calendar application to complete the subscription process and stay up to date with your appointments. You can also manually import the calendar into your calendar application by downloading the ICS file.",
+    "Calendar URL": "Calendar URL",
+    "Use the following URL to import the calendar into your calendar application and stay up to date:": "Use the following URL to import the calendar into your calendar application and stay up to date:",
+    "Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.": "Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.",
+    "Download the ICS file to manually import the calendar directly into your application:": "Download the ICS file to manually import the calendar directly into your application:",
+    "Download ICS file": "Download ICS file",
+    "Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.": "Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.",
+    "Subscribe": "Subscribe",
+    "Copy": "Copy",
+    "Copied": "Copied",
+    "Subscribe to shift calendar": "Subscribe to shift calendar"
 }

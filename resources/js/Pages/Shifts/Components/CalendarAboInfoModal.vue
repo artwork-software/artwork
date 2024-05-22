@@ -17,7 +17,7 @@ export default {
         copyAboUrlToClipboard() {
             const url = this.$page.props.user.shift_calendar_abo.calendar_abo_url;
             navigator.clipboard.writeText(url).then(() => {
-                this.copyText = ' Kopiert';
+                this.copyText = this.$t('Copied');
                 setTimeout(() => {
                     this.copyText = '';
                 }, 2000);
@@ -107,15 +107,15 @@ export default {
 </script>
 
 <template>
-    <BaseModal v-if="true" @closed="closeModal(true)">
+    <BaseModal v-if="true" @closed="closeModal(true)" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
 
 
         <div class="w-full">
             <h2 class="headline1 mb-6">
-                Anleitung zum Abonnieren des Kalenders
+                {{ $t('Instructions for subscribing to the calendar') }}
             </h2>
            <p class="text-secondary subpixel-antialiased text-sm">
-               Hier finden Sie detaillierte Anleitungen, wie Sie den Kalender in verschiedenen Anwendungen abonnieren können. Folgen Sie den entsprechenden Links für Ihre bevorzugte Kalenderanwendung, um den Abonnementprozess abzuschließen und immer auf dem neuesten Stand Ihrer Termine zu bleiben.
+               {{ $t('Here you will find detailed instructions on how to subscribe to the calendar in various applications. Follow the appropriate links for your favorite calendar application to complete the subscription process and stay up to date with your appointments. You can also manually import the calendar into your calendar application by downloading the ICS file.') }}
            </p>
             <div class="mx-auto w-full my-5">
                 <Disclosure v-for="instruction in instructions" as="div" class="mt-2" v-slot="{ open }">
@@ -141,34 +141,40 @@ export default {
         <div>
             <!-- Textbox to copy the calendar url -->
             <div class="my-10">
-                <label for="calendar-url" class="block text-sm font-bold text-gray-700 ">Kalender-URL</label>
-                <p class="text-secondary subpixel-antialiased text-sm mb-2">Nutzen Sie die folgende URL, um den Kalender manuell in Ihre Kalenderanwendung zu importieren:</p>
+                <label for="calendar-url" class="block text-sm font-bold text-gray-700 ">{{ $t('Calendar URL') }}</label>
+                <p class="text-secondary subpixel-antialiased text-sm mb-2">
+                    {{ $t('Use the following URL to import the calendar into your calendar application and stay up to date:') }}
+                </p>
                 <div class="mt-1 relative rounded-md shadow-sm">
                     <input @click="$event.target.select()" type="text" name="calendar-url" id="calendar-url" class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-gray-300 rounded-md" :value="$page.props.user.shift_calendar_abo.calendar_abo_url" readonly>
                     <button type="button" class="absolute flex items-center inset-y-0 right-0 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75" @click="copyAboUrlToClipboard">
-                        <IconCircleCheck class="h-4 w-4 mr-1" v-if="copyText"/> {{ copyText ? copyText : 'Kopieren' }}
+                        <IconCircleCheck class="h-4 w-4 mr-1" v-if="copyText"/> {{ copyText ? copyText : $t('Copy') }}
                     </button>
                 </div>
-                <span class="text-xs flex items-start gap-x-1 mt-1 text-artwork-buttons-create">
-                    <IconInfoCircle class="h-5 w-5" stroke-width="1.5" /> Klicken Sie auf "Kopieren", um die URL in Ihre Zwischenablage zu kopieren und in die gewünschte Kalenderanwendung einzufügen.
+                <span class="text-xs flex items-center gap-x-1 mt-1 text-artwork-buttons-create">
+                    <IconInfoCircle class="h-5 w-5" stroke-width="1.5" /> {{ $t('Click on “Copy” to copy the URL to your clipboard and paste it into the desired calendar application.') }}
                 </span>
             </div>
         </div>
 
         <div>
-            <div class="flex items-center justify-between mt-4">
+            <div class="flex items-start gap-x-3 justify-between mt-4">
                 <div>
                     <div class="text-secondary subpixel-antialiased text-sm mb-2">
-                        Laden Sie die ICS-Datei herunter, um den Kalender direkt in Ihre Anwendung zu importieren:
+                        {{ $t('Download the ICS file to manually import the calendar directly into your application:') }}
                     </div>
                     <div class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="downloadICSFile">
-                        ICS Datei herunterladen
+                        {{ $t('Download ICS file') }}
                     </div>
+
                 </div>
 
-                <FormButton @click="closeModal(true)" text="Schließen">
-                    Schließen
+                <FormButton @click="closeModal(true)" :text="$t('Close')">
+                    {{ $t('Close') }}
                 </FormButton>
+            </div>
+            <div class="text-artwork-messages-error subpixel-antialiased text-xs mt-2">
+                {{ $t('Attention - The ICS file is not updated automatically. You must re-import the file regularly to keep it up to date.') }}
             </div>
         </div>
 

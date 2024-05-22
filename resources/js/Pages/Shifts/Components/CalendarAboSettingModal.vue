@@ -185,7 +185,9 @@ export default {
                 <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
                 <span class="ml-1">{{ $t('Show instructions') }}</span>
             </div>
-            <FormButton @click="create" class="mt-4" text="Abonnieren"></FormButton>
+            <FormButton @click="create(true)" :text="$t('Subscribe')">
+                {{ $t('Subscribe') }}
+            </FormButton>
         </div>
 
     </BaseModal>

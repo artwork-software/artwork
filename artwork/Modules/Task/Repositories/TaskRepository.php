@@ -21,6 +21,6 @@ readonly class TaskRepository extends BaseRepository
 
     public function syncWithoutDetach(BelongsToMany $belongsToMany, array $ids): void
     {
-        $belongsToMany->syncWithoutDetaching($ids);
+        $belongsToMany->sync($ids);
     }
 }

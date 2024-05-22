@@ -1130,6 +1130,7 @@
     "Week(s)" : "Woche(n)",
     "Month(s)" : "Monat(e)",
     "Year(s)" : "Jahr(e)",
+    "Minute(s)": "Minute(n)",
     "Check calculation" : "Kalkulation prüfen",
     "Notification by e-mail" : "Benachrichtigung per E-Mail",
     "Get notified by e-mail and stay up to date - even if you are not currently online in artwork." : "Lass dich per E-Mail benachrichtigen und bleibe auf dem neusten Stand – auch wenn du gerade nicht im artwork online bist.",
@@ -1745,5 +1746,18 @@
     "Compact Mode": "Kompaktmodus",
     "Project Role Settings": "Projektrollen-Einstellungen",
     "Project Role": "Projektrolle",
-    "Project Roles": "Projektrollen"
+    "Project Roles": "Projektrollen",
+    "Shift Calendar subscription settings": "Schicht Kalender-Abonnement Einstellungen",
+    "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.": "Passe dein Kalender-Abonnement an deine individuellen Bedürfnisse an. Wähle einen bestimmten Zeitraum, bestimmte Terminarten und aktiviere Benachrichtigungen, um optimal informiert zu bleiben und deine Planung zu erleichtern. Nutze diese Einstellungen, um deinen Kalender nach deinen Wünschen zu konfigurieren und organisiert zu bleiben.",
+    "Set period for calendar subscription": "Zeitraum für Kalender-Abonnement festlegen",
+    "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.": "Wähle einen bestimmten Zeitraum für dein Kalender-Abonnement. Wenn du keinen Zeitraum auswählst, wird das Abonnement unbefristet fortgesetzt. So kannst du das Kalender-Abonnement nur für einen bestimmten Zeitraum abonnieren.",
+    "Period Start": "Zeitraum Start",
+    "Period End": "Zeitraum Ende",
+    "Select event types for calendar subscription": "Wähle Terminarten für Kalender-Abonnement",
+    "Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning." : "Wähle spezifische Terminarten für dein Kalender-Abonnement. So kannst du festlegen, welche Terminarten in deinem abonnierten Kalender angezeigt werden sollen, um deine Planung zu optimieren.",
+    "Select event types": "Terminarten auswählen",
+    "Activate calendar notifications": "Kalender-Benachrichtigungen aktivieren",
+    "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.": "Erhalte rechtzeitige Benachrichtigungen über bevorstehende Termine. Aktiviere diese Option, um Erinnerungen und Warnungen für deine geplanten Termine zu erhalten und sicherzustellen, dass du keine wichtigen Ereignisse verpasst.",
+    "Notification settings": "Benachrichtigungseinstellungen",
+    "Show instructions": "Anleitung anzeigen"
 }

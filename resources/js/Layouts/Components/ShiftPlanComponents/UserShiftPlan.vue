@@ -47,7 +47,7 @@
     </div>
 
     <pre>
-        {{ $page.props.user }}
+        {{ $page.props }}
     </pre>
 </template>
 
@@ -103,7 +103,7 @@ export default {
         'weeklyWorkingHours',
         'type',
         'totalPlannedWorkingHours',
-        'shiftQualifications'
+        'shiftQualifications',
     ],
     methods: {
         previousTimeRange() {

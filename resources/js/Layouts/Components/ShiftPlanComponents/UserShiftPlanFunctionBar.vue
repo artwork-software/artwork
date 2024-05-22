@@ -15,7 +15,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center" v-if="checkIfThisIsMe">
             <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm hover:text-artwork-buttons-hover duration-150 transition-all ease-in-out cursor-pointer">
                 <IconCalendarStar class="h-5 w-5"/>
                 Kalender Abonnieren
@@ -71,7 +71,7 @@ export default {
         'weeklyWorkingHours',
         'type',
         'totalPlannedWorkingHours',
-        'eventTypes'
+        'eventTypes',
     ],
     emits: ['previousTimeRange', 'nextTimeRange'],
     data() {
@@ -98,6 +98,11 @@ export default {
             // Calculate the total number of hours that need to be worked
             return (totalDays * hoursPerDay).toFixed(1);
         },
+        checkIfThisIsMe(){
+            if(this.$page.props.user_to_edit){
+                return this.$page.props.user_to_edit.id === this.$page.props.user.id;
+            }
+        },
     },
     methods: {
 
@@ -107,9 +112,11 @@ export default {
         nextTimeRange() {
             this.$emit('nextTimeRange')
         },
-        closeCalendarAboSettingModal(){
+        closeCalendarAboSettingModal(bool){
             this.showCalendarAboSettingModal = false;
-            this.showCalendarAboInfoModal = true;
+            if(bool){
+                this.showCalendarAboInfoModal = true;
+            }
         }
     },
 }

@@ -197,7 +197,7 @@ class User extends Model implements
 
     public function shiftCalendarAbo(): hasOne
     {
-        return $this->hasOne(UserShiftCalendarAbo::class, 'user_id', 'id');
+        return $this->hasOne(UserShiftCalendarAbo::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string

@@ -2,7 +2,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
         <div class="flex flex-col items-center justify-center h-screen">
-            <div class="">
+            <div class="min-h-96">
                 <div class="">
                     <div class="text-2xl mb-8 font-bold text-black">
                         <img :src="$page.props.big_logo" class="max-w-lg h-fit"/>
@@ -42,7 +42,7 @@
                 </form>
 
             </div>
-            <div class="absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
+            <div class="absolute bottom-10 text-secondary subpixel-antialiased text-sm tracking-wide">
                 <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                     {{$t('Imprint')}}
                 </a>

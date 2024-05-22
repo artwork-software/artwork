@@ -103,10 +103,8 @@
                         </div>
                     </Listbox>
                 </div>
-                <div class="mt-3 flex">
-                    <div v-for="type in relevantEventTypes">
-                        <TagComponent :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
-                    </div>
+                <div class="mt-3 flex flex-wrap">
+                    <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
             <div class="mt-10">

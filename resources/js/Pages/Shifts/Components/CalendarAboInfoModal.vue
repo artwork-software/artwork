@@ -2,8 +2,10 @@
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 export default {
     name: "CalendarAboInfoModal",
+    mixins: [IconLib],
     components: {
         FormButton,
         BaseModal, Disclosure, DisclosureButton, DisclosurePanel
@@ -12,19 +14,27 @@ export default {
         closeModal(bool) {
             this.$emit('close', bool)
         },
+        copyAboUrlToClipboard() {
+            const url = this.$page.props.user.shift_calendar_abo.calendar_abo_url;
+            navigator.clipboard.writeText(url).then(() => {
+                this.copyText = ' Kopiert';
+                setTimeout(() => {
+                    this.copyText = '';
+                }, 2000);
+            });
+        },
+        downloadICSFile() {
+            const url = this.$page.props.user.shift_calendar_abo.calendar_abo_url;
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Schichtkalender.ics';
+            a.click();
+        }
     },
     data(){
         return {
+            copyText: '',
             instructions: [
-                {
-                    system: 'Outlook',
-                    description: 'So abonnierst du einen Kalender in Outlook:',
-                    steps: [
-                        'Öffne Outlook',
-                        'Gehe zu "Kalender" und klicke auf "Kalender öffnen" > "Aus dem Internet".',
-                        'Gib die URL (Siehe Textbox) ein und klicke auf "OK".',
-                    ]
-                },
                 {
                     system: 'Google Kalender',
                     description: 'So abonnierst du einen Kalender in Google Kalender:',
@@ -101,10 +111,13 @@ export default {
 
 
         <div class="w-full">
-            <h4 class="font-bold text-base">
+            <h2 class="headline1 mb-6">
                 Anleitung zum Abonnieren des Kalenders
-            </h4>
-            <div class="mx-auto w-full">
+            </h2>
+           <p class="text-secondary subpixel-antialiased text-sm">
+               Hier finden Sie detaillierte Anleitungen, wie Sie den Kalender in verschiedenen Anwendungen abonnieren können. Folgen Sie den entsprechenden Links für Ihre bevorzugte Kalenderanwendung, um den Abonnementprozess abzuschließen und immer auf dem neuesten Stand Ihrer Termine zu bleiben.
+           </p>
+            <div class="mx-auto w-full my-5">
                 <Disclosure v-for="instruction in instructions" as="div" class="mt-2" v-slot="{ open }">
                     <DisclosureButton
                         class="flex w-full justify-between rounded-lg bg-artwork-buttons-create/20 px-4 py-2 text-left text-sm font-medium text-artwork-buttons-create hover:bg-artwork-buttons-create/30 focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
@@ -127,19 +140,32 @@ export default {
 
         <div>
             <!-- Textbox to copy the calendar url -->
-            <div class="mt-4">
-                <label for="calendar-url" class="block text-sm font-medium text-gray-700">Kalender-URL</label>
+            <div class="my-10">
+                <label for="calendar-url" class="block text-sm font-bold text-gray-700 ">Kalender-URL</label>
+                <p class="text-secondary subpixel-antialiased text-sm mb-2">Nutzen Sie die folgende URL, um den Kalender manuell in Ihre Kalenderanwendung zu importieren:</p>
                 <div class="mt-1 relative rounded-md shadow-sm">
-                    <input type="text" name="calendar-url" id="calendar-url" class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-gray-300 rounded-md" :value="$page.props.user.shift_calendar_abo.calendar_abo_url" readonly disabled>
-                    <button type="button" class="absolute inset-y-0 right-0 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
-                        Kopieren
+                    <input @click="$event.target.select()" type="text" name="calendar-url" id="calendar-url" class="focus:ring-primary focus:border-primary block w-full pr-10 sm:text-sm border-gray-300 rounded-md" :value="$page.props.user.shift_calendar_abo.calendar_abo_url" readonly>
+                    <button type="button" class="absolute flex items-center inset-y-0 right-0 px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75" @click="copyAboUrlToClipboard">
+                        <IconCircleCheck class="h-4 w-4 mr-1" v-if="copyText"/> {{ copyText ? copyText : 'Kopieren' }}
                     </button>
                 </div>
+                <span class="text-xs flex items-start gap-x-1 mt-1 text-artwork-buttons-create">
+                    <IconInfoCircle class="h-5 w-5" stroke-width="1.5" /> Klicken Sie auf "Kopieren", um die URL in Ihre Zwischenablage zu kopieren und in die gewünschte Kalenderanwendung einzufügen.
+                </span>
             </div>
         </div>
 
         <div>
-            <div class="flex justify-end mt-4">
+            <div class="flex items-center justify-between mt-4">
+                <div>
+                    <div class="text-secondary subpixel-antialiased text-sm mb-2">
+                        Laden Sie die ICS-Datei herunter, um den Kalender direkt in Ihre Anwendung zu importieren:
+                    </div>
+                    <div class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="downloadICSFile">
+                        ICS Datei herunterladen
+                    </div>
+                </div>
+
                 <FormButton @click="closeModal(true)" text="Schließen">
                     Schließen
                 </FormButton>

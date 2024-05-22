@@ -1130,6 +1130,7 @@
     "Week(s)": "Week(s)",
     "Month(s)": "Month(s)",
     "Year(s)": "Year(s)",
+    "Minute(s)": "Minute(s)",
     "Check calculation": "Check calculation",
     "Notification by e-mail": "Notification by e-mail",
     "Get notified by e-mail and stay up to date - even if you are not currently online in artwork.": "Get notified by e-mail and stay up to date - even if you are not currently online in artwork.",
@@ -1745,5 +1746,18 @@
     "Compact Mode": "Compact Mode",
     "Project Role Settings": "Project Role Settings",
     "Project Role": "Project Role",
-    "Project Roles": "Project Roles"
+    "Project Roles": "Project Roles",
+    "Shift Calendar subscription settings": "Shift Calendar subscription settings",
+    "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.": "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.",
+    "Set period for calendar subscription": "Set period for calendar subscription",
+    "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.": "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.",
+    "Period Start": "Period Start",
+    "Period End": "Period End",
+    "Select event types for calendar subscription": "Select event types for calendar subscription",
+    "Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning." : "Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning.",
+    "Select event types": "Select event types",
+    "Activate calendar notifications": "Activate calendar notifications",
+    "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.": "Receive timely notifications about upcoming events. Activate this option to receive reminders and alerts for your scheduled events and make sure you don't miss any important events.",
+    "Notification settings": "Notification settings",
+    "Show instructions": "Show instructions"
 }

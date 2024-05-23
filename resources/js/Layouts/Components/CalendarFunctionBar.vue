@@ -169,11 +169,13 @@
 
     <GeneralCalendarAboSettingModal
         v-if="showCalendarAboSettingModal"
-        @close="showCalendarAboSettingModal = false"
+        @close="closeCalendarAboSettingModal"
         :event-types="filterOptions.eventTypes"
         :areas="filterOptions.areas"
         :rooms="filterOptions.rooms"
     />
+
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 </template>
 
 <script>
@@ -194,12 +196,14 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        CalendarAboInfoModal,
         GeneralCalendarAboSettingModal,
         PlusButton,
         AddButtonSmall,
@@ -253,10 +257,17 @@ export default {
             showPDFConfigModal: false,
             isPageScrolled: false,
             showCalendarAboSettingModal: false,
+            showCalendarAboInfoModal: false,
         }
     },
     methods: {
         usePage,
+        closeCalendarAboSettingModal(bool){
+            this.showCalendarAboSettingModal = false;
+            if(bool){
+                this.showCalendarAboInfoModal = true;
+            }
+        },
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
         },

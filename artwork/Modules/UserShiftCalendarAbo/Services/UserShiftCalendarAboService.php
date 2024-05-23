@@ -21,7 +21,7 @@ class UserShiftCalendarAboService
         $calendarAbo = new UserShiftCalendarAbo();
         $calendarAbo->user_id = Auth::id();
         // $calendarAbo->calendar_abo_id random string
-        $calendarAbo->calendar_abo_id = Str::random(32);
+        $calendarAbo->calendar_abo_id = Str::uuid();
         $calendarAbo->date_range = $data['date_range'];
         $calendarAbo->start_date = $data['start_date'];
         $calendarAbo->end_date = $data['end_date'];

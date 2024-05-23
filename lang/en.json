@@ -1748,6 +1748,7 @@
     "Project Role": "Project Role",
     "Project Roles": "Project Roles",
     "Shift Calendar subscription settings": "Shift Calendar subscription settings",
+    "Calendar subscription settings": "Calendar subscription settings",
     "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.": "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.",
     "Set period for calendar subscription": "Set period for calendar subscription",
     "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.": "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.",
@@ -1772,5 +1773,13 @@
     "Copy": "Copy",
     "Copied": "Copied",
     "Subscribe to shift calendar": "Subscribe to shift calendar",
-    "Subscribe to calendar": "Subscribe to calendar"
+    "Subscribe to calendar": "Subscribe to calendar",
+    "Select areas for calendar subscription": "Select areas for calendar subscription",
+    "Select specific areas for your calendar subscription. This allows you to define which areas should be displayed in your subscribed calendar to optimize your planning.": "Select specific areas for your calendar subscription. This allows you to define which areas should be displayed in your subscribed calendar to optimize your planning.",
+    "Select areas": "Select areas",
+    "Select rooms for calendar subscription": "Select rooms for calendar subscription",
+    "Select specific rooms for your calendar subscription. This allows you to define which rooms should be displayed in your subscribed calendar to optimize your planning.": "Select specific rooms for your calendar subscription. This allows you to define which rooms should be displayed in your subscribed calendar to optimize your planning.",
+    "Select rooms": "Select rooms",
+    "Information" : "Information",
+    "As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.": "As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program."
 }

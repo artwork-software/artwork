@@ -26,27 +26,54 @@ export default {
     data(){
         return {
             aboForm: useForm({
-                date_range: false,
-                start_date: '',
-                end_date: '',
-                specific_event_types: false,
-                specific_rooms: false,
-                specific_areas: false,
-                enable_notification: false,
-                notification_time:  0,
-                notification_time_unit: 'minutes',
+                id: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.id : null,
+                date_range: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.date_range : false,
+                start_date: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.start_date : '',
+                end_date: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.end_date : '',
+                specific_event_types: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.specific_event_types : false,
+                event_types: [],
+                specific_rooms: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.specific_rooms : false,
+                selected_rooms: [],
+                specific_areas: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.specific_areas : false,
+                selected_areas: [],
+                enable_notification: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.enable_notification : false,
+                notification_time:  this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.notification_time : 15,
+                notification_time_unit: this.$page.props.user.calendar_abo ? this.$page.props.user.calendar_abo.notification_time_unit : 'minutes',
             }),
-            event_types: [],
-            selected_rooms: [],
-            selected_areas: [],
+            event_types: this.$page.props.user.calendar_abo ? this.eventTypes.filter((eventType) => this.$page.props.user.calendar_abo.event_types.includes(eventType.id)) : [],
+            selected_rooms: this.$page.props.user.calendar_abo ? this.rooms.filter((room) => this.$page.props.user.calendar_abo.selected_rooms.includes(room.id)) : [],
+            selected_areas: this.$page.props.user.calendar_abo ? this.areas.filter((area) => this.$page.props.user.calendar_abo.selected_areas.includes(area.id)) : [],
         }
     },
     methods: {
         closeModal(bool){
             this.$emit('close', bool)
         },
-        create() {
-            console.log(this.aboForm)
+        create(){
+            this.aboForm.event_types = this.event_types.map((eventType) => eventType.id)
+            this.aboForm.selected_rooms = this.selected_rooms.map((room) => room.id)
+            this.aboForm.selected_areas = this.selected_areas.map((area) => area.id)
+
+            if ( this.aboForm.id ) {
+                this.aboForm.patch(route('user.calendar.abo.update', this.aboForm.id), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.closeModal(true)
+
+
+                    }
+                })
+            } else {
+                this.aboForm.post(route('user.calendar.abo.create'), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.closeModal(true)
+
+                    }
+                })
+            }
         }
     }
 }
@@ -55,7 +82,7 @@ export default {
 <template>
     <BaseModal v-if="true" @closed="closeModal(false)" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
         <div class="mb-5">
-            <h2 class="headline1 mb-6">{{ $t('Shift Calendar subscription settings') }}</h2>
+            <h2 class="headline1 mb-6">{{ $t('Calendar subscription settings') }}</h2>
             <p class="text-secondary subpixel-antialiased text-sm">
                 {{ $t('Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.') }}
             </p>
@@ -142,17 +169,17 @@ export default {
                 </div>
                 <div class="ml-3 text-sm leading-6">
                     <label for="specific_event_types" class="font-medium text-gray-900">
-                        {{ $t('Select event types for calendar subscription') }}
+                        {{ $t('Select areas for calendar subscription') }}
                     </label>
                     <p id="specific_event_types-description" class="text-gray-500">
-                        {{ $t('Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning.') }}
+                        {{ $t('Select specific areas for your calendar subscription. This allows you to define which areas should be displayed in your subscribed calendar to optimize your planning.') }}
                     </p>
                 </div>
             </div>
             <div v-if="aboForm.specific_areas" class="mt-3 ml-7">
                 <Listbox as="div" v-model="selected_areas" multiple>
                     <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">
-                        {{ $t('Select event types') }}
+                        {{ $t('Select areas') }}
                     </ListboxLabel>
                     <div class="relative mt-2">
                         <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
@@ -187,17 +214,17 @@ export default {
                 </div>
                 <div class="ml-3 text-sm leading-6">
                     <label for="specific_event_types" class="font-medium text-gray-900">
-                        {{ $t('Select event types for calendar subscription') }}
+                        {{ $t('Select rooms for calendar subscription') }}
                     </label>
                     <p id="specific_event_types-description" class="text-gray-500">
-                        {{ $t('Select specific types of events for your calendar subscription. This allows you to specify which event types should be displayed in your subscribed calendar to optimize your planning.') }}
+                        {{ $t('Select specific rooms for your calendar subscription. This allows you to define which rooms should be displayed in your subscribed calendar to optimize your planning.') }}
                     </p>
                 </div>
             </div>
             <div v-if="aboForm.specific_rooms" class="mt-3 ml-7">
                 <Listbox as="div" v-model="selected_rooms" multiple>
                     <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">
-                        {{ $t('Select event types') }}
+                        {{ $t('Select rooms') }}
                     </ListboxLabel>
                     <div class="relative mt-2">
                         <ListboxButton class="relative w-full cursor-default rounded-md bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
@@ -259,14 +286,25 @@ export default {
 
 
         <div class="flex items-center justify-between">
-            <div class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
-                <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
-                <span class="ml-1">{{ $t('Show instructions') }}</span>
+            <div>
+                <div v-if="aboForm.id" class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
+                    <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                    <span class="ml-1">{{ $t('Show instructions') }}</span>
+                </div>
             </div>
-            <FormButton @click="create(true)" :text="$t('Subscribe')">
-                {{ $t('Subscribe') }}
-            </FormButton>
+            <FormButton @click="create(true)" :text="aboForm.id ? $t('Save') : $t('Subscribe')" />
         </div>
+
+        <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >
+            <div class="flex items-center gap-1 mb-2">
+                <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
+            </div>
+            <div class="text-xs text-artwork-buttons-create w-fit">
+                {{ $t('As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.') }}
+            </div>
+        </div>
+
     </BaseModal>
 </template>
 

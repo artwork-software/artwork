@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_shift_calendar_abos', function (Blueprint $table) {
+        Schema::create('user_calender_abos', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('calendar_abo_id')->unique();
@@ -20,6 +20,10 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->boolean('specific_event_types')->default(false);
             $table->json('event_types')->nullable();
+            $table->boolean('specific_rooms')->default(false);
+            $table->json('selected_rooms')->nullable();
+            $table->boolean('specific_areas')->default(false);
+            $table->json('selected_areas')->nullable();
             $table->boolean('enable_notification')->default(false);
             $table->integer('notification_time')->nullable();
             $table->enum('notification_time_unit', ['minutes', 'hours', 'days'])->nullable();
@@ -32,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_shift_calendar_abos');
+        Schema::dropIfExists('user_calender_abos');
     }
 };

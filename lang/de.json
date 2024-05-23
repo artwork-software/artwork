@@ -1748,6 +1748,7 @@
     "Project Role": "Projektrolle",
     "Project Roles": "Projektrollen",
     "Shift Calendar subscription settings": "Schicht Kalender-Abonnement Einstellungen",
+    "Calendar subscription settings": "Kalender-Abonnement Einstellungen",
     "Customize your calendar subscription to suit your individual needs. Select a specific time period, certain appointment types and activate notifications to stay optimally informed and make your planning easier. Use these settings to configure your calendar according to your preferences and stay organized.": "Passe dein Kalender-Abonnement an deine individuellen Bedürfnisse an. Wähle einen bestimmten Zeitraum, bestimmte Terminarten und aktiviere Benachrichtigungen, um optimal informiert zu bleiben und deine Planung zu erleichtern. Nutze diese Einstellungen, um deinen Kalender nach deinen Wünschen zu konfigurieren und organisiert zu bleiben.",
     "Set period for calendar subscription": "Zeitraum für Kalender-Abonnement festlegen",
     "Select a specific period for your calendar subscription. If you do not select a period, the subscription will continue indefinitely. This allows you to subscribe to the calendar for a set period of time only.": "Wähle einen bestimmten Zeitraum für dein Kalender-Abonnement. Wenn du keinen Zeitraum auswählst, wird das Abonnement unbefristet fortgesetzt. So kannst du das Kalender-Abonnement nur für einen bestimmten Zeitraum abonnieren.",
@@ -1772,5 +1773,13 @@
     "Copy": "Kopieren",
     "Copied": "Kopiert",
     "Subscribe to shift calendar": "Schichtkalender abonnieren",
-    "Subscribe to calendar": "Kalender abonnieren"
+    "Subscribe to calendar": "Kalender abonnieren",
+    "Select areas for calendar subscription": "Bereiche für Kalender-Abonnement auswählen",
+    "Select specific areas for your calendar subscription. This allows you to define which areas should be displayed in your subscribed calendar to optimize your planning.": "Wähle spezifische Bereiche für dein Kalender-Abonnement aus. So kannst du festlegen, welche Bereiche in deinem abonnierten Kalender angezeigt werden sollen, um deine Planung zu optimieren.",
+    "Select areas": "Bereiche auswählen",
+    "Select rooms for calendar subscription": "Räume für Kalender-Abonnement auswählen",
+    "Select specific rooms for your calendar subscription. This allows you to define which rooms should be displayed in your subscribed calendar to optimize your planning.": "Wähle spezifische Räume für dein Kalender-Abonnement aus. So kannst du festlegen, welche Räume in deinem abonnierten Kalender angezeigt werden sollen, um deine Planung zu optimieren.",
+    "Select rooms": "Räume auswählen",
+    "Information": "Information",
+    "As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.": "Sobald du auf „Speichern“ klickst, wird dein Abonnement aktualisiert und die Einstellungen gespeichert. Wenn du den Kalender über den Link abonniert hast, werden deine Einträge im Kalenderprogramm automatisch aktualisiert. Alternativ kannst du auch die ICS-Datei herunterladen und dann in dein Kalenderprogramm einfügen."
 }

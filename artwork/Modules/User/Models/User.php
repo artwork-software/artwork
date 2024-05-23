@@ -24,6 +24,7 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
@@ -188,7 +189,7 @@ class User extends Model implements
         'assigned_craft_ids'
     ];
 
-    protected $with = ['calendar_settings', 'shiftCalendarAbo'];
+    protected $with = ['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -198,6 +199,11 @@ class User extends Model implements
     public function shiftCalendarAbo(): hasOne
     {
         return $this->hasOne(UserShiftCalendarAbo::class);
+    }
+
+    public function calendarAbo(): hasOne
+    {
+        return $this->hasOne(UserCalenderAbo::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string

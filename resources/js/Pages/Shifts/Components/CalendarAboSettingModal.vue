@@ -181,14 +181,25 @@ export default {
 
 
         <div class="flex items-center justify-between">
-            <div class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
-                <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
-                <span class="ml-1">{{ $t('Show instructions') }}</span>
+            <div>
+                <div v-if="aboForm.id" class="flex items-center text-xs text-artwork-buttons-hover underline cursor-pointer" @click="closeModal(true)">
+                    <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                    <span class="ml-1">{{ $t('Show instructions') }}</span>
+                </div>
             </div>
-            <FormButton @click="create(true)" :text="$t('Subscribe')">
-                {{ $t('Subscribe') }}
-            </FormButton>
+            <FormButton @click="create(true)" :text="aboForm.id ? $t('Save') : $t('Subscribe')" />
         </div>
+
+        <div v-if="aboForm.id" class="mt-2 text-artwork-buttons-create bg-artwork-buttons-create/10 rounded-lg p-3" >
+            <div class="flex items-center gap-1 mb-2">
+                <IconInfoCircle class="h-4 w-4" stroke-width="1.5"/>
+                <h5 class="font-bold text-sm">{{ $t('Information') }}</h5>
+            </div>
+            <div class="text-xs text-artwork-buttons-create w-fit">
+                {{ $t('As soon as you click on “Save”, your subscription will be updated and the settings will be saved. If you have subscribed to the calendar via the link, your entries in the calendar program will be updated automatically. Alternatively, you can also download the ICS file and then insert it into your calendar program.') }}
+            </div>
+        </div>
+
 
     </BaseModal>
 </template>

@@ -45,10 +45,6 @@
             </div>
         </div>
     </div>
-
-    <pre>
-        {{ $page.props }}
-    </pre>
 </template>
 
 <script>

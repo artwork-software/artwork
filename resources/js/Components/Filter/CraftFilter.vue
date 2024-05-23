@@ -17,13 +17,13 @@ export default {
     data() {
         return {
             showCraftFilter: false,
-            selectedCrafts: this.$page.props.user ? this.$page.props.user.show_crafts : []
+            selectedCrafts: this.$page.props.user ? this.$page.props.user.show_crafts ?? [] : []
         }
     },
     methods: {
         addCraftToUser(craftId) {
             // add or remove craft from user
-            if (this.selectedCrafts.includes(craftId)) {
+            if (this.selectedCrafts?.includes(craftId)) {
                 this.selectedCrafts = this.selectedCrafts.filter(craft => craft !== craftId);
             } else {
                 this.selectedCrafts.push(craftId);
@@ -55,7 +55,7 @@ export default {
                 <div v-for="craft in crafts" :key="craft.id">
                     <div class="relative flex items-start">
                         <div class="flex h-6 items-center">
-                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create" />
+                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts?.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create" />
                         </div>
                         <div class="ml-3 text-sm leading-6">
                             <label :for="'craft-' + craft.id" class="font-medium text-white">{{ craft.name }}</label>

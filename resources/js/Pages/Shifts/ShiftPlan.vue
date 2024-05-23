@@ -477,7 +477,7 @@ export default {
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts.length === 0){
+            if (this.$page.props.user.show_crafts?.length === 0){
                 return this.crafts.map(craft => ({
                     name: craft.name,
                     id: craft.id,
@@ -485,7 +485,7 @@ export default {
                     color: craft?.color
                 }));
             } else {
-                return this.crafts.filter(craft => this.$page.props.user.show_crafts.includes(craft.id)).map(craft => ({
+                return this.crafts.filter(craft => this.$page.props.user.show_crafts?.includes(craft.id)).map(craft => ({
                     name: craft.name,
                     id: craft.id,
                     users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
@@ -501,10 +501,10 @@ export default {
     },
     methods: {
         checkIfEventHasShiftsToDisplay(event) {
-            if(this.$page.props.user.show_crafts.length === 0){
+            if(this.$page.props.user.show_crafts?.length === 0){
                 return event.shifts.length > 0;
             } else {
-                return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts.includes(shift.craft.id));
+                return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
             }
         },
         showDropFeedback(feedback) {

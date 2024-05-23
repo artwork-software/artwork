@@ -423,6 +423,7 @@ readonly class ProjectService
                 ->events()
                 ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
                 ->with(['timelines', 'shifts', 'event_type', 'room'])
+                ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
             $timeline = $event->timelines()->get()->toArray();
@@ -456,7 +457,7 @@ readonly class ProjectService
             });
 
 
-            $eventsWithRelevant[$event->id] = [
+            $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
                 'shifts' => $shiftsToReturn,
@@ -464,8 +465,8 @@ readonly class ProjectService
                 'room' => $event->room,
             ];
         }
-        rsort($eventsWithRelevant);
-
+        //rsort($eventsWithRelevant);
+        //dd($eventsWithRelevant);
         return $eventsWithRelevant;
     }
 

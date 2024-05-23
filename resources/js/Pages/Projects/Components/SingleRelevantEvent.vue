@@ -5,11 +5,13 @@
              :style="{backgroundColor: event.event_type.hex_code}">
             <div class="flex items-center">
                 <span v-if="!event.event.allDay">
-                    {{ event.event?.start_time }} - {{ event.event?.end_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                    {{ event.event?.formatted_dates.start }} - {{ event.event?.formatted_dates.end }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
+
                 <span v-else>
                     {{ event.event?.event_date_without_time.start }} - {{ event.event?.event_date_without_time.end }} {{ $t('All day') }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
+
                 <span v-if="event.event.is_series" class="ml-3">
                     <IconRepeat class="h-4 w-4" />
                 </span>

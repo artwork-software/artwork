@@ -123,6 +123,7 @@ class Event extends Model
         'event_date_without_time',
         'days_of_shifts',
         'shift_container_height',
+        'formatted_dates'
     ];
 
     public function comments(): HasMany
@@ -200,6 +201,18 @@ class Event extends Model
     public function getEndTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->end_time)->format('H:i');
+    }
+
+
+    /**
+     * @return array<string, string>
+     */
+    public function getFormattedDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y H:i'),
+            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i')
+        ];
     }
 
     /**

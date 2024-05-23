@@ -44,7 +44,7 @@ readonly class ChecklistService
     {
         $checklist->users()->sync($ids);
         $taskService->getByChecklist($checklist)->each(function (Task $task) use ($ids, $taskService): void {
-            $taskService->syncTaskUsersWithoutDetach($task, $ids);
+            $taskService->syncTaskUsersWithDetach($task, $ids);
         });
     }
 

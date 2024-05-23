@@ -167,7 +167,13 @@
 
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
 
-    <GeneralCalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="showCalendarAboSettingModal = false" />
+    <GeneralCalendarAboSettingModal
+        v-if="showCalendarAboSettingModal"
+        @close="showCalendarAboSettingModal = false"
+        :event-types="filterOptions.eventTypes"
+        :areas="filterOptions.areas"
+        :rooms="filterOptions.rooms"
+    />
 </template>
 
 <script>

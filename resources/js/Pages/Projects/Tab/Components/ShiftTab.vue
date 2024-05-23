@@ -337,7 +337,7 @@ export default defineComponent({
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts.length === 0){
+            if (this.$page.props.user.show_crafts?.length === 0){
                 return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
                     name: craft.name,
                     id: craft.id,
@@ -350,7 +350,7 @@ export default defineComponent({
                     id: craft.id,
                     users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
                     color: craft?.color
-                })).filter(craft => this.$page.props.user.show_crafts.includes(craft.id));
+                })).filter(craft => this.$page.props.user.show_crafts?.includes(craft.id));
             }
         },
         usersWithNoCrafts() {

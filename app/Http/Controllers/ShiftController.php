@@ -6,6 +6,7 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -34,7 +35,8 @@ class ShiftController extends Controller
         private readonly ChangeService $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
-        private readonly ShiftService $shiftService
+        private readonly ShiftService $shiftService,
+        private readonly EventService $eventService
     ) {
     }
 
@@ -167,6 +169,11 @@ class ShiftController extends Controller
                 ->setTranslationKey('Shift of event was created')
                 ->setTranslationKeyPlaceholderValues([$event->eventName])
         );
+
+        $event->update([
+            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
+            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
+        ]);
     }
 
     public function show(): void
@@ -915,6 +922,13 @@ class ShiftController extends Controller
         if ($shift->is_committed) {
             $shiftService->createRemovedAllUsersFromShiftHistoryEntry($shift, $changeService);
         }
+
+        return Redirect::back();
+    }
+
+    public function updateDescription(Request $request, Shift $shift): RedirectResponse
+    {
+        $shift->update($request->only(['description']));
 
         return Redirect::back();
     }

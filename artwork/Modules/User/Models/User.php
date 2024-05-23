@@ -79,6 +79,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $can_work_shifts
  * @property string $language
  * @property string $profile_photo_url
+ * @property float $zoom_factor
+ * @property boolean $is_sidebar_opened
+ * @property boolean $compact_mode
+ * @property array $show_crafts
  * @property Collection<Department> $departments
  * @property Collection<Project> $projects
  * @property Collection<Comment> $comments
@@ -91,6 +95,19 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Craft> $crafts
  * @property UserShiftCalendarFilter $shift_calendar_filter
  * @property UserCalendarFilter $calendar_filter
+ * @property UserCalendarSettings $calendar_settings
+ * @property Collection<Shift> $shifts
+ * @property Collection<Permission> $permission
+ * @property Collection<Role> $allRoles
+ * @property Collection<MoneySource> $money_sources
+ * @property Collection<MoneySourceTask> $moneySourceTasks
+ * @property Collection<Task> $tasks
+ * @property Collection<MoneySource> $accessMoneySources
+ * @property Collection<ShiftQualification> $shiftQualifications
+ * @property Collection<Craft> $assignedCrafts
+ * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
+ * @property Collection<string> $allPermissions
+ *
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -136,7 +153,10 @@ class User extends Model implements
         'salary_description',
         'language',
         'zoom_factor',
-        'is_sidebar_opened'
+        'is_sidebar_opened',
+        'compact_mode',
+        'show_crafts',
+        'goto_mode'
     ];
 
     protected $casts = [
@@ -147,7 +167,9 @@ class User extends Model implements
         'temporary' => 'boolean',
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
-        'is_sidebar_opened' => 'boolean'
+        'is_sidebar_opened' => 'boolean',
+        'compact_mode' => 'boolean',
+        'show_crafts' => 'array'
     ];
 
     protected $hidden = [

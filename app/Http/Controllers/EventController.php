@@ -299,6 +299,11 @@ class EventController extends Controller
             );
         }
 
+        $firstEvent->update([
+            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($firstEvent),
+            'latest_end_datetime' => $this->eventService->getLatestEndTime($firstEvent)
+        ]);
+
         $projectFirstEvent = $firstEvent->project()->first();
 
         if ($request->is_series) {
@@ -382,6 +387,7 @@ class EventController extends Controller
         if ($request->isOption) {
             $this->createRequestNotification($request, $firstEvent);
         }
+
 
         broadcast(new OccupancyUpdated())->toOthers();
 

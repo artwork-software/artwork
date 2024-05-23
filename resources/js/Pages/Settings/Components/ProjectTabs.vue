@@ -14,6 +14,12 @@ export default {
                     show: true
                 },
                 {
+                    name: this.$t('Project Role Settings'),
+                    href: route('project-roles.index'),
+                    current: route().current('project-roles.index'),
+                    show: true
+                },
+                {
                     name: this.$t('Tab Settings'),
                     href: route('tab.index'),
                     current: route().current('tab.index'),

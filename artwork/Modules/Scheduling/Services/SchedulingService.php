@@ -167,11 +167,13 @@ readonly class SchedulingService
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
+                    $room = $event->room()->first();
+
                     $notificationDescription = [
                         1 => [
                             'type' => 'link',
-                            'title' => $event->room()->first()->name,
-                            'href' => route('rooms.show', $event->room()->first()->id)
+                            'title' => $room ? $room->name : '',
+                            'href' => route('rooms.show', $room ? $room->id : null)
                         ],
                         2 => [
                             'type' => 'string',

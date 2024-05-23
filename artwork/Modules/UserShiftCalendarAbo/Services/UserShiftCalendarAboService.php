@@ -98,7 +98,9 @@ class UserShiftCalendarAboService
                 ->address('Raum: ' . $shiftEvent->room()->first()->name . ' | Event: ' . $eventName)
                 ->startsAt(Carbon::parse($shiftStart . ' ' . $shift->start))
                 ->endsAt(Carbon::parse($shiftEnd . ' ' . $shift->end))
-                ->organizer($eventCreator->email, $eventCreator->full_name);
+                ->organizer($eventCreator->email, $eventCreator->full_name)
+                ->uniqueIdentifier($shiftEvent->id)
+                ->createdAt(Carbon::parse($shiftEvent->created_at));
             $this->addAttendeesToEvent($event, $shift, $eventCreator);
             $this->addAlertToEvent($event, $calendarAbo, $shiftStart, $shift->start, $shift);
         });

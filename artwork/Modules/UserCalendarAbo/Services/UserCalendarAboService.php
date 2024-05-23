@@ -88,8 +88,16 @@ class UserCalendarAboService
                 $calendarEvent->organizer($event->creator->email, $event->creator->full_name);
             }
 
-            if($event->project){
-                $calendarEvent->url(route('projects.tab', ['project' => $event->project->id, 'projectTab' => 1]), 'Im Projekt anzeigen');
+            if ($event->project) {
+                $calendarEvent->url(
+                    route(
+                        'projects.tab',
+                        [
+                        'project' => $event->project->id,
+                        'projectTab' => 1]
+                    ),
+                    'Im Projekt anzeigen'
+                );
             }
         });
     }

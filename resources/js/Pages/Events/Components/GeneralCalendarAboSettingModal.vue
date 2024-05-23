@@ -60,8 +60,6 @@ export default {
                     preserveState: true,
                     onSuccess: () => {
                         this.closeModal(true)
-
-
                     }
                 })
             } else {

@@ -1292,7 +1292,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         // user.shift.calendar.abo.update
         Route::patch(
-            '/calendar/abo/{userShiftCalendarAbo}/update',
+            '/calendar/abo/{userCalenderAbo}/update',
             [\App\Http\Controllers\UserCalenderAboController::class, 'update']
         )->name('user.calendar.abo.update');
     });

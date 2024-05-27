@@ -272,8 +272,8 @@ readonly class CalendarService
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
         return $query
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
+            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id ?? null))
+            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id ?? null))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas(

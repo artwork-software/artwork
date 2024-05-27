@@ -18,4 +18,14 @@ class ProjectComponentValue extends Model
     protected $casts = [
         'data' => 'array',
     ];
+
+
+    protected $appends = [
+        'text_without_html',
+    ];
+
+    public function getTextWithoutHtmlAttribute(): string
+    {
+        return strip_tags($this->data['text']);
+    }
 }

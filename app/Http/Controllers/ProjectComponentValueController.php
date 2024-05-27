@@ -57,15 +57,26 @@ class ProjectComponentValueController extends Controller
         $value = ProjectComponentValue::where('project_id', $project->id)
             ->where('component_id', $component->id)->first();
 
+        //dd($request->input('data')['text']);
+        $valueInput = null;
+        if (array_key_exists('text', $request->input('data'))) {
+            // add nl2br to the text input
+            $valueInput = nl2br($request->input('data')['text']);
+            // return it ad array to be able to store it in the database
+            $valueInput = ['text' => $valueInput];
+        } else {
+            $valueInput = $request->input('data');
+        }
+
         if ($value === null) {
             ProjectComponentValue::create([
                 'project_id' => $project->id,
                 'component_id' => $component->id,
-                'data' => $request->input('data'),
+                'data' => $valueInput,
             ]);
         } else {
             $value->update([
-                'data' => $request->input('data'),
+                'data' => $valueInput,
             ]);
         }
     }

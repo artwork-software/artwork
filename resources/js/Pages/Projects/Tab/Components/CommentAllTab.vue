@@ -2,13 +2,12 @@
     <div class="mt-6 p-5 bg-lightBackgroundGray">
         <div
             class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
-            <div
-                v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment)"
-                class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
+            <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
                         <textarea
                             :placeholder="$t('What should the other project members know about the project?')"
                             v-model="commentForm.text"
                             rows="4"
+                            maxlength="5000"
                             class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0 w-full"
                         />
                 <div class="absolute bottom-0 right-0 flex bg-white">
@@ -26,6 +25,7 @@
                     </button>
                 </div>
             </div>
+            <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
             <div>
                 <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
                      @mouseover="commentHovered = comment.id"

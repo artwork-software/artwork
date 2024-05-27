@@ -22,7 +22,7 @@ export default {
                 preserveScroll: true,
                 preserveState: false
             })
-        }
+        },
     },
 }
 </script>

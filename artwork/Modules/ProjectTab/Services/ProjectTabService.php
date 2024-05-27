@@ -106,7 +106,9 @@ readonly class ProjectTabService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService
+            $projectService,
+            null,
+            $project
         );
 
         $eventsAtAGlance = Collection::make();

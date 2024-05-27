@@ -64,8 +64,8 @@ class Timeline extends Model
     public function getFormattedDatesAttribute(): array
     {
         return [
-            'start_date' => $this->start_date->format('d.m.Y'),
-            'end_date' => $this->end_date->format('d.m.Y'),
+            'start_date' => Carbon::parse($this->start_date)->format('d.m.Y'),
+            'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
         ];
     }
 

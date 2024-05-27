@@ -477,7 +477,7 @@ export default {
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts?.length === 0){
+            if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
                 return this.crafts.map(craft => ({
                     name: craft.name,
                     id: craft.id,
@@ -501,7 +501,7 @@ export default {
     },
     methods: {
         checkIfEventHasShiftsToDisplay(event) {
-            if(this.$page.props.user.show_crafts?.length === 0){
+            if(this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null){
                 return event.shifts.length > 0;
             } else {
                 return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));

@@ -68,6 +68,11 @@ readonly class ProjectService
         return $this->projectRepository->findOrFail($id);
     }
 
+    public function save(Project $project): Project
+    {
+        return $this->projectRepository->save($project);
+    }
+
     public function softDelete(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,

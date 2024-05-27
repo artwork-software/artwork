@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "ext-curl": "*",
+        "ext-dom": "*",
         "ext-gd": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
@@ -27,6 +28,7 @@
         "laravel-lang/native-currency-names": "^1.1",
         "laravel-lang/native-locale-names": "^2.2",
         "laravel/framework": "^v10.0",
+        "laravel/horizon": "^5.24",
         "laravel/jetstream": "^v2.12.5",
         "laravel/sanctum": "^v3.2",
         "laravel/scout": "^v9.4.12",
@@ -42,8 +44,7 @@
         "symfony/event-dispatcher": "^v6.1.0",
         "symfony/http-client": "^v6.1.7",
         "symfony/mailgun-mailer": "^v6.1.0",
-        "tightenco/ziggy": "^v1.5.0",
-        "ext-dom": "*"
+        "tightenco/ziggy": "^v1.5.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^v3.7.0",

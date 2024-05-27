@@ -6,9 +6,9 @@ use Carbon\Carbon;
 
 class ProjectImportModel
 {
-    public readonly Carbon|null $end;
+    public Carbon|null $end;
 
-    public readonly Carbon|null $start;
+    public Carbon|null $start;
 
     public function __construct(
         public readonly string $identifier,

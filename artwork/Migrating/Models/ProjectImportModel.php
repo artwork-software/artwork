@@ -18,10 +18,10 @@ class ProjectImportModel
         ?string                $end,
     )
     {
-        if($start) {
+        if ($start) {
             $this->start = Carbon::parse($start);
         }
-        if($end) {
+        if ($end) {
             $this->end = Carbon::parse($end);
         }
     }

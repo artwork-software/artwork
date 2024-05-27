@@ -34,7 +34,7 @@ class ImportProject
 
     public function handle(): void
     {
-        if(!$project = $this->projectService->getByName($this->project->name)->first()) {
+        if (!$project = $this->projectService->getByName($this->project->name)->first()) {
             logger()->debug('Project not found, creating new project');
             $project = new Project();
             $project->name = $this->project->name;
@@ -42,10 +42,8 @@ class ImportProject
             $this->projectService->save($project);
         }
 
-        foreach($this->dataAggregator->findEvents($this->project->identifier) as $event) {
+        foreach ($this->dataAggregator->findEvents($this->project->identifier) as $event) {
             $this->dispatcher->dispatch(new ImportEvent($this->config, $this->dataAggregator, $event, $project));
         }
     }
-
-
 }

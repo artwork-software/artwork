@@ -1496,7 +1496,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     display: block;
-    top: 0;
+    top: 4rem;
     z-index: 21;
     background-color: #CECDD8;
 }

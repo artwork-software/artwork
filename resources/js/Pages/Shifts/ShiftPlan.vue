@@ -12,19 +12,21 @@
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
-                                      :crafts="crafts"
-                                      @select-go-to-next-mode="selectGoToNextMode"
-                                        @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
+            <pre>
+
+            </pre>
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
-                            <TableHead id="stickyTableHead" ref="stickyTableHead">
+                            <TableHead>
                                 <th class="z-0" style="width:164px;"></th>
-                                <th  v-for="day in days" style="width:200px;" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                <th v-for="day in days" style="width:200px;" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                                     <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                         {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                     </div>
@@ -44,7 +46,7 @@
                                     <td v-for="day in days" style="width:200px;" class="max-h-28 overflow-y-auto cell">
                                         <div v-for="event in room[day.full_day].events.data" class="mb-1">
                                             <SingleShiftPlanEvent
-                                                v-if="checkIfEventHasShiftsToDisplay(event)"
+                                                v-if="event.shifts.length > 0"
                                                 :multiEditMode="multiEditMode"
                                                 :user-for-multi-edit="userForMultiEdit"
                                                 :highlightMode="highlightMode"
@@ -66,7 +68,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight} : {height: 20 + 'px'}">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
@@ -100,15 +102,8 @@
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
-                            <tr class="flex w-full py-2">
-                                <th class="w-44">
-                                    <BaseFilter onlyIcon="true" left="true">
-                                        <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
-                                            <CraftFilter :crafts="crafts" is_tiny/>
-                                        </div>
-                                    </BaseFilter>
-
-                                </th>
+                            <tr class="flex w-full py-1">
+                                <th class="w-44"></th>
                                 <th class="flex items-center pl-2 py-1">
                                     <Switch @click="toggleHighlightMode"
                                             :class="[highlightMode ?
@@ -135,19 +130,6 @@
                                         {{$t('Multi-Edit')}}
                                     </div>
                                 </th>
-                                <th class="flex items-center pl-2 py-1">
-                                    <Switch @click="toggleCompactMode"
-                                            :class="[this.$page.props.user.compact_mode ?
-                                        'bg-artwork-buttons-create' :
-                                        'bg-gray-300',
-                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
-                                    <span aria-hidden="true"
-                                          :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                                    </Switch>
-                                    <div :class="[this.$page.props.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
-                                        {{$t('Compact Mode')}}
-                                    </div>
-                                </th>
                             </tr>
                             <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
                                 <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
@@ -158,14 +140,13 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right -mt-2 pr-1"
+                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1"
                                         :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
                                                      :expected-hours="user.expectedWorkingHours"
                                                      :planned-hours="user.plannedWorkingHours"
                                                      :type="user.type"
-                                                     :color="craft.color"
                                         />
                                         <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                            :item="user.element"
@@ -175,7 +156,6 @@
                                                            :userForMultiEdit="userForMultiEdit"
                                                            :multiEditMode="multiEditMode"
                                                            @addUserToMultiEdit="addUserToMultiEdit"
-                                                           :color="craft.color"
                                         />
                                         <HighlightUserCell v-else
                                                            :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -184,28 +164,19 @@
                                                            :planned-hours="user.plannedWorkingHours"
                                                            :type="user.type"
                                                            @highlightShiftsOfUser="highlightShiftsOfUser"
-                                                           :color="craft.color"
                                         />
                                     </th>
                                     <td v-for="day in days">
-                                        <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
-                                            class="w-[12.375rem] p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden"
+                                        <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
+                                            class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                             @click="openShowUserShiftModal(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
                                             </span>
-                                            <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
+                                            <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
-                                            </span>
-                                            <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
-                                                    </span>
-                                                </span>
-
                                             </span>
                                         </div>
                                     </td>
@@ -226,7 +197,6 @@
                                                      :expected-hours="user.expectedWorkingHours"
                                                      :planned-hours="user.plannedWorkingHours"
                                                      :type="user.type"
-                                                     :color="null"
                                         />
                                         <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                            :item="user.element"
@@ -236,7 +206,6 @@
                                                            :userForMultiEdit="userForMultiEdit"
                                                            :multiEditMode="multiEditMode"
                                                            @addUserToMultiEdit="addUserToMultiEdit"
-                                                           :color="null"
                                         />
                                         <HighlightUserCell v-else
                                                            :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -244,25 +213,17 @@
                                                            :expected-hours="user.expectedWorkingHours"
                                                            :planned-hours="user.plannedWorkingHours"
                                                            :type="user.type"
-                                                           @highlightShiftsOfUser="highlightShiftsOfUser"
-                                                           :color="null"/>
+                                                           @highlightShiftsOfUser="highlightShiftsOfUser"/>
                                     </th>
                                     <td v-for="day in days">
-                                        <div class="w-[12.375rem] p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)" :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
+                                        <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
                                             </span>
-                                            <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
+                                            <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
-                                            </span>
-                                            <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
-                                                    </span>
-                                                </span>
                                             </span>
                                         </div>
                                     </td>
@@ -344,19 +305,13 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import Table from "@/Components/Table/Table.vue";
 import TableHead from "@/Components/Table/TableHead.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
-import {SelectorIcon} from "@heroicons/vue/solid";
-import ShiftsQualificationsAssignmentModal
-    from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
-import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconChevronDown, IconFileText, IconX} from "@tabler/icons-vue";
-import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import { SelectorIcon } from "@heroicons/vue/solid";
+import ShiftsQualificationsAssignmentModal from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
-        CraftFilter,
-        IconChevronDown, IconX, IconFileText, BaseFilter,
         ShiftsQualificationsAssignmentModal,
         TableBody,
         TableHead,
@@ -418,7 +373,7 @@ export default {
             multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
-            userOverviewHeight: 480,
+            userOverviewHeight: 400,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,
@@ -430,8 +385,6 @@ export default {
             showShiftsQualificationsAssignmentModalShifts: [],
             shiftsAreChecked: [],
             shiftsToRemoveCheckState: [],
-            firstDayPosition: this.days ? this.days[0].full_day : null,
-            currentDayOnView: this.days ? this.days[0] : null
         }
     },
     mounted() {
@@ -477,21 +430,11 @@ export default {
         },
         craftsToDisplay() {
             const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
-                return this.crafts.map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                }));
-            } else {
-                return this.crafts.filter(craft => this.$page.props.user.show_crafts?.includes(craft.id)).map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                }));
-            }
+            return this.crafts.map(craft => ({
+                name: craft.name,
+                id: craft.id,
+                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id))
+            }));
         },
         usersWithNoCrafts() {
             return this.dropUsers.filter(user =>
@@ -500,13 +443,6 @@ export default {
         },
     },
     methods: {
-        checkIfEventHasShiftsToDisplay(event) {
-            if(this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null){
-                return event.shifts.length > 0;
-            } else {
-                return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
-            }
-        },
         showDropFeedback(feedback) {
             this.dropFeedback = feedback;
             setTimeout(() => {
@@ -588,94 +524,12 @@ export default {
             if (this.$refs.userOverview) {
                 // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
-
-                // update the current day on view with the day that is currently visible
-                const firstDay = document.getElementById(this.days[0].full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                const scrollPosition = scrollableContainer.scrollLeft;
-                const dayIndex = Math.floor(scrollPosition / firstDay.offsetWidth);
-                this.currentDayOnView = this.days[dayIndex];
-
-            }
-        },
-        selectGoToNextMode(){
-            if (this.$page.props.user.goto_mode === 'day'){
-                this.goToDay('next')
-            } else if (this.$page.props.user.goto_mode === 'week'){
-                this.goToWeek('next')
-            } else if (this.$page.props.user.goto_mode === 'month'){
-                this.goToMonth('next')
-            }
-        },
-        selectGoToPreviousMode(){
-            if (this.$page.props.user.goto_mode === 'day'){
-                this.goToDay('previous')
-            } else if (this.$page.props.user.goto_mode === 'week'){
-                this.goToWeek('previous')
-            } else if (this.$page.props.user.goto_mode === 'month'){
-                this.goToMonth('previous')
-            }
-        },
-        goToWeek(type = 'next'){
-            if (type === 'next') {
-                const nextKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number + 1);
-
-                // bring the new kw in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextKwDay);
-            } else {
-                const previousKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number - 1);
-
-                // bring the new kw in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousKwDay);
-            }
-        },
-        goToDay(type = 'next') {
-            if (type === 'next') {
-                const nextDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
-                const nextDayIndex = this.days.indexOf(nextDay) + 1;
-                if (nextDayIndex < this.days.length) {
-                    const nextDay = this.days[nextDayIndex];
-                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                    scrollableContainer.scrollLeft = firstDay.offsetWidth * nextDayIndex;
-                }
-            } else {
-                const previousDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
-                const previousDayIndex = this.days.indexOf(previousDay) - 1;
-                if (previousDayIndex >= 0) {
-                    const previousDay = this.days[previousDayIndex];
-                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                    scrollableContainer.scrollLeft = firstDay.offsetWidth * previousDayIndex;
-                }
-            }
-        },
-        goToMonth(type = 'next'){
-            if (type === 'next') {
-                const nextMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number + 1);
-
-                // bring the new month in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextMonthDay);
-            } else {
-                const previousMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number - 1);
-
-                // bring the new month in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousMonthDay);
             }
         },
         syncScrollUserOverview(event) {
             if (this.$refs.shiftPlan) {
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
-
             }
         },
         openShowUserShiftModal(user, day) {
@@ -690,14 +544,6 @@ export default {
         toggleMultiEditMode() {
             this.highlightMode = false;
             this.multiEditMode = !this.multiEditMode;
-        },
-        toggleCompactMode() {
-            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
-                compact_mode: !this.$page.props.user.compact_mode
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
         },
         highlightShiftsOfUser(id, type) {
             this.idToHighlight = id;
@@ -1019,6 +865,24 @@ export default {
     overflow: overlay;
 }
 
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 
 .stickyHeader {
     position: sticky;

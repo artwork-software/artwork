@@ -598,8 +598,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
         Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
         Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
-        Route::patch('/{shift}/update/description', [ShiftController::class, 'updateDescription'])
-            ->name('event.shift.update.updateDescription');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])
             ->name('project.sum.money.source.update');
 
@@ -1257,32 +1255,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'reorder'])
                 ->name('sidebar.tab.reorder');
         });
-    });
-
-    Route::group(['prefix' => 'user'], function (): void {
-        Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
-            ->name('user.operationPlan');
-        Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])
-            ->name('user.compact.mode.toggle');
-        // user.update.show_crafts
-        Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
-            ->name('user.update.show_crafts');
-        //user.calendar.go.to.stepper
-        Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
-            ->name('user.calendar.go.to.stepper');
-    });
-
-    Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::get('index', [\App\Http\Controllers\ProjectRoleController::class, 'index'])
-            ->name('project-roles.index');
-        //project-roles.store
-        Route::post('store', [\App\Http\Controllers\ProjectRoleController::class, 'store'])
-            ->name('project-roles.store');
-        //project-roles.update
-        Route::patch('{projectRole}/update', [\App\Http\Controllers\ProjectRoleController::class, 'update'])
-            ->name('project-roles.update');
-        //project-roles.destroy
-        Route::delete('{projectRole}/destroy', [\App\Http\Controllers\ProjectRoleController::class, 'destroy'])
-            ->name('project-roles.destroy');
     });
 });

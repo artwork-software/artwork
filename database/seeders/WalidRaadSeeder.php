@@ -294,9 +294,7 @@ class WalidRaadSeeder extends Seeder
             'series_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' => Carbon::now()->subDays(10)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->endOfDay()
+            'allDay' => true
         ]);
 
         $serieEvent1 = $project->events()->create([
@@ -313,9 +311,7 @@ class WalidRaadSeeder extends Seeder
             'series_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' => Carbon::now()->subDays(9)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(9)->endOfDay()
+            'allDay' => true
         ]);
 
         $serieEvent2 = $project->events()->create([
@@ -332,9 +328,7 @@ class WalidRaadSeeder extends Seeder
             'series_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' => Carbon::now()->subDays(8)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(8)->endOfDay()
+            'allDay' => true
         ]);
 
         SeriesEvents::create([
@@ -354,9 +348,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' => Carbon::now()->subDays(10)->format('Y-m-d H:i:s'),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s')
+            'allDay' => false
         ]);
 
         $project->events()->create([
@@ -371,9 +363,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' => Carbon::now()->subDays(7)->format('Y-m-d H:i:s'),
-            'latest_end_datetime' => Carbon::now()->subDays(7)->addHour()->format('Y-m-d H:i:s')
+            'allDay' => false
         ]);
 
         $project->events()->create([
@@ -388,9 +378,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' => Carbon::now()->subDays(0)->format('Y-m-d H:i:s'),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s')
+            'allDay' => false
         ]);
 
         $project->events()->create([
@@ -405,9 +393,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(4)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(4)->endOfDay()
+            'allDay' => true
         ]);
 
         $project->events()->create([
@@ -422,9 +408,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(4)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(4)->endOfDay()
+            'allDay' => true
         ]);
 
         $project->events()->create([
@@ -439,9 +423,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(10)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->endOfDay()
+            'allDay' => true
         ]);
 
         $project->events()->create([
@@ -456,9 +438,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(7)->startOfDay(),
-            'latest_end_datetime' => Carbon::now()->subDays(7)->endOfDay()
+            'allDay' => true
         ]);
 
         /** @var Event $eventWithManyShifts */
@@ -474,9 +454,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => true,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(6),
-            'latest_end_datetime' => Carbon::now()->subDays(6)->addHours(5)
+            'allDay' => true
         ]);
 
         $project->events()->create([
@@ -491,9 +469,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' =>  Carbon::now()->endOfDay()->subHours(3),
-            'latest_end_datetime' => Carbon::now()->endOfDay()->subMinutes(59)
+            'allDay' => false
         ]);
 
         $project->events()->create([
@@ -508,9 +484,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(10)->format('Y-m-d H:i:s'),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s')
+            'allDay' => false
         ]);
 
         /** @var Event $eventWithShift */
@@ -526,9 +500,7 @@ class WalidRaadSeeder extends Seeder
             'user_id' => 1,
             'accepted' => false,
             'option_string' => null,
-            'allDay' => false,
-            'earliest_start_datetime' =>  Carbon::now()->subDays(10)->format('Y-m-d H:i:s'),
-            'latest_end_datetime' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s')
+            'allDay' => false
         ]);
 
         /** @var Shift $shift */

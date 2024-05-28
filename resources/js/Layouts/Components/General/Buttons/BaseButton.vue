@@ -45,7 +45,7 @@ export default {
        :disabled="disabled"
        :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-artwork-buttons-hover`,
        $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding, classes]"
-       class="flex items-center rounded-lg shadow-sm focus:outline-none transition-all duration-150 ease-in-out "
+       class="flex mt-1 items-center rounded-lg shadow-sm focus:outline-none transition-all duration-150 ease-in-out"
     >
         <!-- slot for the icon -->
         <slot></slot>

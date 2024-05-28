@@ -46,7 +46,8 @@
                     leave-active-class="transition ease-in duration-75"
                     leave-from-class="transform opacity-100 scale-100"
                     leave-to-class="transform opacity-0 scale-95">
-                    <div class="z-50 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    <div
+                        class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
@@ -57,19 +58,6 @@
                                 <span v-else>
                                     <IconChevronUp class="h-5 w-5 text-white"/>
                                 </span>
-                            </div>
-                            <div class="flex items-center pl-2 py-1">
-                                <Switch @click="toggleCompactMode"
-                                        :class="[this.$page.props.user.compact_mode ?
-                                        'bg-artwork-buttons-create' :
-                                        'bg-gray-300',
-                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
-                                    <span aria-hidden="true"
-                                          :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                                </Switch>
-                                <div :class="[this.$page.props.user.compact_mode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
-                                    {{$t('Compact Mode')}}
-                                </div>
                             </div>
                             <div>
                                 <IconX class="h-5 w-5 text-white" @click="userWindow = !userWindow"/>
@@ -112,60 +100,17 @@
                                         {{craft.name}}
                                     </div>
                                 </div>
-                                <div>
-                                    <div>
-                                        <label for="account-number" class="block text-xs font-medium leading-6 text-white">
-                                            {{ $t('Search') }}
-                                        </label>
-                                        <div class="relative mt-2 rounded-md shadow-sm">
-                                            <input v-model="userSearch" type="text" name="account-number" id="account-number" class="block w-full border-0 py-1.5 pr-10 text-gray-900 ring-0  placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
-                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                                <IconSearch class="h-5 w-5 text-gray-400" aria-hidden="true" v-if="userSearch.length === 0" />
-                                                <IconX class="h-5 w-5 text-gray-400 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <CraftFilter is_tiny :crafts="loadedProjectInformation['ShiftTab'].crafts"/>
                             </div>
                             <div class="my-2 h-0.5 w-full bg-[#3A374D]">
                             </div>
                         </div>
                         <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
-                            <div v-for="craft in searchUserWithCrafts">
-                                <div @click="changeCraftVisibility(craft.id)" class="text-xs text-white flex cursor-pointer items-center h-6" v-if="craft.users.length > 0">
-                                    {{ craft.name }}
-                                    <IconChevronDown
-                                        :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
-                                        class="h-4 w-4"
-                                    />
-                                </div>
-                                <div v-for="user in craft.users" v-if="!closedCrafts.includes(craft.id)">
-                                    <DragElement :item="user.element"
-                                                 :plannedHours="user.plannedWorkingHours"
-                                                 :expected-hours="user.expectedWorkingHours"
-                                                 :type="user.type"
-                                                 :color="craft.color"
-                                    />
-                                </div>
-                            </div>
-
-                            <div v-if="searchUserWithoutCrafts.length > 0">
-                                <div @click="changeCraftVisibility('noCraft')" class="text-xs text-white flex cursor-pointer items-center h-6">
-                                    {{ $t('Without craft assignment')}}
-                                    <IconChevronDown
-                                        :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
-                                        class="h-4 w-4"
-                                    />
-                                </div>
-                                <div v-for="user in searchUserWithoutCrafts" v-if="!closedCrafts.includes('noCraft')">
-                                    <DragElement :item="user.element"
-                                                 :plannedHours="user.plannedWorkingHours"
-                                                 :expected-hours="user.expectedWorkingHours"
-                                                 :type="user.type"
-                                                 :color="null"
-                                    />
-                                </div>
+                            <div v-for="user in filteredUsers">
+                                <DragElement :item="user.element"
+                                             :plannedHours="user.plannedWorkingHours"
+                                             :expected-hours="user.expectedWorkingHours"
+                                             :type="user.type"
+                                />
                             </div>
                         </div>
                     </div>
@@ -200,8 +145,6 @@ import {usePage} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import {Inertia} from "@inertiajs/inertia";
-import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -211,7 +154,6 @@ export default defineComponent({
     ],
     mixins: [Permissions, IconLib],
     components: {
-        CraftFilter,
         SideNotification,
         Input,
         SingleRelevantEvent,
@@ -239,60 +181,43 @@ export default defineComponent({
             showExtern: false,
             showProvider: false,
             activeCraftFilters: [],
-            dropFeedback: null,
-            closedCrafts: [],
-            userSearch: ''
-        }
-    },
-    watch: {
-        userSearch: {
-            handler(){
-                if(this.userSearch.length > 0){
-                    this.closedCrafts = [];
-                }
-            }
+            dropFeedback: null
         }
     },
     computed: {
         dropUsers(){
             const users = [];
+
             if (this.loadedProjectInformation['ShiftTab']) {
-                // Initialzustand: alle Benutzer anzeigen, wenn keine spezifischen Filter gesetzt sind
-                const noFiltersApplied = !this.showIntern && !this.showExtern && !this.showProvider;
-
-                // Filter für interne Benutzer
-                if (this.showIntern || noFiltersApplied) {
-                    this.loadedProjectInformation['ShiftTab'].users_for_shifts.forEach((user) => {
-                        users.push({
-                            element: user.user,
-                            type: 0,
-                            plannedWorkingHours: user.plannedWorkingHours,
-                        });
-                    });
-                }
-
-                // Filter für externe Benutzer (Freelancer)
-                if (this.showExtern || noFiltersApplied) {
-                    this.loadedProjectInformation['ShiftTab'].freelancers_for_shifts.forEach((freelancer) => {
-                        users.push({
-                            element: freelancer.freelancer,
-                            type: 1,
-                            plannedWorkingHours: freelancer.plannedWorkingHours,
-                        });
-                    });
-                }
-
-                // Filter für Dienstleister
-                if (this.showProvider || noFiltersApplied) {
-                    this.loadedProjectInformation['ShiftTab'].service_providers_for_shifts.forEach((service_provider) => {
-                        users.push({
-                            element: service_provider.service_provider,
-                            type: 2,
-                            plannedWorkingHours: service_provider.plannedWorkingHours,
-                        })
+                this.loadedProjectInformation['ShiftTab'].users_for_shifts.forEach((user) => {
+                    users.push({
+                        element: user.user,
+                        type: 0,
+                        plannedWorkingHours: user.plannedWorkingHours,
                     })
-                }
+                })
             }
+
+            if (this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab'].freelancers_for_shifts.forEach((freelancer) => {
+                    users.push({
+                        element: freelancer.freelancer,
+                        type: 1,
+                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                    })
+                })
+            }
+
+            if (this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab'].service_providers_for_shifts.forEach((service_provider) => {
+                    users.push({
+                        element: service_provider.service_provider,
+                        type: 2,
+                        plannedWorkingHours: service_provider.plannedWorkingHours,
+                    })
+                })
+            }
+
             return users;
         },
         conflictMessage(){
@@ -335,78 +260,16 @@ export default defineComponent({
             }
             return users;
         },
-        craftsToDisplay() {
-            const users = this.dropUsers;
-            if (this.$page.props.user.show_crafts?.length === 0){
-                return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                }));
-            } else {
-                return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                })).filter(craft => this.$page.props.user.show_crafts?.includes(craft.id));
-            }
-        },
-        usersWithNoCrafts() {
-            return this.dropUsers.filter(user =>
-                !user.element.assigned_craft_ids || user.element.assigned_craft_ids?.length === 0
-            );
-        },
         hasUncommittedShift() {
             return this.loadedProjectInformation['ShiftTab']?.events_with_relevant.some(
                 event => event.shifts.find(shift => shift.is_committed === false)
             );
-        },
-        searchUserWithoutCrafts() {
-            // check if user Freelancer, User or Service Provider. USer and Freelancer has first and last name, service provider has name and add filter for showIntern, showExtern and showProvider
-            return this.usersWithNoCrafts.filter(user => {
-                if (user.element.first_name && user.element.last_name) {
-                    return user.element.first_name.toLowerCase().includes(this.userSearch.toLowerCase()) ||
-                        user.element.last_name.toLowerCase().includes(this.userSearch.toLowerCase());
-                } else if (user.element.provider_name) {
-                    return user.element.provider_name.toLowerCase().includes(this.userSearch.toLowerCase());
-                }
-            });
-        },
-        searchUserWithCrafts() {
-            return this.craftsToDisplay.map(craft => ({
-                ...craft,
-                users: craft.users.filter(user => {
-                    if (user.element.first_name && user.element.last_name) {
-                        return user.element.first_name.toLowerCase().includes(this.userSearch.toLowerCase()) ||
-                            user.element.last_name.toLowerCase().includes(this.userSearch.toLowerCase());
-                    } else if (user.element.provider_name) {
-                        return user.element.provider_name.toLowerCase().includes(this.userSearch.toLowerCase());
-                    }
-                })
-            }));
         }
     },
     mounted() {
         this.makeContainerDraggable();
     },
     methods: {
-        changeCraftVisibility(id) {
-            if (this.closedCrafts.includes(id)) {
-                this.closedCrafts.splice(this.closedCrafts.indexOf(id), 1);
-            } else {
-                this.closedCrafts.push(id);
-            }
-        },
-        toggleCompactMode() {
-            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
-                compact_mode: !this.$page.props.user.compact_mode
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-        },
         checkCommitted(){
             return this.loadedProjectInformation['ShiftTab'].events_with_relevant?.length > 0;
         },
@@ -497,12 +360,29 @@ export default defineComponent({
 .shiftUserWindow {
     overflow: overlay;
 }
+::-webkit-scrollbar {
+    width: 16px;
+}
 
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 .stickyHeader {
     position: sticky;
     position: -webkit-sticky;
     display: block;
-    top: 0;
+    top: 60px;
     z-index: 21;
     background-color: #F5F5F3;
 }

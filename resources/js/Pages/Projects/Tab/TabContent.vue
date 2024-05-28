@@ -131,6 +131,8 @@ export default {
                 />
             </div>
         </div>
+
+
         <BaseSidenav @toggle="this.show =! this.show" v-if="currentTab.hasSidebarTabs">
             <div class="w-full">
                 <div class="mb-5 ml-3">

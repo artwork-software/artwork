@@ -70,11 +70,6 @@
                 {{ $t('View in tasks')}}
             </button>
         </div>
-        <div v-if="buttons?.includes('show_project')">
-            <button @click="$emit('showProject', true)" type="button" class="rounded-full bg-transparent px-3.5 py-1.5 text-sm font-semibold text-indigo-600 hover:text-white ring-2 ring-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                {{ $t('Open Project')}}
-            </button>
-        </div>
     </div>
 
 </template>
@@ -99,8 +94,7 @@ export default {
         'openDialogModal',
         'deleteNotification',
         'openProject',
-        'showInTask',
-        'showProject'
+        'showInTask'
     ],
     components: {
         DeclineEventModal,

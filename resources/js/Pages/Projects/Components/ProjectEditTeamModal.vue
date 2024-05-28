@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_team.svg" modal-size="sm:max-w-4xl">
+    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_team.svg">
             <div class="mx-3">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ $t('Assign project team') }}
@@ -60,8 +60,9 @@
                     </transition>
                 </div>
                 <div class="mt-4">
-                    <div v-for="user in this.users" class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
-                        <div class="flex items-center w-56">
+                    <span v-for="user in this.users"
+                          class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                        <div class="flex items-center w-64">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full"
                                      :src="user.profile_photo_url"
@@ -75,7 +76,7 @@
                                 <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
-                        <div class="flex justify-between items-center my-1.5 h-5 w-2xl">
+                        <div class="flex justify-between items-center my-1.5 h-5 w-80">
                             <div class="flex items-center justify-between" v-if="checkUserAuth(user)">
                                <div class="flex">
                                     <input v-model="user.pivot_can_write"
@@ -122,30 +123,9 @@
                                         </div>
                                     </template>
                                 </Dropdown>
-
-                                <Dropdown :open="user.openedMenuRoles" align="right" width="60" class="text-right">
-                                    <template #trigger>
-                                        <span class="inline-flex">
-                                            <button @click="user.openedMenuRoles = !user.openedMenuRoles" type="button"
-                                                    class="text-sm flex items-center ml-14 my-auto text-primary font-semibold focus:outline-none transition">
-                                                {{ $t('Project Roles') }}
-                                            </button>
-                                        </span>
-                                    </template>
-                                    <template #content>
-                                        <div class="w-44 p-4">
-                                            <div class="flex mb-2" v-for="role in projectRoles">
-                                                <input :id="role.id" :name="role.name" type="checkbox" :checked="user?.pivot_roles?.includes(role.id)" @change="addRoleToUser(user, role)" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                <p class=" ml-4 my-auto text-sm text-secondary">
-                                                    {{ role.name }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </Dropdown>
                             </div>
                         </div>
-                    </div>
+                    </span>
                     <span v-for="department in this.departments"
                           class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                         <div class="flex items-center">
@@ -198,8 +178,7 @@ export default {
         'assignedUsers',
         'assignedDepartments',
         'userIsProjectManager',
-        'projectId',
-        'projectRoles'
+        'projectId'
     ],
     data(){
         return {
@@ -257,8 +236,7 @@ export default {
                     access_budget: user.pivot_access_budget,
                     is_manager: user.pivot_is_manager,
                     can_write: user.pivot_can_write,
-                    delete_permission: user.pivot_delete_permission,
-                    roles: user.pivot_roles
+                    delete_permission: user.pivot_delete_permission
                 };
             })
             this.form.assigned_departments = [];
@@ -277,13 +255,6 @@ export default {
             }
 
             return this.hasAdminRole();
-        },
-        addRoleToUser(user, role) {
-            if (user.pivot_roles?.includes(role.id)) {
-                user.pivot_roles.splice(user.pivot_roles.indexOf(role.id), 1);
-                return;
-            }
-            user.pivot_roles.push(role.id);
         }
     },
     watch: {

@@ -40,11 +40,11 @@ readonly class ChecklistService
         return $this->checklistRepository->save($checklist);
     }
 
-    public function assignUsersById(Checklist $checklist, TaskService $taskService, array $ids): void
+    public function assignUsersById(Checklist $checklist, array $ids, TaskService $taskService): void
     {
         $checklist->users()->sync($ids);
         $taskService->getByChecklist($checklist)->each(function (Task $task) use ($ids, $taskService): void {
-            $taskService->syncTaskUsersWithDetach($task, $ids);
+            $taskService->syncTaskUsersWithoutDetach($task, $ids);
         });
     }
 

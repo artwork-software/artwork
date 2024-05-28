@@ -31,7 +31,6 @@ class UserWithoutShiftsResource extends JsonResource
             'pivot_is_manager' => (bool)$this->pivot?->is_manager,
             'pivot_can_write' => (bool)$this->pivot?->can_write,
             'pivot_delete_permission' => (bool)$this->pivot?->delete_permission,
-            'pivot_roles' => (array)$this->pivot?->roles,
         ];
     }
 }

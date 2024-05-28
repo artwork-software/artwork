@@ -2,7 +2,6 @@
 
 namespace Database\Factories\Artwork\Modules\UserShiftCalendarAbo\Models;
 
-
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Illuminate\Database\Eloquent\Factories\Factory;

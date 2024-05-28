@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\UserShiftCalendarAbo\Services;
 
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarAbo\Services\UserShiftCalendarAboService;
@@ -19,6 +20,7 @@ class UserShiftCalendarAboServiceTest extends TestCase
 
     public function testCreate(): void
     {
+        $user = User::factory()->create();
         $data = [
             'date_range' => true,
             'start_date' => Carbon::now()->subMonth(),
@@ -29,7 +31,7 @@ class UserShiftCalendarAboServiceTest extends TestCase
             'notification_time' => 5,
             'notification_time_unit' => 'minutes',
         ];
-        $this->userShiftCalendarAboService->create($data);
+        $this->userShiftCalendarAboService->create($data, $user->id);
         $this->assertDatabaseHas('user_shift_calender_abos', $data);
     }
 

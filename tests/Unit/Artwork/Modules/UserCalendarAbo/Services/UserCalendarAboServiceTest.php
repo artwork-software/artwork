@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\UserCalendarAbo\Services;
 
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
 use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
 use Carbon\Carbon;
@@ -18,6 +19,7 @@ class UserCalendarAboServiceTest extends TestCase
 
     public function testCreate(): void
     {
+        $user = User::factory()->create();
         $data = [
             'date_range' => true,
             'start_date' => Carbon::now()->subMonth(),
@@ -32,7 +34,7 @@ class UserCalendarAboServiceTest extends TestCase
             'notification_time' => 5,
             'notification_time_unit' => 'minutes',
         ];
-        $this->userCalendarAboService->create($data);
+        $this->userCalendarAboService->create($data, $user->id);
         $this->assertDatabaseHas('user_calender_abos', $data);
     }
 

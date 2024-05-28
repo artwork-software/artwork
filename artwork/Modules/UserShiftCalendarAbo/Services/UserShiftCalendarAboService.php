@@ -16,10 +16,10 @@ readonly class UserShiftCalendarAboService
         //
     }
 
-    public function create(array $data): void
+    public function create(array $data, int $userId): void
     {
         $calendarAbo = new UserShiftCalendarAbo();
-        $calendarAbo->user_id = Auth::id();
+        $calendarAbo->user_id = $userId;
         // $calendarAbo->calendar_abo_id random string
         $calendarAbo->calendar_abo_id = Str::uuid();
         $calendarAbo->date_range = $data['date_range'];

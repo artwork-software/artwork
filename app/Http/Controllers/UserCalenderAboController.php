@@ -7,6 +7,7 @@ use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
 use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Spatie\IcalendarGenerator\Components\Calendar;
 
 class UserCalenderAboController extends Controller
@@ -36,7 +37,7 @@ class UserCalenderAboController extends Controller
      */
     public function store(Request $request): void
     {
-        $this->userCalendarAboService->create($request->all());
+        $this->userCalendarAboService->create($request->all(), Auth::id());
     }
 
     /**

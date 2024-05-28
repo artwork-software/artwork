@@ -24,11 +24,9 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -81,10 +79,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $can_work_shifts
  * @property string $language
  * @property string $profile_photo_url
- * @property float $zoom_factor
- * @property boolean $is_sidebar_opened
- * @property boolean $compact_mode
- * @property array $show_crafts
  * @property Collection<Department> $departments
  * @property Collection<Project> $projects
  * @property Collection<Comment> $comments
@@ -97,19 +91,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Craft> $crafts
  * @property UserShiftCalendarFilter $shift_calendar_filter
  * @property UserCalendarFilter $calendar_filter
- * @property UserCalendarSettings $calendar_settings
- * @property Collection<Shift> $shifts
- * @property Collection<Permission> $permission
- * @property Collection<Role> $allRoles
- * @property Collection<MoneySource> $money_sources
- * @property Collection<MoneySourceTask> $moneySourceTasks
- * @property Collection<Task> $tasks
- * @property Collection<MoneySource> $accessMoneySources
- * @property Collection<ShiftQualification> $shiftQualifications
- * @property Collection<Craft> $assignedCrafts
- * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
- * @property Collection<string> $allPermissions
- *
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -155,10 +136,7 @@ class User extends Model implements
         'salary_description',
         'language',
         'zoom_factor',
-        'is_sidebar_opened',
-        'compact_mode',
-        'show_crafts',
-        'goto_mode'
+        'is_sidebar_opened'
     ];
 
     protected $casts = [
@@ -169,9 +147,7 @@ class User extends Model implements
         'temporary' => 'boolean',
         'can_work_shifts' => 'boolean',
         'zoom_factor' => 'float',
-        'is_sidebar_opened' => 'boolean',
-        'compact_mode' => 'boolean',
-        'show_crafts' => 'array'
+        'is_sidebar_opened' => 'boolean'
     ];
 
     protected $hidden = [
@@ -189,21 +165,11 @@ class User extends Model implements
         'assigned_craft_ids'
     ];
 
-    protected $with = ['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'];
+    protected $with = ['calendar_settings'];
 
     public function getTypeAttribute(): string
     {
         return 'user';
-    }
-
-    public function shiftCalendarAbo(): hasOne
-    {
-        return $this->hasOne(UserShiftCalendarAbo::class);
-    }
-
-    public function calendarAbo(): hasOne
-    {
-        return $this->hasOne(UserCalendarAbo::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string

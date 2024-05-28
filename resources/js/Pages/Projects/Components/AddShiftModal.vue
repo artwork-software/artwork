@@ -203,12 +203,8 @@
                                                       rows="4"
                                                       name="comment"
                                                       id="comment"
-                                                      maxlength="250"
                                                       class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
                                             />
-                                            <div class="text-xs text-end mt-1 text-artwork-buttons-context">
-                                                {{ shiftForm.description.length }} / 250
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -409,9 +405,6 @@ export default defineComponent({
                 this.validationMessages.errors.shift_end.push(this.$t('Please enter an end time and date.'));
                 hasErrors = true;
             }
-
-            // check if the shift description is too long
-
 
             return hasErrors;
         },

@@ -297,9 +297,7 @@ class ContentSeeder extends Seeder
             'event_type_id' => 1,
             'room_id' => 1,
             'project_id' => null,
-            'user_id' => 1,
-            'earliest_start_datetime' => Carbon::now()->addDay()->addHours(2),
-            'latest_end_datetime' => Carbon::now()->addDay()->addHours(3)
+            'user_id' => 1
         ]);
 
         DB::table('events')->insert([
@@ -311,9 +309,7 @@ class ContentSeeder extends Seeder
             'event_type_id' => 1,
             'room_id' => 1,
             'project_id' => 1,
-            'user_id' => 1,
-            'earliest_start_datetime' => Carbon::now()->addDay()->subHour(),
-            'latest_end_datetime' => Carbon::now()->addDay()->addHour()
+            'user_id' => 1
         ]);
 
         DB::table('events')->insert([
@@ -324,9 +320,7 @@ class ContentSeeder extends Seeder
             'event_type_id' => 2,
             'room_id' => 2,
             'project_id' => 1,
-            'user_id' => 1,
-            'earliest_start_datetime' => Carbon::now()->addDays(2)->subHours(2),
-            'latest_end_datetime' => Carbon::now()->addDays(2)->subHour()
+            'user_id' => 1
         ]);
     }
 

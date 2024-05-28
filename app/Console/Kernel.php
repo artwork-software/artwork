@@ -6,7 +6,6 @@ use Artwork\Core\Console\Commands\CreateMoneySourceExpirationReminderNotificatio
 use Artwork\Core\Console\Commands\DeleteExpiredNotificationsForAllCommand;
 use Artwork\Core\Console\Commands\DeleteOldNotificationsCommand;
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
-use Artwork\Core\Console\Commands\NotifyCraftIfShiftDeadlineReached;
 use Artwork\Core\Console\Commands\RemoveExpiredInvitationsCommand;
 use Artwork\Core\Console\Commands\RemoveTemporaryRoomsCommand;
 use Artwork\Core\Console\Commands\SendDeadlineNotificationsCommand;
@@ -44,7 +43,6 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendDeadlineNotificationsCommand::class)->dailyAt('09:00');
         $schedule->command(RemoveTemporaryRoomsCommand::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(DeleteOldNotificationsCommand::class)->dailyAt('07:00');
-        $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(SendNotificationsEmailSummariesCommand::class, ['daily'])
             ->dailyAt('9:00');

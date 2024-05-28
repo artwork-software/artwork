@@ -1,11 +1,10 @@
 <template>
     <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
-            <div class="flex justify-center w-full bg-white" :class="filteredEvents?.length ? 'mt-10' : ''">
+            <div class="flex justify-center w-full bg-white">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
-                     v-if="filteredEvents?.length > 0"
-                     >
+                     v-if="filteredEvents?.length > 0">
                     <IconAlertTriangle class="h-6  mr-2"/>
                     {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
@@ -429,6 +428,24 @@ export default {
     overflow: overlay;
 }
 
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 .stickyHeader {
     position: sticky;
     align-self: flex-start;

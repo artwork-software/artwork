@@ -71,8 +71,8 @@ class ExportPDFController extends Controller
         $pdf = Pdf::loadView('pdf.calendar', [
             'title' => $request->title,
             'rooms' => $roomService->getFilteredRooms(
-                Carbon::parse($request->input('start')),
-                Carbon::parse($request->input('end')),
+                $request->input('start'),
+                $request->input('end'),
                 $userService->getAuthUser()->calendar_filter
             ),
             'filterRooms' => RoomPdfResource::collection(Room::all()),

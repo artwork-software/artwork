@@ -1,5 +1,5 @@
 <template>
-    <div  :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
+    <div class="h-full" :class="highlight">
         <div class="rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
@@ -57,22 +57,22 @@
                 </div>
             </div>
         </div>
-        <div class="mt-1 min-h-[144px] overflow-x-scroll rounded-b-lg bg-gray-200 px-1 py-2" :style="{height: shift.shift_height + 'px'}">
+        <div class="mt-1 h-[calc(100%-2.7rem)] rounded-b-lg bg-gray-200 px-1 py-2">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
-                    {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
+                    {{ shift.formatted_dates.start }} - {{ shift.formatted_dates.end }}
                 </span>
                 <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
-                    {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.end }}
+                    {{ shift.formatted_dates.start }}
                 </span>
-
-                <span v-if="shift.break_minutes"> | {{ shift.break_formatted }}</span>
+                {{ shift.start }} - {{ shift.end }}
+                <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
             </p>
-            <ShiftNoteComponent :shift="shift" />
+            <p class="text-xs mb-3">{{ shift.description }}</p>
             <div v-for="user in shift.users">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
-                        <UserPopoverTooltip :user="user" height="4" width="4" class="flex items-center" />
+                        <img :src="user.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
                         <span class="text-xs">{{ user.full_name }}</span>
                         <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
@@ -96,7 +96,7 @@
             <div v-for="freelancer in shift.freelancer">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
-                        <UserPopoverTooltip :user="freelancer" height="4" width="4" class="flex items-center" />
+                        <img :src="freelancer.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
                         <span class="text-xs">{{ freelancer.name }}</span>
                         <span v-if="freelancer.pivot.shift_count > 1" class="text-xs"> 1/{{ freelancer.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
@@ -168,6 +168,10 @@
                                 @close-modal="this.closeDeleteUserModal"
                                 @returnBuffer="deleteUserWithSeriesShiftData"
     />
+
+    <pre>
+        {{ shift }}
+    </pre>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -194,14 +198,10 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import {Inertia} from "@inertiajs/inertia";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
-        ShiftNoteComponent,
-        UserPopoverTooltip,
         BaseMenu,
         ShiftQualificationIconCollection,
         ShiftsQualificationsDropElement,

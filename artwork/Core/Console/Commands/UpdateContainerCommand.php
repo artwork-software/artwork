@@ -20,7 +20,7 @@ class UpdateContainerCommand extends Command
         Artisan::call('migrate --force');
         exec('npm run dev');
         exec('npm run prod');
-        if (!Permission::first()) {
+        if(!Permission::first()) {
             Artisan::call('db:seed:production');
         }
     }

@@ -2,13 +2,13 @@
 export default {
     name: "ColorHelper",
     methods: {
-        backgroundColorWithOpacity(color, percent = 15){
-            if (!color) return `rgb(255, 255, 255, ${percent}%)`;
-            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent}%)`;
+        backgroundColorWithOpacity(color){
+            if (!color) return 'rgb(255, 255, 255, 15%)';
+            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
         },
-        TextColorWithDarken(color, percent = 75){
+        TextColorWithDarken(color){
             if (!color) return 'rgb(180, 180, 180)';
-            return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
+            return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
         },
     }
 }

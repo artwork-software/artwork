@@ -23,9 +23,9 @@ readonly class TaskService
         return $this->taskRepository->findByModel($checklist);
     }
 
-    public function syncTaskUsersWithDetach(Task $task, array $ids): void
+    public function syncTaskUsersWithoutDetach(Task $task, array $ids): void
     {
-        $this->taskRepository->syncWithDetach($task->task_users(), $ids);
+        $this->taskRepository->syncWithoutDetach($task->task_users(), $ids);
     }
 
     public function deleteAll(Collection|array $tasks): void

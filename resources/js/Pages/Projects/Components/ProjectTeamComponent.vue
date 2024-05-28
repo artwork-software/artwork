@@ -7,32 +7,20 @@
                       v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
             />
         </div>
-        <div class="flex w-full mt-2 flex-wrap mb-3">
+        <div class="flex w-full mt-2 flex-wrap">
             <span
                 class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project management') }}
             </span>
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in project.project_managers">
-                <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                <img :data-tooltip-target="user.id"
+                     :src="user.profile_photo_url"
+                     :alt="user.name"
+                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                <UserTooltip :user="user"/>
             </div>
         </div>
-        <div class="mb-3">
-            <div v-for="role in project.projectRoles" class="mb-3">
-                 <div v-if="checkRoleHasUser(role)">
-                     <span class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
-                        {{ role.name }}
-                     </span>
-                     <div class="flex">
-                         <div class="flex mt-2" v-for="(user, index) in project.usersArray">
-                             <div class="" v-if="user?.pivot_roles?.includes(role.id)" :class="index !== 0 ? '' : '-mr-3'">
-                                 <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-            </div>
-        </div>
-        <div class="flex w-full mt-2 flex-wrap mb-4">
+        <div class="flex w-full mt-2 flex-wrap">
             <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project team') }}
             </span>
@@ -47,7 +35,11 @@
                     </div>
                 </div>
                 <div class="flex -mr-3 mt-2" v-for="user in this.onlyTeamMember">
-                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
+                    <img :data-tooltip-target="user.id"
+                         :src="user.profile_photo_url"
+                         :alt="user.name"
+                         class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
+                    <UserTooltip :user="user"/>
                 </div>
             </div>
         </div>
@@ -58,7 +50,6 @@
                               :project-id="this.project.id"
                               :userIsProjectManager="this.userIsProjectManager"
                               @closed="this.showTeamModal = false"
-                              :projectRoles="this.project.projectRoles"
         />
     </div>
 
@@ -72,8 +63,6 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 export default defineComponent({
     mixins: [
@@ -81,8 +70,6 @@ export default defineComponent({
         IconLib
     ],
     components: {
-        ToolTipDefault,
-        UserPopoverTooltip,
         ProjectEditTeamModal,
         TeamTooltip,
         UserTooltip,
@@ -135,9 +122,6 @@ export default defineComponent({
                 }
             )
             return managerIdArray.includes(this.$page.props.user.id);
-        },
-        checkRoleHasUser(role) {
-            return this.project.usersArray.some(user => user.pivot_roles.includes(role.id));
         }
     }
 });

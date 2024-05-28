@@ -1,12 +1,12 @@
 <template>
     <BaseFilter onlyIcon="true">
         <div class="inline-flex border-none justify-end w-full">
-            <button class="flex items-center" @click="resetCalendarFilter">
-                <IconX stroke-width="1.5" class="w-3 mr-1"/>
+            <button class="flex" @click="resetCalendarFilter">
+                <IconX stroke-width="1.5" class="w-3 mr-1 mt-0.5"/>
                 <label class="text-xs cursor-pointer">{{ $t('Reset')}}</label>
             </button>
-            <button class="flex items-center ml-4" @click="saving = !saving">
-                <IconFileText stroke-width="1.5" class="w-3 mr-1"/>
+            <button class="flex ml-4" @click="saving = !saving">
+                <IconFileText stroke-width="1.5" class="w-3 mr-1 mt-0.5"/>
                 <label class="text-xs cursor-pointer">{{ $t('Save')}}</label>
             </button>
         </div>
@@ -81,7 +81,7 @@
             <!-- Event Filter Section -->
             <Disclosure v-slot="{ open }">
                 <DisclosureButton
-                    class="flex w-full py-2 justify-between rounded-lg text-left text-sm focus:outline-none focus-visible:ring-purple-500"
+                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
                 >
                                 <span
                                     :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Events')}}</span>
@@ -93,7 +93,8 @@
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <hr class="border-gray-500 mt-2 mb-2">
                     <Disclosure v-slot="{ open }">
-                        <DisclosureButton class="flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                        <DisclosureButton
+                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Event type')}}</span>
                             <IconChevronDown stroke-width="1.5"
@@ -113,8 +114,6 @@
                     </Disclosure>
                 </DisclosurePanel>
             </Disclosure>
-            <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-            <CraftFilter :crafts="crafts" v-if="crafts.length > 0" />
 
         </div>
     </BaseFilter>
@@ -140,13 +139,11 @@ import {XIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default {
     name: "ShiftPlanFilter",
     mixins: [Permissions, IconLib],
     components: {
-        CraftFilter,
         SwitchLabel,
         Switch,
         SwitchGroup,
@@ -167,8 +164,7 @@ export default {
         'filterOptions',
         'personalFilters',
         'atAGlance',
-        'user_filters',
-        'crafts'
+        'user_filters'
     ],
     mounted() {
            this.initFilter()

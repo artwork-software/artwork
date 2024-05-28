@@ -22,13 +22,12 @@
                                 </div>
                                 <p class="subpixel-antialiased">{{ $t('Define the specifications of your trade.')}}</p>
 
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5">
 
-                                <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mt-5">
-                                    <ColorPickerComponent :color="craft.color" class="col-span-1" @updateColor="addColor" />
                                     <input type="text"
                                            :placeholder="$t('Name of the craft') + '*'"
                                            v-model="craft.name"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                            required
                                     />
                                     <input type="text"
@@ -36,17 +35,7 @@
                                            v-model="craft.abbreviation"
                                            maxlength="3"
                                            required
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"/>
-                                </div>
-
-                                <div class="my-3">
-                                    <span class="xsLight text-xs mb-1">{{$t('Days until notification if shift not fully staffed')}}</span>
-                                    <input type="number"
-                                           v-model="craft.notify_days"
-                                           maxlength="3"
-                                           required
-                                           min="0" max="100"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"/>
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
 
                                 <div class="mt-3">
@@ -137,13 +126,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
-        ColorPickerComponent,
         FormButton,
         XCircleIcon,
         TagComponent,
@@ -159,9 +146,7 @@ export default defineComponent({
                 name: this.craftToEdit ? this.craftToEdit.name : '',
                 abbreviation: this.craftToEdit ? this.craftToEdit.abbreviation : '',
                 users: [],
-                assignable_by_all: true,
-                color: this.craftToEdit ? this.craftToEdit.color : '#ffffff',
-                notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0
+                assignable_by_all: true
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
             users: this.craftToEdit ? this.craftToEdit.users : []
@@ -185,10 +170,6 @@ export default defineComponent({
             }
         },
         saveCraft(){
-            if (this.craft.notify_days < 0) {
-                this.craft.notify_days = 0;
-            }
-
             if(!this.enabled){
                 this.craft.assignable_by_all = false
                 this.users.forEach((user) => {
@@ -218,12 +199,9 @@ export default defineComponent({
                 })
             }
         },
-        addColor(color){
-            this.craft.color = color
-        },
         updateCraft(){
 
-        },
+        }
     }
 })
 </script>

@@ -2,24 +2,6 @@
    <div class="w-full group flex">
        <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
            <div>
-               <input :type="time.start_date ? 'date' : 'text'" onfocus="(this.type='date')"
-                      :placeholder="$t('Start*')"
-                      v-model="time.start_date"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-               />
-           </div>
-           <div>
-               <input :type="time.end_date ? 'date' : 'text'" onfocus="(this.type='date')"
-                      :placeholder="$t('Ende*')"
-                      v-model="time.end_date"
-                      maxlength="3"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-           </div>
-           <div>
                <input type="text" onfocus="(this.type='time')"
                       :placeholder="$t('Start*')"
                       v-model="time.start"

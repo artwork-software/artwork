@@ -11,6 +11,5 @@ class ProjectUserPivot extends Pivot
         'is_manager' => 'boolean',
         'can_write' => 'boolean',
         'delete_permission' => 'boolean',
-        'roles' => 'array',
     ];
 }

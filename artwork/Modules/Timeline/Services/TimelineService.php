@@ -19,8 +19,6 @@ readonly class TimelineService
             'event_id' => $eventId,
             'start' => $shiftPresetTimeline->start,
             'end' => $shiftPresetTimeline->end,
-            'start_date' => $shiftPresetTimeline->start_date,
-            'end_date' => $shiftPresetTimeline->end_date,
             'description' => $shiftPresetTimeline->description,
         ]);
 

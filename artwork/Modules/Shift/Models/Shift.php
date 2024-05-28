@@ -48,10 +48,6 @@ use Illuminate\Support\Collection;
  * @property-read string $break_formatted
  * @property-read User|null $committedBy
  * @property-read Collection<ShiftsQualifications> $shiftsQualifications
- * @property-read array $formatted_dates
- * @property-read array $days_of_shift
- * @property-read int $max_users
- * @method static Builder isCommitted()
  */
 class Shift extends Model
 {
@@ -95,9 +91,7 @@ class Shift extends Model
         'break_formatted',
         'infringement',
         'formatted_dates',
-        'days_of_shift',
-        'max_users',
-        'shift_height',
+        'days_of_shift'
     ];
 
     public function committedBy(): BelongsTo
@@ -267,36 +261,5 @@ class Shift extends Model
     public function scopeOrderedByStart(Builder $builder, string $direction = 'asc'): Builder
     {
         return $builder->orderBy('start', $direction);
-    }
-
-    public function getMaxUsersAttribute(): int
-    {
-        return $this->shiftsQualifications->sum('value');
-    }
-
-    public function getShiftHeightAttribute(): int
-    {
-        $startDate = Carbon::parse($this->start_date);
-        $startTime = Carbon::parse($this->start);
-        $endDate = Carbon::parse($this->end_date);
-        $endTime = Carbon::parse($this->end);
-
-        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
-        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
-
-
-        // Berechne die Differenz in Minuten
-        $diff = $shiftStartDateTime->diffInMinutes($shiftEndDateTime);
-
-        // Lade Konfigurationswerte
-        $maxShiftHeight = (int) config('shift.max_shift_height');
-        $shiftHeightFactor = (float) config('shift.shift_height_factor');
-        $shiftHeightOffset = (int) config('shift.shift_height_offset');
-
-        // Berechne die Schichthöhe
-        $shiftHeight = ($diff / 60) * $shiftHeightFactor;
-
-        // Gib die minimale Schichthöhe zurück
-        return min($shiftHeight, $maxShiftHeight - $shiftHeightOffset);
     }
 }

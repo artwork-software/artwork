@@ -10,7 +10,7 @@ abstract class BaseDto implements JsonSerializable, Arrayable
 {
     final public function __construct(array $data = [])
     {
-        foreach ($data as $key => $value) {
+        foreach($data as $key => $value) {
             $this->{$key} = $value;
         }
     }
@@ -28,7 +28,7 @@ abstract class BaseDto implements JsonSerializable, Arrayable
     {
         //late static binding means: the last overwriting method is used. If ClassA derives from BaseDto
         //and Class B derives from Class A, Class B's toArray implementation is used if it exists
-        return $this->toArray();
+        return static::toArray();
     }
 
     /**

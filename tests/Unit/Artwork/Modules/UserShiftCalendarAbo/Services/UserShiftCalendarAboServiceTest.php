@@ -49,5 +49,4 @@ class UserShiftCalendarAboServiceTest extends TestCase
         $this->userShiftCalendarAboService->updateByRequest($calendarAbo, $data);
         $this->assertDatabaseHas('user_shift_calender_abos', $data);
     }
-
 }

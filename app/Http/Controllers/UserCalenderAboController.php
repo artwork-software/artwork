@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
+use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class UserCalenderAboController extends Controller
     public function show(string $calendar_abo_id): \Illuminate\Contracts\Routing\ResponseFactory|
     \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\Response|\Illuminate\Foundation\Application
     {
-        $calendarAbo = UserCalenderAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
+        $calendarAbo = UserCalendarAbo::where('calendar_abo_id', $calendar_abo_id)->firstOrFail();
         $user = $calendarAbo->user;
 
         // Create Calendar
@@ -81,7 +81,7 @@ class UserCalenderAboController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserCalenderAbo $userCalenderAbo): void
+    public function edit(UserCalendarAbo $userCalenderAbo): void
     {
         //
     }
@@ -89,7 +89,7 @@ class UserCalenderAboController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserCalenderAbo $userCalenderAbo): void
+    public function update(Request $request, UserCalendarAbo $userCalenderAbo): void
     {
         $this->userCalendarAboService->updateByRequest($request->all(), $userCalenderAbo);
     }
@@ -97,7 +97,7 @@ class UserCalenderAboController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserCalenderAbo $userCalenderAbo): void
+    public function destroy(UserCalendarAbo $userCalenderAbo): void
     {
         //
     }

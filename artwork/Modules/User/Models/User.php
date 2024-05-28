@@ -24,7 +24,7 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
+use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
@@ -203,7 +203,7 @@ class User extends Model implements
 
     public function calendarAbo(): hasOne
     {
-        return $this->hasOne(UserCalenderAbo::class);
+        return $this->hasOne(UserCalendarAbo::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string

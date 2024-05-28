@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\UserCalendarAbo\Services;
 
-use Artwork\Modules\UserCalendarAbo\Models\UserCalenderAbo;
+use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarAbo\Repositories\UserCalendarAboRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +18,7 @@ readonly class UserCalendarAboService
 
     public function create(array $data, int $userId): void
     {
-        $calendarAbo = new UserCalenderAbo();
+        $calendarAbo = new UserCalendarAbo();
         $calendarAbo->user_id = $userId;
         $calendarAbo->calendar_abo_id = $data['calendar_abo_id'] ?? Str::uuid();
         $calendarAbo->date_range = $data['date_range'];
@@ -37,7 +37,7 @@ readonly class UserCalendarAboService
     }
 
 
-    public function updateByRequest(array $data, UserCalenderAbo $calendarAbo): void
+    public function updateByRequest(array $data, UserCalendarAbo $calendarAbo): void
     {
         $calendarAbo->fill($data);
         $this->userCalendarAboRepository->save($calendarAbo);

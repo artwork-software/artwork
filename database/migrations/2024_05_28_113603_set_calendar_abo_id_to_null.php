@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('calendar_abo_id')->nullable()->change();
         });
 
-        Schema::table('user_calender_abos', function (Blueprint $table) {
+        Schema::table('user_calendar_abos', function (Blueprint $table) {
             $table->string('calendar_abo_id')->nullable()->change();
         });
     }

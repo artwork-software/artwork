@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read string $calendar_abo_url
  * @property-read User $user
  */
-class UserCalenderAbo extends Model
+class UserCalendarAbo extends Model
 {
     use HasFactory;
 

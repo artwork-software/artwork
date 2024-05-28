@@ -20,7 +20,7 @@ readonly class UserCalendarAboService
     {
         $calendarAbo = new UserCalenderAbo();
         $calendarAbo->user_id = $userId;
-        $calendarAbo->calendar_abo_id = Str::uuid();
+        $calendarAbo->calendar_abo_id = $data['calendar_abo_id'] ?? Str::uuid();
         $calendarAbo->date_range = $data['date_range'];
         $calendarAbo->start_date = $data['start_date'];
         $calendarAbo->end_date = $data['end_date'];

@@ -18,7 +18,6 @@ class UserCalenderAboFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'calendar_abo_id' => Str::uuid(),
         ];
     }
 }

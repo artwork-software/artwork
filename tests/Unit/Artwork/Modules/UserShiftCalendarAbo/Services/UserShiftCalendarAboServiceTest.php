@@ -7,6 +7,7 @@ use Artwork\Modules\UserCalendarAbo\Services\UserCalendarAboService;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarAbo\Services\UserShiftCalendarAboService;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class UserShiftCalendarAboServiceTest extends TestCase
@@ -21,13 +22,15 @@ class UserShiftCalendarAboServiceTest extends TestCase
     public function testCreate(): void
     {
         $user = User::factory()->create();
+        $uuid = Str::uuid();
         $data = [
-            'date_range' => true,
+            'calendar_abo_id' => $uuid, // 'calendar_abo_id' => Str::uuid(),
+            'date_range' => 1,
             'start_date' => Carbon::now()->subMonth(),
             'end_date' => Carbon::now()->addMonths(4),
-            'specific_event_types' => true,
+            'specific_event_types' => 1,
             'event_types' => [1, 2, 3],
-            'enable_notification' => true,
+            'enable_notification' => 1,
             'notification_time' => 5,
             'notification_time_unit' => 'minutes',
         ];
@@ -39,12 +42,13 @@ class UserShiftCalendarAboServiceTest extends TestCase
     {
         $calendarAbo = UserShiftCalendarAbo::factory()->create();
         $data = [
-            'date_range' => true,
+            'calendar_abo_id' => Str::uuid(),
+            'date_range' => 1,
             'start_date' => Carbon::now()->subMonth(),
             'end_date' => Carbon::now()->addMonths(4),
-            'specific_event_types' => true,
+            'specific_event_types' => 1,
             'event_types' => [1, 2, 3],
-            'enable_notification' => true,
+            'enable_notification' => 1,
             'notification_time' => 5,
             'notification_time_unit' => 'minutes',
         ];

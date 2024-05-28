@@ -94,10 +94,9 @@ class Availability extends Model
 
     public function scopeBetweenDates(
         Builder $builder,
-        Carbon  $startDate,
-        Carbon  $endDate
-    ): Builder
-    {
+        Carbon $startDate,
+        Carbon $endDate
+    ): Builder {
         return $builder->whereBetween('date', [$startDate, $endDate]);
     }
 

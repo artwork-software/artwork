@@ -21,7 +21,6 @@ class UserCalenderAboController extends Controller
      */
     public function index(): void
     {
-
     }
 
     /**

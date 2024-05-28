@@ -144,7 +144,9 @@ readonly class UserShiftCalendarAboService
                     $alertTime->subDays($calendarAbo->notification_time);
                     break;
             }
-            $event->alertAt($alertTime, 'Schicht: ');
+            $event->alertAt($alertTime, 'Schicht: ' . $shift->craft()->first()->name . ' - ' .
+                $shift->start . ' - ' . $shift->end . ' beginnt in ' .
+                $calendarAbo->notification_time . ' ' . $calendarAbo->notification_time_unit);
         }
     }
 }

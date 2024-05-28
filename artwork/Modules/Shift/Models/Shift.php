@@ -299,8 +299,4 @@ class Shift extends Model
         // Gib die minimale Schichthöhe zurück
         return min($shiftHeight, $maxShiftHeight - $shiftHeightOffset);
     }
-
-
-
-
 }

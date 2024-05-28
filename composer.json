@@ -10,6 +10,7 @@
     "require": {
         "php": "^8.2",
         "ext-curl": "*",
+        "ext-dom": "*",
         "ext-gd": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
@@ -37,13 +38,13 @@
         "pestphp/pest-plugin-laravel": "^v2.0",
         "pusher/pusher-php-server": "7.0.2",
         "sentry/sentry-laravel": "^4.2",
+        "spatie/icalendar-generator": "^2.8",
         "spatie/laravel-permission": "^5.5.16",
         "spatie/laravel-settings": "^2.5.0",
         "symfony/event-dispatcher": "^v6.1.0",
         "symfony/http-client": "^v6.1.7",
         "symfony/mailgun-mailer": "^v6.1.0",
-        "tightenco/ziggy": "^v1.5.0",
-        "ext-dom": "*"
+        "tightenco/ziggy": "^v1.5.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^v3.7.0",

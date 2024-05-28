@@ -18,7 +18,7 @@ class SeedProductionCommand extends Command
      */
     public function handle(): int
     {
-        if(Permission::first() && !$this->option('force')) {
+        if (Permission::first() && !$this->option('force')) {
             $this->error('Database is already seeded. Use --force to seed again');
             return Command::FAILURE;
         }

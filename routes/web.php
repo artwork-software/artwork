@@ -1270,6 +1270,31 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');
+
+
+        // save user shift calendar abo
+        Route::post(
+            '/shift/calendar/abo/create',
+            [\App\Http\Controllers\UserShiftCalendarAboController::class, 'store']
+        )->name('user.shift.calendar.abo.create');
+
+        // user.shift.calendar.abo.update
+        Route::patch(
+            '/shift/calendar/abo/{userShiftCalendarAbo}/update',
+            [\App\Http\Controllers\UserShiftCalendarAboController::class, 'update']
+        )->name('user.shift.calendar.abo.update');
+
+        // save user calendar abo
+        Route::post(
+            '/calendar/abo/create',
+            [\App\Http\Controllers\UserCalenderAboController::class, 'store']
+        )->name('user.calendar.abo.create');
+
+        // user.shift.calendar.abo.update
+        Route::patch(
+            '/calendar/abo/{userCalenderAbo}/update',
+            [\App\Http\Controllers\UserCalenderAboController::class, 'update']
+        )->name('user.calendar.abo.update');
     });
 
     Route::group(['prefix' => 'project-roles'], function (): void {
@@ -1286,3 +1311,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project-roles.destroy');
     });
 });
+
+Route::get(
+    '/shift/calendar/abo/{calendar_abo_id}',
+    [\App\Http\Controllers\UserShiftCalendarAboController::class, 'show']
+)->name('user-shift-calendar-abo.show');
+
+Route::get(
+    '/calendar/abo/{calendar_abo_id}',
+    [\App\Http\Controllers\UserCalenderAboController::class, 'show']
+)->name('user-calendar-abo.show');

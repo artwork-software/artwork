@@ -1,6 +1,6 @@
 <template>
     <div id="bar" class="p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed w-[calc(100%-4rem)] ' : 'sticky w-full' : 'fixed  w-[calc(100%-4rem)] ']">
-        <div class="inline-flex items-center">
+        <div class="inline-flex items-center gap-x-3">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
                 <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
@@ -20,7 +20,12 @@
                     </button>
                 </div>
             </div>
-
+            <div class="flex items-center">
+                <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
+                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                    {{ $t('Subscribe to calendar') }}
+                </div>
+            </div>
 
         </div>
 
@@ -161,6 +166,16 @@
     </div>
 
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
+
+    <GeneralCalendarAboSettingModal
+        v-if="showCalendarAboSettingModal"
+        @close="closeCalendarAboSettingModal"
+        :event-types="filterOptions.eventTypes"
+        :areas="filterOptions.areas"
+        :rooms="filterOptions.rooms"
+    />
+
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 </template>
 
 <script>
@@ -180,12 +195,16 @@ import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
+import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        CalendarAboInfoModal,
+        GeneralCalendarAboSettingModal,
         PlusButton,
         AddButtonSmall,
         PdfConfigModal,
@@ -237,10 +256,18 @@ export default {
             externUpdate: false,
             showPDFConfigModal: false,
             isPageScrolled: false,
+            showCalendarAboSettingModal: false,
+            showCalendarAboInfoModal: false,
         }
     },
     methods: {
         usePage,
+        closeCalendarAboSettingModal(bool){
+            this.showCalendarAboSettingModal = false;
+            if(bool){
+                this.showCalendarAboInfoModal = true;
+            }
+        },
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
         },

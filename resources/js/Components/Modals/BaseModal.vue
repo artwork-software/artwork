@@ -15,7 +15,7 @@
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
-                            <div class="relative z-40">
+                            <div>
                                 <slot />
                             </div>
                         </DialogPanel>

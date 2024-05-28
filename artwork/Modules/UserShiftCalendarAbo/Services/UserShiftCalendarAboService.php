@@ -8,10 +8,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-class UserShiftCalendarAboService
+readonly class UserShiftCalendarAboService
 {
     public function __construct(
-        private readonly UserShiftCalendarAboRepository $userShiftCalendarAboRepository
+        private UserShiftCalendarAboRepository $userShiftCalendarAboRepository
     ) {
         //
     }

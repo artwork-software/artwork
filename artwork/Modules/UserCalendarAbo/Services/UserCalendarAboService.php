@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Spatie\IcalendarGenerator\Enums\EventStatus;
 
-class UserCalendarAboService
+readonly class UserCalendarAboService
 {
     public function __construct(
-        private readonly UserCalendarAboRepository $userCalendarAboRepository
+        private UserCalendarAboRepository $userCalendarAboRepository
     ) {
     }
 

@@ -26,8 +26,8 @@ class UserShiftCalendarAboServiceTest extends TestCase
         $data = [
             'calendar_abo_id' => $uuid, // 'calendar_abo_id' => Str::uuid(),
             'date_range' => 1,
-            'start_date' => Carbon::now()->subMonth(),
-            'end_date' => Carbon::now()->addMonths(4),
+            'start_date' => Carbon::now()->subMonth()->format('Y-m-d'),
+            'end_date' => Carbon::now()->addMonths(4)->format('Y-m-d'),
             'specific_event_types' => 1,
             'event_types' => [1, 2, 3],
             'enable_notification' => 1,
@@ -44,8 +44,8 @@ class UserShiftCalendarAboServiceTest extends TestCase
         $data = [
             'calendar_abo_id' => Str::uuid(),
             'date_range' => 1,
-            'start_date' => Carbon::now()->subMonth(),
-            'end_date' => Carbon::now()->addMonths(4),
+            'start_date' => Carbon::now()->subMonth()->format('Y-m-d'),
+            'end_date' => Carbon::now()->addMonths(4)->format('Y-m-d'),
             'specific_event_types' => 1,
             'event_types' => [1, 2, 3],
             'enable_notification' => 1,

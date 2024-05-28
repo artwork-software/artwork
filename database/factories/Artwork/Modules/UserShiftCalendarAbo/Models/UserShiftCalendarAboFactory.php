@@ -22,5 +22,4 @@ class UserShiftCalendarAboFactory extends Factory
             'calendar_abo_id' => Str::uuid(),
         ];
     }
-
 }

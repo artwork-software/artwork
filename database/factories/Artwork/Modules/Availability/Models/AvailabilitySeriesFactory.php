@@ -9,6 +9,9 @@ class AvailabilitySeriesFactory extends Factory
 {
     protected $model = AvailabilitySeries::class;
 
+    /**
+     * @return string []
+     */
     public function definition(): array
     {
         return [

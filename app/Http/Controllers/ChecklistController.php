@@ -133,7 +133,7 @@ class ChecklistController extends Controller
             return Redirect::back();
         }
 
-        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids, $taskService);
+        $this->checklistService->assignUsersById($checklist, $taskService, $request->assigned_user_ids ?? []);
 
         $this->changeService->saveFromBuilder(
             $this->changeService

@@ -24,7 +24,10 @@
                 <li v-for="craft in crafts" :key="craft" class="flex justify-between gap-x-6 py-5">
                     <div class="flex gap-x-4">
                         <div class="min-w-0 flex-auto">
-                            <p class="text-sm font-semibold leading-6 text-gray-900">{{ craft.name }} ({{ craft.abbreviation }})</p>
+                            <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
+                                <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(craft.color), borderColor: TextColorWithDarken(craft.color, 90)}"/>
+                                {{ craft.name }} ({{ craft.abbreviation }})
+                            </p>
                             <div class="" v-if="craft.assignable_by_all">
                                 <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
                             </div>
@@ -35,6 +38,14 @@
                                         {{ user.full_name }}<span>, </span>
                                     </span>
                                 </p>
+                            </div>
+                            <div class="mt-1 truncate xsLight">
+                                <div v-if="craft.notify_days > 0">
+                                    {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [craft.notify_days]) }}
+                                </div>
+                                <div v-else>
+                                    {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -92,10 +103,8 @@
                         </div>
                     </Listbox>
                 </div>
-                <div class="mt-3 flex">
-                    <div v-for="type in relevantEventTypes">
-                        <TagComponent :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
-                    </div>
+                <div class="mt-3 flex flex-wrap">
+                    <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
             <div class="mt-10">
@@ -176,10 +185,11 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
-    mixins: [IconLib],
+    mixins: [IconLib, ColorHelper],
     components: {
         BaseMenu,
         TabComponent,

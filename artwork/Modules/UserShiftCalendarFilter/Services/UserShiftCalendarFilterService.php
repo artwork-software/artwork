@@ -6,7 +6,5 @@ use Artwork\Modules\UserShiftCalendarFilter\Repositories\UserShiftCalendarFilter
 
 readonly class UserShiftCalendarFilterService
 {
-    public function __construct(private UserShiftCalendarFilterRepository $userShiftCalendarFilterRepository)
-    {
-    }
+
 }

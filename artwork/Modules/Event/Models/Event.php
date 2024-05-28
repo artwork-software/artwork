@@ -43,6 +43,8 @@ use Illuminate\Support\Collection;
  * @property int $project_id
  * @property bool $is_series
  * @property int $series_id
+ * @property Carbon $earliest_start_datetime
+ * @property Carbon $latest_end_datetime
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -59,6 +61,7 @@ use Illuminate\Support\Collection;
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts
+ * @property-read int $shift_container_height
  */
 class Event extends Model
 {
@@ -91,7 +94,9 @@ class Event extends Model
         'accepted',
         'option_string',
         'declined_room_id',
-        'allDay'
+        'allDay',
+        'latest_end_datetime',
+        'earliest_start_datetime'
     ];
 
     protected $guarded = [
@@ -106,7 +111,9 @@ class Event extends Model
         'end_time' => 'datetime:d. M Y H:i',
         'is_series' => 'boolean',
         'accepted' => 'boolean',
-        'allDay' => 'boolean'
+        'allDay' => 'boolean',
+        'earliest_start_datetime' => 'datetime',
+        'latest_end_datetime' => 'datetime',
     ];
 
     protected $appends = [
@@ -114,7 +121,9 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'days_of_shifts'
+        'days_of_shifts',
+        'shift_container_height',
+        'formatted_dates'
     ];
 
     public function comments(): HasMany
@@ -192,6 +201,18 @@ class Event extends Model
     public function getEndTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->end_time)->format('H:i');
+    }
+
+
+    /**
+     * @return array<string, string>
+     */
+    public function getFormattedDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y H:i'),
+            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i')
+        ];
     }
 
     /**
@@ -352,5 +373,30 @@ class Event extends Model
     public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
     {
         return $builder->orderBy('start_time', $direction);
+    }
+
+    public function getShiftContainerHeightAttribute(): int
+    {
+        $earliestStartTime = $this->earliest_start_datetime;
+        $latestEndTime = $this->latest_end_datetime;
+
+        // Berechne die Differenz in Minuten
+        $diff = $latestEndTime->diffInMinutes($earliestStartTime);
+
+        // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
+        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+        $pixelHeight = $diff / 60  * $shiftHeightFactor;
+
+        // Konfigurationswerte für minimale und maximale Schichthöhe
+        $minShiftHeight = (int)config('shift.min_shift_height');
+        $maxShiftHeight = (int)config('shift.max_shift_height');
+
+        // Prüfe auf Sonderfälle und return die entsprechende Höhe
+        if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
+            return $minShiftHeight;
+        }
+
+        // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
+        return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
     }
 }

@@ -488,4 +488,61 @@ class UserController extends Controller
     {
         $user->update($request->only('zoom_factor'));
     }
+
+    public function operationPlan(
+        Request $request,
+        User $user,
+        UserService $userService,
+        ShiftQualificationService $shiftQualificationService,
+        CalendarService $calendarService,
+        EventService $eventService,
+        RoomService $roomService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
+        SessionManager $sessionManager,
+        Repository $config
+    ): Response|ResponseFactory {
+        $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
+        $vacationMonth = $request->get('vacationMonth');
+        $selectedDate = $showVacationsAndAvailabilities ?
+            Carbon::parse($showVacationsAndAvailabilities) :
+            Carbon::today();
+        $selectedPeriodDate = $vacationMonth ?
+            Carbon::parse($vacationMonth) :
+            Carbon::today();
+
+        $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
+
+        return Inertia::render(
+            'Shifts/UserOperationPlan',
+            $userService->getUserShiftPlanPageDto(
+                $user,
+                $calendarService,
+                $eventService,
+                $roomService,
+                $eventTypeService,
+                $projectService,
+                $shiftQualificationService,
+                $selectedPeriodDate,
+                $selectedDate,
+                $request->get('month'),
+                $vacationMonth
+            )
+        );
+    }
+
+    public function compactMode(User $user, Request $request): void
+    {
+        $user->update($request->only('compact_mode'));
+    }
+
+    public function updateShowCrafts(User $user, Request $request): void
+    {
+        $user->update($request->only('show_crafts'));
+    }
+
+    public function calendarGoToStepper(User $user, Request $request): void
+    {
+        $user->update($request->only('goto_mode'));
+    }
 }

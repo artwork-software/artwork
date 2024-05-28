@@ -50,6 +50,12 @@ return [
         'more_than_ten_days' => 'You have been scheduled for more than 10 consecutive days',
         'worker_more_than_ten_days' => 'Employee scheduled for more than 10 consecutive days',
         'shift_staffing_deleted' => 'Shift staffing deleted :projectName :craftAbbreviation',
+        // 'open_demand' => 'Der Termin :event hat noch :count offene Stellen',
+        'open_demand' => 'The event :event still has :count open positions',
+        // open_demand_description' =>
+        // 'Der Termin :event hat noch :count offene Stellen für die Gewerk :craft :shift_start - :shift_end',
+        'open_demand_description' =>
+            'The event :event still has :count open positions for the craft :craft :shift',
     ],
     'event' => [
         'with_adjoining_audience' => 'Event with audience in adjoining room',

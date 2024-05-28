@@ -11,6 +11,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -20,6 +21,7 @@ use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
@@ -421,6 +423,7 @@ readonly class ProjectService
                 ->events()
                 ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
                 ->with(['timelines', 'shifts', 'event_type', 'room'])
+                ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
             $timeline = $event->timelines()->get()->toArray();
@@ -447,17 +450,59 @@ readonly class ProjectService
                 $shift->load('shiftsQualifications');
             }
 
-            $eventsWithRelevant[$event->id] = [
+
+            $shiftsToReturn = $event->shifts->map(function ($shift) use ($event) {
+                $shift->margin_top = $this->getMarginTopForShift($event, $shift);
+                return $shift;
+            });
+
+
+            $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
-                'shifts' => $event->shifts,
+                'shifts' => $shiftsToReturn,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
             ];
         }
-        rsort($eventsWithRelevant);
-
+        //rsort($eventsWithRelevant);
+        //dd($eventsWithRelevant);
         return $eventsWithRelevant;
+    }
+
+    private function getMarginTopForShift(Event $event, Shift $shift): float
+    {
+        // get difference between $event->earliest_start_datetime and $shift->start_date + $shift->start
+        $eventEarliestStartDateTime = Carbon::parse($event->earliest_start_datetime);
+        $startDate = Carbon::parse($shift->start_date);
+        $startTime = Carbon::parse($shift->start);
+        $endDate = Carbon::parse($shift->end_date);
+        $endTime = Carbon::parse($shift->end);
+        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
+        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
+
+        // calculate the difference
+        $diff = $eventEarliestStartDateTime->diffInMinutes($shiftStartDateTime);
+        $pixelHeight = $diff / 60 * 180;
+
+        $shiftDuration = $shiftEndDateTime->diffInMinutes($shiftStartDateTime);
+        $shiftHeight = $shiftDuration / 60 * 180;
+
+        if ($shiftHeight > (int)config('shift.max_shift_height')) {
+            return 38;
+        }
+
+        // if the calculated height is null or 0 than return 36
+        if ($pixelHeight === null || $pixelHeight === 0) {
+            return 38;
+        }
+
+
+        // if the calculated height is greater than the max_shift_height than return the max_shift_height - $shiftHeight
+        if ($pixelHeight > (int)config('shift.max_shift_height')) {
+            return (int)config('shift.max_shift_height') - $shiftHeight;
+        }
+        return $pixelHeight;
     }
 
     /**

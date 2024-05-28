@@ -3,9 +3,11 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class ShiftService
@@ -19,10 +21,12 @@ readonly class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
-    public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, int $eventId): Shift
+    public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, Event $event): Shift
     {
         $shift = new Shift([
-            'event_id' => $eventId,
+            'event_id' => $event->id,
+            'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+            'end_date' => Carbon::parse($event->end_time)->format('Y-m-d'),
             'start' => $presetShift->start,
             'end' => $presetShift->end,
             'break_minutes' => $presetShift->break_minutes,

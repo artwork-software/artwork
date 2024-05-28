@@ -34,12 +34,8 @@
                         <TeamTooltip :team="department"/>
                     </div>
                 </div>
-                <div class="flex -mr-3 mt-2" v-for="user in this.onlyTeamMember">
-                    <img :data-tooltip-target="user.id"
-                         :src="user.profile_photo_url"
-                         :alt="user.name"
-                         class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
-                    <UserTooltip :user="user"/>
+                <div class="flex -mr-3 mt-2" v-for="user in project.usersArray">
+                    <UserPopoverTooltip :user="user" width="11" height="11" classes="border-2 border-white rounded-full" />
                 </div>
             </div>
         </div>

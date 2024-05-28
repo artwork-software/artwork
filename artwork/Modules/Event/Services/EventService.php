@@ -65,13 +65,13 @@ readonly class EventService
     ): void {
         $timelineService->forceDeleteTimelines($event->timelines);
         foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
-            $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event->id);
+            $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
         }
 
         $shiftService->forceDeleteShifts($event->shifts);
         /** @var PresetShift $presetShift */
         foreach ($shiftPreset->shifts as $presetShift) {
-            $shift = $shiftService->createFromShiftPresetShiftForEvent($presetShift, $event->id);
+            $shift = $shiftService->createFromShiftPresetShiftForEvent($presetShift, $event);
 
             /** @var PresetShiftShiftsQualifications $presetShiftShiftsQualification */
             foreach ($presetShift->shiftsQualifications as $presetShiftShiftsQualification) {

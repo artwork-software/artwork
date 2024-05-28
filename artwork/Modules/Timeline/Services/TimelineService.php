@@ -2,9 +2,11 @@
 
 namespace Artwork\Modules\Timeline\Services;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Repositories\TimelineRepository;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class TimelineService
@@ -13,10 +15,12 @@ readonly class TimelineService
     {
     }
 
-    public function createFromShiftPresetTimeline(ShiftPresetTimeline $shiftPresetTimeline, int $eventId): Timeline
+    public function createFromShiftPresetTimeline(ShiftPresetTimeline $shiftPresetTimeline, Event $event): Timeline
     {
         $timeline = new Timeline([
-            'event_id' => $eventId,
+            'event_id' => $event->id,
+            'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+            'end_date' => Carbon::parse($event->end_time)->format('Y-m-d'),
             'start' => $shiftPresetTimeline->start,
             'end' => $shiftPresetTimeline->end,
             'description' => $shiftPresetTimeline->description,

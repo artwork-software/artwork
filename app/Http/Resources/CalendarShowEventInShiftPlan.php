@@ -1,12 +1,18 @@
 <?php
 
-namespace Artwork\Modules\Event\Http\Resources;
+namespace App\Http\Resources;
 
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CalendarShowEventResource extends JsonResource
+class CalendarShowEventInShiftPlan extends JsonResource
 {
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
     /**
      * @return array<string, mixed>
      */
@@ -41,15 +47,15 @@ class CalendarShowEventResource extends JsonResource
             'allDay' => $this->allDay,
             'shifts' => $this->shifts()->with(['shiftsQualifications'])->get(),
             'subEvents' => SubEventResource::collection($this->subEvents),
-            'eventTypeColorBackground' => $this->event_type->hex_code . '33',
             'event_type' => $this->event_type,
             'days_of_event' => $this->days_of_event,
             'days_of_shifts' => $this->days_of_shifts,
             'project' => $this->project,
             'option_string' => $this->option_string,
-            'projectLeaders' => $this->project?->managerUsers,
             'is_series' => $this->is_series,
-            'series' => $this->series
+            'series' => $this->series,
+            'formatted_dates' => $this->formatted_dates,
+            'timesWithoutDates' => $this->timesWithoutDates,
         ];
     }
 }

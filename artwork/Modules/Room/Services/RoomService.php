@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Room\Services;
 
 use App\Http\Controllers\FilterController;
+use App\Http\Resources\CalendarShowEventInShiftPlan;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
@@ -504,9 +505,10 @@ readonly class RoomService
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
 
-        $room->events()
-            ->with('shifts') // Lade die Schichten der Events vor
-            ->whereHas('shifts', function ($query) use ($calendarPeriod): void {
+
+        $room->events()->with('shifts')
+            ->without(['created_by', 'shift_relevant_event_types']) // Lade die Schichten der Events vor
+            /*->whereHas('shifts', function ($query) use ($calendarPeriod): void {
                 $query->where(function ($q) use ($calendarPeriod): void {
                     // Schichten, die vor der Periode beginnen und nach der Periode enden
                     $q->where('start_date', '<', $calendarPeriod->start)
@@ -516,7 +518,7 @@ readonly class RoomService
                     $q->whereBetween('start_date', [$calendarPeriod->start, $calendarPeriod->end])
                         ->orWhereBetween('end_date', [$calendarPeriod->start, $calendarPeriod->end]);
                 });
-            })
+            })*/
             // Weitere Bedingungen und Filter wie vorher
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
@@ -549,37 +551,27 @@ readonly class RoomService
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-                foreach ($event->shifts as $shift) {
-                    // Berechne den Zeitraum für jede Schicht innerhalb der gewünschten Periode
-                    $start = $shift->start_date;
-                    $end = $shift->end_date;
 
 
-                    if (empty($start) || $start === null) {
-                        $start = Carbon::parse($shift->event_start_day);
-                    }
-                    if (empty($end) || $end === null) {
-                        $end = Carbon::parse($shift->event_end_day);
-                    }
+                // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
+                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                    $calendarPeriod->start :
+                    $event->start_time;
 
-                    //dd($shift->toArray());
-                    $shiftStart = $start->isBefore($calendarPeriod->start) ?
-                        $calendarPeriod->start : $start;
-                    $shiftEnd = $end->isAfter($calendarPeriod->end) ?
-                        $calendarPeriod->end : $end;
-                    $shiftPeriod = CarbonPeriod::create($shiftStart->startOfDay(), $shiftEnd->endOfDay());
+                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
 
-                    foreach ($shiftPeriod as $date) {
-                        $dateKey = $date->format('d.m.Y');
-                        $actualEvents[$dateKey][] = $event;
-                    }
+                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+                foreach ($eventPeriod as $date) {
+                    $dateKey = $date->format('d.m.Y');
+                    $actualEvents[$dateKey][] = $event;
                 }
             });
 
         foreach ($actualEvents as $key => $value) {
             // check if $value is already in the array $eventsForRoom[$key]['events] if yes then skip
             if (isset($eventsForRoom[$key])) {
-                $eventsForRoom[$key]['events'] = CalendarShowEventResource::collection(
+                $eventsForRoom[$key]['events'] = CalendarShowEventInShiftPlan::collection(
                     collect($eventsForRoom[$key]['events'])->merge($value)->unique()
                 );
                 continue;

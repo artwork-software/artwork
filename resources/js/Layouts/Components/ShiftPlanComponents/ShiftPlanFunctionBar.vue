@@ -50,20 +50,11 @@
             <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
                 <SecondaryButton :text="$t('Lock all shifts')" @click="showConfirmCommitModal = true" />
             </div>
-
-            <div class="ml-5 flex items-center" >
-                <button class="subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
-                        @click="openHistoryModal()">
-                    <IconChevronRight stroke-width="1.5"
-                        class="-mr-0.5 h-4 w-4  group-hover:text-white"
-                        aria-hidden="true"/>
-                    {{ $t('View history')}}
-                </button>
-            </div>
         </div>
 
         <div class="flex items-center">
             <div class="flex items-center gap-x-3">
+                <IconHistory @click="openHistoryModal()" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
                 <IconArrowsDiagonal stroke-width="1.5" v-if="!isFullscreen" @click="enterFullscreenMode"
                       class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
                 <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->

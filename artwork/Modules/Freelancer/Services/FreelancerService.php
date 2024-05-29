@@ -50,6 +50,7 @@ readonly class FreelancerService
                 'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
             ];
 
+
             if ($addVacationsAndAvailabilities) {
                 $freelancerData['vacations'] = $freelancer->getVacationDays();
                 $freelancerData['availabilities'] = $this->freelancerRepository
@@ -64,6 +65,34 @@ readonly class FreelancerService
         }
 
         return $freelancersWithPlannedWorkingHours;
+    }
+
+    /**
+     * Berechnet die Arbeitsstunden für jede Kalenderwoche innerhalb eines bestimmten Datumsbereichs.
+     *
+     * @param Freelancer $freelancer
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return string []
+     */
+    private function calculateWeeklyWorkingHours(Freelancer $freelancer, Carbon $startDate, Carbon $endDate): array
+    {
+        // first create a carbon period for the given date range
+        $period = Carbon::parse($startDate)->toPeriod($endDate);
+
+        $weeklyWorkingHours = [];
+
+        // iterate over each week and calculate the working hours
+        foreach ($period as $week) {
+            $startDate = $week->copy()->startOfWeek();
+            $endDate = $week->copy()->endOfWeek();
+            $weeklyWorkingHours[$week->format('W')] = $freelancer->plannedWorkingHours(
+                $startDate,
+                $endDate
+            );
+        }
+
+        return $weeklyWorkingHours;
     }
 
     /**

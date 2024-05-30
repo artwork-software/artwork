@@ -71,10 +71,10 @@ export default defineComponent({
             return event.shifts.every(shift => shift.is_committed);
         },
         checkIfShiftInDayString(shift) {
-            if(this.$page.props.user.show_crafts.length === 0){
+            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null){
                 return shift.days_of_shift?.includes(this.dayString['full_day']);
             } else {
-                return shift.days_of_shift?.includes(this.dayString['full_day']) && this.$page.props.user.show_crafts.includes(shift.craft.id);
+                return shift.days_of_shift?.includes(this.dayString['full_day']) && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
             }
 
         }

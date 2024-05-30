@@ -66,12 +66,13 @@
             :event_type="event.event_type"
             :eventId="event.event.id"
         />
-        <div class="flex justify-start mt-3 overflow-x-scroll gap-3" :style="{height: event.event.shift_container_height + 'px', maxHeight: event.event.shift_container_height + 'px', }" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event.timeline"
-                                     :shifts="event.shifts"
+        <!-- Event Timeline -->
+        <div class="flex justify-start mt-3 overflow-x-scroll gap-3" :style="{height: event.event?.shift_container_height + 'px', maxHeight: event.event?.shift_container_height + 'px', }" v-if="showShift">
+            <TimeLineShiftsComponent :time-line="event?.timeline"
+                                     :shifts="event?.shifts"
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
-                                     :event="event.event"
+                                     :event="event?.event"
                                      :shift-qualifications="shiftQualifications"
                                      @dropFeedback="dropFeedback"/>
         </div>

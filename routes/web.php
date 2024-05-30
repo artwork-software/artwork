@@ -1310,6 +1310,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('{projectRole}/destroy', [\App\Http\Controllers\ProjectRoleController::class, 'destroy'])
             ->name('project-roles.destroy');
     });
+
+    // route for shift time preset
+    Route::group(['prefix' => 'shift-time-preset'], function (): void {
+        //shift-time-preset.store
+        Route::post('store', [\App\Http\Controllers\ShiftTimePresetController::class, 'store'])
+            ->name('shift-time-preset.store');
+        //shift-time-preset.update
+        Route::patch('{shiftTimePreset}/update', [\App\Http\Controllers\ShiftTimePresetController::class, 'update'])
+            ->name('shift-time-preset.update');
+        //shift-time-preset.destroy
+        Route::delete('{shiftTimePreset}/destroy', [\App\Http\Controllers\ShiftTimePresetController::class, 'destroy'])
+            ->name('shift-time-preset.destroy');
+    });
 });
 
 Route::get(

@@ -63,7 +63,6 @@
 
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import '@vuepic/vue-datepicker/dist/main.css'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";

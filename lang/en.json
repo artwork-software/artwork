@@ -305,7 +305,7 @@
     "Can only be assigned by:": "Can only be assigned by:",
     "Edit": "Edit",
     "Shift-relevant Event Types": "Shift-relevant Event Types",
-    "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'Shifts' tab of the project. You can also define additional events as shift-relevant for each project.": "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'Shifts' tab of the project. You can also define additional events as shift-relevant for each project.",
+    "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'shifts' tab of the project. You can also define additional events as shift-relevant for each project.": "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'Shifts' tab of the project. You can also define additional events as shift-relevant for each project.",
     "Select Event Types": "Select Event Types",
     "Qualifications": "Qualifications",
     "Create or edit qualifications": "Create or edit qualifications",

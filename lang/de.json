@@ -304,7 +304,7 @@
     "Assignable by all schedulers": "Von allen Schichtplaner*innen zuteilbar",
     "Can only be assigned by:": "Kann nur von folgenden Nutzer*innen zugeordnet werden:",
     "Shift-relevant Event Types": "Schichtrelevante Termintypen",
-    "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'Shifts' tab of the project. You can also define additional events as shift-relevant for each project.": "Lege fest, welche Termintypen standardmäßig als Schichtrelevant angezeigt werden. Diese werden dann automatisch im Projekttab „Schichten“ angezeigt. Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.",
+    "Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'shifts' tab of the project. You can also define additional events as shift-relevant for each project.": "Lege fest, welche Termintypen standardmäßig als Schichtrelevant angezeigt werden. Diese werden dann automatisch im Projekttab „Schichten“ angezeigt. Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.",
     "Select Event Types": "Termintypen auswählen",
     "Qualifications": "Qualifikationen",
     "Create or edit qualifications" : "Lege Qualifikationen an oder bearbeite sie",

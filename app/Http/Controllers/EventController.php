@@ -396,7 +396,7 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        Event::create([
+        $seriesEvent = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
             'description' => $request->description,
@@ -412,6 +412,10 @@ class EventController extends Controller
             'is_series' => true,
             'series_id' => $series->id,
             'allDay' => $request->allDay
+        ]);
+        $seriesEvent->update([
+            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($seriesEvent),
+            'latest_end_datetime' => $this->eventService->getLatestEndTime($seriesEvent)
         ]);
     }
 

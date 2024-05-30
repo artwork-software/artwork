@@ -380,19 +380,22 @@ class Event extends Model
         $earliestStartTime = $this->earliest_start_datetime;
         $latestEndTime = $this->latest_end_datetime;
 
+
+        // Konfigurationswerte für minimale und maximale Schichthöhe
+        $minShiftHeight = (int)config('shift.min_shift_height');
+        $maxShiftHeight = (int)config('shift.max_shift_height');
+        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+
         if ($earliestStartTime === null || $latestEndTime === null) {
-            return 0;
+            return $minShiftHeight;
         }
         // Berechne die Differenz in Minuten
         $diff = $latestEndTime->diffInMinutes($earliestStartTime);
 
         // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
-        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+
         $pixelHeight = $diff / 60  * $shiftHeightFactor;
 
-        // Konfigurationswerte für minimale und maximale Schichthöhe
-        $minShiftHeight = (int)config('shift.min_shift_height');
-        $maxShiftHeight = (int)config('shift.max_shift_height');
 
         // Prüfe auf Sonderfälle und return die entsprechende Höhe
         if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {

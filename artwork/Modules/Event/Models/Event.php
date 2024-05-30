@@ -380,6 +380,9 @@ class Event extends Model
         $earliestStartTime = $this->earliest_start_datetime;
         $latestEndTime = $this->latest_end_datetime;
 
+        if ($earliestStartTime === null || $latestEndTime === null) {
+            return 0;
+        }
         // Berechne die Differenz in Minuten
         $diff = $latestEndTime->diffInMinutes($earliestStartTime);
 

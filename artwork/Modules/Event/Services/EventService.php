@@ -5,6 +5,7 @@ namespace Artwork\Modules\Event\Services;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -485,7 +486,7 @@ readonly class EventService
             ->getEventsWhereUserHasShifts($userId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -556,7 +557,7 @@ readonly class EventService
             ->getEventsWhereFreelancerHasShifts($freelancerId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -614,7 +615,7 @@ readonly class EventService
             ->getEventsWhereServiceProviderHasShifts($serviceProviderId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -749,6 +750,7 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
         ?bool $atAGlance
     ): EventManagementDto {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
@@ -764,7 +766,8 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService
+            $projectService,
+            $calendarFilter
         );
 
         return EventManagementDto::newInstance()

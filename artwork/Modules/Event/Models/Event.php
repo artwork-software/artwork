@@ -5,6 +5,7 @@ namespace Artwork\Modules\Event\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\EventComment\Models\EventComment;
+use Artwork\Modules\EventType\Cache\EventTypeMemoryCache;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -58,6 +59,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
+ * @property-read int $shift_container_height
  * @property-read array<string> $days_of_shifts
  */
 class Event extends Model
@@ -114,6 +116,8 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
+        'shift_container_height',
+        'formatted_dates',
         'days_of_shifts'
     ];
 
@@ -225,10 +229,7 @@ class Event extends Model
         return $days;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function getDaysOfShiftsAttribute(): array
+    public function getDaysOfShifts(): array
     {
         $days = [];
 
@@ -243,6 +244,11 @@ class Event extends Model
         }
 
         return $days;
+    }
+
+    public function getEventType(): ?EventType
+    {
+        return EventTypeMemoryCache::getEventType($this->event_type_id);
     }
 
     public function getMinutesFromDayStart(Carbon $date): int

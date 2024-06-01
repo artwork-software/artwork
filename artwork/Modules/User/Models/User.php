@@ -5,6 +5,8 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
+use Artwork\Modules\Calendar\Filter\CalendarFilterProvider;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
@@ -97,7 +99,8 @@ class User extends Model implements
     AuthorizableContract,
     CanResetPasswordContract,
     Vacationer,
-    Available
+    Available,
+    CalendarFilterProvider
 {
     use Authenticatable;
     use Authorizable;
@@ -457,5 +460,13 @@ class User extends Model implements
     public function scopeCanWorkShifts(Builder $builder): Builder
     {
         return $builder->where('can_work_shifts', true);
+    }
+
+    public function getCalendarFilter(): ?CalendarFilter
+    {
+        if(!$filter = $this->calendar_filter()->first()) {
+            $filter = null;
+        }
+        return $filter;
     }
 }

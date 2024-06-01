@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Artwork\Modules\EventType\Cache\EventTypeMemoryCache;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -14,6 +15,12 @@ abstract class TestCase extends BaseTestCase
     use CreatesApplication;
     use DatabaseTransactions;
     use WithFaker;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        EventTypeMemoryCache::forgetAll();
+    }
 
     /**
      * @return \Artwork\Modules\User\Models\User

@@ -109,6 +109,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
+                Auth::user()->getCalendarFilter(),
                 $request->boolean('atAGlance')
             )
         );

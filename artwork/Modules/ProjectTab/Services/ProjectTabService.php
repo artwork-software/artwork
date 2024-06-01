@@ -34,6 +34,7 @@ use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 readonly class ProjectTabService
 {
@@ -107,8 +108,7 @@ readonly class ProjectTabService
             $eventTypeService,
             $areaService,
             $projectService,
-            null,
-            $project
+            Auth::user()->getCalendarFilter(),
         );
 
         $eventsAtAGlance = Collection::make();

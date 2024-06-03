@@ -12,6 +12,11 @@ readonly class ShiftTimePresetService
     ) {
     }
 
+    public function getAll(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->shiftTimePresetRepository->all();
+    }
+
     public function createByRequest(array $data): void
     {
         $shiftTimePreset = new ShiftTimePreset();

@@ -123,7 +123,8 @@ class Event extends Model
         'event_date_without_time',
         'days_of_shifts',
         'shift_container_height',
-        'formatted_dates'
+        'formatted_dates',
+        'dates_for_series_event'
     ];
 
     public function comments(): HasMany
@@ -404,5 +405,23 @@ class Event extends Model
 
         // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
         return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getDatesForSeriesEventAttribute(): array
+    {
+        $dates = [];
+        if ($this->is_series) {
+            $dates = [
+                'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
+                'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+                'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
+                'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+            ];
+        }
+
+        return $dates;
     }
 }

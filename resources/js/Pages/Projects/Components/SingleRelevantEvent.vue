@@ -74,7 +74,9 @@
                                      :currentUserCrafts="currentUserCrafts"
                                      :event="event?.event"
                                      :shift-qualifications="shiftQualifications"
-                                     @dropFeedback="dropFeedback"/>
+                                     @dropFeedback="dropFeedback"
+                                     :shift-time-presets="shiftTimePresets"
+            />
         </div>
     </div>
 </template>
@@ -101,7 +103,8 @@ export default defineComponent({
         'crafts',
         'eventTypes',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'shiftTimePresets'
     ],
     emits: ['dropFeedback'],
     mixins: [IconLib],

@@ -1818,5 +1818,20 @@
     "How to subscribe to a calendar in Outlook.com:": "So abonnierst du einen Kalender in Outlook.com:",
     "Open Outlook.com and go to \"Calendar\".": "Öffne Outlook.com und gehe zu „Kalender“.",
     "Click on \"Add calendar\" and select \"From internet\".": "Klicke auf „Kalender hinzufügen“ und wähle „Aus dem Internet“.",
-    "Enter the URL (see text box) and click on \"Import calendar\".": "Gib die URL (siehe Textfeld) ein und klicke auf „Kalender importieren“."
+    "Enter the URL (see text box) and click on \"Import calendar\".": "Gib die URL (siehe Textfeld) ein und klicke auf „Kalender importieren“.",
+    "Period of the repeat appointment: {0} - {1}": "Zeitraum des wiederkehrenden Termins: {0} - {1}",
+    "Hide time presets": "Zeitvorgaben ausblenden",
+    "Show time presets": "Zeitvorgaben anzeigen",
+    "Minutes": "Minuten",
+    "No presets found.": "Keine Vorgaben gefunden.",
+    "Automatic mode is activated. The shift times are calculated automatically.": "Automatikmodus ist aktiviert. Die Schichtzeiten werden automatisch berechnet.",
+    "Manual mode is activated. The shift times must be entered manually.": "Manueller Modus ist aktiviert. Die Schichtzeiten müssen manuell eingegeben werden.",
+    "Manual mode is deactivated as the date is from the repeat event.": "Manueller Modus ist deaktiviert, da das Datum vom Wiederholungstermin stammt.",
+    "Time presets for shifts": "Zeitvorgaben für Schichten",
+    "Create time presets for layers to be able to assign them quickly and easily later.": "Erstelle Zeitvorgaben für Schichten, um sie später schnell und einfach zuordnen zu können.",
+    "New time preset": "Neue Zeitvorgabe",
+    "No time presets for shifts have been created yet.": "Es wurden noch keine Zeitvorgaben für Schichten erstellt.",
+    "Break time": "Pausenzeit",
+    "Create Time Preset": "Zeitvorgabe erstellen",
+    "Edit Time Preset": "Zeitvorgabe bearbeiten"
 }

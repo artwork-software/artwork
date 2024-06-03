@@ -41,10 +41,13 @@ const saveTimePreset = () => {
     <BaseModal v-if="true" @closed="$emit('closed')">
         <form @submit.prevent="saveTimePreset">
 
-            <h3 class="headline2">{{ props.timePreset ? $t('Edit') : $t('Create') }} Time Preset</h3>
+            <h3 class="headline2">
+                <span v-if="newTimePreset.id">{{ $t('Edit Time Preset')}}</span>
+                <span v-else>{{ $t('Create Time Preset')}}</span>
+            </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-10">
                 <div class="col-span-2">
-                    <label for="name" class="text-base">Name</label>
+                    <label for="name" class="text-base">{{ $t('Name') }}</label>
                     <input type="text"
                            :placeholder="$t('Name')"
                            v-model="newTimePreset.name"
@@ -53,7 +56,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div>
-                    <label for="name" class="text-base">Startzeit</label>
+                    <label for="name" class="text-base">{{ $t('Start-Time')}}</label>
                     <input type="time"
                            :placeholder="$t('Start-Time')"
                            v-model="newTimePreset.start_time"
@@ -62,7 +65,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div>
-                    <label for="name" class="text-base">Endzeit</label>
+                    <label for="name" class="text-base">{{ $t('End-Time') }}</label>
                     <input type="time"
                            :placeholder="$t('Start-Time')"
                            v-model="newTimePreset.end_time"
@@ -71,7 +74,7 @@ const saveTimePreset = () => {
                     />
                 </div>
                 <div class="col-span-2">
-                    <label for="name" class="text-base">Pausenzeit</label>
+                    <label for="name" class="text-base">{{ $t('Break time') }}</label>
                     <input type="number"
                            :placeholder="$t('Length of break in minutes*')"
                            v-model="newTimePreset.break_time"

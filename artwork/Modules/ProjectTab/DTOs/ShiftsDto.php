@@ -21,6 +21,16 @@ class ShiftsDto extends BaseDto
 
     public ?Collection $shiftQualifications = null;
 
+    public ?Collection $shiftTimePresets = null;
+
+
+    public function setShiftTimePresets(?Collection $shiftTimePresets): self
+    {
+        $this->shiftTimePresets = $shiftTimePresets;
+
+        return $this;
+    }
+
     public function setUsersForShifts(?array $usersForShifts): self
     {
         $this->usersForShifts = $usersForShifts;

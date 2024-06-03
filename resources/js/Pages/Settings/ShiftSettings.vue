@@ -148,16 +148,21 @@
             <div>
                 <div class="flex items-center justify-between">
                     <TinyPageHeadline
-                        class="mt-10"
-                        title="Zeit Presets für Schichten"
-                        description="Erstellen Sie Zeit Presets für Schichten um diese später schnell und einfach zuordnen zu können."
+                        class="mt-14"
+                        :title="$t('Time presets for shifts')"
+                        :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
                     />
-                    <AddButtonSmall text="Neues Zeit Preset" class="mt-5" @click="showAddShiftPresetModal = true" />
+                    <AddButtonSmall :text="$t('New time preset')" class="mt-5" @click="showAddShiftPresetModal = true" />
                 </div>
                 <div class="mt-5">
-                    <div class="mb-5 xsLight" v-if="shiftTimePresets.length === 0">
-                        Bisher wurden keine Zeit Presets für Schichten erstellt.
-                    </div>
+                    <AlertComponent
+                        type="info"
+                        show-icon
+                        icon-size="h-6 w-6"
+                        v-if="shiftTimePresets.length === 0"
+                        :text="$t('No time presets for shifts have been created yet.')"
+                        text-size="xsLight"
+                    />
                     <ul v-else role="list" class="w-full">
                         <li v-for="(shiftTimePreset) in shiftTimePresets" :key="shiftTimePreset.id" class="py-4 pr-4 flex justify-between items-center border-b-2">
                             <div class="sDark">
@@ -166,7 +171,8 @@
                                 </div>
                                 <div class="flex items-center gap-x-2 text-gray-500 text-xs">
                                     <div>{{ shiftTimePreset.start_time }} - {{ shiftTimePreset.end_time}} </div>
-                                    <div v-if="shiftTimePreset.break_time !== 0">Pausenzeit: {{ shiftTimePreset.break_time }} Minuten</div>
+                                    <div v-if="shiftTimePreset.break_time !== 0">{{ $t('Break time')}}: {{ shiftTimePreset.break_time }}
+                                        {{ $t('Minutes') }}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-x-3">
@@ -234,11 +240,13 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        AlertComponent,
         AddEditShiftTimePreset,
         TinyPageHeadline,
         BaseMenu,

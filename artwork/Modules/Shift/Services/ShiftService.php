@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Services;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -16,6 +17,7 @@ use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use stdClass;
 
 readonly class ShiftService
 {
@@ -31,11 +33,41 @@ readonly class ShiftService
         return $this->shiftRepository->getById($shiftId);
     }
 
+    private function convertStartEndTime(array $data, Event $event): stdClass
+    {
+        $convertedTime = new StdClass();
+        $convertedStartTime = Carbon::parse($data['start']);
+        $convertedEndTime = Carbon::parse($data['end']);
+
+        $convertedTime->start = Carbon::parse($event->start_time)->format('Y-m-d');
+        if ($convertedEndTime->isBefore($convertedStartTime)) {
+            $convertedTime->end = Carbon::parse($event->start_time)->addDay()->format('Y-m-d');
+        } else {
+            $convertedTime->end = Carbon::parse($event->start_time)->format('Y-m-d');
+        }
+        return $convertedTime;
+    }
+
+    public function createShiftBySeriesEvent(Event $event, array $data, int $craftId): Shift|Model
+    {
+        $shift = new Shift();
+        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
+        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
+        $shift->start = $data['start'];
+        $shift->end = $data['end'];
+        $shift->break_minutes = $data['break_minutes'];
+        $shift->description = $data['description'];
+        $shift->event()->associate($event);
+        $shift->craft()->associate($craftId);
+        $shift->is_committed = false;
+        return $this->shiftRepository->save($shift);
+    }
+
     public function createShift(Event $event, Craft $craft, array $data): Shift|Model
     {
         $shift = new Shift();
-        $shift->start_date = $data['start_date'];
-        $shift->end_date = $data['end_date'];
+        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
+        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
         $shift->start = $data['start'];
         $shift->end = $data['end'];
         $shift->break_minutes = $data['break_minutes'];
@@ -43,26 +75,39 @@ readonly class ShiftService
         $shift->event()->associate($event);
         $shift->craft()->associate($craft);
         $createdShift = $this->shiftRepository->save($shift);
-
-        $event->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-        ]);
+        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
         return $createdShift;
     }
 
     public function createShiftByRequest(array $data, Event $event): Model|Shift
     {
         $shift = new Shift();
-        $shift->start_date = $data['start_date'];
-        $shift->end_date = $data['end_date'];
+        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
+        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
         $shift->start = $data['start'];
         $shift->end = $data['end'];
         $shift->break_minutes = $data['break_minutes'];
         $shift->description = $data['description'];
         $shift->craft_id = $data['craft_id'];
         $shift->event()->associate($event);
+        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
         return $this->shiftRepository->save($shift);
+    }
+
+    public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
+    {
+        $shift = new Shift();
+        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
+        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
+        $shift->start = $data['start'];
+        $shift->end = $data['end'];
+        $shift->break_minutes = $data['break_minutes'];
+        $shift->description = $data['description'];
+        $shift->event()->associate($event);
+        $shift->craft()->associate($craftId);
+        $createdShift = $this->shiftRepository->save($shift);
+        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
+        return $createdShift;
     }
 
     public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, Event $event): Shift

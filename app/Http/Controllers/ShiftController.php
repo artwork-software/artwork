@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -49,27 +49,12 @@ class ShiftController extends Controller
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
-        $convertedStartTime = Carbon::parse($request->start);
-        $convertedEndTime = Carbon::parse($request->end);
         if ($request->automaticMode) {
-            $startDate = Carbon::parse($event->start_time)->format('Y-m-d');
-            if ($convertedEndTime->isBefore($convertedStartTime)) {
-                $endDate = Carbon::parse($event->start_time)->addDay()->format('Y-m-d');
-            } else {
-                $endDate = Carbon::parse($event->start_time)->format('Y-m-d');
-            }
-
-            $shift = $event->shifts()->create([
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'start' => $convertedStartTime->format('H:i'),
-                'end' => $convertedEndTime->format('H:i'),
-                'break_minutes' => $request->break_minutes,
-                'craft_id' => $request->craft_id,
-                'number_employees' => $request->number_employees,
-                'number_masters' => $request->number_masters,
-                'description' => $request->description,
-            ]);
+            $shift = $this->shiftService->createAutomatic(
+                event: $event,
+                craftId: $request->craft_id,
+                data: $request->all(),
+            );
         } else {
             $shift = $this->shiftService->createShiftByRequest($request->all(), $event);
         }
@@ -98,27 +83,12 @@ class ShiftController extends Controller
             /** @var Event $seriesEvent */
             foreach ($seriesEvents as $seriesEvent) {
                 if ($seriesEvent->id != $event->id) {
-                    $startDate = Carbon::parse($seriesEvent->start_time)->format('Y-m-d');
-                    if ($convertedEndTime->isBefore($convertedStartTime)) {
-                        $endDate = Carbon::parse($seriesEvent->start_time)->addDay()->format('Y-m-d');
-                    } else {
-                        $endDate = Carbon::parse($seriesEvent->start_time)->format('Y-m-d');
-                    }
-                    $data = [
-                        'start_date' => $startDate,
-                        'end_date' => $endDate,
-                        'start' => $convertedStartTime->format('H:i'),
-                        'end' => $convertedEndTime->format('H:i'),
-                        'break_minutes' => $request->break_minutes,
-                        'number_employees' => $request->number_employees,
-                        'number_masters' => $request->number_masters,
-                        'description' => $request->description,
-                    ];
-                    $newShift = $this->shiftService->createShift(
+                    $newShift = $this->shiftService->createShiftBySeriesEvent(
                         $seriesEvent,
-                        $request->craft_id,
-                        $data
+                        $request->all(),
+                        $request->craft_id
                     );
+
                     $newShift->update([
                         'shift_uuid' => $shiftUuid,
                         'event_start_day' => Carbon::parse($seriesEvent->start_time)->format('Y-m-d'),
@@ -130,10 +100,7 @@ class ShiftController extends Controller
                             $shiftsQualification
                         );
                     }
-                    $seriesEvent->update([
-                        'earliest_start_datetime' => $this->eventService->getEarliestStartTime($seriesEvent),
-                        'latest_end_datetime' => $this->eventService->getLatestEndTime($seriesEvent),
-                    ]);
+                    event(new UpdateEventEarliestLatestDates($seriesEvent, $this->eventService));
                 }
             }
         }
@@ -158,11 +125,7 @@ class ShiftController extends Controller
                 ->setTranslationKey('Shift of event was created')
                 ->setTranslationKeyPlaceholderValues([$event->eventName])
         );
-
-        $event->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-        ]);
+        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
     }
 
     public function show(): void

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Services;
 
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -48,6 +49,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
 
 readonly class EventService
 {
@@ -868,5 +870,33 @@ readonly class EventService
         }
 
         return $latestEndTime;
+    }
+
+    public function createSeriesEvent(
+        $startDate,
+        $endDate,
+        $request,
+        $series,
+        $projectId,
+        $user
+    ): Model|Event {
+        $event = new Event();
+
+        $event->name = $request->title;
+        $event->eventName = $request->eventName;
+        $event->description = $request->description;
+        $event->start_time = $startDate;
+        $event->end_time = $endDate;
+        $event->occupancy_option = $request->isOption;
+        $event->audience = $request->audience;
+        $event->is_loud = $request->isLoud;
+        $event->event_type_id = $request->eventTypeId;
+        $event->room_id = $request->roomId;
+        $event->project_id = $projectId ?: null;
+        $event->is_series = true;
+        $event->series_id = $series->id;
+        $event->allDay = $request->allDay;
+        $event->creator()->associate($user);
+        return $this->eventRepository->save($event);
     }
 }

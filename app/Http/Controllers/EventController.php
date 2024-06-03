@@ -13,6 +13,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
@@ -299,10 +300,8 @@ class EventController extends Controller
             );
         }
 
-        $firstEvent->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($firstEvent),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($firstEvent)
-        ]);
+        event(new UpdateEventEarliestLatestDates($firstEvent, $this->eventService));
+
 
         $projectFirstEvent = $firstEvent->project()->first();
 
@@ -396,27 +395,15 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        $seriesEvent = Event::create([
-            'name' => $request->title,
-            'eventName' => $request->eventName,
-            'description' => $request->description,
-            'start_time' => $startDate,
-            'end_time' => $endDate,
-            'occupancy_option' => $request->isOption,
-            'audience' => $request->audience,
-            'is_loud' => $request->isLoud,
-            'event_type_id' => $request->eventTypeId,
-            'room_id' => $request->roomId,
-            'user_id' => Auth::id(),
-            'project_id' => $projectId ?: null,
-            'is_series' => true,
-            'series_id' => $series->id,
-            'allDay' => $request->allDay
-        ]);
-        $seriesEvent->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($seriesEvent),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($seriesEvent)
-        ]);
+        $seriesEvent = $this->eventService->createSeriesEvent(
+            $startDate,
+            $endDate,
+            $request,
+            $series,
+            $projectId,
+            Auth::user()
+        );
+        event(new UpdateEventEarliestLatestDates($seriesEvent, $this->eventService));
     }
 
     public function commitShifts(Request $request): void

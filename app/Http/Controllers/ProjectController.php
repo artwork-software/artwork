@@ -51,6 +51,7 @@ use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -123,7 +124,6 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
-use JsonException;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -2074,10 +2074,7 @@ class ProjectController extends Controller
                 ]
             )
         );
-        $event->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-        ]);
+        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
     }
 
     public function updateTimeLines(Request $request): void
@@ -2092,10 +2089,7 @@ class ProjectController extends Controller
                 'description' => nl2br($timeline['description_without_html'])
             ]);
             $event = $findTimeLine->event()->first();
-            $event->update([
-                'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-                'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-            ]);
+            event(new UpdateEventEarliestLatestDates($event, $this->eventService));
         }
     }
 

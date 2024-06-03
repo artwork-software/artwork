@@ -412,16 +412,15 @@ class Event extends Model
      */
     public function getDatesForSeriesEventAttribute(): array
     {
-        $dates = [];
-        if ($this->is_series) {
-            $dates = [
-                'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
-                'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
-                'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
-                'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
-            ];
+        if (!$this->is_series) {
+            return [];
         }
 
-        return $dates;
+        return [
+            'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
+            'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+            'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
+            'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+        ];
     }
 }

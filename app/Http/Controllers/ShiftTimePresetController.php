@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\ShiftTimePreset\Http\Requests\AddShiftTimePresetRequest;
+use Artwork\Modules\ShiftTimePreset\Http\Requests\EditShiftTimePresetRequest;
 use Artwork\Modules\ShiftTimePreset\Models\ShiftTimePreset;
 use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Illuminate\Http\Request;
@@ -14,51 +16,19 @@ class ShiftTimePresetController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     */
-    public function index(): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(AddShiftTimePresetRequest $request): void
     {
-        $this->shiftTimePresetService->createByRequest($request->all());
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ShiftTimePreset $shiftTimePreset): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ShiftTimePreset $shiftTimePreset): void
-    {
-        //
+        $this->shiftTimePresetService->createByRequest($request->validated());
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ShiftTimePreset $shiftTimePreset): void
+    public function update(EditShiftTimePresetRequest $request, ShiftTimePreset $shiftTimePreset): void
     {
-        $this->shiftTimePresetService->updateByRequest($shiftTimePreset, $request->all());
+        $this->shiftTimePresetService->updateByRequest($shiftTimePreset, $request->validated());
     }
 
     /**

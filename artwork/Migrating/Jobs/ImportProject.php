@@ -38,7 +38,8 @@ class ImportProject
             );
         }
 
-        if ($this->config->shouldImportProjectGroups() &&
+        if (
+            $this->config->shouldImportProjectGroups() &&
             $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
                 $this->projectImportModel->projectGroupIdentifier
             )

@@ -30,4 +30,9 @@ readonly class CraftRepository extends BaseRepository
     {
         return Craft::query()->isAssignableByAll()->get();
     }
+
+    public function findById(int $id): Craft
+    {
+        return Craft::find($id);
+    }
 }

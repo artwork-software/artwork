@@ -8,6 +8,7 @@
                          :event="event"
                          :currentUserCrafts="currentUserCrafts"
                          :shift-qualifications="shiftQualifications"
+                         :shift-time-presets="shiftTimePresets"
             />
         </div>
 
@@ -23,6 +24,7 @@
                    :buffer="buffer"
                    :shift-qualifications="shiftQualifications"
                    @closed="closeAddShiftModal"
+                   :shift-time-presets="shiftTimePresets"
     />
     <ChooseShiftSeries :event="event"
                        v-if="showChooseShiftSeriesModal"
@@ -50,7 +52,8 @@ export default defineComponent({
         'event',
         'crafts',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'shiftTimePresets'
     ],
     components: {
         SingleShift,
@@ -69,6 +72,7 @@ export default defineComponent({
                 onlyThisDay: false,
                 start: null,
                 end: null,
+                cameFormBuffer: false
             }
         }
     },

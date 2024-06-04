@@ -23,7 +23,8 @@ class Import
         $upperDateImportThreshold = $this->importer->getConfig()->upperDateImportThreshold();
 
         foreach ($this->importer->getDataAggregator()->findProjects() as $project) {
-            if (($lowerDateImportThreshold && $project->start <= $lowerDateImportThreshold) ||
+            if (
+                ($lowerDateImportThreshold && $project->start <= $lowerDateImportThreshold) ||
                 ($upperDateImportThreshold && $project->end >= $upperDateImportThreshold)
             ) {
                 continue;

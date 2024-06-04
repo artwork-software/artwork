@@ -44,6 +44,7 @@ class ImportConfig extends Repository
     {
         return $this->get(static::LOWER_DATE_IMPORT_THRESHOLD);
     }
+
     public function upperDateImportThreshold(): ?Carbon
     {
         return $this->get(static::UPPER_DATE_IMPORT_THRESHOLD);

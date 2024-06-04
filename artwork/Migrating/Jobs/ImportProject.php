@@ -34,7 +34,6 @@ class ImportProject
                 $projectService,
                 $this->projectImportModel->name,
                 $this->projectImportModel->description,
-
                 false
             );
         }

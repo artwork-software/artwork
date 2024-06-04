@@ -734,7 +734,7 @@ readonly class RoomService
             $fallbackRoom->user()->associate(User::first());
             $fallbackRoom->area()->associate(Area::first());
             $fallbackRoom->name = 'FallbackRoom Room';
-            $fallbackRoom->description = 'FallbackRoom Room';
+            $fallbackRoom->description = 'Fallback Room';
             $fallbackRoom->fallback_room = true;
             $fallbackRoom->order = 9999;
             $this->save($fallbackRoom);

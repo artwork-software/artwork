@@ -4,17 +4,12 @@ namespace Artwork\Migrating\Models;
 
 use Carbon\Carbon;
 
-class ProjectImportModel
+class ProjectGroupImportModel
 {
-    public Carbon|null $end;
-
-    public Carbon|null $start;
-
     public function __construct(
         public readonly string $identifier,
         public readonly string $name,
         public readonly string $description,
-        public readonly string $projectGroupIdentifier,
         ?string                $start,
         ?string                $end,
     )

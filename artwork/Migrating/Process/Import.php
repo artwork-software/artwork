@@ -21,13 +21,20 @@ class Import
     {
         $lowerDateImportThreshold = $this->importer->getConfig()->lowerDateImportThreshold();
         $upperDateImportThreshold = $this->importer->getConfig()->upperDateImportThreshold();
+
         foreach ($this->importer->getDataAggregator()->findProjects() as $project) {
             if (($lowerDateImportThreshold && $project->start <= $lowerDateImportThreshold) ||
                 ($upperDateImportThreshold && $project->end >= $upperDateImportThreshold)
             ) {
                 continue;
             }
-            $dispatcher->dispatch(new ImportProject($this->importer->getConfig(), $this->importer->getDataAggregator(), $project));
+            $dispatcher->dispatch(
+                new ImportProject(
+                    $this->importer->getConfig(),
+                    $this->importer->getDataAggregator(),
+                    $project
+                )
+            );
         }
     }
 }

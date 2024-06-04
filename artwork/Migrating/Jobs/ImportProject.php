@@ -17,33 +17,70 @@ class ImportProject
     use Queueable;
     use InteractsWithQueue;
 
-    private Dispatcher $dispatcher;
-
-    private RoomService $roomService;
-    private ProjectService $projectService;
-
     public function __construct(
         private readonly ImportConfig       $config,
         private readonly DataAggregator     $dataAggregator,
-        private readonly ProjectImportModel $project
+        private readonly ProjectImportModel $projectImportModel
     )
     {
-        $this->dispatcher = app()->get(Dispatcher::class);
-        $this->projectService = app()->get(ProjectService::class);
     }
 
-    public function handle(): void
+    public function handle(
+        Dispatcher     $dispatcher,
+        ProjectService $projectService
+    ): void
     {
-        if (!$project = $this->projectService->getByName($this->project->name)->first()) {
+        if (!$project = $projectService->getByName($this->projectImportModel->name)->first()) {
             logger()->debug('Project not found, creating new project');
-            $project = new Project();
-            $project->name = $this->project->name;
-            $project->shift_description = $this->project->description;
-            $this->projectService->save($project);
+            $project = $this->createProject(
+                $projectService,
+                $this->projectImportModel->name,
+                $this->projectImportModel->description,
+
+                false
+            );
         }
 
-        foreach ($this->dataAggregator->findEvents($this->project->identifier) as $event) {
-            $this->dispatcher->dispatch(new ImportEvent($this->config, $this->dataAggregator, $event, $project));
+        if ($this->config->shouldImportProjectGroups() &&
+            $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
+                $this->projectImportModel->projectGroupIdentifier
+            )
+        ) {
+            if (!$projectGroup = $projectService->getProjectGroupByName($projectGroupImportModel->name)) {
+                $projectGroup = $this->createProject(
+                    $projectService,
+                    $projectGroupImportModel->name,
+                    $projectGroupImportModel->description,
+                    true
+                );
+            }
+
+            $projectService->associateProjectWithGroup($project, $projectGroup);
         }
+
+        foreach ($this->dataAggregator->findEvents($this->projectImportModel->identifier) as $event) {
+            $dispatcher->dispatch(
+                new ImportEvent(
+                    $this->config,
+                    $this->dataAggregator,
+                    $event,
+                    $project
+                )
+            );
+        }
+    }
+
+    private function createProject(
+        ProjectService $projectService,
+        string         $name,
+        string         $description,
+        bool           $isGroup
+    ): Project
+    {
+        $project = new Project();
+        $project->name = $name;
+        $project->shift_description = $description;
+        $project->is_group = $isGroup;
+        return $projectService->save($project);
     }
 }

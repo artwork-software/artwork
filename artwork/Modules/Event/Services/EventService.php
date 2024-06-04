@@ -893,6 +893,7 @@ readonly class EventService
         return $latestEndTime;
     }
 
+
     public function createSeriesEvent(
         $startDate,
         $endDate,

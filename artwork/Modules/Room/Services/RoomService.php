@@ -45,6 +45,11 @@ readonly class RoomService
     {
     }
 
+    public function save(Room $room): Room
+    {
+        return $this->roomRepository->save($room);
+    }
+
     public function delete(Room $room): bool
     {
         return $this->roomRepository->delete($room);
@@ -720,5 +725,26 @@ readonly class RoomService
                 ProjectIndexAdminResource::collection($projectService->getProjectsWithAccessBudgetAndManagerUsers())
                     ->resolve()
             );
+    }
+
+    public function getFallbackRoom(): Room
+    {
+        if(!$fallbackRoom = $this->roomRepository->getFallbackRoom()) {
+            $fallbackRoom = new Room();
+            $fallbackRoom->user()->associate(User::first());
+            $fallbackRoom->area()->associate(Area::first());
+            $fallbackRoom->name = 'FallbackRoom Room';
+            $fallbackRoom->description = 'Fallback Room';
+            $fallbackRoom->fallback_room = true;
+            $fallbackRoom->order = 9999;
+            $this->save($fallbackRoom);
+        }
+
+        return $fallbackRoom;
+    }
+
+    public function findByName(string $name): ?Room
+    {
+        return $this->roomRepository->findByName($name);
     }
 }

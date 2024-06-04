@@ -226,4 +226,9 @@ readonly class UserService
 
         return [$startDate, $endDate];
     }
+
+    public function getAdminUser(): User
+    {
+        return $this->userRepository->getAdminUser();
+    }
 }

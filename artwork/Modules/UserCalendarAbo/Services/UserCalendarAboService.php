@@ -50,7 +50,7 @@ readonly class UserCalendarAboService
                 ->whereBetween('end_date', [$calendarAbo->start_date, $calendarAbo->end_date]);
         }
         if ($calendarAbo->specific_event_types) {
-            $events = $events->whereIn('event_type', $calendarAbo->event_types);
+            $events = $events->whereIn('event_type_id', $calendarAbo->event_types);
         }
 
         if ($calendarAbo->specific_rooms) {

@@ -377,8 +377,8 @@ class Event extends Model
 
     public function getShiftContainerHeightAttribute(): int
     {
-        $earliestStartTime = $this->earliest_start_datetime;
-        $latestEndTime = $this->latest_end_datetime;
+        $earliestStartTime = $this->earliest_start_datetime ?? Carbon::today();
+        $latestEndTime = $this->latest_end_datetime ?? Carbon::today();
 
         if ($earliestStartTime === null || $latestEndTime === null) {
             return 0;

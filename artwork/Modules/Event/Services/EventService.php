@@ -869,4 +869,9 @@ readonly class EventService
 
         return $latestEndTime;
     }
+
+    public function save(Event $event): Event
+    {
+        return $this->eventRepository->save($event);
+    }
 }

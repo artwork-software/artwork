@@ -28,14 +28,14 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: 8.2
-          php_extensions: gd zip bcmath
+          php_extensions: gd zip bcmath pcntl
 
       - name: PHPStan Static Analysis
         uses: php-actions/phpstan@v3
         with:
           path: app/ artwork/
           php_version: 8.2
-          php_extensions: gd zip bcmath
+          php_extensions: gd zip bcmath pcntl
   tests:
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
@@ -72,7 +72,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug
+          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl
 
       - name: Composer Install
         run: composer install

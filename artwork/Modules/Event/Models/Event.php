@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
@@ -123,8 +124,21 @@ class Event extends Model
         'event_date_without_time',
         'days_of_shifts',
         'shift_container_height',
-        'formatted_dates'
+        'formatted_dates',
+        'dates_for_series_event'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (Event $event) {
+            /** @var EventService $eventService */
+            $eventService = app()->get(EventService::class);
+            $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
+            $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+    }
 
     public function comments(): HasMany
     {
@@ -380,19 +394,22 @@ class Event extends Model
         $earliestStartTime = $this->earliest_start_datetime;
         $latestEndTime = $this->latest_end_datetime;
 
+
+        // Konfigurationswerte für minimale und maximale Schichthöhe
+        $minShiftHeight = (int)config('shift.min_shift_height');
+        $maxShiftHeight = (int)config('shift.max_shift_height');
+        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+
         if ($earliestStartTime === null || $latestEndTime === null) {
-            return 0;
+            return $minShiftHeight;
         }
         // Berechne die Differenz in Minuten
         $diff = $latestEndTime->diffInMinutes($earliestStartTime);
 
         // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
-        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+
         $pixelHeight = $diff / 60  * $shiftHeightFactor;
 
-        // Konfigurationswerte für minimale und maximale Schichthöhe
-        $minShiftHeight = (int)config('shift.min_shift_height');
-        $maxShiftHeight = (int)config('shift.max_shift_height');
 
         // Prüfe auf Sonderfälle und return die entsprechende Höhe
         if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
@@ -401,5 +418,22 @@ class Event extends Model
 
         // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
         return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getDatesForSeriesEventAttribute(): array
+    {
+        if (!$this->is_series) {
+            return [];
+        }
+
+        return [
+            'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
+            'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+            'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
+            'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+        ];
     }
 }

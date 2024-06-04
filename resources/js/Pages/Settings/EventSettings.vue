@@ -225,7 +225,6 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import Permissions from "@/Mixins/Permissions.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import ColorPicker from 'primevue/colorpicker';
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -289,7 +288,6 @@ export default {
         TrashIcon,
         PencilAltIcon,
         XIcon,
-        ColorPicker
     },
     props: ['event_types'],
     data() {

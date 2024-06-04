@@ -21,7 +21,7 @@ class TimelineServiceTest extends TestCase
     public function testCreateFromShiftPresetTimeline(): void
     {
         $shiftPresetTimeline = ShiftPresetTimeline::factory()->make();
-        $event = Event::factory()->make();
+        $event = Event::factory()->create();
 
         $timeline = $this->timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
 

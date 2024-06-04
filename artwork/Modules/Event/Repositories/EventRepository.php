@@ -28,6 +28,11 @@ readonly class EventRepository extends BaseRepository
             ->get();
     }
 
+    public function getAll(): Collection
+    {
+        return Event::all();
+    }
+
     public function getEventsWhereFreelancerHasShifts(int $freelancerId): Collection
     {
         return Event::query()

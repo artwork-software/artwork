@@ -51,4 +51,9 @@ readonly class CraftService
     {
         return $this->craftRepository->getAssignableByAllCrafts();
     }
+
+    public function findById(int $id): Craft
+    {
+        return $this->craftRepository->findById($id);
+    }
 }

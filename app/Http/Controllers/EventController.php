@@ -13,7 +13,6 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
-use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
@@ -300,8 +299,6 @@ class EventController extends Controller
             );
         }
 
-        event(new UpdateEventEarliestLatestDates($firstEvent, $this->eventService));
-
 
         $projectFirstEvent = $firstEvent->project()->first();
 
@@ -395,7 +392,7 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        $seriesEvent = $this->eventService->createSeriesEvent(
+        $this->eventService->createSeriesEvent(
             $startDate,
             $endDate,
             $request,
@@ -403,7 +400,6 @@ class EventController extends Controller
             $projectId,
             Auth::user()
         );
-        event(new UpdateEventEarliestLatestDates($seriesEvent, $this->eventService));
     }
 
     public function commitShifts(Request $request): void

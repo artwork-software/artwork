@@ -5,7 +5,7 @@ namespace Artwork\Modules\Shift\Services;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
-use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -24,6 +24,7 @@ readonly class ShiftService
     public function __construct(
         private ShiftRepository $shiftRepository,
         private EventService $eventService,
+        private CraftService $craftService,
         private NotificationService $notificationService
     ) {
     }
@@ -74,24 +75,16 @@ readonly class ShiftService
         $shift->description = $data['description'];
         $shift->event()->associate($event);
         $shift->craft()->associate($craft);
-        $createdShift = $this->shiftRepository->save($shift);
-        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
-        return $createdShift;
+        return $this->shiftRepository->save($shift);
     }
 
     public function createShiftByRequest(array $data, Event $event): Model|Shift
     {
-        $shift = new Shift();
-        $shift->start_date = $this->convertStartEndTime($data, $event)->start;
-        $shift->end_date = $this->convertStartEndTime($data, $event)->end;
-        $shift->start = $data['start'];
-        $shift->end = $data['end'];
-        $shift->break_minutes = $data['break_minutes'];
-        $shift->description = $data['description'];
-        $shift->craft_id = $data['craft_id'];
-        $shift->event()->associate($event);
-        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
-        return $this->shiftRepository->save($shift);
+        return $this->createShift(
+            $event,
+            $this->craftService->findById($data['craft_id']),
+            $data
+        );
     }
 
     public function createAutomatic(Event $event, int $craftId, array $data): Shift|Model
@@ -105,9 +98,7 @@ readonly class ShiftService
         $shift->description = $data['description'];
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
-        $createdShift = $this->shiftRepository->save($shift);
-        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
-        return $createdShift;
+        return $this->shiftRepository->save($shift);
     }
 
     public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, Event $event): Shift

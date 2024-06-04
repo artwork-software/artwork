@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Illuminate\Console\Command;
 
@@ -15,10 +13,11 @@ class UpdateEventEarliestAndLatestDate extends Command
 
     public function handle(
         EventService $eventService
-    ): void {
-        $events = Event::all();
-        foreach ($events as $event) {
-            event(new UpdateEventEarliestLatestDates($event, $eventService));
+    ): void
+    {
+        foreach ($eventService->getAll() as $event) {
+            $event->touchQuietly(); // touch() has implicit save call
+            $eventService->save($event);
             $this->info("Updated event {$event->id}");
         }
     }

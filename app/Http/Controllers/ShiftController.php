@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -100,7 +99,6 @@ class ShiftController extends Controller
                             $shiftsQualification
                         );
                     }
-                    event(new UpdateEventEarliestLatestDates($seriesEvent, $this->eventService));
                 }
             }
         }
@@ -125,7 +123,6 @@ class ShiftController extends Controller
                 ->setTranslationKey('Shift of event was created')
                 ->setTranslationKeyPlaceholderValues([$event->eventName])
         );
-        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
     }
 
     public function show(): void

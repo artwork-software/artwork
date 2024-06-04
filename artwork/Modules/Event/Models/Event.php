@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
@@ -126,6 +127,18 @@ class Event extends Model
         'formatted_dates',
         'dates_for_series_event'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (Event $event) {
+            /** @var EventService $eventService */
+            $eventService = app()->get(EventService::class);
+            $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
+            $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+    }
 
     public function comments(): HasMany
     {

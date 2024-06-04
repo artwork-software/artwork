@@ -51,7 +51,6 @@ use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
-use Artwork\Modules\Event\Events\UpdateEventEarliestLatestDates;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -2074,7 +2073,6 @@ class ProjectController extends Controller
                 ]
             )
         );
-        event(new UpdateEventEarliestLatestDates($event, $this->eventService));
     }
 
     public function updateTimeLines(Request $request): void
@@ -2088,8 +2086,10 @@ class ProjectController extends Controller
                 'end' => $timeline['end'],
                 'description' => nl2br($timeline['description_without_html'])
             ]);
-            $event = $findTimeLine->event()->first();
-            event(new UpdateEventEarliestLatestDates($event, $this->eventService));
+            if($event = $findTimeLine->event()->first()) {
+                $event->touchQuietly();
+                $this->eventService->save($event);
+            }
         }
     }
 

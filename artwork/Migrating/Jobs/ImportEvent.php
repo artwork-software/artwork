@@ -30,12 +30,11 @@ class ImportEvent
     private EventTypeService $eventTypeService;
 
     public function __construct(
-        private readonly ImportConfig     $config,
-        private readonly DataAggregator   $dataAggregator,
+        private readonly ImportConfig $config,
+        private readonly DataAggregator $dataAggregator,
         private readonly EventImportModel $event,
-        private readonly Project          $project,
-    )
-    {
+        private readonly Project $project,
+    ) {
         $this->roomService = app()->get(RoomService::class);
         $this->eventTypeService = app()->get(EventTypeService::class);
         $this->eventService = app()->get(EventService::class);
@@ -74,7 +73,6 @@ class ImportEvent
             logger()->error('Event creation failed. Project: ' . $this->project->name);
             throw $e;
         }
-
     }
 
     private function eventIsAllDay(): bool
@@ -113,7 +111,9 @@ class ImportEvent
     private function createEventTypeOrGetFallbackEventType(): EventType
     {
         if ($this->config->shouldCreateEventType()) {
-            $this->dispatcher->dispatchSync(new ImportEventType($this->dataAggregator->findEventType($this->event->eventType)));
+            $this->dispatcher->dispatchSync(
+                new ImportEventType($this->dataAggregator->findEventType($this->event->eventType))
+            );
             return $this->getEventType();
         }
 
@@ -127,6 +127,8 @@ class ImportEvent
 
     private function getEventType(): ?EventType
     {
-        return $this->eventTypeService->findByName($this->dataAggregator->findEventType($this->event->eventType)?->name);
+        return $this->eventTypeService->findByName(
+            $this->dataAggregator->findEventType($this->event->eventType)?->name
+        );
     }
 }

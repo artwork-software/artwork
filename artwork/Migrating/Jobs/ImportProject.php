@@ -18,18 +18,16 @@ class ImportProject
     use InteractsWithQueue;
 
     public function __construct(
-        private readonly ImportConfig       $config,
-        private readonly DataAggregator     $dataAggregator,
+        private readonly ImportConfig $config,
+        private readonly DataAggregator $dataAggregator,
         private readonly ProjectImportModel $projectImportModel
-    )
-    {
+    ) {
     }
 
     public function handle(
-        Dispatcher     $dispatcher,
+        Dispatcher $dispatcher,
         ProjectService $projectService
-    ): void
-    {
+    ): void {
         if (!$project = $projectService->getByName($this->projectImportModel->name)->first()) {
             logger()->debug('Project not found, creating new project');
             $project = $this->createProject(
@@ -72,11 +70,10 @@ class ImportProject
 
     private function createProject(
         ProjectService $projectService,
-        string         $name,
-        string         $description,
-        bool           $isGroup
-    ): Project
-    {
+        string $name,
+        string $description,
+        bool $isGroup
+    ): Project {
         $project = new Project();
         $project->name = $name;
         $project->shift_description = $description;

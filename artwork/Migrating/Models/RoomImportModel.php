@@ -8,7 +8,6 @@ class RoomImportModel
         public readonly string $identifier,
         public readonly string $name,
         public readonly string $description,
-    )
-    {
+    ) {
     }
 }

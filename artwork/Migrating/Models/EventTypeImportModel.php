@@ -7,8 +7,6 @@ class EventTypeImportModel
     public function __construct(
         public readonly string $identifier,
         public readonly string $name,
-    )
-    {
-
+    ) {
     }
 }

@@ -15,10 +15,9 @@ class ProjectImportModel
         public readonly string $name,
         public readonly string $description,
         public readonly string $projectGroupIdentifier,
-        ?string                $start,
-        ?string                $end,
-    )
-    {
+        ?string $start,
+        ?string $end,
+    ) {
         if ($start) {
             $this->start = Carbon::parse($start);
         }

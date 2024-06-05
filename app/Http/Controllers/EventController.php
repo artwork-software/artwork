@@ -299,10 +299,6 @@ class EventController extends Controller
             );
         }
 
-        $firstEvent->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($firstEvent),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($firstEvent)
-        ]);
 
         $projectFirstEvent = $firstEvent->project()->first();
 
@@ -396,23 +392,14 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        Event::create([
-            'name' => $request->title,
-            'eventName' => $request->eventName,
-            'description' => $request->description,
-            'start_time' => $startDate,
-            'end_time' => $endDate,
-            'occupancy_option' => $request->isOption,
-            'audience' => $request->audience,
-            'is_loud' => $request->isLoud,
-            'event_type_id' => $request->eventTypeId,
-            'room_id' => $request->roomId,
-            'user_id' => Auth::id(),
-            'project_id' => $projectId ?: null,
-            'is_series' => true,
-            'series_id' => $series->id,
-            'allDay' => $request->allDay
-        ]);
+        $this->eventService->createSeriesEvent(
+            $startDate,
+            $endDate,
+            $request,
+            $series,
+            $projectId,
+            Auth::user()
+        );
     }
 
     public function commitShifts(Request $request): void

@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Services;
 
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -48,6 +49,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
 
 readonly class EventService
 {
@@ -56,13 +58,14 @@ readonly class EventService
     }
 
     public function importShiftPreset(
-        Event $event,
-        ShiftPreset $shiftPreset,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        ShiftQualificationService $shiftQualificationService,
+        Event                       $event,
+        ShiftPreset                 $shiftPreset,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        ShiftQualificationService   $shiftQualificationService,
         ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
+    ): void
+    {
         $timelineService->forceDeleteTimelines($event->timelines);
         foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
             $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
@@ -95,13 +98,14 @@ readonly class EventService
     }
 
     public function importShiftPresetForEventsOfProjectByEventType(
-        ShiftPreset $shiftPreset,
-        int $projectId,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        ShiftQualificationService $shiftQualificationService,
+        ShiftPreset                 $shiftPreset,
+        int                         $projectId,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        ShiftQualificationService   $shiftQualificationService,
         ShiftsQualificationsService $shiftsQualificationsService
-    ): void {
+    ): void
+    {
         foreach (
             $this->eventRepository->getEventsByProjectIdAndEventTypeId(
                 $projectId,
@@ -120,19 +124,20 @@ readonly class EventService
     }
 
     public function delete(
-        Event $event,
+        Event                       $event,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        ProjectTabService $projectTabService
-    ): void {
+        ChangeService               $changeService,
+        EventCommentService         $eventCommentService,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        SubEventService             $subEventService,
+        NotificationService         $notificationService,
+        ProjectTabService           $projectTabService
+    ): void
+    {
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
                 $changeService
@@ -165,19 +170,20 @@ readonly class EventService
     }
 
     public function deleteAll(
-        Collection|array $events,
+        Collection|array            $events,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
-        NotificationService $notificationService,
-        ProjectTabService $projectTabService
-    ): void {
+        ChangeService               $changeService,
+        EventCommentService         $eventCommentService,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        SubEventService             $subEventService,
+        NotificationService         $notificationService,
+        ProjectTabService           $projectTabService
+    ): void
+    {
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
@@ -213,17 +219,18 @@ readonly class EventService
     }
 
     public function restore(
-        Event $event,
+        Event                       $event,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService
-    ): void {
+        ChangeService               $changeService,
+        EventCommentService         $eventCommentService,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        SubEventService             $subEventService
+    ): void
+    {
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
@@ -249,13 +256,14 @@ readonly class EventService
     }
 
     public function forceDeleteAll(
-        Collection|array $events,
+        Collection|array    $events,
         EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService,
+        TimelineService     $timelineService,
+        ShiftService        $shiftService,
+        SubEventService     $subEventService,
         NotificationService $notificationService
-    ): void {
+    ): void
+    {
         /** @var Event $event */
         foreach ($events as $event) {
             $eventCommentService->deleteEventComments($event->comments);
@@ -270,17 +278,18 @@ readonly class EventService
     }
 
     public function restoreAll(
-        Collection|array $events,
+        Collection|array            $events,
         ShiftsQualificationsService $shiftsQualificationsService,
-        ShiftUserService $shiftUserService,
-        ShiftFreelancerService $shiftFreelancerService,
+        ShiftUserService            $shiftUserService,
+        ShiftFreelancerService      $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService,
-        ChangeService $changeService,
-        EventCommentService $eventCommentService,
-        TimelineService $timelineService,
-        ShiftService $shiftService,
-        SubEventService $subEventService
-    ): void {
+        ChangeService               $changeService,
+        EventCommentService         $eventCommentService,
+        TimelineService             $timelineService,
+        ShiftService                $shiftService,
+        SubEventService             $subEventService
+    ): void
+    {
         /** @var Event $event */
         foreach ($events as $event) {
             $this->eventRepository->restore($event);
@@ -310,10 +319,11 @@ readonly class EventService
     }
 
     private function createEventDeletedNotificationsForProjectManagers(
-        Event $event,
+        Event               $event,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
-    ): void {
+        ProjectTabService   $projectTabService
+    ): void
+    {
         if (is_null($event->project) || $event->project->managerUsers->isEmpty()) {
             return;
         }
@@ -369,10 +379,11 @@ readonly class EventService
     }
 
     private function createEventDeletedNotification(
-        Event $event,
+        Event               $event,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
-    ): void {
+        ProjectTabService   $projectTabService
+    ): void
+    {
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
         $notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_ROOM_ANSWER);
@@ -420,10 +431,11 @@ readonly class EventService
      * @return array<int, mixed>
      */
     public function getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
-        int $userId,
+        int    $userId,
         Carbon $startDate,
         Carbon $endDate
-    ): array {
+    ): array
+    {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
 
@@ -495,10 +507,11 @@ readonly class EventService
      * @return array<int, mixed>
      */
     public function getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
-        int $freelancerId,
+        int    $freelancerId,
         Carbon $startDate,
         Carbon $endDate
-    ): array {
+    ): array
+    {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
 
@@ -567,10 +580,11 @@ readonly class EventService
      * @return array<int, mixed>
      */
     public function getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
-        int $serviceProviderId,
+        int    $serviceProviderId,
         Carbon $startDate,
         Carbon $endDate
-    ): array {
+    ): array
+    {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
 
@@ -610,9 +624,10 @@ readonly class EventService
     }
 
     public function getEventsWhereServiceProviderHasShiftsFilteredByDateOfShifts(
-        int $serviceProviderId,
+        int    $serviceProviderId,
         Carbon $date
-    ): Collection {
+    ): Collection
+    {
         return $this->eventRepository
             ->getEventsWhereServiceProviderHasShifts($serviceProviderId)
             ->filter(
@@ -623,20 +638,21 @@ readonly class EventService
     }
 
     public function getShiftPlanDto(
-        UserService $userService,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        RoomService $roomService,
-        CraftService $craftService,
-        EventTypeService $eventTypeService,
-        ProjectService $projectService,
-        FilterService $filterService,
-        ShiftFilterController $shiftFilterController,
+        UserService               $userService,
+        FreelancerService         $freelancerService,
+        ServiceProviderService    $serviceProviderService,
+        RoomService               $roomService,
+        CraftService              $craftService,
+        EventTypeService          $eventTypeService,
+        ProjectService            $projectService,
+        FilterService             $filterService,
+        ShiftFilterController     $shiftFilterController,
         ShiftQualificationService $shiftQualificationService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
-    ): ShiftPlanDto {
+        RoomCategoryService       $roomCategoryService,
+        RoomAttributeService      $roomAttributeService,
+        AreaService               $areaService,
+    ): ShiftPlanDto
+    {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
 
         $periodArray = [];
@@ -745,19 +761,20 @@ readonly class EventService
     }
 
     public function createEventManagementDto(
-        CalendarService $calendarService,
-        RoomService $roomService,
-        UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        ProjectTabService $projectTabService,
-        EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
+        CalendarService      $calendarService,
+        RoomService          $roomService,
+        UserService          $userService,
+        FilterService        $filterService,
+        FilterController     $filterController,
+        ProjectTabService    $projectTabService,
+        EventTypeService     $eventTypeService,
+        RoomCategoryService  $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
-        ProjectService $projectService,
-        ?bool $atAGlance
-    ): EventManagementDto {
+        AreaService          $areaService,
+        ProjectService       $projectService,
+        ?bool                $atAGlance
+    ): EventManagementDto
+    {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
 
         $showCalendar = $calendarService->createCalendarData(
@@ -821,6 +838,12 @@ readonly class EventService
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
     }
 
+    /** @return Event[]|Collection */
+    public function getAll(): Collection|array
+    {
+        return $this->eventRepository->getAll();
+    }
+
     public function getEarliestStartTime(Event $event): Carbon
     {
         $earliestStartTime = $event->start_time;
@@ -870,5 +893,40 @@ readonly class EventService
         }
 
         return $latestEndTime;
+    }
+
+
+    public function createSeriesEvent(
+        $startDate,
+        $endDate,
+        $request,
+        $series,
+        $projectId,
+        $user
+    ): Model|Event
+    {
+        $event = new Event();
+
+        $event->name = $request->title;
+        $event->eventName = $request->eventName;
+        $event->description = $request->description;
+        $event->start_time = $startDate;
+        $event->end_time = $endDate;
+        $event->occupancy_option = $request->isOption;
+        $event->audience = $request->audience;
+        $event->is_loud = $request->isLoud;
+        $event->event_type_id = $request->eventTypeId;
+        $event->room_id = $request->roomId;
+        $event->project_id = $projectId ?: null;
+        $event->is_series = true;
+        $event->series_id = $series->id;
+        $event->allDay = $request->allDay;
+        $event->creator()->associate($user);
+        return $this->eventRepository->save($event);
+    }
+
+    public function save(Event $event): Event
+    {
+        return $this->eventRepository->save($event);
     }
 }

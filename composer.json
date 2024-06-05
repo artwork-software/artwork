@@ -28,6 +28,7 @@
         "laravel-lang/native-currency-names": "^1.1",
         "laravel-lang/native-locale-names": "^2.2",
         "laravel/framework": "^v10.0",
+        "laravel/horizon": "^5.24",
         "laravel/jetstream": "^v2.12.5",
         "laravel/sanctum": "^v3.2",
         "laravel/scout": "^v9.4.12",

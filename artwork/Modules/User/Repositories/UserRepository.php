@@ -3,6 +3,7 @@
 namespace Artwork\Modules\User\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -85,4 +86,8 @@ readonly class UserRepository extends BaseRepository
             ->get();
     }
 
+    public function getAdminUser(): User
+    {
+        return User::role(RoleEnum::ARTWORK_ADMIN->value)->first();
+    }
 }

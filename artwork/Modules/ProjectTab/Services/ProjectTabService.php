@@ -30,6 +30,7 @@ use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderDropResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
@@ -38,8 +39,10 @@ use Illuminate\Support\Facades\Auth;
 
 readonly class ProjectTabService
 {
-    public function __construct(private ProjectTabRepository $projectTabRepository)
-    {
+    public function __construct(
+        private ProjectTabRepository $projectTabRepository,
+        private readonly ShiftTimePresetService $shiftTimePresetService
+    ) {
     }
 
     public function findFirstProjectTab(): ProjectTab|null
@@ -191,7 +194,8 @@ readonly class ProjectTabService
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))
             ->setCrafts($craftService->getAll())
             ->setCurrentUserCrafts($userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts()))
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setShiftTimePresets($this->shiftTimePresetService->getAll());
     }
 
     public function getBudgetInformationDto(

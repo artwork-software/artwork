@@ -12,19 +12,30 @@
 
 
             <div class="mt-10">
-                <h3 class="headline2 mb-2">{{$t('Crafts')}}</h3>
+                <h3 class="headline2 mb-2">{{}}</h3>
                 <p class="xsLight">
-                    {{$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')}}
+                    {{}}
                 </p>
             </div>
+            <div class="flex items-center justify-between gap-x-3">
+                <TinyPageHeadline
+                    :title="$t('Crafts')"
+                    :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
+                />
 
-            <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
+               <div class="w-72">
+                   <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
+               </div>
 
+            </div>
             <ul role="list" class="divide-y divide-gray-100">
                 <li v-for="craft in crafts" :key="craft" class="flex justify-between gap-x-6 py-5">
                     <div class="flex gap-x-4">
                         <div class="min-w-0 flex-auto">
-                            <p class="text-sm font-semibold leading-6 text-gray-900">{{ craft.name }} ({{ craft.abbreviation }})</p>
+                            <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
+                                <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(craft.color), borderColor: TextColorWithDarken(craft.color, 90)}"/>
+                                {{ craft.name }} ({{ craft.abbreviation }})
+                            </p>
                             <div class="" v-if="craft.assignable_by_all">
                                 <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
                             </div>
@@ -35,6 +46,14 @@
                                         {{ user.full_name }}<span>, </span>
                                     </span>
                                 </p>
+                            </div>
+                            <div class="mt-1 truncate xsLight">
+                                <div v-if="craft.notify_days > 0">
+                                    {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [craft.notify_days]) }}
+                                </div>
+                                <div v-else>
+                                    {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -63,10 +82,10 @@
                 </li>
             </ul>
             <div class="mt-10">
-                <h4 class="mb-2 headline2">{{$t('Shift-relevant Event Types')}}</h4>
-                <p class="xsLight">
-                    {{$t("Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'shifts' tab of the project. You can also define additional events as shift-relevant for each project.")}}
-                </p>
+                <TinyPageHeadline
+                    :title="$t('Shift-relevant Event Types')"
+                    :description="$t('Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the \'shifts\' tab of the project. You can also define additional events as shift-relevant for each project.')"
+                />
                 <div class="mt-3">
                     <Listbox as="div">
                         <div class="relative mt-2 w-1/2">
@@ -92,16 +111,18 @@
                         </div>
                     </Listbox>
                 </div>
-                <div class="mt-3 flex">
-                    <div v-for="type in relevantEventTypes">
-                        <TagComponent :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
-                    </div>
+                <div class="mt-3 flex flex-wrap">
+                    <TagComponent v-for="type in relevantEventTypes" :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                 </div>
             </div>
-            <div class="mt-10">
-                <h4 class="mb-2 headline2">{{$t('Qualifications')}}</h4>
-                <p class="xsLight">{{$t('Create or edit qualifications')}}</p>
-                <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
+            <div>
+                <div class="flex items-center justify-between">
+                    <TinyPageHeadline class="mt-10"
+                        :title="$t('Qualifications')"
+                        :description="$t('Create or edit qualifications')"
+                    />
+                    <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
+                </div>
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
                         {{$t('No qualifications have been created yet.')}}
@@ -120,6 +141,45 @@
                                 </span>
                             </span>
                             <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between">
+                    <TinyPageHeadline
+                        class="mt-14"
+                        :title="$t('Time presets for shifts')"
+                        :description="$t('Create time presets for layers to be able to assign them quickly and easily later.')"
+                    />
+                    <AddButtonSmall :text="$t('New time preset')" class="mt-5" @click="showAddShiftPresetModal = true" />
+                </div>
+                <div class="mt-5">
+                    <AlertComponent
+                        type="info"
+                        show-icon
+                        icon-size="h-6 w-6"
+                        v-if="shiftTimePresets.length === 0"
+                        :text="$t('No time presets for shifts have been created yet.')"
+                        text-size="xsLight"
+                    />
+                    <ul v-else role="list" class="w-full">
+                        <li v-for="(shiftTimePreset) in shiftTimePresets" :key="shiftTimePreset.id" class="py-4 pr-4 flex justify-between items-center border-b-2">
+                            <div class="sDark">
+                                <div>
+                                    {{ shiftTimePreset.name }}
+                                </div>
+                                <div class="flex items-center gap-x-2 text-gray-500 text-xs">
+                                    <div>{{ shiftTimePreset.start_time }} - {{ shiftTimePreset.end_time}} </div>
+                                    <div v-if="shiftTimePreset.break_time !== 0">{{ $t('Break time')}}: {{ shiftTimePreset.break_time }}
+                                        {{ $t('Minutes') }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-x-3">
+                                <IconEdit stroke-width="1.5" class="h-5 w-5 cursor-pointer" aria-hidden="true" @click="openAddEditShiftPresetModal(shiftTimePreset)"/>
+
+                                <IconTrash stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="deleteShiftTimePreset(shiftTimePreset)"/>
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -146,6 +206,7 @@
             @closed="this.$page.props.flash.error.shift_qualification = null"
             :confirm="$t('Close message')"
         />
+        <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
         <ConfirmDeleteModal :title="$t('Delete craft')" :description="$t('Are you sure you want to delete the selected craft?')" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
@@ -176,11 +237,18 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import TabComponent from "@/Components/Tabs/TabComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
-    mixins: [IconLib],
+    mixins: [IconLib, ColorHelper],
     components: {
+        AlertComponent,
+        AddEditShiftTimePreset,
+        TinyPageHeadline,
         BaseMenu,
         TabComponent,
         AddButtonSmall,
@@ -207,7 +275,7 @@ export default defineComponent({
         DotsVerticalIcon,
         AppLayout
     },
-    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications'],
+    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications', 'shiftTimePresets'],
     data(){
         return {
             selectedEventType: null,
@@ -218,6 +286,8 @@ export default defineComponent({
             showShiftQualificationModal: false,
             shiftQualificationModalMode: null,
             shiftQualificationModalShiftQualification: null,
+            showAddShiftPresetModal: false,
+            presetToEdit: null,
             tabs: [
                 {
                     name: this.$t('Shift Settings'),
@@ -255,6 +325,20 @@ export default defineComponent({
         }
     },
     methods: {
+        openAddEditShiftPresetModal(shiftTimePreset){
+            this.presetToEdit = shiftTimePreset;
+            this.showAddShiftPresetModal = true;
+        },
+        closeShiftPresetModal(){
+            this.presetToEdit = null;
+            this.showAddShiftPresetModal = false;
+        },
+        deleteShiftTimePreset(preset){
+            this.$inertia.delete(route('shift-time-preset.destroy', preset.id), {
+                preserveScroll: true,
+                preserveState: true
+            })
+        },
         openShiftQualificationModal(mode, shiftQualification = null) {
             this.shiftQualificationModalMode = mode;
             this.shiftQualificationModalShiftQualification = shiftQualification;

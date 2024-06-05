@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property bool $project_mandatory
  * @property bool $individual_name
+ * @property bool $fallback_type
  * @property string $abbreviation
  * @property bool $relevant_for_shift
  * @property string $created_at
@@ -34,6 +35,7 @@ class EventType extends Model
         'project_mandatory' => 'boolean',
         'individual_name' => 'boolean',
         'relevant_for_shift' => 'boolean',
+        'fallback_type' => 'boolean',
     ];
 
     public function events(): HasMany

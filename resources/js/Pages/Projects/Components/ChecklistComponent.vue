@@ -60,7 +60,7 @@
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <a @click="openEditChecklistModal(checklist)"
+                                            <a @click="openEditChecklistModal(checklist)" v-if="$role('artwork admin') || $can('')"
                                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconEdit stroke-width="1.5"
                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -761,7 +761,7 @@
                         </span>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
-                            <span class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">
+                            <span class="hind text-secondary tracking-tight ml-1 my-auto text-xl">
                                 {{ $t('Private list - only you can see it') }}
                             </span>
                         </div>

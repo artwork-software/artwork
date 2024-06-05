@@ -4,8 +4,8 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
-use Artwork\Modules\EventType\Cache\EventTypeMemoryCache;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -44,6 +44,8 @@ use Illuminate\Support\Collection;
  * @property int $project_id
  * @property bool $is_series
  * @property int $series_id
+ * @property Carbon $earliest_start_datetime
+ * @property Carbon $latest_end_datetime
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -59,8 +61,8 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
- * @property-read int $shift_container_height
  * @property-read array<string> $days_of_shifts
+ * @property-read int $shift_container_height
  */
 class Event extends Model
 {
@@ -93,7 +95,9 @@ class Event extends Model
         'accepted',
         'option_string',
         'declined_room_id',
-        'allDay'
+        'allDay',
+        'latest_end_datetime',
+        'earliest_start_datetime'
     ];
 
     protected $guarded = [
@@ -108,7 +112,9 @@ class Event extends Model
         'end_time' => 'datetime:d. M Y H:i',
         'is_series' => 'boolean',
         'accepted' => 'boolean',
-        'allDay' => 'boolean'
+        'allDay' => 'boolean',
+        'earliest_start_datetime' => 'datetime',
+        'latest_end_datetime' => 'datetime',
     ];
 
     protected $appends = [
@@ -116,10 +122,23 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
+        'days_of_shifts',
         'shift_container_height',
         'formatted_dates',
-        'days_of_shifts'
+        'dates_for_series_event'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (Event $event) {
+            /** @var EventService $eventService */
+            $eventService = app()->get(EventService::class);
+            $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
+            $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+    }
 
     public function comments(): HasMany
     {
@@ -198,6 +217,18 @@ class Event extends Model
         return Carbon::parse($this->end_time)->format('H:i');
     }
 
+
+    /**
+     * @return array<string, string>
+     */
+    public function getFormattedDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->translatedFormat('d.m.Y H:i'),
+            'end' => Carbon::parse($this->end_time)->translatedFormat('d.m.Y H:i')
+        ];
+    }
+
     /**
      * @return array<string, string>
      */
@@ -206,6 +237,17 @@ class Event extends Model
         return [
             'start' => Carbon::parse($this->start_time)->format('d.m.Y'),
             'end' => Carbon::parse($this->end_time)->format('d.m.Y')
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getTimesWithoutDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->format('H:i'),
+            'end' => Carbon::parse($this->end_time)->format('H:i')
         ];
     }
 
@@ -229,7 +271,10 @@ class Event extends Model
         return $days;
     }
 
-    public function getDaysOfShifts(): array
+    /**
+     * @return array<string>
+     */
+    public function getDaysOfShiftsAttribute(): array
     {
         $days = [];
 
@@ -244,11 +289,6 @@ class Event extends Model
         }
 
         return $days;
-    }
-
-    public function getEventType(): ?EventType
-    {
-        return EventTypeMemoryCache::getEventType($this->event_type_id);
     }
 
     public function getMinutesFromDayStart(Carbon $date): int
@@ -358,5 +398,53 @@ class Event extends Model
     public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
     {
         return $builder->orderBy('start_time', $direction);
+    }
+
+    public function getShiftContainerHeightAttribute(): int
+    {
+        $earliestStartTime = $this->earliest_start_datetime ?? Carbon::today();
+        $latestEndTime = $this->latest_end_datetime ?? Carbon::today();
+
+
+        // Konfigurationswerte für minimale und maximale Schichthöhe
+        $minShiftHeight = (int)config('shift.min_shift_height');
+        $maxShiftHeight = (int)config('shift.max_shift_height');
+        $shiftHeightFactor = (int)config('shift.shift_height_factor');
+
+        if ($earliestStartTime === null || $latestEndTime === null) {
+            return $minShiftHeight;
+        }
+        // Berechne die Differenz in Minuten
+        $diff = $latestEndTime->diffInMinutes($earliestStartTime);
+
+        // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
+
+        $pixelHeight = $diff / 60  * $shiftHeightFactor;
+
+
+        // Prüfe auf Sonderfälle und return die entsprechende Höhe
+        if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
+            return $minShiftHeight;
+        }
+
+        // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
+        return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getDatesForSeriesEventAttribute(): array
+    {
+        if (!$this->is_series) {
+            return [];
+        }
+
+        return [
+            'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
+            'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+            'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
+            'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+        ];
     }
 }

@@ -27,31 +27,31 @@
                 <div>
                     <BaseMenu dots-size="h-4 w-4">
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="editShift"
+                            <div @click="editShift"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconEdit
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Edit') }}
-                            </a>
+                            </div>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="this.clearShiftUsers(shift)"
+                            <div @click="this.clearShiftUsers(shift)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconCircleX
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Clear') }}
-                            </a>
+                            </div>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="deleteShift(shift.id)"
+                            <div @click="deleteShift(shift.id)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconTrash
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Delete') }}
-                            </a>
+                            </div>
                         </MenuItem>
                     </BaseMenu>
                 </div>
@@ -163,6 +163,7 @@
                    :currentUserCrafts="currentUserCrafts"
                    :edit="true"
                    :shift-qualifications="shiftQualifications"
+                   :shift-time-presets="shiftTimePresets"
     />
     <ChooseDeleteUserShiftModal v-if="showDeleteUserModal"
                                 @close-modal="this.closeDeleteUserModal"
@@ -225,7 +226,8 @@ export default defineComponent({
         'crafts',
         'event',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'shiftTimePresets'
     ],
     emits: ['dropFeedback'],
     data() {

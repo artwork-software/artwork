@@ -4,6 +4,7 @@ namespace Artwork\Modules\ServiceProvider\Services;
 
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\DTOs\ShowDto;
@@ -48,6 +49,7 @@ readonly class ServiceProviderService
 
         return $serviceProvidersWithPlannedWorkingHours;
     }
+
 
     public function createShowDto(
         ServiceProvider $serviceProvider,

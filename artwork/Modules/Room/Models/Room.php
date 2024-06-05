@@ -30,6 +30,7 @@ use Illuminate\Support\Collection;
  * @property int $order
  * @property bool $temporary
  * @property bool $everyone_can_book
+ * @property bool $fallback_room
  * @property Carbon $start_date
  * @property Carbon $end_date
  * @property int $area_id
@@ -83,6 +84,7 @@ class Room extends Model
 
     protected $casts = [
         'everyone_can_book' => 'boolean',
+        'fallback_type' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'temporary' => 'boolean'

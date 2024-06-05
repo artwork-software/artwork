@@ -5,11 +5,13 @@
              :style="{backgroundColor: event.event_type.hex_code}">
             <div class="flex items-center">
                 <span v-if="!event.event.allDay">
-                    {{ event.event?.start_time }} - {{ event.event?.end_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                    {{ event.event?.formatted_dates.start }} - {{ event.event?.formatted_dates.end }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
+
                 <span v-else>
                     {{ event.event?.event_date_without_time.start }} - {{ event.event?.event_date_without_time.end }} {{ $t('All day') }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
+
                 <span v-if="event.event.is_series" class="ml-3">
                     <IconRepeat class="h-4 w-4" />
                 </span>
@@ -64,14 +66,17 @@
             :event_type="event.event_type"
             :eventId="event.event.id"
         />
-        <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event.timeline"
-                                     :shifts="event.shifts"
+        <!-- Event Timeline -->
+        <div class="flex justify-start mt-3 overflow-x-scroll gap-3" :style="{height: event.event?.shift_container_height + 'px', maxHeight: event.event?.shift_container_height + 'px', }" v-if="showShift">
+            <TimeLineShiftsComponent :time-line="event?.timeline"
+                                     :shifts="event?.shifts"
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
-                                     :event="event.event"
+                                     :event="event?.event"
                                      :shift-qualifications="shiftQualifications"
-                                     @dropFeedback="dropFeedback"/>
+                                     @dropFeedback="dropFeedback"
+                                     :shift-time-presets="shiftTimePresets"
+            />
         </div>
     </div>
 </template>
@@ -98,7 +103,8 @@ export default defineComponent({
         'crafts',
         'eventTypes',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'shiftTimePresets'
     ],
     emits: ['dropFeedback'],
     mixins: [IconLib],
@@ -125,7 +131,7 @@ export default defineComponent({
         return {
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
-            showShift: parseInt(this.$page.props.urlParameters?.eventId) === parseInt(this.event.event.id),
+            showShift: this.$page.props.urlParameters?.eventId ? parseInt(this.$page.props.urlParameters?.eventId) === parseInt(this.event.event.id) : true,
             showImportShiftTemplateModal: false,
         }
     },

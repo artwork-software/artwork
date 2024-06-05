@@ -30,10 +30,7 @@ readonly class PermissionService
 
     public function findByName(string $name): Permission|null
     {
-        /** @var Permission|null $permission */
-        $permission = $this->permissionRepository->getByName($name);
-
-        return $permission;
+        return $this->permissionRepository->getByName($name);
     }
 
     /**

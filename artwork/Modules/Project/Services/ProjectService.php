@@ -66,6 +66,11 @@ readonly class ProjectService
         return $this->projectRepository->findOrFail($id);
     }
 
+    public function save(Project $project): Project
+    {
+        return $this->projectRepository->save($project);
+    }
+
     public function softDelete(
         Project $project,
         ShiftsQualificationsService $shiftsQualificationsService,
@@ -354,6 +359,14 @@ readonly class ProjectService
         return $this->projectRepository->getByName($query);
     }
 
+    public function getProjectGroupByName(string $name): ?Project
+    {
+        return $this->projectRepository
+            ->getByName($name)
+            ->where('is_group', '=', true)
+            ->first();
+    }
+
     public function updateShiftContact(Project $project, $time): void
     {
         $project->shift_contact()
@@ -479,5 +492,11 @@ readonly class ProjectService
     public function getProjectsWithAccessBudgetAndManagerUsers(): Collection
     {
         return $this->projectRepository->getProjects(['access_budget', 'managerUsers']);
+    }
+
+    public function associateProjectWithGroup(Project $project, Project $projectGroup): void
+    {
+        $project->groups()->attach($projectGroup->id);
+        $project->save();
     }
 }

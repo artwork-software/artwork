@@ -166,7 +166,7 @@
                             <div class="col-span-3 flex items-center justify-end">
                                 <div class="grid grid-cols-8">
                                     <div class="col-span-6">
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep w-fit" :class="project.state?.color">
                                             {{ project.state?.name }}
                                         </span>
                                     </div>

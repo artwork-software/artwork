@@ -81,6 +81,8 @@ readonly class UserService
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
             ];
 
+            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
+
             if ($addVacationsAndAvailabilities) {
                 $userData['vacations'] = $user->getVacationDays();
                 $userData['availabilities'] = $this->userRepository
@@ -94,7 +96,37 @@ readonly class UserService
             $usersWithPlannedWorkingHours[] = $userData;
         }
 
+        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
         return $usersWithPlannedWorkingHours;
+    }
+
+    /**
+     * Berechnet die Arbeitsstunden für jede Kalenderwoche innerhalb eines bestimmten Datumsbereichs.
+     *
+     * @param User $user
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return string []
+     */
+    private function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        // first create a carbon period for the given date range
+        $period = Carbon::parse($startDate)->toPeriod($endDate);
+
+        $weeklyWorkingHours = [];
+
+        // iterate over each week and calculate the working hours
+        foreach ($period as $week) {
+            $startDate = $week->copy()->startOfWeek();
+            $endDate = $week->copy()->endOfWeek();
+            $workingHours = $user->plannedWorkingHours(
+                $startDate,
+                $endDate
+            ) - $user->weekly_working_hours;
+            $weeklyWorkingHours[$week->format('W')] = $workingHours;
+        }
+
+        return $weeklyWorkingHours;
     }
 
     public function getAuthUserCrafts(): Collection
@@ -225,5 +257,10 @@ readonly class UserService
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
+    }
+
+    public function getAdminUser(): User
+    {
+        return $this->userRepository->getAdminUser();
     }
 }

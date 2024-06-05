@@ -125,10 +125,13 @@
                                      :event-types="headerObject.eventTypes"
                                      :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
+                                     :shift-time-presets="loadedProjectInformation['ShiftTab'].shift_time_presets"
                 />
             </div>
         </div>
     </div>
+
+
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>

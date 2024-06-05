@@ -23,7 +23,7 @@ readonly class RoomRepository extends BaseRepository
 
     public function findOrFail(int $id): Room
     {
-        return $this->findOrFail($id);
+        return Room::findOrFail($id);
     }
 
     public function getFilteredRoomsBy(
@@ -93,5 +93,15 @@ readonly class RoomRepository extends BaseRepository
     public function getRoomsNotIdIn(array $ids): Collection
     {
         return Room::query()->notIdIn($ids)->get();
+    }
+
+    public function getFallbackRoom(): ?Room
+    {
+        return Room::query()->where('fallback_room', true)->first();
+    }
+
+    public function findByName(string $name): ?Room
+    {
+        return Room::query()->where('name', $name)->first();
     }
 }

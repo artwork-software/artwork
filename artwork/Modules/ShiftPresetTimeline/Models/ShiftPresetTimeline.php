@@ -31,6 +31,7 @@ class ShiftPresetTimeline extends Model
     protected $casts = [
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
+
     ];
 
     public function shiftPreset(): BelongsTo

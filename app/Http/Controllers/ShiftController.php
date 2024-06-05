@@ -9,7 +9,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -26,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
+use Random\RandomException;
 
 class ShiftController extends Controller
 {
@@ -38,23 +38,23 @@ class ShiftController extends Controller
     ) {
     }
 
+    /**
+     * @throws RandomException
+     */
     public function store(
         Request $request,
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
-        /** @var Shift $shift */
-        $shift = $event->shifts()->create($request->only([
-            'start_date',
-            'end_date',
-            'start',
-            'end',
-            'break_minutes',
-            'craft_id',
-            'number_employees',
-            'number_masters',
-            'description',
-        ]));
+        if ($request->automaticMode) {
+            $shift = $this->shiftService->createAutomatic(
+                event: $event,
+                craftId: $request->craft_id,
+                data: $request->all(),
+            );
+        } else {
+            $shift = $this->shiftService->createShiftByRequest($request->all(), $event);
+        }
 
         $shift->update([
             'event_start_day' => Carbon::parse($event->start_time)->format('Y-m-d'),
@@ -80,25 +80,12 @@ class ShiftController extends Controller
             /** @var Event $seriesEvent */
             foreach ($seriesEvents as $seriesEvent) {
                 if ($seriesEvent->id != $event->id) {
-                    $newShift = $seriesEvent->shifts()->create(
-                        array_merge(
-                            [
-                                'start_date' => $seriesEvent->start_time,
-                                'end_date' => $seriesEvent->end_time,
-                            ],
-                            $request->only(
-                                [
-                                    'start',
-                                    'end',
-                                    'break_minutes',
-                                    'craft_id',
-                                    'number_employees',
-                                    'number_masters',
-                                    'description',
-                                ]
-                            )
-                        )
+                    $newShift = $this->shiftService->createShiftBySeriesEvent(
+                        $seriesEvent,
+                        $request->all(),
+                        $request->craft_id
                     );
+
                     $newShift->update([
                         'shift_uuid' => $shiftUuid,
                         'event_start_day' => Carbon::parse($seriesEvent->start_time)->format('Y-m-d'),
@@ -121,40 +108,7 @@ class ShiftController extends Controller
         }
 
         if ($shift->infringement) {
-            $this->notificationService->setIcon('blue');
-            $this->notificationService->setPriority(1);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
-
-            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
-            $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
-            $this->notificationService->setEventId($shift->event()->first()->id);
-            $this->notificationService->setShiftId($shift->id);
-            foreach (User::role(RoleEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
-                $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
-                $broadcastMessage = [
-                    'id' => rand(1, 1000000),
-                    'type' => 'error',
-                    'message' => $notificationTitle
-                ];
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'string',
-                        'title' => __('notification.keyWords.concerns') .
-                            $shift->event()->first()->project()->first()->name . ' , ' .
-                            $shift->craft()->first()->abbreviation . ' ' .
-                            Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
-                            Carbon::parse($shift->end)->format('d.m.Y H:i'),
-                        'href' => null
-                    ],
-                ];
-
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationTo($authUser);
-                $this->notificationService->createNotification();
-            }
+            $this->shiftService->createInfringementNotification($shift);
         }
 
         $this->changeService->saveFromBuilder(

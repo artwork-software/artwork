@@ -36,7 +36,7 @@ class CalendarShowEventResource extends JsonResource
             'event_type_color' => $this->event_type->hex_code,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
-            //'created_by' => $this->creator,
+            'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'allDay' => $this->allDay,
             'shifts' => $this->shifts()->with(['shiftsQualifications'])->get(),

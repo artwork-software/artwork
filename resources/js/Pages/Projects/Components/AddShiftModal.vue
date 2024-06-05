@@ -207,7 +207,7 @@
                                                       class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
                                             />
                                             <div class="text-xs text-end mt-1 text-artwork-buttons-context">
-                                                {{ shiftForm.description.length }} / 250
+                                                {{ shiftForm.description?.length ?? 0 }} / 250
                                             </div>
                                         </div>
                                     </div>

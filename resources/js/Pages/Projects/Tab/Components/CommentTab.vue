@@ -2,8 +2,7 @@
     <div class="mt-6 p-5 bg-lightBackgroundGray">
         <div
             class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
-            <div
-                v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
+            <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
                         <textarea
                             :placeholder="$t('What should the other project members know about the project?')"
                             v-model="commentForm.text"
@@ -25,8 +24,9 @@
                             'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm text-secondaryHover']"></IconCircleCheckFilled>
                     </button>
                 </div>
+                <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
             </div>
-            <div class="text-xs text-end mt-1 text-artwork-buttons-context">{{ commentForm.text?.length ?? 0 }} / 5000</div>
+
             <div>
                 <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
                      @mouseover="commentHovered = comment.id"
@@ -39,7 +39,7 @@
                                 {{ comment.created_at }}
                             </div>
                         </div>
-                        <button v-show="this.canEditComponent && (commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id))" type="button"
+                        <button v-show="this.canEditComponent && (commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds?.includes(this.$page.props.user.id) || projectManagerIds?.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id))" type="button"
                                 @click="deleteCommentFromProject(comment)">
                             <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                             <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>

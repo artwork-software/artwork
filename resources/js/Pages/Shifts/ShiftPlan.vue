@@ -17,9 +17,6 @@
                                         @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
-            <pre>
-                {{ currentDayOnView }}
-            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
@@ -69,7 +66,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight} : {height: 20 + 'px'}">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
@@ -184,12 +181,8 @@
                                                            :color="craft.color"
                                         />
                                     </th>
-                                    <td v-for="day in days">
-                                        <div
-                                            :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
-                                            class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden"
-                                            :style="{width: day.week_separator ? '39px' : '198px'}"
-                                            @click="openShowUserShiftModal(user, day)">
+                                    <td v-for="day in days" class="flex gap-x-0.5">
+                                        <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" :style="{width: day.is_sunday ? '158px' : '198px'}" @click="openShowUserShiftModal(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
@@ -205,10 +198,13 @@
                                                     </span>
                                                 </span>
                                             </span>
-                                            <span v-if="day.week_separator &&  user?.weeklyWorkingHours" class="flex items-center justify-center h-full text-xs">
-                                                {{ user?.weeklyWorkingHours[day.week_number].toFixed(1) }}
+                                        </div>
+                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                            <span v-if="user.type === 0">
+                                                {{ user?.weeklyWorkingHours[day.week_number] }}
                                             </span>
                                         </div>
+
                                     </td>
                                 </tr>
                                 </tbody>
@@ -267,9 +263,6 @@
                                                         <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
                                                     </span>
                                                 </span>
-                                            </span>
-                                            <span v-if="day.week_separator &&  user?.weeklyWorkingHours" class="flex items-center justify-center h-full text-xs">
-                                                {{ user?.weeklyWorkingHours[day.week_number].toFixed(1) }}
                                             </span>
                                         </div>
                                     </td>
@@ -662,11 +655,7 @@ export default {
                     const nextDay = this.days[nextDayIndex];
                     const firstDay = document.getElementById(this.currentDayOnView.full_day);
                     const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                    let scrollPlus = 0;
-                    if(this.currentDayOnView.is_sunday){
-                        scrollPlus = 44;
-                    }
-                    scrollableContainer.scrollLeft = firstDay.offsetWidth * nextDayIndex + scrollPlus;
+                    scrollableContainer.scrollLeft = firstDay.offsetWidth * nextDayIndex;
                 }
             } else {
                 const previousDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);

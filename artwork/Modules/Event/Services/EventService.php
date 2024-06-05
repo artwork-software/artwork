@@ -653,11 +653,8 @@ readonly class EventService
                 'month_number' => $period->month,
                 'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
+                'add_week_separator' => $period->isSunday()
             ];
-            // add after every 7 days placeholder for week separator in frontend calendar
-            if ($period->isSunday()) {
-                $periodArray[] = ['week_separator' => true, 'week_number' => $period->weekOfYear];
-            }
         }
 
         $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(

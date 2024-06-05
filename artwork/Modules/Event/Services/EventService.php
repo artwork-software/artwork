@@ -667,7 +667,9 @@ readonly class EventService
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
                 'month_number' => $period->month,
+                'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
+                'add_week_separator' => $period->isSunday()
             ];
         }
 

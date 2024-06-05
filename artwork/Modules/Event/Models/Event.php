@@ -240,6 +240,17 @@ class Event extends Model
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function getTimesWithoutDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->format('H:i'),
+            'end' => Carbon::parse($this->end_time)->format('H:i')
+        ];
+    }
+
     public function serializeDate(DateTimeInterface $date): string
     {
         return $date->format('Y-m-d H:i:s');

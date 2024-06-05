@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center"
+            <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: event.event_type?.hex_code ?? event.event_type_color}">
                 <div class="w-40 truncate">
                     {{ eventType.abbreviation }}: {{ project?.name }}
@@ -11,7 +11,7 @@
                 </div>
             </div>
         </div>
-        <div class="bg-backgroundGray" :class="userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray'">
+        <div class="bg-backgroundGray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.is_weekend ? 'bg-white' : 'bg-backgroundGray']">
             <div v-for="shift in event.shifts" class="flex justify-between px-1">
                 <!-- Drop Element --->
                 <ShiftDropElement
@@ -71,7 +71,7 @@ export default defineComponent({
             return event.shifts.every(shift => shift.is_committed);
         },
         checkIfShiftInDayString(shift) {
-            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null){
+            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
                 return shift.days_of_shift?.includes(this.dayString['full_day']);
             } else {
                 return shift.days_of_shift?.includes(this.dayString['full_day']) && this.$page.props.user?.show_crafts?.includes(shift.craft.id);

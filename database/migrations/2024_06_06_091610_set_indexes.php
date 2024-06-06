@@ -27,7 +27,6 @@ return new class extends Migration {
         });
 
         Schema::table('availabilities', static function (Blueprint $table) {
-            $table->index(['available_type', 'available_id']);
             $table->foreign('series_id')
                 ->references('id')
                 ->on('availability_series')

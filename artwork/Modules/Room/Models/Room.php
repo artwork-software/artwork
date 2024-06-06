@@ -77,6 +77,11 @@ class Room extends Model
         'created_at'
     ];
 
+    protected $with = [
+        'admins',
+        'creator'
+    ];
+
     protected $casts = [
         'everyone_can_book' => 'boolean',
         'fallback_type' => 'boolean',

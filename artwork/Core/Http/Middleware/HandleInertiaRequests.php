@@ -55,7 +55,8 @@ class HandleInertiaRequests extends Middleware
                 ],
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
-                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false
+                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
+                'calendar_settings' => Auth::user()->calendar_settings
             ]
         );
     }

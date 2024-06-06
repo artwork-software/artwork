@@ -71,11 +71,11 @@ class Event extends Model
     use SoftDeletes;
     use Prunable;
 
-//    protected $with = [
-//        'series',
-//        'event_type',
-//        'subEvents'
-//    ];
+    protected $with = [
+        'series',
+        'event_type',
+        'subEvents'
+    ];
 
     protected $fillable = [
         'name',

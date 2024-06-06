@@ -19,6 +19,8 @@ class CalendarShowEventInShiftPlan extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
+        $shifts = $this->shifts()->with(['shiftsQualifications'])->get();
+
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
@@ -42,14 +44,14 @@ class CalendarShowEventInShiftPlan extends JsonResource
             'event_type_color' => $this->event_type->hex_code,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
-            //'created_by' => $this->creator,
+            'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'allDay' => $this->allDay,
-            'shifts' => $this->shifts()->with(['shiftsQualifications'])->get(),
+            'shifts' => $shifts,
             'subEvents' => SubEventResource::collection($this->subEvents),
             'event_type' => $this->event_type,
             'days_of_event' => $this->days_of_event,
-            'days_of_shifts' => $this->days_of_shifts,
+            'days_of_shifts' => $this->getDaysOfShifts($shifts),
             'project' => $this->project,
             'option_string' => $this->option_string,
             'is_series' => $this->is_series,

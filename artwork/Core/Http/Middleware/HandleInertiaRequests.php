@@ -43,8 +43,8 @@ class HandleInertiaRequests extends Middleware
                 'businessEmail' => $generalSettings->business_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : false,
-                'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
-                'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),
+                'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles(), true),
+                'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions(), true),
                 'myMoneySources' => Auth::guest() ?
                     false :
                     Auth::user()->accessMoneySources()->get(['money_source_id']),

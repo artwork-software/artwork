@@ -2,7 +2,8 @@
 
 namespace Tests;
 
-use Artwork\Modules\EventType\Cache\EventTypeMemoryCache;
+use Artwork\Modules\EventType\Cache\EventTypeArrayCache;
+use Artwork\Modules\ProjectTab\Cache\ProjectTabArrayCache;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -19,7 +20,8 @@ abstract class TestCase extends BaseTestCase
     public function setUp(): void
     {
         parent::setUp();
-        EventTypeMemoryCache::forgetAll();
+        EventTypeArrayCache::forgetAll();
+        ProjectTabArrayCache::forgetAll();
     }
 
     /**

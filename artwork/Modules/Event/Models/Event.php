@@ -71,11 +71,11 @@ class Event extends Model
     use SoftDeletes;
     use Prunable;
 
-    protected $with = [
-        'series',
-        'event_type',
-        'subEvents'
-    ];
+//    protected $with = [
+//        'series',
+//        'event_type',
+//        'subEvents'
+//    ];
 
     protected $fillable = [
         'name',
@@ -271,14 +271,15 @@ class Event extends Model
         return $days;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function getDaysOfShiftsAttribute(): array
+    public function getDaysOfShifts(?Collection $shifts): array
     {
         $days = [];
 
-        foreach ($this->shifts as $shift) {
+        if(!$shifts) {
+            $shifts = $this->shifts;
+        }
+
+        foreach ($shifts as $shift) {
             if ($shift->start_date === null || $shift->end_date === null) {
                 continue;
             }

@@ -25,7 +25,7 @@ class FreelancerShiftPlanResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_image,
-            'shifts' => $this->getShiftsAttribute(),
+            'shifts' => $this->loadShifts(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
             'shift_ids' => $this->getShiftIdsBetweenStartDateAndEndDate($this->startDate, $this->endDate),
             'shift_qualifications' => $this->shiftQualifications

@@ -164,11 +164,8 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        'formatted_vacation_days',
         'assigned_craft_ids'
     ];
-
-    protected $with = ['calendar_settings'];
 
     public function getTypeAttribute(): string
     {
@@ -195,7 +192,7 @@ class User extends Model implements
             ->withPivot('id', 'shift_qualification_id');
     }
 
-    public function getShiftsAttribute(): Collection
+    public function loadShifts(): Collection
     {
         return $this->shifts()
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
@@ -219,23 +216,6 @@ class User extends Model implements
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
-    }
-
-    public function getFormattedVacationDaysAttribute()
-    {
-        $vacations = $this->vacations;
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
     }
 
     //@todo: fix phpcs error - refactor function name to projectFiles
@@ -380,7 +360,7 @@ class User extends Model implements
     /**
      * @return string[]
      */
-    public function getAllPermissionsAttribute(): array
+    public function allPermissions(): array
     {
         $permissions = [];
         foreach (Permission::all() as $permission) {
@@ -394,7 +374,7 @@ class User extends Model implements
     /**
      * @return string[]
      */
-    public function getAllRolesAttribute(): array
+    public function allRoles(): array
     {
         $rolesArray = [];
         foreach (Role::all() as $roles) {
@@ -464,9 +444,6 @@ class User extends Model implements
 
     public function getCalendarFilter(): ?CalendarFilter
     {
-        if(!$filter = $this->calendar_filter()->first()) {
-            $filter = null;
-        }
-        return $filter;
+        return $this->calendar_filter()->first();
     }
 }

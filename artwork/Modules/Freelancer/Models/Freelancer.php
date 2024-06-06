@@ -109,7 +109,7 @@ class Freelancer extends Model implements Vacationer, Available
     }
 
 
-    public function getShiftsAttribute(): Collection
+    public function loadShifts(): Collection
     {
         return $this->shifts()
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])

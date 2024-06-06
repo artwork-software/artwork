@@ -77,11 +77,6 @@ class Room extends Model
         'created_at'
     ];
 
-    protected $with = [
-        'admins',
-      //  'creator'
-    ];
-
     protected $casts = [
         'everyone_can_book' => 'boolean',
         'fallback_type' => 'boolean',
@@ -159,7 +154,7 @@ class Room extends Model
     public function getEventsAt(Carbon $dateTime): Collection
     {
         return $this->events->filter(
-            fn (Event $event) => $dateTime->between(
+            fn(Event $event) => $dateTime->between(
                 Carbon::parse($event->start_time),
                 Carbon::parse($event->end_time)
             )

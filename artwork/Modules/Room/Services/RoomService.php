@@ -6,6 +6,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Resources\CalendarShowEventInShiftPlan;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
@@ -381,13 +382,11 @@ readonly class RoomService
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
+        ?CalendarFilter $calendarFilter,
         $shiftPlan = false
     ): Collection {
-        $user = Auth::user();
-        if (!$shiftPlan) {
-            $calendarFilter = $user->calendar_filter()->first();
-        } else {
-            $calendarFilter = $user->shift_calendar_filter()->first();
+        if (!$calendarFilter) {
+            $calendarFilter = new \stdClass();
         }
 
         $isLoud = $calendarFilter->is_loud ?? false;
@@ -531,7 +530,6 @@ readonly class RoomService
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
-
                     ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('id', $roomIds))
                     ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
                     ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
@@ -556,8 +554,6 @@ readonly class RoomService
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-
-
                 // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
                 $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                     $calendarPeriod->start :
@@ -589,13 +585,16 @@ readonly class RoomService
     public function collectEventsForRooms(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
+        ?CalendarFilter $calendarFilter,
         ?Project $project = null,
         $shiftPlan = false
     ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
-            $roomEvents->add($this->collectEventsForRoom($room, $calendarPeriod, $project, $shiftPlan));
+            $roomEvents->add(
+                $this->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter, $shiftPlan)
+            );
         }
         return $roomEvents;
     }
@@ -670,8 +669,9 @@ readonly class RoomService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
+        ?CalendarFilter $calendarFilter,
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
 
         $calendarData = $calendarService->createCalendarData(
             $startDate,
@@ -685,6 +685,7 @@ readonly class RoomService
             $eventTypeService,
             $areaService,
             $projectService,
+            $calendarFilter,
             $room
         );
 
@@ -721,7 +722,7 @@ readonly class RoomService
 
     public function getFallbackRoom(): Room
     {
-        if(!$fallbackRoom = $this->roomRepository->getFallbackRoom()) {
+        if (!$fallbackRoom = $this->roomRepository->getFallbackRoom()) {
             $fallbackRoom = new Room();
             $fallbackRoom->user()->associate(User::first());
             $fallbackRoom->area()->associate(Area::first());

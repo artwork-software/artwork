@@ -92,10 +92,10 @@ class Project extends Model
         'own_copyright' => 'boolean',
     ];
 
-    protected $with = [
-        'shiftRelevantEventTypes',
-        'state'
-    ];
+//    protected $with = [
+//        'shiftRelevantEventTypes',
+//        'state'
+//    ];
 
     public function costCenter(): BelongsTo
     {

@@ -11,5 +11,4 @@ class EventTypeArrayCache implements ArrayCache
     use UsesArrayCache;
 
     protected static string $service = ProjectTabService::class;
-
 }

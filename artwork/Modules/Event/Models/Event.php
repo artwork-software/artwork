@@ -122,7 +122,6 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'days_of_shifts',
         'shift_container_height',
         'formatted_dates',
         'dates_for_series_event'

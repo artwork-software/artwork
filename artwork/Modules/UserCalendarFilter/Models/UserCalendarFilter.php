@@ -3,9 +3,8 @@
 namespace Artwork\Modules\UserCalendarFilter\Models;
 
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -29,10 +28,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $created_at
  * @property string $updated_at
  */
-class UserCalendarFilter extends Model
+class UserCalendarFilter extends CalendarFilter
 {
-    use HasFactory;
-
     protected $fillable = [
         'start_date',
         'end_date',
@@ -69,9 +66,4 @@ class UserCalendarFilter extends Model
         'room_attributes' => 'array',
         'room_categories' => 'array',
     ];
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
-    }
 }

@@ -109,6 +109,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
+                Auth::user()->getCalendarFilter(),
                 $request->boolean('atAGlance')
             )
         );
@@ -299,7 +300,6 @@ class EventController extends Controller
             );
         }
 
-
         $projectFirstEvent = $firstEvent->project()->first();
 
         if ($request->is_series) {
@@ -384,7 +384,6 @@ class EventController extends Controller
             $this->createRequestNotification($request, $firstEvent);
         }
 
-
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($firstEvent);
@@ -392,14 +391,23 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        $this->eventService->createSeriesEvent(
-            $startDate,
-            $endDate,
-            $request,
-            $series,
-            $projectId,
-            Auth::user()
-        );
+        Event::create([
+            'name' => $request->title,
+            'eventName' => $request->eventName,
+            'description' => $request->description,
+            'start_time' => $startDate,
+            'end_time' => $endDate,
+            'occupancy_option' => $request->isOption,
+            'audience' => $request->audience,
+            'is_loud' => $request->isLoud,
+            'event_type_id' => $request->eventTypeId,
+            'room_id' => $request->roomId,
+            'user_id' => Auth::id(),
+            'project_id' => $projectId ?: null,
+            'is_series' => true,
+            'series_id' => $series->id,
+            'allDay' => $request->allDay
+        ]);
     }
 
     public function commitShifts(Request $request): void

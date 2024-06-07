@@ -37,7 +37,8 @@ test('users with the permission can create eventTypes', function (): void {
 
 test('users with the permission can update eventTypes', function (): void {
     $this->patch("/event_types/{$this->event_type->id}", [
-        'name' => 'TestEventType'
+        'name' => 'TestEventType',
+        'project_mandatory' => false,
     ]);
 
     $this->assertDatabaseHas('event_types', [

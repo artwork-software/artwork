@@ -14,7 +14,7 @@ class ChecklistPolicy
     public function view(User $user, Checklist $checklist): bool
     {
         return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
-            $checklist->departments->users->contains($user->id);
+            $checklist->departments->users->contains($user->id) || $checklist->projects->users->contains($user->id);
     }
 
     public function create(): bool
@@ -22,9 +22,10 @@ class ChecklistPolicy
         return true;
     }
 
-    public function update(User $user): bool
+    public function update(User $user, Checklist $checklist): bool
     {
-        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
+        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
+            $checklist->project->users->contains($user->id);
     }
 
     public function delete(User $user): bool

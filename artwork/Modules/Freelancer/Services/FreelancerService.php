@@ -50,6 +50,7 @@ readonly class FreelancerService
                 'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
             ];
 
+
             if ($addVacationsAndAvailabilities) {
                 $freelancerData['vacations'] = $freelancer->getVacationDays();
                 $freelancerData['availabilities'] = $this->freelancerRepository

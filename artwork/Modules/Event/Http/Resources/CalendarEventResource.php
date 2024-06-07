@@ -20,7 +20,7 @@ class CalendarEventResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $this->userCalendarSettings = Auth::user()->calendar_settings();
+        $this->userCalendarSettings = Auth::user()->calendar_settings;
 
         $output = [
             'resource' => class_basename($this),

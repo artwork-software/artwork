@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\EventType\Services\EventTypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -19,16 +20,9 @@ class EventTypeController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, EventTypeService $eventTypeService): RedirectResponse
     {
-        EventType::create([
-            'name' => $request->get('name'),
-            'hex_code' => $request->get('hex_code', '#EC7A3D'),
-            'project_mandatory' => $request->get('project_mandatory'),
-            'individual_name' => $request->get('individual_name'),
-            'abbreviation' => $request->get('abbreviation'),
-        ]);
-
+        $eventTypeService->save($this->setProperties(new EventType(), $request));
         return Redirect::back();
     }
 
@@ -39,9 +33,9 @@ class EventTypeController extends Controller
         ]);
     }
 
-    public function update(Request $request, EventType $eventType): RedirectResponse
+    public function update(Request $request, EventType $eventType, EventTypeService $eventTypeService): RedirectResponse
     {
-        $eventType->update($request->all());
+        $eventTypeService->save($this->setProperties($eventType, $request));
 
         return Redirect::route('event_types.management');
     }
@@ -65,5 +59,16 @@ class EventTypeController extends Controller
     public function updateRelevant(Request $request, EventType $eventType): void
     {
         $eventType->update(['relevant_for_shift' => $request->relevant_for_shift]);
+    }
+
+    private function setProperties(EventType $eventType, Request $request): EventType
+    {
+        $eventType->name = $request->get('name', $eventType->name);
+        $eventType->hex_code = $request->get('hex_code') ?? $eventType->hex_code ?: '#EC7A3D';
+        $eventType->project_mandatory = $request->get('project_mandatory', $eventType->project_mandatory);
+        $eventType->individual_name = $request->get('individual_name',  $eventType->individual_name);
+        $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
+
+        return $eventType;
     }
 }

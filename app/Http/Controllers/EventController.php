@@ -95,22 +95,23 @@ class EventController extends Controller
         AreaService $areaService,
         ProjectService $projectService
     ): Response {
+        $dto = $eventService->createEventManagementDto(
+            $calendarService,
+            $roomService,
+            $userService,
+            $filterService,
+            $filterController,
+            $projectTabService,
+            $eventTypeService,
+            $roomCategoryService,
+            $roomAttributeService,
+            $areaService,
+            $projectService,
+            Auth::user()->getCalendarFilter(),
+            $request->boolean('atAGlance'));
         return Inertia::render(
             'Events/EventManagement',
-            $eventService->createEventManagementDto(
-                $calendarService,
-                $roomService,
-                $userService,
-                $filterService,
-                $filterController,
-                $projectTabService,
-                $eventTypeService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService,
-                $projectService,
-                $request->boolean('atAGlance')
-            )
+            $dto
         );
     }
 
@@ -176,7 +177,7 @@ class EventController extends Controller
             ->whereDate(
                 'event_start_day',
                 Carbon::now()->format('Y-m-d')
-            )->with(['event','event.project','event.room'])->get();
+            )->with(['event', 'event.project', 'event.room'])->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
@@ -193,7 +194,7 @@ class EventController extends Controller
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
             \session()->get('locale') ??
-                config('app.fallback_locale')
+            config('app.fallback_locale')
         )->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
@@ -299,7 +300,6 @@ class EventController extends Controller
             );
         }
 
-
         $projectFirstEvent = $firstEvent->project()->first();
 
         if ($request->is_series) {
@@ -384,7 +384,6 @@ class EventController extends Controller
             $this->createRequestNotification($request, $firstEvent);
         }
 
-
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($firstEvent);
@@ -392,14 +391,23 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        $this->eventService->createSeriesEvent(
-            $startDate,
-            $endDate,
-            $request,
-            $series,
-            $projectId,
-            Auth::user()
-        );
+        Event::create([
+            'name' => $request->title,
+            'eventName' => $request->eventName,
+            'description' => $request->description,
+            'start_time' => $startDate,
+            'end_time' => $endDate,
+            'occupancy_option' => $request->isOption,
+            'audience' => $request->audience,
+            'is_loud' => $request->isLoud,
+            'event_type_id' => $request->eventTypeId,
+            'room_id' => $request->roomId,
+            'user_id' => Auth::id(),
+            'project_id' => $projectId ?: null,
+            'is_series' => true,
+            'series_id' => $series->id,
+            'allDay' => $request->allDay
+        ]);
     }
 
     public function commitShifts(Request $request): void
@@ -457,12 +465,16 @@ class EventController extends Controller
                                         'notification.keyWords.concerns_time_period',
                                         [
                                             'start' =>
-                                                Carbon::parse($firstShift->event_start_day . '
-                                                 ' . $firstShift->start)
-                                                ->format('d.m.Y H:i'),
+                                                Carbon::parse(
+                                                    $firstShift->event_start_day . '
+                                                 ' . $firstShift->start
+                                                )
+                                                    ->format('d.m.Y H:i'),
                                             'end' =>
-                                                Carbon::parse($lastShift->event_end_day . '
-                                                ' . $lastShift->end)->format('d.m.Y H:i')
+                                                Carbon::parse(
+                                                    $lastShift->event_end_day . '
+                                                ' . $lastShift->end
+                                                )->format('d.m.Y H:i')
                                         ],
                                         $user->language
                                     ),
@@ -529,7 +541,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -579,7 +591,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -613,7 +625,6 @@ class EventController extends Controller
 
     private function createConflictNotification($collision, Event $event): void
     {
-
         $room = $event->room()->first();
         $project = $event->project()->first();
 
@@ -653,7 +664,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1742,7 +1753,7 @@ class EventController extends Controller
     public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Events', [
-            'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
+            'trashed_events' => Event::onlyTrashed()->get()->map(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->eventName,
                 'project' => $event->project,

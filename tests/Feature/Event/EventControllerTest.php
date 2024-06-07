@@ -37,7 +37,7 @@ beforeEach(function () {
 test('views events', function () {
     $today = today();
 
-    $calendarFilter = $this->auth_user->calendar_filter()->first();
+    $calendarFilter = $this->auth_user->getCalendarFilter();
     $calendarFilter->end_date = $today;
     $calendarFilter->save();
 

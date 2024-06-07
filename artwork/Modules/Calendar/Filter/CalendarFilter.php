@@ -10,5 +10,4 @@ abstract class CalendarFilter extends Model
 {
     use HasFactory;
     use BelongsToUser;
-
 }

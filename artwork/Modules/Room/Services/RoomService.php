@@ -382,8 +382,7 @@ readonly class RoomService
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
-        ?CalendarFilter $calendarFilter,
-        $shiftPlan = false
+        ?CalendarFilter $calendarFilter = null,
     ): Collection {
         if (!$calendarFilter) {
             $calendarFilter = new \stdClass();
@@ -593,7 +592,7 @@ readonly class RoomService
 
         foreach ($roomsWithEvents as $room) {
             $roomEvents->add(
-                $this->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter, $shiftPlan)
+                $this->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter)
             );
         }
         return $roomEvents;

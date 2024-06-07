@@ -312,6 +312,11 @@ return new class extends Migration {
                 ->on('crafts')
                 ->cascadeOnUpdate();
         });
+
+        Schema::table('events', static function(Blueprint $t) {
+            $t->index('start_time');
+            $t->index('end_time');
+        });
     }
 
     /**

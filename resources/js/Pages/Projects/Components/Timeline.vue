@@ -1,6 +1,6 @@
 <template>
     <div class="w-[175px]">
-        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-t-lg mb-0.5"  @click="showAddTimeLineModal = true">
+        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-lg mb-0.5"  @click="showAddTimeLineModal = true">
             <div class="uppercase text-white text-xs">
                 {{ $t('Timeline') }}
             </div>
@@ -17,7 +17,7 @@
                      @click="showAddTimeLineModal = true"
                      class="flex flex-col relative"
                      v-if="time.start !== null && time.end !== null">
-                    <div class="text-xs bg-gray-900 p-2 text-white h-full">
+                    <div class="text-xs bg-gray-900 p-2 text-white h-full rounded-lg">
                         <p v-if="time.start_date === time.end_date">
                             {{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.end }}
                         </p>

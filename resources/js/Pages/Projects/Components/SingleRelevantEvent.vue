@@ -1,5 +1,5 @@
 <template>
-    <div class="mb-3">
+    <div class="mb-3 flex flex-col gap-2">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg"
              :style="{backgroundColor: event.event_type.hex_code}">
@@ -67,7 +67,7 @@
             :eventId="event.event.id"
         />
         <!-- Event Timeline -->
-        <div class="flex flex-col mt-3 gap-3 h-auto" v-if="showShift">
+        <div class="" v-if="showShift">
             <TimeLineShiftsComponent :time-line="event?.timeline"
                                      :shifts="event?.shifts"
                                      :crafts="crafts"

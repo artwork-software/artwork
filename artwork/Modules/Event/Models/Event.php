@@ -62,7 +62,6 @@ use Illuminate\Support\Collection;
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts
- * @property-read int $shift_container_height
  */
 class Event extends Model
 {
@@ -122,7 +121,6 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'shift_container_height',
         'formatted_dates',
         'dates_for_series_event'
     ];
@@ -131,7 +129,7 @@ class Event extends Model
     {
         parent::boot();
 
-        static::saving(function (Event $event) {
+        static::saving(function (Event $event): void {
             /** @var EventService $eventService */
             $eventService = app()->get(EventService::class);
             $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
@@ -398,37 +396,6 @@ class Event extends Model
     public function scopeOrderByStartTime(Builder $builder, string $direction = 'ASC'): Builder
     {
         return $builder->orderBy('start_time', $direction);
-    }
-
-    public function getShiftContainerHeightAttribute(): int
-    {
-        $earliestStartTime = $this->earliest_start_datetime ?? Carbon::today();
-        $latestEndTime = $this->latest_end_datetime ?? Carbon::today();
-
-
-        // Konfigurationswerte für minimale und maximale Schichthöhe
-        $minShiftHeight = (int)config('shift.min_shift_height');
-        $maxShiftHeight = (int)config('shift.max_shift_height');
-        $shiftHeightFactor = (int)config('shift.shift_height_factor');
-
-        if ($earliestStartTime === null || $latestEndTime === null) {
-            return $minShiftHeight;
-        }
-        // Berechne die Differenz in Minuten
-        $diff = $latestEndTime->diffInMinutes($earliestStartTime);
-
-        // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
-
-        $pixelHeight = $diff / 60  * $shiftHeightFactor;
-
-
-        // Prüfe auf Sonderfälle und return die entsprechende Höhe
-        if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
-            return $minShiftHeight;
-        }
-
-        // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
-        return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
     }
 
     /**

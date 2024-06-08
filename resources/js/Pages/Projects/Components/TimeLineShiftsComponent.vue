@@ -1,16 +1,15 @@
 <template>
-    <div class="flex h-full gap-2">
+    <div :id="'event-container-inner-' + event.id" class="flex flex-row items-start gap-2">
         <Timeline :time-line="timeLine" :event="event"/>
-        <div class="w-[175px]" v-for="shift in shifts">
+        <template v-for="shift in event.shifts">
             <SingleShift @dropFeedback="dropFeedback"
                          :shift="shift"
                          :crafts="crafts"
                          :event="event"
                          :currentUserCrafts="currentUserCrafts"
                          :shift-qualifications="shiftQualifications"
-                         :shift-time-presets="shiftTimePresets"
-            />
-        </div>
+                         :shift-time-presets="shiftTimePresets"/>
+        </template>
 
         <!-- Empty -->
         <div class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
@@ -43,6 +42,7 @@ import {XIcon} from "@heroicons/vue/solid";
 import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
 import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ShiftPlanPlacementHandler from "@/Helper/ShiftPlanPlacementHandler.vue";
 
 export default defineComponent({
     name: "TimeLineShiftsComponent",
@@ -73,12 +73,31 @@ export default defineComponent({
                 start: null,
                 end: null,
                 cameFormBuffer: false
-            }
+            },
+            elementsHeightInPixelsPerMinute: 0.75, // 200 Pixel / (4 * 60 Minuten),
+            elementsHeaderHeight: 36
         }
     },
     mixins: [IconLib],
     emits: ['dropFeedback'],
+    mounted() {
+        this.getPlacementHandler().initialize();
+    },
+    updated() {
+        this.getPlacementHandler().reinitialize();
+    },
     methods: {
+        getPlacementHandler() {
+            return new ShiftPlanPlacementHandler(
+                this.event.id,
+                this.shifts.concat(this.timeLine),
+                'event-container-inner-',
+                'timeline-container-',
+                'shift-container-',
+                this.elementsHeightInPixelsPerMinute,
+                this.elementsHeaderHeight
+            );
+        },
         dropFeedback(event){
             this.$emit('dropFeedback', event)
         },

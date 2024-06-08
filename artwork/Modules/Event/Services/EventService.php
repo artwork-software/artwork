@@ -50,6 +50,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 readonly class EventService
 {
@@ -852,6 +854,7 @@ readonly class EventService
             $shiftStart = Carbon::parse($shift->start)->format('H:i:s');
             $shiftStartDate = Carbon::parse($shift->start_date)->format('Y-m-d');
             $startDateTime = Carbon::parse($shiftStartDate . ' ' . $shiftStart);
+            Log::debug($startDateTime->format('d.m.Y H:i:s'));
             if ($startDateTime->isBefore($earliestStartTime)) {
                 $earliestStartTime = $startDateTime;
             }

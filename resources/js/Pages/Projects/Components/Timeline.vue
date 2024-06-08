@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <AddTimeLineModal v-if="showAddTimeLineModal" :event="event" :timeLine="timeLine" @closed="showAddTimeLineModal = false"/>
+    <AddTimeLineModal v-if="showAddTimeLineModal" :event="event" :timeLine="timeLine" @closed="this.closeModal()"/>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -52,10 +52,19 @@ export default defineComponent({
         'timeLine',
         'event'
     ],
+    emits: [
+        'wantsFreshPlacements'
+    ],
     data(){
         return {
             showAddTimeLineModal: false
         }
+    },
+    methods: {
+        closeModal() {
+            this.$emit('wantsFreshPlacements');
+            this.showAddTimeLineModal = false;
+        }
     }
-})
+});
 </script>

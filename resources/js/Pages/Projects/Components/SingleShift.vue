@@ -159,7 +159,7 @@
                    :shift="shift"
                    :event="event"
                    :crafts="crafts"
-                   @closed="openEditShiftModal = false"
+                   @closed="this.closeAddShiftModal()"
                    :currentUserCrafts="currentUserCrafts"
                    :edit="true"
                    :shift-qualifications="shiftQualifications"
@@ -229,7 +229,7 @@ export default defineComponent({
         'shiftQualifications',
         'shiftTimePresets'
     ],
-    emits: ['dropFeedback'],
+    emits: ['dropFeedback', 'wantsFreshPlacements'],
     data() {
         return {
             openEditShiftModal: false,
@@ -321,6 +321,13 @@ export default defineComponent({
         }
     },
     methods: {
+        wantsFreshPlacements() {
+            this.$emit('wantsFreshPlacements');
+        },
+        closeAddShiftModal() {
+            this.wantsFreshPlacements();
+            this.openEditShiftModal = false;
+        },
         getShiftQualificationById(id) {
             return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
         },
@@ -352,6 +359,9 @@ export default defineComponent({
                 {
                     preserveScroll: true,
                     preserveState: true,
+                    onSuccess: () => {
+                        this.wantsFreshPlacements();
+                    }
                 }
             );
         },

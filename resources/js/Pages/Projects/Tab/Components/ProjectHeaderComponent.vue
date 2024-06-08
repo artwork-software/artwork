@@ -11,11 +11,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
+        TagComponent,
         BaseModal,
         BaseMenu,
         UserPopoverTooltip,
@@ -180,7 +182,7 @@ export default {
                 <div class="w-full mt-1 text-secondary subpixel-antialiased">
                     <div v-if="headerObject.firstEventInProject && headerObject.lastEventInProject">
                         {{ $t('Time period/opening hours') }}: {{ headerObject.firstEventInProject?.start_time }}
-                        <span v-if="firstEventInProject?.start_time">{{ $t('Clock') }} -</span>
+                        <span v-if="headerObject.firstEventInProject?.start_time">{{ $t('Clock') }} -</span>
                         {{ headerObject.lastEventInProject?.end_time }}
                         <span v-if="headerObject.lastEventInProject?.end_time">{{ $t('Clock') }}</span>
                     </div>
@@ -234,7 +236,6 @@ export default {
         <div class="ml-14">
             <slot />
         </div>
-
 
         <project-data-edit-modal
             :show="editingProject"

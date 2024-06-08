@@ -193,7 +193,7 @@ export default {
         show: Boolean,
         project: Object,
         groupProjects: Array,
-        currentGroup: Object,
+        currentGroup: Object|String,
         states: Array
     },
     components: {

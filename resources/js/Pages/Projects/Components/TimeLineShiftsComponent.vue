@@ -1,8 +1,12 @@
 <template>
     <div :id="'event-container-inner-' + event.id" class="flex flex-row items-start gap-2">
-        <Timeline :time-line="timeLine" :event="event"/>
+        <Timeline :time-line="timeLine"
+                  :event="event"
+                  @wantsFreshPlacements="this.reinitializeEventContainerPlacements()"
+        />
         <template v-for="shift in event.shifts">
             <SingleShift @dropFeedback="dropFeedback"
+                         @wantsFreshPlacements="this.reinitializeEventContainerPlacements()"
                          :shift="shift"
                          :crafts="crafts"
                          :event="event"
@@ -83,9 +87,6 @@ export default defineComponent({
     mounted() {
         this.getPlacementHandler().initialize();
     },
-    updated() {
-        this.getPlacementHandler().reinitialize();
-    },
     methods: {
         getPlacementHandler() {
             return new ShiftPlanPlacementHandler(
@@ -97,6 +98,9 @@ export default defineComponent({
                 this.elementsHeightInPixelsPerMinute,
                 this.elementsHeaderHeight
             );
+        },
+        reinitializeEventContainerPlacements() {
+            this.getPlacementHandler().reinitialize();
         },
         dropFeedback(event){
             this.$emit('dropFeedback', event)
@@ -110,17 +114,19 @@ export default defineComponent({
             }
         },
         updateBuffer(buffer){
-            this.buffer = buffer
-            this.showChooseShiftSeriesModal = false
-            this.showAddShiftModal = true
+            this.buffer = buffer;
+            this.showChooseShiftSeriesModal = false;
+            this.showAddShiftModal = true;
         },
         closeAddShiftModal(){
-            this.showAddShiftModal = false
+            this.showAddShiftModal = false;
             this.buffer = {
                 onlyThisDay: false,
                 start: null,
                 end: null,
-            }
+            };
+
+            this.reinitializeEventContainerPlacements();
         }
     },
 })

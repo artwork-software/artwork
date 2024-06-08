@@ -39,7 +39,6 @@ export default class {
     }
 
     initialize() {
-        var startTime = performance.now();
         let overlayDiv = this.addOverlayDiv()
 
         if (this.timelinesAndShifts.length === 0) {
@@ -49,9 +48,7 @@ export default class {
         this.calculateHeights();
         this.calculateMargins();
 
-        var endTime = performance.now()
         this.removeOverlayDiv(overlayDiv);
-        console.debug(`Call to initialize took ${endTime - startTime} ms.`);
     }
 
     reinitialize() {

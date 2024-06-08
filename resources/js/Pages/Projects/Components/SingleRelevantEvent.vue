@@ -62,13 +62,14 @@
         />
         <ImportShiftTemplate
             v-if="showImportShiftTemplateModal"
-            @closed="showImportShiftTemplateModal = false"
+            @closed="this.closeImportShiftTemplateModal()"
             :event_type="event.event_type"
             :eventId="event.event.id"
         />
         <!-- Event Timeline -->
         <div class="" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event?.timeline"
+            <TimeLineShiftsComponent ref="timelineShiftsComponent"
+                                     :time-line="event?.timeline"
                                      :shifts="event?.shifts"
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
@@ -136,6 +137,10 @@ export default defineComponent({
         }
     },
     methods: {
+        closeImportShiftTemplateModal() {
+            this.showImportShiftTemplateModal = false;
+            this.$refs.timelineShiftsComponent.reinitializeEventContainerPlacements();
+        },
         dropFeedback(event) {
             this.$emit('dropFeedback', event)
         },

@@ -4,8 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Availability\Models\Availability;
-use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -164,6 +163,7 @@ readonly class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
         ?Room $room = null,
         ?Project $project = null,
     ): array {
@@ -177,7 +177,6 @@ readonly class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
-                'month_number' => $period->month,
             ];
         }
 
@@ -198,12 +197,12 @@ readonly class CalendarService
                     $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
-                        $userService->getAuthUser()->calendar_filter
+                        $calendarFilter
                     ),
                     $calendarPeriod,
                     $project
                 ) :
-                $roomService->collectEventsForRoom($room, $calendarPeriod, $project),
+                $roomService->collectEventsForRoom($room, $calendarPeriod, $calendarFilter, $project),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
                 [],

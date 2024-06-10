@@ -29,7 +29,7 @@ class FreelancerShiftResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_image,
-            'shifts' => $this->getShiftsAttribute($startDate, $endDate),
+            'shifts' => $this->loadShifts($startDate, $endDate),
         ];
     }
 }

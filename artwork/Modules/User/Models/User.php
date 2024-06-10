@@ -5,6 +5,7 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
@@ -230,7 +231,7 @@ class User extends Model implements
             ->withPivot('id', 'shift_qualification_id');
     }
 
-    public function getShiftsAttribute(): Collection
+    public function loadShifts(): Collection
     {
         return $this->shifts()
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
@@ -415,7 +416,10 @@ class User extends Model implements
     /**
      * @return string[]
      */
-    public function getAllPermissionsAttribute(): array
+    /**
+     * @return string[]
+     */
+    public function allPermissions(): array
     {
         $permissions = [];
         foreach (Permission::all() as $permission) {
@@ -426,10 +430,7 @@ class User extends Model implements
         return $permissions;
     }
 
-    /**
-     * @return string[]
-     */
-    public function getAllRolesAttribute(): array
+    public function allRoles(): array
     {
         $rolesArray = [];
         foreach (Role::all() as $roles) {
@@ -497,4 +498,8 @@ class User extends Model implements
         return $builder->where('can_work_shifts', true);
     }
 
+    public function getCalendarFilter(): ?CalendarFilter
+    {
+        return $this->calendar_filter()->first();
+    }
 }

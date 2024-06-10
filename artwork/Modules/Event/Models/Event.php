@@ -268,11 +268,14 @@ class Event extends Model
         return $days;
     }
 
-    public function getDaysOfShifts(?Collection $shifts): array
+    public function getDaysOfShifts(Shift|Collection $shifts = null): array
     {
+        if ($shifts instanceof Shift) {
+            $shifts = collect([$shifts]);
+        }
         $days = [];
 
-        if(!$shifts) {
+        if (!$shifts) {
             $shifts = $this->shifts;
         }
 

@@ -59,7 +59,7 @@ class UserCalenderAboController extends Controller
         // filter event room on selected areas
         $events = $events->filter(function ($event) use ($calendarAbo) {
             if ($calendarAbo->specific_areas) {
-                return in_array($event->room->area_id, $calendarAbo->selected_areas);
+                return in_array($event->room->area_id, $calendarAbo->selected_areas, true);
             }
             return true;
         });

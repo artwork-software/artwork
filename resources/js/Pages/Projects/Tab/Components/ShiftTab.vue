@@ -180,10 +180,13 @@
                                      :event-types="headerObject.eventTypes"
                                      :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
+                                     :shift-time-presets="loadedProjectInformation['ShiftTab'].shift_time_presets"
                 />
             </div>
         </div>
     </div>
+
+
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
@@ -205,6 +208,7 @@ import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default defineComponent({
     name: "ShiftTab",
+    inheritAttrs: false,
     props: [
         'loadedProjectInformation',
         'headerObject',

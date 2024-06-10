@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -30,10 +31,13 @@ readonly class UserService
     {
     }
 
-    public function getAuthUser(): ?User
+    public function getAuthUser(bool $needCalendarAbo = false): ?User
     {
         /** @var User $user */
         $user = Auth::user();
+        if($needCalendarAbo && !$user->calendarAbo){
+            $user->load(['calendarAbo']);
+        }
 
         return $user;
     }
@@ -79,7 +83,11 @@ readonly class UserService
                 'user' => $desiredUserResource,
                 'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
+                // dayServices group by pivot_date
+                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
             ];
+
+            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
 
             if ($addVacationsAndAvailabilities) {
                 $userData['vacations'] = $user->getVacationDays();
@@ -94,7 +102,37 @@ readonly class UserService
             $usersWithPlannedWorkingHours[] = $userData;
         }
 
+        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
         return $usersWithPlannedWorkingHours;
+    }
+
+    /**
+     * Berechnet die Arbeitsstunden für jede Kalenderwoche innerhalb eines bestimmten Datumsbereichs.
+     *
+     * @param User $user
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return string []
+     */
+    private function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
+    {
+        // first create a carbon period for the given date range
+        $period = Carbon::parse($startDate)->toPeriod($endDate);
+
+        $weeklyWorkingHours = [];
+
+        // iterate over each week and calculate the working hours
+        foreach ($period as $week) {
+            $startDate = $week->copy()->startOfWeek();
+            $endDate = $week->copy()->endOfWeek();
+            $workingHours = $user->plannedWorkingHours(
+                    $startDate,
+                    $endDate
+                ) - $user->weekly_working_hours;
+            $weeklyWorkingHours[$week->format('W')] = $workingHours;
+        }
+
+        return $weeklyWorkingHours;
     }
 
     public function getAuthUserCrafts(): Collection
@@ -141,7 +179,6 @@ readonly class UserService
             $calendarData,
             $dateToShow
         ] = $calendarService->getAvailabilityData(
-            null,
             $user,
             $month
         );
@@ -161,7 +198,7 @@ readonly class UserService
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setDaysWithEvents($daysWithEvents)
-            ->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
+            ->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setProjects($projectService->getAll())
@@ -192,10 +229,11 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(User $user): array
+    public function getUserCalendarFilterDatesOrDefault(?CalendarFilter $userCalendarFilter): array
     {
-        $userCalendarFilter = $user->calendar_filter;
-
+        if (!$userCalendarFilter) {
+            $userCalendarFilter = new \stdClass();
+        }
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
             !is_null($userCalendarFilter?->end_date);
         $startDate = $hasUserCalendarFilterDates ?
@@ -225,5 +263,10 @@ readonly class UserService
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
+    }
+
+    public function getAdminUser(): User
+    {
+        return $this->userRepository->getAdminUser();
     }
 }

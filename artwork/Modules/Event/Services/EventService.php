@@ -4,10 +4,13 @@ namespace Artwork\Modules\Event\Services;
 
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
@@ -48,6 +51,8 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 readonly class EventService
 {
@@ -486,7 +491,7 @@ readonly class EventService
             ->getEventsWhereUserHasShifts($userId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -558,7 +563,7 @@ readonly class EventService
             ->getEventsWhereFreelancerHasShifts($freelancerId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -617,7 +622,7 @@ readonly class EventService
             ->getEventsWhereServiceProviderHasShifts($serviceProviderId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -636,6 +641,7 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
+        DayServicesService $dayServicesService
     ): ShiftPlanDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
 
@@ -651,7 +657,9 @@ readonly class EventService
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
                 'month_number' => $period->month,
+                'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
+                'add_week_separator' => $period->isSunday()
             ];
         }
 
@@ -681,14 +689,16 @@ readonly class EventService
             )
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
-            ->setFilterOptions($filterService->getCalendarFilterDefinitions(
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService,
-                $roomService
-            ))
+            ->setFilterOptions(
+                $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $projectService,
+                    $roomService
+                )
+            )
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
@@ -716,7 +726,8 @@ readonly class EventService
                     ServiceProviderShiftPlanResource::class
                 )
             )
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setDayServices($dayServicesService->getAll());
     }
 
     /**
@@ -754,9 +765,10 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
         ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
@@ -769,7 +781,8 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService
+            $projectService,
+            $calendarFilter,
         );
 
         return EventManagementDto::newInstance()
@@ -819,14 +832,22 @@ readonly class EventService
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
     }
 
+    /** @return Event[]|Collection */
+    public function getAll(): Collection|array
+    {
+        return $this->eventRepository->getAll();
+    }
+
     public function getEarliestStartTime(Event $event): Carbon
     {
         $earliestStartTime = $event->start_time;
 
         foreach ($event->timelines as $timeline) {
             $timelineStart = Carbon::parse($timeline->start)->format('H:i:s');
-            $startDateTime = Carbon::parse($timeline->start_date->format('Y-m-d') . '
-             ' . $timelineStart);
+            $startDateTime = Carbon::parse(
+                $timeline->start_date->format('Y-m-d') . '
+             ' . $timelineStart
+            );
             if ($startDateTime->isBefore($earliestStartTime)) {
                 $earliestStartTime = $startDateTime;
             }
@@ -836,6 +857,7 @@ readonly class EventService
             $shiftStart = Carbon::parse($shift->start)->format('H:i:s');
             $shiftStartDate = Carbon::parse($shift->start_date)->format('Y-m-d');
             $startDateTime = Carbon::parse($shiftStartDate . ' ' . $shiftStart);
+
             if ($startDateTime->isBefore($earliestStartTime)) {
                 $earliestStartTime = $startDateTime;
             }
@@ -868,5 +890,39 @@ readonly class EventService
         }
 
         return $latestEndTime;
+    }
+
+
+    public function createSeriesEvent(
+        $startDate,
+        $endDate,
+        $request,
+        $series,
+        $projectId,
+        $user
+    ): Model|Event {
+        $event = new Event();
+
+        $event->name = $request->title;
+        $event->eventName = $request->eventName;
+        $event->description = $request->description;
+        $event->start_time = $startDate;
+        $event->end_time = $endDate;
+        $event->occupancy_option = $request->isOption;
+        $event->audience = $request->audience;
+        $event->is_loud = $request->isLoud;
+        $event->event_type_id = $request->eventTypeId;
+        $event->room_id = $request->roomId;
+        $event->project_id = $projectId ?: null;
+        $event->is_series = true;
+        $event->series_id = $series->id;
+        $event->allDay = $request->allDay;
+        $event->creator()->associate($user);
+        return $this->eventRepository->save($event);
+    }
+
+    public function save(Event $event): Event
+    {
+        return $this->eventRepository->save($event);
     }
 }

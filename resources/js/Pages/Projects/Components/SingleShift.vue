@@ -1,6 +1,6 @@
 <template>
-    <div  :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
-        <div class="rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
+    <div :class="[highlight, 'w-[175px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
+        <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
                     'bg-green-500' :
@@ -27,37 +27,37 @@
                 <div>
                     <BaseMenu dots-size="h-4 w-4">
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="editShift"
+                            <div @click="editShift"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconEdit
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Edit') }}
-                            </a>
+                            </div>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="this.clearShiftUsers(shift)"
+                            <div @click="this.clearShiftUsers(shift)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconCircleX
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Clear') }}
-                            </a>
+                            </div>
                         </MenuItem>
                         <MenuItem v-slot="{ active }">
-                            <a href="#" @click="deleteShift(shift.id)"
+                            <div @click="deleteShift(shift.id)"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                 <IconTrash
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Delete') }}
-                            </a>
+                            </div>
                         </MenuItem>
                     </BaseMenu>
                 </div>
             </div>
         </div>
-        <div class="mt-1 min-h-[144px] overflow-x-scroll rounded-b-lg bg-gray-200 px-1 py-2" :style="{height: shift.shift_height + 'px'}">
+        <div class="h-full mt-1 rounded-b-lg bg-gray-200 px-1 py-2">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
@@ -159,10 +159,11 @@
                    :shift="shift"
                    :event="event"
                    :crafts="crafts"
-                   @closed="openEditShiftModal = false"
+                   @closed="this.closeAddShiftModal()"
                    :currentUserCrafts="currentUserCrafts"
                    :edit="true"
                    :shift-qualifications="shiftQualifications"
+                   :shift-time-presets="shiftTimePresets"
     />
     <ChooseDeleteUserShiftModal v-if="showDeleteUserModal"
                                 @close-modal="this.closeDeleteUserModal"
@@ -225,9 +226,10 @@ export default defineComponent({
         'crafts',
         'event',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'shiftTimePresets'
     ],
-    emits: ['dropFeedback'],
+    emits: ['dropFeedback', 'wantsFreshPlacements'],
     data() {
         return {
             openEditShiftModal: false,
@@ -319,6 +321,13 @@ export default defineComponent({
         }
     },
     methods: {
+        wantsFreshPlacements() {
+            this.$emit('wantsFreshPlacements');
+        },
+        closeAddShiftModal() {
+            this.wantsFreshPlacements();
+            this.openEditShiftModal = false;
+        },
         getShiftQualificationById(id) {
             return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
         },
@@ -350,6 +359,9 @@ export default defineComponent({
                 {
                     preserveScroll: true,
                     preserveState: true,
+                    onSuccess: () => {
+                        this.wantsFreshPlacements();
+                    }
                 }
             );
         },

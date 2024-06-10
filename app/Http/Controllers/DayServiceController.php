@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\DayService\Http\Requests\CreateDayServiceRequest;
 use Artwork\Modules\DayService\Models\DayService;
+use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Services\DayServicesService;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class DayServiceController extends Controller
@@ -70,5 +75,24 @@ class DayServiceController extends Controller
     public function destroy(DayService $dayService): void
     {
         //
+    }
+
+    public function attachDayServiceable(
+        DayService $dayService,
+        int $dayServiceable,
+        Request $request
+    ): void {
+        $modelInstance = $this->dayServicesService->findModelInstance($request->modelType, $dayServiceable);
+        $this->dayServicesService->attachDayServiceable($dayService, $modelInstance, $request->date);
+    }
+
+
+
+    public function removeDayServiceable(
+        int $dayServiceable,
+        Request $request
+    ): void {
+        $modelInstance = $this->dayServicesService->findModelInstance($request->modelType, $dayServiceable);
+        $modelInstance->dayServices()->wherePivot('date', $request->date)->detach($request->dayService);
     }
 }

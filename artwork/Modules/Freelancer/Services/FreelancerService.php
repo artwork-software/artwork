@@ -48,7 +48,9 @@ readonly class FreelancerService
             $freelancerData = [
                 'freelancer' => $desiredFreelancerResource,
                 'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
+                'dayServices' => $freelancer->dayServices?->groupBy('pivot.date'),
             ];
+
 
             if ($addVacationsAndAvailabilities) {
                 $freelancerData['vacations'] = $freelancer->getVacationDays();
@@ -100,7 +102,6 @@ readonly class FreelancerService
             $dateToShow
         ] = $calendarService->getAvailabilityData(
             $freelancer,
-            null,
             $month
         );
 

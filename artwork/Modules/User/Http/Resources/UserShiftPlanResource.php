@@ -32,12 +32,12 @@ class UserShiftPlanResource extends JsonResource
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-            'shifts' => $this->getShiftsAttribute(),
+            'shifts' => $this->loadShifts(),
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
             'shift_ids' => $this->getShiftIdsBetweenStartDateAndEndDate($this->startDate, $this->endDate),
-            'shift_qualifications' => $this->shiftQualifications
+            'shift_qualifications' => $this->shiftQualifications,
         ];
     }
 

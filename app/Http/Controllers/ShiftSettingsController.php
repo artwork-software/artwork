@@ -6,6 +6,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\ShiftTimePreset\Models\ShiftTimePreset;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,7 +20,8 @@ class ShiftSettingsController extends Controller
             'crafts' => Craft::all(),
             'eventTypes' => EventType::all(),
             'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get(),
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'shiftTimePresets' => ShiftTimePreset::all()
         ]);
     }
 

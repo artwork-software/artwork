@@ -25,4 +25,16 @@ readonly class ProjectTabRepository extends BaseRepository
 
         return $projectTab;
     }
+
+    public function findByName(string $name): ?ProjectTab
+    {
+        return ProjectTab::query()
+            ->where('name', $name)
+            ->first();
+    }
+
+    public function findById(int $id): ?ProjectTab
+    {
+        return ProjectTab::find($id);
+    }
 }

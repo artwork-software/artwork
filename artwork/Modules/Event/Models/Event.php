@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
@@ -61,7 +62,6 @@ use Illuminate\Support\Collection;
  * @property SeriesEvents|null $series
  * @property-read array<string> $days_of_event
  * @property-read array<string> $days_of_shifts
- * @property-read int $shift_container_height
  */
 class Event extends Model
 {
@@ -121,10 +121,21 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'days_of_shifts',
-        'shift_container_height',
-        'formatted_dates'
+        'formatted_dates',
+        'dates_for_series_event'
     ];
+
+    public static function boot(): void
+    {
+        parent::boot();
+
+        static::saving(function (Event $event): void {
+            /** @var EventService $eventService */
+            $eventService = app()->get(EventService::class);
+            $event->earliest_start_datetime = $eventService->getEarliestStartTime($event);
+            $event->latest_end_datetime = $eventService->getLatestEndTime($event);
+        });
+    }
 
     public function comments(): HasMany
     {
@@ -226,6 +237,17 @@ class Event extends Model
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function getTimesWithoutDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->format('H:i'),
+            'end' => Carbon::parse($this->end_time)->format('H:i')
+        ];
+    }
+
     public function serializeDate(DateTimeInterface $date): string
     {
         return $date->format('Y-m-d H:i:s');
@@ -246,14 +268,15 @@ class Event extends Model
         return $days;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function getDaysOfShiftsAttribute(): array
+    public function getDaysOfShifts(?Collection $shifts): array
     {
         $days = [];
 
-        foreach ($this->shifts as $shift) {
+        if(!$shifts) {
+            $shifts = $this->shifts;
+        }
+
+        foreach ($shifts as $shift) {
             if ($shift->start_date === null || $shift->end_date === null) {
                 continue;
             }
@@ -345,15 +368,15 @@ class Event extends Model
             }
         )->orWhere(
             function ($query) use ($start, $end): void {
-            // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
                 $query->where('start_time', '<', $start)
-                ->whereBetween('end_time', [$start, $end]);
+                    ->whereBetween('end_time', [$start, $end]);
             }
         )->orWhere(
             function ($query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
                 $query->whereBetween('start_time', [$start, $end])
-                ->where('end_time', '>', $end);
+                    ->where('end_time', '>', $end);
             }
         );
     }
@@ -375,31 +398,20 @@ class Event extends Model
         return $builder->orderBy('start_time', $direction);
     }
 
-    public function getShiftContainerHeightAttribute(): int
+    /**
+     * @return array<string, string>
+     */
+    public function getDatesForSeriesEventAttribute(): array
     {
-        $earliestStartTime = $this->earliest_start_datetime;
-        $latestEndTime = $this->latest_end_datetime;
-
-        if ($earliestStartTime === null || $latestEndTime === null) {
-            return 0;
-        }
-        // Berechne die Differenz in Minuten
-        $diff = $latestEndTime->diffInMinutes($earliestStartTime);
-
-        // Berechne die Pixelhöhe unter Verwendung des Konfigurationsfaktors
-        $shiftHeightFactor = (int)config('shift.shift_height_factor');
-        $pixelHeight = $diff / 60  * $shiftHeightFactor;
-
-        // Konfigurationswerte für minimale und maximale Schichthöhe
-        $minShiftHeight = (int)config('shift.min_shift_height');
-        $maxShiftHeight = (int)config('shift.max_shift_height');
-
-        // Prüfe auf Sonderfälle und return die entsprechende Höhe
-        if ($pixelHeight === 0 || ($this->shifts->isEmpty() && $this->timelines->isEmpty())) {
-            return $minShiftHeight;
+        if (!$this->is_series) {
+            return [];
         }
 
-        // Begrenze die Pixelhöhe auf die minimalen und maximalen Werte
-        return max($minShiftHeight, min($pixelHeight, $maxShiftHeight));
+        return [
+            'start' => Carbon::parse($this->start_time)->format('Y-m-d'),
+            'end' => Carbon::parse($this->series->end_date)->format('Y-m-d'),
+            'formatted_start' => Carbon::parse($this->start_time)->translatedFormat('d. M Y'),
+            'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
+        ];
     }
 }

@@ -4,6 +4,8 @@ namespace Artwork\Modules\Calendar\Services;
 
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -66,19 +68,12 @@ readonly class CalendarService
      */
     //@todo: fix phpcs error - fix complexity
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function getAvailabilityData(?Freelancer $freelancer = null, ?User $user = null, $month = null): array
+    public function getAvailabilityData(Available $available, $month = null): array
     {
         $vacationDays = [];
         $availabilityDays = [];
-        if ($freelancer) {
-            $vacationDays = $freelancer->vacations()->orderBy('date', 'ASC')->get();
-            $availabilityDays = $freelancer->availabilities()->orderBy('date', 'ASC')->get();
-        }
-
-        if ($user) {
-            $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
-            $availabilityDays = $user->availabilities()->orderBy('date', 'ASC')->get();
-        }
+        $vacationDays = $available->vacations()->orderBy('date', 'ASC')->get();
+        $availabilityDays = $available->availabilities()->orderBy('date', 'ASC')->get();
 
         $currentMonth = Carbon::now()->startOfMonth();
 
@@ -169,6 +164,7 @@ readonly class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
         ?Room $room = null,
         ?Project $project = null,
     ): array {
@@ -182,7 +178,6 @@ readonly class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
-                'month_number' => $period->month,
             ];
         }
 
@@ -203,12 +198,12 @@ readonly class CalendarService
                     $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
-                        $userService->getAuthUser()->calendar_filter
+                        $calendarFilter
                     ),
                     $calendarPeriod,
                     $project
                 ) :
-                $roomService->collectEventsForRoom($room, $calendarPeriod, $project),
+                $roomService->collectEventsForRoom($room, $calendarPeriod, $calendarFilter, $project),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
                 [],

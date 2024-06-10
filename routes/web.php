@@ -1298,18 +1298,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::get('index', [\App\Http\Controllers\ProjectRoleController::class, 'index'])
-            ->name('project-roles.index');
-        //project-roles.store
-        Route::post('store', [\App\Http\Controllers\ProjectRoleController::class, 'store'])
-            ->name('project-roles.store');
-        //project-roles.update
-        Route::patch('{projectRole}/update', [\App\Http\Controllers\ProjectRoleController::class, 'update'])
-            ->name('project-roles.update');
-        //project-roles.destroy
-        Route::delete('{projectRole}/destroy', [\App\Http\Controllers\ProjectRoleController::class, 'destroy'])
-            ->name('project-roles.destroy');
+        Route::resource('project-roles', \App\Http\Controllers\ProjectRoleController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
     });
+
+    // route for shift time preset
+    Route::group(['prefix' => 'shift-time-preset'], function (): void {
+        Route::resource('shift-time-preset', \App\Http\Controllers\ShiftTimePresetController::class)
+            ->only(['store', 'update', 'destroy']);
+    });
+
+    // attach DayService to entity
+    Route::post(
+        '/day-service/{dayService}/attach/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'attachDayServiceable']
+    )
+        ->name('day-service.attach');
+
+    //remove.day.service.from.user
+    Route::patch(
+        '/day-service/remove/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
+    )
+        ->name('remove.day.service.from.user');
 });
 
 Route::get(

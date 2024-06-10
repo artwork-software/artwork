@@ -106,7 +106,7 @@
                                 </div>
                             </div>
                         </DashboardCard>
-                        <div class="flex justify-end mt-3">
+                        <div class="flex justify-end mt-3" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
                             <a :href="route('shifts.plan')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
                     </div>

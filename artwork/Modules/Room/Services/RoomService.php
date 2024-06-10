@@ -90,6 +90,7 @@ readonly class RoomService
         );
     }
 
+
     public function checkTemporaryChanges(
         $roomId,
         $oldTemporary,

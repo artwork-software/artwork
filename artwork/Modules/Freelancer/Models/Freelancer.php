@@ -5,6 +5,8 @@ namespace Artwork\Modules\Freelancer\Models;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\DayService\Models\DayServiceable;
+use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
@@ -38,11 +40,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class Freelancer extends Model implements Vacationer, Available
+class Freelancer extends Model implements Vacationer, Available, DayServiceable
 {
     use HasFactory;
     use GoesOnVacation;
     use HasAvailability;
+    use CanHasDayServices;
 
     /**
      * @var string[]
@@ -71,7 +74,7 @@ class Freelancer extends Model implements Vacationer, Available
         'display_name',
         'type',
         'profile_photo_url',
-        'assigned_craft_ids'
+        'assigned_craft_ids',
     ];
 
     protected $casts = [
@@ -174,4 +177,5 @@ class Freelancer extends Model implements Vacationer, Available
     {
         return $builder->where('can_work_shifts', true);
     }
+
 }

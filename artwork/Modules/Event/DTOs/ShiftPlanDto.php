@@ -44,6 +44,16 @@ class ShiftPlanDto extends BaseDto
 
     public ?Collection $shiftQualifications = null;
 
+    public ?Collection $dayServices = null;
+
+
+    public function setDayServices(?Collection $dayServices): self
+    {
+        $this->dayServices = $dayServices;
+
+        return $this;
+    }
+
     public function setEvents(?Collection $events): self
     {
         $this->events = $events;
@@ -272,6 +282,11 @@ class ShiftPlanDto extends BaseDto
         return $this->shiftQualifications;
     }
 
+    public function getDayServices(): ?Collection
+    {
+        return $this->dayServices;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -294,7 +309,8 @@ class ShiftPlanDto extends BaseDto
             'usersForShifts' => $this->getUsersForShifts(),
             'freelancersForShifts' => $this->getFreelancersForShifts(),
             'serviceProvidersForShifts' => $this->getServiceProvidersForShifts(),
-            'shiftQualifications' => $this->getShiftQualifications()
+            'shiftQualifications' => $this->getShiftQualifications(),
+            'dayServices' => $this->getDayServices(),
         ];
     }
 }

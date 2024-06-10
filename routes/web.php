@@ -1307,6 +1307,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::resource('shift-time-preset', \App\Http\Controllers\ShiftTimePresetController::class)
             ->only(['store', 'update', 'destroy']);
     });
+
+    // attach DayService to entity
+    Route::post(
+        '/day-service/{dayService}/attach/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'attachDayServiceable']
+    )
+        ->name('day-service.attach');
+
+    //remove.day.service.from.user
+    Route::patch(
+        '/day-service/remove/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
+    )
+        ->name('remove.day.service.from.user');
 });
 
 Route::get(

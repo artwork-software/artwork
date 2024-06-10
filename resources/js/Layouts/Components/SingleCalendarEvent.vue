@@ -52,7 +52,7 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
-                        {{ event.title }}
+                        {{ event.eventName ?? event.project.name }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.project?.state?.color"

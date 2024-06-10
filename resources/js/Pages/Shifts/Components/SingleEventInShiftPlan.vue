@@ -38,7 +38,7 @@ const pageProps = defineProps({
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 rounded-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.event_type?.hex_code), color: TextColorWithDarken(event.event_type?.hex_code)}">
                 <div class="w-40 truncate">
-                    {{ event.event_type.abbreviation }}: {{ event?.project?.name }}
+                    {{ event.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
                 </div>
                 <div class="text-xs">
                     <div v-if="event.allDay">

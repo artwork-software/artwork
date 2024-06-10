@@ -3,7 +3,11 @@
 namespace Artwork\Modules\DayService\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
 * @property int $id
@@ -22,4 +26,26 @@ class DayService extends Model
         'icon',
         'hex_color',
     ];
+
+    // Definieren Sie die Beziehung für jedes Modelltyp separat
+    public function users(): MorphToMany
+    {
+        return $this->morphedByMany(User::class, 'day_serviceable')
+            ->withTimestamps()
+            ->withPivot('date');
+    }
+
+    public function freelancers(): MorphToMany
+    {
+        return $this->morphedByMany(Freelancer::class, 'day_serviceable')
+            ->withTimestamps()
+            ->withPivot('date');
+    }
+
+    public function serviceProviders(): MorphToMany
+    {
+        return $this->morphedByMany(ServiceProvider::class, 'day_serviceable')
+            ->withTimestamps()
+            ->withPivot('date');
+    }
 }

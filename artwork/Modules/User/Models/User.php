@@ -7,6 +7,8 @@ use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\DayService\Models\DayServiceable;
+use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\MoneySource\Models\MoneySource;
@@ -116,7 +118,8 @@ class User extends Model implements
     AuthorizableContract,
     CanResetPasswordContract,
     Vacationer,
-    Available
+    Available,
+    DayServiceable
 {
     use Authenticatable;
     use Authorizable;
@@ -132,6 +135,7 @@ class User extends Model implements
     use Searchable;
     use GoesOnVacation;
     use HasAvailability;
+    use CanHasDayServices;
 
     protected $fillable = [
         'first_name',
@@ -186,10 +190,10 @@ class User extends Model implements
         'full_name',
         'type',
         'formatted_vacation_days',
-        'assigned_craft_ids'
+        'assigned_craft_ids',
     ];
 
-    protected $with = ['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'];
+    protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
 
     public function getTypeAttribute(): string
     {
@@ -492,4 +496,5 @@ class User extends Model implements
     {
         return $builder->where('can_work_shifts', true);
     }
+
 }

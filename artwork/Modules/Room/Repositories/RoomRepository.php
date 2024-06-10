@@ -50,6 +50,7 @@ readonly class RoomRepository extends BaseRepository
             ->get();
     }
 
+
     public function getUserWhereIsAdmin(int|Room $room, int $userId): Collection
     {
         if (!$room instanceof Room) {

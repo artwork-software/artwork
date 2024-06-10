@@ -448,12 +448,14 @@ export default class {
     parseShiftDateFromDateAndTime(dateString, timeString) {
         const dateParts = dateString.split(' '),
             day = parseInt(dateParts[0]),
-            //@todo: fix 2024??
-            month = new Date(Date.parse(dateParts[1] + " 1, 2024")).getMonth(),
+            curYear = new Date().getFullYear(),
+            month = new Date(Date.parse(dateParts[1] + " 1, " + curYear)).getMonth(),
             year = parseInt(dateParts[2]),
             timeParts = timeString.split(':'),
             hours = parseInt(timeParts[0]),
             minutes = parseInt(timeParts[1]);
+
+        console.debug(curYear);
 
         return new Date(year, month, day, hours, minutes);
     }

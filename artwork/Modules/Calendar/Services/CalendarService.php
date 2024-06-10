@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -67,19 +68,12 @@ readonly class CalendarService
      */
     //@todo: fix phpcs error - fix complexity
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function getAvailabilityData(?Freelancer $freelancer = null, ?User $user = null, $month = null): array
+    public function getAvailabilityData(Available $available, $month = null): array
     {
         $vacationDays = [];
         $availabilityDays = [];
-        if ($freelancer) {
-            $vacationDays = $freelancer->vacations()->orderBy('date', 'ASC')->get();
-            $availabilityDays = $freelancer->availabilities()->orderBy('date', 'ASC')->get();
-        }
-
-        if ($user) {
-            $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
-            $availabilityDays = $user->availabilities()->orderBy('date', 'ASC')->get();
-        }
+        $vacationDays = $available->vacations()->orderBy('date', 'ASC')->get();
+        $availabilityDays = $available->availabilities()->orderBy('date', 'ASC')->get();
 
         $currentMonth = Carbon::now()->startOfMonth();
 

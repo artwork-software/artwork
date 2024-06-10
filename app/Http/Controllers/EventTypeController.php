@@ -66,7 +66,7 @@ class EventTypeController extends Controller
         $eventType->name = $request->get('name', $eventType->name);
         $eventType->hex_code = $request->get('hex_code') ?? $eventType->hex_code ?: '#EC7A3D';
         $eventType->project_mandatory = $request->get('project_mandatory', $eventType->project_mandatory);
-        $eventType->individual_name = $request->get('individual_name',  $eventType->individual_name);
+        $eventType->individual_name = $request->get('individual_name', $eventType->individual_name);
         $eventType->abbreviation = $request->get('abbreviation', $eventType->abbreviation);
 
         return $eventType;

@@ -282,12 +282,7 @@ class ProjectController extends Controller
             ->map(fn($department) => Department::query()->findOrFail($department['id']));
         //@todo how did this line ever work?
         //->map(fn(Department $department) => $this->authorize('update', $department));
-
-
-
         //$this->projectService->storeByRequest($request);
-
-
         $project = Project::create([
             'name' => $request->name,
             'number_of_participants' => $request->number_of_participants,
@@ -2043,7 +2038,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function getGroupOutput($project)
+    private function getGroupOutput($project): string
     {
         $group = DB::table('project_groups')->select('*')->where('project_id', $project->id)->first();
         return $group ? Project::find($group->group_id) : '';
@@ -2086,7 +2081,7 @@ class ProjectController extends Controller
                 'end' => $timeline['end'],
                 'description' => nl2br($timeline['description_without_html'])
             ]);
-            if($event = $findTimeLine->event()->first()) {
+            if ($event = $findTimeLine->event()->first()) {
                 $event->touchQuietly();
                 $this->eventService->save($event);
             }

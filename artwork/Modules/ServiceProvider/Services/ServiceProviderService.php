@@ -44,6 +44,7 @@ readonly class ServiceProviderService
             $serviceProvidersWithPlannedWorkingHours[] = [
                 'service_provider' => $desiredServiceProviderResource,
                 'plannedWorkingHours' => $serviceProvider->plannedWorkingHours($startDate, $endDate),
+                'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
             ];
         }
 

@@ -3,6 +3,8 @@
 namespace Artwork\Modules\ServiceProvider\Models;
 
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\DayService\Models\DayServiceable;
+use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\ServiceProviderContacts\Models\ServiceProviderContacts;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
@@ -34,9 +36,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class ServiceProvider extends Model
+class ServiceProvider extends Model implements DayServiceable
 {
     use HasFactory;
+    use CanHasDayServices;
 
     protected $fillable = [
         'profile_image',
@@ -60,7 +63,7 @@ class ServiceProvider extends Model
         'name',
         'type',
         'profile_photo_url',
-        'assigned_craft_ids'
+        'assigned_craft_ids',
     ];
 
     protected $casts = [
@@ -161,4 +164,5 @@ class ServiceProvider extends Model
     {
         return $builder->where('can_work_shifts', true);
     }
+
 }

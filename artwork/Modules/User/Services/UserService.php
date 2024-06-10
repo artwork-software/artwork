@@ -31,10 +31,13 @@ readonly class UserService
     {
     }
 
-    public function getAuthUser(): ?User
+    public function getAuthUser(bool $needCalendarAbo = false): ?User
     {
         /** @var User $user */
         $user = Auth::user();
+        if($needCalendarAbo && !$user->calendarAbo){
+            $user->load(['calendarAbo']);
+        }
 
         return $user;
     }
@@ -80,6 +83,8 @@ readonly class UserService
                 'user' => $desiredUserResource,
                 'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
+                // dayServices group by pivot_date
+                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
             ];
 
             $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
@@ -174,7 +179,6 @@ readonly class UserService
             $calendarData,
             $dateToShow
         ] = $calendarService->getAvailabilityData(
-            null,
             $user,
             $month
         );

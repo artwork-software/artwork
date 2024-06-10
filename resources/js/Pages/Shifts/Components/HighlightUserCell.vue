@@ -1,6 +1,6 @@
 
 <template>
-    <div @click="$emit('highlightShiftsOfUser', item.id, type)" class="w-full p-2 my-2 text-white text-xs rounded-lg flex items-center gap-2"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10), divStyle}">
+    <div @click="$emit('highlightShiftsOfUser', item.id, type)" class="w-full p-2 text-white text-xs rounded-lg flex items-center gap-2"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10), divStyle}">
         <div v-if="!$page.props.user.compact_mode">
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>
@@ -26,7 +26,8 @@
             <div v-else class="text-ellipsis w-32">
                 <div class="flex">
                     <div class="truncate">
-                {{ item.provider_name }}</div>
+                        {{ item.provider_name }}
+                    </div>
                     <div class="ml-1"> (DL) </div>
                 </div>
                 <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>

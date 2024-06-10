@@ -10,6 +10,7 @@ use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
@@ -638,6 +639,7 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
+        DayServicesService $dayServicesService
     ): ShiftPlanDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
 
@@ -722,7 +724,8 @@ readonly class EventService
                     ServiceProviderShiftPlanResource::class
                 )
             )
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setDayServices($dayServicesService->getAll());
     }
 
     /**

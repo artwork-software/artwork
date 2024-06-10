@@ -95,8 +95,32 @@
                     </div>
                 <div v-show="showUserOverview" ref="userOverview" class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                     <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background" :style="{top: calculateTopPositionOfUserOverView}">
-                        <div>
-                            <!-- placeholder day shifts -->
+                        <div class="flex items-center justify-end gap-x-3">
+                            <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                <span class="sr-only">Use setting</span>
+                                <span :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                      <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                         <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                      </span>
+                                      <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                          <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                      </span>
+                                </span>
+                            </Switch>
+                            <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
+                                <Switch @click="toggleDayServiceMode" v-model="dayServiceMode" :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                    <span class="sr-only">Use setting</span>
+                                    <span :class="[dayServiceMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        <span :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <component :is="selectedDayService?.icon" class="w-5 h-5" :style="{color: selectedDayService?.hex_color}" />
+                                        </span>
+                                        <span :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <component :is="selectedDayService?.icon" class="w-5 h-5" :style="{color: selectedDayService?.hex_color}" />
+                                        </span>
+                                    </span>
+                                </Switch>
+                                <DayServiceFilter :current-selected-day-service="selectedDayService" :day-services="dayServices" @update:current-selected-day-service="updateSelectedDayService" />
+                            </div>
                         </div>
                         <div class="flex items-center justify-end gap-x-3 pr-20">
                             <Switch @click="toggleHighlightMode" v-model="highlightMode" :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -110,17 +134,7 @@
                                       </span>
                                 </span>
                             </Switch>
-                            <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                <span class="sr-only">Use setting</span>
-                                <span :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                         <IconPencil stroke-width="1.5" class="w-5 h-5" />
-                                      </span>
-                                      <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                          <IconPencil stroke-width="1.5" class="w-5 h-5" />
-                                      </span>
-                                </span>
-                            </Switch>
+
                             <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode" :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                 <span class="sr-only">Use setting</span>
                                 <span :class="[$page.props.user.compact_mode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
@@ -152,7 +166,7 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right -mt-2"
+                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                         :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
@@ -181,8 +195,9 @@
                                                            :color="craft.color"
                                         />
                                     </th>
-                                    <td v-for="day in days" class="flex gap-x-0.5">
-                                        <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" :style="{width: day.is_sunday ? '158px' : '198px'}" @click="openShowUserShiftModal(user, day)">
+                                    <td v-for="day in days" class="flex gap-x-0.5 relative">
+                                        <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden" :style="{width: day.is_sunday ? '158px' : '198px'}"
+                                             @click="handleCellClick(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
@@ -198,13 +213,18 @@
                                                     </span>
                                                 </span>
                                             </span>
+
                                         </div>
-                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                        <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
+                                            <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
+                                                <component :is="userDayService.icon" class="h-4 w-4" :style="{color: userDayService.hex_color}"/>
+                                            </div>
+                                        </div>
+                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
                                             <span v-if="user.type === 0">
                                                 {{ user?.weeklyWorkingHours[day.week_number] }}
                                             </span>
                                         </div>
-
                                     </td>
                                 </tr>
                                 </tbody>
@@ -217,7 +237,7 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
                                                      :expected-hours="user.expectedWorkingHours"
@@ -244,9 +264,9 @@
                                                            @highlightShiftsOfUser="highlightShiftsOfUser"
                                                            :color="null"/>
                                     </th>
-                                    <td v-for="day in days">
+                                    <td v-for="day in days" class="flex gap-x-0.5 relative">
                                         <div class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
-                                             @click="openShowUserShiftModal(user, day)"
+                                             @click="handleCellClick(user, day)"
                                              :style="{width: day.week_separator ? '39px' : '198px'}"
                                              :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
@@ -263,6 +283,16 @@
                                                         <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
                                                     </span>
                                                 </span>
+                                            </span>
+                                        </div>
+                                        <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-1 top-1.5 flex items-center justify-end">
+                                            <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
+                                                <component :is="userDayService.icon" class="h-4 w-4" :style="{color: userDayService.hex_color}"/>
+                                            </div>
+                                        </div>
+                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                            <span v-if="user.type === 0">
+                                                {{ user?.weeklyWorkingHours[day.week_number] }}
                                             </span>
                                         </div>
                                     </td>
@@ -353,11 +383,13 @@ import {IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vu
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        DayServiceFilter,
         IconPencil,
         SingleEventInShiftPlan,
         CraftFilter,
@@ -404,7 +436,8 @@ export default {
         'serviceProvidersForShifts',
         'user_filters',
         'crafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'dayServices'
     ],
     data() {
         return {
@@ -418,6 +451,8 @@ export default {
             idToHighlight: null,
             typeToHighlight: null,
             multiEditMode: false,
+            dayServiceMode: false,
+            selectedDayService: this.dayServices ? this.dayServices[0] : null,
             checkedShiftsForMultiEdit: [],
             userForMultiEdit: null,
             multiEditFeedback: '',
@@ -458,7 +493,8 @@ export default {
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
                     availabilities: user.availabilities,
-                    weeklyWorkingHours: user.weeklyWorkingHours
+                    weeklyWorkingHours: user.weeklyWorkingHours,
+                    dayServices: user.dayServices
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {
@@ -469,6 +505,7 @@ export default {
                     vacations: freelancer.vacations,
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
                     availabilities: freelancer.availabilities,
+                    dayServices: freelancer.dayServices
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {
@@ -477,6 +514,7 @@ export default {
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
+                    dayServices: service_provider.dayServices
                 })
             })
             return users;
@@ -506,6 +544,53 @@ export default {
         },
     },
     methods: {
+        handleCellClick(user, day){
+            if(this.dayServiceMode ){
+                let type = null;
+                switch (user.type) {
+                    case 0:
+                        type = 'user';
+                        break;
+                    case 1:
+                        type = 'freelancer';
+                        break;
+                    case 2:
+                        type = 'service_provider';
+                        break;
+                }
+                const hasDayService = user.dayServices?.[day.without_format]?.some(dayService => dayService.id === this.selectedDayService.id)
+                // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
+                if (hasDayService){
+                    Inertia.patch(route('remove.day.service.from.user', {
+                        dayServiceable: user.element.id,
+                    }), {
+                        dayService: this.selectedDayService.id,
+                        date: day.without_format,
+                        modelType: type
+                    }, {
+                        preserveScroll: true,
+                        preserveState: true
+                    });
+                } else {
+                    Inertia.post(route('day-service.attach', {
+                        dayServiceable: user.element.id,
+                        dayService: this.selectedDayService.id,
+                    }), {
+                        date: day.without_format,
+                        modelType: type
+                    }, {
+                        preserveScroll: true,
+                        preserveState: true
+                    });
+                }
+
+            } else {
+                this.openShowUserShiftModal(user, day)
+            }
+        },
+        updateSelectedDayService(dayService) {
+            this.selectedDayService = dayService;
+        },
         calculateTopPositionOfUserOverView() {
             return this.showUserOverview ? this.userOverviewHeight + 'px' : '0';
         },
@@ -699,11 +784,18 @@ export default {
         },
         toggleHighlightMode() {
             this.multiEditMode = false;
+            this.dayServiceMode = false;
             this.highlightMode = !this.highlightMode;
         },
         toggleMultiEditMode() {
             this.highlightMode = false;
+            this.dayServiceMode = false;
             this.multiEditMode = !this.multiEditMode;
+        },
+        toggleDayServiceMode() {
+            this.highlightMode = false;
+            this.multiEditMode = false;
+            this.dayServiceMode = !this.dayServiceMode;
         },
         toggleCompactMode() {
             Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {

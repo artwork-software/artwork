@@ -138,6 +138,7 @@ class RoomController extends Controller
         RoomAttributeService $roomAttributeService,
         AreaService $areaService
     ): Response|ResponseFactory {
+        $room->load(['creator']);
         return Inertia::render(
             'Rooms/Show',
             $roomService->createShowDto(

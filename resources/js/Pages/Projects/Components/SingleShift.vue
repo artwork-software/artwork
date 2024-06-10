@@ -1,6 +1,6 @@
 <template>
-    <div  :class="highlight" :style="{marginTop: shift.margin_top + 'px'}">
-        <div class="rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
+    <div :class="[highlight, 'w-[175px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
+        <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
                     'bg-green-500' :
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-1 min-h-[144px] overflow-x-scroll rounded-b-lg bg-gray-200 px-1 py-2" :style="{height: shift.shift_height + 'px'}">
+        <div class="h-full mt-1 rounded-b-lg bg-gray-200 px-1 py-2">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
@@ -159,7 +159,7 @@
                    :shift="shift"
                    :event="event"
                    :crafts="crafts"
-                   @closed="openEditShiftModal = false"
+                   @closed="this.closeAddShiftModal()"
                    :currentUserCrafts="currentUserCrafts"
                    :edit="true"
                    :shift-qualifications="shiftQualifications"
@@ -229,7 +229,7 @@ export default defineComponent({
         'shiftQualifications',
         'shiftTimePresets'
     ],
-    emits: ['dropFeedback'],
+    emits: ['dropFeedback', 'wantsFreshPlacements'],
     data() {
         return {
             openEditShiftModal: false,
@@ -321,6 +321,13 @@ export default defineComponent({
         }
     },
     methods: {
+        wantsFreshPlacements() {
+            this.$emit('wantsFreshPlacements');
+        },
+        closeAddShiftModal() {
+            this.wantsFreshPlacements();
+            this.openEditShiftModal = false;
+        },
         getShiftQualificationById(id) {
             return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
         },
@@ -352,6 +359,9 @@ export default defineComponent({
                 {
                     preserveScroll: true,
                     preserveState: true,
+                    onSuccess: () => {
+                        this.wantsFreshPlacements();
+                    }
                 }
             );
         },

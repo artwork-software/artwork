@@ -208,6 +208,7 @@ import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default defineComponent({
     name: "ShiftTab",
+    inheritAttrs: false,
     props: [
         'loadedProjectInformation',
         'headerObject',

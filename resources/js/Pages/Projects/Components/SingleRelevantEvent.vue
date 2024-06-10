@@ -1,5 +1,5 @@
 <template>
-    <div class="mb-3">
+    <div class="mb-3 flex flex-col gap-2">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg"
              :style="{backgroundColor: event.event_type.hex_code}">
@@ -62,13 +62,14 @@
         />
         <ImportShiftTemplate
             v-if="showImportShiftTemplateModal"
-            @closed="showImportShiftTemplateModal = false"
+            @closed="this.closeImportShiftTemplateModal()"
             :event_type="event.event_type"
             :eventId="event.event.id"
         />
         <!-- Event Timeline -->
-        <div class="flex justify-start mt-3 overflow-x-scroll gap-3" :style="{height: event.event?.shift_container_height + 'px', maxHeight: event.event?.shift_container_height + 'px', }" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event?.timeline"
+        <div class="" v-if="showShift">
+            <TimeLineShiftsComponent ref="timelineShiftsComponent"
+                                     :time-line="event?.timeline"
                                      :shifts="event?.shifts"
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
@@ -136,6 +137,10 @@ export default defineComponent({
         }
     },
     methods: {
+        closeImportShiftTemplateModal() {
+            this.showImportShiftTemplateModal = false;
+            this.$refs.timelineShiftsComponent.reinitializeEventContainerPlacements();
+        },
         dropFeedback(event) {
             this.$emit('dropFeedback', event)
         },

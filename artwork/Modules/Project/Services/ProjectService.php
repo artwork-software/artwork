@@ -463,59 +463,16 @@ readonly class ProjectService
                 $shift->load('shiftsQualifications');
             }
 
-
-            $shiftsToReturn = $event->shifts->map(function ($shift) use ($event) {
-                $shift->margin_top = $this->getMarginTopForShift($event, $shift);
-                return $shift;
-            });
-
-
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
-                'shifts' => $shiftsToReturn,
+                'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
             ];
         }
-        //rsort($eventsWithRelevant);
-        //dd($eventsWithRelevant);
+
         return $eventsWithRelevant;
-    }
-
-    private function getMarginTopForShift(Event $event, Shift $shift): float
-    {
-        // get difference between $event->earliest_start_datetime and $shift->start_date + $shift->start
-        $eventEarliestStartDateTime = Carbon::parse($event->earliest_start_datetime);
-        $startDate = Carbon::parse($shift->start_date);
-        $startTime = Carbon::parse($shift->start);
-        $endDate = Carbon::parse($shift->end_date);
-        $endTime = Carbon::parse($shift->end);
-        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
-        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
-
-        // calculate the difference
-        $diff = $eventEarliestStartDateTime->diffInMinutes($shiftStartDateTime);
-        $pixelHeight = $diff / 60 * 180;
-
-        $shiftDuration = $shiftEndDateTime->diffInMinutes($shiftStartDateTime);
-        $shiftHeight = $shiftDuration / 60 * 180;
-
-        if ($shiftHeight > (int)config('shift.max_shift_height')) {
-            return 38;
-        }
-
-        // if the calculated height is null or 0 than return 36
-        if ($pixelHeight === null || $pixelHeight === 0) {
-            return 38;
-        }
-
-
-        // if the calculated height is greater than the max_shift_height than return the max_shift_height - $shiftHeight
-        if ($pixelHeight > (int)config('shift.max_shift_height')) {
-            return (int)config('shift.max_shift_height') - $shiftHeight;
-        }
-        return $pixelHeight;
     }
 
     /**

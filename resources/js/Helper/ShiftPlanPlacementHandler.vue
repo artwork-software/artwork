@@ -39,11 +39,11 @@ export default class {
     }
 
     initialize() {
-        let overlayDiv = this.addOverlayDiv()
-
         if (this.timelinesAndShifts.length === 0) {
             return;
         }
+
+        let overlayDiv = this.addOverlayDiv()
 
         this.calculateHeights();
         this.calculateMargins();

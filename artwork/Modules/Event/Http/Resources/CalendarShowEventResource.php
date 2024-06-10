@@ -20,12 +20,12 @@ class CalendarShowEventResource extends JsonResource
 
         $shifts = $this->shifts()->with(['shiftsQualifications'])->first();
 
-        $project = $this->project->without([
+        $project = $this->project()->without([
             'shiftRelevantEventTypes',
             'state'
         ])->first();
 
-        $room = $this->room->without([
+        $room = $this->room()->without([
             'admins',
             'creator'
         ])->first();

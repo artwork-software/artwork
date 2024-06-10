@@ -31,9 +31,9 @@ class ContentSeeder extends Seeder
         $this->seedGenreAndCategoriesAndAreas();
         $this->seedDepartments();
         $this->seedRooms();
-        $this->seedEventsAndEventTypes();
         $this->seedCostCenters();
         $this->seedProjects();
+        $this->seedEventsAndEventTypes();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
         $this->seedCurrencies();

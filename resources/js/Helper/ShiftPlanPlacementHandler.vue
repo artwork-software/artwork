@@ -455,8 +455,6 @@ export default class {
             hours = parseInt(timeParts[0]),
             minutes = parseInt(timeParts[1]);
 
-        console.debug(curYear);
-
         return new Date(year, month, day, hours, minutes);
     }
 

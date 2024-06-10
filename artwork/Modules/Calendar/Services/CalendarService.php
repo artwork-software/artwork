@@ -4,6 +4,7 @@ namespace Artwork\Modules\Calendar\Services;
 
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;

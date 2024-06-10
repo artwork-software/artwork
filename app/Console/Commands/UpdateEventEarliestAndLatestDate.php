@@ -13,8 +13,7 @@ class UpdateEventEarliestAndLatestDate extends Command
 
     public function handle(
         EventService $eventService
-    ): void
-    {
+    ): void {
         foreach ($eventService->getAll() as $event) {
             $event->touchQuietly(); // touch() has implicit save call
             $eventService->save($event);

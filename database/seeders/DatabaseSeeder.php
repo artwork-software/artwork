@@ -15,14 +15,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
-            SettingsSeeder::class,
-            DefaultComponentSeeder::class,
-            ContentSeeder::class,
-            CraftSeeder::class,
             ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
             FreelancerSeeder::class,
             ServiceProviderSeeder::class,
+            SettingsSeeder::class,
+            DefaultComponentSeeder::class,
+            ContentSeeder::class,
+            CraftSeeder::class,
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,

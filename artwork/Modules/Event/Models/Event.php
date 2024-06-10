@@ -122,7 +122,6 @@ class Event extends Model
         'start_time_without_day',
         'end_time_without_day',
         'event_date_without_time',
-        'days_of_shifts',
         'shift_container_height',
         'formatted_dates',
         'dates_for_series_event'
@@ -271,14 +270,15 @@ class Event extends Model
         return $days;
     }
 
-    /**
-     * @return array<string>
-     */
-    public function getDaysOfShiftsAttribute(): array
+    public function getDaysOfShifts(?Collection $shifts): array
     {
         $days = [];
 
-        foreach ($this->shifts as $shift) {
+        if(!$shifts) {
+            $shifts = $this->shifts;
+        }
+
+        foreach ($shifts as $shift) {
             if ($shift->start_date === null || $shift->end_date === null) {
                 continue;
             }
@@ -370,15 +370,15 @@ class Event extends Model
             }
         )->orWhere(
             function ($query) use ($start, $end): void {
-            // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
                 $query->where('start_time', '<', $start)
-                ->whereBetween('end_time', [$start, $end]);
+                    ->whereBetween('end_time', [$start, $end]);
             }
         )->orWhere(
             function ($query) use ($start, $end): void {
                 // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
                 $query->whereBetween('start_time', [$start, $end])
-                ->where('end_time', '>', $end);
+                    ->where('end_time', '>', $end);
             }
         );
     }

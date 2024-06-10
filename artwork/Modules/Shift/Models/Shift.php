@@ -95,7 +95,6 @@ class Shift extends Model
         'break_formatted',
         'infringement',
         'formatted_dates',
-        'days_of_shift',
         'max_users',
         'shift_height',
     ];

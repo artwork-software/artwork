@@ -6,6 +6,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -50,7 +51,6 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Auth;
 
 readonly class EventService
 {
@@ -489,7 +489,7 @@ readonly class EventService
             ->getEventsWhereUserHasShifts($userId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -561,7 +561,7 @@ readonly class EventService
             ->getEventsWhereFreelancerHasShifts($freelancerId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -620,7 +620,7 @@ readonly class EventService
             ->getEventsWhereServiceProviderHasShifts($serviceProviderId)
             ->filter(
                 function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->days_of_shifts);
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
                 }
             );
     }
@@ -687,14 +687,16 @@ readonly class EventService
             )
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
-            ->setFilterOptions($filterService->getCalendarFilterDefinitions(
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService,
-                $roomService
-            ))
+            ->setFilterOptions(
+                $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $projectService,
+                    $roomService
+                )
+            )
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
@@ -761,11 +763,10 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
         ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault(
-            $userService->getAuthUser(needCalendarAbo: true)
-        );
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
@@ -778,7 +779,8 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService
+            $projectService,
+            $calendarFilter,
         );
 
         return EventManagementDto::newInstance()
@@ -840,8 +842,10 @@ readonly class EventService
 
         foreach ($event->timelines as $timeline) {
             $timelineStart = Carbon::parse($timeline->start)->format('H:i:s');
-            $startDateTime = Carbon::parse($timeline->start_date->format('Y-m-d') . '
-             ' . $timelineStart);
+            $startDateTime = Carbon::parse(
+                $timeline->start_date->format('Y-m-d') . '
+             ' . $timelineStart
+            );
             if ($startDateTime->isBefore($earliestStartTime)) {
                 $earliestStartTime = $startDateTime;
             }

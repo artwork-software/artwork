@@ -1,11 +1,4 @@
 <template>
-    <div class="ml-20 flex flex-col gap-2">
-        <TextComponent v-model="this.testModel" id="text" label="Text"/>
-        <NumberComponent v-model="this.testModel2" id="number" label="Number"/>
-        <DateComponent v-model="this.testModel3" id="date" label="Date"/>
-        <TextareaComponent v-model="this.testModel4" id="textarea" label="Textarea"/>
-    </div>
-
     <Head>
         <link rel="icon" type="image/png" :href="$page.props.small_logo" />
         <title>{{ title }} - {{ $page.props.page_title }}</title>

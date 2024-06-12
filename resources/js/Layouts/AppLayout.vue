@@ -1,4 +1,11 @@
 <template>
+    <div class="ml-20 flex flex-col gap-2">
+        <TextComponent v-model="this.testModel" id="text" label="Text"/>
+        <NumberComponent v-model="this.testModel2" id="number" label="Number"/>
+        <DateComponent v-model="this.testModel3" id="date" label="Date"/>
+        <TextareaComponent v-model="this.testModel4" id="textarea" label="Textarea"/>
+    </div>
+
     <Head>
         <link rel="icon" type="image/png" :href="$page.props.small_logo" />
         <title>{{ title }} - {{ $page.props.page_title }}</title>
@@ -179,6 +186,10 @@ import {
     IconUsers
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextComponent from "@/Components/Inputs/TextComponent.vue";
+import NumberComponent from "@/Components/Inputs/NumberComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import DateComponent from "@/Components/Inputs/DateComponent.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -200,6 +211,10 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        DateComponent,
+        TextareaComponent,
+        NumberComponent,
+        TextComponent,
         SvgCollection,
         Dialog,
         DialogOverlay,
@@ -459,6 +474,10 @@ export default {
             showPermissions: false,
             hoveredIcon: false,
             fullSidenav: false,
+            testModel: '',
+            testModel2: '',
+            testModel3: '',
+            testModel4: ''
         }
     },
     setup() {

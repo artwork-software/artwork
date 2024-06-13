@@ -3,7 +3,7 @@
         <PlaceholderLabel :label="this.label"/>
         <Listbox as="div"
                  v-model="this.value"
-                 @update:model-value="this.change()"
+                 @update:model-value="this.$emit('update:modelValue', this.value);"
                  by="id">
             <div class="relative">
                 <ListboxButton
@@ -73,20 +73,15 @@ export default defineComponent({
     ],
     data() {
         return {
+            //this is necessary because Listbox requries v-model, we are not able to bind modelValue
+            //prop to value attribute of Listbox because Listbox is not a native input element
+            //see v-model documentation regarding two-way binding https://vuejs.org/guide/components/v-model.html
+            //so we simply proxy the value but still emit the desired update:modelValue event
             value: this.modelValue
         }
     },
     emits: [
         'update:modelValue'
-    ],
-    methods: {
-        change() {
-            //usually not needed that way but due to Listbox itself we cant just v-model the element properly
-            //we need to v-model a data attribute which value change results in proper emit so parent
-            //component receives selected value
-            //modelValue is still used for setting current value for example, see data
-            this.$emit('update:modelValue', this.value);
-        }
-    }
+    ]
 })
 </script>

@@ -179,10 +179,10 @@ import {
     IconUsers
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import TextComponent from "@/Components/Inputs/TextComponent.vue";
-import NumberComponent from "@/Components/Inputs/NumberComponent.vue";
+import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import DateComponent from "@/Components/Inputs/DateComponent.vue";
+import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},

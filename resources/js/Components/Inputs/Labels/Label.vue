@@ -1,6 +1,6 @@
 <template>
     <label :for="this.for"
-           class="cursor-text text-sm text-black subpixel-antialiased">
+           class="cursor-text text-xs text-black subpixel-antialiased">
         {{ this.label }}
     </label>
 </template>

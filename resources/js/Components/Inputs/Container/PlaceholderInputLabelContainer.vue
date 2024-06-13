@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col relative w-full h-full mt-4">
+    <div class="flex flex-col relative w-full h-full mt-5">
         <slot/>
     </div>
 </template>

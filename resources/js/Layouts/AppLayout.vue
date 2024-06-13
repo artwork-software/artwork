@@ -492,11 +492,3 @@ export default {
 }
 
 </script>
-
-<style scoped>
-.managementMenu {
-    overflow: overlay;
-}
-
-
-</style>

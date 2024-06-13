@@ -700,20 +700,3 @@ export default defineComponent({
     }
 })
 </script>
-<style>
-    .transform {
-    transition: transform 0.2s, opacity 0.2s;
-    }
-    .scale-95 {
-    transform: scale(0.95);
-    }
-    .scale-100 {
-    transform: scale(1);
-    }
-    .opacity-0 {
-    opacity: 0;
-    }
-    .opacity-100 {
-    opacity: 1;
-    }
-</style>

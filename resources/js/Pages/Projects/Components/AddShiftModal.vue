@@ -182,38 +182,13 @@
                                                    v-model="shiftForm.break_minutes"
                                                    @change="validateShiftBreak()"/>
                                         </div>
-                                        <div class="w-full flex flex-col relative mt-5">
-                                            <PlaceholderLabel :label="$t('Craft') + '*'"/>
-                                            <Listbox as="div"
-                                                     v-model="selectedCraft"
-                                                     @update:modelValue="validateShiftCraft()"
-                                                     by="id"
-                                            >
-                                                <div class="relative">
-                                                    <ListboxButton class="w-full h-[36px] pl-1 pt-1 text-left text-xs subpixel-antialiased font-normal border-gray-300 inputMain xsDark disabled:border-none">
-                                                        <span v-if="selectedCraft?.name" class="truncate">
-                                                            {{ selectedCraft?.name }}
-                                                        </span>
-                                                        <span v-else class="truncate text-secondary">{{ $t('Please select...') + '*'}} </span>
-                                                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                                        </span>
-                                                    </ListboxButton>
-                                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                        <ListboxOptions class="absolute z-50 text-xs subpixel-antialiased cursor-pointer mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                            <ListboxOption as="template" v-for="craft in selectableCrafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
-                                                                <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative select-none py-2 pl-3 pr-9']">
-                                                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
-                                                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                                                    </span>
-                                                                </li>
-                                                            </ListboxOption>
-                                                        </ListboxOptions>
-                                                    </transition>
-                                                </div>
-                                            </Listbox>
-                                        </div>
+                                        <SelectComponent id="addShiftCraftSelectComponent"
+                                                         :label="$t('Craft') + '*'"
+                                                         v-model="this.selectedCraft"
+                                                         :options="this.selectableCrafts"
+                                                         selected-property-to-display="name"
+                                                         :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                                        />
                                         <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
                                                     this.validationMessages.errors.break_length.length > 0 ||
                                                     this.validationMessages.warnings.craft.length > 0 ||
@@ -334,11 +309,13 @@ import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions, IconLib],
     components: {
+        SelectComponent,
         TimeInputComponent,
         DateInputComponent,
         TextareaComponent,

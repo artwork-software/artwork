@@ -170,7 +170,7 @@ import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
-    IconAdjustmentsAlt, IconBell,
+    IconAdjustmentsAlt, IconBell, IconBuildingWarehouse,
     IconCalendarMonth,
     IconCalendarUser,
     IconCurrencyEuro, IconFileText,
@@ -310,8 +310,6 @@ export default {
                     name: 'Dashboard',
                     href: route('dashboard'),
                     route: ['/dashboard'],
-                    svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
                     has_permission: true,
                     icon: IconLayoutDashboard
                 },
@@ -319,8 +317,6 @@ export default {
                     name: this.$t('Projects'),
                     href: route('projects'),
                     route: ['/projects'],
-                    svgSrc: '/Svgs/Sidebar/icon_projects.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
                     has_permission: true,
                     icon: IconGeometry
                 },
@@ -328,8 +324,6 @@ export default {
                     name: this.$t('Room assignment'),
                     href: route('events'),
                     route: ['/calendar/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
                     has_permission: true,
                     icon: IconCalendarMonth
                 },
@@ -337,27 +331,27 @@ export default {
                     name: this.$t('Shift plan'),
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
                     has_permission: this.$can('can view shift plan') || this.hasAdminRole(),
                     icon: IconCalendarUser
+                },
+                {
+                    name: 'Inventar',
+                    href: route('inventory-management.inventory'),
+                    route: ['/inventory-management', '/inventory-management/scheduling'],
+                    has_permission: true,
+                    icon: IconBuildingWarehouse
                 },
                 {
                     name: this.$t('Tasks'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
-                    svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
                     has_permission: true,
                     icon: IconListCheck
                 },
-
                 {
                     name: this.$t('Sources of funding'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
-                    svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
                     has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole(),
                     icon: IconCurrencyEuro
                 },
@@ -365,8 +359,6 @@ export default {
                     name: this.$t('Users'),
                     href: route('users'),
                     route: ['/users'],
-                    svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
                     has_permission: true,
                     icon: IconUsers
                 },
@@ -375,8 +367,6 @@ export default {
                     name: this.$t('Contracts'),
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_contract.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
                     has_permission: true,
                     icon: IconFileText
                 }

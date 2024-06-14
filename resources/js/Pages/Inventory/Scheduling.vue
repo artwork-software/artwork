@@ -1,5 +1,5 @@
 <template>
-    <InventoryHeader>
+    <InventoryHeader :title="this.$t('Inventory Scheduling')">
         Lorem Ipsum 2
     </InventoryHeader>
 </template>

@@ -24,13 +24,13 @@ export default defineComponent({
         return {
             tabs: [
                 {
-                    name: 'Bestand',
+                    name: this.$t('Inventory'),
                     href: route('inventory-management.inventory'),
                     current: route().current('inventory-management.inventory'),
                     hasPermission: true
                 },
                 {
-                    name: 'Inventar-Dispo',
+                    name: this.$t('Inventory Scheduling'),
                     href: route('inventory-management.scheduling'),
                     current: route().current('inventory-management.scheduling'),
                     hasPermission: true

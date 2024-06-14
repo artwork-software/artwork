@@ -1,10 +1,10 @@
 <template>
-    <app-layout :title="$t('Toolsettings') + ' - ' + title">
+    <app-layout :title="this.title + '-' + this.$t('Inventory Management')">
         <div class="max-w-screen-xl ml-14 mr-40 mb-4">
             <div class="mb-5">
-                <h2 class="headline1 mb-2">Bestandsverwaltung</h2>
+                <h2 class="headline1 mb-2">{{ this.$t('Inventory Management') }}</h2>
                 <div class="headline3Light">
-                    Pflege den Bestand aller Projekte für dein artwork.
+                    {{ this.$t('Maintain the inventory of all projects for your artwork.') }}
                 </div>
             </div>
             <InventoryTabs class="mb-5"/>

@@ -1,7 +1,9 @@
 <template>
-    <div v-if="list.length > 0" v-for="item in list"
+    <div v-if="list.length > 0"
+         v-for="item in list"
          class="flex w-full mb-2">
-        <input type="checkbox" v-model="item.checked"
+        <input type="checkbox"
+               v-model="item.checked"
                @change="$emit('change-filter-items', { list: list, item: item, filterName: filterName})"
                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
         <p :class="[item.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
@@ -25,7 +27,3 @@ export default {
     emits: ['change-filter-items']
 }
 </script>
-
-<style scoped>
-
-</style>

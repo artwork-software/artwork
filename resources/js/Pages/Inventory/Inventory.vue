@@ -1,17 +1,39 @@
 <template>
     <InventoryHeader :title="this.$t('Inventory')">
         <div class="flex flex-col relative">
-            <div
-                class="absolute right-0 -translate-y-full cursor-pointer z-20 text-xs font-bold rounded-t-md border-b-2 bg-gradient-to-t from-gray-600 to-gray-500 subpixel-antialiased hover:from-blue-700 hover:to-blue-600 text-white flex flex-row items-center p-2">
-                <div class="flex flex-row items-center gap-x-2">
-                    <span class="drop-shadow-sm shadow-black">
-                        {{ $t('New column') }}
-                    </span>
-                    <button
-                        class="p-1 border-white border-2 rounded-full items-center shadow-sm"
-                        @click="dummyFn()">
-                        <PlusIcon stroke-width="1.5" class="h-4 w-4"/>
-                    </button>
+            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md border-b-2 subpixel-antialiased text-white flex flex-row items-center h-20">
+                <BaseFilter :only-icon="true" class="mr-3">
+                    <div class="w-full">
+                        <div class="flex justify-end mb-3">
+                            <span class="xxsLight cursor-pointer text-right w-full" @click="dummyFn()">
+                                {{ $t('Reset') }}
+                            </span>
+                        </div>
+                        <BaseFilterCheckboxList :list="getCrafts()"
+                                                filter-name="inventory-management-crafts-filter"
+                                                @change-filter-items="changeCraftFilter"/>
+                    </div>
+                </BaseFilter>
+                <div class="flex flex-row h-full">
+                    <div class="inventory-search-container p-4 flex flex-row h-full items-center justify-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500">
+                        <TextInputComponent id="inventory-search-input"
+                                            aria-label="ajax search text input"
+                                            :label="$t('Search')"
+                                            v-model="searchValue"
+                                            class="!mt-0 !w-52 !h-9"/>
+                        <IconSearch class="cursor-pointer w-6 h-6 hover:text-blue-500"/>
+                    </div>
+                    <div class="w-[1px] h-8 bg-white"/>
+                    <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600">
+                        <span class="drop-shadow-sm shadow-black">
+                            {{ $t('New column') }}
+                        </span>
+                        <button
+                            class="p-1 border-white border-2 rounded-full items-center shadow-sm"
+                            @click="dummyFn()">
+                            <PlusIcon stroke-width="1.5" class="h-4 w-4"/>
+                        </button>
+                    </div>
                 </div>
             </div>
             <table class="table-auto border-4">
@@ -115,7 +137,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <template v-for="(craft) in getCrafts()">
+                <template v-for="(craft) in filteredCrafts">
                     <InventoryCraft :craft="craft" :colspan="6"/>
                 </template>
                 </tbody>
@@ -126,7 +148,15 @@
 
 <script setup>
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
-import {IconChevronDown, IconChevronUp, IconCopy, IconDotsVertical, IconTrash, IconX} from "@tabler/icons-vue";
+import {
+    IconSearch,
+    IconCopy,
+    IconDotsVertical,
+    IconTrash,
+    IconX,
+    IconChevronUp,
+    IconChevronDown
+} from "@tabler/icons-vue";
 import {
     Listbox,
     ListboxOption,
@@ -137,9 +167,12 @@ import {
     MenuItems
 } from "@headlessui/vue";
 import {PlusIcon, CheckIcon} from "@heroicons/vue/solid";
-import {ref} from "vue";
-import InventoryCategory from "@/Pages/Inventory/InventoryCategory.vue";
+import {computed, ref} from "vue";
 import InventoryCraft from "@/Pages/Inventory/InventoryCraft.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 const props = defineProps({
         columns: Array,
@@ -148,6 +181,7 @@ const props = defineProps({
     }),
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
+    searchValue = ref(''),
     dummyFn = () => true,
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);
@@ -157,6 +191,10 @@ const props = defineProps({
             dynamicColumnNameInputRefs[columnId].value.select();
         }, 5);
 
+    },
+    changeCraftFilter = (args) => {
+        //args.list.forEach.checked -> sync in backend to user (InventoryManagementFilter)
+        console.debug(args);
     },
     getCrafts = () => {
         let crafts = [];
@@ -168,6 +206,50 @@ const props = defineProps({
 
         return crafts;
     },
+    filteredCrafts = computed(() => {
+        let crafts = getCrafts();
+        if (searchValue.value.length === 0) {
+            return crafts;
+        }
+
+        crafts.forEach((craft) => {
+            let filteredCategories = [];
+
+            craft.categories.forEach((category) => {
+                if (category.name.indexOf(searchValue.value) > -1) {
+                    filteredCategories.push(category);
+
+                    //show category if search value included in name
+                    return;
+                }
+
+                if (category.groups.some((group) => group.name.indexOf(searchValue.value) > -1)) {
+                    filteredCategories.push(category);
+
+                    //show category if some group includes search value
+                    return;
+                }
+
+                if (
+                    category.groups.some(
+                        //category name matches
+                        (group) => group.name.indexOf(searchValue.value) > -1 ||
+                        //or some items have some matching cell values
+                        group.items.some((item) => item.cells.some(
+                            //@todo: implement all types of inputs
+                            (cell) => cell.value.indexOf(searchValue.value) > -1
+                        ))
+                    )
+                ) {
+                    filteredCategories.push(category)
+                }
+            });
+
+            craft.categories = filteredCategories;
+        });
+
+        return crafts;
+    }),
     getCategories = () => {
         return [
             {
@@ -489,3 +571,17 @@ const props = defineProps({
         ]
     }
 </script>
+
+<style scoped>
+.inventory-search-container :deep(label) {
+    color: white;
+}
+
+.inventory-search-container :deep(input) {
+    color: rgb(37 99 235 / 1);
+}
+
+.inventory-search-container :deep(input):focus {
+    border-color: rgb(37 99 235 / 1);
+}
+</style>

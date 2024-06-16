@@ -28,12 +28,3 @@ const props = defineProps({
         craftShown.value = !craftShown.value;
     };
 </script>
-
-<style scoped>
-.fade-enter-active { /* <<transition name>>-<<transition class>> */
-    transition: all .3s ease;
-}
-.fade-leave-active {
-    transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
-}
-</style>

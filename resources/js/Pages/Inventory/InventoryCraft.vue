@@ -1,6 +1,6 @@
 <template>
     <tr @click="toggleCraft()">
-        <td :colspan="colspan" class="h-32 pl-3 cursor-pointer subpixel-antialiased text-2xl font-bold">
+        <td :colspan="colspan" class="h-24 pl-3 cursor-pointer subpixel-antialiased text-2xl font-bold">
             <div class="flex flex-row items-center gap-x-3">
                 <span class="">{{ craft.name }}</span>
                 <IconChevronUp v-if="craftShown" class="w-5 h-5"/>

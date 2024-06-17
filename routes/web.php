@@ -72,6 +72,7 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
+use Artwork\Modules\Inventory\Http\Controller\InventoryController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -1321,6 +1322,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
     )
         ->name('remove.day.service.from.user');
+
+    Route::group(['prefix' => 'inventory-management'], function (): void {
+        Route::get('/', [InventoryController::class, 'inventory'])
+            ->name('inventory-management.inventory');
+        Route::get('/scheduling', [InventoryController::class, 'scheduling'])
+            ->name('inventory-management.scheduling');
+    });
 });
 
 Route::get(

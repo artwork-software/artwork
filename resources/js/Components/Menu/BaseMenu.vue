@@ -1,5 +1,4 @@
 <script>
-import {IconCopy, IconDotsVertical, IconLock, IconLockOpen, IconTrash} from "@tabler/icons-vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -45,7 +44,3 @@ export default {
         </transition>
     </Menu>
 </template>
-
-<style scoped>
-
-</style>

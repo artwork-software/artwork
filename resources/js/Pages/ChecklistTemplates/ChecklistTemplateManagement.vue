@@ -163,13 +163,13 @@
 import  {Inertia} from "@inertiajs/inertia";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import InputComponent from "@/Layouts/Components/InputComponent";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";

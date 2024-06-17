@@ -437,16 +437,16 @@ import {
     XCircleIcon,
     ChevronRightIcon
 } from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import JetButton from "@/Jetstream/Button";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import JetButton from "@/Jetstream/Button.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import CalendarComponent from "@/Layouts/Components/CalendarComponent";
-import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
+import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";

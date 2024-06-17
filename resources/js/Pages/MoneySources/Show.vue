@@ -257,10 +257,10 @@ import {
     DotsVerticalIcon,
     ChevronRightIcon, ChevronDownIcon, CheckIcon
 } from "@heroicons/vue/solid";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
+import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";

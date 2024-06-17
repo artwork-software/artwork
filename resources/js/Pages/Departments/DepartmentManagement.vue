@@ -390,20 +390,20 @@ import {
     MenuButton,
     MenuItem, MenuItems
 } from '@headlessui/vue'
-import Button from "@/Jetstream/Button";
-import JetButton from "@/Jetstream/Button";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton";
-import Checkbox from "@/Layouts/Components/Checkbox";
+import Button from "@/Jetstream/Button.vue";
+import JetButton from "@/Jetstream/Button.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
+import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import InputComponent from "@/Layouts/Components/InputComponent";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";

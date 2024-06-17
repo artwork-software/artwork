@@ -122,7 +122,7 @@ import JetCheckbox from '@/Jetstream/Checkbox.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";

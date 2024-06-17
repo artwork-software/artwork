@@ -869,16 +869,5 @@ export default {
     background-color: #E1D1DC;
 }
 
-@layer base {
-    input[type=number].appearance-none::-webkit-inner-spin-button,
-    input[type=number].appearance-none::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
-    input[type=number].appearance-none {
-        -moz-appearance: textfield;
-    }
-}
 
 </style>

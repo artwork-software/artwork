@@ -70,7 +70,7 @@
 <script>
 
 import AppLayout from '@/Layouts/AppLayout.vue'
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {
     XIcon
 } from "@heroicons/vue/outline";

@@ -337,7 +337,7 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {PlusCircleIcon} from '@heroicons/vue/outline'
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";

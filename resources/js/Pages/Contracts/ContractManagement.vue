@@ -132,11 +132,11 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
-import BaseSidenav from "@/Layouts/Components/BaseSidenav";
-import ContractListItem from "@/Layouts/Components/ContractListItem";
-import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
-import ContractFilter from "@/Layouts/Components/ContractFilter";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import ContractListItem from "@/Layouts/Components/ContractListItem.vue";
+import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav.vue";
+import ContractFilter from "@/Layouts/Components/ContractFilter.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";

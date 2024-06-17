@@ -37,8 +37,8 @@ import {
     UploadIcon,
     XCircleIcon
 } from '@heroicons/vue/outline';
-import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
-import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal";
+import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
+import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";

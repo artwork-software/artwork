@@ -485,7 +485,7 @@
 
 <script>
 
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     ChevronDownIcon,
     DotsVerticalIcon,
@@ -508,10 +508,10 @@ import {
     ChevronUpIcon,
     TrashIcon
 } from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import Input from "@/Jetstream/Input";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import TagComponent from "@/Layouts/Components/TagComponent";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Input from "@/Jetstream/Input.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
 import IconLib from "@/Mixins/IconLib.vue";

@@ -647,7 +647,6 @@ import {
     SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import JetDialogModal from "@/Jetstream/DialogModal";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
@@ -656,7 +655,6 @@ import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue"
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
 import Button from "@/Jetstream/Button.vue";
-import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -665,6 +663,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 
 export default {
     name: 'BudgetComponent',
@@ -696,7 +695,6 @@ export default {
         XIcon,
         PencilAltIcon,
         TrashIcon,
-        JetDialogModal,
         CheckIcon,
         Listbox,
         ListboxButton,

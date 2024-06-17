@@ -85,7 +85,7 @@
 
 <script>
 
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";

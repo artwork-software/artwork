@@ -187,26 +187,26 @@ import {
     MenuItem,
     MenuItems
 } from '@headlessui/vue'
-import Button from "@/Jetstream/Button";
-import JetButton from "@/Jetstream/Button";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton";
-import Checkbox from "@/Layouts/Components/Checkbox";
+import Button from "@/Jetstream/Button.vue";
+import JetButton from "@/Jetstream/Button.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
+import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import {
     Link,
     useForm
 } from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import InputComponent from "@/Layouts/Components/InputComponent";
-import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
-import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
-import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
-import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
-import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
+import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings.vue";
+import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent.vue";
+import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings.vue";
+import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";

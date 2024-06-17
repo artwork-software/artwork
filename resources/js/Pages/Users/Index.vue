@@ -331,12 +331,12 @@ import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
-import Checkbox from "@/Layouts/Components/Checkbox";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import Checkbox from "@/Layouts/Components/Checkbox.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import FlowbiteModal from "@/Flowbite/FlowbiteModal";
-import InputComponent from "@/Layouts/Components/InputComponent";
+import FlowbiteModal from "@/Flowbite/FlowbiteModal.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";

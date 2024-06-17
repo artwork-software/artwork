@@ -60,8 +60,8 @@
 <script>
 
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import JetDialogModal from "@/Jetstream/DialogModal";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";

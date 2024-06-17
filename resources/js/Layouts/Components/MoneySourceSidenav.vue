@@ -182,7 +182,7 @@ import {
     UploadIcon,
     XCircleIcon
 } from '@heroicons/vue/outline';
-import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
+import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
 import {Inertia} from "@inertiajs/inertia";

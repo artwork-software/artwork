@@ -167,7 +167,7 @@ import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} f
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
 import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
     IconAdjustmentsAlt, IconBell, IconBuildingWarehouse,

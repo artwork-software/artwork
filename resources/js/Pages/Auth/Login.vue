@@ -131,8 +131,8 @@ import JetCheckbox from '@/Jetstream/Checkbox.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
-import Checkbox from "@/Layouts/Components/Checkbox";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import Checkbox from "@/Layouts/Components/Checkbox.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";

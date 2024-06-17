@@ -119,15 +119,15 @@
 <script>
 import {ChevronDownIcon} from '@heroicons/vue/outline';
 import {ChevronRightIcon, ChevronUpIcon} from "@heroicons/vue/solid";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
-import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
+import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
-import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
-import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
-import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
-import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
+import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
+import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
+import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
+import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/Mixins/Permissions.vue";

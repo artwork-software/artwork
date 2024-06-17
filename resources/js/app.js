@@ -1,10 +1,12 @@
-require('./bootstrap');
-require('../css/global.css');
+import './bootstrap';
+import '../css/app.css';
+import '../css/global.css';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/inertia-vue3';
 import { InertiaProgress } from '@inertiajs/progress';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
+import {resolvePageComponent} from "laravel-vite-plugin/inertia-helpers";
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n'
@@ -23,10 +25,15 @@ const svgColors = {
     eventType9:'#4D908E',
     eventType10:'#21485C'
 }
+
+import en from '../../lang/en.json';
+import de from '../../lang/de.json';
+
 const messages = {
-    en: require('../../lang/en.json'),
-    de: require('../../lang/de.json')
-}
+    en: en,
+    de: de
+};
+
 
 const i18n = VueI18n.createI18n({
     legacy: false, // you must specify 'legacy: false' option
@@ -41,7 +48,7 @@ const appName = window.document.getElementsByTagName('title')[0]?.innerText || '
 
 createInertiaApp({
     title: (title) => `${title}`,
-    resolve: (name) => require(`./Pages/${name}.vue`),
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, app: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)

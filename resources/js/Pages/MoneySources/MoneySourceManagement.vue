@@ -393,9 +393,9 @@ import {
     ArrowNarrowDownIcon,
     ArrowNarrowUpIcon
 } from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import InputComponent from "@/Layouts/Components/InputComponent";
-import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent.vue";
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/Mixins/Permissions.vue";

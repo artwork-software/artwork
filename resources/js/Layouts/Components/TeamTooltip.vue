@@ -31,8 +31,8 @@
 
 <script>
 
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {
     name: "TeamTooltip",

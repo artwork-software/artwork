@@ -644,7 +644,7 @@ const options = [
     },
 ];
 
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     ChevronDownIcon,
     DotsVerticalIcon,
@@ -671,11 +671,11 @@ import {
     ChevronUpIcon,
     TrashIcon
 } from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import Input from "@/Jetstream/Input";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import TagComponent from "@/Layouts/Components/TagComponent";
-import InputComponent from "@/Layouts/Components/InputComponent";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Input from "@/Jetstream/Input.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";

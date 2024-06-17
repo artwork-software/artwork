@@ -133,51 +133,7 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between w-full">
-                        <div class="flex items-center gap-x-1">
-                            <div class="flex-auto">
-                                <p>{{ projects.from ?? 0 }} - {{ projects.to ?? 0 }} von {{ projects.total }}</p>
-                            </div>
-                            <div>
-                                <Menu as="div" class="relative inline-block text-base-600 hover:text-base-900">
-                                    <MenuButton class="flex items-center me-4">
-                                        <p>Zeilen pro Seite: {{ projects.per_page }}</p>
-                                        <IconChevronDown class="w-5 h-5"/>
-                                    </MenuButton>
-
-                                    <transition enter-active-class="transition duration-100 ease-out"
-                                                enter-from-class="transform scale-95 opacity-0"
-                                                enter-to-class="transform scale-100 opacity-100"
-                                                leave-active-class="transition duration-75 ease-in"
-                                                leave-from-class="transform scale-100 opacity-100"
-                                                leave-to-class="transform scale-95 opacity-0">
-                                        <MenuItems
-                                            class="absolute origin-top-right z-50 bottom-0 left-0 mb-6 p-1 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-                                            <MenuItem v-for="entities in entitiesPerPage" :key="entities" as="template" v-slot="{ active }">
-                                                <button @click="updateEntitiesPerPage(entities)" :class="[active ? 'bg-gray-500 text-white' : 'text-gray-600', 'group flex items-center justify-center w-full rounded-md px-2 py-1 text-sm',]">
-                                                    {{ entities }}
-                                                </button>
-                                            </MenuItem>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <!-- Pagination -->
-                            <div class="flex items-center">
-                                <div v-if="projects.links.length > 3">
-                                    <div class="flex flex-wrap -mb-1">
-                                        <template v-for="(link, key) in projects.links" :key="key">
-                                            <div v-if="link.url === null" class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400" v-html="link.label"></div>
-                                            <Link v-else class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white" :class="{ 'text-artwork-buttons-create': link.active }" :href="link.url" v-html="link.label"></Link>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <BasePaginator :entities="projects" property-name="projects" />
                 </div>
             </div>
         </div>
@@ -271,44 +227,38 @@ import {
     SwitchGroup,
     SwitchLabel
 } from '@headlessui/vue'
-import Button from "@/Jetstream/Button";
-import JetButton from "@/Jetstream/Button";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton";
-import Checkbox from "@/Layouts/Components/Checkbox";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {Inertia} from "@inertiajs/inertia";
-import {Link} from "@inertiajs/inertia-vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import TeamTooltip from "@/Layouts/Components/TeamTooltip";
-import projects from "@/Pages/Trash/Projects";
-import InputComponent from "@/Layouts/Components/InputComponent";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
-import Dropdown from "@/Jetstream/Dropdown.vue";
-import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
-import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-import ProjectExportBudgetsByBudgetDeadlineModal from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
-import {IconPin} from "@tabler/icons-vue";
-import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
-import IconLib from "@/Mixins/IconLib.vue";
+import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
+import SingleProject from "@/Pages/Projects/Components/SingleProject.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import SingleProject from "@/Pages/Projects/Components/SingleProject.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import {IconPin} from "@tabler/icons-vue";
+import ProjectExportBudgetsByBudgetDeadlineModal
+    from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
+import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import {Link} from "@inertiajs/inertia-vue3";
+import IconLib from "@/Mixins/IconLib.vue";
+import Input from "@/Jetstream/Input.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     components: {
+        BasePaginator,
         SingleProject,
         BaseModal,
         BaseMenu,
@@ -324,14 +274,12 @@ export default defineComponent({
         UserPopoverTooltip,
         Input,
         BaseFilter,
-        Dropdown,
         Switch,
         ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
         TeamIconCollection,
         SvgCollection,
-        Button,
         AppLayout,
         DotsVerticalIcon,
         PlusSmIcon,
@@ -343,19 +291,10 @@ export default defineComponent({
         ListboxOptions,
         CheckIcon,
         SelectorIcon,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        JetButton,
-        JetDialogModal,
-        JetInput,
-        JetInputError,
-        JetSecondaryButton,
+
         InformationCircleIcon,
         ChevronDownIcon,
         ChevronUpIcon,
-        Checkbox,
         XIcon,
         PencilAltIcon,
         TrashIcon,
@@ -433,6 +372,7 @@ export default defineComponent({
                     href: '#',
                     current: this.showBudgetHistoryTab
                 },
+
             ]
         },
         filteredProjects() {
@@ -460,14 +400,6 @@ export default defineComponent({
 
     },
     methods: {
-        updateEntitiesPerPage(entities) {
-            Inertia.reload({
-                only: ['projects'],
-                data: {
-                    entitiesPerPage: entities
-                }
-            })
-        },
 
         openCreateProjectModal() {
             this.createProject = true;

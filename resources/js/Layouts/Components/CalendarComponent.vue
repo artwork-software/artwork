@@ -260,7 +260,7 @@
 
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     CalendarIcon,
     ChevronDownIcon,
@@ -293,14 +293,14 @@ import {
     SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import EventComponent from "@/Layouts/Components/EventComponent";
-import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
-import Button from "@/Jetstream/Button";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
-import BaseFilter from "@/Layouts/Components/BaseFilter";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent.vue";
+import Button from "@/Jetstream/Button.vue";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";

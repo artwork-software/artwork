@@ -16,6 +16,7 @@
                                 {{ eventsOfDay?.length ?? 0 }}
                             </div>
                         </div>
+
                         <DashboardCard>
                             <div class="font-semibold flex items-center gap-x-3 mb-3">
                                 <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
@@ -248,9 +249,9 @@ import {
     DotsHorizontalIcon,
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
-import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";

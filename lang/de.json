@@ -105,6 +105,7 @@
     "Moved Permanently": "Permanent verschoben",
     "Multi-Status": "Multistatus",
     "Multiple Choices": "Mehrfachauswahl",
+    "Please select...": "Bitte auswählen...",
     "Name": "Name",
     "Network Authentication Required": "Netzwerkauthentifizierung erforderlich",
     "Network Connect Timeout Error": "Zeitüberschreitungsfehler bei Netzwerkverbindung",
@@ -1833,5 +1834,10 @@
     "No time presets for shifts have been created yet.": "Es wurden noch keine Zeitvorgaben für Schichten erstellt.",
     "Break time": "Pausenzeit",
     "Create Time Preset": "Zeitvorgabe erstellen",
-    "Edit Time Preset": "Zeitvorgabe bearbeiten"
+    "Edit Time Preset": "Zeitvorgabe bearbeiten",
+    "Inventory":  "Bestand",
+    "Inventory Management": "Bestandsverwaltung",
+    "Inventory Scheduling": "Bestandsdisposition",
+    "Maintain the inventory of all projects for your artwork.": "Pflege den Bestand aller Projekte für dein artwork.",
+    "Filter": "Filter"
 }

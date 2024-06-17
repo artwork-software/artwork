@@ -105,6 +105,7 @@
     "Moved Permanently": "Moved Permanently",
     "Multi-Status": "Multi-Status",
     "Multiple Choices": "Multiple Choices",
+    "Please select...": "Please select...",
     "Name": "Name",
     "Network Authentication Required": "Network Authentication Required",
     "Network Connect Timeout Error": "Network Connect Timeout Error",
@@ -1833,5 +1834,10 @@
     "No time presets for shifts have been created yet.": "No time presets for shifts have been created yet.",
     "Break time": "Break time",
     "Create Time Preset": "Create Time Preset",
-    "Edit Time Preset": "Edit Time Preset"
+    "Edit Time Preset": "Edit Time Preset",
+    "Inventory":  "Inventory",
+    "Inventory Management": "Inventory Management",
+    "Inventory Scheduling": "Inventory Scheduling",
+    "Maintain the inventory of all projects for your artwork.": "Maintain the inventory of all projects for your artwork.",
+    "Filter": "Filter"
 }

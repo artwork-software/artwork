@@ -27,7 +27,6 @@
                                             class="!mt-0 !w-52 !h-9"/>
                         <IconSearch class="cursor-pointer w-6 h-6 hover:text-blue-500"/>
                     </div>
-                    <div class="w-[1px] h-8 bg-white"/>
                     <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600">
                         <span class="drop-shadow-sm shadow-black">
                             {{ $t('New column') }}
@@ -51,15 +50,20 @@
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
                                     class="w-[calc(100%-0.8rem)] indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
-                                    @dblclick="column.clicked = !column.clicked; selectInput(column.id)">
+                                    @dblclick="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
-                                <input
-                                    type="text"
-                                    :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
-                                    :class="[column.clicked ? '' : 'hidden', 'text-black w-[calc(100%-0.9rem)] p-1 top-[4px] left-[8px] z-50 absolute border-0 text-xs']"
-                                    v-model="column.name"
-                                    @focusout="column.clicked = !column.clicked">
+                                <div :class="[column.clicked ? '' : 'hidden', 'flex flex-row items-center bg-gray-500 px-1 top-[3px] text-white gap-x-2 w-full z-50 absolute']">
+                                    <input
+                                        type="text"
+                                        :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
+                                        class="w-[calc(100%-10px)] p-1 pl-2 border-0 text-xs text-black"
+                                        v-model="column.newValue"
+                                        @keyup.enter="applyColumnValueChange(column)"
+                                        @keyup.esc="denyColumnValueChange(column)">
+                                    <IconCheck class="w-5 h-5 hover:text-green-500" @click="applyColumnValueChange(column)"/>
+                                    <IconX class="w-5 h-5 hover:text-red-500" @click="denyColumnValueChange(column)"/>
+                                </div>
                             </div>
                             <Menu v-show="showMenu === column.id"
                                   as="div"
@@ -142,7 +146,8 @@
                 </thead>
                 <tbody>
                 <template v-for="(craft) in filteredCrafts">
-                    <InventoryCraft :craft="craft" :colspan="6"/>
+                    <InventoryCraft :craft="craft"
+                                    :colspan="6"/>
                 </template>
                 </tbody>
             </table>
@@ -159,7 +164,7 @@ import {
     IconTrash,
     IconX,
     IconChevronUp,
-    IconChevronDown
+    IconChevronDown, IconCheck
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -194,7 +199,24 @@ const props = defineProps({
         setTimeout(() => {
             dynamicColumnNameInputRefs[columnId].value.select();
         }, 5);
+    },
+    toggleColumnEdit = (column) => {
+        column.clicked = !column.clicked;
 
+        if (column.clicked) {
+            column.newValue = column.name;
+            setTimeout(() => {
+                dynamicColumnNameInputRefs[column.id].value.select();
+            }, 5);
+        }
+    },
+    applyColumnValueChange = (column) => {
+        column.name = column.newValue;
+        toggleColumnEdit(column);
+    },
+    denyColumnValueChange = (column) => {
+        column.newValue = column.name;
+        toggleColumnEdit(column);
     },
     changeCraftFilter = (args) => {
         //args.list.forEach.checked -> sync in backend to user (InventoryManagementFilter)

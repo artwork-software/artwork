@@ -163,8 +163,7 @@ import {
     IconDotsVertical,
     IconTrash,
     IconX,
-    IconChevronUp,
-    IconChevronDown, IconCheck
+    IconCheck
 } from "@tabler/icons-vue";
 import {
     Listbox,

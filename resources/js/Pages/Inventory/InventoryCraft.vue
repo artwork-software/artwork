@@ -14,7 +14,7 @@
     </tr>
     <AddNewCategory v-if="craftShown"/>
     <template v-if="craftShown"
-              v-for="(category, index) in craft.categories">
+              v-for="(category) in craft.categories">
         <InventoryCategory :colspan="6"
                            :category="category"/>
     </template>
@@ -23,7 +23,7 @@
 
 <script setup>
 import InventoryCategory from "@/Pages/Inventory/InventoryCategory.vue";
-import {IconChevronDown, IconChevronUp, IconCirclePlus, IconLink} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconLink} from "@tabler/icons-vue";
 import {ref} from "vue";
 import AddNewCategory from "@/Pages/Inventory/AddNewCategory.vue";
 

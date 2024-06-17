@@ -66,5 +66,4 @@ const props = defineProps({
         groupValue.value = props.group.name;
         toggleGroupEdit();
     };
-;
 </script>

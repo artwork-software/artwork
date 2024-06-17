@@ -48,9 +48,9 @@ createInertiaApp({
             .mixin({ methods: { route }})
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
-        app.use(VueMathjax)
-        app.use(i18n)
-        app.use(PrimeVue, { unstyled: true })
+        app.use(VueMathjax);
+        app.use(i18n);
+        app.use(PrimeVue, { unstyled: true });
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3

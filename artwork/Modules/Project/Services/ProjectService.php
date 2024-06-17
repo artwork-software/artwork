@@ -439,6 +439,7 @@ readonly class ProjectService
                 ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
+
             $timeline = $event->timelines()->get()->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
@@ -461,6 +462,11 @@ readonly class ProjectService
 
             foreach ($event->shifts as $shift) {
                 $shift->load('shiftsQualifications');
+
+                foreach ($shift->users as $user) {
+                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                }
+
             }
 
             $eventsWithRelevant[] = [

@@ -162,49 +162,49 @@ class ProjectController extends Controller
 
     public function index(): Response|ResponseFactory
     {
-        $projects = Project::query()
-            ->with([
-                'checklists.tasks.checklist.project',
-                'access_budget',
-                'categories',
-                'comments.user',
-                'departments.users.departments',
-                'genres',
-                'managerUsers',
-                'project_files',
-                'sectors',
-                'users.departments',
-                'writeUsers',
-                'state',
-                'delete_permission_users'
-            ])
+        $entitiesPerPage = request()->get('entitiesPerPage', 10);
+
+        $projectsQuery = Project::with([
+            'access_budget' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'categories',
+            'genres',
+            'managerUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'writeUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'state',
+            'delete_permission_users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+        ])->whereNull('pinned_by_users')
             ->orderBy('id', 'DESC')
-            ->get();
+            ->without(['shiftRelevantEventTypes']);
+
+        if (request()->has('search')) {
+            $projectsQuery = Project::search(request()->get('search'));
+        }
+
+        $projects = $projectsQuery->paginate($entitiesPerPage);
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
+            'projects' => $projects,
+            'pinnedProjects' => Project::whereNotNull('pinned_by_users')
+                ->whereRaw("JSON_LENGTH(pinned_by_users) > 0")
+                ->without(['shiftRelevantEventTypes'])
+                ->get(),
+            'first_project_tab_id' => ProjectTab::query()->without(['components', 'sidebarTabs'])->value('id'),
             'states' => ProjectStates::all(),
             'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
-
-            'users' => User::all(),
-
-            'categories' => Category::query()->with('projects')->get()->map(fn($category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'projects' => $category->projects
-            ]),
-
-            'genres' => Genre::query()->with('projects')->get()->map(fn($genre) => [
-                'id' => $genre->id,
-                'name' => $genre->name,
-                'projects' => $genre->projects
-            ]),
-
-            'sectors' => Sector::query()->with('projects')->get()->map(fn($sector) => [
-                'id' => $sector->id,
-                'name' => $sector->name,
-                'projects' => $sector->projects
-            ]),
+            'categories' => Category::all(['id', 'name']),
+            'genres' => Genre::all(['id', 'name']),
+            'sectors' => Sector::all(['id', 'name']),
         ]);
     }
 

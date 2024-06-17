@@ -19,3 +19,15 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+<IfModule mod_headers.c>
+# Caching
+# 1 Jahr (der maximale unterstützte Wert) für Grafik-/Multimediadateien
+    <FilesMatch "\.(ico|jpg|jpeg|gif|png|pdf|mp3|mp4)$">
+        Header set Cache-Control "public, max-age=31536000, no-transform"
+    </FilesMatch>
+    # 2 Stunden für Textdateien
+    <FilesMatch "\.(html|htm|xml|txt|xsl)$">
+        Header set Cache-Control "public, max-age=7200, must-revalidate"
+    </FilesMatch>
+</IfModule>

@@ -121,112 +121,58 @@
                             </span>
                         </span>
                     </div>
+
                     <div class="my-3 w-full">
-                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in sortedProjects" :key="project.id">
-                            <div class="col-span-7 flex items-center">
-                                <div class="grid grid-cols-10 gap-x-3">
-                                    <div class="col-span-1 flex items-center justify-center">
-                                        <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
-                                            <img :src="'/storage/keyVisual/' + project.key_visual" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
-                                            <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
-                                            <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
-                                                <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-span-9 flex items-center">
-                                        <div class="flex items-center">
-                                            <Link v-if="
-                                                $can('view projects') ||
-                                                $can('management projects') ||
-                                                $can('write projects') ||
-                                                $role('artwork admin') ||
-                                                $role('budget admin') ||
-                                                checkPermission(project, 'edit') ||
-                                                checkPermission(project, 'view')"
-                                                  :href="getEditHref(project)"
-                                                  class="flex w-full my-auto">
-                                                <p class="xsDark flex items-center">
-                                                    {{ truncate(project.name, 30, '...') }}
-                                                </p>
-                                            </Link>
-                                            <div v-else class="flex w-full my-auto items-center">
-                                                <p class="xsDark flex items-center">
-                                            <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
-                                                     aria-hidden="true"/>
-                                            </span>
-                                                    {{ truncate(project.name, 80, '...') }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in pinnedProjects" :key="project.id">
+                            <SingleProject :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
+                        </div>
+                    </div>
+                    <div class="my-3 w-full">
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in filteredProjects" :key="project.id">
+                            <SingleProject :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center gap-x-1">
+                            <div class="flex-auto">
+                                <p>{{ projects.from ?? 0 }} - {{ projects.to ?? 0 }} von {{ projects.total }}</p>
                             </div>
-                            <div class="col-span-3 flex items-center justify-end">
-                                <div class="grid grid-cols-8">
-                                    <div class="col-span-6">
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep w-fit" :class="project.state?.color">
-                                            {{ project.state?.name }}
-                                        </span>
-                                    </div>
-                                    <div class="col-span-1">
-                                        <div v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id)"
-                                             class="flex items-center xxsLight subpixel-antialiased">
-                                            <IconPinned class="h-5 w-5 text-primary"/>
-                                        </div>
-                                    </div>
-                                    <div class="flex justify-end">
-                                        <BaseMenu v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin') || $can('delete projects') || $can('write projects')">
-                                            <MenuItem v-slot="{ active }"
-                                                      v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
-                                                <a @click="openEditProjectModal(project)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                                    <IconEdit stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                              aria-hidden="true"/>
-                                                    {{ $t('Edit basic data') }}
-                                                </a>
+                            <div>
+                                <Menu as="div" class="relative inline-block text-base-600 hover:text-base-900">
+                                    <MenuButton class="flex items-center me-4">
+                                        <p>Zeilen pro Seite: {{ projects.per_page }}</p>
+                                        <IconChevronDown class="w-5 h-5"/>
+                                    </MenuButton>
+
+                                    <transition enter-active-class="transition duration-100 ease-out"
+                                                enter-from-class="transform scale-95 opacity-0"
+                                                enter-to-class="transform scale-100 opacity-100"
+                                                leave-active-class="transition duration-75 ease-in"
+                                                leave-from-class="transform scale-100 opacity-100"
+                                                leave-to-class="transform scale-95 opacity-0">
+                                        <MenuItems
+                                            class="absolute origin-top-right z-50 bottom-0 left-0 mb-6 p-1 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+                                            <MenuItem v-for="entities in entitiesPerPage" :key="entities" as="template" v-slot="{ active }">
+                                                <button @click="updateEntitiesPerPage(entities)" :class="[active ? 'bg-gray-500 text-white' : 'text-gray-600', 'group flex items-center justify-center w-full rounded-md px-2 py-1 text-sm',]">
+                                                    {{ entities }}
+                                                </button>
                                             </MenuItem>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id)">
-                                                <a @click="pinProject(project)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconPinnedOff stroke-width="1.5"
-                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                   aria-hidden="true"/>
-                                                    {{  $t('Undo pinning') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem class="cursor-pointer" v-slot="{ active }" v-else>
-                                                <a @click="pinProject(project)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconPin stroke-width="1.5"
-                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                             aria-hidden="true"/>
-                                                    {{  $t('Pin') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }"
-                                                      v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
-                                                <a href="#" @click="duplicateProject(project)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconCopy stroke-width="1.5"
-                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                              aria-hidden="true"/>
-                                                    {{ $t('Duplicate') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }"
-                                                      v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
-                                                <a href="#" @click="openDeleteProjectModal(project)"
-                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <IconTrash stroke-width="1.5"
-                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                               aria-hidden="true"/>
-                                                    {{ $t('Put in the trash') }}
-                                                </a>
-                                            </MenuItem>
-                                        </BaseMenu>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <!-- Pagination -->
+                            <div class="flex items-center">
+                                <div v-if="projects.links.length > 3">
+                                    <div class="flex flex-wrap -mb-1">
+                                        <template v-for="(link, key) in projects.links" :key="key">
+                                            <div v-if="link.url === null" class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400" v-html="link.label"></div>
+                                            <Link v-else class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white" :class="{ 'text-artwork-buttons-create': link.active }" :href="link.url" v-html="link.label"></Link>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -235,6 +181,7 @@
                 </div>
             </div>
         </div>
+
         <project-create-modal
             v-if="createProject"
             :show="createProject"
@@ -244,29 +191,7 @@
             :project-groups="this.projectGroups"
             @close-create-project-modal="closeCreateProjectModal"
         />
-        <BaseModal @closed="closeDeleteProjectModal" v-if="deletingProject" modal-image="/Svgs/Overlays/illu_warning.svg">
-                <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        {{ $t('Delete project') }}
-                    </div>
-                    <div class="text-error subpixel-antialiased">
-                        {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-white"
-                                @click="deleteProject">
-                            {{ $t('Delete') }}
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteProjectModal()"
-                                  class="xsLight cursor-pointer">
-                                {{ $t('No, not really') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-        </BaseModal>
+
         <!-- Success Modal - Delete project -->
         <SuccessModal
             v-if="showSuccessModal"
@@ -380,9 +305,11 @@ import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import SingleProject from "@/Pages/Projects/Components/SingleProject.vue";
 
 export default defineComponent({
     components: {
+        SingleProject,
         BaseModal,
         BaseMenu,
         PlusButton,
@@ -448,17 +375,18 @@ export default defineComponent({
     props: [
         'projects',
         'states',
-        'users',
         'categories',
         'genres',
         'sectors',
         'can',
-        'projectGroups'
+        'projectGroups',
+        'first_project_tab_id',
+        'pinnedProjects'
     ],
     mixins: [Permissions, IconLib],
     data() {
         return {
-            project_search: '',
+            project_search: this.$page.props.urlParameters.search ?? '',
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectBudgetAccess: {},
@@ -488,7 +416,8 @@ export default defineComponent({
             editingProject: false,
             projectToEdit: null,
             createProject: false,
-            showProjectExportBudgetsByBudgetDeadlineModal: false
+            showProjectExportBudgetsByBudgetDeadlineModal: false,
+            entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
         }
     },
     computed: {
@@ -507,7 +436,7 @@ export default defineComponent({
             ]
         },
         filteredProjects() {
-            return this.projects.filter(project => {
+            return this.projects?.data?.filter(project => {
                 // Check if the project should be included based on user-related status
                 if (this.enabled && !project.curr_user_is_related) {
                     return false;
@@ -528,31 +457,18 @@ export default defineComponent({
             });
         },
         // sort Projects by pinned_by_users array. if user id in array, project is pinned and in sort function it will be first
-        sortedProjects() {
-            return this.filteredProjects.sort((a, b) => {
-                if (a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id)) {
-                    return -1;
-                }
-                if (b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id)) {
-                    return 1;
-                }
-                return 0;
-            });
-        },
-        groupPerProject() {
-            let groupPerProject = [];
-            this.projectGroups.forEach((projectGroup) => {
-                projectGroup.groups?.forEach((groupProject) => {
-                    groupPerProject[groupProject.id] = projectGroup;
-                })
-            })
-            return groupPerProject;
-        }
+
     },
     methods: {
-        pinProject(project) {
-            Inertia.post(route('project.pin', {project: project.id}));
+        updateEntitiesPerPage(entities) {
+            Inertia.reload({
+                only: ['projects'],
+                data: {
+                    entitiesPerPage: entities
+                }
+            })
         },
+
         openCreateProjectModal() {
             this.createProject = true;
         },
@@ -599,26 +515,8 @@ export default defineComponent({
             this.showSearchbar = !this.showSearchbar;
             this.project_search = '';
         },
-        getEditHref(project) {
-            return route('projects.tab', {project: project.id, projectTab: project.first_tab_id});
-        },
-        duplicateProject(project) {
-            this.$inertia.post(`/projects/${project.id}/duplicate`);
-        },
-        openDeleteProjectModal(project) {
-            this.projectToDelete = project;
-            this.deletingProject = true;
-        },
-        closeDeleteProjectModal() {
-            this.deletingProject = false;
-            this.projectToDelete = null;
-        },
-        deleteProject() {
-            this.nameOfDeletedProject = this.projectToDelete.name;
-            Inertia.delete(`/projects/${this.projectToDelete.id}`);
-            this.closeDeleteProjectModal();
-            this.openSuccessModal();
-        },
+
+
         openSuccessModal() {
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -645,52 +543,25 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-        checkPermission(project, type) {
-            const writeAuth = [];
-            const managerAuth = [];
-            const deleteAuth = [];
-            const viewAuth = [];
 
-            project.users.forEach((user) => {
-                viewAuth.push(user.id);
-            });
-
-            project.project_managers.forEach((user) => {
-                managerAuth.push(user.id);
-            })
-
-            project.write_auth.forEach((user) => {
-                writeAuth.push(user.id);
-            });
-
-            project.delete_permission_users.forEach((user) => {
-                deleteAuth.push(user.id);
-            });
-
-            if(viewAuth.includes(this.$page.props.user.id) && type === 'view') {
-                return true;
-            }
-
-            if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
-                return true;
-            }
-            if (managerAuth.includes(this.$page.props.user.id) || deleteAuth.includes(this.$page.props.user.id) && type === 'delete') {
-                return true;
-            }
-            return false;
-        },
-        truncate(text, length, clamp) {
-            clamp = clamp || '...';
-            const node = document.createElement('div');
-            node.innerHTML = text;
-            const content = node.textContent;
-            return content.length > length ? content.slice(0, length) + clamp : content;
-        },
         openProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = true;
         },
         closeProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = false;
+        }
+    },
+    watch: {
+        project_search: {
+            handler() {
+                Inertia.reload({
+                    only: ['projects'],
+                    data: {
+                        search: this.project_search,
+                        page: 1
+                    }
+                })
+            }
         }
     }
 })

@@ -305,6 +305,7 @@ export default defineComponent({
             this.loadedProjectInformation['ShiftTab'].events_with_relevant.forEach(event => {
                 event.shifts.forEach(shift => {
                     shift.users.forEach(user => {
+                        console.log(user);
                         if(user.formatted_vacation_days?.includes(shift.event_start_day)){
                             conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
                         }

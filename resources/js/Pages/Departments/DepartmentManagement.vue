@@ -397,10 +397,10 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {Link} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
@@ -492,7 +492,7 @@ export default defineComponent({
     created() {
         Echo.private('departments')
             .listen('DepartmentUpdated', () => {
-                Inertia.reload({only: ['departments']})
+                router.reload({only: ['departments']})
             });
     },
     methods: {
@@ -559,7 +559,7 @@ export default defineComponent({
             this.teamToDelete = null;
         },
         deleteTeam() {
-            Inertia.delete(`/departments/${this.teamToDelete.id}`);
+            router.delete(`/departments/${this.teamToDelete.id}`);
             this.closeDeleteTeamModal();
             this.showSuccessModal('delete');
         },

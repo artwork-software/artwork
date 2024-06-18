@@ -197,7 +197,7 @@ import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import {
     Link,
     useForm
-} from "@inertiajs/inertia-vue3";
+} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";

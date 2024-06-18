@@ -168,8 +168,8 @@ import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {useForm} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
@@ -249,7 +249,7 @@ export default defineComponent({
     },
     methods: {
         addContact(){
-            Inertia.post(route('service-provider.contact.store', this.serviceProvider.id), {
+            router.post(route('service-provider.contact.store', this.serviceProvider.id), {
             }, {
                 preserveState: true, preserveScroll: true
             })
@@ -297,7 +297,7 @@ export default defineComponent({
 
             reader.readAsDataURL(photo);
 
-            Inertia.post(route('service_provider.change.profile-image', this.serviceProvider.id),{
+            router.post(route('service_provider.change.profile-image', this.serviceProvider.id),{
                 profileImage: photo,
             }, {
                 preserveScroll: true,

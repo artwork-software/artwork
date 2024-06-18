@@ -294,7 +294,7 @@ import {
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent.vue";
 import Button from "@/Jetstream/Button.vue";
@@ -304,7 +304,7 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -609,11 +609,11 @@ export default {
 
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            Inertia.reload();
+            router.reload();
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            Inertia.reload();
+            router.reload();
         },
         scrollToNine() {
             if (this.currentView === 'month') {
@@ -662,22 +662,22 @@ export default {
         },
         nextDay() {
             this.$refs.vuecal.next();
-            this.dateValue[0] = this.addOneDay(this.dateValue[0]);
-            this.dateValue[1] = this.addOneDay(this.dateValue[1]);
-            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
-                start_date:  this.dateValue[0],
-                end_date: this.dateValue[1],
+            this.dateValueArray[0] = this.addOneDay(this.dateValueArray[0]);
+            this.dateValueArray[1] = this.addOneDay(this.dateValueArray[1]);
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValueArray[0],
+                end_date: this.dateValueArray[1],
             },{
                 preserveScroll: true
             })
         },
         previousDay() {
             this.$refs.vuecal.previous();
-            this.dateValue[0] = this.subtractOneDay(this.dateValue[0]);
-            this.dateValue[1] = this.subtractOneDay(this.dateValue[1]);
-            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
-                start_date:  this.dateValue[0],
-                end_date: this.dateValue[1],
+            this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
+            this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValueArray[0],
+                end_date: this.dateValueArray[1],
             },{
                 preserveScroll: true
             })

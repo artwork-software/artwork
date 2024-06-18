@@ -1,7 +1,6 @@
 import axios from 'axios';
-import lodash from 'lodash';
 import pusher from 'pusher-js';
-window._ = lodash;
+
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -26,7 +25,7 @@ window.Pusher = pusher;
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: import.meta.env.MIX_PUSHER_APP_KEY ?? '12345',
-    cluster: import.meta.env.MIX_PUSHER_APP_CLUSTER,
+    cluster: import.meta.env.MIX_PUSHER_APP_CLUSTER ?? 'eu',
     forceTLS: false,
     wsHost: window.location.hostname,
     wsPort: import.meta.env.MIX_PUSHER_PORT,

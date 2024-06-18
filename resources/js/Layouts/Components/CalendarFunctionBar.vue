@@ -188,9 +188,9 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {useForm, usePage} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -362,7 +362,7 @@ export default {
         },
 
         updateFilterValue(key, value){
-            Inertia.patch(route('user.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+            router.patch(route('user.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
                 key: key,
                 value: value
             }, {

@@ -823,7 +823,7 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";

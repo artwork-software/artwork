@@ -36,7 +36,7 @@ import {XIcon, XCircleIcon, PencilIcon} from "@heroicons/vue/outline"
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ref} from "vue";
 import draggable from "vuedraggable";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import EditableTagComponent from "@/Components/Tags/EditableTagComponent.vue";
 

@@ -51,7 +51,7 @@
 import Permissions from "@/Mixins/Permissions.vue";
 import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 
 export default {
@@ -150,7 +150,7 @@ export default {
             return this.rooms.find(room => room.id === roomId);
         },
         updateTimes() {
-            Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                 start_date: this.dateValue[0],
                 end_date: this.dateValue[1],
             })

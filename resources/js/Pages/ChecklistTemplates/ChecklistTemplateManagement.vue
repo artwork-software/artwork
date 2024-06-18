@@ -160,13 +160,13 @@
 
 <script>
 
-import  {Inertia} from "@inertiajs/inertia";
+import  {router} from "@inertiajs/vue3";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
@@ -244,7 +244,7 @@ export default {
             this.templateToDelete = null;
         },
         deleteTemplate(){
-            Inertia.delete(`/checklist_templates/${this.templateToDelete.id}`);
+            router.delete(`/checklist_templates/${this.templateToDelete.id}`);
             this.closeDeleteTemplateModal();
             this.openSuccessModal('delete')
         },

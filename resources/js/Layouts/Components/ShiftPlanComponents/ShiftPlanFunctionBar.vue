@@ -96,7 +96,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
@@ -179,7 +179,7 @@ export default {
     },
     methods: {
         changeUserSelectedGoTo(type){
-            Inertia.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+            router.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
                 goto_mode: type,
             }, {
                 preserveScroll: true,
@@ -196,7 +196,7 @@ export default {
             }
         },
         updateFilterValue(key, value){
-            Inertia.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+            router.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
                 key: key,
                 value: value
             }, {
@@ -243,7 +243,7 @@ export default {
 
 
 
-            Inertia.post('/shifts/commit', { events: filteredEvents }, {
+            router.post('/shifts/commit', { events: filteredEvents }, {
                 onSuccess: () => {
                     this.showConfirmCommitModal = false;
                 },

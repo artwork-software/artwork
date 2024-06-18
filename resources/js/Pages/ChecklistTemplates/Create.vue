@@ -205,7 +205,7 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import draggable from "vuedraggable";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

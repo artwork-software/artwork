@@ -1,8 +1,8 @@
 <script>
 import {IconChevronDown} from "@tabler/icons-vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 
 export default {
     name: "BasePaginator",
@@ -27,7 +27,7 @@ export default {
     },
     methods: {
         updateEntitiesPerPage(entitiesToShow) {
-            Inertia.reload({
+            router.reload({
                 only: [this.propertyName],
                 data: {
                     entitiesPerPage: entitiesToShow,

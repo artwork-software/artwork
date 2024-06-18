@@ -210,7 +210,7 @@ import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";

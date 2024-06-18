@@ -39,7 +39,7 @@ import BudgetSettingsHeader from "@/Pages/BudgetSettings/BudgetSettingsHeader.vu
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 
@@ -57,7 +57,7 @@ export default defineComponent({
     ],
     methods: {
         saveBudgetColumnSetting(budgetColumnSetting) {
-            Inertia.patch(
+            router.patch(
                 route(
                     'budget-settings.general.update',
                     {

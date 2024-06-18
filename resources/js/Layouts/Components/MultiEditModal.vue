@@ -164,7 +164,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";

@@ -397,7 +397,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent.vue";
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";

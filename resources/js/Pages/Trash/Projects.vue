@@ -189,7 +189,7 @@ import {
 import {TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";

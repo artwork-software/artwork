@@ -185,7 +185,7 @@ import {
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import MoneySourceFileUploadModal from "@/Layouts/Components/MoneySourceFileUploadModal.vue";
 import MoneySourceFileEditModal from "@/Layouts/Components/MoneySourceFileEditModal.vue";
@@ -196,7 +196,7 @@ import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjec
 import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
@@ -298,9 +298,9 @@ export default {
 
         updateTask(task) {
             if (!task.done) {
-                Inertia.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true});
+                router.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true});
             } else {
-                Inertia.patch(route('money_source.task.undone', {moneySourceTask: task.id}), {}, {preserveState: true});
+                router.patch(route('money_source.task.undone', {moneySourceTask: task.id}), {}, {preserveState: true});
             }
 
         },

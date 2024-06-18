@@ -513,7 +513,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 
@@ -832,7 +832,7 @@ export default {
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            Inertia.delete(`/events/${this.eventToDelete.id}`, {
+            router.delete(`/events/${this.eventToDelete.id}`, {
               onFinish: () => {
                 this.closeModal();
               }

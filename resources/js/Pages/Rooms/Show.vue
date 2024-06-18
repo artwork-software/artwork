@@ -443,7 +443,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";

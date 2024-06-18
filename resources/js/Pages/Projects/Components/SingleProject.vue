@@ -2,8 +2,8 @@
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {Link} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {Link} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
@@ -66,7 +66,7 @@ export default {
         },
         deleteProject() {
             this.nameOfDeletedProject = this.project.name;
-            Inertia.delete(`/projects/${this.project.id}`);
+            router.delete(`/projects/${this.project.id}`);
             this.closeDeleteProjectModal();
             this.openSuccessModal();
         },
@@ -108,7 +108,7 @@ export default {
             return false;
         },
         pinProject() {
-            Inertia.post(route('project.pin', {project: this.project.id}), {}, {
+            router.post(route('project.pin', {project: this.project.id}), {}, {
                 preserveScroll: true,
                 preserveState: true,
             });

@@ -55,7 +55,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {CheckIcon, ChevronDownIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import SingleMoneySourceTask from "@/Pages/Tasks/Components/SingleMoneySourceTask.vue";
 import SingleTask from "@/Pages/Tasks/Components/SingleTask.vue";

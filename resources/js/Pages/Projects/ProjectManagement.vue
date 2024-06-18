@@ -251,7 +251,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -400,6 +400,7 @@ export default defineComponent({
 
     },
     methods: {
+        usePage,
 
         openCreateProjectModal() {
             this.createProject = true;
@@ -486,7 +487,7 @@ export default defineComponent({
     watch: {
         project_search: {
             handler() {
-                Inertia.reload({
+                router.reload({
                     only: ['projects'],
                     data: {
                         search: this.project_search,

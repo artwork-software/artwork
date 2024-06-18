@@ -250,9 +250,9 @@ import {
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
@@ -304,7 +304,7 @@ export default defineComponent({
     created() {
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
-                Inertia.reload({only: ['rooms', 'calendar', 'days']})
+                router.reload({only: ['rooms', 'calendar', 'days']})
             });
     },
     methods: {

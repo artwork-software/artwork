@@ -41,7 +41,7 @@
 <script>
 import {defineComponent} from 'vue'
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import dayjs from "dayjs";
 export default defineComponent({
     name: "TemporarilyHired",

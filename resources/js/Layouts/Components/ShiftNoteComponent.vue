@@ -1,6 +1,6 @@
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 
 export default {
     name: "ShiftNoteComponent",

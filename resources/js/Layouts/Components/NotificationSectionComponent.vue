@@ -123,7 +123,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow.vue";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";

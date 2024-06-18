@@ -346,7 +346,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmEventRequestCompo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";

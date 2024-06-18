@@ -105,7 +105,7 @@ import {
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({

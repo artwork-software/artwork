@@ -216,7 +216,7 @@ import {
 } from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 

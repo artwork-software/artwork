@@ -234,7 +234,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -300,7 +300,7 @@ export default {
             this.deletingAllTeamMembers = false;
         },
         deleteTeam() {
-            Inertia.delete(`/departments/${this.department.id}`);
+            router.delete(`/departments/${this.department.id}`);
             this.closeDeleteTeamModal()
         },
         openChangeTeamMembersModal() {

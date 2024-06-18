@@ -259,7 +259,7 @@ import {
 } from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";

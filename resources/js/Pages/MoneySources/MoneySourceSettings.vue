@@ -76,7 +76,7 @@ import {
 } from "@heroicons/vue/outline";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {defineComponent} from 'vue'
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -109,7 +109,7 @@ export default defineComponent({
         },
         afterDeleteCategoryConfirm(confirmed) {
             if (confirmed) {
-                Inertia.delete(
+                router.delete(
                     route('money_source_categories.destroy', {moneySourceCategory: this.categoryToDelete.id}),
                     {
                         preserveScroll: true
@@ -124,7 +124,7 @@ export default defineComponent({
             const regex = /^(?!\s)(?:(?!\s+$)\s|\S+\s*\S*)*(?<!\s)$/;
             if (regex.test(this.moneySourceCategoryInput)) {
                 this.showInvalidCategoryNameErrorText = false;
-                Inertia.post(
+                router.post(
                     route('money_source_categories.store'),
                     {
                         name: this.moneySourceCategoryInput

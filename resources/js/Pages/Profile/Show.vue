@@ -295,7 +295,7 @@ import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {CheckIcon} from "@heroicons/vue/solid";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
@@ -403,7 +403,7 @@ export default defineComponent({
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.user.id}`);
+            router.delete(`/users/${this.user.id}`);
             this.closeDeleteUserModal()
         },
         updateProfileInformation() {

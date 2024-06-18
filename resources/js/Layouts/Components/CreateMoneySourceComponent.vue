@@ -421,9 +421,9 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -588,7 +588,7 @@ export default {
                             (this.remindOnExpiration && this.expirationReminders.length > 0) ||
                             (this.remindOnThreshold && this.thresholdReminders.length > 0)
                         ) {
-                            Inertia.post(
+                            router.post(
                                 route(
                                     'money_source.reminder.store',
                                     {

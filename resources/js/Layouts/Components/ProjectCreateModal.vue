@@ -452,7 +452,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {
     Disclosure,
     DisclosureButton,

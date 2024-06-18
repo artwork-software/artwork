@@ -1,5 +1,8 @@
 <template>
-    <tr>
+    <tr :draggable="isDraggable()"
+        @dragstart="groupDragStart"
+        @dragend="groupDragEnd"
+        :class="'cursor-grab ' + trCls">
         <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
@@ -27,25 +30,76 @@
         </td>
     </tr>
     <AddNewItem v-if="groupShown"/>
-    <template v-if="groupShown" v-for="(item) in group.items">
-        <InventoryItem :item="item"/>
+    <DropItem v-if="showFirstDropItem"
+              :colspan="colspan"
+              :destination-index="0"
+              @item-requests-drag-move="moveItemToDestination"/>
+    <template v-if="groupShown" v-for="(item, index) in group.items">
+        <InventoryItem :index="index"
+                       :item="item"
+                       :colspan="colspan"
+                       :tr-cls="getOnDragCls(index)"
+                       @item-dragging="handleItemDragging"
+                       @item-drag-end="handleItemDragEnd"/>
+        <DropItem v-if="showTemplateDropItem(index)"
+                  :colspan="colspan"
+                  :destination-index="(index + 1)"
+                  @group-requests-drag-move="moveItemToDestination"/>
     </template>
 </template>
 
 <script setup>
 
 import InventoryItem from "@/Pages/Inventory/InventoryItem.vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {IconChevronDown, IconChevronUp, IconCheck, IconX} from "@tabler/icons-vue";
 import AddNewItem from "@/Pages/Inventory/AddNewItem.vue";
+import DropItem from "@/Pages/Inventory/DropItem.vue";
+
+const emits = defineEmits(['groupDragging', 'groupDragEnd']);
 const props = defineProps({
+        index: Number,
         colspan: Number,
-        group: Object
+        group: Object,
+        trCls: String
     }),
     groupInputRef = ref(null),
     groupShown = ref(true),
     groupClicked = ref(false),
     groupValue = ref(props.group.name),
+    itemDragging = ref(false),
+    draggedItemIndex = ref(null),
+    showFirstDropItem = computed(() => {
+        return itemDragging.value && draggedItemIndex.value > 0;
+    }),
+    showTemplateDropItem = computed(() => {
+        return (index) => itemDragging.value &&
+            index !== draggedItemIndex.value &&
+            index !== (draggedItemIndex.value - 1);
+    }),
+    handleItemDragging = (index) => {
+        draggedItemIndex.value = index;
+        itemDragging.value = true;
+    },
+    handleItemDragEnd = () => {
+        draggedItemIndex.value = null;
+        itemDragging.value = false;
+    },
+    moveItemToDestination = (itemId, fromIndex, toIndex) => {
+        console.debug(
+            'item requested move from to index',
+            props.group.id,
+            itemId,
+            fromIndex,
+            toIndex
+        );
+    },
+    isDraggable = () => {
+        return !groupClicked.value;
+    },
+    getOnDragCls = (index) => {
+        return itemDragging.value && draggedItemIndex.value !== index ? 'onDragBackground' : '';
+    },
     toggleGroup = () => {
         groupShown.value = !groupShown.value;
     },
@@ -65,5 +119,19 @@ const props = defineProps({
     denyGroupValueChange = () => {
         groupValue.value = props.group.name;
         toggleGroupEdit();
-    };
+    },
+    groupDragStart = (e) => {
+        emits.call(this, 'groupDragging', props.index);
+
+        e.dataTransfer.setData('groupId', props.group.id);
+        e.dataTransfer.setData('currentGroupIndex', props.index.toString());
+    },
+    groupDragEnd = () => emits.call(this, 'groupDragEnd')
 </script>
+
+<style scoped>
+.onDragBackground :deep(td) {
+    opacity: 50%;
+}
+</style>
+

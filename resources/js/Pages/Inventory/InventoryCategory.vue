@@ -33,31 +33,73 @@
         </td>
     </tr>
     <AddNewGroup v-if="categoryShown"/>
-    <template v-if="categoryShown" v-for="(group) in category.groups">
-        <InventoryGroup :group="group"
-                        :colspan="colspan"/>
+    <DropGroup v-if="showFirstDropGroup"
+               :colspan="colspan"
+               :destination-index="0"
+               @group-requests-drag-move="moveGroupToDestination"/>
+    <template v-if="categoryShown" v-for="(group, index) in category.groups">
+        <InventoryGroup :index="index"
+                        :group="group"
+                        :colspan="colspan"
+                        :tr-cls="getOnDragCls(index)"
+                        @group-dragging="handleGroupDragging"
+                        @group-drag-end="handleGroupDragEnd"/>
+        <DropGroup v-if="showTemplateDropGroup(index)"
+                   :colspan="colspan"
+                   :destination-index="(index + 1)"
+                   @group-requests-drag-move="moveGroupToDestination"/>
     </template>
 </template>
 
 <script setup>
 import InventoryGroup from "@/Pages/Inventory/InventoryGroup.vue";
 import {IconChevronDown, IconChevronUp, IconCheck, IconX} from "@tabler/icons-vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import AddNewGroup from "@/Pages/Inventory/AddNewGroup.vue";
+import DropGroup from "@/Pages/Inventory/DropGroup.vue";
 
 const emits = defineEmits(['categoryDragging', 'categoryDragEnd']);
 const props = defineProps({
         index: Number,
         category: Object,
         colspan: Number,
-        isLastCategory: Boolean,
         trCls: String
     }),
     categoryInputRef = ref(null),
     categoryShown = ref(true),
     categoryClicked = ref(false),
     categoryValue = ref(props.category.name),
+    groupDragging = ref(false),
+    draggedGroupIndex = ref(null),
+    showFirstDropGroup = computed(() => {
+        return groupDragging.value && draggedGroupIndex.value > 0;
+    }),
+    showTemplateDropGroup = computed(() => {
+        return (index) => groupDragging.value &&
+            index !== draggedGroupIndex.value &&
+            index !== (draggedGroupIndex.value - 1);
+    }),
+    getOnDragCls = (index) => {
+        return groupDragging.value && draggedGroupIndex.value !== index ? 'onDragBackground' : '';
+    },
+    handleGroupDragging = (index) => {
+        draggedGroupIndex.value = index;
+        groupDragging.value = true;
+    },
+    handleGroupDragEnd = () => {
+        draggedGroupIndex.value = null;
+        groupDragging.value = false;
+    },
+    moveGroupToDestination = (groupId, fromIndex, toIndex) => {
+        console.debug(
+            'group requested move from to index',
+            props.category.id,
+            groupId,
+            fromIndex,
+            toIndex
+        );
+    },
     isDraggable = () => {
         return !categoryClicked.value;
     },
@@ -85,11 +127,9 @@ const props = defineProps({
         emits.call(this,'categoryDragging', props.index);
 
         e.dataTransfer.setData('categoryId', props.category.id);
-        e.dataTransfer.setData('currentCategoryIndex', props.index);
+        e.dataTransfer.setData('currentCategoryIndex', props.index.toString());
     },
-    categoryDragEnd = () => {
-        emits.call(this, 'categoryDragEnd');
-    }
+    categoryDragEnd = () => emits.call(this, 'categoryDragEnd');
 </script>
 
 <style scoped>

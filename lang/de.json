@@ -1839,5 +1839,9 @@
     "Inventory Management": "Bestandsverwaltung",
     "Inventory Scheduling": "Bestandsdisposition",
     "Maintain the inventory of all projects for your artwork.": "Pflege den Bestand aller Projekte für dein artwork.",
-    "Filter": "Filter"
+    "Filter": "Filter",
+    "Delete category?": "Kategorie löschen?",
+    "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Kategorie wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände der zugehörigen Gruppen disponiert sind.",
+    "Delete group?": "Gruppe löschen?",
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Diese Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind."
 }

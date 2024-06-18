@@ -1839,5 +1839,9 @@
     "Inventory Management": "Inventory Management",
     "Inventory Scheduling": "Inventory Scheduling",
     "Maintain the inventory of all projects for your artwork.": "Maintain the inventory of all projects for your artwork.",
-    "Filter": "Filter"
+    "Filter": "Filter",
+    "Delete category?": "Delete category?",
+    "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.",
+    "Delete group?": "Delete group?",
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled."
 }

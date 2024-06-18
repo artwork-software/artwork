@@ -35,15 +35,15 @@
             </div>
         </td>
     </tr>
-    <IconTrashXFilled v-if="!categoryClicked && categoryMouseover"
+    <IconTrashXFilled v-if="!categoryClicked && categoryMouseover && !categoryDragged"
                       @mouseover="handleCategoryDeleteMouseover"
                       @mouseout="handleCategoryDeleteMouseout"
                       :class="[categoryDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showCategoryDeleteConfirmModal()"/>
     <ConfirmDeleteModal v-if="categoryConfirmDeleteModalShown"
-                        title="Kategorie löschen"
-                        button="Ja"
-                        description="Kategorie wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände der zugehörigen Gruppen disponiert sind."
+                        :title="$t('Delete category?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.')"
                         @delete="deleteCategory()"
                         @closed="closeCategoryDeleteConfirmModal()"
     />
@@ -84,6 +84,7 @@ const props = defineProps({
     }),
     categoryInputRef = ref(null),
     categoryShown = ref(true),
+    categoryDragged = ref(false),
     categoryClicked = ref(false),
     categoryValue = ref(props.category.name),
     categoryMouseover = ref(false),
@@ -147,12 +148,16 @@ const props = defineProps({
         return !categoryClicked.value;
     },
     categoryDragStart = (e) => {
+        categoryDragged.value = true;
         emits.call(this, 'categoryDragging', props.index);
 
         e.dataTransfer.setData('categoryId', props.category.id);
         e.dataTransfer.setData('currentCategoryIndex', props.index.toString());
     },
-    categoryDragEnd = () => emits.call(this, 'categoryDragEnd'),
+    categoryDragEnd = () => {
+        categoryDragged.value = false;
+        emits.call(this, 'categoryDragEnd')
+    },
     handleGroupDragging = (index) => {
         draggedGroupIndex.value = index;
         groupDragging.value = true;

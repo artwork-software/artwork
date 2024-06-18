@@ -31,15 +31,15 @@
             </div>
         </td>
     </tr>
-    <IconTrashXFilled v-if="!groupClicked && groupMouseover"
+    <IconTrashXFilled v-if="!groupClicked && groupMouseover && !groupDragged"
                       @mouseover="handleGroupDeleteMouseover"
                       @mouseout="handleGroupDeleteMouseout"
                       :class="[groupDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showGroupDeleteConfirmModal()"/>
     <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
-                        title="Gruppe löschen"
-                        button="Ja"
-                        description="Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind."
+                        :title="$t('Delete group?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.')"
                         @delete="deleteGroup()"
                         @closed="closeGroupDeleteConfirmModal()"
     />
@@ -80,6 +80,7 @@ const props = defineProps({
     }),
     groupInputRef = ref(null),
     groupShown = ref(true),
+    groupDragged = ref(false),
     groupClicked = ref(false),
     groupValue = ref(props.group.name),
     groupMouseover = ref(false),
@@ -143,12 +144,16 @@ const props = defineProps({
         return !groupClicked.value;
     },
     groupDragStart = (e) => {
+        groupDragged.value = true;
         emits.call(this, 'groupDragging', props.index);
 
         e.dataTransfer.setData('groupId', props.group.id);
         e.dataTransfer.setData('currentGroupIndex', props.index.toString());
     },
-    groupDragEnd = () => emits.call(this, 'groupDragEnd'),
+    groupDragEnd = () => {
+        groupDragged.value = false;
+        emits.call(this, 'groupDragEnd');
+    },
     handleItemDragging = (index) => {
         draggedItemIndex.value = index;
         itemDragging.value = true;

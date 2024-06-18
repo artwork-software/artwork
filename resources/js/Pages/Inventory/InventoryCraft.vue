@@ -13,10 +13,19 @@
         </td>
     </tr>
     <AddNewCategory v-if="craftShown"/>
+    <DropCategory v-if="categoryDragging && draggedCategoryIndex > 0"
+                  :colspan="6"/>
     <template v-if="craftShown"
-              v-for="(category) in craft.categories">
-        <InventoryCategory :colspan="6"
-                           :category="category"/>
+              v-for="(category, index) in craft.categories">
+        <InventoryCategory :index="index"
+                           :category="category"
+                           :colspan="6"
+                           :tr-cls="getOnDragCls(index)"
+                           @category-dragging="handleCategoryDragging"
+                           @category-drag-end="handleCategoryDragend"
+        />
+        <DropCategory v-if="categoryDragging && index !== draggedCategoryIndex && index !== (draggedCategoryIndex - 1)"
+                      :colspan="6"/>
     </template>
     <AddNewCategory v-if="craftShown"/>
 </template>
@@ -26,6 +35,7 @@ import InventoryCategory from "@/Pages/Inventory/InventoryCategory.vue";
 import {IconChevronDown, IconChevronUp, IconLink} from "@tabler/icons-vue";
 import {ref} from "vue";
 import AddNewCategory from "@/Pages/Inventory/AddNewCategory.vue";
+import DropCategory from "@/Pages/Inventory/DropCategory.vue";
 
 const props = defineProps({
         colspan: Number,
@@ -33,7 +43,20 @@ const props = defineProps({
         selectInput: Function,
         createDynamicColumnNameInputRef: Function
     }),
+    categoryDragging = ref(false),
+    draggedCategoryIndex = ref(null),
     craftShown = ref(true),
+    getOnDragCls = (index) => {
+        return categoryDragging.value && draggedCategoryIndex.value !== index ? 'opacity-50' : '';
+    },
+    handleCategoryDragging = (index) => {
+        draggedCategoryIndex.value = index;
+        categoryDragging.value = true;
+    },
+    handleCategoryDragend = () => {
+        draggedCategoryIndex.value = null;
+        categoryDragging.value = false;
+    },
     toggleCraft = () => {
         craftShown.value = !craftShown.value;
     },

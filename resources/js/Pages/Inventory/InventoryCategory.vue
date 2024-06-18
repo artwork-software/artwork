@@ -1,17 +1,17 @@
 <template>
-    <tr>
-        <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-primary text-white subpixel-antialiased text-sm">
+    <tr :draggable="isDraggable()" @dragstart="categoryDragStart" @dragend="categoryDragEnd" :class="'cursor-grab ' + trCls">
+        <td :colspan="colspan" class="pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
                     class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
                     @dblclick="toggleCategoryEdit()">
                     {{ category.name }}
                 </div>
-                <div @click="toggleCategory()">
+                <div @click="toggleCategory()" class="cursor-pointer">
                     <IconChevronUp v-if="categoryShown" class="w-5 h-5" />
                     <IconChevronDown v-else class="w-5 h-5"/>
                 </div>
-                <div :class="[categoryClicked ? '' : 'hidden', 'flex flex-row items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
+                <div :class="[categoryClicked ? '' : 'hidden', 'flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
                     <input
                         type="text"
                         ref="categoryInputRef"
@@ -39,15 +39,21 @@ import {ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import AddNewGroup from "@/Pages/Inventory/AddNewGroup.vue";
 
+const emits = defineEmits(['categoryDragging', 'categoryDragEnd']);
 const props = defineProps({
+        index: Number,
         category: Object,
         colspan: Number,
-        isLastCategory: Boolean
+        isLastCategory: Boolean,
+        trCls: String
     }),
     categoryInputRef = ref(null),
     categoryShown = ref(true),
     categoryClicked = ref(false),
     categoryValue = ref(props.category.name),
+    isDraggable = () => {
+        return !categoryClicked.value;
+    },
     toggleCategory = () => {
         categoryShown.value = !categoryShown.value;
     },
@@ -67,5 +73,12 @@ const props = defineProps({
     denyCategoryValueChange = () => {
         categoryValue.value = props.category.name;
         toggleCategoryEdit();
-    };
+    },
+    categoryDragStart = (e) => {
+        emits.call(this,'categoryDragging', props.index);
+        e.dataTransfer.movedCategoryId = props.category.id;
+    },
+    categoryDragEnd = () => {
+        emits.call(this, 'categoryDragEnd');
+    }
 </script>

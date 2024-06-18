@@ -2,7 +2,7 @@
     <tr draggable="true"
         @dragstart="itemDragStart"
         @dragend="itemDragEnd"
-        :class="'cursor-grab h-16 ' + trCls">
+        :class="'cursor-grab h-10 ' + trCls">
         <template v-for="(cell) in item.cells">
             <InventoryCell :cell="cell"/>
         </template>

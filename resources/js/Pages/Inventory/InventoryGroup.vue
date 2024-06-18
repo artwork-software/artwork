@@ -1,7 +1,9 @@
 <template>
-    <tr :draggable="isDraggable()"
+    <tr :draggable="groupIsDraggable()"
         @dragstart="groupDragStart"
         @dragend="groupDragEnd"
+        @mouseover="handleGroupMouseover()"
+        @mouseout="handleGroupMouseout()"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
@@ -29,6 +31,18 @@
             </div>
         </td>
     </tr>
+    <IconTrashXFilled v-if="!groupClicked && groupMouseover"
+                      @mouseover="handleGroupDeleteMouseover"
+                      @mouseout="handleGroupDeleteMouseout"
+                      :class="[groupDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
+                      @click="showGroupDeleteConfirmModal()"/>
+    <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
+                        title="Gruppe löschen"
+                        button="Ja"
+                        description="Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind."
+                        @delete="deleteGroup()"
+                        @closed="closeGroupDeleteConfirmModal()"
+    />
     <AddNewItem v-if="groupShown"/>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
@@ -38,7 +52,7 @@
         <InventoryItem :index="index"
                        :item="item"
                        :colspan="colspan"
-                       :tr-cls="getOnDragCls(index)"
+                       :tr-cls="getItemOnDragCls(index)"
                        @item-dragging="handleItemDragging"
                        @item-drag-end="handleItemDragEnd"/>
         <DropItem v-if="showTemplateDropItem(index)"
@@ -52,9 +66,10 @@
 
 import InventoryItem from "@/Pages/Inventory/InventoryItem.vue";
 import {computed, ref} from "vue";
-import {IconChevronDown, IconChevronUp, IconCheck, IconX} from "@tabler/icons-vue";
+import {IconCheck, IconChevronDown, IconChevronUp, IconTrashXFilled, IconX} from "@tabler/icons-vue";
 import AddNewItem from "@/Pages/Inventory/AddNewItem.vue";
 import DropItem from "@/Pages/Inventory/DropItem.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const emits = defineEmits(['groupDragging', 'groupDragEnd']);
 const props = defineProps({
@@ -67,6 +82,9 @@ const props = defineProps({
     groupShown = ref(true),
     groupClicked = ref(false),
     groupValue = ref(props.group.name),
+    groupMouseover = ref(false),
+    groupDeleteCls = ref(''),
+    groupConfirmDeleteModalShown = ref(false),
     itemDragging = ref(false),
     draggedItemIndex = ref(null),
     showFirstDropItem = computed(() => {
@@ -77,29 +95,6 @@ const props = defineProps({
             index !== draggedItemIndex.value &&
             index !== (draggedItemIndex.value - 1);
     }),
-    handleItemDragging = (index) => {
-        draggedItemIndex.value = index;
-        itemDragging.value = true;
-    },
-    handleItemDragEnd = () => {
-        draggedItemIndex.value = null;
-        itemDragging.value = false;
-    },
-    moveItemToDestination = (itemId, fromIndex, toIndex) => {
-        console.debug(
-            'item requested move from to index',
-            props.group.id,
-            itemId,
-            fromIndex,
-            toIndex
-        );
-    },
-    isDraggable = () => {
-        return !groupClicked.value;
-    },
-    getOnDragCls = (index) => {
-        return itemDragging.value && draggedItemIndex.value !== index ? 'onDragBackground' : '';
-    },
     toggleGroup = () => {
         groupShown.value = !groupShown.value;
     },
@@ -120,13 +115,60 @@ const props = defineProps({
         groupValue.value = props.group.name;
         toggleGroupEdit();
     },
+    handleGroupMouseover = () => {
+        groupMouseover.value = true;
+    },
+    handleGroupMouseout = () => {
+        groupMouseover.value = false;
+    },
+    handleGroupDeleteMouseover = () => {
+        groupMouseover.value = true;
+        groupDeleteCls.value = 'bg-red-600';
+    },
+    handleGroupDeleteMouseout = () => {
+        groupMouseover.value = false;
+        groupDeleteCls.value = 'bg-black';
+    },
+    showGroupDeleteConfirmModal = () => {
+        groupConfirmDeleteModalShown.value = true;
+    },
+    deleteGroup = () => {
+        console.debug('delete group', props.group.id);
+        closeGroupDeleteConfirmModal();
+    },
+    closeGroupDeleteConfirmModal = () => {
+        groupConfirmDeleteModalShown.value = false;
+    },
+    groupIsDraggable = () => {
+        return !groupClicked.value;
+    },
     groupDragStart = (e) => {
         emits.call(this, 'groupDragging', props.index);
 
         e.dataTransfer.setData('groupId', props.group.id);
         e.dataTransfer.setData('currentGroupIndex', props.index.toString());
     },
-    groupDragEnd = () => emits.call(this, 'groupDragEnd')
+    groupDragEnd = () => emits.call(this, 'groupDragEnd'),
+    handleItemDragging = (index) => {
+        draggedItemIndex.value = index;
+        itemDragging.value = true;
+    },
+    getItemOnDragCls = (index) => {
+        return itemDragging.value && draggedItemIndex.value !== index ? 'onDragBackground' : '';
+    },
+    handleItemDragEnd = () => {
+        draggedItemIndex.value = null;
+        itemDragging.value = false;
+    },
+    moveItemToDestination = (itemId, fromIndex, toIndex) => {
+        console.debug(
+            'item requested move from to index',
+            props.group.id,
+            itemId,
+            fromIndex,
+            toIndex
+        );
+    };
 </script>
 
 <style scoped>

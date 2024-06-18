@@ -40,8 +40,8 @@
                 </div>
             </div>
             <table class="table-auto border-4">
-                <thead class="sticky top-0 z-20 bg-gray-500 transition-all duration-300 shadow-sm text-white">
-                <tr class="table-row text-xs font-light w-full h-full">
+                <thead class="sticky z-20 top-0 bg-gray-500 transition-all duration-300 shadow-sm text-white">
+                <tr class="text-xs w-full h-full">
                     <th v-for="(column,index) in columns"
                         @mouseover="showMenu = column.id" :key="column.id"
                         @mouseout="showMenu = null"

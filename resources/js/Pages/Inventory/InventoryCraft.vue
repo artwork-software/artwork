@@ -22,7 +22,7 @@
         <InventoryCategory :index="index"
                            :category="category"
                            :colspan="colspan"
-                           :tr-cls="getOnDragCls(index)"
+                           :tr-cls="getCategoryOnDragCls(index)"
                            @category-dragging="handleCategoryDragging"
                            @category-drag-end="handleCategoryDragEnd"
         />
@@ -62,12 +62,15 @@ const props = defineProps({
     toggleCraft = () => {
         craftShown.value = !craftShown.value;
     },
-    getOnDragCls = (index) => {
-        return categoryDragging.value && draggedCategoryIndex.value !== index ? 'onDragBackground' : '';
+    openShiftSettingsInNewTab = () => {
+        window.open(route('shift.settings'), '_blank');
     },
     handleCategoryDragging = (index) => {
         draggedCategoryIndex.value = index;
         categoryDragging.value = true;
+    },
+    getCategoryOnDragCls = (index) => {
+        return categoryDragging.value && draggedCategoryIndex.value !== index ? 'onDragBackground' : '';
     },
     handleCategoryDragEnd = () => {
         draggedCategoryIndex.value = null;
@@ -81,8 +84,5 @@ const props = defineProps({
             fromIndex,
             toIndex
         );
-    },
-    openShiftSettingsInNewTab = () => {
-        window.open(route('shift.settings'), '_blank');
     };
 </script>

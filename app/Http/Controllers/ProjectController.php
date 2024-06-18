@@ -72,8 +72,8 @@ use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
-use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
@@ -190,6 +190,10 @@ class ProjectController extends Controller
         if (request()->has('search')) {
             $projectsQuery = Project::search(request()->get('search'));
         }
+        $users = collect();
+        if (request()->has('user_search') && request()->get('user_search') !== null && request()->get('user_search') !== '') {
+            $users = User::search(request()->get('user_search'))->get();
+        }
 
         $projects = $projectsQuery->paginate($entitiesPerPage);
 
@@ -205,7 +209,22 @@ class ProjectController extends Controller
             'categories' => Category::all(['id', 'name']),
             'genres' => Genre::all(['id', 'name']),
             'sectors' => Sector::all(['id', 'name']),
+            'users' => $users,
+            'createSettings' => app(ProjectCreateSettings::class),
         ]);
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $settings = app(ProjectCreateSettings::class);
+        $settings->attributes = (bool)$request->get('attributes');
+        $settings->state = (bool)$request->state;
+        $settings->managers = (bool)$request->managers;
+        $settings->cost_center = (bool)$request->cost_center;
+        $settings->budget_deadline = (bool)$request->budget_deadline;
+
+        $settings->save();
+        return Redirect::back();
     }
 
     /**
@@ -286,13 +305,46 @@ class ProjectController extends Controller
         $project = Project::create([
             'name' => $request->name,
             'number_of_participants' => $request->number_of_participants,
-            'budget_deadline' => $request->budgetDeadline
         ]);
+
+        $is_manager = false;
+        if (in_array(Auth::id(), $request->assignedUsers, true)) {
+            $is_manager = true;
+        }
 
         $project->users()->save(
             Auth::user(),
-            ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]
+            ['access_budget' => true, 'is_manager' => $is_manager, 'can_write' => true, 'delete_permission' => true]
         );
+
+        if (!empty($request->assignedUsers)) {
+            foreach ($request->assignedUsers as $user) {
+                if ($user !== Auth::id()) {
+                    $project->users()->save(
+                        User::find($user),
+                        [
+                            'access_budget' => false,
+                            'is_manager' => true,
+                            'can_write' => false,
+                            'delete_permission' => false
+                        ]
+                    );
+                }
+            }
+        }
+
+        if (!empty($request->budgetDeadline)) {
+            $project->update(['budget_deadline' => Carbon::parse($request->budgetDeadline)->format('Y-m-d')]);
+        }
+
+        if (!empty($request->state)) {
+            $project->update(['state' => $request->state]);
+        }
+
+        if (!empty($request->cost_center)) {
+            $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center]);
+            $project->update(['cost_center_id' => $costCenter->id]);
+        }
 
         if ($request->isGroup) {
             $project->is_group = true;

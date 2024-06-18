@@ -1,6 +1,7 @@
 <?php
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 
 return [
 
@@ -9,7 +10,8 @@ return [
      * put them (manually) here.
      */
     'settings' => [
-        GeneralSettings::class
+        GeneralSettings::class,
+        ProjectCreateSettings::class
     ],
 
     /*

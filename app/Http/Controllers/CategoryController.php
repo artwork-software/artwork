@@ -8,6 +8,7 @@ use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Http\RedirectResponse;
@@ -69,6 +70,7 @@ class CategoryController extends Controller
                 'name' => $state->name,
                 'color' => $state->color
             ]),
+            'createSettings' => app(ProjectCreateSettings::class)
         ]);
     }
 

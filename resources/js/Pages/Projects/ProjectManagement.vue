@@ -134,9 +134,12 @@
                     </div>
 
                     <BasePaginator :entities="projects" property-name="projects" />
+
                 </div>
             </div>
         </div>
+
+
 
         <project-create-modal
             v-if="createProject"
@@ -145,7 +148,9 @@
             :genres="genres"
             :sectors="sectors"
             :project-groups="this.projectGroups"
+            :states="states"
             @close-create-project-modal="closeCreateProjectModal"
+            :create-settings="createSettings"
         />
 
         <!-- Success Modal - Delete project -->
@@ -320,7 +325,8 @@ export default defineComponent({
         'can',
         'projectGroups',
         'first_project_tab_id',
-        'pinnedProjects'
+        'pinnedProjects',
+        'createSettings'
     ],
     mixins: [Permissions, IconLib],
     data() {

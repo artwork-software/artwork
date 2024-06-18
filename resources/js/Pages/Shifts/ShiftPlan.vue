@@ -237,7 +237,7 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
                                                      :expected-hours="user.expectedWorkingHours"

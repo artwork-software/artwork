@@ -351,6 +351,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
     Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore']);
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
+    Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
+        ->name('project_settings.update');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');

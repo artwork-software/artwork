@@ -147,7 +147,7 @@
                 <tbody>
                 <template v-for="(craft) in filteredCrafts">
                     <InventoryCraft :craft="craft"
-                                    :colspan="6"/>
+                                    :colspan="getColSpan()"/>
                 </template>
                 </tbody>
             </table>
@@ -191,6 +191,9 @@ const props = defineProps({
     showMenu = ref(null),
     searchValue = ref(''),
     dummyFn = () => true,
+    getColSpan = () => {
+        return props.columns.length;
+    },
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);
     },

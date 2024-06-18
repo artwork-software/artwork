@@ -1,13 +1,18 @@
 <template>
-    <tr :draggable="isDraggable()" @dragstart="categoryDragStart" @dragend="categoryDragEnd" :class="'cursor-grab ' + trCls">
-        <td :colspan="colspan" class="pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm">
+    <tr :draggable="isDraggable()"
+        @dragstart="categoryDragStart"
+        @dragend="categoryDragEnd"
+        :class="'cursor-grab ' + trCls">
+        <td :colspan="colspan"
+            class="pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
                     class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
                     @dblclick="toggleCategoryEdit()">
                     {{ category.name }}
                 </div>
-                <div @click="toggleCategory()" class="cursor-pointer">
+                <div @click="toggleCategory()"
+                     class="cursor-pointer">
                     <IconChevronUp v-if="categoryShown" class="w-5 h-5" />
                     <IconChevronDown v-else class="w-5 h-5"/>
                 </div>
@@ -19,8 +24,10 @@
                         v-model="categoryValue"
                         @keyup.enter="applyCategoryValueChange()"
                         @keyup.esc="denyCategoryValueChange()">
-                    <IconCheck class="w-5 h-5 hover:text-green-500" @click="applyCategoryValueChange()"/>
-                    <IconX class="w-5 h-5 hover:text-red-500" @click="denyCategoryValueChange()"/>
+                    <IconCheck class="w-5 h-5 hover:text-green-500"
+                               @click="applyCategoryValueChange()"/>
+                    <IconX class="w-5 h-5 hover:text-red-500"
+                           @click="denyCategoryValueChange()"/>
                 </div>
             </div>
         </td>
@@ -76,9 +83,17 @@ const props = defineProps({
     },
     categoryDragStart = (e) => {
         emits.call(this,'categoryDragging', props.index);
-        e.dataTransfer.movedCategoryId = props.category.id;
+
+        e.dataTransfer.setData('categoryId', props.category.id);
+        e.dataTransfer.setData('currentCategoryIndex', props.index);
     },
     categoryDragEnd = () => {
         emits.call(this, 'categoryDragEnd');
     }
 </script>
+
+<style scoped>
+.onDragBackground :deep(td) {
+    opacity: 50%;
+}
+</style>

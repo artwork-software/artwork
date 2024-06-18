@@ -13,19 +13,23 @@
         </td>
     </tr>
     <AddNewCategory v-if="craftShown"/>
-    <DropCategory v-if="categoryDragging && draggedCategoryIndex > 0"
-                  :colspan="6"/>
+    <DropCategory v-if="showFirstDropCategory"
+                  :colspan="colspan"
+                  :destination-index="0"
+                  @categroy-requests-drag-move="moveCategoryToDestination"/>
     <template v-if="craftShown"
               v-for="(category, index) in craft.categories">
         <InventoryCategory :index="index"
                            :category="category"
-                           :colspan="6"
+                           :colspan="colspan"
                            :tr-cls="getOnDragCls(index)"
                            @category-dragging="handleCategoryDragging"
-                           @category-drag-end="handleCategoryDragend"
+                           @category-drag-end="handleCategoryDragEnd"
         />
-        <DropCategory v-if="categoryDragging && index !== draggedCategoryIndex && index !== (draggedCategoryIndex - 1)"
-                      :colspan="6"/>
+        <DropCategory v-if="showTemplateDropCategory(index)"
+                      :colspan="colspan"
+                      :destination-index="(index + 1)"
+                      @categroy-requests-drag-move="moveCategoryToDestination"/>
     </template>
     <AddNewCategory v-if="craftShown"/>
 </template>
@@ -33,7 +37,7 @@
 <script setup>
 import InventoryCategory from "@/Pages/Inventory/InventoryCategory.vue";
 import {IconChevronDown, IconChevronUp, IconLink} from "@tabler/icons-vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import AddNewCategory from "@/Pages/Inventory/AddNewCategory.vue";
 import DropCategory from "@/Pages/Inventory/DropCategory.vue";
 
@@ -43,22 +47,40 @@ const props = defineProps({
         selectInput: Function,
         createDynamicColumnNameInputRef: Function
     }),
+    craftShown = ref(true),
     categoryDragging = ref(false),
     draggedCategoryIndex = ref(null),
-    craftShown = ref(true),
+    showFirstDropCategory = computed(() => {
+        return categoryDragging.value && draggedCategoryIndex.value > 0;
+    }),
+    showTemplateDropCategory = computed(() => {
+        return (index) =>
+            categoryDragging.value &&
+            index !== draggedCategoryIndex.value &&
+            index !== (draggedCategoryIndex.value - 1);
+    }),
+    toggleCraft = () => {
+        craftShown.value = !craftShown.value;
+    },
     getOnDragCls = (index) => {
-        return categoryDragging.value && draggedCategoryIndex.value !== index ? 'opacity-50' : '';
+        return categoryDragging.value && draggedCategoryIndex.value !== index ? 'onDragBackground' : '';
     },
     handleCategoryDragging = (index) => {
         draggedCategoryIndex.value = index;
         categoryDragging.value = true;
     },
-    handleCategoryDragend = () => {
+    handleCategoryDragEnd = () => {
         draggedCategoryIndex.value = null;
         categoryDragging.value = false;
     },
-    toggleCraft = () => {
-        craftShown.value = !craftShown.value;
+    moveCategoryToDestination = (categoryId, fromIndex, toIndex) => {
+        console.debug(
+            'category requested move from to index',
+            props.craft.id,
+            categoryId,
+            fromIndex,
+            toIndex
+        );
     },
     openShiftSettingsInNewTab = () => {
         window.open(route('shift.settings'), '_blank');

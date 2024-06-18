@@ -1,5 +1,9 @@
 <template>
-    <tr draggable="true" @dragover="categoryDragOver" @dragleave="categoryDragLeave" @drop="categoryDrop" :class="dragOverClass">
+    <tr draggable="true"
+        @dragover="categoryDragOver"
+        @dragleave="categoryDragLeave"
+        @drop="categoryDrop"
+        :class="dragOverClass">
         <td :colspan="colspan">
             <div class="flex flex-row py-1 border border-dashed border-blue-700 justify-center items-center">
                 <IconDragDrop class="w-5 h-5"/>
@@ -12,8 +16,10 @@
 import {IconDragDrop} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 
+const emits = defineEmits(['categroyRequestsDragMove']);
 const props = defineProps({
-        colspan: Number
+        colspan: Number,
+        destinationIndex: Number
     }),
     draggedOver = ref(false),
     dragOverClass = computed(() => {
@@ -23,10 +29,16 @@ const props = defineProps({
         draggedOver.value = true;
         e.preventDefault()
     },
-    categoryDragLeave = (e) => {
+    categoryDragLeave = () => {
         draggedOver.value = false;
     },
     categoryDrop = (e) => {
-        console.debug('categoryDropped', e);
+        emits.call(
+            this,
+            'categroyRequestsDragMove',
+            e.dataTransfer.getData('categoryId'),
+            e.dataTransfer.getData('currentCategoryIndex'),
+            props.destinationIndex
+        );
     };
 </script>

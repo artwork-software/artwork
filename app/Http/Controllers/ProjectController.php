@@ -198,7 +198,8 @@ class ProjectController extends Controller
 
     public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
     {
-        $this->projectSettingsService->store($request);
+        $settings = app(ProjectCreateSettings::class);
+        $this->projectSettingsService->store($request, $settings);
         return Redirect::back();
     }
 

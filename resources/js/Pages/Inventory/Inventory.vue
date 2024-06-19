@@ -1,5 +1,5 @@
 <template>
-    <InventoryHeader :title="this.$t('Inventory')">
+    <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
             <div class="absolute right-[2px] -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
                 <BaseFilter :only-icon="true" class="mr-3">

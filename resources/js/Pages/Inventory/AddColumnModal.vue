@@ -24,26 +24,33 @@
                 <div v-if="newColumnForm.type?.id === NEW_COLUMN_TYPE.SELECT.id"
                      class="w-full flex flex-col">
 
-                    <div class="flex flex-row w-1/2 items-center gap-x-2">
+                    <div class="flex flex-row w-full items-start gap-x-2">
+                        <div class="flex flex-row w-full items-center gap-x-2">
                         <TextInputComponent id="new-select-option-name"
                                             v-model="newColumnNewSelectOptionName"
-                                            :label="$t('Neue Auswahlmöglichkeit')"/>
-                        <IconPlus v-if="newColumnNewSelectOptionName.length > 0"
-                                  class="w-6 h-6 cursor-pointer translate-y-2.5 p-0.5 subpixel-antialiased rounded-full text-white bg-black hover:bg-green-500"
+                                            :label="$t('Neue Auswahlmöglichkeit')"
+                                            @keyup.enter="addNewColumnNewSelectOption()"/>
+                        <PlusCircleIcon v-if="newColumnNewSelectOptionName.length > 0"
+                                  class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full"
                                   @click="addNewColumnNewSelectOption()"/>
+                        </div>
+
+                    </div>
+                    <div class="w-full flex flex-col items-center text-xs">
+                        <div v-for="(option, index) in newColumnForm.selectOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
+                            <span class="text-primary underline">Auswahlmöglichkeit {{ (index + 1) }}:</span>
+                            <div class="flex flex-row justify-between">
+                                <span class="w-[90%] break-words">{{ option }}</span>
+                                <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
+                                           @click="removeNewColumnNewSelectOption(index)"/>
+                            </div>
+                        </div>
                     </div>
                     <span v-if="showNewColumnFormTypeOptionsError"
                           class="text-xs subpixel-antialiased text-error mt-2">
                         {{ $t('Es muss mindestens eine Auswahloption hinzugefügt werden.') }}
                     </span>
-                    <div class="flex flex-col text-xs">
-                        <div v-for="(option, index) in newColumnForm.selectOptions"
-                            class="flex flex-row items-center gap-x-2 mt-2">
-                            <span>{{ option }}</span>
-                            <IconTrashXFilled class="w-6 h-6 cursor-pointer p-0.5 subpixel-antialiased rounded-full text-white bg-black hover:bg-red-500"
-                                              @click="removeNewColumnNewSelectOption(index)"/>
-                        </div>
-                    </div>
+
                 </div>
                 <div class="w-full flex flex-row justify-center mt-4">
                     <FormButton :text="$t('Save')"
@@ -55,7 +62,7 @@
 </template>
 
 <script setup>
-import {IconPlus, IconTrashXFilled} from "@tabler/icons-vue";
+import {PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -116,8 +123,13 @@ const NEW_COLUMN_TYPE = {
         ];
     },
     addNewColumnNewSelectOption = () => {
+        if (newColumnNewSelectOptionName.value.length === 0 || newColumnNewSelectOptionName.value.trim().length === 0) {
+            //just whitespaces are not allowed
+            return;
+        }
         newColumnForm.selectOptions.push(newColumnNewSelectOptionName.value);
         newColumnNewSelectOptionName.value = '';
+        validateNewColumn();
     },
     removeNewColumnNewSelectOption = (index) => {
         newColumnForm.selectOptions.splice(index, 1);

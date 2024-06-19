@@ -126,10 +126,10 @@ import {
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import {reactive} from "vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -217,7 +217,7 @@ export default {
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.user_to_edit.id}`);
+            router.delete(`/users/${this.user_to_edit.id}`);
             this.closeDeleteUserModal()
         },
     }

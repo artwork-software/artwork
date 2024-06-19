@@ -533,7 +533,7 @@
 
                             <span class="float-left flex xsLight subpixel-antialiased">
                                 <IconAdjustmentsAlt stroke-width="1.5"
-                                class="mr-2"
+                                class="mr-2 h-6 w-6"
                                 alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
                                     <IconChevronDown stroke-width="1.5"
                                         class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
@@ -644,7 +644,7 @@ const options = [
     },
 ];
 
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     ChevronDownIcon,
     DotsVerticalIcon,
@@ -671,12 +671,12 @@ import {
     ChevronUpIcon,
     TrashIcon
 } from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import Input from "@/Jetstream/Input";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import TagComponent from "@/Layouts/Components/TagComponent";
-import InputComponent from "@/Layouts/Components/InputComponent";
-import {useForm} from "@inertiajs/inertia-vue3";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Input from "@/Jetstream/Input.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import {useForm} from "@inertiajs/vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";

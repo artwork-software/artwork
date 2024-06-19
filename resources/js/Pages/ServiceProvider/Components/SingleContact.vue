@@ -32,8 +32,8 @@
 <script>
 import {defineComponent} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {router} from "@inertiajs/vue3";
+import {useForm} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default defineComponent({
@@ -56,7 +56,7 @@ export default defineComponent({
     },
     methods: {
         deleteContact(){
-            Inertia.delete(route('service-provider.contact.delete', this.contact.id), {
+            router.delete(route('service-provider.contact.delete', this.contact.id), {
                 preserveState: true, preserveScroll: true, onSuccess: () => this.openSuccessModal()
             });
         },

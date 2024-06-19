@@ -8,10 +8,10 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {XIcon} from "@heroicons/vue/outline";
-import {Link} from "@inertiajs/inertia-vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import {Link} from "@inertiajs/vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 
 export default {

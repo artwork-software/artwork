@@ -1,7 +1,7 @@
 <script>
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {Switch, SwitchGroup, SwitchLabel, Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";

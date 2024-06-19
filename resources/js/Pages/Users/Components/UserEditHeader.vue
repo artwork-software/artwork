@@ -48,7 +48,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
@@ -81,17 +81,17 @@ export default {
     methods: {
         changeTab(selectedTab) {
             if (selectedTab === 1) {
-                Inertia.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
             } else if (selectedTab === 2) {
-                Inertia.get(route('user.edit.terms', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.terms', {user: this.user_to_edit.id}));
             } else if (selectedTab === 3) {
-                Inertia.get(route('user.edit.info', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.info', {user: this.user_to_edit.id}));
             } else if (selectedTab === 4) {
-                Inertia.get(route('user.edit.permissions', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.permissions', {user: this.user_to_edit.id}));
             } else if (selectedTab === 5) {
-                Inertia.get(route('user.edit.workProfile', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.workProfile', {user: this.user_to_edit.id}));
             } else {
-                Inertia.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
+                router.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
             }
         },
     },

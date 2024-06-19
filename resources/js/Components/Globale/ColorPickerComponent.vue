@@ -41,13 +41,16 @@ export default {
         v-on:activeKeyChange="updateColor"
         :pure-color="selectedColor"
         disable-alpha
+        class="w-full"
     />
 </template>
 
 <style>
 .vc-color-wrap {
-    height: 2.5rem !important;
-    width: 2.5rem !important;
+    height: 3rem !important;
+    width: 3rem !important;
+    min-width: 3rem !important;
+    max-width: 3rem !important;
     box-shadow: none !important;
 
 }

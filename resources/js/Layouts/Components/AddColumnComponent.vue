@@ -147,7 +147,7 @@ import {
     RadioGroup,
     RadioGroupOption
 } from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {
     XIcon,
     CheckIcon,

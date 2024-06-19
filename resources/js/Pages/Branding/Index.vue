@@ -131,7 +131,7 @@ import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({

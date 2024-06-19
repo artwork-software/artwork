@@ -253,10 +253,10 @@
 import {defineComponent} from "vue";
 import BudgetSettingsHeader from "@/Pages/BudgetSettings/BudgetSettingsHeader.vue";
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
-import InputComponent from "@/Layouts/Components/InputComponent";
+import {router} from "@inertiajs/vue3";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -320,7 +320,7 @@ export default defineComponent({
     watch: {
         budgetAccountManagementGlobal: {
             handler() {
-                Inertia.patch(
+                router.patch(
                     route('budget-settings.account-management.updateBudgetAccountManagementGlobal'),
                     {
                         enabled: this.budgetAccountManagementGlobal
@@ -502,7 +502,7 @@ export default defineComponent({
             }
 
             if (desiredRoute !== null) {
-                Inertia.delete(
+                router.delete(
                     desiredRoute,
                     {
                         preserveState: false,

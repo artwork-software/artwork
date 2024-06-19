@@ -137,7 +137,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Label from "@/Jetstream/Label.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default {

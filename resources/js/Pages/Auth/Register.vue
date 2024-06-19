@@ -114,15 +114,13 @@
 
 <script>
 import {defineComponent} from 'vue'
-import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue'
-import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue'
 import JetButton from '@/Jetstream/Button.vue'
 import JetInput from '@/Jetstream/Input.vue'
 import JetCheckbox from '@/Jetstream/Checkbox.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
-import {Head, Link} from '@inertiajs/inertia-vue3';
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {Head, Link} from '@inertiajs/vue3';
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -132,8 +130,6 @@ export default defineComponent({
     mixins: [Permissions],
     components: {
         Head,
-        JetAuthenticationCard,
-        JetAuthenticationCardLogo,
         JetButton,
         JetInput,
         JetCheckbox,

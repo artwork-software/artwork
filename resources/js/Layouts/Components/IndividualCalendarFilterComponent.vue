@@ -271,7 +271,7 @@ import {
 import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -588,7 +588,7 @@ export default {
             }
         },
         reloadChanges() {
-            Inertia.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
                 is_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
                 is_not_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
                 adjoining_no_audience: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNoAudience.checked),

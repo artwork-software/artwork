@@ -90,4 +90,9 @@ readonly class UserRepository extends BaseRepository
     {
         return User::role(RoleEnum::ARTWORK_ADMIN->value)->first();
     }
+
+    public function searchUsers(string $search): Collection
+    {
+        return User::search($search)->get();
+    }
 }

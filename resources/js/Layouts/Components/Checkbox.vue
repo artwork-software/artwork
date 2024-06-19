@@ -16,7 +16,7 @@
 
 <script>
 import {InformationCircleIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 

@@ -6,7 +6,7 @@
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="date"
                dataformatas="dd.mm.yyyy"
-               class="p-1.5 text-sm h-full w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
+               class="p-1.5 h-12 text-sm w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
     </InputLabelContainer>
 </template>
 

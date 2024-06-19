@@ -20,12 +20,12 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+
 import {XIcon} from "@heroicons/vue/outline";
 
 export default {
     name: "TagComponent",
-    components: {Button, XIcon},
+    components: {XIcon},
     props: {
         property: String,
         displayedText: String,

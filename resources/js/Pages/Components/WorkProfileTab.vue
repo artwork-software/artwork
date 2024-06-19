@@ -139,12 +139,12 @@
 <script>
 import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import {reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
@@ -256,7 +256,7 @@ export default {
             }
 
             if (desiredRoute) {
-                Inertia.patch(
+                router.patch(
                     route(desiredRoute, routeParameter),
                     {
                         shiftQualificationId: shiftQualification.id,
@@ -320,7 +320,7 @@ export default {
             }
 
             if (desiredRoute) {
-                Inertia.patch(
+                router.patch(
                     route(desiredRoute, routeParameter),
                     {
                         craftId: this.selectedCraftToAssign
@@ -352,7 +352,7 @@ export default {
             }
 
             if (desiredRoute) {
-                Inertia.delete(
+                router.delete(
                     route(desiredRoute, routeParameter),
                     {
                         preserveScroll: true

@@ -206,9 +206,9 @@
 <script>
 import {ChevronLeftIcon, ChevronRightIcon, XIcon, CalendarIcon} from "@heroicons/vue/solid";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import dayjs from "dayjs";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Button from "@/Jetstream/Button.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
@@ -440,7 +440,7 @@ export default {
         },
         previousMonth() {
             const currentMonth = new Date(this.createShowDate[1].date);
-            Inertia.reload({
+            router.reload({
                 data: {
                     vacationMonth: this.subtractOneMonth(currentMonth),
                 }
@@ -449,7 +449,7 @@ export default {
         nextMonth() {
             const currentMonth = new Date(this.createShowDate[1].date);
 
-            Inertia.reload({
+            router.reload({
                 data: {
                     vacationMonth: this.addOneMonth(currentMonth),
                 }

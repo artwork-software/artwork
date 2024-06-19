@@ -1,6 +1,6 @@
 <script setup>
 
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";

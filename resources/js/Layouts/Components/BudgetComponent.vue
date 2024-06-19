@@ -647,16 +647,14 @@ import {
     SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {useForm} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
 import Button from "@/Jetstream/Button.vue";
-import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -665,6 +663,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 
 export default {
     name: 'BudgetComponent',
@@ -696,7 +695,6 @@ export default {
         XIcon,
         PencilAltIcon,
         TrashIcon,
-        JetDialogModal,
         CheckIcon,
         Listbox,
         ListboxButton,
@@ -844,7 +842,7 @@ export default {
         userExcludeCommentedBudgetItems: {
             handler(excludeHiddenItems) {
                 if (this.$page.props.user.commented_budget_items_setting === null) {
-                    Inertia.post(
+                    router.post(
                         route(
                             'user.commentedBudgetItemsSettings.store',
                             {
@@ -862,7 +860,7 @@ export default {
                     return;
                 }
 
-                Inertia.patch(
+                router.patch(
                     route(
                         'user.commentedBudgetItemsSettings.update',
                         {
@@ -895,7 +893,7 @@ export default {
     },
     methods: {
         updateColumnCommented(columnId, bool) {
-            Inertia.patch(
+            router.patch(
                 route(
                     'project.budget.column.update.commented',
                     {
@@ -919,7 +917,7 @@ export default {
             });
         },
         duplicateColumn(columnId){
-            Inertia.post(route('project.budget.column.duplicate', columnId), {}, {
+            router.post(route('project.budget.column.duplicate', columnId), {}, {
                 preserveState: true,
                 preserveScroll: true
             });
@@ -1036,16 +1034,16 @@ export default {
             this.showUserAdd = true
         },
         changeColumnColor(color, columnId) {
-            this.$inertia.patch(route('project.budget.column-color.change'), {
+            router.patch(route('project.budget.column-color.change'), {
                 color: color,
                 columnId: columnId
             })
         },
         deleteColumn(column) {
-            this.$inertia.delete(route('project.budget.column.delete', column))
+            router.delete(route('project.budget.column.delete', column))
         },
         addRowToSubPosition(subPosition, row) {
-            this.$inertia.post(route('project.budget.sub-position-row.add'), {
+            router.post(route('project.budget.sub-position-row.add'), {
                 table_id: this.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
@@ -1061,7 +1059,7 @@ export default {
             this.showAddColumnModal = false;
         },
         openUseTemplateModal() {
-            Inertia.reload({
+            router.reload({
                 data: {
                     useTemplates: true
                 },
@@ -1104,7 +1102,7 @@ export default {
                 cell.value = 0;
             }
 
-            this.$inertia.patch(route('project.budget.cell.update'), {
+            router.patch(route('project.budget.cell.update'), {
                 column_id: cell.column.id,
                 value: cell.value,
                 sub_position_row_id: cell.sub_position_row_id,
@@ -1123,7 +1121,7 @@ export default {
                 }
             }
 
-            this.$inertia.post(route('project.budget.sub-position.add'), {
+            router.post(route('project.budget.sub-position.add'), {
                 table_id: this.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
@@ -1133,7 +1131,7 @@ export default {
             });
         },
         addMainPosition(type, mainPosition) {
-            this.$inertia.post(route('project.budget.main-position.add'), {
+            router.post(route('project.budget.main-position.add'), {
                 table_id: this.table.id,
                 type: type,
                 positionBefore: mainPosition.position
@@ -1143,7 +1141,7 @@ export default {
             });
         },
         updateColumnName(column) {
-            this.$inertia.patch(route('project.budget.column.update-name'), {
+            router.patch(route('project.budget.column.update-name'), {
                 column_id: column.id,
                 columnName: column.name
             }, {
@@ -1152,7 +1150,7 @@ export default {
             });
         },
         updateMainPositionName(mainPosition) {
-            this.$inertia.patch(route('project.budget.main-position.update-name'), {
+            router.patch(route('project.budget.main-position.update-name'), {
                 mainPosition_id: mainPosition.id,
                 mainPositionName: mainPosition.name
             }, {
@@ -1161,7 +1159,7 @@ export default {
             });
         },
         updateSubPositionName(subPosition) {
-            this.$inertia.patch(route('project.budget.sub-position.update-name'), {
+            router.patch(route('project.budget.sub-position.update-name'), {
                 subPosition_id: subPosition.id,
                 subPositionName: subPosition.name
             }, {
@@ -1171,7 +1169,7 @@ export default {
         },
         openCellDetailModal(cell, type) {
             console.log('hier');
-            Inertia.get(
+            router.get(
                 route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedCell: cell.id,
@@ -1187,7 +1185,7 @@ export default {
             );
         },
         openBudgetSumDetailModal(type, column, tab = 'comment') {
-            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
+            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
             }, {
@@ -1200,7 +1198,7 @@ export default {
             })
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
-            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
+            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1214,7 +1212,7 @@ export default {
             })
         },
         openMainPositionSumDetailModal(mainPosition, column, type) {
-            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
+            router.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedMainPosition: mainPosition.id,
                     selectedColumn: column.id,
@@ -1274,15 +1272,15 @@ export default {
         },
         deletePosition() {
             if (this.mainPositionToDelete !== null) {
-                this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id),{preserveState: true, preserveScroll: true})
+                router.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id),{preserveState: true, preserveScroll: true})
                 this.successHeading = this.$t('Main position deleted');
                 this.successDescription = this.$t('Main position successfully deleted', [this.mainPositionToDelete.name]);
             } else if (this.subPositionToDelete !== null) {
-                this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id),{preserveState: true, preserveScroll: true})
+                router.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id),{preserveState: true, preserveScroll: true})
                 this.successHeading = this.$t('Sub-item deleted');
                 this.successDescription = this.$t('Sub-item successfully deleted', [this.subPositionToDelete.name]);
             } else {
-                this.$inertia.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
+                router.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
                     preserveState: true
                 });
@@ -1360,36 +1358,36 @@ export default {
             this.showVerifiedModal = true
         },
         verifiedMainPosition(mainPositionId) {
-            this.$inertia.patch(this.route('project.budget.verified.main-position'), {
+            router.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
                 table_id: this.table.id,
             }, {preserveState: true, preserveScroll: true})
         },
         verifiedSubPosition(subPositionId) {
-            this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
+            router.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
                 table_id: this.table.id,
             }, {preserveState: true, preserveScroll: true})
         },
         requestRemove(position, type) {
-            this.$inertia.post(this.route('project.budget.take-back.verification'), {
+            router.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
             }, {preserveState: true, preserveScroll: true})
         },
         removeVerification(position, type) {
-            this.$inertia.post(this.route('project.budget.remove.verification'), {
+            router.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
             }, {preserveState: true, preserveScroll: true})
         },
         lockColumn(columnId) {
-            this.$inertia.patch(this.route('project.budget.lock.column'), {
+            router.patch(this.route('project.budget.lock.column'), {
                 columnId: columnId
             }, {preserveState: true, preserveScroll: true});
         },
         unlockColumn(columnId) {
-            this.$inertia.patch(this.route('project.budget.unlock.column'), {
+            router.patch(this.route('project.budget.unlock.column'), {
                 columnId: columnId
             }, {preserveState: true, preserveScroll: true});
         },
@@ -1400,12 +1398,12 @@ export default {
             this.showDeleteModal = true;
         },
         resetBudgetTable(){
-            this.$inertia.patch(this.route('project.budget.reset.table', this.project.id),{}, {preserveState: true, preserveScroll: true})
+            router.patch(this.route('project.budget.reset.table', this.project.id),{}, {preserveState: true, preserveScroll: true})
             this.resetWanted= false;
             this.showDeleteModal = false;
         },
         deleteBudgetTemplate(){
-          this.$inertia.delete(this.route('project.budget.table.delete', this.table.id), {preserveState: true, preserveScroll: true})
+          router.delete(this.route('project.budget.table.delete', this.table.id), {preserveState: true, preserveScroll: true})
         },
         openErrorModal(title, description) {
             this.errorTitle = title;
@@ -1426,7 +1424,7 @@ export default {
         },
         showSageNotAssignedDataConfirmationModalHandler(closedToDelete) {
             if (closedToDelete) {
-                Inertia.delete(
+                router.delete(
                     route('sageNotAssignedData.destroy',
                         {
                             sageNotAssignedData: this.sageNotAssignedDataToDelete.id

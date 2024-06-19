@@ -92,7 +92,96 @@
                     @openEditModal="openEditCurrencyModal"
                 />
             </div>
+
+
+            <TinyPageHeadline
+                :title="$t('Settings for project creation')"
+                :description="$t('Here you have the option of making settings for the creation of projects.')"
+            />
+            <transition
+                enter-active-class="duration-300 ease-out"
+                enter-from-class="transform opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="transform opacity-0"
+            >
+                <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+                    {{ $t('Saved. The changes have been successfully applied.') }}
+                </div>
+            </transition>
+
+            <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4">
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="attributes" class="font-medium text-gray-900">
+                            {{ $t('Project Attributes') }}
+                        </label>
+                        <p id="attributes-description" class="text-gray-500 text-xs">
+                            {{ $t('Should it be possible to add project attributes when creating a project?') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.state" id="state" aria-describedby="state-description" name="state" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="state" class="font-medium text-gray-900">
+                            {{ $t('Project status') }}
+                        </label>
+                        <p id="state-description" class="text-gray-500 text-xs">
+                            {{ $t('Should it be possible to add a project status when creating a project?') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.managers" id="managers" aria-describedby="managers-description" name="managers" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="managers" class="font-medium text-gray-900">
+                            {{ $t('Project management') }}
+                        </label>
+                        <p id="managers-description" class="text-gray-500 text-xs">
+                            {{ $t('Should it be possible to add the project management when creating a project?') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.cost_center" id="cost_center" aria-describedby="cost_center-description" name="cost_center" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="cost_center" class="font-medium text-gray-900">
+                            {{ $t('Cost bearer') }}
+                        </label>
+                        <p id="cost_center-description" class="text-gray-500 text-xs">
+                           {{ $t('Do you want to add the cost unit of the project when creating it?') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.budget_deadline" id="budget_deadline" aria-describedby="budget_deadline-description" name="budget_deadline" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="budget_deadline" class="font-medium text-gray-900">
+                            {{ $t('Project Budget Deadline') }}
+                        </label>
+                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                            {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
+
 
         <ProjectSettingsDeleteModal
             :show="deletingGenre"
@@ -164,18 +253,21 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {DotsVerticalIcon, TrashIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import {router, useForm} from "@inertiajs/vue3";
 
 export default {
     mixins: [Permissions],
     components: {
+        TinyPageHeadline,
         ProjectTabs,
         ProjectSettingState,
         ProjectSettingsDeleteModal,
@@ -204,7 +296,8 @@ export default {
         'companyTypes',
         'collectingSocieties',
         'currencies',
-        'states'
+        'states',
+        'createSettings'
     ],
     data() {
         return {
@@ -223,7 +316,15 @@ export default {
             deletingCurrency: false,
             currencyToDelete: null,
             deletingState: false,
-            stateToDelete: null
+            stateToDelete: null,
+            createSettingsForm: useForm({
+                attributes: this.createSettings.attributes,
+                state: this.createSettings.state,
+                managers: this.createSettings.managers,
+                cost_center: this.createSettings.cost_center,
+                budget_deadline: this.createSettings.budget_deadline
+            }),
+            showSaveSuccess: false
         }
     },
     methods: {
@@ -394,10 +495,24 @@ export default {
         closeDeleteStateModal(){
             this.stateToDelete = null;
             this.deletingState = false
+        },
+        updateCreateSettings(){
+            if (this.createSettingsForm.isDirty) {
+                this.createSettingsForm.patch(route('project_settings.update'), {
+                    preserveScroll: true,
+                    onFinish: () => {
+                        this.showSaveSuccess = true
+                        setTimeout(() => {
+                            this.showSaveSuccess = false
+                        }, 2500)
+                    }
+                })
+            }
         }
     },
     setup() {
         return {}
-    }
+    },
+
 }
 </script>

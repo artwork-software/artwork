@@ -11,7 +11,7 @@ import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
 import BudgetTab from "@/Pages/Projects/Tab/Components/BudgetTab.vue";
 import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorComponent.vue";
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";

@@ -85,12 +85,12 @@
 </template>
 
 <script>
-import AppLayout from "@/Layouts/AppLayout";
-import TrashLayout from "@/Layouts/TrashLayout";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import TrashLayout from "@/Layouts/TrashLayout.vue";
 import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {TrashIcon, XIcon} from "@heroicons/vue/outline";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 

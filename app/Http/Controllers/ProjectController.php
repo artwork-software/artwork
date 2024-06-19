@@ -286,87 +286,67 @@ class ProjectController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): JsonResponse|RedirectResponse {
         if (
-            !Auth::user()->canAny(
-                [
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value,
-                    PermissionEnum::PROJECT_MANAGEMENT->value
-                ]
-            )
+            !Auth::user()->canAny([
+            PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
+            PermissionEnum::WRITE_PROJECTS->value,
+            PermissionEnum::PROJECT_MANAGEMENT->value
+            ])
         ) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']));
-        //@todo how did this line ever work?
-        //->map(fn(Department $department) => $this->authorize('update', $department));
-        //$this->projectService->storeByRequest($request);
+        $departments = Department::whereIn('id', collect($request->assigned_departments)->pluck('id'))->get();
+
         $project = Project::create([
             'name' => $request->name,
             'number_of_participants' => $request->number_of_participants,
         ]);
 
-        $is_manager = false;
-        if (in_array(Auth::id(), $request->assignedUsers, true)) {
-            $is_manager = true;
-        }
+        $is_manager = in_array(Auth::id(), $request->assignedUsers, true);
 
-        $project->users()->save(
-            Auth::user(),
-            ['access_budget' => true, 'is_manager' => $is_manager, 'can_write' => true, 'delete_permission' => true]
-        );
+        $project->users()->attach(Auth::id(), [
+            'access_budget' => true,
+            'is_manager' => $is_manager,
+            'can_write' => true,
+            'delete_permission' => true
+        ]);
 
         if (!empty($request->assignedUsers)) {
-            foreach ($request->assignedUsers as $user) {
-                if ($user !== Auth::id()) {
-                    $project->users()->save(
-                        User::find($user),
-                        [
-                            'access_budget' => false,
-                            'is_manager' => true,
-                            'can_write' => false,
-                            'delete_permission' => false
-                        ]
-                    );
-                }
-            }
+            $usersToAttach = collect($request->assignedUsers)->filter(fn($user) => $user !== Auth::id())
+                ->mapWithKeys(fn($user) => [$user => [
+                    'access_budget' => false,
+                    'is_manager' => true,
+                    'can_write' => false,
+                    'delete_permission' => false
+                ]]);
+
+            $project->users()->attach($usersToAttach);
         }
 
-        if (!empty($request->budgetDeadline)) {
-            $project->update(['budget_deadline' => Carbon::parse($request->budgetDeadline)->format('Y-m-d')]);
-        }
-
-        if (!empty($request->state)) {
-            $project->update(['state' => $request->state]);
-        }
-
-        if (!empty($request->cost_center)) {
-            $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center]);
-            $project->update(['cost_center_id' => $costCenter->id]);
-        }
+        $project->update([
+            'budget_deadline' => !empty($request->budgetDeadline) ?
+                Carbon::parse($request->budgetDeadline)->format('Y-m-d') : null,
+            'state' => $request->state ?? null,
+            'cost_center_id' => !empty($request->cost_center) ?
+                CostCenter::firstOrCreate(['name' => $request->cost_center])->id : null
+        ]);
 
         if ($request->isGroup) {
             $project->is_group = true;
-            $project->groups()->sync(collect($request->projects));
-            $project->save();
-        }
-
-        if (!$request->isGroup && !empty($request->selectedGroup)) {
+            $project->groups()->sync($request->projects);
+        } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
         if ($request->assigned_user_ids) {
-            $project->users()->sync(collect($request->assigned_user_ids));
+            $project->users()->sync($request->assigned_user_ids);
         }
 
         $project->categories()->sync($request->assignedCategoryIds);
         $project->sectors()->sync($request->assignedSectorIds);
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
-
-        //$this->generateBasicBudgetValues($project);
 
         $this->budgetService->generateBasicBudgetValues(
             $project,
@@ -377,11 +357,12 @@ class ProjectController extends Controller
             $sageApiSettingsService
         );
 
-        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
-        $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
+        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
+        $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
         return Redirect::route('projects', $project);
     }
+
 
     public function generateBasicBudgetValues(Project $project): void
     {

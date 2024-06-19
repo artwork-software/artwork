@@ -177,6 +177,7 @@
                             <FormButton
                                 :disabled="editRoomForm.name.length === 0"
                                 @click="editRoom"
+                                :text="$t('Save')"
                             />
                         </div>
 

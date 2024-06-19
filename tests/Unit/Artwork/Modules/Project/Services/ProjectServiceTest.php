@@ -96,5 +96,4 @@ class ProjectServiceTest extends TestCase
         // check if all $project->shiftRelevantEventTypes relations deleted_at is same as $time
         $this->assertDatabaseHas('project_shift_contacts', ['project_id' => $project->id, 'deleted_at' => $time]);
     }
-
 }

@@ -107,7 +107,7 @@
                 leave-to-class="transform opacity-0"
             >
                 <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
-                    Gespeichert. Die Änderungen wurden erfolgreich übernommen.
+                    {{ $t('Saved. The changes have been successfully applied.') }}
                 </div>
             </transition>
 
@@ -118,10 +118,10 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="attributes" class="font-medium text-gray-900">
-                            Projekt Attribute
+                            {{ $t('Project Attributes') }}
                         </label>
                         <p id="attributes-description" class="text-gray-500 text-xs">
-                            Soll es möglich sein, Projektattribute beim Anlegen eines Projektes hinzuzufügen?
+                            {{ $t('Should it be possible to add project attributes when creating a project?') }}
                         </p>
                     </div>
                 </div>
@@ -131,10 +131,10 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="state" class="font-medium text-gray-900">
-                            Projekt Status
+                            {{ $t('Project status') }}
                         </label>
                         <p id="state-description" class="text-gray-500 text-xs">
-                            Soll es möglich sein, einen Projektstatus beim Anlegen eines Projektes hinzuzufügen?
+                            {{ $t('Should it be possible to add a project status when creating a project?') }}
                         </p>
                     </div>
                 </div>
@@ -144,10 +144,10 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="managers" class="font-medium text-gray-900">
-                            Projektleitung
+                            {{ $t('Project management') }}
                         </label>
                         <p id="managers-description" class="text-gray-500 text-xs">
-                            Soll es möglich sein, die Projektleitung beim Anlegen eines Projektes hinzuzufügen?
+                            {{ $t('Should it be possible to add the project management when creating a project?') }}
                         </p>
                     </div>
                 </div>
@@ -157,10 +157,10 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="cost_center" class="font-medium text-gray-900">
-                            Kostenträger
+                            {{ $t('Cost bearer') }}
                         </label>
                         <p id="cost_center-description" class="text-gray-500 text-xs">
-                            Wollen Sie den Kostenträger des Projekts bei der Erstellung hinzufügen?
+                           {{ $t('Do you want to add the cost unit of the project when creating it?') }}
                         </p>
                     </div>
                 </div>
@@ -170,10 +170,10 @@
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="budget_deadline" class="font-medium text-gray-900">
-                            Projekt Budget Deadline
+                            {{ $t('Project Budget Deadline') }}
                         </label>
                         <p id="budget_deadline-description" class="text-gray-500 text-xs">
-                            Möchten Sie die Projektbudgetfrist eintragen, wenn Sie ein Projekt anlegen?
+                            {{ $t('Would you like to enter the project budget deadline when you create a project?') }}
                         </p>
                     </div>
                 </div>

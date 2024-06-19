@@ -317,7 +317,7 @@
                                    :placeholder="$t('Title*')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-2" v-if="createSettings.attributes">
                             <Menu as="div" class="inline-block text-left w-full">
                                 <div>
                                     <MenuButton
@@ -462,7 +462,7 @@
                                               :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-2"  v-if="createSettings.attributes">
                             <div class="relative w-full">
                                 <div class="w-full">
                                     <input id="projectGroupQuery" v-model="projectGroupQuery" type="text"

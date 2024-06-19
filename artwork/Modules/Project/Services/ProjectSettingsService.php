@@ -8,14 +8,15 @@ use Artwork\Modules\Project\Models\ProjectCreateSettings;
 class ProjectSettingsService
 {
 
-    public function store(ProjectCreateSettingRequest $request): void
-    {
-        $settings = app(ProjectCreateSettings::class);
-        $settings->attributes = $request->boolean('attributes');
-        $settings->state = $request->boolean('state');
-        $settings->managers = $request->boolean('managers');
-        $settings->cost_center = $request->boolean('cost_center');
-        $settings->budget_deadline = $request->boolean('budget_deadline');
-        $settings->save();
+    public function store(
+        ProjectCreateSettingRequest $request,
+        ProjectCreateSettings $projectCreateSettings
+    ): void {
+        $projectCreateSettings->attributes = $request->boolean('attributes');
+        $projectCreateSettings->state = $request->boolean('state');
+        $projectCreateSettings->managers = $request->boolean('managers');
+        $projectCreateSettings->cost_center = $request->boolean('cost_center');
+        $projectCreateSettings->budget_deadline = $request->boolean('budget_deadline');
+        $projectCreateSettings->save();
     }
 }

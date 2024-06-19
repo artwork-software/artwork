@@ -23,7 +23,8 @@
                             leave-to-class="opacity-0">
                     <ListboxOptions
                         class="absolute z-50 text-xs subpixel-antialiased cursor-pointer mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <ListboxOption as="template" v-for="(option, index) in this.options"
+                        <ListboxOption v-for="(option, index) in this.options"
+                                       as="template"
                                        :key="'listbox-option-' + this.id + '-' + index"
                                        :value="option"
                                        v-slot="{ active, selected }">

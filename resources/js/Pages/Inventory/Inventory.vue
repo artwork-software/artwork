@@ -27,15 +27,11 @@
                                             class="!mt-0 !w-52 !h-9"/>
                         <IconSearch class="cursor-pointer w-6 h-6 hover:text-blue-500"/>
                     </div>
-                    <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600">
+                    <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600" @click="openAddColumnModal()">
                         <span class="drop-shadow-sm shadow-black">
                             {{ $t('New column') }}
                         </span>
-                        <button
-                            class="p-1 border-white border-2 rounded-full items-center shadow-sm"
-                            @click="dummyFn()">
-                            <PlusIcon stroke-width="1.5" class="h-4 w-4"/>
-                        </button>
+                        <PlusIcon stroke-width="1.5" class="h-7 w-7 p-1 border-white border-2 rounded-full shadow-sm"/>
                     </div>
                 </div>
             </div>
@@ -151,6 +147,8 @@
                 </template>
                 </tbody>
             </table>
+            <AddColumnModal :show="showAddColumnModal"
+                            @closed="closeAddColumnModal"/>
         </div>
     </InventoryHeader>
 </template>
@@ -181,6 +179,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import AddColumnModal from "@/Pages/Inventory/AddColumnModal.vue";
 
 const props = defineProps({
         columns: Array,
@@ -190,9 +189,17 @@ const props = defineProps({
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
     searchValue = ref(''),
+    showAddColumnModal = ref(false),
     dummyFn = () => true,
     getColSpan = () => {
         return props.columns.length;
+    },
+    openAddColumnModal = () => {
+        showAddColumnModal.value = true;
+        console.debug('test');
+    },
+    closeAddColumnModal = () => {
+        showAddColumnModal.value = false;
     },
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);

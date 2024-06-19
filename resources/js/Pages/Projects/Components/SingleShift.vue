@@ -192,7 +192,7 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -337,7 +337,7 @@ export default defineComponent({
         dayjs,
         clearShiftUsers(shift) {
             if (shift.users.length > 0 || shift.freelancer.length > 0 || shift.service_provider.length > 0) {
-                Inertia.delete(
+                router.delete(
                     route(
                         'shift.removeAllUsers',
                         {
@@ -384,7 +384,7 @@ export default defineComponent({
             this.userTypeToDelete = null;
         },
         deleteUserFromShift(usersPivotId, userType, removeFromSingleShift = true) {
-            Inertia.delete(
+            router.delete(
                 route(
                     'shift.removeUserByType',
                     {

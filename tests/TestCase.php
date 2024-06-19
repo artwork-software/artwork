@@ -22,6 +22,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
         EventTypeArrayCache::forgetAll();
         ProjectTabArrayCache::forgetAll();
+        $this->withoutVite();
     }
 
     /**

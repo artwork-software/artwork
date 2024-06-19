@@ -68,7 +68,7 @@ import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -118,7 +118,7 @@ export default {
     },
     methods: {
         attachCategories() {
-            Inertia.post(
+            router.post(
                 route('money_sources.categories.sync', {moneySource: this.moneySourceId}),
                 {
                     categoryIds: this.selectedCategoryIds

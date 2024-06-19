@@ -6,7 +6,7 @@
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'" id="sidebar"
-             class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
+             class="fixed sidebar z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
             <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between overflow-auto">
                 <div class="w-full">
                     <div class="flex items-center justify-center" :class="fullSidenav ? 'w-full' : ''">
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="flex flex-col min-h-screen" @click="fullSidenav = false">
+        <div class="flex flex-col min-h-screen pl-2" @click="fullSidenav = false">
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -166,8 +166,8 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {Link, usePage, Head} from "@inertiajs/vue3";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
     IconAdjustmentsAlt, IconBell, IconBuildingWarehouse,

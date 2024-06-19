@@ -17,7 +17,7 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { Head } from '@inertiajs/inertia-vue3';
+import { Head } from '@inertiajs/vue3';
 import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue'
 import Permissions from "@/Mixins/Permissions.vue";
 

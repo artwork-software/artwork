@@ -94,7 +94,7 @@
                         </div>
                     </div>
                 <div v-show="showUserOverview" ref="userOverview" class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                    <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background" :style="{top: calculateTopPositionOfUserOverView}">
+                    <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                         <div class="flex items-center justify-end gap-x-3">
                             <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                 <span class="sr-only">Use setting</span>
@@ -158,7 +158,7 @@
                             <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                             <div>
                                 <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
-                                <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
                                     {{craft.name}}
                                     <ChevronDownIcon
                                         :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
@@ -229,7 +229,7 @@
                                 </tr>
                                 </tbody>
                                 <tbody>
-                                <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
+                                <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 pl-2 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
                                     {{ $t('Without craft assignment')}}
                                     <ChevronDownIcon
                                         :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
@@ -237,7 +237,7 @@
                                     />
                                 </tr>
                                 <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
-                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                         <DragElement v-if="!highlightMode && !multiEditMode"
                                                      :item="user.element"
                                                      :expected-hours="user.expectedWorkingHours"
@@ -267,7 +267,7 @@
                                     <td v-for="day in days" class="flex gap-x-0.5 relative">
                                         <div class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                              @click="handleCellClick(user, day)"
-                                             :style="{width: day.week_separator ? '39px' : '198px'}"
+                                             :style="{width: day.is_sunday ? '158px' : '198px'}"
                                              :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
@@ -285,12 +285,12 @@
                                                 </span>
                                             </span>
                                         </div>
-                                        <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-1 top-1.5 flex items-center justify-end">
+                                        <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
                                             <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
                                                 <component :is="userDayService.icon" class="h-4 w-4" :style="{color: userDayService.hex_color}"/>
                                             </div>
                                         </div>
-                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                        <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
                                             <span v-if="user.type === 0">
                                                 {{ user?.weeklyWorkingHours[day.week_number] }}
                                             </span>
@@ -359,10 +359,10 @@ import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/Singl
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
@@ -561,7 +561,7 @@ export default {
                 const hasDayService = user.dayServices?.[day.without_format]?.some(dayService => dayService.id === this.selectedDayService.id)
                 // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
                 if (hasDayService){
-                    Inertia.patch(route('remove.day.service.from.user', {
+                    router.patch(route('remove.day.service.from.user', {
                         dayServiceable: user.element.id,
                     }), {
                         dayService: this.selectedDayService.id,
@@ -572,7 +572,7 @@ export default {
                         preserveState: true
                     });
                 } else {
-                    Inertia.post(route('day-service.attach', {
+                    router.post(route('day-service.attach', {
                         dayServiceable: user.element.id,
                         dayService: this.selectedDayService.id,
                     }), {
@@ -663,7 +663,7 @@ export default {
             return `${year}-${month}-${day}`;
         },
         updateTimes() {
-            Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                 start_date: this.dateValue[0],
                 end_date: this.dateValue[1],
             }, {
@@ -798,7 +798,7 @@ export default {
             this.dayServiceMode = !this.dayServiceMode;
         },
         toggleCompactMode() {
-            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
+            router.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
                 compact_mode: !this.$page.props.user.compact_mode
             }, {
                 preserveScroll: true,
@@ -936,7 +936,7 @@ export default {
             }
 
 
-            Inertia.post(route('shift.multi.edit.save'), {
+            router.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,
                 shiftsToHandle: this.shiftsToHandleOnMultiEdit

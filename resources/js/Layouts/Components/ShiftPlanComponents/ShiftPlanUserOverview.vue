@@ -49,7 +49,7 @@
 
 <script>
 import {defineComponent} from 'vue'
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
 

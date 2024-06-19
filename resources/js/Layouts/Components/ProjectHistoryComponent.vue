@@ -72,7 +72,6 @@
 
 <script>
 import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
@@ -87,7 +86,6 @@ export default {
         BaseModal,
         UserPopoverTooltip,
         NewUserToolTip,
-        JetDialogModal,
         XIcon,
         CheckIcon
     },

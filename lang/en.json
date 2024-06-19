@@ -1839,5 +1839,13 @@
     "Inventory Management": "Inventory Management",
     "Inventory Scheduling": "Inventory Scheduling",
     "Maintain the inventory of all projects for your artwork.": "Maintain the inventory of all projects for your artwork.",
-    "Filter": "Filter"
+    "Filter": "Filter",
+    "Should it be possible to add project attributes when creating a project?": "Should it be possible to add project attributes when creating a project?",
+    "Should it be possible to add a project status when creating a project?": "Should it be possible to add a project status when creating a project?",
+    "Should it be possible to add the project management when creating a project?": "Should it be possible to add the project management when creating a project?",
+    "Do you want to add the cost unit of the project when creating it?": "Do you want to add the cost unit of the project when creating it?",
+    "Would you like to enter the project budget deadline when you create a project?": "Would you like to enter the project budget deadline when you create a project?",
+    "Saved. The changes have been successfully applied.": "Saved. The changes have been successfully applied.",
+    "Settings for project creation": "Settings for project creation",
+    "Here you have the option of making settings for the creation of projects.": "Here you have the option of making settings for the creation of projects."
 }

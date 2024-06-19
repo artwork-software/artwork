@@ -1839,5 +1839,13 @@
     "Inventory Management": "Bestandsverwaltung",
     "Inventory Scheduling": "Bestandsdisposition",
     "Maintain the inventory of all projects for your artwork.": "Pflege den Bestand aller Projekte für dein artwork.",
-    "Filter": "Filter"
+    "Filter": "Filter",
+    "Should it be possible to add project attributes when creating a project?": "Soll es möglich sein, Projektattribute beim Erstellen eines Projekts hinzuzufügen?",
+    "Should it be possible to add a project status when creating a project?": "Soll es möglich sein, einen Projektstatus beim Erstellen eines Projekts hinzuzufügen?",
+    "Should it be possible to add the project management when creating a project?": "Soll es möglich sein, die Projektleitung beim Erstellen eines Projekts hinzuzufügen?",
+    "Do you want to add the cost unit of the project when creating it?": "Möchtest du die Kostenträger des Projekts beim Erstellen hinzufügen?",
+    "Would you like to enter the project budget deadline when you create a project?": "Möchtest du den Projekt-Budget-Stichtag beim Erstellen eines Projekts eingeben?",
+    "Saved. The changes have been successfully applied.": "Gespeichert. Die Änderungen wurden erfolgreich übernommen.",
+    "Settings for project creation": "Einstellungen für Projekt-Erstellung",
+    "Here you have the option of making settings for the creation of projects.": "Hier hast du die Möglichkeit, Einstellungen für die Erstellung von Projekten vorzunehmen."
 }

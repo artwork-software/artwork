@@ -19,15 +19,15 @@
                     </div>
                 </div>
                 <div v-if="isCreateProjectTab">
-                    <div class="mt-2">
-                        <div class="mb-2">
+                    <div class="mt-2 divide-y divide-gray-300 divide-dashed">
+                        <div class="py-3">
                             <div class="relative flex w-full">
                                 <input id="projectName" v-model="createProjectForm.name" type="text"
                                        :placeholder="$t('Project name*')"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                         </div>
-                        <div class="mb-2">
+                        <div class="py-3" v-if="createSettings.attributes">
                             <Menu as="div" class="inline-block text-left w-full">
                                 <div>
                                     <MenuButton
@@ -157,25 +157,97 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
+                            <div class="flex" :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
+                                <div v-for="categoryId in createProjectForm.assignedCategoryIds">
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
+                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                </div>
+                                <div v-for="genreId in createProjectForm.assignedGenreIds">
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
+                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                </div>
+                                <div v-for="sectorId in createProjectForm.assignedSectorIds">
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
+                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex mb-2">
-                            <div v-for="categoryId in createProjectForm.assignedCategoryIds">
-                                <TagComponent hide-x="true"
-                                              :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                              :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
-                            </div>
-                            <div v-for="genreId in createProjectForm.assignedGenreIds">
-                                <TagComponent hide-x="true"
-                                              :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                              :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
-                            </div>
-                            <div v-for="sectorId in createProjectForm.assignedSectorIds">
-                                <TagComponent hide-x="true"
-                                              :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                              :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+
+                        <div class="flex py-2 w-full" v-if="createSettings.state">
+                            <Listbox as="div" class="flex w-full" v-model="selectedState">
+                                <ListboxButton class="w-full text-left">
+                                    <button class="w-full h-12 flex justify-between xsDark items-center text-left border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
+                                        <span class="w-full" v-if="!selectedState">
+                                            {{ $t('Select project status') }}
+                                        </span>
+                                        <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
+                                              :style="{
+                                            backgroundColor: backgroundColorWithOpacity(states.find(state => state.id === selectedState)?.color),
+                                            color: TextColorWithDarken(states.find(state => state.id === selectedState)?.color),
+                                            borderColor: TextColorWithDarken(states.find(state => state.id === selectedState)?.color)
+                                        }">
+                                            {{ this.states.find(state => state.id === selectedState)?.name}}
+                                        </span>
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </button>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100"
+                                            leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-[88%] z-10 mt-12 bg-white shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class=""
+                                                       v-for="state in states"
+                                                       :key="state.id"
+                                                       :value="state.id" v-slot="{ active, selected }">
+                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
+                                                <div class="flex">
+                                                    <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: TextColorWithDarken(state.color), borderColor: TextColorWithDarken(state.color)}">
+                                                        {{ state.name }}
+                                                    </span>
+                                                </div>
+                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                    <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                        </div>
+
+                        <div class="py-2" v-if="createSettings.managers">
+                            <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
+                            <UserSearch @user-selected="addUserToProject" class="mb-2" />
+
+                            <div v-if="assignedUsers.length > 0">
+                                <div v-for="(user, index) in assignedUsers">
+                                    <div class="flex items-center justify-between mb-3 group">
+                                        <div class="flex items-center gap-x-2">
+                                            <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
+                                            <div>
+                                                {{ user.full_name}}
+                                            </div>
+                                        </div>
+                                        <div class="hidden group-hover:block">
+                                            <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center mb-2">
+
+                        <div class="py-3" v-if="createSettings.cost_center">
+                            <TextInputComponent
+                                v-model="createProjectForm.cost_center"
+                                :label="$t('Name of the cost unit')"
+                            />
+                        </div>
+
+                        <div class="flex items-center py-3">
                             <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="addToProjectGroup"
@@ -184,7 +256,7 @@
                                 {{ $t('Belongs to project group') }}
                             </label>
                         </div>
-                        <div v-if="this.addToProjectGroup" class="mb-2">
+                        <div v-if="this.addToProjectGroup" class="py-3">
                             <Listbox as="div" v-model="this.createProjectForm.selectedGroup" id="room">
                                 <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                     <div class="flex-grow flex text-left xsDark">
@@ -213,7 +285,7 @@
                                 </ListboxOptions>
                             </Listbox>
                         </div>
-                        <div class="mt-4">
+                        <div class="py-3" v-if="createSettings.budget_deadline">
                             <div class="xsLight">
                                 <span>{{ $t('Budget deadline') }}</span>
                             </div>
@@ -225,14 +297,15 @@
                                        class="border-gray-300 inputMain xsDark placeholder-secondary placeholder:text-secondary disabled:border-none flex-grow"/>
                             </div>
                         </div>
-                        <div class="w-full items-center text-center">
-                            <FormButton
-                                @click="addProject"
-                                :disabled="this.createProjectForm.name === ''"
-                                :text="$t('Create')"
-                                class="mt-8 inline-flex items-center"
-                            />
-                        </div>
+
+                    </div>
+                    <div class="w-full items-center text-center">
+                        <FormButton
+                            @click="addProject"
+                            :disabled="this.createProjectForm.name === ''"
+                            :text="$t('Create')"
+                            class="mt-8 inline-flex items-center"
+                        />
                     </div>
                 </div>
                 <div v-if="isCreateProjectGroupTab">
@@ -244,7 +317,7 @@
                                    :placeholder="$t('Title*')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-2" v-if="createSettings.attributes">
                             <Menu as="div" class="inline-block text-left w-full">
                                 <div>
                                     <MenuButton
@@ -389,7 +462,7 @@
                                               :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-2"  v-if="createSettings.attributes">
                             <div class="relative w-full">
                                 <div class="w-full">
                                     <input id="projectGroupQuery" v-model="projectGroupQuery" type="text"
@@ -452,7 +525,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {
     Disclosure,
     DisclosureButton,
@@ -467,10 +540,17 @@ import {
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default {
     name: 'ProjectCreateModal',
+    mixins: [IconLib, ColorHelper],
     components: {
+        TextInputComponent,
+        UserSearch,
         BaseModal,
         FormButton,
         ListboxOption,
@@ -497,7 +577,9 @@ export default {
         'categories',
         'genres',
         'sectors',
-        'projectGroups'
+        'projectGroups',
+        'states',
+        'createSettings'
     ],
     data() {
         return {
@@ -512,11 +594,16 @@ export default {
                 isGroup: false,
                 projects: [],
                 selectedGroup: null,
-                budgetDeadline: null
+                budgetDeadline: null,
+                state: null,
+                assignedUsers: [],
+                cost_center: '',
             }),
             projectGroupProjects: [],
             projectGroupSearchResults: [],
             projectGroupQuery: '',
+            selectedState: null,
+            assignedUsers: [],
         }
     },
     computed: {
@@ -534,6 +621,14 @@ export default {
         },
     },
     methods: {
+        addUserToProject(user) {
+            if (!this.assignedUsers.includes(user)) {
+                this.assignedUsers.push(user);
+            }
+        },
+        removeUserFromProject(index) {
+            this.assignedUsers.splice(index, 1);
+        },
         changeTab(selectedTab) {
             if (selectedTab.name === this.$t('Projects')) {
                 this.isCreateProjectTab = true;
@@ -549,6 +644,10 @@ export default {
             this.projectGroupProjects.forEach((projectToAdd) => {
                 this.createProjectForm.projects.push(projectToAdd.id);
             });
+
+            this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
+            this.createProjectForm.state = this.selectedState;
+
             this.createProjectForm.post(
                 route('projects.store'), {
                     onSuccess: () => {

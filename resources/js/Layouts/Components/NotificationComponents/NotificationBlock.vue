@@ -149,11 +149,11 @@
 <script>
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
@@ -212,7 +212,7 @@ export default {
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
         openHistory() {
-            Inertia.reload({
+            router.reload({
                 data: {
                     showHistory: true,
                     historyType: this.notification.data?.historyType,
@@ -232,7 +232,7 @@ export default {
             })
         },
         loadEventDataForDecline() {
-            Inertia.reload({
+            router.reload({
                 data: {
                     openDeclineEvent: true,
                     eventId: this.notification.data?.eventId
@@ -246,7 +246,7 @@ export default {
             this.showDeclineEventModal = false;
         },
         loadEventDataForEditAndAccept() {
-            Inertia.reload({
+            router.reload({
                 data: {
                     openEditEvent: true,
                     eventId: this.notification.data?.eventId
@@ -257,7 +257,7 @@ export default {
             })
         },
         loadEventDataForDialog() {
-            Inertia.reload({
+            router.reload({
                 data: {
                     openEditEvent: true,
                     eventId: this.notification.data?.eventId
@@ -268,7 +268,7 @@ export default {
             })
         },
         loadEventDataForEventWithoutRoom(){
-            Inertia.reload({
+            router.reload({
                 data: {
                     openEditEvent: true,
                     eventId: this.notification.data?.eventId
@@ -282,7 +282,7 @@ export default {
             this.createEventComponentIsVisible = false;
             if(bool){
                 this.checkNotificationKey();
-                Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
@@ -294,7 +294,7 @@ export default {
             this.showRoomRequestDialogComponent = false;
             if(bool){
                 this.checkNotificationKey();
-                Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
@@ -307,7 +307,7 @@ export default {
 
             if (bool) {
                 this.checkNotificationKey();
-                Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
@@ -317,7 +317,7 @@ export default {
         },
         finishDeclineEvent(){
             this.checkNotificationKey();
-            Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+            router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                 notificationKey: this.notification.data?.notificationKey
             }, {
                 preserveScroll: true,

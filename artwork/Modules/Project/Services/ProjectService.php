@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Scout\Builder;
 
 readonly class ProjectService
 {
@@ -40,6 +41,44 @@ readonly class ProjectService
     public function getProjectByCostCenter(string $costCenter): Project|null
     {
         return $this->projectRepository->getProjectByCostCenter($costCenter);
+    }
+
+    public function getProjects(): \Illuminate\Database\Eloquent\Builder
+    {
+        return $this->projectRepository->getProjectQuery([
+            'access_budget' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'categories',
+            'genres',
+            'managerUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'writeUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'state',
+            'delete_permission_users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+        ])->whereNull('pinned_by_users')
+            ->orderBy('id', 'DESC')
+            ->without(['shiftRelevantEventTypes']);
+    }
+
+    public function paginateProjects(
+        Builder|\Illuminate\Database\Eloquent\Builder $projectQuery,
+        int $perPage = 10
+    ): \Illuminate\Pagination\LengthAwarePaginator {
+        return $projectQuery->paginate($perPage);
+    }
+
+    public function getProjectGroups(): Collection
+    {
+        return $this->projectRepository->getProjectGroups();
     }
 
     public function pin(Project $project): bool
@@ -461,6 +500,10 @@ readonly class ProjectService
 
             foreach ($event->shifts as $shift) {
                 $shift->load('shiftsQualifications');
+
+                foreach ($shift->users as $user) {
+                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                }
             }
 
             $eventsWithRelevant[] = [
@@ -500,5 +543,15 @@ readonly class ProjectService
     {
         $project->groups()->attach($projectGroup->id);
         $project->save();
+    }
+
+    public function scoutSearch(string $query): Builder
+    {
+        return $this->projectRepository->scoutSearch($query);
+    }
+
+    public function pinnedProjects(): Collection
+    {
+        return $this->projectRepository->pinnedProjects();
     }
 }

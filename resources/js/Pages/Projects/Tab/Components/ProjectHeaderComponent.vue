@@ -1,10 +1,10 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -12,10 +12,11 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default {
     name: "ProjectHeaderComponent",
-    mixins: [Permissions, IconLib],
+    mixins: [Permissions, IconLib, ColorHelper],
     components: {
         TagComponent,
         BaseModal,
@@ -94,7 +95,7 @@ export default {
         },
         deleteProject() {
             this.nameOfDeletedProject = this.projectToDelete.name;
-            Inertia.delete(`/projects/${this.projectToDelete.id}`);
+            router.delete(`/projects/${this.projectToDelete.id}`);
             this.closeDeleteProjectModal();
         },
         locationString() {
@@ -136,8 +137,7 @@ export default {
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
                         {{ project?.name }}
-                        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                              :class="project?.state?.color">
+                        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(project?.state?.color), color: TextColorWithDarken(project?.state?.color), borderColor: TextColorWithDarken(project?.state?.color)}">
                             {{ project?.state?.name }}
                         </span>
                     </h2>

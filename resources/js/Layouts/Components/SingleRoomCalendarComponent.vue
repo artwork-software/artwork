@@ -71,7 +71,7 @@ import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 
 
@@ -177,7 +177,7 @@ export default {
             return `${year}-${month}-${day}`;
         },
         updateTimes() {
-            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
                 start_date:  this.dateValue[0],
                 end_date: this.dateValue[1],
             },{
@@ -226,7 +226,7 @@ export default {
         },
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            Inertia.reload();
+            router.reload();
         },
 
 

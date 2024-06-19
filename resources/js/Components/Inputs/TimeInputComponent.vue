@@ -5,7 +5,7 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="time"
-               class="p-1.5 text-sm h-full w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
+               class="p-1.5 text-sm h-12 w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
     </InputLabelContainer>
 </template>
 

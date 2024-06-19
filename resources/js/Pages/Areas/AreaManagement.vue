@@ -897,8 +897,8 @@
 <script>
 
 import AppLayout from '@/Layouts/AppLayout.vue'
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import Button from "@/Jetstream/Button";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Button from "@/Jetstream/Button.vue";
 import {
     DotsVerticalIcon,
     InformationCircleIcon,
@@ -908,16 +908,16 @@ import {
 } from "@heroicons/vue/outline";
 import {CheckIcon, ChevronUpIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
-import JetButton from "@/Jetstream/Button";
+import JetButton from "@/Jetstream/Button.vue";
 import {defineComponent} from 'vue'
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import JetSecondaryButton from "@/Jetstream/SecondaryButton";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
+import {Link, useForm} from "@inertiajs/vue3";
 import draggable from "vuedraggable";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
-import {Inertia} from "@inertiajs/inertia";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -1078,7 +1078,7 @@ export default defineComponent({
         },
         afterDeleteRoomCategoryConfirm(confirmed) {
             if (confirmed) {
-                Inertia.delete(route('room_categories.destroy', {roomCategory: this.roomCategoryToDelete.id}));
+                router.delete(route('room_categories.destroy', {roomCategory: this.roomCategoryToDelete.id}));
                 this.roomCategoryToDelete = null;
             }
             this.roomCategoryDeleteModalVisible = false;
@@ -1089,7 +1089,7 @@ export default defineComponent({
         },
         afterDeleteRoomAttributeConfirm(confirmed) {
             if (confirmed) {
-                Inertia.delete(route('room_attribute.destroy', {roomAttribute: this.roomAttributeToDelete.id}));
+                router.delete(route('room_attribute.destroy', {roomAttribute: this.roomAttributeToDelete.id}));
                 this.roomAttributeToDelete = null;
             }
             this.roomAttributeDeleteModalVisible = false;
@@ -1102,7 +1102,7 @@ export default defineComponent({
         addRoomCategory() {
             if (this.checkNameRegex(this.roomCategoryInput)) {
                 this.showInvalidNameErrorText = false;
-                Inertia.post(
+                router.post(
                     route('room_categories.store'),
                     {
                         name: this.roomCategoryInput
@@ -1116,12 +1116,12 @@ export default defineComponent({
             }
         },
         deleteRoomAttribute(attribute) {
-            Inertia.delete(route('room_attribute.destroy', {roomAttribute: attribute.id}));
+            router.delete(route('room_attribute.destroy', {roomAttribute: attribute.id}));
         },
         addRoomAttribute() {
             if (this.checkNameRegex(this.roomAttributeInput)) {
                 this.showInvalidNameErrorText = false;
-                Inertia.post(
+                router.post(
                     route('room_attribute.store'),
                     {
                         name: this.roomAttributeInput
@@ -1139,7 +1139,7 @@ export default defineComponent({
                 const openedAreas = this.opened_areas;
 
                 openedAreas.push(area.id)
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas}, {
+                router.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas}, {
                     preserveScroll: true,
                     preserveState: true
                 });
@@ -1147,7 +1147,7 @@ export default defineComponent({
                 const filteredList = this.opened_areas.filter(function (value) {
                     return value !== area.id;
                 })
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList},{
+                router.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList},{
                     preserveScroll: true,
                     preserveState: true
                 });
@@ -1158,7 +1158,7 @@ export default defineComponent({
                 room.order = index + 1
             })
 
-            this.$inertia.put('/rooms/order', {
+            router.put('/rooms/order', {
                 rooms
             }, {
                 preserveState: true,
@@ -1218,10 +1218,10 @@ export default defineComponent({
             this.closeEditAreaModal();
         },
         duplicateArea(area) {
-            this.$inertia.post(`/areas/${area.id}/duplicate`);
+            router.post(`/areas/${area.id}/duplicate`);
         },
         duplicateRoom(room) {
-            this.$inertia.post(`/rooms/${room.id}/duplicate`);
+            router.post(`/rooms/${room.id}/duplicate`);
         },
         openSoftDeleteAreaModal(area) {
             this.areaToSoftDelete = area;
@@ -1232,7 +1232,7 @@ export default defineComponent({
             this.areaToSoftDelete = null;
         },
         softDeleteArea() {
-            this.$inertia.delete(`/areas/${this.areaToSoftDelete.id}`);
+            router.delete(`/areas/${this.areaToSoftDelete.id}`);
             this.closeSoftDeleteAreaModal()
             this.successHeading = this.$t('Area in the recycle bin')
             this.successDescription = this.$t('The area and all associated rooms have been successfully trashed.')
@@ -1255,7 +1255,7 @@ export default defineComponent({
         },
         softDeleteAllRooms() {
             this.areaToDeleteRoomsFrom.rooms.forEach((room) => {
-                this.$inertia.delete(`/rooms/${room.id}`);
+                router.delete(`/rooms/${room.id}`);
             })
             this.closeDeleteAllRoomsModal();
             this.successHeading = this.$t('Room in the recycle bin')
@@ -1308,7 +1308,7 @@ export default defineComponent({
             this.roomToSoftDelete = null;
         },
         softDeleteRoom() {
-            this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
+            router.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
             this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')

@@ -43,7 +43,7 @@
 
 <script>
 import {defineComponent} from 'vue'
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import {ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
 import dayjs from "dayjs";
@@ -56,7 +56,7 @@ export default defineComponent({
         previousMonth() {
             const currentMonth = new Date(this.dateToShow[1].date);
 
-            Inertia.reload({
+            router.reload({
                 data: {
                     month: this.subtractOneMonth(currentMonth),
                 }
@@ -65,7 +65,7 @@ export default defineComponent({
         nextMonth() {
             const currentMonth = new Date(this.dateToShow[1].date);
 
-            Inertia.reload({
+            router.reload({
                 data: {
                     month: this.addOneMonth(currentMonth),
                 }
@@ -74,7 +74,7 @@ export default defineComponent({
         showVacationsAndAvailabilities(day) {
             const currentMonth = new Date(this.dateToShow[1].date);
             const rightMonth = dayjs(currentMonth)
-            Inertia.reload({
+            router.reload({
                 data: {
                     showVacationsAndAvailabilities: day,
                     vacationMonth: rightMonth.format('YYYY-MM-DD')

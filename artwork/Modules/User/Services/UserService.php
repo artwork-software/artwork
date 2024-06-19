@@ -31,6 +31,11 @@ readonly class UserService
     {
     }
 
+    public function searchUsers(string $search): Collection
+    {
+        return $this->userRepository->searchUsers($search);
+    }
+
     public function getAuthUser(bool $needCalendarAbo = false): ?User
     {
         /** @var User $user */

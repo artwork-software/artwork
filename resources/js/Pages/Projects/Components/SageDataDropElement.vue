@@ -1,5 +1,5 @@
 <script>
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SageDropMultipleDataSelectModal from "@/Pages/Projects/Components/SageDropMultipleDataSelectModal.vue";
 
 export default {
@@ -28,7 +28,7 @@ export default {
             const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
             if(data.type === 'globaleMove'){
-                Inertia.post(this.route('project.budget.drop.sage'), {
+                router.post(this.route('project.budget.drop.sage'), {
                     table_id: this.tableId,
                     sub_position_id: this.subPositionId,
                     positionBefore: this.row ? this.row.position : -1,
@@ -47,7 +47,7 @@ export default {
                     this.DataSelect.positionBefore = this.row ? this.row.position : -1;
                     this.showMultipleDataSelectModal = true;
                 } else {
-                    Inertia.post(this.route('project.budget.move.sage.to.row', {
+                    router.post(this.route('project.budget.move.sage.to.row', {
                         table_id: this.tableId,
                         sub_position_id: this.subPositionId,
                         positionBefore: this.row ? this.row.position : -1,

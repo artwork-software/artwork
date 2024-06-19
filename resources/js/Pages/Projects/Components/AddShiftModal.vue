@@ -295,7 +295,7 @@ import {
     ChevronDownIcon,
     PlusCircleIcon
 } from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

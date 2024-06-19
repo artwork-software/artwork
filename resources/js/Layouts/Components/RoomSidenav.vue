@@ -8,7 +8,7 @@
                            @click="openRoomAccessModal"/>
         </div>
         <div class="text-secondary text-sm mt-4 uppercase">{{$t('Room admin')}}</div>
-        <div class="flex" v-if="room.room_admins.length > 0">
+        <div class="flex" v-if="room.room_admins?.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.room_admins">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
@@ -17,7 +17,7 @@
             {{$t('No room admins available yet')}}
         </div>
         <div class="text-secondary text-sm mt-4 uppercase">{{ $t('Authorized to request')}}</div>
-        <div class="flex" v-if="room.requestable_by.length > 0">
+        <div class="flex" v-if="room.requestable_by?.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
@@ -35,7 +35,7 @@
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openEditRoomAttributesModal"/>
         </div>
-        <div v-if="adjoiningRooms.length > 0 || categories.length > 0 || attributes.length > 0">
+        <div v-if="adjoiningRooms?.length > 0 || categories?.length > 0 || attributes?.length > 0">
             <div class="mt-4 flex flex-wrap">
                 <div v-for="category in categories"
                      class="mr-2 mb-2 flex text-sm px-3 py-1 border border-darkGray bg-primary w-fit rounded-full">
@@ -72,7 +72,7 @@
             />
         </div>
         <div v-if="showRoomFiles">
-            <div v-if="room.room_files.length > 0" class="mt-4">
+            <div v-if="room.room_files?.length > 0" class="mt-4">
                 <div v-for="roomFile in room.room_files">
                     <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>

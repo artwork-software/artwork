@@ -49,7 +49,7 @@
 
 <script>
 import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
 export default {

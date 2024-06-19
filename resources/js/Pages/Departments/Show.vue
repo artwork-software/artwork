@@ -228,14 +228,14 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import JetButton from "@/Jetstream/Button";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInput from "@/Jetstream/Input";
-import JetInputError from "@/Jetstream/InputError";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {Inertia} from "@inertiajs/inertia";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import JetButton from "@/Jetstream/Button.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import {router} from "@inertiajs/vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -300,7 +300,7 @@ export default {
             this.deletingAllTeamMembers = false;
         },
         deleteTeam() {
-            Inertia.delete(`/departments/${this.department.id}`);
+            router.delete(`/departments/${this.department.id}`);
             this.closeDeleteTeamModal()
         },
         openChangeTeamMembersModal() {

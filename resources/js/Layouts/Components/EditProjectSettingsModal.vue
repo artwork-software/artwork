@@ -38,10 +38,8 @@ export default {
         <p class="text-artwork-buttons-context subpixel-antialiased">{{ description }}</p>
 
         <div class="my-5 flex items-center w-full">
-            <ColorPickerComponent @update-color="UpdateColor" :color="itemCopy.color"  />
-            <div class="w-full">
-                <input type="text" v-model="itemCopy.name" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
-            </div>
+            <ColorPickerComponent class="w-fit" @update-color="UpdateColor" :color="itemCopy.color"  />
+            <input type="text" v-model="itemCopy.name" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
         </div>
         <div class="flex justify-between mt-6">
             <FormButton :text="$t('Save')" @click="update" />

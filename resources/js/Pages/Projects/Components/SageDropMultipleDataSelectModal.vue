@@ -3,7 +3,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
 import IconLib from "@/Mixins/IconLib.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormatter.vue";
 
 export default {
@@ -46,7 +46,7 @@ export default {
             // get all checked data form cellData.sage_assigned_data only the id
             let checkedData = this.cellData.sage_assigned_data.filter(data => data.checked).map(data => data.id);
             if(this.type === 'dropOnValue') {
-                Inertia.post(route('project.budget.move.sage.row', {
+                router.post(route('project.budget.move.sage.row', {
                     columnCell: this.cell.id,
                     movedColumn: this.cellData.id
                 }), {
@@ -62,7 +62,7 @@ export default {
             }
 
             if(this.type === 'dropOnRow') {
-                Inertia.post(this.route('project.budget.move.sage.to.row', {
+                router.post(this.route('project.budget.move.sage.to.row', {
                     table_id: this.cellData.table_id,
                     sub_position_id: this.cellData.sub_position_id,
                     positionBefore: this.cellData.positionBefore,

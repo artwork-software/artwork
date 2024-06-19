@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {CalendarIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";

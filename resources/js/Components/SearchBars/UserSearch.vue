@@ -11,6 +11,7 @@ export default {
     data() {
         return {
             user_search_query: '',
+            users: []
         }
     },
     emits: ['user-selected'],
@@ -23,12 +24,12 @@ export default {
     watch: {
         user_search_query: {
             handler() {
-                router.reload({
-                    data: {
-                        user_search: this.user_search_query
-                    },
-                    only: ['users']
-                })
+                axios.post(route('user.scoutSearch'),{
+                    user_search: this.user_search_query,
+                    wantsJson: true,
+                }).then(response => {
+                    this.users = response.data;
+                });
             },
             deep: true
         }
@@ -49,9 +50,9 @@ export default {
             </div>
         </div>
         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-            <div v-if="$page.props.users.length > 0" class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+            <div v-if="users?.length > 0" class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200">
-                    <div v-for="(user, index) in $page.props.users" :key="index" class="flex items-center cursor-pointer">
+                    <div v-for="(user, index) in users" :key="index" class="flex items-center cursor-pointer">
                         <div class="flex-1 text-sm py-4" @click="selectUser(user)">
                             <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
                                 <img :src="user.profile_photo_url" :alt="user.name" class="rounded-full h-8 w-8 object-cover"/>

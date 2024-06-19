@@ -1331,6 +1331,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/scheduling', [InventoryController::class, 'scheduling'])
             ->name('inventory-management.scheduling');
     });
+
+    Route::group(['prefix' => 'searching'], function(){
+        Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
+    });
 });
 
 Route::get(

@@ -139,8 +139,6 @@
             </div>
         </div>
 
-
-
         <project-create-modal
             v-if="createProject"
             :show="createProject"

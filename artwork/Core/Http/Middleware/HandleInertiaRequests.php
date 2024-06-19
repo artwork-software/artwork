@@ -4,9 +4,11 @@ namespace Artwork\Core\Http\Middleware;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -52,7 +54,7 @@ class HandleInertiaRequests extends Middleware
                 'urlParameters' => $request->query(),
                 'flash' => [
                     'success' => fn() => $request->session()->get('success'),
-                    'error' => fn() => $request->session()->get('error')
+                    'error' => fn() => $request->session()->get('error'),
                 ],
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,

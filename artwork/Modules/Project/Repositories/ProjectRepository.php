@@ -7,6 +7,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Laravel\Scout\Builder;
 
 readonly class ProjectRepository extends BaseRepository
 {
@@ -96,6 +97,24 @@ readonly class ProjectRepository extends BaseRepository
         }
 
         return $query;
+    }
+
+    public function scoutSearch(string $query): Builder
+    {
+        return Project::search($query);
+    }
+
+    public function pinnedProjects(): Collection
+    {
+        return Project::whereNotNull('pinned_by_users')
+            ->whereRaw("JSON_LENGTH(pinned_by_users) > 0")
+            ->without(['shiftRelevantEventTypes'])
+            ->get();
+    }
+
+    public function getProjectGroups(): Collection
+    {
+        return Project::where('is_group', '=', 1)->with('groups')->get();
     }
 
 }

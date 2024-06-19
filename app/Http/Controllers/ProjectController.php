@@ -37,6 +37,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
@@ -61,6 +62,7 @@ use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
@@ -81,6 +83,7 @@ use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -93,6 +96,7 @@ use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Sector\Services\SectorService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -125,6 +129,8 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -142,6 +148,11 @@ class ProjectController extends Controller
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
         private readonly ProjectSettingsService $projectSettingsService,
+        private readonly UserService $userService,
+        private readonly ProjectStateService $projectStateService,
+        private readonly CategoryService $categoryService,
+        private readonly GenreService $genreService,
+        private readonly SectorService $sectorService,
     ) {
     }
 
@@ -163,35 +174,27 @@ class ProjectController extends Controller
         return $returnUser;
     }
 
+
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function index(): Response|ResponseFactory
     {
         $entitiesPerPage = request()->get('entitiesPerPage', 10);
-
-        $projectsQuery = $this->projectService->getProjects();
-
-        if (request()->has('search')) {
-            $projectsQuery = Project::search(request()->get('search'));
-        }
-        $users = collect();
-        if (request()->has('user_search') && request()->get('user_search') !== null && request()->get('user_search') !== '') {
-            $users = User::search(request()->get('user_search'))->get();
-        }
-
-        $projects = $projectsQuery->paginate($entitiesPerPage);
+        $projectsQuery = \request()->has('search') ?
+            $this->projectService->scoutSearch(request()->get('search')) :
+            $this->projectService->getProjects();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => $projects,
-            'pinnedProjects' => Project::whereNotNull('pinned_by_users')
-                ->whereRaw("JSON_LENGTH(pinned_by_users) > 0")
-                ->without(['shiftRelevantEventTypes'])
-                ->get(),
-            'first_project_tab_id' => ProjectTab::query()->without(['components', 'sidebarTabs'])->value('id'),
-            'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
-            'categories' => Category::all(['id', 'name']),
-            'genres' => Genre::all(['id', 'name']),
-            'sectors' => Sector::all(['id', 'name']),
-            'users' => $users,
+            'projects' => $this->projectService->paginateProjects($projectsQuery, $entitiesPerPage),
+            'pinnedProjects' => $this->projectService->pinnedProjects(),
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'states' => $this->projectStateService->getAll(),
+            'projectGroups' => $this->projectService->getProjectGroups(),
+            'categories' => $this->categoryService->getAll(),
+            'genres' => $this->genreService->getAll(),
+            'sectors' => $this->sectorService->getAll(),
             'createSettings' => app(ProjectCreateSettings::class),
         ]);
     }

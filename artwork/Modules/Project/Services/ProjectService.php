@@ -42,6 +42,32 @@ readonly class ProjectService
         return $this->projectRepository->getProjectByCostCenter($costCenter);
     }
 
+    public function getProjects(): \Illuminate\Database\Eloquent\Builder
+    {
+        return Project::with([
+            'access_budget' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'categories',
+            'genres',
+            'managerUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'writeUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'state',
+            'delete_permission_users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+        ])->whereNull('pinned_by_users')
+            ->orderBy('id', 'DESC')
+            ->without(['shiftRelevantEventTypes']);
+    }
+
     public function pin(Project $project): bool
     {
         $user = Auth::user();
@@ -439,7 +465,6 @@ readonly class ProjectService
                 ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
-
             $timeline = $event->timelines()->get()->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
@@ -466,7 +491,6 @@ readonly class ProjectService
                 foreach ($shift->users as $user) {
                     $user->formatted_vacation_days = $user->getFormattedVacationDays();
                 }
-
             }
 
             $eventsWithRelevant[] = [

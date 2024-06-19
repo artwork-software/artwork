@@ -68,6 +68,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
@@ -79,6 +80,7 @@ use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -139,6 +141,7 @@ class ProjectController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
+        private readonly ProjectSettingsService $projectSettingsService,
     ) {
     }
 
@@ -214,16 +217,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
     {
-        $settings = app(ProjectCreateSettings::class);
-        $settings->attributes = (bool)$request->get('attributes');
-        $settings->state = (bool)$request->state;
-        $settings->managers = (bool)$request->managers;
-        $settings->cost_center = (bool)$request->cost_center;
-        $settings->budget_deadline = (bool)$request->budget_deadline;
-
-        $settings->save();
+        $this->projectSettingsService->store($request);
         return Redirect::back();
     }
 

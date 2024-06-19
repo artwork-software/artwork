@@ -95,8 +95,8 @@
 
 
             <TinyPageHeadline
-                title="Einstellungen für Projekterstellung"
-                description="Hier können Sie die Einstellungen für die Projekterstellung bearbeiten."
+                :title="$t('Settings for project creation')"
+                :description="$t('Here you have the option of making settings for the creation of projects.')"
             />
             <transition
                 enter-active-class="duration-300 ease-out"

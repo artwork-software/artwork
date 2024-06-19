@@ -44,7 +44,7 @@ readonly class ProjectService
 
     public function getProjects(): \Illuminate\Database\Eloquent\Builder
     {
-        return Project::with([
+        return $this->projectRepository->getProjectQuery([
             'access_budget' => function ($query): void {
                 $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
             },

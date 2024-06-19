@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Artwork\Modules\Project\Services;
+namespace Tests\Feature\Project;
 
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
@@ -28,9 +28,9 @@ class ProjectSettingsServiceTest extends TestCase
             'cost_center' => true,
             'budget_deadline' => true,
         ]);
-
-        $this->projectSettingsService->store($request);
         $projectSettings = app(ProjectCreateSettings::class);
+        $this->projectSettingsService->store($request, $projectSettings);
+
         $this->assertTrue($projectSettings->attributes);
         $this->assertTrue($projectSettings->state);
         $this->assertTrue($projectSettings->managers);

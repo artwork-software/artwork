@@ -167,28 +167,7 @@ class ProjectController extends Controller
     {
         $entitiesPerPage = request()->get('entitiesPerPage', 10);
 
-        $projectsQuery = Project::with([
-            'access_budget' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'categories',
-            'genres',
-            'managerUsers' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'users' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'writeUsers' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'state',
-            'delete_permission_users' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-        ])->whereNull('pinned_by_users')
-            ->orderBy('id', 'DESC')
-            ->without(['shiftRelevantEventTypes']);
+        $projectsQuery = $this->projectService->getProjects();
 
         if (request()->has('search')) {
             $projectsQuery = Project::search(request()->get('search'));

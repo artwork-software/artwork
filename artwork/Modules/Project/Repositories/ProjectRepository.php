@@ -86,4 +86,16 @@ readonly class ProjectRepository extends BaseRepository
 
         return $query->get();
     }
+
+    public function getProjectQuery($with): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Project::query();
+
+        if (count($with) > 0) {
+            $query->with($with);
+        }
+
+        return $query;
+    }
+
 }

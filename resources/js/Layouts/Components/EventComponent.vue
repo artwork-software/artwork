@@ -533,7 +533,7 @@
 
                             <span class="float-left flex xsLight subpixel-antialiased">
                                 <IconAdjustmentsAlt stroke-width="1.5"
-                                class="mr-2"
+                                class="mr-2 h-6 w-6"
                                 alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
                                     <IconChevronDown stroke-width="1.5"
                                         class="ml-2 -mr-1 h-5 w-5 text-primary float-right"

@@ -5,11 +5,10 @@ namespace Artwork\Modules\Project\Services;
 use Artwork\Modules\Project\Repositories\ProjectStateRepository;
 use Illuminate\Support\Collection;
 
-
-class ProjectStateService
+readonly class ProjectStateService
 {
     public function __construct(
-        private readonly ProjectStateRepository $projectStateRepository
+        private ProjectStateRepository $projectStateRepository
     ) {
     }
 

@@ -23,13 +23,11 @@
                 />
                 <div v-if="newColumnForm.type?.id === NEW_COLUMN_TYPE.SELECT.id"
                      class="w-full flex flex-col">
-                    <span class="text-xs subpixel-antialiased">
-                        {{ $t('Neue Auswahlmöglichkeit hinzufügen:') }}
-                    </span>
+
                     <div class="flex flex-row w-1/2 items-center gap-x-2">
                         <TextInputComponent id="new-select-option-name"
                                             v-model="newColumnNewSelectOptionName"
-                                            :label="$t('Auswahlmöglichkeit')"/>
+                                            :label="$t('Neue Auswahlmöglichkeit')"/>
                         <IconPlus v-if="newColumnNewSelectOptionName.length > 0"
                                   class="w-6 h-6 cursor-pointer translate-y-2.5 p-0.5 subpixel-antialiased rounded-full text-white bg-black hover:bg-green-500"
                                   @click="addNewColumnNewSelectOption()"/>
@@ -58,9 +56,9 @@
 
 <script setup>
 import {IconPlus, IconTrashXFilled} from "@tabler/icons-vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
 import {ref} from "vue";
+import {useForm} from "@inertiajs/vue3";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

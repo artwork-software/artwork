@@ -9,7 +9,7 @@
                     </div>
                     <div class="flex items-center mb-12">
                         <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Login')}}</h2>
-                        <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
+                        <SvgCollection svgName="arrowRight"/>
                     </div>
                 </div>
                 <form class="space-y-10" @submit.prevent="submit">

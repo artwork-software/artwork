@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\ProjectController;
+use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
@@ -10,9 +11,12 @@ use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\Sector\Models\Sector;
 use Carbon\Carbon;
+use Database\Factories\Artwork\Modules\Category\Models\CategoryFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -41,58 +45,74 @@ class ContentSeeder extends Seeder
 
     private function seedCollectingSocieties(): void
     {
+        $faker = \Faker\Factory::create();
         CollectingSociety::create([
-            'name' => 'GEMA'
+            'name' => 'GEMA',
+            'color' => $faker->hexColor
         ]);
 
         CollectingSociety::create([
-            'name' => 'PETA'
+            'name' => 'PETA',
+            'color' => $faker->hexColor
         ]);
 
         CollectingSociety::create([
-            'name' => 'KENA'
+            'name' => 'KENA',
+            'color' => $faker->hexColor
         ]);
     }
 
     private function seedCurrencies(): void
     {
+        $faker = \Faker\Factory::create();
         Currency::create([
-            'name' => '€'
+            'name' => '€',
+            'color' => $faker->hexColor
         ]);
         Currency::create([
-            'name' => '$'
+            'name' => '$',
+            'color' => $faker->hexColor
         ]);
         Currency::create([
-            'name' => 'CHF'
+            'name' => 'CHF',
+            'color' => $faker->hexColor
         ]);
         Currency::create([
-            'name' => '£'
+            'name' => '£',
+            'color' => $faker->hexColor
         ]);
     }
 
     private function seedContractTypes(): void
     {
+        $faker = \Faker\Factory::create();
         ContractType::create([
-            'name' => 'Werkvertrag'
+            'name' => 'Werkvertrag',
+            'color' => $faker->hexColor
         ]);
 
         ContractType::create([
-            'name' => 'Dienstvertrag'
+            'name' => 'Dienstvertrag',
+            'color' => $faker->hexColor
         ]);
     }
 
     private function seedCompanyTypes(): void
     {
+        $faker = \Faker\Factory::create();
         CompanyType::create([
-            'name' => 'GmbH'
+            'name' => 'GmbH',
+            'color' => $faker->hexColor
         ]);
 
         CompanyType::create([
-            'name' => 'GbR'
+            'name' => 'GbR',
+            'color' => $faker->hexColor
         ]);
 
         CompanyType::create([
-            'name' => 'AG'
+            'name' => 'AG',
+            'color' => $faker->hexColor
         ]);
     }
 
@@ -180,12 +200,226 @@ class ContentSeeder extends Seeder
         DB::table('areas')->insert([
             'name' => 'Außenbereich',
         ]);
-        DB::table('categories')->insert([
-            'name' => 'Festivals'
-        ]);
-        DB::table('genres')->insert([
-            'name' => 'Rock'
-        ]);
+
+        $faker = \Faker\Factory::create();
+
+        for ($i = 0; $i < 10; $i++) {
+            Category::create([
+                'name' => $faker->randomElement([
+                    'Kunst',
+                    'Musik',
+                    'Theater',
+                    'Literatur',
+                    'Film',
+                    'Tanz',
+                    'Fotografie',
+                    'Design',
+                    'Mode',
+                    'Architektur',
+                    'Gastronomie',
+                    'Kultur',
+                    'Gesundheit',
+                    'Sport',
+                    'Technik',
+                    'Wissenschaft',
+                    'Politik',
+                    'Geschichte',
+                    'Natur',
+                    'Reisen',
+                    'Essen',
+                    'Trinken',
+                    'Kochen',
+                    'Backen',
+                    'Gärtnern',
+                    'Handwerk',
+                    'DIY',
+                    'Kreativität',
+                    'Nachhaltigkeit',
+                    'Umwelt',
+                    'Tiere',
+                    'Menschen',
+                    'Kinder',
+                    'Jugendliche',
+                    'Erwachsene',
+                    'Senioren',
+                    'Familie',
+                    'Freunde',
+                    'Liebe',
+                    'Beziehung',
+                    'Gesellschaft',
+                    'Kommunikation',
+                    'Medien',
+                    'Internet',
+                    'Technologie',
+                    'Digitalisierung',
+                    'Zukunft',
+                    'Vergangenheit',
+                    'Gegenwart',
+                    'Zeit',
+                    'Raum',
+                    'Ort',
+                    'Stadt',
+                    'Land',
+                    'Welt',
+                    'Universum',
+                    'Gesundheit',
+                    'Krankheit',
+                    'Heilung',
+                    'Therapie',
+                    'Medizin',
+                    'Pflege',
+                    'Ernährung',
+                    'Fitness',
+                    'Sport',
+                    'Bewegung',
+                    'Entspannung',
+                    'Meditation',
+                    'Achtsamkeit',
+                    'Spiritualität',
+                    'Religion',
+                    'Philosophie',
+                    'Psychologie',
+                    'Kunsttherapie',
+                    'Musiktherapie',
+                    'Tanztherapie',
+                    'Theatertherapie',
+                    'Literaturtherapie',
+                    'Kreativtherapie',
+                    'Sozialtherapie',
+                    'Pädagogik',
+                    'Schule',
+                    'Bildung',
+                    'Ausbildung',
+                ]),
+                'color' => $faker->hexColor
+            ]);
+        }
+
+        for ($i = 0; $i < 10; $i++) {
+            Genre::create([
+                'name' => $faker->randomElement([
+                    'Pop',
+                    'Rock',
+                    'Klassik',
+                    'Jazz',
+                    'Blues',
+                    'Soul',
+                    'Funk',
+                    'Reggae',
+                    'Hip-Hop',
+                    'Rap',
+                    'Metal',
+                    'Punk',
+                    'Indie',
+                    'Alternative',
+                    'Country',
+                    'Folk',
+                    'Electro',
+                    'Techno',
+                    'House',
+                    'Trance',
+                    'Dubstep',
+                    'Drum & Bass',
+                    'Hardstyle',
+                    'Schlager',
+                    'Volksmusik',
+                    'Chanson',
+                    'Oper',
+                    'Operette',
+                    'Musical',
+                    'Film',
+                    'Kabarett',
+                    'Comedy',
+                    'Satire',
+                    'Improvisation',
+                    'Zauberei',
+                    'Pantomime',
+                    'Clownerie',
+                    'Akrobatik',
+                    'Jonglage',
+                    'Feuershow',
+                    'Tanztheater',
+                    'Ballett',
+                    'Contemporary',
+                    'Modern',
+                    'Streetdance',
+                    'Breakdance',
+                    'Hip-Hop',
+                    'Jazzdance',
+                    'Standard',
+                    'Latein',
+                    'Salsa',
+                    'Tango',
+                    'Walzer',
+                    'Foxtrott',
+                    'Cha-Cha-Cha',
+                    'Rumba',
+                    'Samba',
+                    'Jive',
+                    'Quickstep',
+                    'Paso Doble',
+                    'Wiener Walzer',
+                    'Musical',
+                    'Operette',
+                    'Oper',
+                    'Konzert',
+                    'Oratorium',
+                    'Kammermusik',
+                    'Symphonie',
+                    'Sinfonie',
+                    'Kantate',
+                    'Messe',
+                    'Requiem',
+                    'Sonate',
+                    'Quartett',
+                    'Trio',
+                    'Duett',
+                    'Solo',
+                    'Arie',
+                    'Ouvertüre',
+                    'Intermezzo',
+                    'Fuge',
+                    'Variationen',
+                    'Rhapsodie',
+                    'Impromptu',
+                    'Etüde',
+                    'Präludium',
+                    'Nocturne',
+                    'Scherzo',
+                    'Ballade',
+                    'Capriccio',
+                    'Fantasie',
+                ]),
+                'color' => $faker->hexColor
+            ]);
+        }
+
+        for ($i = 0; $i < 5; $i++) {
+            Sector::create([
+                'name' => $faker->randomElement([
+                    'Vorgarten',
+                    'Hinterhof',
+                    'Keller',
+                    'Dachboden',
+                    'Wohnzimmer',
+                    'Küche',
+                    'Bad',
+                    'Schlafzimmer',
+                    'Kinderzimmer',
+                    'Arbeitszimmer',
+                    'Büro',
+                    'Gästezimmer',
+                    'Esszimmer',
+                    'Wohnzimmer',
+                    'Wintergarten',
+                    'Terrasse',
+                    'Balkon',
+                    'Garten',
+                    'Garage',
+                ]),
+                'color' => $faker->hexColor
+            ]);
+        }
     }
 
     private function seedRooms(): void

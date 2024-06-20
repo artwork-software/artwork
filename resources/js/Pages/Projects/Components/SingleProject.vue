@@ -8,10 +8,12 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 
 export default {
     name: "SingleProject",
     components: {
+        ProjectCreateModal,
         ProjectDataEditModal,
         BaseModal, Link, BaseMenu, Menu,
         MenuButton,
@@ -34,7 +36,23 @@ export default {
         states: {
             type: Object,
             required: true
-        }
+        },
+        createSettings: {
+            type: Object,
+            required: true
+        },
+        sectors: {
+            type: Object,
+            required: true
+        },
+        categories: {
+            type: Object,
+            required: true
+        },
+        genres: {
+            type: Object,
+            required: true
+        },
     },
     data(){
         return {
@@ -137,7 +155,7 @@ export default {
         <div class="grid grid-cols-10 gap-x-3">
             <div class="col-span-1 flex items-center justify-center">
                 <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
-                    <img :src="'/storage/keyVisual/' + project.key_visual_path" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual_path">
+                    <img :src="'/storage/keyVisual/' + project.key_visual_path" alt="" class="rounded-full h-12 w-12 object-cover" v-if="project.key_visual_path">
                     <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
                         <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
@@ -265,15 +283,29 @@ export default {
         </div>
     </BaseModal>
 
-    <project-data-edit-modal
+    <project-create-modal
+        v-if="editingProject"
+        :show="editingProject"
+        :categories="categories"
+        :genres="genres"
+        :sectors="sectors"
+        :project-groups="projectGroups"
+        :states="states"
+        @close-create-project-modal="closeEditProjectModal"
+        :create-settings="createSettings"
+        :project="project"
+    />
+
+    <!--<project-data-edit-modal
         v-if="editingProject"
         :show="editingProject"
         :project="project"
         :group-projects="this.projectGroups"
         :current-group="this.groupPerProject[project?.id]"
         :states="states"
+        :create-settings="createSettings"
         @closed="closeEditProjectModal"
-    />
+    />-->
 </template>
 
 <style scoped>

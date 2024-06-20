@@ -146,6 +146,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="craft.color"
+                                                 class="mb-1"
                                     />
                                 </div>
                             </div>
@@ -164,6 +165,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="null"
+                                                 class="mb-1"
                                     />
                                 </div>
                             </div>

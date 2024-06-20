@@ -51,6 +51,9 @@ readonly class ProjectService
             },
             'categories',
             'genres',
+            'sectors',
+            'costCenter',
+            'groups',
             'managerUsers' => function ($query): void {
                 $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
             },
@@ -553,5 +556,72 @@ readonly class ProjectService
     public function pinnedProjects(): Collection
     {
         return $this->projectRepository->pinnedProjects();
+    }
+
+    public function attachManagementUsersWithoutSelf(Project $project, array $userIds): void
+    {
+        $usersToAttach = collect($userIds)->filter(fn($user) => $user !== Auth::id())
+            ->mapWithKeys(fn($user) => [$user => [
+                'access_budget' => false,
+                'is_manager' => true,
+                'can_write' => false,
+                'delete_permission' => false
+            ]]);
+
+        $project->users()->attach($usersToAttach);
+    }
+
+    public function attachManagementUsersWithSelf(Project $project, array $userIds): void
+    {
+        $usersToAttach = collect($userIds)
+            ->mapWithKeys(fn($user) => [$user => [
+                'access_budget' => false,
+                'is_manager' => true,
+                'can_write' => false,
+                'delete_permission' => false
+            ]]);
+
+        $project->users()->attach($usersToAttach);
+    }
+
+    public function attachSelfToProject(Project $project, bool $isManager): void
+    {
+        $project->users()->attach(Auth::id(), [
+            'access_budget' => false,
+            'is_manager' => $isManager,
+            'can_write' => false,
+            'delete_permission' => false
+        ]);
+    }
+
+    public function syncCategories(Project $project, array $categories): void
+    {
+        $project->categories()->sync($categories);
+    }
+
+    public function syncGenres(Project $project, array $genres): void
+    {
+        $project->genres()->sync($genres);
+    }
+
+    public function syncSectors(Project $project, array $sectors): void
+    {
+        $project->sectors()->sync($sectors);
+    }
+
+    public function detachingManagementUsers(Project $project, bool $detachingAll = false, array $userIds = []): void
+    {
+        if ($detachingAll) {
+            $project->managerUsers()->detach();
+        } else {
+            $project->managerUsers()->detach($userIds);
+        }
+    }
+
+    public function updateProject(
+        Project $project,
+        array $data
+    ): \Artwork\Core\Database\Models\Model|\Artwork\Core\Database\Models\Pivot {
+        return $this->projectRepository->update($project, $data);
     }
 }

@@ -31,7 +31,7 @@ readonly class UserService
     {
     }
 
-    public function searchUsers(string $search): Collection
+    public function searchUsers(string $search): \Illuminate\Support\Collection
     {
         return $this->userRepository->searchUsers($search);
     }

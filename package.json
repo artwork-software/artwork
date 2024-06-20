@@ -1,10 +1,6 @@
 {
     "private": true,
     "type": "module",
-    "engines": {
-        "npm": "^18.0.0",
-        "node" : "^8.0.0"
-    },
     "scripts": {
         "dev": "vite",
         "build": "vite build"

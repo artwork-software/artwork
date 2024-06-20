@@ -7,7 +7,7 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build --max_old_space_size=4096",
         "start": "concurrently  \"php artisan serve\" \"pnpm dev \"",
         "ziggy": "php artisan ziggy:generate --types"
     },

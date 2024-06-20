@@ -119,10 +119,10 @@
 </template>
 
 <script>
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";

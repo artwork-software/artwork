@@ -63,7 +63,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {CheckIcon, XCircleIcon} from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 

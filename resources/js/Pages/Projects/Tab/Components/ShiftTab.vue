@@ -199,11 +199,11 @@ import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
 import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {usePage} from "@inertiajs/inertia-vue3";
+import {usePage} from "@inertiajs/vue3";
 import dayjs from "dayjs";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 
 export default defineComponent({
@@ -305,6 +305,7 @@ export default defineComponent({
             this.loadedProjectInformation['ShiftTab'].events_with_relevant.forEach(event => {
                 event.shifts.forEach(shift => {
                     shift.users.forEach(user => {
+                        console.log(user);
                         if(user.formatted_vacation_days?.includes(shift.event_start_day)){
                             conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
                         }
@@ -404,7 +405,7 @@ export default defineComponent({
             }
         },
         toggleCompactMode() {
-            Inertia.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
+            router.post(route('user.compact.mode.toggle', {user: this.$page.props.user.id}), {
                 compact_mode: !this.$page.props.user.compact_mode
             }, {
                 preserveScroll: true,

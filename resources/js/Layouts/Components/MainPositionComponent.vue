@@ -144,7 +144,7 @@ import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@her
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";

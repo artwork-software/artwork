@@ -6,7 +6,7 @@
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'" id="sidebar"
-             class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
+             class="fixed sidebar z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
             <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between overflow-auto">
                 <div class="w-full">
                     <div class="flex items-center justify-center" :class="fullSidenav ? 'w-full' : ''">
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="pl-2 flex flex-col min-h-screen" @click="fullSidenav = false">
+        <div class="flex flex-col min-h-screen pl-2" @click="fullSidenav = false">
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -166,11 +166,11 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {Link, usePage, Head} from "@inertiajs/vue3";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
-    IconAdjustmentsAlt, IconBell,
+    IconAdjustmentsAlt, IconBell, IconBuildingWarehouse,
     IconCalendarMonth,
     IconCalendarUser,
     IconCurrencyEuro, IconFileText,
@@ -179,6 +179,10 @@ import {
     IconUsers
 } from "@tabler/icons-vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -200,6 +204,10 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        DateComponent,
+        TextareaComponent,
+        NumberComponent,
+        TextComponent,
         SvgCollection,
         Dialog,
         DialogOverlay,
@@ -302,8 +310,6 @@ export default {
                     name: 'Dashboard',
                     href: route('dashboard'),
                     route: ['/dashboard'],
-                    svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
                     has_permission: true,
                     icon: IconLayoutDashboard
                 },
@@ -311,8 +317,6 @@ export default {
                     name: this.$t('Projects'),
                     href: route('projects'),
                     route: ['/projects'],
-                    svgSrc: '/Svgs/Sidebar/icon_projects.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
                     has_permission: true,
                     icon: IconGeometry
                 },
@@ -320,8 +324,6 @@ export default {
                     name: this.$t('Room assignment'),
                     href: route('events'),
                     route: ['/calendar/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
                     has_permission: true,
                     icon: IconCalendarMonth
                 },
@@ -329,27 +331,27 @@ export default {
                     name: this.$t('Shift plan'),
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
                     has_permission: this.$can('can view shift plan') || this.hasAdminRole(),
                     icon: IconCalendarUser
+                },
+                {
+                    name: this.$t('Inventory'),
+                    href: route('inventory-management.inventory'),
+                    route: ['/inventory-management', '/inventory-management/scheduling'],
+                    has_permission: true,
+                    icon: IconBuildingWarehouse
                 },
                 {
                     name: this.$t('Tasks'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
-                    svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
                     has_permission: true,
                     icon: IconListCheck
                 },
-
                 {
                     name: this.$t('Sources of funding'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
-                    svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
                     has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole(),
                     icon: IconCurrencyEuro
                 },
@@ -357,8 +359,6 @@ export default {
                     name: this.$t('Users'),
                     href: route('users'),
                     route: ['/users'],
-                    svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
                     has_permission: true,
                     icon: IconUsers
                 },
@@ -367,8 +367,6 @@ export default {
                     name: this.$t('Contracts'),
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
-                    svgSrc: '/Svgs/Sidebar/icon_contract.svg',
-                    svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
                     has_permission: true,
                     icon: IconFileText
                 }
@@ -459,6 +457,10 @@ export default {
             showPermissions: false,
             hoveredIcon: false,
             fullSidenav: false,
+            testModel: '',
+            testModel2: '',
+            testModel3: '',
+            testModel4: ''
         }
     },
     setup() {
@@ -480,11 +482,3 @@ export default {
 }
 
 </script>
-
-<style scoped>
-.managementMenu {
-    overflow: overlay;
-}
-
-
-</style>

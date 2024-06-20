@@ -90,7 +90,7 @@
 <script>
 import {Switch, Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
@@ -99,13 +99,13 @@ export default {
     methods: {
         toggleGroup(settings, groupType) {
             if(this.groupDisabled(settings)) {
-                Inertia.patch(route('notifications.group'), {
+                router.patch(route('notifications.group'), {
                     groupType,
                     enabled_email: true
                 }, {preserveState: true, preserveScroll: true})
                 return;
             }
-            Inertia.patch(route('notifications.group'), {
+            router.patch(route('notifications.group'), {
                 groupType,
                 enabled_email: false
             }, {preserveState: true, preserveScroll: true})
@@ -114,12 +114,12 @@ export default {
             return settings.every( setting => ! setting.enabled_email);
         },
         toggleEmail(type) {
-            Inertia.patch(route('notifications.settings', {setting: type.id}), {
+            router.patch(route('notifications.settings', {setting: type.id}), {
                 enabled_email: !type.enabled_email
             }, {preserveState: true, preserveScroll: true})
         },
         changeFrequency(type, frequency) {
-            Inertia.patch(route('notifications.settings', {setting: type.id}), {
+            router.patch(route('notifications.settings', {setting: type.id}), {
                 frequency: frequency.value
             }, {preserveState: true, preserveScroll: true})
         }

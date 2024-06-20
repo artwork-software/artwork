@@ -123,7 +123,8 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->using(ProjectUserPivot::class)
-            ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission', 'roles');
+            ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission', 'roles')
+            ->without(['vacation', 'calender_settings']);
     }
 
     //@todo: fix phpcs error - refactor function name to accessBudget
@@ -131,13 +132,15 @@ class Project extends Model
     public function access_budget(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('access_budget', true)->withCasts(['access_budget' => 'boolean']);
+            ->wherePivot('access_budget', true)->withCasts(['access_budget' => 'boolean'])
+            ->without(['vacation', 'calender_settings']);
     }
 
     public function writeUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('can_write', true);
+            ->wherePivot('can_write', true)
+            ->without(['vacation', 'calender_settings']);
     }
 
     //@todo: fix phpcs error - refactor function name to deletePermissionUsers
@@ -145,13 +148,15 @@ class Project extends Model
     public function delete_permission_users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('delete_permission', true);
+            ->wherePivot('delete_permission', true)
+            ->without(['vacation', 'calender_settings']);
     }
 
     public function managerUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('is_manager', true);
+            ->wherePivot('is_manager', true)
+            ->without(['vacation', 'calender_settings']);
     }
 
     public function events(): HasMany

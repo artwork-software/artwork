@@ -121,7 +121,7 @@ import Button from "@/Jetstream/Button.vue";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 export default defineComponent({
     name: "SingleUserVacation",
     mixins: [Permissions],
@@ -144,7 +144,7 @@ export default defineComponent({
     },
     methods: {
         openShowEditVacationModal(){
-            Inertia.reload({
+            router.reload({
                 data: {
                     vacationMonth: this.vacation.date,
                 },
@@ -155,14 +155,14 @@ export default defineComponent({
         },
         deleteCompleteSeries(){
             if(this.vacation.type === 'available') {
-                Inertia.delete(route('delete.availability.series', this.vacation.series_id), {
+                router.delete(route('delete.availability.series', this.vacation.series_id), {
                     preserveScroll: true, onFinish: () => {
                         this.showDeleteSeriesConfirmModal = false
                     }
                 })
             }
             if (this.vacation.type === 'vacation'){
-                Inertia.delete(route('delete.vacation.series', this.vacation.series_id), {
+                router.delete(route('delete.vacation.series', this.vacation.series_id), {
                     preserveScroll: true, onFinish: () => {
                         this.showDeleteSeriesConfirmModal = false
                     }
@@ -183,14 +183,14 @@ export default defineComponent({
         },
         deleteAvailabilityOrVacation(){
             if(this.vacation.type === 'available') {
-                Inertia.delete(route('delete.availability', this.vacation.id), {
+                router.delete(route('delete.availability', this.vacation.id), {
                     preserveScroll: true, preserveState: true, onFinish: () => {
                         this.closeModal(true)
                     }
                 })
             }
             if (this.vacation.type === 'vacation'){
-                Inertia.delete(route('delete.vacation', this.vacation.id), {
+                router.delete(route('delete.vacation', this.vacation.id), {
                     preserveScroll: true, preserveState: true, onFinish: () => {
                         this.closeModal(true)
                     }

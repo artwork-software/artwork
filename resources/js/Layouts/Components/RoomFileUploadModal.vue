@@ -44,7 +44,7 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 

@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {defineComponent} from "vue";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";

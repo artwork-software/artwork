@@ -98,10 +98,10 @@
 <script>
 
 import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
-import TagComponent from "@/Layouts/Components/TagComponent";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

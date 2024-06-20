@@ -103,7 +103,7 @@ import {defineComponent} from 'vue'
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -136,7 +136,7 @@ export default defineComponent({
             return this.projects.find(project => project.id === projectId);
         },
         removeUserFromShift(shiftId, usersPivotId) {
-            Inertia.delete(
+            router.delete(
                 route(
                     'shift.removeUserByType',
                     {
@@ -157,7 +157,7 @@ export default defineComponent({
         },
         checkVacation() {
             if (this.user.type === 0) {
-                Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                router.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
                 }, {
@@ -166,7 +166,7 @@ export default defineComponent({
                     }
                 });
             } else if(this.user.type === 1) {
-                Inertia.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
+                router.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
                 }, {

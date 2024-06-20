@@ -332,6 +332,8 @@ class ContentSeeder extends Seeder
 
     private function seedProjects(): void
     {
+
+
         $project = Project::create([
             'name' => 'Dan Daw Creative Projects',
             'number_of_participants' => null,

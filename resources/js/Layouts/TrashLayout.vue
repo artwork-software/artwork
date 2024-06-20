@@ -64,7 +64,7 @@
 <script>
 import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -80,7 +80,7 @@ export default {
     watch: {
         selectedTrash: {
           handler() {
-              Inertia.get(this.selectedTrash.href)
+              router.get(this.selectedTrash.href)
           },
           deep: true
         }

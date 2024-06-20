@@ -250,7 +250,7 @@
 import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";

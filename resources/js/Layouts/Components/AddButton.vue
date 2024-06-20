@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import { PlusCircleIcon } from '@heroicons/vue/outline'
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";

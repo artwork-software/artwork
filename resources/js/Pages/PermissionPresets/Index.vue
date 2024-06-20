@@ -133,7 +133,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import PermissionPresetModal from "@/Pages/PermissionPresets/Components/PermissionPresetModal.vue";
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
@@ -197,7 +197,7 @@ export default defineComponent({
         },
         closeConfirmPermissionPresetDeleteModal(bool) {
             if (bool) {
-                Inertia.delete(
+                router.delete(
                     route(
                         'permission-presets.destroy',
                         {

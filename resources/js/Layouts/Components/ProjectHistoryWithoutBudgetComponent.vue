@@ -42,7 +42,7 @@
 <script>
 
 import 'vue-cal/dist/vuecal.css'
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";

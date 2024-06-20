@@ -174,9 +174,9 @@
 </template>
 
 <script>
-import AppLayout from "@/Layouts/AppLayout";
-import TrashLayout from "@/Layouts/TrashLayout";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import TrashLayout from "@/Layouts/TrashLayout.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
 import {
     ChevronDownIcon,
@@ -187,10 +187,10 @@ import {
     SearchIcon
 } from "@heroicons/vue/solid";
 import {TrashIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import JetDialogModal from "@/Jetstream/DialogModal";
-import {Link} from "@inertiajs/inertia-vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import {Link} from "@inertiajs/vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";

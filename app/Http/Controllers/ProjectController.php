@@ -37,6 +37,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
@@ -61,6 +62,7 @@ use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
@@ -68,17 +70,20 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
-use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectSettingsService;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -91,6 +96,7 @@ use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Sector\Services\SectorService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -123,6 +129,8 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -139,6 +147,12 @@ class ProjectController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
+        private readonly ProjectSettingsService $projectSettingsService,
+        private readonly UserService $userService,
+        private readonly ProjectStateService $projectStateService,
+        private readonly CategoryService $categoryService,
+        private readonly GenreService $genreService,
+        private readonly SectorService $sectorService,
     ) {
     }
 
@@ -160,52 +174,36 @@ class ProjectController extends Controller
         return $returnUser;
     }
 
+
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function index(): Response|ResponseFactory
     {
-        $projects = Project::query()
-            ->with([
-                'checklists.tasks.checklist.project',
-                'access_budget',
-                'categories',
-                'comments.user',
-                'departments.users.departments',
-                'genres',
-                'managerUsers',
-                'project_files',
-                'sectors',
-                'users.departments',
-                'writeUsers',
-                'state',
-                'delete_permission_users'
-            ])
-            ->orderBy('id', 'DESC')
-            ->get();
+        $entitiesPerPage = request()->get('entitiesPerPage', 10);
+        $projectsQuery = \request()->has('search') ?
+            $this->projectService->scoutSearch(request()->get('search')) :
+            $this->projectService->getProjects();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
-            'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
-
-            'users' => User::all(),
-
-            'categories' => Category::query()->with('projects')->get()->map(fn($category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'projects' => $category->projects
-            ]),
-
-            'genres' => Genre::query()->with('projects')->get()->map(fn($genre) => [
-                'id' => $genre->id,
-                'name' => $genre->name,
-                'projects' => $genre->projects
-            ]),
-
-            'sectors' => Sector::query()->with('projects')->get()->map(fn($sector) => [
-                'id' => $sector->id,
-                'name' => $sector->name,
-                'projects' => $sector->projects
-            ]),
+            'projects' => $this->projectService->paginateProjects($projectsQuery, $entitiesPerPage),
+            'pinnedProjects' => $this->projectService->pinnedProjects(),
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'states' => $this->projectStateService->getAll(),
+            'projectGroups' => $this->projectService->getProjectGroups(),
+            'categories' => $this->categoryService->getAll(),
+            'genres' => $this->genreService->getAll(),
+            'sectors' => $this->sectorService->getAll(),
+            'createSettings' => app(ProjectCreateSettings::class),
         ]);
+    }
+
+    public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
+    {
+        $settings = app(ProjectCreateSettings::class);
+        $this->projectSettingsService->store($request, $settings);
+        return Redirect::back();
     }
 
     /**
@@ -267,54 +265,67 @@ class ProjectController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): JsonResponse|RedirectResponse {
         if (
-            !Auth::user()->canAny(
-                [
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value,
-                    PermissionEnum::PROJECT_MANAGEMENT->value
-                ]
-            )
+            !Auth::user()->canAny([
+            PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
+            PermissionEnum::WRITE_PROJECTS->value,
+            PermissionEnum::PROJECT_MANAGEMENT->value
+            ])
         ) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']));
-        //@todo how did this line ever work?
-        //->map(fn(Department $department) => $this->authorize('update', $department));
-        //$this->projectService->storeByRequest($request);
+        $departments = Department::whereIn('id', collect($request->assigned_departments)->pluck('id'))->get();
+
         $project = Project::create([
             'name' => $request->name,
             'number_of_participants' => $request->number_of_participants,
-            'budget_deadline' => $request->budgetDeadline
         ]);
 
-        $project->users()->save(
-            Auth::user(),
-            ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]
-        );
+        $is_manager = in_array(Auth::id(), $request->assignedUsers, true);
+
+        $project->users()->attach(Auth::id(), [
+            'access_budget' => true,
+            'is_manager' => $is_manager,
+            'can_write' => true,
+            'delete_permission' => true
+        ]);
+
+        if (!empty($request->assignedUsers)) {
+            $usersToAttach = collect($request->assignedUsers)->filter(fn($user) => $user !== Auth::id())
+                ->mapWithKeys(fn($user) => [$user => [
+                    'access_budget' => false,
+                    'is_manager' => true,
+                    'can_write' => false,
+                    'delete_permission' => false
+                ]]);
+
+            $project->users()->attach($usersToAttach);
+        }
+
+        $project->update([
+            'budget_deadline' => !empty($request->budgetDeadline) ?
+                Carbon::parse($request->budgetDeadline)->format('Y-m-d') : null,
+            'state' => $request->state ?? null,
+            'cost_center_id' => !empty($request->cost_center) ?
+                CostCenter::firstOrCreate(['name' => $request->cost_center])->id : null
+        ]);
 
         if ($request->isGroup) {
             $project->is_group = true;
-            $project->groups()->sync(collect($request->projects));
-            $project->save();
-        }
-
-        if (!$request->isGroup && !empty($request->selectedGroup)) {
+            $project->groups()->sync($request->projects);
+        } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
         if ($request->assigned_user_ids) {
-            $project->users()->sync(collect($request->assigned_user_ids));
+            $project->users()->sync($request->assigned_user_ids);
         }
 
         $project->categories()->sync($request->assignedCategoryIds);
         $project->sectors()->sync($request->assignedSectorIds);
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
-
-        //$this->generateBasicBudgetValues($project);
 
         $this->budgetService->generateBasicBudgetValues(
             $project,
@@ -325,11 +336,12 @@ class ProjectController extends Controller
             $sageApiSettingsService
         );
 
-        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
-        $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
+        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
+        $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
         return Redirect::route('projects', $project);
     }
+
 
     public function generateBasicBudgetValues(Project $project): void
     {

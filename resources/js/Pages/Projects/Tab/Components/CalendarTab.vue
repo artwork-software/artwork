@@ -65,7 +65,7 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 
 export default {
     components: {
@@ -110,7 +110,7 @@ export default {
     methods: {
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
-            Inertia.reload({
+            router.reload({
                 data: {
                     atAGlance: this.atAGlance,
                 }

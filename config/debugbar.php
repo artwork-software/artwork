@@ -14,7 +14,7 @@ return [
      |
      */
 
-    'enabled' => env('DEBUGBAR_ENABLED', true),
+    'enabled' => env('DEBUGBAR_ENABLED', false),
     'except' => [
         'telescope*',
         'horizon*',
@@ -33,7 +33,7 @@ return [
      |
      */
     'storage' => [
-        'enabled'    => true,
+        'enabled'    => false,
         'driver'     => 'file', // redis, file, pdo, socket, custom
         'path'       => storage_path('debugbar'), // For file driver
         'connection' => null,   // Leave null for default connection (Redis/PDO)

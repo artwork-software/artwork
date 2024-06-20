@@ -190,8 +190,8 @@ class User extends Model implements
         'profile_photo_url',
         'full_name',
         'type',
-        'formatted_vacation_days',
-        'assigned_craft_ids',
+        //'formatted_vacation_days',
+        //'assigned_craft_ids',
     ];
 
     protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
@@ -257,7 +257,7 @@ class User extends Model implements
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    public function getFormattedVacationDaysAttribute()
+    public function getFormattedVacationDays()
     {
         $vacations = $this->vacations;
         $returnInterval = [];

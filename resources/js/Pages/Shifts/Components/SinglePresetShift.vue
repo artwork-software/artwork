@@ -73,7 +73,7 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import dayjs from "dayjs";
 import {Menu, MenuItems, MenuItem, MenuButton} from "@headlessui/vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -108,7 +108,7 @@ export default defineComponent({
     ],
     methods: {
         deleteShift(){
-            Inertia.delete(route('preset.shift.destroy', {presetShift: this.presetShift.id}))
+            router.delete(route('preset.shift.destroy', {presetShift: this.presetShift.id}))
         },
         getShiftQualificationById(id) {
             return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);

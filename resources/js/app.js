@@ -1,14 +1,14 @@
-require('./bootstrap');
-require('../css/global.css');
+import './bootstrap';
+import '../css/app.css';
+import '../css/global.css';
 
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/inertia-vue3';
-import { InertiaProgress } from '@inertiajs/progress';
+import { createInertiaApp } from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
+import {resolvePageComponent} from "laravel-vite-plugin/inertia-helpers";
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n'
-import PrimeVue from 'primevue/config';
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -23,10 +23,15 @@ const svgColors = {
     eventType9:'#4D908E',
     eventType10:'#21485C'
 }
+
+import en from '../../lang/en.json';
+import de from '../../lang/de.json';
+
 const messages = {
-    en: require('../../lang/en.json'),
-    de: require('../../lang/de.json')
-}
+    en: en,
+    de: de
+};
+
 
 const i18n = VueI18n.createI18n({
     legacy: false, // you must specify 'legacy: false' option
@@ -41,8 +46,8 @@ const appName = window.document.getElementsByTagName('title')[0]?.innerText || '
 
 createInertiaApp({
     title: (title) => `${title}`,
-    resolve: (name) => require(`./Pages/${name}.vue`),
-    setup({ el, app: inertiaApp, props, plugin }) {
+    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    setup({ el, App: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route }})
@@ -50,15 +55,16 @@ createInertiaApp({
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax)
         app.use(i18n)
-        app.use(PrimeVue, { unstyled: true })
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3
             document.documentElement.lang = newLocale;
         };
     },
+    progress: {
+        color: '#3017AD',
+        showSpinner: true,
+        includeCss: true,
+    },
 });
-
-
-InertiaProgress.init({ color: '#3017AD', showSpinner: true, includeCSS: true });
 

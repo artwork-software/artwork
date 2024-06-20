@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";

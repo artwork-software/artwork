@@ -31,7 +31,6 @@
 </template>
 
 <script setup>
-import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

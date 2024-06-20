@@ -136,11 +136,11 @@ import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -177,6 +177,7 @@ export default {
             openDeleteSelectedEventsModal: false,
             checkedEvents: [],
             isPageScrolled: false,
+            dateValueCopy: this.dateValue ? this.dateValue : [],
         }
     },
     props: [
@@ -289,11 +290,11 @@ export default {
         },
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            Inertia.reload();
+            router.reload();
         },
         deleteSelectedEvents() {
             this.getCheckedEvents();
-            Inertia.post(route('multi-edit.delete'), {
+            router.post(route('multi-edit.delete'), {
                 events: this.editEvents
             }, {
                 onSuccess: () => {
@@ -359,7 +360,7 @@ export default {
 
         },
         updateZoomFactorInUser(){
-            this.$inertia.patch(route('user.update.zoom_factor', {user : this.$page.props.user.id}), {
+            router.patch(route('user.update.zoom_factor', {user : this.$page.props.user.id}), {
                 zoom_factor: this.zoomFactor
             }, {
                 preserveScroll: true
@@ -370,28 +371,28 @@ export default {
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            Inertia.reload();
+            router.reload();
         },
         calculateDateDifference() {
-            const date1 = new Date(this.dateValue[0]);
-            const date2 = new Date(this.dateValue[1]);
+            const date1 = new Date(this.dateValueCopy[0]);
+            const date2 = new Date(this.dateValueCopy[1]);
             const timeDifference = date2.getTime() - date1.getTime();
             return timeDifference / (1000 * 3600 * 24);
         },
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();
-            this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);
-            const newDate = new Date(this.dateValue[1]);
+            this.dateValueCopy[1] = this.getPreviousDay(this.dateValueCopy[0]);
+            const newDate = new Date(this.dateValueCopy[1]);
             newDate.setDate(newDate.getDate() - dayDifference);
-            this.dateValue[0] = newDate.toISOString().slice(0, 10);
+            this.dateValueCopy[0] = newDate.toISOString().slice(0, 10);
             this.updateTimes();
         },
         nextTimeRange() {
             const dayDifference = this.calculateDateDifference();
-            this.dateValue[0] = this.getNextDay(this.dateValue[1]);
-            const newDate = new Date(this.dateValue[1]);
+            this.dateValueCopy[0] = this.getNextDay(this.dateValueCopy[1]);
+            const newDate = new Date(this.dateValueCopy[1]);
             newDate.setDate(newDate.getDate() + dayDifference + 1);
-            this.dateValue[1] = newDate.toISOString().slice(0, 10);
+            this.dateValueCopy[1] = newDate.toISOString().slice(0, 10);
             this.updateTimes();
         },
         getNextDay(dateString) {
@@ -411,9 +412,9 @@ export default {
             return `${year}-${month}-${day}`;
         },
         updateTimes() {
-            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
-                start_date:  this.dateValue[0],
-                end_date: this.dateValue[1],
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValueCopy[0],
+                end_date: this.dateValueCopy[1],
             },{
                 preserveScroll: true
             })

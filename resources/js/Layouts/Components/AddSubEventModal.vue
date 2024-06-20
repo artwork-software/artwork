@@ -242,7 +242,7 @@ import {
     MenuButton,
     MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";

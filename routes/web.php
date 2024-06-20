@@ -72,6 +72,7 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
+use Artwork\Modules\Inventory\Http\Controller\InventoryController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -350,6 +351,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
     Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore']);
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
+    Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
+        ->name('project_settings.update');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
@@ -1321,6 +1324,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
     )
         ->name('remove.day.service.from.user');
+
+    Route::group(['prefix' => 'inventory-management'], function (): void {
+        Route::get('/', [InventoryController::class, 'inventory'])
+            ->name('inventory-management.inventory');
+        Route::get('/scheduling', [InventoryController::class, 'scheduling'])
+            ->name('inventory-management.scheduling');
+    });
+
+    Route::group(['prefix' => 'searching'], function(){
+        Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
+    });
 });
 
 Route::get(
@@ -1332,3 +1346,5 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [\App\Http\Controllers\UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
+
+

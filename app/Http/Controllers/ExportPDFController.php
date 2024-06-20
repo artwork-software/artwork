@@ -43,16 +43,14 @@ class ExportPDFController extends Controller
         $startDate = Carbon::parse($request->get('start'));
         $endDate = Carbon::parse($request->get('end'));
 
-        if (($project = $request->get('project'))) {
-            if (
-                ($firstEventInProject = $projectService->getFirstEventInProject($project)) &&
-                ($lastEventInProject = $projectService->getLastEventInProject($project))
-            ) {
+        if (
+            ($project = $request->get('project'))
+            && ($firstEventInProject = $projectService->getFirstEventInProject($project))
+            && ($lastEventInProject = $projectService->getLastEventInProject($project))
+        ) {
                 $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-            }
         }
-
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
             $endDate,

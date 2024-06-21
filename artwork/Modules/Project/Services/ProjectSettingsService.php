@@ -2,15 +2,15 @@
 
 namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 
 class ProjectSettingsService
 {
 
     public function store(
-        ProjectCreateSettingRequest $request,
-        ProjectCreateSettings $projectCreateSettings
+        ProjectCreateSettingsUpdateRequest $request,
+        ProjectCreateSettings              $projectCreateSettings
     ): void {
         $projectCreateSettings->attributes = $request->boolean('attributes');
         $projectCreateSettings->state = $request->boolean('state');

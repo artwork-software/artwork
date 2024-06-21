@@ -71,7 +71,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
-use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
@@ -115,6 +115,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -155,6 +156,7 @@ class ProjectController extends Controller
         private readonly GenreService $genreService,
         private readonly SectorService $sectorService,
         private readonly CostCenterService $costCenterService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -183,14 +185,12 @@ class ProjectController extends Controller
      */
     public function index(): Response|ResponseFactory
     {
-        $entitiesPerPage = request()->get('entitiesPerPage', 10);
-        $projectsQuery = request()->has('search') &&
-        request()->get('search') !== null && request()->get('search') !== '' ?
-            $this->projectService->scoutSearch(request()->get('search')) :
-            $this->projectService->getProjects();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => $this->projectService->paginateProjects($projectsQuery, $entitiesPerPage),
+            'projects' => $this->projectService->paginateProjects(
+                request()?->string('search'),
+                request()?->integer('entitiesPerPage', 10)
+            ),
             'pinnedProjects' => $this->projectService->pinnedProjects(),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
             'states' => $this->projectStateService->getAll(),
@@ -202,9 +202,10 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
-    {
-        $settings = app(ProjectCreateSettings::class);
+    public function updateSettings(
+        ProjectCreateSettingsUpdateRequest $request,
+        ProjectCreateSettings $settings
+    ): RedirectResponse {
         $this->projectSettingsService->store($request, $settings);
         return Redirect::back();
     }
@@ -286,15 +287,19 @@ class ProjectController extends Controller
 
         $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
 
-        $this->projectService->attachSelfToProject($project, $is_manager);
+        $this->projectService->attachUserToProject($project, $this->authManager->id(), $is_manager);
 
         if (!empty($request->assignedUsers)) {
-            $this->projectService->attachManagementUsersWithoutSelf($project, $request->assignedUsers);
+            $this->projectService->attachManagementUsersWithoutSelf(
+                $project,
+                $request->collect('assignedUsers'),
+                $this->authManager->id()
+            );
         }
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
-            'budget_deadline' => $request->string('budget_deadline'),
+            'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
@@ -308,9 +313,9 @@ class ProjectController extends Controller
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
-        $this->projectService->syncCategories($project, $request->get('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->get('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->get('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
 
         $project->departments()->sync($departments->pluck('id'));
 
@@ -2116,14 +2121,14 @@ class ProjectController extends Controller
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
         ]);
 
-        $this->projectService->detachingManagementUsers($project, true);
+        $this->projectService->detachManagementUsers($project, true);
         if (!empty($request->assignedUsers)) {
-            $this->projectService->attachManagementUsersWithSelf($project, $request->assignedUsers);
+            $this->projectService->attachManagementUsers($project, $request->assignedUsers);
         }
 
-        $this->projectService->syncCategories($project, $request->get('assignedCategoryIds'));
-        $this->projectService->syncSectors($project, $request->get('assignedSectorIds'));
-        $this->projectService->syncGenres($project, $request->get('assignedGenreIds'));
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
 
         $newProjectName = $project->name;
         $newProjectBudgetDeadline = $project->budget_deadline;

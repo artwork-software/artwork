@@ -7,9 +7,6 @@ import {IconDownload, IconEdit, IconX} from "@tabler/icons-vue";
 import {useForm} from "@inertiajs/vue3";
 import {ref} from "vue";
 
-
-
-
 const props = defineProps({
     project: {
         type: Object,

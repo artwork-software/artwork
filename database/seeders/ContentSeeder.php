@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Http\Controllers\ProjectController;
 use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
 use Artwork\Modules\CompanyType\Models\CompanyType;
@@ -12,9 +13,11 @@ use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Sector\Services\SectorService;
 use Carbon\Carbon;
 use Database\Factories\Artwork\Modules\Category\Models\CategoryFactory;
 use Illuminate\Database\Seeder;
@@ -22,6 +25,14 @@ use Illuminate\Support\Facades\DB;
 
 class ContentSeeder extends Seeder
 {
+
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly GenreService $genreService,
+        private readonly SectorService $sectorService
+    ) {
+    }
+
     /**
      * Run the database seeds.
      *
@@ -204,7 +215,7 @@ class ContentSeeder extends Seeder
         $faker = \Faker\Factory::create();
 
         for ($i = 0; $i < 10; $i++) {
-            Category::create([
+            $this->categoryService->create(collect([
                 'name' => $faker->randomElement([
                     'Kunst',
                     'Musik',
@@ -292,110 +303,110 @@ class ContentSeeder extends Seeder
                     'Ausbildung',
                 ]),
                 'color' => $faker->hexColor
-            ]);
+            ]));
         }
 
         for ($i = 0; $i < 10; $i++) {
-            Genre::create([
-                'name' => $faker->randomElement([
-                    'Pop',
-                    'Rock',
-                    'Klassik',
-                    'Jazz',
-                    'Blues',
-                    'Soul',
-                    'Funk',
-                    'Reggae',
-                    'Hip-Hop',
-                    'Rap',
-                    'Metal',
-                    'Punk',
-                    'Indie',
-                    'Alternative',
-                    'Country',
-                    'Folk',
-                    'Electro',
-                    'Techno',
-                    'House',
-                    'Trance',
-                    'Dubstep',
-                    'Drum & Bass',
-                    'Hardstyle',
-                    'Schlager',
-                    'Volksmusik',
-                    'Chanson',
-                    'Oper',
-                    'Operette',
-                    'Musical',
-                    'Film',
-                    'Kabarett',
-                    'Comedy',
-                    'Satire',
-                    'Improvisation',
-                    'Zauberei',
-                    'Pantomime',
-                    'Clownerie',
-                    'Akrobatik',
-                    'Jonglage',
-                    'Feuershow',
-                    'Tanztheater',
-                    'Ballett',
-                    'Contemporary',
-                    'Modern',
-                    'Streetdance',
-                    'Breakdance',
-                    'Hip-Hop',
-                    'Jazzdance',
-                    'Standard',
-                    'Latein',
-                    'Salsa',
-                    'Tango',
-                    'Walzer',
-                    'Foxtrott',
-                    'Cha-Cha-Cha',
-                    'Rumba',
-                    'Samba',
-                    'Jive',
-                    'Quickstep',
-                    'Paso Doble',
-                    'Wiener Walzer',
-                    'Musical',
-                    'Operette',
-                    'Oper',
-                    'Konzert',
-                    'Oratorium',
-                    'Kammermusik',
-                    'Symphonie',
-                    'Sinfonie',
-                    'Kantate',
-                    'Messe',
-                    'Requiem',
-                    'Sonate',
-                    'Quartett',
-                    'Trio',
-                    'Duett',
-                    'Solo',
-                    'Arie',
-                    'Ouvertüre',
-                    'Intermezzo',
-                    'Fuge',
-                    'Variationen',
-                    'Rhapsodie',
-                    'Impromptu',
-                    'Etüde',
-                    'Präludium',
-                    'Nocturne',
-                    'Scherzo',
-                    'Ballade',
-                    'Capriccio',
-                    'Fantasie',
-                ]),
-                'color' => $faker->hexColor
-            ]);
+            $this->genreService->create(collect([
+               'name' => $faker->randomElement([
+                   'Pop',
+                   'Rock',
+                   'Klassik',
+                   'Jazz',
+                   'Blues',
+                   'Soul',
+                   'Funk',
+                   'Reggae',
+                   'Hip-Hop',
+                   'Rap',
+                   'Metal',
+                   'Punk',
+                   'Indie',
+                   'Alternative',
+                   'Country',
+                   'Folk',
+                   'Electro',
+                   'Techno',
+                   'House',
+                   'Trance',
+                   'Dubstep',
+                   'Drum & Bass',
+                   'Hardstyle',
+                   'Schlager',
+                   'Volksmusik',
+                   'Chanson',
+                   'Oper',
+                   'Operette',
+                   'Musical',
+                   'Film',
+                   'Kabarett',
+                   'Comedy',
+                   'Satire',
+                   'Improvisation',
+                   'Zauberei',
+                   'Pantomime',
+                   'Clownerie',
+                   'Akrobatik',
+                   'Jonglage',
+                   'Feuershow',
+                   'Tanztheater',
+                   'Ballett',
+                   'Contemporary',
+                   'Modern',
+                   'Streetdance',
+                   'Breakdance',
+                   'Hip-Hop',
+                   'Jazzdance',
+                   'Standard',
+                   'Latein',
+                   'Salsa',
+                   'Tango',
+                   'Walzer',
+                   'Foxtrott',
+                   'Cha-Cha-Cha',
+                   'Rumba',
+                   'Samba',
+                   'Jive',
+                   'Quickstep',
+                   'Paso Doble',
+                   'Wiener Walzer',
+                   'Musical',
+                   'Operette',
+                   'Oper',
+                   'Konzert',
+                   'Oratorium',
+                   'Kammermusik',
+                   'Symphonie',
+                   'Sinfonie',
+                   'Kantate',
+                   'Messe',
+                   'Requiem',
+                   'Sonate',
+                   'Quartett',
+                   'Trio',
+                   'Duett',
+                   'Solo',
+                   'Arie',
+                   'Ouvertüre',
+                   'Intermezzo',
+                   'Fuge',
+                   'Variationen',
+                   'Rhapsodie',
+                   'Impromptu',
+                   'Etüde',
+                   'Präludium',
+                   'Nocturne',
+                   'Scherzo',
+                   'Ballade',
+                   'Capriccio',
+                   'Fantasie',
+               ]),
+               'color' => $faker->hexColor
+            ]));
         }
 
         for ($i = 0; $i < 5; $i++) {
-            Sector::create([
+            $this->sectorService->create(collect([
                 'name' => $faker->randomElement([
                     'Vorgarten',
                     'Hinterhof',
@@ -418,7 +429,7 @@ class ContentSeeder extends Seeder
                     'Garage',
                 ]),
                 'color' => $faker->hexColor
-            ]);
+            ]));
         }
     }
 

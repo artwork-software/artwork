@@ -7,7 +7,7 @@ use Artwork\Modules\Category\Models\Category;
 
 readonly class CategoryRepository extends BaseRepository
 {
-    public function getAll()
+    public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return Category::all();
     }

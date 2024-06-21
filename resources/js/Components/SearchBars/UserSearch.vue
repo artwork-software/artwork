@@ -28,7 +28,7 @@ export default {
         },
         checkIfOnlyManager(user) {
             if (this.onlyManager) {
-                return user?.project_manager_permission;
+                return user.project_manager_permission;
             }
             return true;
         }

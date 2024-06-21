@@ -18,9 +18,14 @@ readonly class GenreService
         return $this->genreRepository->getAll();
     }
 
+    public function createNewGenre(): Genre
+    {
+        return new Genre();
+    }
+
     public function create(Collection $request): Genre|Model
     {
-        $genre = new Genre();
+        $genre = $this->createNewGenre();
         $genre->name = $request->get('name');
         $genre->color = $request->get('color');
         return $this->genreRepository->save($genre);

@@ -18,10 +18,14 @@ readonly class SectorService
         return $this->sectorRepository->getAll();
     }
 
+    public function createNewSector(): Sector
+    {
+        return new Sector();
+    }
 
     public function create(Collection $request): Sector|Model
     {
-        $sector = new Sector();
+        $sector = $this->createNewSector();
         $sector->name = $request->get('name');
         $sector->color = $request->get('color');
         return $this->sectorRepository->save($sector);

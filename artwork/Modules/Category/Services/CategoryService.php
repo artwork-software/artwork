@@ -18,9 +18,14 @@ readonly class CategoryService
         return $this->categoryRepository->getAll();
     }
 
+    public function createNewCategory(): Category
+    {
+        return new Category();
+    }
+
     public function create(Collection $request): Category|Model
     {
-        $category = new Category();
+        $category = $this->createNewCategory();
         $category->name = $request->get('name');
         $category->color = $request->get('color');
         return $this->categoryRepository->save($category);

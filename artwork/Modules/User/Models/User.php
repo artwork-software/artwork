@@ -259,7 +259,10 @@ class User extends Model implements
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    public function getFormattedVacationDays()
+    /**
+     * @return array<string>
+     */
+    public function getFormattedVacationDays(): array
     {
         $vacations = $this->vacations;
         $returnInterval = [];
@@ -415,9 +418,7 @@ class User extends Model implements
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-    /**
-     * @return string[]
-     */
+
     /**
      * @return string[]
      */
@@ -432,6 +433,9 @@ class User extends Model implements
         return $permissions;
     }
 
+    /**
+     * @return string[]
+     */
     public function allRoles(): array
     {
         $rolesArray = [];

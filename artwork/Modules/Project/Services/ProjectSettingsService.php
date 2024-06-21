@@ -10,7 +10,7 @@ class ProjectSettingsService
 
     public function store(
         ProjectCreateSettingsUpdateRequest $request,
-        ProjectCreateSettings              $projectCreateSettings
+        ProjectCreateSettings $projectCreateSettings
     ): void {
         $projectCreateSettings->attributes = $request->boolean('attributes');
         $projectCreateSettings->state = $request->boolean('state');

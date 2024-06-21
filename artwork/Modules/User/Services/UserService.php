@@ -40,7 +40,7 @@ readonly class UserService
     {
         /** @var User $user */
         $user = Auth::user();
-        if($needCalendarAbo && !$user->calendarAbo){
+        if ($needCalendarAbo && !$user->calendarAbo) {
             $user->load(['calendarAbo']);
         }
 
@@ -131,9 +131,9 @@ readonly class UserService
             $startDate = $week->copy()->startOfWeek();
             $endDate = $week->copy()->endOfWeek();
             $workingHours = $user->plannedWorkingHours(
-                    $startDate,
-                    $endDate
-                ) - $user->weekly_working_hours;
+                $startDate,
+                $endDate
+            ) - $user->weekly_working_hours;
             $weeklyWorkingHours[$week->format('W')] = $workingHours;
         }
 

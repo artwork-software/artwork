@@ -72,6 +72,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
@@ -150,7 +151,6 @@ class ProjectController extends Controller
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
         private readonly ProjectSettingsService $projectSettingsService,
-        private readonly UserService $userService,
         private readonly ProjectStateService $projectStateService,
         private readonly CategoryService $categoryService,
         private readonly GenreService $genreService,
@@ -179,17 +179,12 @@ class ProjectController extends Controller
     }
 
 
-    /**
-     * @throws NotFoundExceptionInterface
-     * @throws ContainerExceptionInterface
-     */
-    public function index(): Response|ResponseFactory
+    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
-
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
-                request()?->string('search'),
-                request()?->integer('entitiesPerPage', 10)
+                $request->string('search'),
+                $request->integer('entitiesPerPage', 10),
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects(),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,

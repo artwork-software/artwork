@@ -3,9 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build",
-        "start": "concurrently  \"php artisan serve\" \"pnpm dev \"",
-        "ziggy": "php artisan ziggy:generate --types"
+        "build": "vite build"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.7",
@@ -32,6 +30,7 @@
         "@vuepic/vue-datepicker": "^8.8.0",
         "dayjs": "^1.11.11",
         "mathjax": "4.0.0-beta.6",
+        "sass": "^1.77.6",
         "vue-cal": "^4.8.1",
         "vue-i18n": "^9.13.1",
         "vue-mathjax-next": "^0.0.6",

@@ -245,7 +245,4 @@ readonly class ProjectTabService implements ServiceWithArrayCache
         }
         return $this->projectTabRepository->findByName($name);
     }
-
-
-
 }

@@ -13,11 +13,13 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib, ColorHelper],
     components: {
+        ProjectCreateModal,
         TagComponent,
         BaseModal,
         BaseMenu,
@@ -47,6 +49,10 @@ export default {
             type: Object,
             required: true
         },
+        createSettings: {
+            type: Object,
+            required: false
+        }
     },
     data() {
         return {
@@ -237,7 +243,20 @@ export default {
             <slot />
         </div>
 
-        <project-data-edit-modal
+        <project-create-modal
+            v-if="editingProject"
+            :show="editingProject"
+            :categories="headerObject.categories"
+            :genres="headerObject.genres"
+            :sectors="headerObject.sectors"
+            :project-groups="headerObject.projectGroups"
+            :states="headerObject.states"
+            @close-create-project-modal="closeEditProjectModal"
+            :create-settings="createSettings"
+            :project="project"
+        />
+
+        <!--<project-data-edit-modal
             :show="editingProject"
             :project-state="headerObject.projectState"
             @closed="closeEditProjectModal"
@@ -245,7 +264,8 @@ export default {
             :group-projects="this.headerObject.groupProjects"
             :current-group="this.headerObject.currentGroup"
             :states="headerObject.states"
-        />
+        />-->
+
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"

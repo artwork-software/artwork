@@ -77,7 +77,8 @@ test('users without the permission cant create projects', function () {
     $this->post('/projects', [
         'name' => 'TestProject',
         'assigned_users' => [$this->assigned_user],
-        'assigned_departments' => [$this->department]
+        'assigned_departments' => [$this->department],
+        'is_group' => false
     ])->assertStatus(403);
 });
 
@@ -144,6 +145,7 @@ test('users with the permission can duplicate projects', function() {
     $old_project = Project::factory()->create([
         'name' => 'TestProject',
         'number_of_participants' => '1000',
+        'is_group' => false,
     ]);
 
     $checklist = Checklist::create([

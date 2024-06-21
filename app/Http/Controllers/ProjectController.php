@@ -47,6 +47,7 @@ use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\CostCenter\Models\CostCenter;
+use Artwork\Modules\CostCenter\Services\CostCenterService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
@@ -70,7 +71,8 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
-use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
@@ -114,6 +116,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -148,11 +151,12 @@ class ProjectController extends Controller
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
         private readonly ProjectSettingsService $projectSettingsService,
-        private readonly UserService $userService,
         private readonly ProjectStateService $projectStateService,
         private readonly CategoryService $categoryService,
         private readonly GenreService $genreService,
         private readonly SectorService $sectorService,
+        private readonly CostCenterService $costCenterService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -175,19 +179,13 @@ class ProjectController extends Controller
     }
 
 
-    /**
-     * @throws NotFoundExceptionInterface
-     * @throws ContainerExceptionInterface
-     */
-    public function index(): Response|ResponseFactory
+    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
-        $entitiesPerPage = request()->get('entitiesPerPage', 10);
-        $projectsQuery = \request()->has('search') ?
-            $this->projectService->scoutSearch(request()->get('search')) :
-            $this->projectService->getProjects();
-
         return inertia('Projects/ProjectManagement', [
-            'projects' => $this->projectService->paginateProjects($projectsQuery, $entitiesPerPage),
+            'projects' => $this->projectService->paginateProjects(
+                $request->string('search'),
+                $request->integer('entitiesPerPage', 10),
+            ),
             'pinnedProjects' => $this->projectService->pinnedProjects(),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
             'states' => $this->projectStateService->getAll(),
@@ -199,9 +197,10 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
-    {
-        $settings = app(ProjectCreateSettings::class);
+    public function updateSettings(
+        ProjectCreateSettingsUpdateRequest $request,
+        ProjectCreateSettings $settings
+    ): RedirectResponse {
         $this->projectSettingsService->store($request, $settings);
         return Redirect::back();
     }
@@ -281,50 +280,38 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
         ]);
 
-        $is_manager = in_array(Auth::id(), $request->assignedUsers, true);
+        $is_manager = in_array(Auth::id(), $request->get('assignedUsers'), true);
 
-        $project->users()->attach(Auth::id(), [
-            'access_budget' => true,
-            'is_manager' => $is_manager,
-            'can_write' => true,
-            'delete_permission' => true
-        ]);
+        $this->projectService->attachUserToProject($project, $this->authManager->id(), $is_manager);
 
         if (!empty($request->assignedUsers)) {
-            $usersToAttach = collect($request->assignedUsers)->filter(fn($user) => $user !== Auth::id())
-                ->mapWithKeys(fn($user) => [$user => [
-                    'access_budget' => false,
-                    'is_manager' => true,
-                    'can_write' => false,
-                    'delete_permission' => false
-                ]]);
-
-            $project->users()->attach($usersToAttach);
+            $this->projectService->attachManagementUsersWithoutSelf(
+                $project,
+                $request->collect('assignedUsers'),
+                $this->authManager->id()
+            );
         }
 
-        $project->update([
-            'budget_deadline' => !empty($request->budgetDeadline) ?
-                Carbon::parse($request->budgetDeadline)->format('Y-m-d') : null,
-            'state' => $request->state ?? null,
-            'cost_center_id' => !empty($request->cost_center) ?
-                CostCenter::firstOrCreate(['name' => $request->cost_center])->id : null
+        $this->projectService->updateProject($project, [
+            'name' => $request->string('name'),
+            'budget_deadline' => $request->get('budget_deadline'),
+            'state' => $request->integer('state'),
+            'cost_center_id' => $request->string('cost_center') !== null ?
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
         ]);
 
-        if ($request->isGroup) {
-            $project->is_group = true;
-            $project->groups()->sync($request->projects);
+        if ($request->boolean('isGroup')) {
+            $project->update(['is_group' => true]);
+            $project->groups()->sync($request->get('projects'));
         } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
-        if ($request->assigned_user_ids) {
-            $project->users()->sync($request->assigned_user_ids);
-        }
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
 
-        $project->categories()->sync($request->assignedCategoryIds);
-        $project->sectors()->sync($request->assignedSectorIds);
-        $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
         $this->budgetService->generateBasicBudgetValues(
@@ -1961,14 +1948,14 @@ class ProjectController extends Controller
         $headerObject->lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
         $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
         $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
-        $headerObject->states = ProjectStates::all();
+        $headerObject->states = $this->projectStateService->getAll();
         $headerObject->projectGroups = $project->groups;
         $headerObject->groupProjects = Project::where('is_group', 1)->get();
-        $headerObject->categories = Category::all();
+        $headerObject->categories = $this->categoryService->getAll();
         $headerObject->projectCategories = $project->categories;
-        $headerObject->genres = Genre::all();
+        $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
-        $headerObject->sectors = Sector::all();
+        $headerObject->sectors = $this->sectorService->getAll();
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;
@@ -1989,7 +1976,8 @@ class ProjectController extends Controller
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
             'first_project_calendar_tab_id' => $this->projectTabService
                 ->findFirstProjectTabWithCalendarComponent()?->id,
-            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
+            'createSettings' => app(ProjectCreateSettings::class),
         ]);
     }
 
@@ -2111,21 +2099,31 @@ class ProjectController extends Controller
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name', 'budget_deadline');
-
-        if ($request->selectedGroup === null) {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-        } else {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup['id']);
+        DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+        if ($request->get('selectedGroup') !== null) {
+            $group = Project::find($request->get('selectedGroup')['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
         $oldProjectName = $project->name;
         $oldProjectBudgetDeadline = $project->budget_deadline;
 
-        $project->fill($update_properties);
-        $project->save();
+        $this->projectService->updateProject($project, [
+            'name' => $request->string('name'),
+            'budget_deadline' => $request->string('budget_deadline'),
+            'state' => $request->integer('state'),
+            'cost_center_id' => $request->string('cost_center') !== null ?
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
+        ]);
+
+        $this->projectService->detachManagementUsers($project, true);
+        if (!empty($request->assignedUsers)) {
+            $this->projectService->attachManagementUsers($project, $request->assignedUsers);
+        }
+
+        $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
+        $this->projectService->syncSectors($project, $request->collect('assignedSectorIds'));
+        $this->projectService->syncGenres($project, $request->collect('assignedGenreIds'));
 
         $newProjectName = $project->name;
         $newProjectBudgetDeadline = $project->budget_deadline;

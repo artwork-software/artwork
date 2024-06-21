@@ -17,10 +17,12 @@ use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -257,7 +259,10 @@ class User extends Model implements
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    public function getFormattedVacationDays()
+    /**
+     * @return array<string>
+     */
+    public function getFormattedVacationDays(): array
     {
         $vacations = $this->vacations;
         $returnInterval = [];
@@ -413,9 +418,7 @@ class User extends Model implements
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-    /**
-     * @return string[]
-     */
+
     /**
      * @return string[]
      */
@@ -430,6 +433,9 @@ class User extends Model implements
         return $permissions;
     }
 
+    /**
+     * @return string[]
+     */
     public function allRoles(): array
     {
         $rolesArray = [];
@@ -501,5 +507,11 @@ class User extends Model implements
     public function getCalendarFilter(): ?CalendarFilter
     {
         return $this->calendar_filter()->first();
+    }
+
+    public function getHasProjectManagerPermission(): bool
+    {
+        return $this->hasPermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value)
+            || $this->hasRole(RoleEnum::ARTWORK_ADMIN->value);
     }
 }

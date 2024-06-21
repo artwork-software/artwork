@@ -34,6 +34,10 @@ export default {
         classes: {
             type: String,
             default: ""
+        },
+        type: {
+            type: String,
+            default: "button"
         }
     }
 }
@@ -41,7 +45,7 @@ export default {
 
 <template>
     <button
-       type="button"
+       :type="type"
        :disabled="disabled"
        :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-artwork-buttons-hover`,
        $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding, classes]"

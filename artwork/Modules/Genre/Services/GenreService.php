@@ -2,7 +2,10 @@
 
 namespace Artwork\Modules\Genre\Services;
 
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Genre\Repositories\GenreRepository;
+use Illuminate\Support\Collection;
 
 readonly class GenreService
 {
@@ -13,5 +16,18 @@ readonly class GenreService
     public function getAll(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->genreRepository->getAll();
+    }
+
+    public function createNewGenre(): Genre
+    {
+        return new Genre();
+    }
+
+    public function create(Collection $request): Genre|Model
+    {
+        $genre = $this->createNewGenre();
+        $genre->name = $request->get('name');
+        $genre->color = $request->get('color');
+        return $this->genreRepository->save($genre);
     }
 }

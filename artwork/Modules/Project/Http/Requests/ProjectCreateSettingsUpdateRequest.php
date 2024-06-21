@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ProjectCreateSettingRequest extends FormRequest
+class ProjectCreateSettingsUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

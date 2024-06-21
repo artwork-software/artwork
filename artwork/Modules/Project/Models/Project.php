@@ -84,6 +84,7 @@ class Project extends Model
         'collecting_society_id',
         'law_size',
         'cost_center_description',
+        'is_group',
     ];
 
     protected $casts = [
@@ -213,7 +214,7 @@ class Project extends Model
 
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id');
     }
 
     public function table(): HasOne

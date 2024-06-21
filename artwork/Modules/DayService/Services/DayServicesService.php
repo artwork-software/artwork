@@ -74,5 +74,4 @@ readonly class DayServicesService
 
         return $modelMap[$modelType] ?? null;
     }
-
 }

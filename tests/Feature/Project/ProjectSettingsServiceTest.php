@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Project;
 
-use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ class ProjectSettingsServiceTest extends TestCase
     public function testStore(): void
     {
         // fake request
-        $request = new ProjectCreateSettingRequest();
+        $request = new ProjectCreateSettingsUpdateRequest();
         $request->setMethod('POST');
         $request->request->add([
             'attributes' => true,

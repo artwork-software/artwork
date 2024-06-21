@@ -1332,7 +1332,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.scheduling');
     });
 
-    Route::group(['prefix' => 'searching'], function(){
+    Route::group(['prefix' => 'searching'], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
     });
 });
@@ -1346,5 +1346,3 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [\App\Http\Controllers\UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
-
-

@@ -12,5 +12,4 @@ readonly class DayServiceRepository extends BaseRepository
     {
         return DayService::all();
     }
-
 }

@@ -3,18 +3,9 @@
 namespace Artwork\Modules\InventoryManagement\Http\Controller;
 
 use App\Http\Controllers\Controller;
-use Artwork\Modules\InventoryManagement\Http\Requests\Group\CreateCraftInventoryGroupRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupNameRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupOrderRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\Item\CreateCraftInventoryItemRequest;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemCell\UpdateCraftInventoryItemCellCellValueRequest;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryCategoryService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryGroupService;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Psr\Log\LoggerInterface;

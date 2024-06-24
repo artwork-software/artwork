@@ -4,7 +4,6 @@ namespace Artwork\Modules\InventoryManagement\Services;
 
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
-use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemRepository;
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
 use Throwable;

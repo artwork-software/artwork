@@ -2,8 +2,6 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Http\Requests\ItemCell\UpdateCraftInventoryItemCellCellValueRequest;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;
 use Throwable;

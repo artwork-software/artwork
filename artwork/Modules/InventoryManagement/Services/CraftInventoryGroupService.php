@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryGroupRepository;
 use Throwable;

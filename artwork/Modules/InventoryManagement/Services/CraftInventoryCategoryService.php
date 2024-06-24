@@ -2,13 +2,8 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryCategoryRepository;
-use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
-use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 readonly class CraftInventoryCategoryService

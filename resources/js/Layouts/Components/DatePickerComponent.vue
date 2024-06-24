@@ -11,7 +11,7 @@
                        :disabled="!!project"
                        placeholder="Start"
                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
-                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-50 h-8 top-1" @click="toggleDateRangePicker">
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-40 h-8 top-1" @click="toggleDateRangePicker">
                     <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                 </div>
             </div>
@@ -24,7 +24,7 @@
                        :disabled="!!project"
                        placeholder="Ende"
                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
-                    <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-50 h-8 top-1" @click="toggleDateRangePicker">
+                    <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-40 h-8 top-1" @click="toggleDateRangePicker">
                         <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
                     </div>
             </div>

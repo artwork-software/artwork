@@ -35,7 +35,7 @@
                         <template #body>
                             <TableBody>
                                 <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                                    <th class="xsDark flex items-center -mt-2 h-28 w-48"
+                                    <th class="xsDark flex items-center h-28 w-48"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <Link class="flex font-semibold items-center ml-4">
                                             {{ room[days[0].full_day].roomName }}

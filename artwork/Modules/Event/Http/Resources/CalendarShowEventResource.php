@@ -30,7 +30,7 @@ class CalendarShowEventResource extends JsonResource
             'creator'
         ])->first();
 
-        $creator = $this->creator->without(['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'])->get();
+        //$creator = $this->creator->without(['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'])->get();
 
         $resource = class_basename($this);
         $id = $this->id;
@@ -88,7 +88,7 @@ class CalendarShowEventResource extends JsonResource
             'event_type_color' => $event_type_color,
             'areaId' => $areaId,
             'created_at' => $created_at,
-            'created_by' => $creator,
+            //'created_by' => $creator,
             'occupancy_option' => $occupancy_option,
             'allDay' => $allDay,
             'shifts' => $shifts,

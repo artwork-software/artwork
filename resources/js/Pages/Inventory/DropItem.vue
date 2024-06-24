@@ -16,8 +16,8 @@
 import {IconDragDrop} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 
-const emits = defineEmits(['itemRequestsDragMove']);
-const props = defineProps({
+const emits = defineEmits(['itemRequestsDragMove']),
+    props = defineProps({
         colspan: Number,
         destinationIndex: Number
     }),

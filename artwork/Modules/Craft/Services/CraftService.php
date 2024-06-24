@@ -14,9 +14,9 @@ readonly class CraftService
     {
     }
 
-    public function getAll(): Collection
+    public function getAll(array $with = []): Collection
     {
-        return $this->craftRepository->getAll();
+        return $this->craftRepository->getAll($with);
     }
 
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void

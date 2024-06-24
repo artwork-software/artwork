@@ -37,7 +37,7 @@
 
                     </div>
                     <div class="w-full flex flex-col items-center text-xs">
-                        <div v-for="(option, index) in newColumnForm.selectOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
+                        <div v-for="(option, index) in newColumnForm.typeOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
                             <span class="text-primary underline">Auswahlmöglichkeit {{ (index + 1) }}:</span>
                             <div class="flex flex-row justify-between">
                                 <span class="w-[90%] break-words">{{ option }}</span>
@@ -50,7 +50,6 @@
                           class="text-xs subpixel-antialiased text-error mt-2">
                         {{ $t('Es muss mindestens eine Auswahloption hinzugefügt werden.') }}
                     </span>
-
                 </div>
                 <div class="w-full flex flex-row justify-center mt-4">
                     <FormButton :text="$t('Save')"
@@ -70,9 +69,9 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
-const emits = defineEmits(['closed']);
-const NEW_COLUMN_TYPE = {
-        TEXTAREA: {
+const emits = defineEmits(['closed']),
+    NEW_COLUMN_TYPE = {
+        TEXT: {
             id: 0,
             translation: 'Freitextfeld'
         },
@@ -96,7 +95,7 @@ const NEW_COLUMN_TYPE = {
     newColumnForm = useForm({
         name: null,
         type: null,
-        selectOptions: []
+        typeOptions: []
     }),
     showNewColumnFormNameError = ref(false),
     showNewColumnFormTypeOptionsError = ref(false),
@@ -105,8 +104,8 @@ const NEW_COLUMN_TYPE = {
     getTypeOptions = () => {
         return [
             {
-                id: NEW_COLUMN_TYPE.TEXTAREA.id,
-                value: NEW_COLUMN_TYPE.TEXTAREA.translation
+                id: NEW_COLUMN_TYPE.TEXT.id,
+                value: NEW_COLUMN_TYPE.TEXT.translation
             },
             {
                 id: NEW_COLUMN_TYPE.DATE.id,
@@ -127,12 +126,12 @@ const NEW_COLUMN_TYPE = {
             //just whitespaces are not allowed
             return;
         }
-        newColumnForm.selectOptions.push(newColumnNewSelectOptionName.value);
+        newColumnForm.typeOptions.push(newColumnNewSelectOptionName.value);
         newColumnNewSelectOptionName.value = '';
         validateNewColumn();
     },
     removeNewColumnNewSelectOption = (index) => {
-        newColumnForm.selectOptions.splice(index, 1);
+        newColumnForm.typeOptions.splice(index, 1);
     },
     validateNewColumn = () => {
         if (newColumnForm.name === null || newColumnForm.name.length === 0) {
@@ -143,7 +142,7 @@ const NEW_COLUMN_TYPE = {
             newColumnFormNameErrorText.value = '';
         }
 
-        if (newColumnForm.type !== null && newColumnForm.type.id === NEW_COLUMN_TYPE.SELECT.id && newColumnForm.selectOptions.length < 1) {
+        if (newColumnForm.type !== null && newColumnForm.type.id === NEW_COLUMN_TYPE.SELECT.id && newColumnForm.typeOptions.length < 1) {
             showNewColumnFormTypeOptionsError.value = true;
             newColumnFormTypeOptionsErrorText.value = 'Es muss mindestens eine Auswahloption hinzugefügt werden.';
         } else {
@@ -157,12 +156,16 @@ const NEW_COLUMN_TYPE = {
         if (!validateNewColumn()) {
             return;
         }
-
-        console.debug('validated', newColumnForm);
-
-        //newColumnForm.post(route('#'));
+        newColumnForm.post(
+            route('inventory-management.inventory.column.create'),
+            {
+                preserveScroll: true,
+                onSuccess: close
+            }
+        );
     },
     close = () => {
+        newColumnForm.reset();
         emits.call(this, 'closed');
     }
 </script>

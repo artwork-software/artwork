@@ -6,7 +6,7 @@
         @mouseout="handleCategoryMouseout()"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan"
-            class="pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm">
+            :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm']">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
                     class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
@@ -27,9 +27,9 @@
                         v-model="categoryValue"
                         @keyup.enter="applyCategoryValueChange()"
                         @keyup.esc="denyCategoryValueChange()">
-                    <IconCheck class="w-5 h-5 hover:text-green-500"
+                    <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0"
                                @click="applyCategoryValueChange()"/>
-                    <IconX class="w-5 h-5 hover:text-red-500"
+                    <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0"
                            @click="denyCategoryValueChange()"/>
                 </div>
             </div>
@@ -47,11 +47,14 @@
                         @delete="deleteCategory()"
                         @closed="closeCategoryDeleteConfirmModal()"
     />
-    <AddNewGroup v-if="categoryShown"/>
+    <AddNewGroup v-if="categoryShown" @click="openAddCategoryOrGroupModal()"/>
     <DropGroup v-if="showFirstDropGroup"
                :colspan="colspan"
                :destination-index="0"
                @group-requests-drag-move="moveGroupToDestination"/>
+    <tr>
+        <td :colspan="colspan" class="h-0.5"/>
+    </tr>
     <template v-if="categoryShown" v-for="(group, index) in category.groups">
         <InventoryGroup :index="index"
                         :group="group"
@@ -59,6 +62,9 @@
                         :tr-cls="getGroupOnDragCls(index)"
                         @group-dragging="handleGroupDragging"
                         @group-drag-end="handleGroupDragEnd"/>
+        <tr>
+            <td :colspan="colspan" class="h-0.5"/>
+        </tr>
         <DropGroup v-if="showTemplateDropGroup(index)"
                    :colspan="colspan"
                    :destination-index="(index + 1)"
@@ -74,9 +80,10 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import AddNewGroup from "@/Pages/Inventory/AddNewGroup.vue";
 import DropGroup from "@/Pages/Inventory/DropGroup.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {router} from "@inertiajs/vue3";
 
-const emits = defineEmits(['categoryDragging', 'categoryDragEnd']);
-const props = defineProps({
+const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNewGroup']),
+    props = defineProps({
         index: Number,
         category: Object,
         colspan: Number,
@@ -113,8 +120,23 @@ const props = defineProps({
         }
     },
     applyCategoryValueChange = () => {
-        props.category.name = categoryValue.value;
-        toggleCategoryEdit();
+        router.patch(
+            route(
+                'inventory-management.inventory.category.update.name',
+                {
+                    craftInventoryCategory: props.category.id
+                }
+            ),
+            {
+                name: categoryValue.value
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    toggleCategoryEdit();
+                }
+            }
+        );
     },
     denyCategoryValueChange = () => {
         categoryValue.value = props.category.name;
@@ -138,8 +160,16 @@ const props = defineProps({
         categoryConfirmDeleteModalShown.value = true;
     },
     deleteCategory = () => {
-        console.debug('delete category', props.category.id);
-        closeCategoryDeleteConfirmModal();
+        router.delete(
+            route('inventory-management.inventory.category.delete',
+                {
+                    craftInventoryCategory: props.category.id
+                }
+            ),
+            {
+                onSuccess: closeCategoryDeleteConfirmModal
+            }
+        )
     },
     closeCategoryDeleteConfirmModal = () => {
         categoryConfirmDeleteModalShown.value = false;
@@ -177,7 +207,10 @@ const props = defineProps({
             fromIndex,
             toIndex
         );
-    };
+    },
+    openAddCategoryOrGroupModal = () => {
+        emits.call(this, 'wantsToAddNewGroup', 'group', props.category.id);
+    }
 </script>
 
 <style scoped>

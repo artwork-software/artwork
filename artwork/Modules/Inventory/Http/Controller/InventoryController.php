@@ -4,13 +4,16 @@ namespace Artwork\Modules\Inventory\Http\Controller;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryController extends Controller
 {
-    public function __construct(private readonly CraftService $craftService)
-    {
+    public function __construct(
+        private readonly CraftService $craftService,
+        private readonly CraftsInventoryColumnService $craftsInventoryColumnService
+    ) {
     }
 
     public function inventory(): Response
@@ -18,48 +21,16 @@ class InventoryController extends Controller
         return Inertia::render(
             'Inventory/Inventory',
             [
-                'columns' => [
+                'columns' => $this->craftsInventoryColumnService->getAllOrdered(),
+                'crafts' => $this->craftService->getAll(
                     [
-                        'id' => 1,
-                        'type' => 'text',
-                        'name' => 'Name'
-                    ],
-                    [
-                        'id' => 2,
-                        'type' => 'number',
-                        'name' => 'Anzahl'
-                    ],
-                    [
-                        'id' => 3,
-                        'type' => 'textarea',
-                        'name' => 'Kommentar'
-                    ],
-                    [
-                        'id' => 4,
-                        'type' => 'date',
-                        'name' => 'Datum'
-                    ],
-                    [
-                        'id' => 5,
-                        'type' => 'checkbox',
-                        'name' => 'Kürzlich aufbereitet'
-                    ],
-                    [
-                        'id' => 6,
-                        'type' => 'select',
-                        'name' => 'Maximale Dispositionsdauer',
-                        'options' => [
-                            [
-                                '1 Tag',
-                                '3 Tage',
-                                '1 Woche',
-                                '2 Wochen',
-                                '1 Monat'
-                            ]
-                        ]
+                        'inventoryCategories',
+                        'inventoryCategories.groups',
+                        'inventoryCategories.groups.items',
+                        'inventoryCategories.groups.items.cells',
+                        'inventoryCategories.groups.items.cells.column',
                     ]
-                ],
-                'crafts' => $this->craftService->getAll()
+                )
             ]
         );
     }

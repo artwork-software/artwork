@@ -1,14 +1,21 @@
 <template>
    <div class="text-sm">
-       <div class="py-1 px-2 border" :style="{
+       <div class="py-1.5 px-2 border" :style="{
         backgroundColor: backgroundColorWithOpacity(event.event_type.hex_code),
         color: textColorWithDarken(event.event_type.hex_code),
         border: textColorWithDarken(event.event_type.hex_code)
         }"
         :class="isLastEvent ? 'rounded-b-lg' : ''">
-           <div>
+           <div class="flex items-center justify-between gap-x-1">
                {{ event.eventName ?? event.title }}
+               <span class="text-xs" v-if="!event.allDay">
+                   {{ event.timesWithoutDates.start }} - {{ event.timesWithoutDates.end }}
+               </span>
+               <span v-else class="text-xs">
+                   {{ $t('All day') }}
+               </span>
            </div>
+
        </div>
    </div>
 </template>

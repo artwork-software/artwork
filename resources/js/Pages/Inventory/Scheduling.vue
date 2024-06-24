@@ -23,19 +23,21 @@
                        </template>
                        <template #body>
                            <TableBody>
-                               <tr v-for="(room,index) in calendar" class="w-full flex">
-                                   <th class="xsDark flex items-center h-28 w-48"
+                               <tr v-for="(room,index) in calendar" class="w-full h-full flex border-b border-dashed" :id="'roomHeight' + index">
+                                   <th class="xsDark flex items-center w-48"  :style="{height: roomHeights[index] + 'px'}"
                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                       <Link class="flex font-semibold items-center ml-4">
+                                       <Link href="#" class="flex font-semibold items-center ml-4">
                                            {{ room[days[0].full_day].roomName }}
                                        </Link>
                                    </th>
                                    <td v-for="day in days" :style="{width: day.week_separator ? '40px' : '200px'}" class="overflow-y-auto cell border-r-2 border-dotted" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
-                                       <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events.data)" class="mb-1">
-                                           <div class="bg-gray-200 py-1 px-2 rounded-t-lg text-sm mb-1">
-                                               {{ index === 'null' ? 'No Project' : index }}
+                                       <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events.data)" class="mb-1" id="">
+                                           <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
+                                               <span>
+                                                   {{ index === 'null' ? $t('No Project') : index }}
+                                               </span>
                                            </div>
-                                          <SingleEventInInventoryScheduling v-for="event in events" :event="event" :is-last-event="checkIfLastEventInEventData(event, room[day.full_day]?.events.data)" />
+                                          <SingleEventInInventoryScheduling v-for="event in events" :event="event" :is-last-event="checkIfLastEventInEventData(event, events)" />
                                        </div>
                                    </td>
                                </tr>
@@ -50,25 +52,14 @@
                    <div  @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                viewBox="0 0 14.123 6.519">
-                               <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                  transform="translate(-275.125 870.166) rotate(-90)">
-                                   <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                         transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                         stroke-width="1"/>
-                                   <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                         transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                         stroke="#a7a6b1" stroke-width="1"/>
-                               </g>
-                           </svg>
+                           <IconChevronsDown class="h-4 w-4 text-gray-400" />
                        </div>
                    </div>
                    <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
                         :title="$t('Hold and drag to change the size')">
                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                           <SelectorIcon class="h-3 w-6 text-gray-400" />
+                           <IconCaretUpDown class="h-3 w-6 text-gray-400" />
                        </div>
                    </div>
                </div>
@@ -80,10 +71,6 @@
            </div>
        </div>
 
-
-        <pre>
-            {{ calendar }}
-        </pre>
     </InventoryHeader>
 
 </template>
@@ -97,7 +84,7 @@ import Table from "@/Components/Table/Table.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
 import {Link} from "@inertiajs/vue3";
 import {onMounted, ref} from "vue";
-import {SelectorIcon} from "@heroicons/vue/solid";
+import { IconCaretUpDown, IconChevronsDown } from "@tabler/icons-vue";
 import SingleEventInInventoryScheduling from "@/Pages/Inventory/Components/SingleEventInInventoryScheduling.vue";
 
 const props = defineProps({
@@ -124,12 +111,14 @@ const shiftPlan = ref(null);
 const currentDayOnView = ref([]);
 const startY = ref(0);
 const startHeight = ref(0);
+const roomHeights = ref([]);
 
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
     window.addEventListener('scroll', syncScrollShiftPlan);
     window.addEventListener('scroll', syncScrollUserOverview);
     updateHeight();
+    calculateAllRoomHeights();
 });
 
 const checkIfLastEventInEventData = (event, eventData) => {
@@ -199,6 +188,13 @@ const showCloseUserOverview = () => {
     showUserOverview.value = !showUserOverview.value;
     updateHeight();
 }
+const calculateRoomHeightByIndex = (index) => {
+    const roomHeight = document.getElementById('roomHeight' + index);
+    if (roomHeight) {
+        return roomHeight.offsetHeight;
+    }
+    return 0;
+};
 
 const syncScrollShiftPlan = (event) => {
     if (userOverview) {
@@ -215,7 +211,7 @@ const syncScrollShiftPlan = (event) => {
         if (props.days[dayIndex].week_separator) {
             currentDayOnView.value = props.days[dayIndex];
         } else {
-            currentDayOnView.vaule = props.days[dayIndex + 1];
+            currentDayOnView.value = props.days[dayIndex + 1];
         }
     }
 }
@@ -231,6 +227,9 @@ const calculateTopPositionOfUserOverView = () => {
     return showUserOverview.value ? userOverviewHeight.value + 'px' : '0';
 }
 
+const calculateAllRoomHeights = () => {
+    roomHeights.value = props.calendar.map((_, index) => calculateRoomHeightByIndex(index));
+};
 </script>
 
 <style scoped>

@@ -125,7 +125,7 @@ return new class extends Migration {
                 ->cascadeOnUpdate();
             $table->foreign('sub_position_row_id')
                 ->references('id')
-                ->on('column_sub_position_row')
+                ->on('sub_position_rows')
                 ->cascadeOnUpdate();
             $table->foreign('linked_money_source_id')
                 ->references('id')

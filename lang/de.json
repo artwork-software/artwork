@@ -1848,5 +1848,8 @@
     "Saved. The changes have been successfully applied.": "Gespeichert. Die Änderungen wurden erfolgreich übernommen.",
     "Settings for project creation": "Einstellungen für Projekt-Erstellung",
     "Here you have the option of making settings for the creation of projects.": "Hier hast du die Möglichkeit, Einstellungen für die Erstellung von Projekten vorzunehmen.",
-    "No Project": "Kein Projekt"
+    "Delete category?": "Kategorie löschen?",
+    "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Kategorie wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände der zugehörigen Gruppen disponiert sind.",
+    "Delete group?": "Gruppe löschen?",
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Diese Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind."
 }

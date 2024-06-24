@@ -1,7 +1,7 @@
 <template>
-    <InventoryHeader :title="this.$t('Inventory')">
+    <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
-            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
+            <div class="absolute right-[2px] -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
                 <BaseFilter :only-icon="true" class="mr-3">
                     <div class="flex flex-col w-full gap-y-2">
                         <div class="flex justify-between">
@@ -27,22 +27,17 @@
                                             class="!mt-0 !w-52 !h-9"/>
                         <IconSearch class="cursor-pointer w-6 h-6 hover:text-blue-500"/>
                     </div>
-                    <div class="w-[1px] h-8 bg-white"/>
-                    <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600">
+                    <div class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600" @click="openAddColumnModal()">
                         <span class="drop-shadow-sm shadow-black">
                             {{ $t('New column') }}
                         </span>
-                        <button
-                            class="p-1 border-white border-2 rounded-full items-center shadow-sm"
-                            @click="dummyFn()">
-                            <PlusIcon stroke-width="1.5" class="h-4 w-4"/>
-                        </button>
+                        <PlusIcon stroke-width="1.5" class="h-7 w-7 p-1 border-white border-2 rounded-full shadow-sm"/>
                     </div>
                 </div>
             </div>
             <table class="table-auto border-4">
-                <thead class="sticky top-0 z-20 bg-gray-500 transition-all duration-300 shadow-sm text-white">
-                <tr class="table-row text-xs font-light w-full h-full">
+                <thead class="sticky z-20 top-0 bg-gray-500 transition-all duration-300 shadow-sm text-white">
+                <tr class="text-xs w-full h-full">
                     <th v-for="(column,index) in columns"
                         @mouseover="showMenu = column.id" :key="column.id"
                         @mouseout="showMenu = null"
@@ -51,15 +46,20 @@
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
                                     class="w-[calc(100%-0.8rem)] indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
-                                    @dblclick="column.clicked = !column.clicked; selectInput(column.id)">
+                                    @dblclick="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
-                                <input
-                                    type="text"
-                                    :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
-                                    :class="[column.clicked ? '' : 'hidden', 'text-black w-[calc(100%-0.9rem)] p-1 top-[4px] left-[8px] z-50 absolute border-0 text-xs']"
-                                    v-model="column.name"
-                                    @focusout="column.clicked = !column.clicked">
+                                <div :class="[column.clicked ? '' : 'hidden', 'flex flex-row items-center bg-gray-500 px-1 top-[3px] text-white gap-x-2 w-full z-50 absolute']">
+                                    <input
+                                        type="text"
+                                        :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
+                                        class="w-[calc(100%-10px)] p-1 pl-2 border-0 text-xs text-black"
+                                        v-model="column.newValue"
+                                        @keyup.enter="applyColumnValueChange(column)"
+                                        @keyup.esc="denyColumnValueChange(column)">
+                                    <IconCheck class="w-5 h-5 hover:text-green-500" @click="applyColumnValueChange(column)"/>
+                                    <IconX class="w-5 h-5 hover:text-red-500" @click="denyColumnValueChange(column)"/>
+                                </div>
                             </div>
                             <Menu v-show="showMenu === column.id"
                                   as="div"
@@ -142,10 +142,13 @@
                 </thead>
                 <tbody>
                 <template v-for="(craft) in filteredCrafts">
-                    <InventoryCraft :craft="craft" :colspan="6"/>
+                    <InventoryCraft :craft="craft"
+                                    :colspan="getColSpan()"/>
                 </template>
                 </tbody>
             </table>
+            <AddColumnModal :show="showAddColumnModal"
+                            @closed="closeAddColumnModal"/>
         </div>
     </InventoryHeader>
 </template>
@@ -158,8 +161,7 @@ import {
     IconDotsVertical,
     IconTrash,
     IconX,
-    IconChevronUp,
-    IconChevronDown
+    IconCheck
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -177,6 +179,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import AddColumnModal from "@/Pages/Inventory/AddColumnModal.vue";
 
 const props = defineProps({
         columns: Array,
@@ -186,7 +189,18 @@ const props = defineProps({
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
     searchValue = ref(''),
+    showAddColumnModal = ref(false),
     dummyFn = () => true,
+    getColSpan = () => {
+        return props.columns.length;
+    },
+    openAddColumnModal = () => {
+        showAddColumnModal.value = true;
+        console.debug('test');
+    },
+    closeAddColumnModal = () => {
+        showAddColumnModal.value = false;
+    },
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);
     },
@@ -194,7 +208,24 @@ const props = defineProps({
         setTimeout(() => {
             dynamicColumnNameInputRefs[columnId].value.select();
         }, 5);
+    },
+    toggleColumnEdit = (column) => {
+        column.clicked = !column.clicked;
 
+        if (column.clicked) {
+            column.newValue = column.name;
+            setTimeout(() => {
+                dynamicColumnNameInputRefs[column.id].value.select();
+            }, 5);
+        }
+    },
+    applyColumnValueChange = (column) => {
+        column.name = column.newValue;
+        toggleColumnEdit(column);
+    },
+    denyColumnValueChange = (column) => {
+        column.newValue = column.name;
+        toggleColumnEdit(column);
     },
     changeCraftFilter = (args) => {
         //args.list.forEach.checked -> sync in backend to user (InventoryManagementFilter)
@@ -269,32 +300,32 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 1',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 2',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 3',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 4',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 5',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 6',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -304,32 +335,137 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 7',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 8',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 9',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 10',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 11',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 12',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -345,32 +481,32 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 13',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 14',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 15',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 16',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 17',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 18',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -380,32 +516,137 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 19',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 20',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 21',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 22',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 23',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 24',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -420,39 +661,39 @@ const props = defineProps({
                 groups: [
                     {
                         id: Math.floor(Math.random() * 100000),
-                        name: 'Gruppe 5',
+                        name: 'Gruppe 1',
                         items: [
                             {
                                 id: Math.floor(Math.random() * 100000),
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 1',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 2',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 3',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 4',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 5',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 6',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -462,32 +703,137 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 7',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 8',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 9',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 10',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 11',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 12',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -503,32 +849,32 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 13',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 14',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 15',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 16',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 17',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 18',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]
@@ -538,32 +884,692 @@ const props = defineProps({
                                 cells: [
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 19',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 20',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 21',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 22',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 23',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     },
                                     {
                                         id: Math.floor(Math.random() * 100000),
-                                        value: 'Test 24',
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: Math.floor(Math.random() * 100000),
+                name: 'Test Kategorie 3',
+                groups: [
+                    {
+                        id: Math.floor(Math.random() * 100000),
+                        name: 'Gruppe 1',
+                        items: [
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                        ]
+                    },
+                ]
+            },
+            {
+                id: Math.floor(Math.random() * 100000),
+                name: 'Test Kategorie 4',
+                groups: [
+                    {
+                        id: Math.floor(Math.random() * 100000),
+                        name: 'Gruppe 5',
+                        items: [
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                        ]
+                    },
+                    {
+                        id: Math.floor(Math.random() * 100000),
+                        name: 'Gruppe 2',
+                        items: [
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    }
+                                ]
+                            },
+                            {
+                                id: Math.floor(Math.random() * 100000),
+                                cells: [
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
+                                        type: 'text'
+                                    },
+                                    {
+                                        id: Math.floor(Math.random() * 100000),
+                                        value: 'Test ' + Math.floor(Math.random() * 100000),
                                         type: 'text'
                                     }
                                 ]

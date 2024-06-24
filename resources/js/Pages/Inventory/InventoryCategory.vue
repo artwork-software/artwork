@@ -1,30 +1,187 @@
 <template>
-    <tr @click="toggleCategory()">
-        <td :colspan="colspan" class="pl-3 p-2 border-4 cursor-pointer bg-primary text-white subpixel-antialiased text-sm">
-            <div class="flex flex-row items-center gap-x-3">
-                <span>{{ category.name }}</span>
-                <IconChevronUp v-if="categoryShown" class="w-5 h-5"/>
-                <IconChevronDown v-else class="w-5 h-5"/>
+    <tr :draggable="categoryIsDraggable()"
+        @dragstart="categoryDragStart"
+        @dragend="categoryDragEnd"
+        @mouseover="handleCategoryMouseover()"
+        @mouseout="handleCategoryMouseout()"
+        :class="'cursor-grab ' + trCls">
+        <td :colspan="colspan"
+            class="pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm">
+            <div class="w-full h-full flex flex-row items-center relative gap-x-2">
+                <div
+                    class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    @dblclick="toggleCategoryEdit()">
+                    {{ category.name }}
+                </div>
+                <div @click="toggleCategory()"
+                     class="cursor-pointer">
+                    <IconChevronUp v-if="categoryShown" class="w-5 h-5"/>
+                    <IconChevronDown v-else class="w-5 h-5"/>
+                </div>
+                <div
+                    :class="[categoryClicked ? '' : 'hidden', 'flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
+                    <input
+                        type="text"
+                        ref="categoryInputRef"
+                        class="w-full p-1 border-0 text-xs text-black"
+                        v-model="categoryValue"
+                        @keyup.enter="applyCategoryValueChange()"
+                        @keyup.esc="denyCategoryValueChange()">
+                    <IconCheck class="w-5 h-5 hover:text-green-500"
+                               @click="applyCategoryValueChange()"/>
+                    <IconX class="w-5 h-5 hover:text-red-500"
+                           @click="denyCategoryValueChange()"/>
+                </div>
             </div>
         </td>
     </tr>
-    <template v-if="categoryShown" v-for="(group) in category.groups">
-        <InventoryGroup :group="group" :colspan="colspan"/>
+    <IconTrashXFilled v-if="!categoryClicked && categoryMouseover && !categoryDragged"
+                      @mouseover="handleCategoryDeleteMouseover"
+                      @mouseout="handleCategoryDeleteMouseout"
+                      :class="[categoryDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
+                      @click="showCategoryDeleteConfirmModal()"/>
+    <ConfirmDeleteModal v-if="categoryConfirmDeleteModalShown"
+                        :title="$t('Delete category?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.')"
+                        @delete="deleteCategory()"
+                        @closed="closeCategoryDeleteConfirmModal()"
+    />
+    <AddNewGroup v-if="categoryShown"/>
+    <DropGroup v-if="showFirstDropGroup"
+               :colspan="colspan"
+               :destination-index="0"
+               @group-requests-drag-move="moveGroupToDestination"/>
+    <template v-if="categoryShown" v-for="(group, index) in category.groups">
+        <InventoryGroup :index="index"
+                        :group="group"
+                        :colspan="colspan"
+                        :tr-cls="getGroupOnDragCls(index)"
+                        @group-dragging="handleGroupDragging"
+                        @group-drag-end="handleGroupDragEnd"/>
+        <DropGroup v-if="showTemplateDropGroup(index)"
+                   :colspan="colspan"
+                   :destination-index="(index + 1)"
+                   @group-requests-drag-move="moveGroupToDestination"/>
     </template>
 </template>
 
 <script setup>
-
 import InventoryGroup from "@/Pages/Inventory/InventoryGroup.vue";
-import {IconChevronDown, IconChevronUp} from "@tabler/icons-vue";
-import {ref} from "vue";
+import {IconCheck, IconChevronDown, IconChevronUp, IconX, IconTrashXFilled} from "@tabler/icons-vue";
+import {computed, ref} from "vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
+import AddNewGroup from "@/Pages/Inventory/AddNewGroup.vue";
+import DropGroup from "@/Pages/Inventory/DropGroup.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
+const emits = defineEmits(['categoryDragging', 'categoryDragEnd']);
 const props = defineProps({
+        index: Number,
         category: Object,
-        colspan: Number
+        colspan: Number,
+        trCls: String
     }),
+    categoryInputRef = ref(null),
     categoryShown = ref(true),
+    categoryDragged = ref(false),
+    categoryClicked = ref(false),
+    categoryValue = ref(props.category.name),
+    categoryMouseover = ref(false),
+    categoryDeleteCls = ref(''),
+    categoryConfirmDeleteModalShown = ref(false),
+    groupDragging = ref(false),
+    draggedGroupIndex = ref(null),
+    showFirstDropGroup = computed(() => {
+        return groupDragging.value && draggedGroupIndex.value > 0;
+    }),
+    showTemplateDropGroup = computed(() => {
+        return (index) => groupDragging.value &&
+            index !== draggedGroupIndex.value &&
+            index !== (draggedGroupIndex.value - 1);
+    }),
     toggleCategory = () => {
         categoryShown.value = !categoryShown.value;
+    },
+    toggleCategoryEdit = () => {
+        categoryClicked.value = !categoryClicked.value;
+
+        if (categoryClicked.value) {
+            setTimeout(() => {
+                categoryInputRef.value.select();
+            }, 5);
+        }
+    },
+    applyCategoryValueChange = () => {
+        props.category.name = categoryValue.value;
+        toggleCategoryEdit();
+    },
+    denyCategoryValueChange = () => {
+        categoryValue.value = props.category.name;
+        toggleCategoryEdit();
+    },
+    handleCategoryMouseover = () => {
+        categoryMouseover.value = true;
+    },
+    handleCategoryMouseout = () => {
+        categoryMouseover.value = false;
+    },
+    handleCategoryDeleteMouseover = () => {
+        categoryMouseover.value = true;
+        categoryDeleteCls.value = 'bg-red-600';
+    },
+    handleCategoryDeleteMouseout = () => {
+        categoryMouseover.value = false;
+        categoryDeleteCls.value = 'bg-black';
+    },
+    showCategoryDeleteConfirmModal = () => {
+        categoryConfirmDeleteModalShown.value = true;
+    },
+    deleteCategory = () => {
+        console.debug('delete category', props.category.id);
+        closeCategoryDeleteConfirmModal();
+    },
+    closeCategoryDeleteConfirmModal = () => {
+        categoryConfirmDeleteModalShown.value = false;
+    },
+    categoryIsDraggable = () => {
+        return !categoryClicked.value;
+    },
+    categoryDragStart = (e) => {
+        categoryDragged.value = true;
+        emits.call(this, 'categoryDragging', props.index);
+
+        e.dataTransfer.setData('categoryId', props.category.id);
+        e.dataTransfer.setData('currentCategoryIndex', props.index.toString());
+    },
+    categoryDragEnd = () => {
+        categoryDragged.value = false;
+        emits.call(this, 'categoryDragEnd')
+    },
+    handleGroupDragging = (index) => {
+        draggedGroupIndex.value = index;
+        groupDragging.value = true;
+    },
+    getGroupOnDragCls = (index) => {
+        return groupDragging.value && draggedGroupIndex.value !== index ? 'onDragBackground' : '';
+    },
+    handleGroupDragEnd = () => {
+        draggedGroupIndex.value = null;
+        groupDragging.value = false;
+    },
+    moveGroupToDestination = (groupId, fromIndex, toIndex) => {
+        console.debug(
+            'group requested move from to index',
+            props.category.id,
+            groupId,
+            fromIndex,
+            toIndex
+        );
     };
 </script>
+
+<style scoped>
+.onDragBackground :deep(td) {
+    opacity: 50%;
+}
+</style>

@@ -1,0 +1,44 @@
+<template>
+    <tr draggable="true"
+        @dragover="groupDragOver"
+        @dragleave="groupDragLeave"
+        @drop="groupDrop"
+        :class="dragOverClass">
+        <td :colspan="colspan">
+            <div class="flex flex-row py-1 border text-black border-dashed border-blue-700 justify-center items-center">
+                <IconDragDrop class="w-5 h-5"/>
+                <span class="text-xs subpixel-antialiased">Hier platzieren</span>
+            </div>
+        </td>
+    </tr>
+</template>
+<script setup>
+import {IconDragDrop} from "@tabler/icons-vue";
+import {computed, ref} from "vue";
+
+const emits = defineEmits(['groupRequestsDragMove']);
+const props = defineProps({
+        colspan: Number,
+        destinationIndex: Number
+    }),
+    draggedOver = ref(false),
+    dragOverClass = computed(() => {
+        return draggedOver.value ? 'bg-secondary' : '';
+    }),
+    groupDragOver = (e) => {
+        draggedOver.value = true;
+        e.preventDefault()
+    },
+    groupDragLeave = () => {
+        draggedOver.value = false;
+    },
+    groupDrop = (e) => {
+        emits.call(
+            this,
+            'groupRequestsDragMove',
+            e.dataTransfer.getData('groupId'),
+            e.dataTransfer.getData('currentGroupIndex'),
+            props.destinationIndex
+        );
+    };
+</script>

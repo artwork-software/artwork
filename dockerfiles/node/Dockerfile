@@ -7,13 +7,10 @@ WORKDIR '/app'
 COPY lang ./lang
 COPY package-lock.* .
 COPY package.json .
-COPY webpack.mix.js .
-COPY webpack.config.js .
-COPY node_module* ./node_modules
+COPY vite.config.js .
 COPY resources ./resources
 COPY public ./public
 
-RUN npm -g install cross-env webpack
-RUN npm install && npm run dev
+RUN npm install
 
-ENTRYPOINT ["npm", "run", "watch"]
+ENTRYPOINT ["npm", "run", "dev"]

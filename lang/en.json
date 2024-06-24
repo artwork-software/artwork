@@ -1848,5 +1848,8 @@
     "Saved. The changes have been successfully applied.": "Saved. The changes have been successfully applied.",
     "Settings for project creation": "Settings for project creation",
     "Here you have the option of making settings for the creation of projects.": "Here you have the option of making settings for the creation of projects.",
-    "No Project": "No Project"
+    "Delete category?": "Delete category?",
+    "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.",
+    "Delete group?": "Delete group?",
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled."
 }

@@ -31,6 +31,10 @@ class CraftInventoryCategory extends Model
 
     public function groups(): HasMany
     {
-        return $this->hasMany(CraftInventoryGroup::class, 'craft_inventory_category_id', 'id');
+        return $this->hasMany(
+            CraftInventoryGroup::class,
+            'craft_inventory_category_id',
+            'id'
+        )->orderBy('order');
     }
 }

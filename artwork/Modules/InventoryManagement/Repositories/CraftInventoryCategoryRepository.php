@@ -20,8 +20,18 @@ readonly class CraftInventoryCategoryRepository extends BaseRepository
         return $craftInventoryCategory;
     }
 
-    public function getAllByCraftId(int $craftId): Collection
+    public function getAllByCraftIdOrderedByOrder(int $craftId): Collection
     {
-        return CraftInventoryCategory::query()->where('craft_id', $craftId)->get();
+        return CraftInventoryCategory::query()
+            ->where('craft_id', $craftId)
+            ->orderBy('order')
+            ->get();
+    }
+
+    public function getCategoryCountForCraft(int $craftId): int
+    {
+        return CraftInventoryCategory::query()
+            ->where('craft_id', $craftId)
+            ->count();
     }
 }

@@ -9,7 +9,8 @@ use Throwable;
 readonly class CraftInventoryCategoryService
 {
     public function __construct(
-        private CraftInventoryCategoryRepository $craftInventoryCategoryRepository
+        private CraftInventoryCategoryRepository $craftInventoryCategoryRepository,
+        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
     }
 
@@ -23,14 +24,13 @@ readonly class CraftInventoryCategoryService
      */
     public function create(
         int $craftId,
-        string $name,
-        int $order
+        string $name
     ): CraftInventoryCategory {
         $craftsInventoryCategory = $this->getNewCraftInventoryCategory(
             [
                 'craft_id' => $craftId,
                 'name' => $name,
-                'order' => $order
+                'order' => $this->craftInventoryCategoryRepository->getCategoryCountForCraft($craftId)
             ]
         );
         $this->craftInventoryCategoryRepository->saveOrFail($craftsInventoryCategory);
@@ -56,6 +56,21 @@ readonly class CraftInventoryCategoryService
      */
     public function updateOrder(CraftInventoryCategory $craftInventoryCategory, int $order): void
     {
+        foreach (
+            $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
+                $this->craftInventoryCategoryRepository
+                    ->getAllByCraftIdOrderedByOrder($craftInventoryCategory->craft_id),
+                $order,
+                $craftInventoryCategory
+            ) as $index => $orderedCategory
+        ) {
+            $this->craftInventoryCategoryRepository->updateOrFail(
+                $orderedCategory,
+                [
+                    'order' => $index
+                ]
+            );
+        }
     }
 
     public function forceDelete(int|CraftInventoryCategory $craftInventoryCategory): bool

@@ -27,8 +27,7 @@ class CraftInventoryCategoryController extends Controller
         try {
             $this->craftsInventoryCategoryService->create(
                 $request->integer('craftId'),
-                $request->string('name'),
-                $request->integer('order')
+                $request->string('name')
             );
         } catch (Throwable $t) {
             $this->logger->error(

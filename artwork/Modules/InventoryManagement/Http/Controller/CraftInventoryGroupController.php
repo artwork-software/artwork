@@ -5,6 +5,7 @@ namespace Artwork\Modules\InventoryManagement\Http\Controller;
 use App\Http\Controllers\Controller;
 use Artwork\Modules\InventoryManagement\Http\Requests\Group\CreateCraftInventoryGroupRequest;
 use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupNameRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupOrderRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryGroupService;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,6 @@ class CraftInventoryGroupController extends Controller
             $this->craftInventoryGroupService->create(
                 $request->integer('categoryId'),
                 $request->string('name'),
-                $request->integer('order'),
             );
         } catch (Throwable $t) {
             $this->logger->error(
@@ -69,32 +69,32 @@ class CraftInventoryGroupController extends Controller
 
         return $this->redirector->back();
     }
-//
-//    public function updateOrder(
-//        CraftInventoryCategory $craftInventoryCategory,
-//        UpdateCraftInventoryGroupOrderRequest $request
-//    ) {
-//        $order = $request->integer('order');
-//
-//        try {
-//            $this->craftsInventoryCategoryService->updateOrder($craftInventoryCategory, $order);
-//        } catch (Throwable $t) {
-//            $this->logger->error(
-//                sprintf(
-//                    'Could not update crafts inventory category order to: "%s" for reason: "%s"',
-//                    $order,
-//                    $t->getMessage()
-//                )
-//            );
-//
-//            return $this->redirector
-//                ->back()
-//                ->with('error', 'Kategorieposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
-//        }
-//
-//        return $this->redirector->back();
-//    }
-//
+
+    public function updateOrder(
+        CraftInventoryGroup $craftInventoryGroup,
+        UpdateCraftInventoryGroupOrderRequest $request
+    ) {
+        $order = $request->integer('order');
+
+        try {
+            $this->craftInventoryGroupService->updateOrder($craftInventoryGroup, $order);
+        } catch (Throwable $t) {
+            $this->logger->error(
+                sprintf(
+                    'Could not update crafts inventory group order to: "%s" for reason: "%s"',
+                    $order,
+                    $t->getMessage()
+                )
+            );
+
+            return $this->redirector
+                ->back()
+                ->with('error', 'Gruppenposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+        }
+
+        return $this->redirector->back();
+    }
+
     public function forceDelete(CraftInventoryGroup $craftInventoryGroup): RedirectResponse
     {
         if (!$this->craftInventoryGroupService->forceDelete($craftInventoryGroup)) {

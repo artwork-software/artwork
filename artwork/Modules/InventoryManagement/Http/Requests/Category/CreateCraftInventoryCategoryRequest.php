@@ -13,8 +13,7 @@ class CreateCraftInventoryCategoryRequest extends FormRequest
     {
         return [
             'craftId' => 'required|integer|exists:crafts,id',
-            'name' => 'required|string',
-            'order' => 'required|integer',
+            'name' => 'required|string'
         ];
     }
 }

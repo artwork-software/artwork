@@ -9,7 +9,8 @@ use Throwable;
 readonly class CraftInventoryGroupService
 {
     public function __construct(
-        private CraftInventoryGroupRepository $craftsInventoryGroupRepository
+        private CraftInventoryGroupRepository $craftsInventoryGroupRepository,
+        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
     }
 
@@ -23,14 +24,13 @@ readonly class CraftInventoryGroupService
      */
     public function create(
         int $categoryId,
-        string $name,
-        int $order
+        string $name
     ): CraftInventoryGroup {
         $craftsInventoryGroup = $this->getNewCraftInventoryGroup(
             [
                 'craft_inventory_category_id' => $categoryId,
                 'name' => $name,
-                'order' => $order
+                'order' => $this->craftsInventoryGroupRepository->getGroupCountForCategory($categoryId)
             ]
         );
         $this->craftsInventoryGroupRepository->saveOrFail($craftsInventoryGroup);
@@ -56,6 +56,21 @@ readonly class CraftInventoryGroupService
      */
     public function updateOrder(CraftInventoryGroup $craftInventoryGroup, int $order): void
     {
+        foreach (
+            $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
+                $this->craftsInventoryGroupRepository
+                    ->getAllByCategoryIdOrderedByOrder($craftInventoryGroup->craft_inventory_category_id),
+                $order,
+                $craftInventoryGroup
+            ) as $index => $orderedGroup
+        ) {
+            $this->craftsInventoryGroupRepository->updateOrFail(
+                $orderedGroup,
+                [
+                    'order' => $index
+                ]
+            );
+        }
     }
 
     public function forceDelete(int|CraftInventoryGroup $craftInventoryGroup): bool

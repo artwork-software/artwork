@@ -33,6 +33,10 @@ class CraftInventoryItem extends Model
 
     public function cells(): HasMany
     {
-        return $this->hasMany(CraftInventoryItemCell::class, 'craft_inventory_item_id', 'id');
+        return $this->hasMany(
+            CraftInventoryItemCell::class,
+            'craft_inventory_item_id',
+            'id'
+        )->orderBy('order');
     }
 }

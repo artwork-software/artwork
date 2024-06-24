@@ -12,15 +12,15 @@
             </div>
         </td>
     </tr>
+    <tr>
+        <td :colspan="colspan" class="h-5"/>
+    </tr>
     <DropCategory v-if="showFirstDropCategory"
                   :colspan="colspan"
                   :destination-index="0"
                   @categroy-requests-drag-move="moveCategoryToDestination"/>
     <template v-if="craftShown && craft.inventory_categories.length > 0"
               v-for="(category, index) in craft.inventory_categories">
-        <tr>
-            <td :colspan="colspan" class="h-5"/>
-        </tr>
         <AddNewCategory v-if="craftShown && index === 0" @click="openAddCategoryOrGroupModal('category', props.craft.id)"/>
         <InventoryCategory :index="index"
                            :category="category"
@@ -32,7 +32,7 @@
         />
         <DropCategory v-if="showTemplateDropCategory(index)"
                       :colspan="colspan"
-                      :destination-index="(index)"
+                      :destination-index="(index + 1)"
                       @categroy-requests-drag-move="moveCategoryToDestination"/>
         <template v-if="(index + 1) === craft.inventory_categories.length">
             <tr>
@@ -112,7 +112,7 @@ const props = defineProps({
         draggedCategoryIndex.value = null;
         categoryDragging.value = false;
     },
-    moveCategoryToDestination = (categoryId, fromIndex, toIndex) => {
+    moveCategoryToDestination = (categoryId, toIndex) => {
         router.patch(
             route(
                 'inventory-management.inventory.category.update.order',

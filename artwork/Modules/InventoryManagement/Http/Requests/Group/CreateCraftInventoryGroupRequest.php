@@ -13,7 +13,6 @@ class CreateCraftInventoryGroupRequest extends FormRequest
     {
         return [
             'categoryId' => 'required|integer|exists:craft_inventory_categories,id',
-            'order' => 'required|integer',
             'name' => 'required|string'
         ];
     }

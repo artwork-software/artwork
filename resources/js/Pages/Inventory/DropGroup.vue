@@ -8,11 +8,14 @@
         @drop="groupDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row border text-black border-dashed border-blue-700 justify-center items-center">
+            <div class="flex flex-row h-8 border text-black border-dashed border-blue-700 justify-center items-center">
                 <IconDragDrop class="w-5 h-5"/>
                 <span class="text-xs subpixel-antialiased">Hier platzieren</span>
             </div>
         </td>
+    </tr>
+    <tr v-if="destinationIndex > 0">
+        <td :colspan="colspan" class="h-0.5"/>
     </tr>
 </template>
 <script setup>
@@ -40,7 +43,6 @@ const emits = defineEmits(['groupRequestsDragMove']),
             this,
             'groupRequestsDragMove',
             e.dataTransfer.getData('groupId'),
-            e.dataTransfer.getData('currentGroupIndex'),
             props.destinationIndex
         );
     };

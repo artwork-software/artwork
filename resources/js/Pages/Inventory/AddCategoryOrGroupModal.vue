@@ -60,7 +60,6 @@ const emits = defineEmits(['closed']),
     newCategoryOrGroupForm = useForm({
         craftId: null,
         categoryId: null,
-        order: 0,
         name: ''
     }),
     typeIsCategory = () => {

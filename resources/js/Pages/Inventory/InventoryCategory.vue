@@ -199,18 +199,25 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         draggedGroupIndex.value = null;
         groupDragging.value = false;
     },
-    moveGroupToDestination = (groupId, fromIndex, toIndex) => {
-        console.debug(
-            'group requested move from to index',
-            props.category.id,
-            groupId,
-            fromIndex,
-            toIndex
-        );
-    },
     openAddCategoryOrGroupModal = () => {
         emits.call(this, 'wantsToAddNewGroup', 'group', props.category.id);
-    }
+    },
+    moveGroupToDestination = (groupId, toIndex) => {
+        router.patch(
+            route(
+                'inventory-management.inventory.group.update.order',
+                {
+                    craftInventoryGroup: groupId
+                }
+            ),
+            {
+                order: toIndex
+            },
+            {
+                preserveScroll: true
+            }
+        );
+    };
 </script>
 
 <style scoped>

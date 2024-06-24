@@ -31,9 +31,9 @@ class ContentSeeder extends Seeder
         $this->seedGenreAndCategoriesAndAreas();
         $this->seedDepartments();
         $this->seedRooms();
-        $this->seedEventsAndEventTypes();
         $this->seedCostCenters();
         $this->seedProjects();
+        $this->seedEventsAndEventTypes();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
         $this->seedCurrencies();
@@ -332,6 +332,8 @@ class ContentSeeder extends Seeder
 
     private function seedProjects(): void
     {
+
+
         $project = Project::create([
             'name' => 'Dan Daw Creative Projects',
             'number_of_participants' => null,

@@ -31,6 +31,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
@@ -49,8 +50,9 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly UserService $userService,
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -61,6 +63,21 @@ class UserController extends Controller
     public function search(SearchRequest $request): array
     {
         return UserIndexResource::collection(User::nameOrLastNameLike($request->get('query'))->get())->resolve();
+    }
+
+
+    public function scoutSearch(Request $request): JsonResponse
+    {
+        $users = [];
+        if (
+            request()->has('user_search') &&
+            request()->get('user_search') !== null &&
+            request()->get('user_search') !== ''
+        ) {
+            $users = $this->userService->searchUsers($request->string('user_search'));
+        }
+
+        return \response()->json($users);
     }
 
     /**
@@ -510,7 +527,7 @@ class UserController extends Controller
         $selectedPeriodDate = $vacationMonth ?
             Carbon::parse($vacationMonth) :
             Carbon::today();
-
+        $user->load(['shiftCalendarAbo']);
         $selectedPeriodDate->locale($sessionManager->get('locale') ?? $config->get('app.fallback_locale'));
 
         return Inertia::render(

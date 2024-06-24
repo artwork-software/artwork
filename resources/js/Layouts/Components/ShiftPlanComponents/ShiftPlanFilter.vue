@@ -137,7 +137,7 @@ import {
 import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
@@ -309,7 +309,7 @@ export default {
             }
         },
         reloadChanges() {
-            Inertia.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
+            router.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
                 rooms: this.arrayToIds(this.filterArray.rooms),
                 event_types: this.arrayToIds(this.filterArray.eventTypes),
             })

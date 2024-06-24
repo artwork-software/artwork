@@ -125,12 +125,12 @@
 </template>
 
 <script>
-import AppLayout from "@/Layouts/AppLayout";
-import TrashLayout from "@/Layouts/TrashLayout";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import TrashLayout from "@/Layouts/TrashLayout.vue";
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
 import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
-import { Link } from "@inertiajs/inertia-vue3";
+import { Link } from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {

@@ -52,7 +52,7 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
-                        {{ event.title }}
+                        {{ event.eventName ?? event.project.name }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.project?.state?.color"
@@ -337,7 +337,7 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {PlusCircleIcon} from '@heroicons/vue/outline'
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -346,7 +346,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmEventRequestCompo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";

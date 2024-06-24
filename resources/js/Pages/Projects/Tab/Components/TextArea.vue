@@ -9,7 +9,7 @@ export default {
     data() {
         return {
             textData: {
-                text: this.data.project_value ? this.data.project_value.data.text : this.data.data.text,
+                text: this.data.project_value ? this.data.project_value.text_without_html : this.data.data.text,
             },
             descriptionClicked: false
         }
@@ -44,7 +44,7 @@ export default {
         <span v-if="descriptionClicked === false"
              class="mt-2 subpixel-antialiased text-secondary"
              @click="handleDescriptionClick()"
-             v-html="textData.text ? textData.text : $t('Click here to add text')">
+             v-html="data.project_value?.data.text ? data.project_value?.data.text : $t('Click here to add text')">
         </span>
         <textarea v-else
                   :disabled="!this.canEditComponent"

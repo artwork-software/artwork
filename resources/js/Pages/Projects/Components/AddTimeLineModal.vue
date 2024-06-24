@@ -130,7 +130,7 @@ import {
 import Input from "@/Jetstream/Input.vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({

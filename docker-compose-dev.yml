@@ -8,9 +8,12 @@ services:
         - '.:/var/www/html'
       extra_hosts:
         - "host.docker.internal:host-gateway"
-    php-queue-worker:
+#    php-queue-worker:
+#        <<: *php
+#        command: 'php artisan schedule'
+    php-horizon:
         <<: *php
-        command: 'php artisan schedule'
+        command: 'php artisan horizon'
     php-scheduler:
         <<: *php
         command: 'command: yacron -c schedule.yaml'
@@ -27,6 +30,7 @@ services:
             MYSQL_ALLOW_EMPTY_PASSWORD: 1
         volumes:
             - 'sail-mysql:/var/lib/mysql'
+            - './dockerfiles/mysql/shared/:/shared'
         networks:
             - sail
         healthcheck:

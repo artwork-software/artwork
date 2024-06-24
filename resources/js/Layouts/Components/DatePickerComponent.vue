@@ -3,7 +3,7 @@
         <div class="flex items-center gap-x-2" id="datePicker">
             <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <div class="relative rounded-md">
-                <input v-model="dateValueArray[0]"
+                <input v-model="dateValue[0]"
                        @change="this.updateTimes"
                        ref="startDate"
                        id="startDate"
@@ -16,7 +16,7 @@
                 </div>
             </div>
             <div class="relative rounded-md">
-                <input v-model="dateValueArray[1]"
+                <input v-model="dateValue[1]"
                        @change="this.updateTimes"
                        ref="endDate"
                        id="endDate"
@@ -33,12 +33,12 @@
                                no-input
                                :shortcuts="customShortcuts"
                                separator=" - " :formatter="formatter"
-                               :options="datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
+                               :options="datePickerOptions" @update:modelValue="dateValue = $event" i18n="de"
                                v-model="dateValuePicker" id="datePicker">
         </VueTailwindDatepicker>
     </div>
     <div class="font-medium text-gray-900" v-else>
-        {{ $t('Project period') }}: {{ new Date(dateValueArray[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValueArray[1]).format("DD.MM.YYYY") }}
+        {{ $t('Project period') }}: {{ new Date(dateValue[0]).format("DD.MM.YYYY") }} - {{ new Date(dateValue[1]).format("DD.MM.YYYY") }}
     </div>
     <div v-if="hasError" class="text-error mt-1 mx-2" :class="errorMessage.length > 0 ? 'mt-10' : ''" >{{ errorMessage }}</div>
 </template>
@@ -46,7 +46,7 @@
 <script>
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -201,8 +201,8 @@ export default {
             this.showDateRangePicker = !this.showDateRangePicker;
         },
         updateTimes() {
-            const startDate = new Date(this.dateValueArray[0]);
-            const endDate = new Date(this.dateValueArray[1]);
+            const startDate = new Date(this.dateValue[0]);
+            const endDate = new Date(this.dateValue[1]);
 
             if (startDate?.getFullYear() < 1800 || endDate?.getFullYear() < 1800) {
                 this.errorMessage = this.$t('Please select a valid date.');
@@ -217,7 +217,7 @@ export default {
                 this.hasError = false;
 
                 if (this.is_shift_plan) {
-                    Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+                    router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {
@@ -225,7 +225,7 @@ export default {
                         preserveScroll: true,
                     })
                 } else {
-                    Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                    router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
                     }, {

@@ -37,6 +37,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Models\Category;
+use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
@@ -61,6 +62,7 @@ use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
 use Artwork\Modules\Genre\Models\Genre;
+use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySource\Services\MoneySourceCalculationService;
 use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderService;
@@ -68,17 +70,20 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Http\Requests\UpdateProjectRequest;
 use Artwork\Modules\Project\Http\Resources\ProjectEditResource;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
-use Artwork\Modules\Project\Http\Resources\ProjectIndexShowResource;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectSettingsService;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -91,6 +96,7 @@ use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
+use Artwork\Modules\Sector\Services\SectorService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -123,7 +129,8 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
-use JsonException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -140,6 +147,12 @@ class ProjectController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly EventService $eventService,
+        private readonly ProjectSettingsService $projectSettingsService,
+        private readonly UserService $userService,
+        private readonly ProjectStateService $projectStateService,
+        private readonly CategoryService $categoryService,
+        private readonly GenreService $genreService,
+        private readonly SectorService $sectorService,
     ) {
     }
 
@@ -161,52 +174,36 @@ class ProjectController extends Controller
         return $returnUser;
     }
 
+
+    /**
+     * @throws NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     */
     public function index(): Response|ResponseFactory
     {
-        $projects = Project::query()
-            ->with([
-                'checklists.tasks.checklist.project',
-                'access_budget',
-                'categories',
-                'comments.user',
-                'departments.users.departments',
-                'genres',
-                'managerUsers',
-                'project_files',
-                'sectors',
-                'users.departments',
-                'writeUsers',
-                'state',
-                'delete_permission_users'
-            ])
-            ->orderBy('id', 'DESC')
-            ->get();
+        $entitiesPerPage = request()->get('entitiesPerPage', 10);
+        $projectsQuery = \request()->has('search') ?
+            $this->projectService->scoutSearch(request()->get('search')) :
+            $this->projectService->getProjects();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
-            'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
-
-            'users' => User::all(),
-
-            'categories' => Category::query()->with('projects')->get()->map(fn($category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'projects' => $category->projects
-            ]),
-
-            'genres' => Genre::query()->with('projects')->get()->map(fn($genre) => [
-                'id' => $genre->id,
-                'name' => $genre->name,
-                'projects' => $genre->projects
-            ]),
-
-            'sectors' => Sector::query()->with('projects')->get()->map(fn($sector) => [
-                'id' => $sector->id,
-                'name' => $sector->name,
-                'projects' => $sector->projects
-            ]),
+            'projects' => $this->projectService->paginateProjects($projectsQuery, $entitiesPerPage),
+            'pinnedProjects' => $this->projectService->pinnedProjects(),
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'states' => $this->projectStateService->getAll(),
+            'projectGroups' => $this->projectService->getProjectGroups(),
+            'categories' => $this->categoryService->getAll(),
+            'genres' => $this->genreService->getAll(),
+            'sectors' => $this->sectorService->getAll(),
+            'createSettings' => app(ProjectCreateSettings::class),
         ]);
+    }
+
+    public function updateSettings(ProjectCreateSettingRequest $request): RedirectResponse
+    {
+        $settings = app(ProjectCreateSettings::class);
+        $this->projectSettingsService->store($request, $settings);
+        return Redirect::back();
     }
 
     /**
@@ -268,59 +265,67 @@ class ProjectController extends Controller
         SageApiSettingsService $sageApiSettingsService
     ): JsonResponse|RedirectResponse {
         if (
-            !Auth::user()->canAny(
-                [
-                    PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
-                    PermissionEnum::WRITE_PROJECTS->value,
-                    PermissionEnum::PROJECT_MANAGEMENT->value
-                ]
-            )
+            !Auth::user()->canAny([
+            PermissionEnum::ADD_EDIT_OWN_PROJECT->value,
+            PermissionEnum::WRITE_PROJECTS->value,
+            PermissionEnum::PROJECT_MANAGEMENT->value
+            ])
         ) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']));
-        //@todo how did this line ever work?
-        //->map(fn(Department $department) => $this->authorize('update', $department));
-
-
-
-        //$this->projectService->storeByRequest($request);
-
+        $departments = Department::whereIn('id', collect($request->assigned_departments)->pluck('id'))->get();
 
         $project = Project::create([
             'name' => $request->name,
             'number_of_participants' => $request->number_of_participants,
-            'budget_deadline' => $request->budgetDeadline
         ]);
 
-        $project->users()->save(
-            Auth::user(),
-            ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]
-        );
+        $is_manager = in_array(Auth::id(), $request->assignedUsers, true);
+
+        $project->users()->attach(Auth::id(), [
+            'access_budget' => true,
+            'is_manager' => $is_manager,
+            'can_write' => true,
+            'delete_permission' => true
+        ]);
+
+        if (!empty($request->assignedUsers)) {
+            $usersToAttach = collect($request->assignedUsers)->filter(fn($user) => $user !== Auth::id())
+                ->mapWithKeys(fn($user) => [$user => [
+                    'access_budget' => false,
+                    'is_manager' => true,
+                    'can_write' => false,
+                    'delete_permission' => false
+                ]]);
+
+            $project->users()->attach($usersToAttach);
+        }
+
+        $project->update([
+            'budget_deadline' => !empty($request->budgetDeadline) ?
+                Carbon::parse($request->budgetDeadline)->format('Y-m-d') : null,
+            'state' => $request->state ?? null,
+            'cost_center_id' => !empty($request->cost_center) ?
+                CostCenter::firstOrCreate(['name' => $request->cost_center])->id : null
+        ]);
 
         if ($request->isGroup) {
             $project->is_group = true;
-            $project->groups()->sync(collect($request->projects));
-            $project->save();
-        }
-
-        if (!$request->isGroup && !empty($request->selectedGroup)) {
+            $project->groups()->sync($request->projects);
+        } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
         if ($request->assigned_user_ids) {
-            $project->users()->sync(collect($request->assigned_user_ids));
+            $project->users()->sync($request->assigned_user_ids);
         }
 
         $project->categories()->sync($request->assignedCategoryIds);
         $project->sectors()->sync($request->assignedSectorIds);
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
-
-        //$this->generateBasicBudgetValues($project);
 
         $this->budgetService->generateBasicBudgetValues(
             $project,
@@ -331,11 +336,12 @@ class ProjectController extends Controller
             $sageApiSettingsService
         );
 
-        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
-        $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
+        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
+        $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
         return Redirect::route('projects', $project);
     }
+
 
     public function generateBasicBudgetValues(Project $project): void
     {
@@ -1811,291 +1817,6 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
-    /**
-     * @throws JsonException
-     */
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    /*public function projectTab(
-        Request $request,
-        Project $project,
-        ProjectTab $projectTab,
-        SageAssignedDataCommentService $sageAssignedDataCommentService,
-        ShiftQualificationService $shiftQualificationService,
-        RoomService $roomService,
-        SageApiSettingsService $sageApiSettingsService,
-        ContractTypeService $contractTypeService,
-        CompanyTypeService $companyTypeService,
-        CurrencyService $currencyService,
-        CollectingSocietyService $collectingSocietyService,
-        ProjectService $projectService,
-        UserService $userService,
-        FreelancerService $freelancerService,
-        ServiceProviderService $serviceProviderService,
-        CraftService $craftService,
-        CalendarService $calendarService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService
-    ): Response|ResponseFactory {
-        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
-        $headerObject->project = $project;
-        // define the relations to load
-        $relationsToLoad = new Collection();
-        $loadedProjectInformation = [];
-
-        // Get the project tab content and load the components with the project values for the current project
-        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }, 'components' => function ($query): void {
-            $query->orderBy('order');
-        }, 'sidebarTabs.componentsInSidebar.component.projectValue'  => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
-
-        $projectTabComponents = $projectTab->components()->with('component')->get();
-
-        //concat sidebar components with project tab components
-        $projectTabComponents = $projectTabComponents->concat(
-            $projectTab->sidebarTabs
-                ->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
-                ->flatten()
-                ->unique('id')
-        );
-
-        foreach ($projectTabComponents as $componentInTab) {
-            $component = $componentInTab->component;
-            if ($component->type === ProjectTabComponentEnum::CHECKLIST->value) {
-                $headerObject = $this->checklistService->getProjectChecklists(
-                    $project,
-                    $headerObject,
-                    $componentInTab
-                );
-            }
-
-            if ($component->type === ProjectTabComponentEnum::CHECKLIST_ALL->value) {
-                $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
-            }
-
-            if ($component->type === ProjectTabComponentEnum::COMMENT_TAB->value) {
-                $headerObject->project->comments = $project->comments()->whereIn('tab_id', $componentInTab->scope)
-                    ->with('user')->get();
-            }
-
-            if ($component->type === ProjectTabComponentEnum::COMMENT_ALL_TAB->value) {
-                $headerObject->project->comments_all = $project->comments()->with('user')->get();
-            }
-
-            if ($component->type === ProjectTabComponentEnum::PROJECT_DOCUMENTS->value) {
-                $headerObject->project->project_files_tab = $project
-                    ->project_files()
-                    ->whereIn('tab_id', $componentInTab->scope)
-                    ->get();
-            }
-
-            if ($component->type === ProjectTabComponentEnum::PROJECT_ALL_DOCUMENTS->value) {
-                $headerObject->project->project_files_all = $project->project_files;
-            }
-
-            if ($component->type === ProjectTabComponentEnum::PROJECT_STATUS->value) {
-                $headerObject->project->state = ProjectStates::find($project->state);
-            }
-
-            if ($component->type === ProjectTabComponentEnum::PROJECT_TEAM->value) {
-                $relationsToLoad->push(['categories',
-                    'departments.users.departments',
-                    'managerUsers',
-                    'writeUsers',
-                    'users.departments',
-                    'delete_permission_users']);
-
-                // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
-                // is true to the headerObject for the ProjectShowHeaderComponent
-                $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
-                        'id' => $user->id,
-                        'first_name' => $user->first_name,
-                        'last_name' => $user->last_name,
-                        'profile_photo_url' => $user->profile_photo_url,
-                        'email' => $user->email,
-                        'departments' => $user->departments,
-                        'position' => $user->position,
-                        'business' => $user->business,
-                        'phone_number' => $user->phone_number,
-                        'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-                        'pivot_access_budget' => (bool)$user->pivot?->access_budget,
-                        'pivot_is_manager' => (bool)$user->pivot?->is_manager,
-                        'pivot_can_write' => (bool)$user->pivot?->can_write,
-                        'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
-                    ]);
-
-                $headerObject->project->departments = DepartmentIndexResource::collection(
-                    $project->departments
-                )->resolve();
-                $headerObject->project->project_managers = $project->managerUsers;
-                $headerObject->project->write_auth = $project->writeUsers;
-                $headerObject->project->delete_permission_users = $project->delete_permission_users;
-            }
-
-            if ($component->type === ProjectTabComponentEnum::CALENDAR->value) {
-                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
-                    $request->get('startDate') && $request->get('endDate') ?
-                        Carbon::create($request->get('startDate'))->startOfDay() :
-                        Carbon::now()->startOfDay(),
-                    $request->get('startDate') && $request->get('endDate') ?
-                        Carbon::create($request->get('endDate'))->endOfDay() :
-                        Carbon::now()->addWeeks()->endOfDay(),
-                    $project,
-                    $roomService,
-                    $calendarService,
-                    $projectService,
-                    $userService,
-                    $filterService,
-                    $filterController,
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    request('atAGlance') ?? false
-                );
-            }
-
-            if ($component->type === ProjectTabComponentEnum::BUDGET->value) {
-                $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
-                    $project,
-                    $loadedProjectInformation,
-                    $sageAssignedDataCommentService,
-                    $sageApiSettingsService
-                );
-                $headerObject->project->users = $project->users->map(fn (User $user) => [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'profile_photo_url' => $user->profile_photo_url,
-                    'email' => $user->email,
-                    'departments' => $user->departments,
-                    'position' => $user->position,
-                    'business' => $user->business,
-                    'phone_number' => $user->phone_number,
-                    'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
-                    'pivot_access_budget' => (bool)$user->pivot?->access_budget,
-                    'pivot_is_manager' => (bool)$user->pivot?->is_manager,
-                    'pivot_can_write' => (bool)$user->pivot?->can_write,
-                    'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
-                ]);
-            }
-
-            if ($component->type === ProjectTabComponentEnum::SHIFT_TAB->value) {
-                $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
-                $headerObject->project->shift_contacts = $project->shift_contact;
-                $headerObject->project->project_managers = $project->managerUsers;
-                $headerObject->project->shiftDescription = $project->shift_description;
-                $headerObject->project->freelancers = Freelancer::all();
-                $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
-
-                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab(
-                    $project,
-                    $shiftQualificationService,
-                    $projectService,
-                    $userService,
-                    $freelancerService,
-                    $serviceProviderService,
-                    $craftService
-                );
-            }
-
-            if ($component->type === ProjectTabComponentEnum::SHIFT_CONTACT_PERSONS->value) {
-                $headerObject->project->shift_contacts = $project->shift_contact;
-                $headerObject->project->project_managers = $project->managerUsers;
-            }
-
-            if ($component->type === ProjectTabComponentEnum::BUDGET_INFORMATIONS->value) {
-                $headerObject->project->cost_center = $project->costCenter;
-                $headerObject->project->collecting_society = $project->collectingSociety;
-
-                $loadedProjectInformation['BudgetInformation'] = $this->projectTabService->getBudgetInformationDto(
-                    $project,
-                    $contractTypeService,
-                    $companyTypeService,
-                    $currencyService,
-                    $collectingSocietyService
-                );
-            }
-        }
-        if (!$project->is_group) {
-            $group = DB::table('project_groups')
-                ->select('*')
-                ->where('project_id', '=', $project->id)
-                ->first();
-            if (!empty($group)) {
-                $groupOutput = Project::find($group->group_id);
-            } else {
-                $groupOutput = '';
-            }
-        } else {
-            $groupOutput = '';
-        }
-
-        // add History to the header object for the ProjectShowHeaderComponent in $headerObject->project
-        $historyArray = [];
-        $historyComplete = $project->historyChanges()->all();
-
-        $headerObject->project_history = [];
-        foreach ($historyComplete as $history) {
-            $headerObject->project_history[] = [
-                'changes' => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
-                'created_at' => $history->created_at->diffInHours() < 24
-                    ? $history->created_at->diffForHumans()
-                    : $history->created_at->format('d.m.Y, H:i'),
-            ];
-        }
-
-        $headerObject->firstEventInProject = $project
-            ->events()
-            ->orderBy('start_time', 'ASC')
-            ->limit(1)
-            ->first();
-        $headerObject->lastEventInProject = $project->events()
-            ->orderBy('end_time', 'DESC')
-            ->limit(1)
-            ->first();
-        $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
-        $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
-        $headerObject->states = ProjectStates::all();
-        $headerObject->projectGroups = $project->groups;
-        $headerObject->groupProjects = Project::where('is_group', 1)->get();
-        $headerObject->categories = Category::all();
-        $headerObject->projectCategories = $project->categories;
-        $headerObject->genres = Genre::all();
-        $headerObject->projectGenres = $project->genres;
-        $headerObject->sectors = Sector::all();
-        $headerObject->projectSectors = $project->sectors;
-        $headerObject->projectState = $project->state;
-        $headerObject->access_budget = $project->access_budget;
-        $headerObject->tabs = ProjectTab::orderBy('order')->get();
-        $headerObject->currentTabId = $projectTab->id;
-        $headerObject->currentGruop = $groupOutput;
-        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
-        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
-        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
-        $headerObject->project->projectSectors = $project->sectors;
-        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
-        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
-        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
-
-        return inertia('Projects/Tab/TabContent', [
-            'currentTab' => $projectTab,
-            'headerObject' => $headerObject,
-            'loadedProjectInformation' => $loadedProjectInformation,
-            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $this->projectTabService
-                ->findFirstProjectTabWithCalendarComponent()?->id,
-            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
-        ]);
-    }*/
-
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
@@ -2329,7 +2050,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function getGroupOutput($project)
+    private function getGroupOutput($project): string
     {
         $group = DB::table('project_groups')->select('*')->where('project_id', $project->id)->first();
         return $group ? Project::find($group->group_id) : '';
@@ -2359,10 +2080,6 @@ class ProjectController extends Controller
                 ]
             )
         );
-        $event->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-        ]);
     }
 
     public function updateTimeLines(Request $request): void
@@ -2376,11 +2093,10 @@ class ProjectController extends Controller
                 'end' => $timeline['end'],
                 'description' => nl2br($timeline['description_without_html'])
             ]);
-            $event = $findTimeLine->event()->first();
-            $event->update([
-                'earliest_start_datetime' => $this->eventService->getEarliestStartTime($event),
-                'latest_end_datetime' => $this->eventService->getLatestEndTime($event),
-            ]);
+            if ($event = $findTimeLine->event()->first()) {
+                $event->touchQuietly();
+                $this->eventService->save($event);
+            }
         }
     }
 

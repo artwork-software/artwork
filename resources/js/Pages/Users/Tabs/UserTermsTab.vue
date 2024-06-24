@@ -34,7 +34,7 @@
 import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 

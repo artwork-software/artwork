@@ -284,20 +284,20 @@ import JetFormSection from '@/Jetstream/FormSection.vue'
 import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetLabel from '@/Jetstream/Label.vue'
-import AppLayout from "@/Layouts/AppLayout";
-import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm";
-import JetSectionBorder from "@/Jetstream/SectionBorder";
-import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm";
-import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthenticationForm";
-import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
-import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm.vue";
+import JetSectionBorder from "@/Jetstream/SectionBorder.vue";
+import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue";
+import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue";
+import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm.vue";
+import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm.vue";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {CheckIcon} from "@heroicons/vue/solid";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import {Inertia} from "@inertiajs/inertia";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {router} from "@inertiajs/vue3";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -403,7 +403,7 @@ export default defineComponent({
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.user.id}`);
+            router.delete(`/users/${this.user.id}`);
             this.closeDeleteUserModal()
         },
         updateProfileInformation() {

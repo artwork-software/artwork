@@ -33,7 +33,7 @@ import {
     ListboxOptions,
     ListboxButton
 } from "@headlessui/vue";
-import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
+import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 
 export default {

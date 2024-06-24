@@ -8,7 +8,7 @@
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
+                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 rounded-lg">
                             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
@@ -103,7 +103,7 @@ import {defineComponent} from 'vue'
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -136,7 +136,7 @@ export default defineComponent({
             return this.projects.find(project => project.id === projectId);
         },
         removeUserFromShift(shiftId, usersPivotId) {
-            Inertia.delete(
+            router.delete(
                 route(
                     'shift.removeUserByType',
                     {
@@ -157,7 +157,7 @@ export default defineComponent({
         },
         checkVacation() {
             if (this.user.type === 0) {
-                Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                router.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
                 }, {
@@ -166,7 +166,7 @@ export default defineComponent({
                     }
                 });
             } else if(this.user.type === 1) {
-                Inertia.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
+                router.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
                 }, {

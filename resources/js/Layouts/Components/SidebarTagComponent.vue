@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";

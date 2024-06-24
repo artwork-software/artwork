@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\Timeline\Services;
 
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\Timeline\Repositories\TimelineRepository;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
@@ -20,12 +21,12 @@ class TimelineServiceTest extends TestCase
     public function testCreateFromShiftPresetTimeline(): void
     {
         $shiftPresetTimeline = ShiftPresetTimeline::factory()->make();
-        $eventId = 1;
+        $event = Event::factory()->create();
 
-        $timeline = $this->timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $eventId);
+        $timeline = $this->timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
 
         $this->assertInstanceOf(Timeline::class, $timeline);
-        $this->assertEquals($eventId, $timeline->event_id);
+        $this->assertEquals($event->id, $timeline->event_id);
         $this->assertEquals($shiftPresetTimeline->start, $timeline->start);
         $this->assertEquals($shiftPresetTimeline->end, $timeline->end);
         $this->assertEquals($shiftPresetTimeline->description, $timeline->description);

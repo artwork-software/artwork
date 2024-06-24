@@ -16,6 +16,7 @@
                                 {{ eventsOfDay?.length ?? 0 }}
                             </div>
                         </div>
+
                         <DashboardCard>
                             <div class="font-semibold flex items-center gap-x-3 mb-3">
                                 <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
@@ -106,7 +107,7 @@
                                 </div>
                             </div>
                         </DashboardCard>
-                        <div class="flex justify-end mt-3">
+                        <div class="flex justify-end mt-3" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
                             <a :href="route('shifts.plan')" class="text-artwork-buttons-create underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
                     </div>
@@ -248,10 +249,10 @@ import {
     DotsHorizontalIcon,
 } from '@heroicons/vue/solid'
 import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
-import TeamTooltip from "@/Layouts/Components/TeamTooltip";
-import {Inertia} from "@inertiajs/inertia";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import {Link, useForm} from "@inertiajs/vue3";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
@@ -303,7 +304,7 @@ export default defineComponent({
     created() {
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
-                Inertia.reload({only: ['rooms', 'calendar', 'days']})
+                router.reload({only: ['rooms', 'calendar', 'days']})
             });
     },
     methods: {

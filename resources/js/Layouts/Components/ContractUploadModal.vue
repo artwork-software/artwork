@@ -368,7 +368,7 @@ import JetInputError from '@/Jetstream/InputError.vue'
 import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/Mixins/Permissions.vue";

@@ -85,10 +85,7 @@
                                 <div>
                                     <div class="flex w-full mb-3">
                                         <div>
-                                            <div @click="openColorPicker" class="h-12 w-12 rounded-full cursor-pointer flex items-center justify-center border overflow-hidden relative bg-transparent">
-                                                <input ref="colorPicker" type="color" class="w-full h-full opacity-0 absolute cursor-pointer" v-model="dayServiceForm.hex_color">
-                                                <div class="w-full h-full rounded-full" :style="{ backgroundColor: dayServiceForm.hex_color }"></div>
-                                            </div>
+                                            <ColorPickerComponent @updateColor="addColor" :color="dayServiceForm.hex_color" />
                                         </div>
                                         <div class="relative my-auto w-full ml-8 mr-12">
                                             <input id="color"
@@ -97,7 +94,6 @@
                                                    class="border-gray-300 bg-gray-200 focus:border-primary mb-3 peer pl-0 h-12 w-full focus:border-t-transparent focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 text-primary placeholder-secondary placeholder-transparent"
                                                    placeholder="placeholder"
                                                    disabled
-                                                   @click="openColorPicker"
                                             />
                                             <label for="color"
                                                    class="text-secondary absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-base peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
@@ -141,12 +137,14 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Label from "@/Jetstream/Label.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
+import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 
 export default {
     name: "AddEditDayServiceModal",
     mixins: [Permissions, IconLib],
     components: {
+        ColorPickerComponent,
         ShiftQualificationIconCollection, Label,
         FormButton,
         Dialog,
@@ -175,6 +173,9 @@ export default {
     props: ['iconList', 'dayServiceToEdit'],
     emits: ['closed'],
     methods: {
+        addColor(color){
+            this.dayServiceForm.hex_color = color;
+        },
         closeModal(bool){
             this.$emit('closed', bool)
         },

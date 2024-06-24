@@ -12,6 +12,7 @@ use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
@@ -76,7 +77,7 @@ class EventController extends Controller
         private readonly TimelineService $timelineService,
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
-        private readonly SchedulingService $schedulingService
+        private readonly SchedulingService $schedulingService,
     ) {
     }
 
@@ -109,6 +110,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
+                Auth::user()->getCalendarFilter(),
                 $request->boolean('atAGlance')
             )
         );
@@ -129,7 +131,9 @@ class EventController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
+        DayServicesService $dayServicesService
     ): Response {
+
         return Inertia::render(
             'Shifts/ShiftPlan',
             $eventService->getShiftPlanDto(
@@ -145,7 +149,8 @@ class EventController extends Controller
                 $shiftQualificationService,
                 $roomCategoryService,
                 $roomAttributeService,
-                $areaService
+                $areaService,
+                $dayServicesService
             )
         );
     }
@@ -299,11 +304,6 @@ class EventController extends Controller
             );
         }
 
-        $firstEvent->update([
-            'earliest_start_datetime' => $this->eventService->getEarliestStartTime($firstEvent),
-            'latest_end_datetime' => $this->eventService->getLatestEndTime($firstEvent)
-        ]);
-
         $projectFirstEvent = $firstEvent->project()->first();
 
         if ($request->is_series) {
@@ -387,7 +387,6 @@ class EventController extends Controller
         if ($request->isOption) {
             $this->createRequestNotification($request, $firstEvent);
         }
-
 
         broadcast(new OccupancyUpdated())->toOthers();
 

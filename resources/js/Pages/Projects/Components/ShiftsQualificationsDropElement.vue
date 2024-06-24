@@ -27,7 +27,7 @@ import {defineComponent} from 'vue';
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 export default defineComponent({
     name: 'ShiftsQualificationsDropElement',
     components: {
@@ -258,7 +258,7 @@ export default defineComponent({
             }
         },
         assignUser(droppedUser, shiftQualificationId) {
-            Inertia.post(
+            router.post(
                 route('shift.assignUserByType', {shift: this.shiftId}),
                 {
                     userId: droppedUser.id,

@@ -1,5 +1,5 @@
 <script>
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import SageDropMultipleDataSelectModal from "@/Pages/Projects/Components/SageDropMultipleDataSelectModal.vue";
 
@@ -29,7 +29,7 @@ export default {
             const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
             if(data.type === 'globaleMove') {
-                Inertia.post(route('project.budget.move.sage', {
+                router.post(route('project.budget.move.sage', {
                     sageNotAssignedData: data.id,
                     columnCell: this.cell.id
                 }),{
@@ -45,7 +45,7 @@ export default {
                     this.DataSelect = data;
                     this.showMultipleDataSelectModal = true;
                 } else {
-                    Inertia.post(route('project.budget.move.sage.row', {
+                    router.post(route('project.budget.move.sage.row', {
                         columnCell: this.cell.id,
                         movedColumn: data.id
                     }), {

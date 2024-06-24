@@ -73,7 +73,7 @@ import VueMathjax from "vue-mathjax-next";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
@@ -441,7 +441,7 @@ export default defineComponent({
             }
         },
         assignUser(droppedUser, shiftQualificationId) {
-            Inertia.post(
+            router.post(
                 route('shift.assignUserByType', {shift: this.shift.id}),
                 {
                     userId: droppedUser.id,

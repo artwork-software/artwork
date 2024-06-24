@@ -66,7 +66,12 @@
                                 <span class="w-full" v-if="!selectedState">
                                     {{ $t('Select project status') }}
                                 </span>
-                                <span v-else>
+                                <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
+                                      :style="{
+                                            backgroundColor: backgroundColorWithOpacity(states.find(state => state.id === selectedState)?.color),
+                                            color: TextColorWithDarken(states.find(state => state.id === selectedState)?.color),
+                                            borderColor: TextColorWithDarken(states.find(state => state.id === selectedState)?.color)
+                                        }">
                                     {{ this.states.find(state => state.id === selectedState)?.name}}
                                 </span>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -76,17 +81,17 @@
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <ListboxOptions
-                                class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                class="absolute w-[88%] z-10 mt-12 bg-white shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class=""
                                                v-for="state in states"
                                                :key="state.id"
                                                :value="state.id" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 text-sm subpixel-antialiased']"
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']"
                                         @click="updateProjectState(state)">
                                         <div class="flex">
-                                            <span class="rounded-full items-center font-medium px-2 mt-2 text-sm ml-2 mr-1 mb-1 inline-flex">
-                                                {{ state.name }}
-                                            </span>
+                                             <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: TextColorWithDarken(state.color), borderColor: TextColorWithDarken(state.color)}">
+                                                 {{ state.name }}
+                                             </span>
                                         </div>
                                         <span
                                             :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
@@ -161,14 +166,14 @@
 </template>
 
 <script>
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {
     DownloadIcon,
     XIcon,
     ChevronDownIcon
 } from "@heroicons/vue/outline";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {
     Listbox,
     ListboxButton,
@@ -177,23 +182,25 @@ import {
 } from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
-import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import Input from "@/Jetstream/Input.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default {
     mixins: [
         Permissions,
-        IconLib
+        IconLib,
+        ColorHelper
     ],
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
         project: Object,
         groupProjects: Array,
-        currentGroup: Object,
+        currentGroup: Object|String,
         states: Array
     },
     components: {

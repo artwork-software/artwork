@@ -146,8 +146,8 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {useForm} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
@@ -276,7 +276,7 @@ export default {
 
             reader.readAsDataURL(photo);
 
-            Inertia.post(route('freelancer.change.profile-image', this.freelancer.id),{
+            router.post(route('freelancer.change.profile-image', this.freelancer.id),{
                 profileImage: photo,
             }, {
                 preserveScroll: true,

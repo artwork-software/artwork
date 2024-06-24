@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import AppLayout from "@/Layouts/AppLayout";
-import TrashLayout from "@/Layouts/TrashLayout";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import TrashLayout from "@/Layouts/TrashLayout.vue";
 
 export default {
     layout: [AppLayout, TrashLayout],

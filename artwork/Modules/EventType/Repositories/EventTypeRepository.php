@@ -12,4 +12,19 @@ readonly class EventTypeRepository extends BaseRepository
     {
         return EventType::all();
     }
+
+    public function getById(int $id): ?EventType
+    {
+        return EventType::find($id);
+    }
+
+    public function getByName(string $name): ?EventType
+    {
+        return EventType::where('name', '=', $name)->first();
+    }
+
+    public function getFallbackEventType(): ?EventType
+    {
+        return EventType::where('fallback_type', true)->first();
+    }
 }

@@ -4,9 +4,11 @@ namespace Artwork\Core\Http\Middleware;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -22,6 +24,7 @@ class HandleInertiaRequests extends Middleware
     {
         /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
+        $calendarSettings = Auth::user()?->calendar_settings;
         return array_merge(
             parent::share($request),
             [
@@ -43,19 +46,20 @@ class HandleInertiaRequests extends Middleware
                 'businessEmail' => $generalSettings->business_email,
                 'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : false,
-                'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
-                'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),
+                'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles(), true),
+                'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions(), true),
                 'myMoneySources' => Auth::guest() ?
                     false :
                     Auth::user()->accessMoneySources()->get(['money_source_id']),
                 'urlParameters' => $request->query(),
                 'flash' => [
                     'success' => fn() => $request->session()->get('success'),
-                    'error' => fn() => $request->session()->get('error')
+                    'error' => fn() => $request->session()->get('error'),
                 ],
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
-                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false
+                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
+                'calendar_settings' => $calendarSettings,
             ]
         );
     }

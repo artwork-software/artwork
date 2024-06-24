@@ -16,6 +16,8 @@ class AvailabilityFactory extends Factory
      */
     public function definition(): array
     {
+        $availableType = $this->faker->randomElement([User::class, Freelancer::class]);
+
         return [
             'start_time' => $this->faker->time(),
             'end_time' => $this->faker->time(),
@@ -23,9 +25,9 @@ class AvailabilityFactory extends Factory
             'full_day' => $this->faker->boolean(),
             'comment' => $this->faker->text(20),
             'is_series' => $this->faker->boolean(),
-            'series_id' => $this->faker->randomDigitNotNull(),
-            'available_type' => $this->faker->randomElement([User::class, Freelancer::class]),
-            'available_id' => $this->faker->randomDigitNotNull(),
+            'series_id' => null,
+            'available_type' => $availableType,
+            'available_id' => $availableType::factory(),
         ];
     }
 }

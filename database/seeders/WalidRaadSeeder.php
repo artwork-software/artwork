@@ -45,6 +45,46 @@ class WalidRaadSeeder extends Seeder
             'amount' => 100000,
         ]);
 
+
+        $firstArea = Area::find(1);
+
+        $firstArea->rooms()->create([
+            'name' => 'Theater',
+            'user_id' => 1,
+            'order' => 3
+        ]);
+
+        $firstArea->rooms()->create([
+            'name' => 'Raum 5C',
+            'user_id' => 1,
+            'order' => 4
+        ]);
+
+        $secondArea = Area::find(2);
+
+        $secondArea->rooms()->create([
+            'name' => 'Raum 7D',
+            'user_id' => 1,
+            'order' => 2
+        ]);
+
+        $lastArea = Area::create([
+            'name' => 'Haus 1'
+        ]);
+
+        $lastArea->rooms()->create([
+            'name' => 'Raum 3B',
+            'user_id' => 1,
+            'order' => 1
+        ]);
+
+        $lastArea->rooms()->create([
+            'name' => '6a',
+            'user_id' => 1,
+            'order' => 2
+        ]);
+
+
         /**
          * Attach users to Money Source
          */
@@ -279,6 +319,10 @@ class WalidRaadSeeder extends Seeder
 
         $project->shiftRelevantEventTypes()->attach([2, 8]);
 
+        SeriesEvents::create([
+            'frequency_id' => 1,
+            'end_date' => Carbon::now()->subDays(7)->startOfDay(),
+        ]);
 
         $eventMain = $project->events()->create([
             'eventName' => 'Workshop',
@@ -337,10 +381,7 @@ class WalidRaadSeeder extends Seeder
             'latest_end_datetime' => Carbon::now()->subDays(8)->endOfDay()
         ]);
 
-        SeriesEvents::create([
-            'frequency_id' => 1,
-            'end_date' => Carbon::now()->subDays(7)->startOfDay(),
-        ]);
+
 
         $project->events()->create([
             'eventName' => 'Meeting',
@@ -685,44 +726,6 @@ class WalidRaadSeeder extends Seeder
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
-        ]);
-
-        $firstArea = Area::find(1);
-
-        $firstArea->rooms()->create([
-            'name' => 'Theater',
-            'user_id' => 1,
-            'order' => 3
-        ]);
-
-        $firstArea->rooms()->create([
-            'name' => 'Raum 5C',
-            'user_id' => 1,
-            'order' => 4
-        ]);
-
-        $secondArea = Area::find(2);
-
-        $secondArea->rooms()->create([
-            'name' => 'Raum 7D',
-            'user_id' => 1,
-            'order' => 2
-        ]);
-
-        $lastArea = Area::create([
-            'name' => 'Haus 1'
-        ]);
-
-        $lastArea->rooms()->create([
-            'name' => 'Raum 3B',
-            'user_id' => 1,
-            'order' => 1
-        ]);
-
-        $lastArea->rooms()->create([
-            'name' => '6a',
-            'user_id' => 1,
-            'order' => 2
         ]);
 
 

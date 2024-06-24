@@ -72,6 +72,7 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
+use Artwork\Modules\Inventory\Http\Controller\InventoryController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -350,6 +351,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
     Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore']);
     Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
+    Route::patch('/project/create/settings', [ProjectController::class, 'updateSettings'])
+        ->name('project_settings.update');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
@@ -1298,17 +1301,39 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::get('index', [\App\Http\Controllers\ProjectRoleController::class, 'index'])
-            ->name('project-roles.index');
-        //project-roles.store
-        Route::post('store', [\App\Http\Controllers\ProjectRoleController::class, 'store'])
-            ->name('project-roles.store');
-        //project-roles.update
-        Route::patch('{projectRole}/update', [\App\Http\Controllers\ProjectRoleController::class, 'update'])
-            ->name('project-roles.update');
-        //project-roles.destroy
-        Route::delete('{projectRole}/destroy', [\App\Http\Controllers\ProjectRoleController::class, 'destroy'])
-            ->name('project-roles.destroy');
+        Route::resource('project-roles', \App\Http\Controllers\ProjectRoleController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+    });
+
+    // route for shift time preset
+    Route::group(['prefix' => 'shift-time-preset'], function (): void {
+        Route::resource('shift-time-preset', \App\Http\Controllers\ShiftTimePresetController::class)
+            ->only(['store', 'update', 'destroy']);
+    });
+
+    // attach DayService to entity
+    Route::post(
+        '/day-service/{dayService}/attach/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'attachDayServiceable']
+    )
+        ->name('day-service.attach');
+
+    //remove.day.service.from.user
+    Route::patch(
+        '/day-service/remove/{dayServiceable}',
+        [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
+    )
+        ->name('remove.day.service.from.user');
+
+    Route::group(['prefix' => 'inventory-management'], function (): void {
+        Route::get('/', [InventoryController::class, 'inventory'])
+            ->name('inventory-management.inventory');
+        Route::get('/scheduling', [InventoryController::class, 'scheduling'])
+            ->name('inventory-management.scheduling');
+    });
+
+    Route::group(['prefix' => 'searching'], function(){
+        Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
     });
 });
 
@@ -1321,3 +1346,5 @@ Route::get(
     '/calendar/abo/{calendar_abo_id}',
     [\App\Http\Controllers\UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
+
+

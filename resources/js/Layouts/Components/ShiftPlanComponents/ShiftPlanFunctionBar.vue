@@ -50,20 +50,11 @@
             <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
                 <SecondaryButton :text="$t('Lock all shifts')" @click="showConfirmCommitModal = true" />
             </div>
-
-            <div class="ml-5 flex items-center" >
-                <button class="subpixel-antialiased flex items-center linkText cursor-pointer text-artwork-buttons-create"
-                        @click="openHistoryModal()">
-                    <IconChevronRight stroke-width="1.5"
-                        class="-mr-0.5 h-4 w-4  group-hover:text-white"
-                        aria-hidden="true"/>
-                    {{ $t('View history')}}
-                </button>
-            </div>
         </div>
 
         <div class="flex items-center">
             <div class="flex items-center gap-x-3">
+                <IconHistory @click="openHistoryModal()" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
                 <IconArrowsDiagonal stroke-width="1.5" v-if="!isFullscreen" @click="enterFullscreenMode"
                       class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
                 <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->
@@ -94,7 +85,7 @@
 
 <script>
 
-import Button from "@/Jetstream/Button";
+import Button from "@/Jetstream/Button.vue";
 import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
@@ -105,7 +96,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
@@ -188,7 +179,7 @@ export default {
     },
     methods: {
         changeUserSelectedGoTo(type){
-            Inertia.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+            router.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
                 goto_mode: type,
             }, {
                 preserveScroll: true,
@@ -205,7 +196,7 @@ export default {
             }
         },
         updateFilterValue(key, value){
-            Inertia.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+            router.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
                 key: key,
                 value: value
             }, {
@@ -252,7 +243,7 @@ export default {
 
 
 
-            Inertia.post('/shifts/commit', { events: filteredEvents }, {
+            router.post('/shifts/commit', { events: filteredEvents }, {
                 onSuccess: () => {
                     this.showConfirmCommitModal = false;
                 },

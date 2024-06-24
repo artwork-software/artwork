@@ -92,7 +92,7 @@
 <script>
 
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Inertia} from "@inertiajs/inertia";
+import {router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -189,11 +189,11 @@ export default {
         },
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            Inertia.reload();
+            router.reload();
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            Inertia.reload();
+            router.reload();
         },
         openMultiEditModal() {
             this.getCheckedEvents();
@@ -202,7 +202,7 @@ export default {
         },
         deleteSelectedEvents() {
             this.getCheckedEvents();
-            Inertia.post(route('multi-edit.delete'), {
+            router.post(route('multi-edit.delete'), {
                 events: this.editEvents
             }, {
                 onSuccess: () => {

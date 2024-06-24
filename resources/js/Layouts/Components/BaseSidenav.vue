@@ -45,6 +45,7 @@ export default {
             show: this.$page.props.user ? this.$page.props.user.is_sidebar_opened : false
         }
     },
+    emits: ['toggle'],
     methods: {
         updateShow() {
             this.show = !this.show
@@ -58,7 +59,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

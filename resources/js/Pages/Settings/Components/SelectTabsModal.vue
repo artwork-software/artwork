@@ -12,7 +12,7 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/vue3";
 import {
     Listbox,
     ListboxButton,

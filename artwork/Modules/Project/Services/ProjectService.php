@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Scout\Builder;
 
 readonly class ProjectService
 {
@@ -40,6 +41,44 @@ readonly class ProjectService
     public function getProjectByCostCenter(string $costCenter): Project|null
     {
         return $this->projectRepository->getProjectByCostCenter($costCenter);
+    }
+
+    public function getProjects(): \Illuminate\Database\Eloquent\Builder
+    {
+        return $this->projectRepository->getProjectQuery([
+            'access_budget' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'categories',
+            'genres',
+            'managerUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'writeUsers' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+            'state',
+            'delete_permission_users' => function ($query): void {
+                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+            },
+        ])->whereNull('pinned_by_users')
+            ->orderBy('id', 'DESC')
+            ->without(['shiftRelevantEventTypes']);
+    }
+
+    public function paginateProjects(
+        Builder|\Illuminate\Database\Eloquent\Builder $projectQuery,
+        int $perPage = 10
+    ): \Illuminate\Pagination\LengthAwarePaginator {
+        return $projectQuery->paginate($perPage);
+    }
+
+    public function getProjectGroups(): Collection
+    {
+        return $this->projectRepository->getProjectGroups();
     }
 
     public function pin(Project $project): bool
@@ -66,6 +105,11 @@ readonly class ProjectService
     public function findById(int $id): Project
     {
         return $this->projectRepository->findOrFail($id);
+    }
+
+    public function save(Project $project): Project
+    {
+        return $this->projectRepository->save($project);
     }
 
     public function softDelete(
@@ -356,6 +400,14 @@ readonly class ProjectService
         return $this->projectRepository->getByName($query);
     }
 
+    public function getProjectGroupByName(string $name): ?Project
+    {
+        return $this->projectRepository
+            ->getByName($name)
+            ->where('is_group', '=', true)
+            ->first();
+    }
+
     public function updateShiftContact(Project $project, $time): void
     {
         $project->shift_contact()
@@ -448,61 +500,22 @@ readonly class ProjectService
 
             foreach ($event->shifts as $shift) {
                 $shift->load('shiftsQualifications');
+
+                foreach ($shift->users as $user) {
+                    $user->formatted_vacation_days = $user->getFormattedVacationDays();
+                }
             }
-
-
-            $shiftsToReturn = $event->shifts->map(function ($shift) use ($event) {
-                $shift->margin_top = $this->getMarginTopForShift($event, $shift);
-                return $shift;
-            });
-
 
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
-                'shifts' => $shiftsToReturn,
+                'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
             ];
         }
-        //rsort($eventsWithRelevant);
-        //dd($eventsWithRelevant);
+
         return $eventsWithRelevant;
-    }
-
-    private function getMarginTopForShift(Event $event, Shift $shift): float
-    {
-        // get difference between $event->earliest_start_datetime and $shift->start_date + $shift->start
-        $eventEarliestStartDateTime = Carbon::parse($event->earliest_start_datetime);
-        $startDate = Carbon::parse($shift->start_date);
-        $startTime = Carbon::parse($shift->start);
-        $endDate = Carbon::parse($shift->end_date);
-        $endTime = Carbon::parse($shift->end);
-        $shiftStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime->toTimeString());
-        $shiftEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime->toTimeString());
-
-        // calculate the difference
-        $diff = $eventEarliestStartDateTime->diffInMinutes($shiftStartDateTime);
-        $pixelHeight = $diff / 60 * 180;
-
-        $shiftDuration = $shiftEndDateTime->diffInMinutes($shiftStartDateTime);
-        $shiftHeight = $shiftDuration / 60 * 180;
-
-        if ($shiftHeight > (int)config('shift.max_shift_height')) {
-            return 38;
-        }
-
-        // if the calculated height is null or 0 than return 36
-        if ($pixelHeight === null || $pixelHeight === 0) {
-            return 38;
-        }
-
-
-        // if the calculated height is greater than the max_shift_height than return the max_shift_height - $shiftHeight
-        if ($pixelHeight > (int)config('shift.max_shift_height')) {
-            return (int)config('shift.max_shift_height') - $shiftHeight;
-        }
-        return $pixelHeight;
     }
 
     /**
@@ -524,5 +537,21 @@ readonly class ProjectService
     public function getProjectsWithAccessBudgetAndManagerUsers(): Collection
     {
         return $this->projectRepository->getProjects(['access_budget', 'managerUsers']);
+    }
+
+    public function associateProjectWithGroup(Project $project, Project $projectGroup): void
+    {
+        $project->groups()->attach($projectGroup->id);
+        $project->save();
+    }
+
+    public function scoutSearch(string $query): Builder
+    {
+        return $this->projectRepository->scoutSearch($query);
+    }
+
+    public function pinnedProjects(): Collection
+    {
+        return $this->projectRepository->pinnedProjects();
     }
 }

@@ -338,7 +338,7 @@ export default {
                     name: this.$t('Inventory'),
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
-                    has_permission: true,
+                    has_permission: false,
                     icon: IconBuildingWarehouse
                 },
                 {

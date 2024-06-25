@@ -45,8 +45,7 @@
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        :class="[index === 0 || index === 1 ? 'w-[5%]' : index === 2 ? 'w-[40%]' : '']"
-                    >
+                        :class="[index <= 1 ? 'w-[10%]' : index === 2 ? 'w-[40%]' : '']">
                         <div class="w-full h-full flex flex-row items-center relative ">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div

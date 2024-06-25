@@ -1,0 +1,27 @@
+@layer components {
+    .timeline-container {
+        @apply flex flex-col gap-2 w-full;
+
+        .timeline-dates-container,
+        .timeline-times-container {
+            @apply flex flex-row gap-2;
+
+            .timeline-date-input,
+            .timeline-time-input {
+                @apply h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border w-full border-gray-300;
+            }
+        }
+
+        .timeline-error-text {
+            @apply text-error text-xs;
+        }
+
+        .timeline-textarea {
+            @apply block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300;
+        }
+    }
+
+    .delete-icon {
+        @apply hidden h-5 w-5 text-artwork-buttons-create hover:text-error cursor-pointer;
+    }
+}

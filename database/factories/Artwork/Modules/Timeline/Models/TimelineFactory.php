@@ -17,7 +17,9 @@ class TimelineFactory extends Factory
     {
         return [
             'event_id' => Event::factory(),
-            'start' => today(),
+            'start_date' => today(),
+            'end_date' => today(),
+            'start' => today()->addDay(),
             'end' => today()->addDay(),
             'description' => $this->faker->text(),
         ];

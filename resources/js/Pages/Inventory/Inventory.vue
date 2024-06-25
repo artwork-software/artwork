@@ -248,6 +248,7 @@ const props = defineProps({
                 name: column.newValue
             },
             {
+                preserveState: true,
                 preserveScroll: true
             }
         );

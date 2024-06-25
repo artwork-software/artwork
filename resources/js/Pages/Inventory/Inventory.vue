@@ -1,8 +1,7 @@
 <template>
     <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
-            <div
-                class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
+            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
                 <BaseFilter :only-icon="true" class="mr-3">
                     <div class="flex flex-col w-full gap-y-2">
                         <div class="flex justify-between">
@@ -39,15 +38,16 @@
                     </div>
                 </div>
             </div>
-            <table class="table-fixed">
+            <table class="table table-fixed">
                 <thead class="sticky z-20 top-0 bg-gray-500 transition-all duration-300 shadow-sm text-white">
-                <tr class="text-xs w-full h-full">
+                <tr class="text-xs">
                     <th v-for="(column,index) in columns"
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        class="max-w-16 h-full">
-                        <div class="w-full h-full flex flex-row items-center relative">
+                        :class="[index === 0 || index === 1 ? 'w-[5%]' : index === 2 ? 'w-[40%]' : '']"
+                    >
+                        <div class="w-full h-full flex flex-row items-center relative ">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
                                     class="w-[calc(100%-0.8rem)] indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"

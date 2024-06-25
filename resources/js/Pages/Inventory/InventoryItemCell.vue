@@ -1,10 +1,8 @@
 <template>
-    <td class="max-w-16 h-full overflow-hidden overflow-ellipsis px-3 border subpixel-antialiased relative text-xs">
-        <div class="flex flex-row w-full h-full items-center" @click="toggleCellEdit()">
-            <span class="cursor-text">{{ cell.cell_value }}</span>
-        </div>
+    <td class="max-w-40 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden">
+        <span class="cursor-text" @click="toggleCellEdit()">{{ cell.cell_value }}</span>
         <div v-if="cell.column.type === 0 && cellClicked"
-            :class="[cellClicked ? '' : 'hidden', 'flex flex-row items-center gap-x-2 w-[calc(100%-1rem)] -translate-x-1 h-7 top-1.5 z-50 absolute']">
+            :class="[cellClicked ? '' : 'hidden', 'flex flex-row bg-white items-center gap-x-2 w-[calc(100%-1rem)] -translate-x-1 h-7 top-1.5 z-50 absolute']">
             <input ref="cellValueInputRef"
                    type="text"
                    class="w-full text-xs px-1 flex "

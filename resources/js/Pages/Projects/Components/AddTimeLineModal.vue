@@ -14,7 +14,7 @@
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel
                             class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" alt="appointment"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
                                         @click="closeModal">
@@ -165,7 +165,7 @@ const emits = defineEmits(['closed']),
                     addTimeLineForm.post(
                         route('add.timeline.row', {event: props.event.id}),
                         {
-                            preserveState: true,
+                            preserveState: false,
                             preserveScroll: true,
                             onFinish: () => {
                                 //handle existing timelines which may be updated
@@ -181,14 +181,12 @@ const emits = defineEmits(['closed']),
         }
     },
     updateTimes = () => {
-
-    props.timeLine.forEach((timeline) => timeline.start_date = null);
         router.patch(
             route('update.timelines'),
             {
                 timelines: props.timeLine
             }, {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true,
                 onFinish: () => {
                     closeModal(true);

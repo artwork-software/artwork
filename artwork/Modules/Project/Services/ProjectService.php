@@ -109,7 +109,10 @@ readonly class ProjectService
 
     public function save(Project $project): Project
     {
-        return $this->projectRepository->save($project);
+        /** @var Project $project */
+        $project = $this->projectRepository->save($project);
+
+        return $project;
     }
 
     public function softDelete(
@@ -478,7 +481,13 @@ readonly class ProjectService
                 ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
-            $timeline = $event->timelines()->orderBy('start_date')->get()->toArray();
+            $timeline = $event->timelines()
+                ->orderBy('start_date')
+                ->orderBy('start')
+                ->orderBy('end_date')
+                ->orderBy('end')
+                ->get()
+                ->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);

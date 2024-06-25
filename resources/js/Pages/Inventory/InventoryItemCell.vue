@@ -1,6 +1,13 @@
 <template>
-    <td class="max-w-40 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden">
-        <span class="cursor-text" @click="toggleCellEdit()">{{ cell.cell_value }}</span>
+    <td class="max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap">
+        <span v-if="cell.cell_value.length > 0"
+              class="cursor-text"
+              @click="toggleCellEdit()">
+            {{ cell.cell_value }}
+        </span>
+        <div v-else
+             class="w-full h-full cursor-text"
+              @click="toggleCellEdit()"/>
         <div v-if="cell.column.type === 0 && cellClicked"
             :class="[cellClicked ? '' : 'hidden', 'flex flex-row bg-white items-center gap-x-2 w-[calc(100%-1rem)] -translate-x-1 h-7 top-1.5 z-50 absolute']">
             <input ref="cellValueInputRef"

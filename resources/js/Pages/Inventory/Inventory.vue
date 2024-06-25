@@ -38,14 +38,14 @@
                     </div>
                 </div>
             </div>
-            <table class="table table-fixed">
+            <table>
                 <thead class="sticky z-20 top-0 bg-gray-500 transition-all duration-300 shadow-sm text-white">
                 <tr class="text-xs">
                     <th v-for="(column,index) in columns"
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        :class="[index <= 1 ? 'w-[10%]' : index === 2 ? 'w-[40%]' : '']">
+                        :class="[index <= 1 ? 'w-[7.5%]' : index === 2 ? 'w-[35%]' : '']">
                         <div class="w-full h-full flex flex-row items-center relative ">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div

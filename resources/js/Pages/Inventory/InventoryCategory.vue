@@ -6,7 +6,7 @@
         @mouseout="handleCategoryMouseout()"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan"
-            :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'pl-3 p-2 bg-primary text-white subpixel-antialiased text-sm']">
+            :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'px-3 py-2 bg-primary text-white subpixel-antialiased text-sm']">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
                     class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"

@@ -39,8 +39,12 @@ class ProjectServiceTest extends TestCase
 
     public function testGetProjects(): void
     {
-        $projects = Project::factory()->count(5)->create();
-        $this->assertEquals(5, $this->projectService->getProjects()->count());
+        $createCount = 5;
+        $currentProjectCount = $this->projectService->getProjects()->count();
+
+        Project::factory()->count($createCount)->create();
+
+        $this->assertEquals(($currentProjectCount + $createCount), $this->projectService->getProjects()->count());
     }
 
     public function testPin(): void
@@ -76,8 +80,12 @@ class ProjectServiceTest extends TestCase
 
     public function testGetAll(): void
     {
-        $projects = Project::factory()->count(5)->create();
-        $this->assertEquals(5, $this->projectService->getAll()->count());
+        $createCount = 5;
+        $currentProjectCount = $this->projectService->getProjects()->count();
+
+        Project::factory()->count($createCount)->create();
+
+        $this->assertEquals(($currentProjectCount + $createCount), $this->projectService->getAll()->count());
     }
 
     public function testGetByName(): void

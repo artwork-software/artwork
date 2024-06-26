@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\AppController;
 use App\Providers\RouteServiceProvider;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
@@ -17,11 +18,14 @@ class AppControllerTest extends TestCase
 
     private AppController $appController;
 
+    private GeneralSettings $generalSettings;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->appController = app(AppController::class);
+        $this->generalSettings = app(GeneralSettings::class);
     }
 
     public function testIndex(): void
@@ -33,6 +37,9 @@ class AppControllerTest extends TestCase
 
     public function testShowSetupPage(): void
     {
+        $this->generalSettings->setup_finished = false;
+        $this->generalSettings->save();
+
         $response = $this->get('/setup');
 
         $response->assertStatus(200);

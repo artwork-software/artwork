@@ -170,6 +170,7 @@
                            :titel="$t('Wirklich löschen')"
                            :description="$t('Spalte wirklich löschen? Das kann nicht rückgängig gemacht werden. Alle Werte gehen verloren.')"
                            @closed="handleColumnDeletion"/>
+    <div id="remove-icon-container"></div>
 </template>
 
 <script setup>

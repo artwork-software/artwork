@@ -41,9 +41,11 @@
                         :button="$t('Yes')"
                         :description="$t('Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.')"
                         @delete="deleteGroup()"
-                        @closed="closeGroupDeleteConfirmModal()"
-    />
+                        @closed="closeGroupDeleteConfirmModal()"/>
     <AddNewItem v-if="groupShown" @click="addNewItem()"/>
+    <tr>
+        <td></td>
+    </tr>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
               :destination-index="0"
@@ -58,7 +60,7 @@
         <DropItem v-if="showTemplateDropItem(index)"
                   :colspan="colspan"
                   :destination-index="(index + 1)"
-                  @group-requests-drag-move="moveItemToDestination"/>
+                  @item-requests-drag-move="moveItemToDestination"/>
     </template>
 </template>
 
@@ -203,19 +205,26 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         itemDragging.value = false;
     },
     moveItemToDestination = (itemId, fromIndex, toIndex) => {
-        console.debug(
-            'item requested move from to index',
-            props.group.id,
-            itemId,
-            fromIndex,
-            toIndex
+        router.patch(
+            route(
+                'inventory-management.inventory.item.update.order',
+                {
+                    craftInventoryItem: itemId
+                }
+            ),
+            {
+                order: toIndex
+            },
+            {
+                preserveScroll: true
+            }
         );
     };
 </script>
 
 <style scoped>
 .onDragBackground :deep(td) {
-    opacity: 50%;
+    opacity: 35%;
 }
 </style>
 

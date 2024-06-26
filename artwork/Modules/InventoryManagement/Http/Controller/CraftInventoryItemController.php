@@ -4,6 +4,8 @@ namespace Artwork\Modules\InventoryManagement\Http\Controller;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\InventoryManagement\Http\Requests\Item\CreateCraftInventoryItemRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Item\UpdateCraftInventoryItemOrderRequest;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
@@ -37,6 +39,42 @@ class CraftInventoryItemController extends Controller
             return $this->redirector
                 ->back()
                 ->with('error', 'Gegenstand konnte nicht gespeichert werden. Bitte versuche es erneut.');
+        }
+
+        return $this->redirector->back();
+    }
+
+    public function forceDelete(CraftInventoryItem $craftInventoryItem): RedirectResponse
+    {
+        if (!$this->craftInventoryItemService->forceDelete($craftInventoryItem)) {
+            return $this->redirector
+                ->back()
+                ->with('error', 'Gruppe konnte nicht gelöscht werden. Bitte versuche es erneut.');
+        }
+
+        return $this->redirector->back();
+    }
+
+    public function updateOrder(
+        CraftInventoryItem $craftInventoryItem,
+        UpdateCraftInventoryItemOrderRequest $request
+    ) {
+        $order = $request->integer('order');
+
+        try {
+            $this->craftInventoryItemService->updateOrder($craftInventoryItem, $order);
+        } catch (Throwable $t) {
+            $this->logger->error(
+                sprintf(
+                    'Could not update crafts inventory item order to: "%s" for reason: "%s"',
+                    $order,
+                    $t->getMessage()
+                )
+            );
+
+            return $this->redirector
+                ->back()
+                ->with('error', 'Gegenstandsposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
         }
 
         return $this->redirector->back();

@@ -3,21 +3,21 @@
         <span v-if="hasCellValue()"
               :class="getCellValueCls()"
               @click="toggleCellEdit()">
-            <template v-if="isTextColumn()">
+            <template v-if="isTextColumn() || isSelectColumn()">
                 {{ cell.cell_value }}
             </template>
             <template v-else-if="isDateColumn()">
-                <div class="w-full h-full flex flex-row items-center justify-center">
-                    {{ formatDate(cell.cell_value) }}
-                </div>
+                {{ formatDate(cell.cell_value) }}
             </template>
             <template v-else-if="isCheckboxColumn()">
                 {{ cell.cell_value === 'true' ? $t('Yes') : $t('No') }}
             </template>
-            <template v-else-if="isSelectColumn()">
-                {{ cell.cell_value }}
-            </template>
         </span>
+        <div v-else-if="!hasCellValue() && isCheckboxColumn()"
+             class="w-full text-center cursor-text"
+             @click="toggleCellEdit()">
+            {{ $t('No') }}
+        </div>
         <div v-else class="w-full h-full cursor-text" @click="toggleCellEdit()"/>
         <!-- Freitextfeld -->
         <div v-if="isTextColumn() && cellClicked"
@@ -92,7 +92,10 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 
 const emits = defineEmits(['isEditingCellValue']),
     props = defineProps({
-        cell: Object,
+        cell: {
+            type: Object,
+            required: true
+        },
     }),
     cellValueInputRef = ref(null),
     cellValue = ref(props.cell.cell_value),
@@ -106,7 +109,7 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.cell_value.length > 0;
     },
     getCellValueCls = () => {
-        return props.cell.column.type === 2 ? 'text-center block cursor-text' : 'cursor-text';
+        return isDateColumn() || isCheckboxColumn() ? 'text-center block cursor-text' : 'cursor-text';
     },
     isTextColumn = () => {
         return props.cell.column.type === 0;
@@ -125,16 +128,16 @@ const emits = defineEmits(['isEditingCellValue']),
 
         //emit to prevent item from being dragged, causing input
         //events to not work properly if draggable while editing value
-        emits.call(this, 'isEditingCellValue', cellClicked.value);
+        emits.call(this, 'isEditingCellValue', cellClicked.value, props.cell.id);
 
-        if (cellClicked.value) {
+        if (cellClicked.value && isTextColumn()) {
             setTimeout(() => {
                 cellValueInputRef.value?.select();
             }, 5);
         }
     },
     applyCellValueChange = () => {
-        //compare as strings in case of checkbox  which are preserved as string in database
+        //compare as strings in case of checkbox which are preserved as string in database
         if (props.cell.cell_value.toString() === cellValue.value.toString()) {
             toggleCellEdit();
             return;

@@ -1,18 +1,41 @@
 <template>
+    <tr>
+        <td></td>
+    </tr>
     <tr :draggable="isDraggable"
         @dragstart="itemDragStart"
         @dragend="itemDragEnd"
+        @mouseover="handleItemMouseover()"
+        @mouseout="handleItemMouseout()"
         :class="'cursor-grab h-10 ' + trCls">
         <template v-for="(cell) in item.cells">
             <InventoryCell :cell="cell"
                            @is-editing-cell-value="handleCellIsEditing"/>
         </template>
     </tr>
+    <tr>
+        <td>
+            <IconTrashXFilled v-if="!isAnyCellEditing && itemMouseover && !itemDragged"
+                              @mouseover="handleItemDeleteMouseover"
+                              @mouseout="handleItemDeleteMouseout"
+                              :class="[itemDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[115%] translate-x-[40%]']"
+                              @click="showItemDeleteConfirmModal()"/>
+        </td>
+    </tr>
+    <ConfirmDeleteModal v-if="itemConfirmDeleteModalShown"
+                        :title="$t('Delete item?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete this item? This cannot be undone and is only possible if item is not scheduled.')"
+                        @delete="deleteItem()"
+                        @closed="closeItemDeleteConfirmModal()"/>
 </template>
 
 <script setup>
 import InventoryCell from "@/Pages/Inventory/InventoryItemCell.vue";
 import {computed, ref} from "vue";
+import {IconTrashXFilled} from "@tabler/icons-vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {router} from "@inertiajs/vue3";
 
 const emits = defineEmits(['itemDragging', 'itemDragEnd']),
     props = defineProps({
@@ -21,20 +44,72 @@ const emits = defineEmits(['itemDragging', 'itemDragEnd']),
         item: Object,
         trCls: String
     }),
-    inventoryCellIsEditing = ref(false),
-    isDraggable = computed(() => {
-        return !inventoryCellIsEditing.value;
+    inventoryCellsEditing = ref([]),
+    itemDragged = ref(false),
+    itemMouseover = ref(false),
+    itemDeleteCls = ref(''),
+    itemConfirmDeleteModalShown = ref(false),
+    isAnyCellEditing = computed(() => {
+        return inventoryCellsEditing.value.length > 0;
     }),
-    handleCellIsEditing = (isEditing) => {
-        inventoryCellIsEditing.value = isEditing;
+    isDraggable = computed(() => inventoryCellsEditing.value.length === 0),
+    handleCellIsEditing = (isEditing, cellId) => {
+        if (isEditing) {
+            //append
+            inventoryCellsEditing.value.push({cellId: cellId, isEditing: true});
+            return
+        }
+
+        inventoryCellsEditing.value = inventoryCellsEditing.value.filter(
+            (editingCell) => editingCell.cellId !== cellId
+        );
+    },
+    handleItemMouseover = () => {
+        itemMouseover.value = true;
+    },
+    handleItemMouseout = () => {
+        itemMouseover.value = false;
+    },
+    handleItemDeleteMouseover = () => {
+        itemMouseover.value = true;
+        itemDeleteCls.value = 'bg-red-600';
+    },
+    handleItemDeleteMouseout = () => {
+        itemMouseover.value = false;
+        itemDeleteCls.value = 'bg-black';
+    },
+    showItemDeleteConfirmModal = () => {
+        itemConfirmDeleteModalShown.value = true;
+    },
+    deleteItem = () => {
+        router.delete(
+            route(
+                'inventory-management.inventory.item.delete',
+                {
+                    craftInventoryItem: props.item.id
+                }
+            ),
+            {
+                preserveScroll: true
+            }
+        );
+        closeItemDeleteConfirmModal();
+    },
+    closeItemDeleteConfirmModal = () => {
+        itemConfirmDeleteModalShown.value = false;
     },
     itemDragStart = (e) => {
+        itemDragged.value = true;
+
         emits.call(this,'itemDragging', props.index);
 
         e.dataTransfer.setData('itemId', props.item.id);
         e.dataTransfer.setData('currentItemIndex', props.index.toString());
     },
-    itemDragEnd = () => emits.call(this, 'itemDragEnd')
+    itemDragEnd = () => {
+        itemDragged.value = false;
+        emits.call(this, 'itemDragEnd');
+    }
 </script>
 
 <style scoped>

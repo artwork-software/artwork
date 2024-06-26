@@ -1411,9 +1411,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     '/create',
                     [CraftInventoryItemController::class, 'create']
                 )->name('inventory-management.inventory.item.create');
+                Route::patch(
+                    '/{craftInventoryItem}/order',
+                    [CraftInventoryItemController::class, 'updateOrder']
+                )->name('inventory-management.inventory.item.update.order');
                 Route::delete(
                     '/{craftInventoryItem}',
-                    [CraftInventoryGroupController::class, 'forceDelete']
+                    [CraftInventoryItemController::class, 'forceDelete']
                 )->name('inventory-management.inventory.item.delete');
             });
 

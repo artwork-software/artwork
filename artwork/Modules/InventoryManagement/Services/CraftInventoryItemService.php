@@ -13,7 +13,8 @@ readonly class CraftInventoryItemService
     public function __construct(
         private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
         private CraftInventoryItemRepository $craftInventoryItemRepository,
-        private CraftInventoryItemCellService $craftInventoryItemCellService
+        private CraftInventoryItemCellService $craftInventoryItemCellService,
+        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
     }
 
@@ -67,19 +68,34 @@ readonly class CraftInventoryItemService
         );
     }
 
-//    /**
-//     * @throws Throwable
-//     */
-//    public function updateOrder(CraftInventoryGroup $craftInventoryGroup, int $order): void
-//    {
-//    }
-//
-//    public function forceDelete(int|CraftInventoryGroup $craftInventoryGroup): bool
-//    {
-//        if (!$craftInventoryGroup instanceof CraftInventoryGroup) {
-//            $craftInventoryGroup = $this->craftsInventoryGroupRepository->find($craftInventoryGroup);
-//        }
-//
-//        return $this->craftsInventoryGroupRepository->forceDelete($craftInventoryGroup);
-//    }
+    /**
+     * @throws Throwable
+     */
+    public function updateOrder(CraftInventoryItem $craftInventoryItem, int $order): void
+    {
+        foreach (
+            $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
+                $this->craftInventoryItemRepository
+                    ->getAllOfGroupOrderedByOrder($craftInventoryItem->craft_inventory_group_id),
+                $order,
+                $craftInventoryItem
+            ) as $index => $orderedItem
+        ) {
+            $this->craftInventoryItemRepository->updateOrFail(
+                $orderedItem,
+                [
+                    'order' => $index
+                ]
+            );
+        }
+    }
+
+    public function forceDelete(int|CraftInventoryItem $craftInventoryItem): bool
+    {
+        if (!$craftInventoryItem instanceof CraftInventoryItem) {
+            $craftInventoryItem = $this->craftInventoryItemRepository->find($craftInventoryItem);
+        }
+
+        return $this->craftInventoryItemRepository->forceDelete($craftInventoryItem);
+    }
 }

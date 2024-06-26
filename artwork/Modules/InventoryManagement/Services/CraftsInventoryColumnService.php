@@ -68,6 +68,8 @@ readonly class CraftsInventoryColumnService
             )
         );
 
+        $this->craftInventoryItemService->createCellsInItemsForColumn($duplicatedColumn);
+
         return $duplicatedColumn;
     }
 

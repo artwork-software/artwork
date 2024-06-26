@@ -124,7 +124,7 @@
                                 <ListboxOptions :static="column.showColorMenu"
                                                 class="absolute -translate-x-[107%] translate-y-[8px] z-40 flex flex-col gap-2 p-2  shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
                                     <ListboxOption as="template"
-                                                   v-for="(color) in ['bg-primary', 'bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-orange-500']"
+                                                   v-for="(color) in ['bg-secondary', 'bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-orange-500']"
                                                    :key="color"
                                                    :value="color"
                                                    v-slot="{ active, selected }">

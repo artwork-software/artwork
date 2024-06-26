@@ -107,7 +107,7 @@ const emits = defineEmits(['isEditingCellValue']),
         ].join(' ');
     },
     getBackgroundCls = () => {
-        return props.cell.column.background_color !== 'bg-primary' ?
+        return props.cell.column.background_color !== 'bg-secondary' ?
             props.cell.column.background_color :
             '';
     },
@@ -118,7 +118,7 @@ const emits = defineEmits(['isEditingCellValue']),
         ].join(' ');
     },
     getBackgroundClsForInput = () => {
-        return props.cell.column.background_color !== 'bg-primary' ?
+        return props.cell.column.background_color !== 'bg-secondary' ?
             props.cell.column.background_color :
             'bg-white';
     },

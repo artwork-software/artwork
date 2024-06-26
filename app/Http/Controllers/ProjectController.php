@@ -109,6 +109,7 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
@@ -2068,9 +2069,9 @@ class ProjectController extends Controller
         );
     }
 
-    public function updateTimeLines(Request $request): void
+    public function updateTimeLines(UpdateTimelinesRequest $request): void
     {
-        foreach ($request->timelines as $timeline) {
+        foreach ($request->collect('timelines') as $timeline) {
             $findTimeLine = Timeline::find($timeline['id']);
             $findTimeLine->update([
                 'start_date' => $timeline['start_date'],
@@ -2108,7 +2109,7 @@ class ProjectController extends Controller
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
-            'budget_deadline' => $request->string('budget_deadline'),
+            'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null

@@ -26,6 +26,10 @@ class ProjectComponentValue extends Model
 
     public function getTextWithoutHtmlAttribute(): string
     {
+        // check if the data is an array and has a key 'text'
+        if (!is_array($this->data) || !array_key_exists('text', $this->data)) {
+            return '';
+        }
         return strip_tags($this->data['text']);
     }
 }

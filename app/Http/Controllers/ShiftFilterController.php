@@ -6,7 +6,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Barryvdh\Debugbar\Facades\Debugbar;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

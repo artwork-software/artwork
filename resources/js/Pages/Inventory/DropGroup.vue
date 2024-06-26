@@ -1,11 +1,14 @@
 <template>
+    <tr v-if="destinationIndex === 0">
+        <td colspan="6" class="h-0.5"/>
+    </tr>
     <tr draggable="true"
         @dragover="groupDragOver"
         @dragleave="groupDragLeave"
         @drop="groupDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row py-1 border text-black border-dashed border-blue-700 justify-center items-center">
+            <div class="flex flex-row border text-black border-dashed border-blue-700 justify-center items-center">
                 <IconDragDrop class="w-5 h-5"/>
                 <span class="text-xs subpixel-antialiased">Hier platzieren</span>
             </div>
@@ -16,8 +19,8 @@
 import {IconDragDrop} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 
-const emits = defineEmits(['groupRequestsDragMove']);
-const props = defineProps({
+const emits = defineEmits(['groupRequestsDragMove']),
+    props = defineProps({
         colspan: Number,
         destinationIndex: Number
     }),

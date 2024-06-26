@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Craft\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -53,5 +54,10 @@ class Craft extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'craft_id', 'id');
+    }
+
+    public function inventoryCategories(): HasMany
+    {
+        return $this->hasMany(CraftInventoryCategory::class, 'craft_id', 'id');
     }
 }

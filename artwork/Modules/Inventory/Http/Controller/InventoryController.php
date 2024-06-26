@@ -8,27 +8,12 @@ use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\User\Services\UserService;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryController extends Controller
 {
-    public function __construct(
-        private readonly CraftService $craftService,
-        private readonly CalendarService $calendarService,
-        private readonly AuthManager $authManager,
-    )
+    public function __construct(private readonly CraftService $craftService)
     {
     }
 

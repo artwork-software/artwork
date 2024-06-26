@@ -1,11 +1,14 @@
 <template>
+    <tr>
+        <td :colspan="colspan" class="h-5"/>
+    </tr>
     <tr draggable="true"
         @dragover="categoryDragOver"
         @dragleave="categoryDragLeave"
         @drop="categoryDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row py-1 border border-dashed border-blue-700 justify-center items-center">
+            <div class="flex flex-row border border-dashed border-blue-700 justify-center items-center">
                 <IconDragDrop class="w-5 h-5"/>
                 <span class="text-xs subpixel-antialiased">Hier platzieren</span>
             </div>
@@ -16,8 +19,8 @@
 import {IconDragDrop} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 
-const emits = defineEmits(['categroyRequestsDragMove']);
-const props = defineProps({
+const emits = defineEmits(['categroyRequestsDragMove']),
+    props = defineProps({
         colspan: Number,
         destinationIndex: Number
     }),

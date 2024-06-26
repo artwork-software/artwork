@@ -5,7 +5,7 @@
         @mouseover="handleGroupMouseover()"
         @mouseout="handleGroupMouseout()"
         :class="'cursor-grab ' + trCls">
-        <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs">
+        <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs border border-secondary">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
                     class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
@@ -25,8 +25,8 @@
                         v-model="groupValue"
                         @keyup.enter="applyGroupValueChange()"
                         @keyup.esc="denyGroupValueChange()">
-                    <IconCheck class="w-5 h-5 hover:text-green-500" @click="applyGroupValueChange()"/>
-                    <IconX class="w-5 h-5 hover:text-red-500" @click="denyGroupValueChange()"/>
+                    <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0" @click="applyGroupValueChange()"/>
+                    <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0" @click="denyGroupValueChange()"/>
                 </div>
             </div>
         </td>
@@ -43,7 +43,7 @@
                         @delete="deleteGroup()"
                         @closed="closeGroupDeleteConfirmModal()"
     />
-    <AddNewItem v-if="groupShown"/>
+    <AddNewItem v-if="groupShown" @click="addNewItem()"/>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
               :destination-index="0"
@@ -70,9 +70,10 @@ import {IconCheck, IconChevronDown, IconChevronUp, IconTrashXFilled, IconX} from
 import AddNewItem from "@/Pages/Inventory/AddNewItem.vue";
 import DropItem from "@/Pages/Inventory/DropItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {router} from "@inertiajs/vue3";
 
-const emits = defineEmits(['groupDragging', 'groupDragEnd']);
-const props = defineProps({
+const emits = defineEmits(['groupDragging', 'groupDragEnd']),
+    props = defineProps({
         index: Number,
         colspan: Number,
         group: Object,
@@ -109,8 +110,21 @@ const props = defineProps({
         }
     },
     applyGroupValueChange = () => {
-        props.group.name = groupValue.value;
-        toggleGroupEdit();
+        router.patch(
+            route(
+                'inventory-management.inventory.group.update.name',
+                {
+                    craftInventoryGroup: props.group.id
+                }
+            ),
+            {
+                name: groupValue.value
+            },
+            {
+                preserveScroll: true,
+                onSuccess: toggleGroupEdit
+            }
+        );
     },
     denyGroupValueChange = () => {
         groupValue.value = props.group.name;
@@ -134,8 +148,31 @@ const props = defineProps({
         groupConfirmDeleteModalShown.value = true;
     },
     deleteGroup = () => {
-        console.debug('delete group', props.group.id);
+        router.delete(
+            route(
+                'inventory-management.inventory.group.delete',
+                {
+                    craftInventoryGroup: props.group.id
+                }
+            ),
+            {
+                preserveScroll: true
+            }
+        );
         closeGroupDeleteConfirmModal();
+    },
+    addNewItem = () => {
+        router.post(
+            route('inventory-management.inventory.item.create'),
+            {
+                groupId: props.group.id,
+                //as length is already the "next" index cause it counts from 1, no need to add 1
+                order: props.group.items.length
+            },
+            {
+                preserveScroll: true
+            }
+        )
     },
     closeGroupDeleteConfirmModal = () => {
         groupConfirmDeleteModalShown.value = false;

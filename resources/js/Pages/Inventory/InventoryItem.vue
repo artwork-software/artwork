@@ -10,10 +10,10 @@
 </template>
 
 <script setup>
-import InventoryCell from "@/Pages/Inventory/InventoryCell.vue";
+import InventoryCell from "@/Pages/Inventory/InventoryItemCell.vue";
 
-const emits = defineEmits(['itemDragging', 'itemDragEnd']);
-const props = defineProps({
+const emits = defineEmits(['itemDragging', 'itemDragEnd']),
+    props = defineProps({
         index: Number,
         colspan: Number,
         item: Object,

@@ -1,5 +1,5 @@
 import './bootstrap';
-import '../css/app.css';
+import '../css/app.scss';
 import '../css/global.css';
 
 import { createApp, h } from 'vue';

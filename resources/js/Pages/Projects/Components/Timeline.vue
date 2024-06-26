@@ -31,7 +31,10 @@
         </div>
     </div>
 
-    <AddTimeLineModal v-if="showAddTimeLineModal" :event="event" :timeLine="timeLine" @closed="this.closeModal()"/>
+    <AddTimeLineModal v-if="showAddTimeLineModal"
+                      :event="event"
+                      :timeLine="timeLine"
+                      @closed="this.closeModal()"/>
 </template>
 <script>
 import {defineComponent} from 'vue'

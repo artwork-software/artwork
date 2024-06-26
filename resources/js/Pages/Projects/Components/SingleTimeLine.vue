@@ -1,100 +1,94 @@
 <template>
-   <div class="w-full group flex">
-       <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
-           <div>
-               <input :type="time.start_date ? 'date' : 'text'" onfocus="(this.type='date')"
-                      :placeholder="$t('Start*')"
-                      v-model="time.start_date"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-               />
-           </div>
-           <div>
-               <input :type="time.end_date ? 'date' : 'text'" onfocus="(this.type='date')"
-                      :placeholder="$t('Ende*')"
-                      v-model="time.end_date"
-                      maxlength="3"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-           </div>
-           <div>
-               <input type="text" onfocus="(this.type='time')"
-                      :placeholder="$t('Start*')"
-                      v-model="time.start"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-               />
-           </div>
-           <div>
-               <input type="text" onfocus="(this.type='time')"
-                      :placeholder="$t('Ende*')"
-                      v-model="time.end"
-                      maxlength="3"
-                      required
-                      @focusout="checkTime(time.start, time.end)"
-                      class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-           </div>
-           <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
-           <div class="mt-2 col-span-2">
-               <textarea v-model="time.description_without_html"
-                         rows="4"
-                         :placeholder="$t('Comment')"
-                         name="comment"
-                         id="comment"
-                         class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
-               />
-           </div>
-       </div>
-       <div class="hidden group-hover:block ml-3">
-           <XCircleIcon @click="deleteTime" class="mt-2 h-5 w-5 text-artwork-buttons-create hover:text-error cursor-pointer"/>
-       </div>
-   </div>
+    <div class="flex flex-row group">
+        <div class="timeline-container">
+            <div class="timeline-dates-container">
+                <input class="timeline-date-input"
+                       type="date"
+                       v-model="time.start_date"
+                       :placeholder="$t('Start*')"
+                       @focusout="checkDates(time.start_date, time.end_date)"
+
+                />
+                <input class="timeline-date-input"
+                       type="date"
+                       v-model="time.end_date"
+                       :placeholder="$t('Ende*')"
+                       @focusout="checkDates(time.start_date, time.end_date)"/>
+            </div>
+            <span class="timeline-error-text" v-if="showDatesNotGivenErrorText">
+                {{ $t('Please fill in both fields.') }}
+            </span>
+            <span class="timeline-error-text" v-if="showDatesStartGreaterThanEndText">
+                {{ $t('The start time must be before the end time.') }}
+            </span>
+            <div class="timeline-times-container">
+                <input class="timeline-time-input"
+                       type="time"
+                       v-model="time.start"
+                       :placeholder="$t('Start*')"
+                       @focusout="checkTime(time.start, time.end)"
+                />
+                <input class="timeline-time-input"
+                       type="time"
+                       :placeholder="$t('Ende*')"
+                       v-model="time.end"
+                       @focusout="checkTime(time.start, time.end)"/>
+            </div>
+            <span class="timeline-error-text" v-if="showTimesNotGivenErrorText">
+                {{ $t('Please fill in both fields.') }}
+            </span>
+            <span class="timeline-error-text" v-if="showTimesStartGreaterThanEndText">
+                {{ $t('The start time must be before the end time.') }}
+            </span>
+            <textarea class="timeline-textarea"
+                      v-model="time.description_without_html"
+                      rows="4"
+                      :placeholder="$t('Comment')"
+                      name="comment"
+                      id="comment"
+            />
+        </div>
+        <XCircleIcon class="group-hover:block ml-2 mt-2 delete-icon" @click="deleteTime"/>
+    </div>
 </template>
 
-<script>
-import {defineComponent} from 'vue'
-import Input from "@/Jetstream/Input.vue";
+<script setup>
 import {XCircleIcon} from "@heroicons/vue/solid";
+import {ref} from "vue";
+import {router} from "@inertiajs/vue3";
 
-export default defineComponent({
-    name: "SingleTimeLine",
-    components: {
-        Input,
-        XCircleIcon
-    },
-    props: [
-        'time',
-        'preset'
-    ],
-    data(){
-        return {
-            helpText: ''
-        }
-    },
-    methods: {
-        checkTime(start, end){
-            this.helpText = start === '' || end === '' ?
-                this.$t('Please fill in both fields.') :
-                    start > end ?
-                    this.$t('The start time must be before the end time.') :
-                    '';
+const props = defineProps({
+        time: {
+            type: Object,
+            required: true
         },
-        deleteTime(){
-            if (this.preset === true) {
-                this.$inertia.delete(route('preset.delete.timeline.row', this.time))
-            } else {
-                this.$inertia.delete(
-                    route('delete.timeline.row', this.time),
-                    {
-                        preserveState: true,
-                        preserveScroll: true
-                    }
-                )
-            }
+        preset: {
+            type: Boolean
         }
-    }
-})
+    }),
+    showDatesNotGivenErrorText = ref(false),
+    showDatesStartGreaterThanEndText = ref(false),
+    showTimesNotGivenErrorText = ref(false),
+    showTimesStartGreaterThanEndText = ref(false),
+    checkDates = (startDate, endDate) => {
+        showDatesNotGivenErrorText.value = startDate.length === 0 || endDate.length === 0;
+        showDatesStartGreaterThanEndText.value = !showDatesNotGivenErrorText.value && startDate > endDate;
+    },
+    checkTime = (start, end) => {
+        showTimesNotGivenErrorText.value = start.length === 0 || end.length === 0;
+        showTimesStartGreaterThanEndText.value = !showTimesNotGivenErrorText.value && start > end;
+    },
+    deleteTime = () => {
+        if (props.preset === true) {
+            router.delete(route('preset.delete.timeline.row', props.time));
+        } else {
+            router.delete(
+                route('delete.timeline.row', props.time),
+                {
+                    preserveState: true,
+                    preserveScroll: true
+                }
+            )
+        }
+    };
 </script>

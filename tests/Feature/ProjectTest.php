@@ -4,13 +4,13 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Support\Facades\Date;
 
-beforeEach(function () {
-
+beforeEach(function (): void {
     $this->auth_user = User::factory()->create();
 
     $this->assigned_user = User::factory()->create();
@@ -23,14 +23,15 @@ beforeEach(function () {
 
     $this->genre = Genre::factory()->create();
 
+    $this->state = new ProjectStates(['name' => 'Test', 'color' => 'Test']);
+    $this->state->save();
 });
 
-test('aborts invalid requests', function () {
+test('aborts invalid requests', function (): void {
 
     $this->actingAs($this->auth_user);
 
     $this->post('/projects', ['name' => null])->assertInvalid();
-
 });
 
 //Tests can currently not work
@@ -70,15 +71,17 @@ test('aborts invalid requests', function () {
 //    ]);
 //});
 
-test('users without the permission cant create projects', function () {
+test('users without the permission cant create projects', function (): void {
 
     $this->actingAs($this->auth_user);
 
     $this->post('/projects', [
         'name' => 'TestProject',
-        'assigned_users' => [$this->assigned_user],
+        'assigned_users' => [$this->assigned_user->id],
         'assigned_departments' => [$this->department],
-        'is_group' => false
+        'isGroup' => false,
+        'state' => $this->state->id,
+        'cost_center' => 'Test'
     ])->assertStatus(403);
 });
 
@@ -120,7 +123,7 @@ test('users without the permission cant create projects', function () {
 //    $response->assertStatus(200);
 //});
 
-test('users with the permission can update projects and change the role of assigned users', function () {
+test('users with the permission can update projects and change the role of assigned users', function (): void {
 
     $this->auth_user->givePermissionTo(\Artwork\Modules\Permission\Enums\PermissionEnum::PROJECT_MANAGEMENT->value);
     $this->actingAs($this->auth_user);
@@ -132,15 +135,17 @@ test('users with the permission can update projects and change the role of assig
         'description' => 'a description',
         'number_of_participants' => '1000',
         'assigned_user_ids' => [$this->auth_user->id => ['is_admin' => false]],
-        'assigned_departments' => [$this->department]
+        'assigned_departments' => [$this->department],
+        'budget_deadline' => null
     ]);
 
     $this->assertDatabaseHas('projects', [
+        'id' => $this->project->id,
         'name' => 'TestProject',
     ]);
 });
 
-test('users with the permission can duplicate projects', function() {
+test('users with the permission can duplicate projects', function (): void {
 
     $old_project = Project::factory()->create([
         'name' => 'TestProject',
@@ -175,11 +180,9 @@ test('users with the permission can duplicate projects', function() {
         'project_id' => $new_project->id,
         'user_id' => $this->assigned_user->id
     ]);
-
-
 });
 
-test('users with the permission can delete projects', function () {
+test('users with the permission can delete projects', function (): void {
 
     $this->auth_user->givePermissionTo('delete projects');
     $this->project->users()->attach($this->auth_user);
@@ -193,7 +196,3 @@ test('users with the permission can delete projects', function () {
         'deleted_at' => Date::now()
     ]);
 });
-
-
-
-

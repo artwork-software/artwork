@@ -28,6 +28,7 @@ class UpdateProjectRequest extends FormRequest
             'assigned_users.?' => ['exists:users,id'],
             'assigned_departments' => ['sometimes', 'array'],
             'assigned_departments.?' => ['exists:departments,id'],
+            'budget_deadline' => 'nullable|date',
         ];
     }
 }

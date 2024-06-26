@@ -7,7 +7,6 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class InventoryController extends Controller
 {

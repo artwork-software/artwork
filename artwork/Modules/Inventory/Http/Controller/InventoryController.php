@@ -5,16 +5,32 @@ namespace Artwork\Modules\Inventory\Http\Controller;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
+use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
+use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\User\Services\UserService;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryController extends Controller
 {
-    public function __construct(private readonly CraftService $craftService)
-    {
+    public function __construct(
+        private readonly CraftService $craftService,
+        private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
+        private readonly CalendarService $calendarService,
+        private readonly AuthManager $authManager,
+    ) {
     }
 
     public function inventory(): Response
@@ -22,48 +38,16 @@ class InventoryController extends Controller
         return Inertia::render(
             'Inventory/Inventory',
             [
-                'columns' => [
+                'columns' => $this->craftsInventoryColumnService->getAllOrdered(),
+                'crafts' => $this->craftService->getAll(
                     [
-                        'id' => 1,
-                        'type' => 'text',
-                        'name' => 'Name'
-                    ],
-                    [
-                        'id' => 2,
-                        'type' => 'number',
-                        'name' => 'Anzahl'
-                    ],
-                    [
-                        'id' => 3,
-                        'type' => 'textarea',
-                        'name' => 'Kommentar'
-                    ],
-                    [
-                        'id' => 4,
-                        'type' => 'date',
-                        'name' => 'Datum'
-                    ],
-                    [
-                        'id' => 5,
-                        'type' => 'checkbox',
-                        'name' => 'Kürzlich aufbereitet'
-                    ],
-                    [
-                        'id' => 6,
-                        'type' => 'select',
-                        'name' => 'Maximale Dispositionsdauer',
-                        'options' => [
-                            [
-                                '1 Tag',
-                                '3 Tage',
-                                '1 Woche',
-                                '2 Wochen',
-                                '1 Monat'
-                            ]
-                        ]
+                        'inventoryCategories',
+                        'inventoryCategories.groups',
+                        'inventoryCategories.groups.items',
+                        'inventoryCategories.groups.items.cells',
+                        'inventoryCategories.groups.items.cells.column',
                     ]
-                ],
-                'crafts' => $this->craftService->getAll()
+                )
             ]
         );
     }
@@ -79,8 +63,7 @@ class InventoryController extends Controller
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-    ): Response
-    {
+    ): Response {
 
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
@@ -98,14 +81,87 @@ class InventoryController extends Controller
             $projectService,
             $this->authManager->user()?->calendar_filter,
         );
+
+        $crafts = $this->craftService->getAll([
+            'inventoryCategories',
+            'inventoryCategories.groups',
+            'inventoryCategories.groups.items',
+            'inventoryCategories.groups.items.events',
+            'inventoryCategories.groups.items.cells',
+            'inventoryCategories.groups.items.cells.column',
+        ])->map(function ($craft) {
+            return [
+                'id' => $craft->id,
+                'name' => $craft->name,
+                'inventory_categories' => $craft->inventoryCategories->map(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'groups' => $category->groups->map(function ($group) {
+                            return [
+                                'id' => $group->id,
+                                'name' => $group->name,
+                                'items' => $group->items->map(function ($item) {
+                                    return [
+                                        'id' => $item->id,
+                                        // name get the first column in items->cells where are a string
+                                        'name' => $item->cells->first(function ($cell) {
+                                            return is_string($cell->cell_value);
+                                        })->cell_value,
+                                        // count get the first column in items->cells where are a number
+                                        'count' => $item->cells->first(function ($cell2) {
+                                            return is_numeric($cell2->cell_value);
+                                        })?->cell_value ?? 0,
+                                        'events' => $item->events->map(function ($event) use ($item) {
+                                            return [
+                                                'id' => $event->id,
+                                                'booking_id' => $event->id,
+                                                'quantity' => $event->quantity,
+                                                'comment' => $event->comment,
+                                                'date' => Carbon::parse($event->date)->format('d.m.Y'),
+                                                'user' => [
+                                                    'id' => $event->user->id,
+                                                    'name' => $event->user->full_name,
+                                                    'profile_photo_url' => $event->user->profile_photo_url,
+                                                ],
+                                                'eventInfo' => [
+                                                    'id' => $event->event->id,
+                                                    'name' => $event->event->eventName,
+                                                    'project_name' => $event->event?->project?->name,
+                                                ],
+                                            ];
+                                        }),
+                                    ];
+                                }),
+                            ];
+                        }),
+                    ];
+                }),
+            ];
+        });
+
         return Inertia::render(
             'Inventory/Scheduling',
             [
                 'dateValue' => $showCalendar['dateValue'],
                 'calendar' => $showCalendar['roomsWithEvents'],
                 'days' => $showCalendar['days'],
-                'crafts' => $this->craftService->getAll()
+                'crafts' => $crafts,
             ]
         );
+    }
+
+    public function dropItemToEvent(
+        Request $request,
+        CraftInventoryItem $item,
+        Event $event
+    ): void {
+        $item->events()->create([
+            'event_id' => $event->id,
+            'quantity' => $request->integer('quantity'),
+            'comment' => '',
+            'date' => Carbon::parse($request->string('date'))->format('Y-m-d'),
+            'user_id' => $this->authManager->id(),
+        ]);
     }
 }

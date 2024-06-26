@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\CraftInventoryItemEvent;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Illuminate\Http\Request;
 
 class CraftInventoryItemEventController extends Controller
@@ -52,7 +52,9 @@ class CraftInventoryItemEventController extends Controller
      */
     public function update(Request $request, CraftInventoryItemEvent $craftInventoryItemEvent)
     {
-        //
+        $craftInventoryItemEvent->update([
+            'quantity' => $request->integer('quantity'),
+        ]);
     }
 
     /**
@@ -60,6 +62,6 @@ class CraftInventoryItemEventController extends Controller
      */
     public function destroy(CraftInventoryItemEvent $craftInventoryItemEvent)
     {
-        //
+        $craftInventoryItemEvent->delete();
     }
 }

@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('craft_inventory_item_events', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('craft_inventory_item_id')->constrained('craft_inventory_items')->cascadeOnDelete();
+            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
+            $table->integer('quantity');
+            $table->string('comment')->nullable();
+            $table->date('date');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }

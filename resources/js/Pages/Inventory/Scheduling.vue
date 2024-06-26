@@ -7,7 +7,7 @@
 
        <div class="-ml-5">
            <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
-               <div ref="calendarPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
+               <div @scroll="syncScrollShiftPlan" ref="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                    <Table>
                        <template #head>
                            <div class="stickyHeader">
@@ -37,7 +37,7 @@
                                                    {{ index === 'null' ? $t('No Project') : index }}
                                                </span>
                                            </div>
-                                          <SingleEventInInventoryScheduling v-for="event in events" :event="event" :is-last-event="checkIfLastEventInEventData(event, events)" />
+                                          <SingleEventInInventoryScheduling :multi-edit="multiEditMode" :day="day.full_day" v-for="event in events" :event="event" :is-last-event="checkIfLastEventInEventData(event, events)" />
                                        </div>
                                    </td>
                                </tr>
@@ -63,13 +63,53 @@
                        </div>
                    </div>
                </div>
-               <div v-show="showUserOverview" ref="userOverview" class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
+               <div v-show="showUserOverview" @scroll="syncScrollUserOverview" ref="userOverview" class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                    <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
-
+                       <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                           <span class="sr-only">Use setting</span>
+                           <span :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                      <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                         <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                      </span>
+                                      <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                          <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                      </span>
+                                </span>
+                       </Switch>
+                   </div>
+                   <div class="pt-16">
+                       <table class="w-full text-white overflow-y-scroll">
+                           <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                           <div class="w-full">
+                               <tbody class="w-full pt-3" v-for="craft in crafts">
+                                    <SingleCraftInUserOverview :multi-edit="multiEditMode" :days="days" :craft="craft" />
+                               </tbody>
+                           </div>
+                       </table>
                    </div>
                </div>
            </div>
        </div>
+
+        <div v-if="multiEditMode">
+            <div class="fixed bg-artwork-navigation-background/80 w-full h-24 z-50 bottom-0 -ml-9">
+                <div class="flex items-center justify-center h-full gap-x-2">
+                    <div>
+                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" i text="Abbrechen" class="text-xs" />
+                    </div>
+                    <div>
+                        <!-- Button with text checkedItems.length + ' Elemente ausgewählt' -->
+                        <AddButtonSmall @click="openMultiEditModal"
+                                        :disabled="!itemIsSelectedForMultiEdit"
+                                        :text="checkedItems.length + ' Element(e) Buchen'"
+                                        class="text-xs"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <MultiEditInventoryModal :selected-items="checkedItems" :events="selectedEvents" v-if="showMultiEditModal" @closed="showMultiEditModal = false" />
 
     </InventoryHeader>
 
@@ -83,9 +123,13 @@ import TableHead from "@/Components/Table/TableHead.vue";
 import Table from "@/Components/Table/Table.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
 import {Link} from "@inertiajs/vue3";
-import {onMounted, ref} from "vue";
-import { IconCaretUpDown, IconChevronsDown } from "@tabler/icons-vue";
+import {onMounted, ref, watch} from "vue";
+import {IconCaretUpDown, IconChevronsDown, IconPencil} from "@tabler/icons-vue";
 import SingleEventInInventoryScheduling from "@/Pages/Inventory/Components/SingleEventInInventoryScheduling.vue";
+import SingleCraftInUserOverview from "@/Pages/Inventory/Components/SingleCraftInUserOverview.vue";
+import {Switch} from "@headlessui/vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInventoryModal.vue";
 
 const props = defineProps({
     dateValue: {
@@ -100,26 +144,88 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    crafts: {
+        type: Object,
+        required: true
+    }
 })
 
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);
 const windowHeight = ref(window.innerHeight);
-const userOverviewHeight = ref(515);
+const userOverviewHeight = ref(600);
 const userOverview = ref(null);
 const shiftPlan = ref(null);
 const currentDayOnView = ref([]);
 const startY = ref(0);
 const startHeight = ref(0);
 const roomHeights = ref([]);
+const closedCrafts = ref([]);
+const multiEditMode = ref(false);
+const itemIsSelectedForMultiEdit = ref(false);
+const checkedItems = ref([]);
+const selectedEvents = ref([]);
+const showMultiEditModal = ref(false);
 
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
-    window.addEventListener('scroll', syncScrollShiftPlan);
-    window.addEventListener('scroll', syncScrollUserOverview);
     updateHeight();
     calculateAllRoomHeights();
 });
+
+const toggleMultiEditMode = () => {
+    multiEditMode.value = !multiEditMode.value;
+
+    if (!multiEditMode.value){
+        props.crafts.forEach((craft) => {
+            craft.inventory_categories.forEach((category) => {
+                category.groups.forEach((group) => {
+                    group.items.forEach((item) => {
+                        item.checked = false
+                    });
+                });
+            });
+        });
+
+        props.days.forEach((day) => {
+            props.calendar.forEach((room) => {
+                room[day.full_day].events.data.forEach((event) => {
+                    event.checked = false
+                })
+            })
+        })
+    }
+}
+
+const openMultiEditModal = () => {
+    // check if any item is selected
+    if (checkedItems.value.length === 0) {
+        return;
+    }
+
+    // check if any event is selected
+    let eventIsSelected = false;
+    props.days.forEach((day) => {
+        props.calendar.forEach((room) => {
+            room[day.full_day].events.data.forEach((event) => {
+                if (event.checked) {
+                    if(!selectedEvents.value.find((selectedEvent) => selectedEvent.id === event.id)) {
+                        selectedEvents.value.push(event)
+                    }
+                    eventIsSelected = true;
+                }
+            })
+        })
+    })
+
+    if (!eventIsSelected) {
+        return;
+    }
+
+    // open modal
+    showMultiEditModal.value = true;
+
+}
 
 const checkIfLastEventInEventData = (event, eventData) => {
     return eventData.indexOf(event) === eventData.length - 1;
@@ -171,7 +277,7 @@ const updateHeight = () => {
     if(!showUserOverview){
         windowHeight.value = (window.innerHeight - 250);
     } else {
-        windowHeight.value = (window.innerHeight - 160) - userOverviewHeight.value;
+        windowHeight.value = (window.innerHeight - 260) - userOverviewHeight.value;
     }
 
     if (window.innerHeight - 160 < 400) {
@@ -198,28 +304,14 @@ const calculateRoomHeightByIndex = (index) => {
 
 const syncScrollShiftPlan = (event) => {
     if (userOverview) {
-        // Synchronize horizontal scrolling from shiftPlan to userOverview
-        userOverview.scrollLeft = event.target.scrollLeft;
-
-        // update the current day on view with the day that is currently visible check if day.week_separator is false
-        // because we don't want to update the currentDayOnView with the week separator
-        const firstDay = document.getElementById(props.days[0].full_day)
-        const scrollableContainer = shiftPlan; // Use the shiftPlan reference as the scrollable container
-        const firstDayPosition = scrollableContainer.scrollLeft;
-        const scrollPosition = scrollableContainer.scrollLeft;
-        const dayIndex = Math.floor(scrollPosition / firstDay.offsetWidth);
-        if (props.days[dayIndex].week_separator) {
-            currentDayOnView.value = props.days[dayIndex];
-        } else {
-            currentDayOnView.value = props.days[dayIndex + 1];
-        }
+        userOverview.value.scrollLeft = event.target.scrollLeft;
     }
 }
 
 const syncScrollUserOverview = (event) => {
     if (shiftPlan) {
         // Synchronize horizontal scrolling from userOverview to shiftPlan
-        shiftPlan.scrollLeft = event.target.scrollLeft;
+        shiftPlan.value.scrollLeft = event.target.scrollLeft;
     }
 }
 
@@ -230,6 +322,32 @@ const calculateTopPositionOfUserOverView = () => {
 const calculateAllRoomHeights = () => {
     roomHeights.value = props.calendar.map((_, index) => calculateRoomHeightByIndex(index));
 };
+
+
+
+watch(() => props.crafts, (newCrafts) => {
+    // uncheck all items when i check a another item
+    newCrafts.forEach((craft) => {
+        craft.inventory_categories.forEach((category) => {
+            category.groups.forEach((group) => {
+                group.items.forEach((item) => {
+                    if (item.checked) {
+                        if(!checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
+                            checkedItems.value.push(item)
+                            itemIsSelectedForMultiEdit.value = true;
+                        }
+                    } else {
+                        checkedItems.value = checkedItems.value.filter((checkedItem) => checkedItem.id !== item.id);
+                        if (checkedItems.value.length === 0) {
+                            itemIsSelectedForMultiEdit.value = false;
+                        }
+                    }
+                });
+            });
+        });
+    });
+}, { deep: true });
+
 </script>
 
 <style scoped>
@@ -245,6 +363,7 @@ const calculateAllRoomHeights = () => {
     align-self: flex-start;
     position: -webkit-sticky;
     display: block;
+    z-index: 30;
     top: 0px;
 }
 

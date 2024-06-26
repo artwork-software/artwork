@@ -1851,5 +1851,9 @@
     "Delete category?": "Delete category?",
     "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.",
     "Delete group?": "Delete group?",
-    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled."
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.",
+    "No Project": "No Project",
+    "All events on which \"{0}\" was booked on \"{1}\" are listed here. There are a total of {2} event(s).": " All events on which \"{0}\" was booked on \"{1}\" are listed here. There are a total of {2} event(s).",
+    "There are no events on this day.": "There are no events on this day.",
+    "All bookings on {0} from \"{1}\"": "All bookings on {0} from \"{1}\""
 }

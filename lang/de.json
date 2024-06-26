@@ -1851,5 +1851,9 @@
     "Delete category?": "Kategorie löschen?",
     "Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.": "Kategorie wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände der zugehörigen Gruppen disponiert sind.",
     "Delete group?": "Gruppe löschen?",
-    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Diese Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind."
+    "Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.": "Diese Gruppe wirklich löschen? Das kann nicht rückgängig gemacht werden und ist nur möglich, wenn keine Gegenstände dieser Gruppe disponiert sind.",
+    "No Project": "Kein Projekt",
+    "All events on which \"{0}\" was booked on \"{1}\" are listed here. There are a total of {2} event(s).": "Alle Events, auf denen \"{0}\" am \"{1}\" gebucht wurde, sind hier aufgelistet. Insgesamt gibt es {2} Event(s).",
+    "There are no events on this day.": "An diesem Tag gibt es keine Events.",
+    "All bookings on {0} from \"{1}\"": "Alle Buchungen am {0} von \"{1}\""
 }

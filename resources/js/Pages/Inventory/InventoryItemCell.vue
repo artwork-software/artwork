@@ -1,5 +1,5 @@
 <template>
-    <td class="max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap">
+    <td :class="[cell.column.background_color + ' max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap']">
         <span v-if="hasCellValue()"
               :class="getCellValueCls()"
               @click="toggleCellEdit()">

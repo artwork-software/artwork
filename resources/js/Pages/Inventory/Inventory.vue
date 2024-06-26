@@ -1,8 +1,7 @@
 <template>
     <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
-            <div
-                class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
+            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
                 <BaseFilter :only-icon="true" class="mr-3">
                     <div class="flex flex-col w-full gap-y-2">
                         <div class="flex justify-between">
@@ -40,14 +39,14 @@
                 </div>
             </div>
             <table>
-                <thead class="sticky z-20 top-0 bg-gray-500 transition-all duration-300 shadow-sm text-white">
+                <thead class="sticky z-20 top-0 transition-all duration-300 shadow-sm text-white">
                 <tr class="text-xs">
                     <th v-for="(column,index) in columns"
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        :class="getColumnWidthCls(index, column)">
-                        <div class="w-full h-full flex flex-row items-center relative ">
+                        :class="getColumnCls(index, column)">
+                        <div class="w-full h-full flex flex-row items-center relative">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
                                     class="w-[calc(100%-0.8rem)] indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
@@ -235,11 +234,21 @@ const props = defineProps({
     isSelectColumn = (column) => {
         return column.type === 3;
     },
+    getColumnCls = (index, column) => {
+        return [
+            getColumnWidthCls(index, column),
+            getColumnBackgroundCls(column)
+        ].join(' ');
+    },
     getColumnWidthCls = (index, column) => {
         return (index === 0 || (index > 2 && isTextColumn(column))) ? 'w-[10%] max-w-[10%]' :
             (index === 1 || (index > 2 && isDateColumn(column))) ? 'w-[9%] max-w-[9%]' :
-            index === 2 ? 'w-[15%] max-w-[15%]' :
-            isCheckboxColumn(column) ? 'w-[2%] max-w-[2%]' : 'w-[7.5%] max-w-[7.5%]';
+                index === 2 ? 'w-[15%] max-w-[15%]' :
+                    isCheckboxColumn(column) ? 'w-[2%] max-w-[2%]' : 'w-[7.5%] max-w-[7.5%]'
+
+    },
+    getColumnBackgroundCls = (column) => {
+        return column.background_color !== '' ? column.background_color : 'bg-secondary';
     },
     openAddColumnModal = () => {
         showAddColumnModal.value = true;

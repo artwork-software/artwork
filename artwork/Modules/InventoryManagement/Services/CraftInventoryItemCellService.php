@@ -24,16 +24,12 @@ readonly class CraftInventoryItemCellService
     public function create(
         int $columnId,
         int $itemId,
-        int $order,
-        string $cellType,
-        string $cellValue
+        string $cellValue = ''
     ): CraftInventoryItemCell {
         $craftInventoryItemCell = $this->getNewCraftInventoryItemCell(
             [
                 'crafts_inventory_column_id' => $columnId,
                 'craft_inventory_item_id' => $itemId,
-                'order' => $order,
-                'cell_type' => $cellType,
                 'cell_value' => $cellValue
             ]
         );

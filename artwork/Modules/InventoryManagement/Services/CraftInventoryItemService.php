@@ -38,18 +38,33 @@ readonly class CraftInventoryItemService
         $this->craftInventoryItemRepository->saveOrFail($craftInventoryItem);
 
         $this->craftsInventoryColumnRepository->getAllOrdered()->each(
-            function (CraftsInventoryColumn $column, int $index) use ($craftInventoryItem, $order): void {
+            function (CraftsInventoryColumn $column) use ($craftInventoryItem): void {
                 $this->craftInventoryItemCellService->create(
                     $column->id,
-                    $craftInventoryItem->id,
-                    ($index + 1),
-                    $column->type,
-                    ''
+                    $craftInventoryItem->id
                 );
             }
         );
 
         return $craftInventoryItem;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function createCellsInItemsForColumn(CraftsInventoryColumn $craftsInventoryColumn): void
+    {
+        $this->craftInventoryItemRepository->getAll()->each(
+            /**
+             * @throws Throwable
+             */
+            function (CraftInventoryItem $craftInventoryItem) use ($craftsInventoryColumn): void {
+                $this->craftInventoryItemCellService->create(
+                    $craftsInventoryColumn->id,
+                    $craftInventoryItem->id
+                );
+            }
+        );
     }
 
 //    /**

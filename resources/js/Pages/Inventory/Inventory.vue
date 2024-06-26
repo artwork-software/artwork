@@ -1,7 +1,8 @@
 <template>
     <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
-            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
+            <div
+                class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
                 <BaseFilter :only-icon="true" class="mr-3">
                     <div class="flex flex-col w-full gap-y-2">
                         <div class="flex justify-between">
@@ -45,7 +46,7 @@
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        :class="[index <= 1 ? 'w-[7.5%]' : index === 2 ? 'w-[35%]' : '']">
+                        :class="getColumnWidthCls(index, column)">
                         <div class="w-full h-full flex flex-row items-center relative ">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
@@ -221,6 +222,24 @@ const props = defineProps({
     getColSpan = () => {
         return props.columns.length;
     },
+    isTextColumn = (column) => {
+        return column.type === 0;
+    },
+    isDateColumn = (column) => {
+        return column.type === 1;
+    },
+    isCheckboxColumn = (column) => {
+        return column.type === 2;
+    },
+    isSelectColumn = (column) => {
+        return column.type === 3;
+    },
+    getColumnWidthCls = (index, column) => {
+        return (index === 0 || (index > 2 && isTextColumn(column))) ? 'w-[10%] max-w-[10%]' :
+            (index === 1 || (index > 2 && isDateColumn(column))) ? 'w-[9%] max-w-[9%]' :
+            index === 2 ? 'w-[15%] max-w-[15%]' :
+            isCheckboxColumn(column) ? 'w-[2%] max-w-[2%]' : 'w-[7.5%] max-w-[7.5%]';
+    },
     openAddColumnModal = () => {
         showAddColumnModal.value = true;
     },
@@ -305,13 +324,14 @@ const props = defineProps({
     },
     filteredCrafts = computed(() => {
         if (searchValue.value.length === 0) {
+            props.crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
             return props.crafts;
         }
 
         props.crafts.forEach((craft) => {
             let filteredCategories = [];
 
-            craft.categories.forEach((category) => {
+            craft.inventory_categories.forEach((category) => {
                 if (category.name.indexOf(searchValue.value) > -1) {
                     filteredCategories.push(category);
 
@@ -332,8 +352,7 @@ const props = defineProps({
                         (group) => group.name.indexOf(searchValue.value) > -1 ||
                             //or some items have some matching cell values
                             group.items.some((item) => item.cells.some(
-                                //@todo: implement all types of inputs
-                                (cell) => cell.value.indexOf(searchValue.value) > -1
+                                (cell) => cell.cell_value.indexOf(searchValue.value) > -1
                             ))
                     )
                 ) {
@@ -341,7 +360,7 @@ const props = defineProps({
                 }
             });
 
-            craft.categories = filteredCategories;
+            craft.filtered_inventory_categories = filteredCategories;
         });
 
         return props.crafts;

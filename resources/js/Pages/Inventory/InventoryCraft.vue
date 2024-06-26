@@ -19,8 +19,8 @@
                   :colspan="colspan"
                   :destination-index="0"
                   @categroy-requests-drag-move="moveCategoryToDestination"/>
-    <template v-if="craftShown && craft.inventory_categories.length > 0"
-              v-for="(category, index) in craft.inventory_categories">
+    <template v-if="craftShown && craft.filtered_inventory_categories.length > 0"
+              v-for="(category, index) in craft.filtered_inventory_categories">
         <AddNewCategory v-if="craftShown && index === 0" @click="openAddCategoryOrGroupModal('category', props.craft.id)"/>
         <InventoryCategory :index="index"
                            :category="category"

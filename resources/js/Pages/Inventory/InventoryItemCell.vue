@@ -1,15 +1,27 @@
 <template>
     <td class="max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap">
-        <span v-if="cell.cell_value.length > 0"
-              class="cursor-text"
+        <span v-if="hasCellValue()"
+              :class="getCellValueCls()"
               @click="toggleCellEdit()">
-            {{ cell.cell_value }}
+            <template v-if="isTextColumn()">
+                {{ cell.cell_value }}
+            </template>
+            <template v-else-if="isDateColumn()">
+                <div class="w-full h-full flex flex-row items-center justify-center">
+                    {{ formatDate(cell.cell_value) }}
+                </div>
+            </template>
+            <template v-else-if="isCheckboxColumn()">
+                {{ cell.cell_value === 'true' ? $t('Yes') : $t('No') }}
+            </template>
+            <template v-else-if="isSelectColumn()">
+                {{ cell.cell_value }}
+            </template>
         </span>
-        <div v-else
-             class="w-full h-full cursor-text"
-              @click="toggleCellEdit()"/>
-        <div v-if="cell.column.type === 0 && cellClicked"
-            :class="[cellClicked ? '' : 'hidden', 'flex flex-row bg-white items-center gap-x-2 w-[calc(100%-1rem)] -translate-x-1 h-7 top-1.5 z-50 absolute']">
+        <div v-else class="w-full h-full cursor-text" @click="toggleCellEdit()"/>
+        <!-- Freitextfeld -->
+        <div v-if="isTextColumn() && cellClicked"
+            class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
             <input ref="cellValueInputRef"
                    type="text"
                    class="w-full text-xs px-1 flex "
@@ -17,6 +29,53 @@
                    @keyup.enter="applyCellValueChange()"
                    @keyup.esc="denyCellValueChange()"
             />
+            <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0 cursor-pointer"
+                       @click="applyCellValueChange()"/>
+            <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0 cursor-pointer"
+                   @click="denyCellValueChange()"/>
+        </div>
+        <!-- Datum -->
+        <div v-else-if="isDateColumn() && cellClicked"
+             class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
+            <input ref="cellValueInputRef"
+                   type="date"
+                   class="w-full text-xs px-1 flex"
+                   v-model="cellValue"
+                   @keyup.enter="applyCellValueChange()"
+                   @keyup.esc="denyCellValueChange()"
+            />
+            <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0 cursor-pointer"
+                       @click="applyCellValueChange()"/>
+            <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0 cursor-pointer"
+                   @click="denyCellValueChange()"/>
+        </div>
+        <!-- Checkbox -->
+        <div v-else-if="isCheckboxColumn() && cellClicked"
+             class="flex flex-row bg-white items-center justify-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-0.5 h-7 top-1.5 z-50 absolute">
+            <input ref="cellValueInputRef"
+                   type="checkbox"
+                   class="w-5 h-5 text-xs px-1 flex "
+                   v-model="cellValue"
+                   @keyup.enter="applyCellValueChange()"
+                   @keyup.esc="denyCellValueChange()"
+            />
+            <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0 cursor-pointer"
+                       @click="applyCellValueChange()"/>
+            <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0 cursor-pointer"
+                   @click="denyCellValueChange()"/>
+        </div>
+        <!-- Auswahlbox -->
+        <div v-else-if="isSelectColumn() && cellClicked"
+             class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
+            <select ref="cellValueInputRef"
+                   class="w-full text-xs px-1 flex "
+                   v-model="cellValue"
+                   @keyup.enter="applyCellValueChange()"
+                   @keyup.esc="denyCellValueChange()">
+                <option v-for="(option) in cell.column.type_options">
+                    {{ option }}
+                </option>
+            </select>
             <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0 cursor-pointer"
                        @click="applyCellValueChange()"/>
             <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0 cursor-pointer"
@@ -38,6 +97,29 @@ const emits = defineEmits(['isEditingCellValue']),
     cellValueInputRef = ref(null),
     cellValue = ref(props.cell.cell_value),
     cellClicked = ref(false),
+    formatDate = (date) => {
+        let parts = date.split('-');
+
+        return parts[2] + '.' + parts[1] + '.' + parts[0];
+    },
+    hasCellValue = () => {
+        return props.cell.cell_value.length > 0;
+    },
+    getCellValueCls = () => {
+        return props.cell.column.type === 2 ? 'text-center block cursor-text' : 'cursor-text';
+    },
+    isTextColumn = () => {
+        return props.cell.column.type === 0;
+    },
+    isDateColumn = () => {
+        return props.cell.column.type === 1;
+    },
+    isCheckboxColumn = () => {
+        return props.cell.column.type === 2;
+    },
+    isSelectColumn = () => {
+        return props.cell.column.type === 3;
+    },
     toggleCellEdit = () => {
         cellClicked.value = !cellClicked.value;
 
@@ -47,12 +129,13 @@ const emits = defineEmits(['isEditingCellValue']),
 
         if (cellClicked.value) {
             setTimeout(() => {
-                cellValueInputRef.value.select();
+                cellValueInputRef.value?.select();
             }, 5);
         }
     },
     applyCellValueChange = () => {
-        if (props.cell.cell_value === cellValue.value) {
+        //compare as strings in case of checkbox  which are preserved as string in database
+        if (props.cell.cell_value.toString() === cellValue.value.toString()) {
             toggleCellEdit();
             return;
         }
@@ -65,7 +148,7 @@ const emits = defineEmits(['isEditingCellValue']),
                 }
             ),
             {
-                cell_value: cellValue.value
+                cell_value: String(cellValue.value)
             },
             {
                 preserveScroll: true,

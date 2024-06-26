@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InventoryManagement\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $craft_inventory_group_id
  * @property int $order
+ * @property CraftInventoryGroup $group
+ * @property Collection $cells
  */
 class CraftInventoryItem extends Model
 {
@@ -37,6 +40,6 @@ class CraftInventoryItem extends Model
             CraftInventoryItemCell::class,
             'craft_inventory_item_id',
             'id'
-        )->orderBy('order');
+        )->orderBy('id');
     }
 }

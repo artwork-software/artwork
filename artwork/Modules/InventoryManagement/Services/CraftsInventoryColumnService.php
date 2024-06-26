@@ -11,7 +11,8 @@ use Throwable;
 readonly class CraftsInventoryColumnService
 {
     public function __construct(
-        private CraftsInventoryColumnRepository $craftsInventoryColumnRepository
+        private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
+        private CraftInventoryItemService $craftInventoryItemService
     ) {
     }
 
@@ -41,6 +42,16 @@ readonly class CraftsInventoryColumnService
             'background_color' => $background_color
         ]);
         $this->craftsInventoryColumnRepository->saveOrFail($craftsInventoryColumn);
+
+        try {
+            $this->craftInventoryItemService->createCellsInItemsForColumn($craftsInventoryColumn);
+        } catch (Throwable $t) {
+            //if any cell could not be created revert the newly created cell and throw to controller
+            //so no column is created if not also all cells are created
+            $this->craftsInventoryColumnRepository->deleteOrFail($craftsInventoryColumn);
+
+            throw $t;
+        }
 
         return $craftsInventoryColumn;
     }

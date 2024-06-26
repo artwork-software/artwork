@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $craft_inventory_item_id
- * @property int $order
- * @property string $cell_type
  * @property string $cell_value
  * @property array $cell_options
  */
@@ -21,8 +19,6 @@ class CraftInventoryItemCell extends Model
     protected $fillable = [
         'crafts_inventory_column_id',
         'craft_inventory_item_id',
-        'order',
-        'cell_type',
         'cell_value',
     ];
 

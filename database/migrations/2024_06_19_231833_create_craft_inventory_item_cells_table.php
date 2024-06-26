@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('crafts_inventory_column_id')->constrained('crafts_inventory_columns')->cascadeOnDelete();
             $table->foreignId('craft_inventory_item_id')->constrained('craft_inventory_items')->cascadeOnDelete();
-            $table->smallInteger('order');
-            $table->string('cell_type');
             $table->string('cell_value');
             $table->timestamps();
             $table->softDeletes();

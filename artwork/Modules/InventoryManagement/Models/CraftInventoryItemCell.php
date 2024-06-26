@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $craft_inventory_item_id
  * @property string $cell_value
- * @property array $cell_options
  */
 class CraftInventoryItemCell extends Model
 {
@@ -21,11 +20,6 @@ class CraftInventoryItemCell extends Model
         'craft_inventory_item_id',
         'cell_value',
     ];
-
-    protected $casts = [
-        'cell_options' => 'array'
-    ];
-
     public function item(): BelongsTo
     {
         return $this->belongsTo(

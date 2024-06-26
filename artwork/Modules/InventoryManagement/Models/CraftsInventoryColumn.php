@@ -31,6 +31,10 @@ class CraftsInventoryColumn extends Model
 
     public function itemCells(): HasMany
     {
-        return $this->hasMany(CraftInventoryItemCell::class, 'crafts_inventory_column_id', 'id');
+        return $this->hasMany(
+            CraftInventoryItemCell::class,
+            'crafts_inventory_column_id',
+            'id'
+        );
     }
 }

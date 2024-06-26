@@ -8,6 +8,7 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Column\CreateCraftsInvento
 use Artwork\Modules\InventoryManagement\Http\Requests\Column\DuplicateCraftsInventoryColumnRequest;
 use Artwork\Modules\InventoryManagement\Http\Requests\Column\UpdateCraftsInventoryColumnBackgroundColorRequest;
 use Artwork\Modules\InventoryManagement\Http\Requests\Column\UpdateCraftsInventoryColumnNameRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Column\UpdateCraftsInventoryColumnTypeOptionsRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Illuminate\Http\RedirectResponse;
@@ -116,6 +117,30 @@ class CraftsInventoryColumnController extends Controller
             return $this->redirector
                 ->back()
                 ->with('error', 'Spaltenfarbe konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+        }
+
+        return $this->redirector->back();
+    }
+
+    public function updateTypeOptions(
+        CraftsInventoryColumn $craftsInventoryColumn,
+        UpdateCraftsInventoryColumnTypeOptionsRequest $request
+    ): RedirectResponse {
+        $selectOptions = $request->get('selectOptions');
+        try {
+            $this->craftsInventoryColumnService->updateTypeOptions($selectOptions, $craftsInventoryColumn);
+        } catch (Throwable $t) {
+            $this->logger->error(
+                sprintf(
+                    'Could not update crafts inventory column type options to: "%s" for reason: "%s"',
+                    $selectOptions,
+                    $t->getMessage()
+                )
+            );
+
+            return $this->redirector
+                ->back()
+                ->with('error', 'Spalten-Auswahloptionen konnte nicht aktualisiert werden. Bitte versuche es erneut.');
         }
 
         return $this->redirector->back();

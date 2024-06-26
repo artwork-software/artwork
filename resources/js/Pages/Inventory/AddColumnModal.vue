@@ -99,8 +99,6 @@ const emits = defineEmits(['closed']),
     }),
     showNewColumnFormNameError = ref(false),
     showNewColumnFormTypeOptionsError = ref(false),
-    newColumnFormNameErrorText = ref(''),
-    newColumnFormTypeOptionsErrorText = ref(''),
     getTypeOptions = () => {
         return [
             {
@@ -134,21 +132,10 @@ const emits = defineEmits(['closed']),
         newColumnForm.typeOptions.splice(index, 1);
     },
     validateNewColumn = () => {
-        if (newColumnForm.name === null || newColumnForm.name.length === 0) {
-            showNewColumnFormNameError.value = true;
-            newColumnFormNameErrorText.value = 'Es muss ein Spaltenname angegeben werden.'
-        } else {
-            showNewColumnFormNameError.value = false;
-            newColumnFormNameErrorText.value = '';
-        }
-
-        if (newColumnForm.type !== null && newColumnForm.type.id === NEW_COLUMN_TYPE.SELECT.id && newColumnForm.typeOptions.length < 1) {
-            showNewColumnFormTypeOptionsError.value = true;
-            newColumnFormTypeOptionsErrorText.value = 'Es muss mindestens eine Auswahloption hinzugefügt werden.';
-        } else {
-            showNewColumnFormTypeOptionsError.value = false;
-            newColumnFormTypeOptionsErrorText.value = '';
-        }
+        showNewColumnFormNameError.value = newColumnForm.name === null || newColumnForm.name.length === 0;
+        showNewColumnFormTypeOptionsError.value = newColumnForm.type !== null &&
+            newColumnForm.type.id === NEW_COLUMN_TYPE.SELECT.id &&
+            newColumnForm.typeOptions.length < 1;
 
         return !showNewColumnFormNameError.value && !showNewColumnFormTypeOptionsError.value;
     },

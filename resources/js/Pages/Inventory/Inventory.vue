@@ -114,6 +114,16 @@
                                                     {{ $t('Delete') }}
                                                 </a>
                                             </MenuItem>
+                                            <MenuItem v-if="column.type === 3"
+                                                      v-slot="{ active }"
+                                                      as="div">
+                                                <a @click="openEditColumnSelectOptionsModal(column)"
+                                                   :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
+                                                    <IconTrash
+                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    {{ $t('Optionen bearbeiten') }}
+                                                </a>
+                                            </MenuItem>
                                         </MenuItems>
                                     </transition>
                                 </div>
@@ -157,10 +167,15 @@
                 </template>
                 </tbody>
             </table>
-            <AddColumnModal :show="showAddColumnModal"
-                            @closed="closeAddColumnModal"/>
         </div>
     </InventoryHeader>
+    <AddColumnModal v-if="showAddColumnModal"
+                    :show="showAddColumnModal"
+                    @closed="closeAddColumnModal"/>
+    <EditColumnSelectOptionsModal v-if="showEditColumnSelectOptionsModal"
+                                  :show="showEditColumnSelectOptionsModal"
+                                  :column="selectOptionsColumnToEdit"
+                                  @closed="closeEditColumnSelectOptionsModal()"/>
     <ErrorComponent v-if="hasFlashError()"
                     :titel="$t('Unfortunately an error has occurred')"
                     :description="getFlashError()"
@@ -202,6 +217,7 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import AddColumnModal from "@/Pages/Inventory/AddColumnModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import EditColumnSelectOptionsModal from "@/Pages/Inventory/EditColumnSelectOptionsModal.vue";
 
 const props = defineProps({
         columns: Array,
@@ -213,9 +229,10 @@ const props = defineProps({
     showMenu = ref(null),
     searchValue = ref(''),
     showAddColumnModal = ref(false),
+    showEditColumnSelectOptionsModal  = ref(false),
+    selectOptionsColumnToEdit = ref(null),
     showConfirmDeleteColumnModal = ref(false),
     columnIdToDelete = ref(null),
-    dummyFn = () => true,
     getProps = () => usePage().props,
     hasFlashError = () => getProps().flash.error?.length > 0,
     getFlashError = () => getProps().flash.error,
@@ -259,6 +276,14 @@ const props = defineProps({
     },
     getColumnBackgroundCls = (column) => {
         return column.background_color !== '' ? column.background_color : 'bg-secondary';
+    },
+    openEditColumnSelectOptionsModal = (column) => {
+        selectOptionsColumnToEdit.value = column;
+        showEditColumnSelectOptionsModal.value = true;
+    },
+    closeEditColumnSelectOptionsModal = () => {
+        selectOptionsColumnToEdit.value = null;
+        showEditColumnSelectOptionsModal.value = false;
     },
     openAddColumnModal = () => {
         showAddColumnModal.value = true;

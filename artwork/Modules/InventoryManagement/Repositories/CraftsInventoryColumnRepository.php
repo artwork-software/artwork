@@ -22,4 +22,9 @@ readonly class CraftsInventoryColumnRepository extends BaseRepository
 
         return $column;
     }
+
+    public function getAllItemCells(CraftsInventoryColumn $craftsInventoryColumn): Collection
+    {
+        return $craftsInventoryColumn->itemCells()->get();
+    }
 }

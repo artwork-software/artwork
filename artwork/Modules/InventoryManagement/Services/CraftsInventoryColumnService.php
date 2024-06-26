@@ -3,6 +3,7 @@
 namespace Artwork\Modules\InventoryManagement\Services;
 
 use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -12,7 +13,8 @@ readonly class CraftsInventoryColumnService
 {
     public function __construct(
         private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
-        private CraftInventoryItemService $craftInventoryItemService
+        private CraftInventoryItemService $craftInventoryItemService,
+        private CraftInventoryItemCellService $craftInventoryItemCellService
     ) {
     }
 
@@ -98,6 +100,35 @@ readonly class CraftsInventoryColumnService
             [
                 'background_color' => $backgroundColor
             ]
+        );
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateTypeOptions(
+        array $typeOptions,
+        CraftsInventoryColumn $craftsInventoryColumn
+    ): void {
+        $oldTypeOptions = $craftsInventoryColumn->type_options;
+
+        $this->craftsInventoryColumnRepository->updateOrFail(
+            $craftsInventoryColumn,
+            [
+                'type_options' => $typeOptions
+            ]
+        );
+
+        $removedTypeOptions = array_diff($oldTypeOptions, $craftsInventoryColumn->type_options);
+
+        $this->craftsInventoryColumnRepository->getAllItemCells($craftsInventoryColumn)->each(
+            function (CraftInventoryItemCell $craftInventoryItemCell) use ($removedTypeOptions): void {
+                if (in_array($craftInventoryItemCell->cell_value, $removedTypeOptions)) {
+                    $this->craftInventoryItemCellService->updateCellValue('', $craftInventoryItemCell);
+                    $craftInventoryItemCell->cell_value = '';
+                    $craftInventoryItemCell->save();
+                }
+            }
         );
     }
 

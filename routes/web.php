@@ -1363,6 +1363,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftsInventoryColumnController::class, 'updateName']
                 )->name('inventory-management.inventory.column.update.name');
                 Route::patch(
+                    '/{craftsInventoryColumn}/select-options',
+                    [CraftsInventoryColumnController::class, 'updateTypeOptions']
+                )->name('inventory-management.inventory.column.update.type_options');
+                Route::patch(
                     '/{craftsInventoryColumn}/background_color',
                     [CraftsInventoryColumnController::class, 'updateBackgroundColor']
                 )->name('inventory-management.inventory.column.update.background_color');

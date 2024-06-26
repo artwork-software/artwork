@@ -19,6 +19,17 @@ readonly class CraftService
         return $this->craftRepository->getAll($with);
     }
 
+    public function getAllWithInventoryCategoriesRelations(): Collection
+    {
+        return $this->getAll([
+            'inventoryCategories',
+            'inventoryCategories.groups',
+            'inventoryCategories.groups.items',
+            'inventoryCategories.groups.items.cells',
+            'inventoryCategories.groups.items.cells.column'
+        ]);
+    }
+
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void
     {
         $craft = new Craft();

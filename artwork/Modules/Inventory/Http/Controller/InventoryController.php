@@ -23,15 +23,7 @@ class InventoryController extends Controller
             'Inventory/Inventory',
             [
                 'columns' => $this->craftsInventoryColumnService->getAllOrdered(),
-                'crafts' => $this->craftService->getAll(
-                    [
-                        'inventoryCategories',
-                        'inventoryCategories.groups',
-                        'inventoryCategories.groups.items',
-                        'inventoryCategories.groups.items.cells',
-                        'inventoryCategories.groups.items.cells.column',
-                    ]
-                )
+                'crafts' => $this->craftService->getAllWithInventoryCategoriesRelations()
             ]
         );
     }

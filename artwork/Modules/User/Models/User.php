@@ -12,6 +12,7 @@ use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
@@ -513,5 +514,14 @@ class User extends Model implements
     {
         return $this->hasPermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value)
             || $this->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+    }
+
+    public function inventoryManagementFilter(): HasOne
+    {
+        return $this->hasOne(
+            InventoryManagementUserFilter::class,
+            'user_id',
+            'id'
+        );
     }
 }

@@ -1,5 +1,5 @@
 <template>
-    <td :class="[cell.column.background_color + ' max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap']">
+    <td :class="getCellCls()">
         <span v-if="hasCellValue()"
               :class="getCellValueCls()"
               @click="toggleCellEdit()">
@@ -21,7 +21,7 @@
         <div v-else class="w-full h-full cursor-text" @click="toggleCellEdit()"/>
         <!-- Freitextfeld -->
         <div v-if="isTextColumn() && cellClicked"
-            class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
+             :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="text"
                    class="w-full text-xs px-1 flex "
@@ -36,7 +36,7 @@
         </div>
         <!-- Datum -->
         <div v-else-if="isDateColumn() && cellClicked"
-             class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
+             :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="date"
                    class="w-full text-xs px-1 flex"
@@ -51,7 +51,7 @@
         </div>
         <!-- Checkbox -->
         <div v-else-if="isCheckboxColumn() && cellClicked"
-             class="flex flex-row bg-white items-center justify-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-0.5 h-7 top-1.5 z-50 absolute">
+             :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="checkbox"
                    class="w-5 h-5 text-xs px-1 flex "
@@ -66,7 +66,7 @@
         </div>
         <!-- Auswahlbox -->
         <div v-else-if="isSelectColumn() && cellClicked"
-             class="flex flex-row bg-white items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-7 top-1.5 z-50 absolute">
+             :class="getInputCls()">
             <select ref="cellValueInputRef"
                    class="w-full text-xs px-1 flex "
                    v-model="cellValue"
@@ -100,6 +100,28 @@ const emits = defineEmits(['isEditingCellValue']),
     cellValueInputRef = ref(null),
     cellValue = ref(props.cell.cell_value),
     cellClicked = ref(false),
+    getCellCls = () => {
+        return [
+            getBackgroundCls(),
+            'max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
+        ].join(' ');
+    },
+    getBackgroundCls = () => {
+        return props.cell.column.background_color !== 'bg-primary' ?
+            props.cell.column.background_color :
+            '';
+    },
+    getInputCls = () => {
+        return [
+            getBackgroundClsForInput(),
+            'flex flex-row items-center gap-x-2 w-[calc(100%-0.8rem)] -translate-x-1 h-full top-0 z-50 absolute'
+        ].join(' ');
+    },
+    getBackgroundClsForInput = () => {
+        return props.cell.column.background_color !== 'bg-primary' ?
+            props.cell.column.background_color :
+            'bg-white';
+    },
     formatDate = (date) => {
         let parts = date.split('-');
 

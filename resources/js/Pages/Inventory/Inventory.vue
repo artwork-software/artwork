@@ -6,13 +6,13 @@
                     <div class="flex flex-col w-full gap-y-2">
                         <div class="flex justify-between">
                             <span> {{ $t('Filter') }}</span>
-                            <span class="xxsLight cursor-pointer text-right w-full" @click="dummyFn()">
+                            <span class="xxsLight cursor-pointer text-right w-full" @click="changeCraftFilter()">
                                 {{ $t('Reset') }}
                             </span>
                         </div>
                         <div class="text-sm border-b">{{ $t('Crafts') }}</div>
                         <div class="craft-checkbox-filter">
-                            <BaseFilterCheckboxList :list="crafts"
+                            <BaseFilterCheckboxList :list="getCraftFilters()"
                                                     filter-name="inventory-management-crafts-filter"
                                                     @change-filter-items="changeCraftFilter"/>
                         </div>
@@ -54,7 +54,7 @@
                                     {{ column.name }}
                                 </div>
                                 <div
-                                    :class="[column.clicked ? '' : 'hidden', 'flex flex-row items-center bg-gray-500 px-1 top-[4px] text-white gap-x-2 w-full z-50 absolute']">
+                                    :class="[column.clicked ? '' : 'hidden', getColumnBackgroundCls(column) + ' flex flex-row items-center px-1 top-[4px] text-white gap-x-2 w-full z-50 absolute']">
                                     <input
                                         type="text"
                                         :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
@@ -124,7 +124,7 @@
                                 <ListboxOptions :static="column.showColorMenu"
                                                 class="absolute -translate-x-[107%] translate-y-[8px] z-40 flex flex-col gap-2 p-2  shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
                                     <ListboxOption as="template"
-                                                   v-for="(color) in ['bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-orange-500']"
+                                                   v-for="(color) in ['bg-primary', 'bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-orange-500']"
                                                    :key="color"
                                                    :value="color"
                                                    v-slot="{ active, selected }">
@@ -206,6 +206,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 const props = defineProps({
         columns: Array,
         crafts: Array,
+        craftFilters: Array,
         colors: Array
     }),
     dynamicColumnNameInputRefs = ref({}),
@@ -233,6 +234,15 @@ const props = defineProps({
     },
     isSelectColumn = (column) => {
         return column.type === 3;
+    },
+    getCraftFilters = () => {
+        return props.crafts.map((craft) => {
+            return {
+                id: craft.id,
+                name: craft.name,
+                checked: props.craftFilters.includes(craft.id)
+            };
+        });
     },
     getColumnCls = (index, column) => {
         return [
@@ -328,17 +338,36 @@ const props = defineProps({
             }
         );
     },
-    changeCraftFilter = (args) => {
-        //args.list.forEach.checked -> sync in backend to user (InventoryManagementFilter)
-        console.debug(args);
+    changeCraftFilter = (args = {list: []}) => {
+        router.patch(
+            route('inventory-management.inventory.filter.update'),
+            {
+                filter: args.list
+                    .filter((arg) => arg.checked === true)
+                    .map((arg) => {
+                    return {craftId: arg.id }
+                })
+            },
+            {
+                preserveScroll: true
+            }
+        );
     },
     filteredCrafts = computed(() => {
         if (searchValue.value.length === 0) {
             props.crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
-            return props.crafts;
+            return props.crafts.filter(
+                (craft) => {
+                    return props.craftFilters.length === 0 || props.craftFilters.includes(craft.id);
+                }
+            );
         }
 
         props.crafts.forEach((craft) => {
+            if (props.craftFilters.length > 0 && !props.craftFilters.includes(craft.id) ) {
+                return;
+            }
+
             let filteredCategories = [];
 
             craft.inventory_categories.forEach((category) => {

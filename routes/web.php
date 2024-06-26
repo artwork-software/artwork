@@ -84,6 +84,7 @@ use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use Artwork\Modules\Inventory\Http\Controller\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
@@ -1343,6 +1344,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'inventory-management'], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
+
+        Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
+            ->name('inventory-management.inventory.filter.update');
 
         Route::group(['prefix' => 'inventory'], function (): void {
             Route::group(['prefix' => 'column'], function (): void {

@@ -19,7 +19,6 @@ class InventoryController extends Controller
 
     public function inventory(): Response
     {
-        throw new UnauthorizedHttpException('Unauthorized');
         return Inertia::render(
             'Inventory/Inventory',
             [
@@ -39,7 +38,6 @@ class InventoryController extends Controller
 
     public function scheduling(): Response
     {
-        throw new UnauthorizedHttpException('Unauthorized');
         return Inertia::render(
             'Inventory/Scheduling',
             [

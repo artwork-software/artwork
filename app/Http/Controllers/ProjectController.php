@@ -2111,7 +2111,7 @@ class ProjectController extends Controller
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
-            'budget_deadline' => $request->string('budget_deadline'),
+            'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
                 $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null

@@ -76,9 +76,11 @@ test('users without the permission cant create projects', function () {
 
     $this->post('/projects', [
         'name' => 'TestProject',
-        'assigned_users' => [$this->assigned_user],
+        'assigned_users' => [$this->assigned_user->id],
         'assigned_departments' => [$this->department],
-        'is_group' => false
+        'isGroup' => false,
+        'state' => 1,
+        'cost_center' => 'Test'
     ])->assertStatus(403);
 });
 
@@ -132,10 +134,12 @@ test('users with the permission can update projects and change the role of assig
         'description' => 'a description',
         'number_of_participants' => '1000',
         'assigned_user_ids' => [$this->auth_user->id => ['is_admin' => false]],
-        'assigned_departments' => [$this->department]
+        'assigned_departments' => [$this->department],
+        'budget_deadline' => null
     ]);
 
     $this->assertDatabaseHas('projects', [
+        'id' => $this->project->id,
         'name' => 'TestProject',
     ]);
 });

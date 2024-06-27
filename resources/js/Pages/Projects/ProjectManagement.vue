@@ -481,7 +481,6 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-
         openProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = true;
         },

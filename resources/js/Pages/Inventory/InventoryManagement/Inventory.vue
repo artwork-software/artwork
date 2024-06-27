@@ -1,43 +1,9 @@
 <template>
     <InventoryHeader :title="$t('Inventory')">
         <div class="flex flex-col relative">
-            <div class="absolute right-0 -translate-y-full text-xs z-30 font-bold rounded-t-md subpixel-antialiased text-white flex flex-row items-center h-20">
-                <BaseFilter :only-icon="true" class="mr-3">
-                    <div class="flex flex-col w-full gap-y-2">
-                        <div class="flex justify-between">
-                            <span> {{ $t('Filter') }}</span>
-                            <span class="xxsLight cursor-pointer text-right w-full" @click="changeCraftFilter()">
-                                {{ $t('Reset') }}
-                            </span>
-                        </div>
-                        <div class="text-sm border-b">{{ $t('Crafts') }}</div>
-                        <div class="craft-checkbox-filter">
-                            <BaseFilterCheckboxList :list="getCraftFilters()"
-                                                    filter-name="inventory-management-crafts-filter"
-                                                    @change-filter-items="changeCraftFilter"/>
-                        </div>
-                    </div>
-                </BaseFilter>
-                <div class="flex flex-row h-full">
-                    <div
-                        class="inventory-search-container p-4 flex flex-row h-full items-center justify-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500">
-                        <TextInputComponent id="inventory-search-input"
-                                            aria-label="ajax search text input"
-                                            :label="$t('Search')"
-                                            v-model="searchValue"
-                                            class="!w-52"/>
-                        <IconSearch class="cursor-pointer w-6 h-6 hover:text-blue-500"/>
-                    </div>
-                    <div
-                        class="cursor-pointer p-4 flex flex-row h-full items-center gap-x-2 bg-gradient-to-t from-gray-600 to-gray-500 hover:from-blue-700 hover:to-blue-600"
-                        @click="openAddColumnModal()">
-                        <span class="drop-shadow-sm shadow-black">
-                            {{ $t('New column') }}
-                        </span>
-                        <PlusIcon stroke-width="1.5" class="h-7 w-7 p-1 border-white border-2 rounded-full shadow-sm"/>
-                    </div>
-                </div>
-            </div>
+            <InventoryTopBar :craft-filters="getCraftFilters()"
+                             @updates-search-value="updateSearchValue"
+                             @updates-craft-filters="updateCraftFilters"/>
             <table>
                 <thead class="sticky z-20 top-0 transition-all duration-300 shadow-sm text-white">
                 <tr class="text-xs">
@@ -49,8 +15,8 @@
                         <div class="w-full h-full flex flex-row items-center relative">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
-                                    class="w-[calc(100%-0.8rem)] indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
-                                    @dblclick="toggleColumnEdit(column)">
+                                    class="w-full indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
+                                    @click="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
                                 <div
@@ -58,14 +24,10 @@
                                     <input
                                         type="text"
                                         :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
-                                        class="w-[calc(100%-10px)] p-1 pl-2 border-0 text-xs text-black"
+                                        class="w-full p-1 pl-2 border-0 text-xs text-black"
                                         v-model="column.newValue"
-                                        @keyup.enter="applyColumnValueChange(column)"
-                                        @keyup.esc="denyColumnValueChange(column)">
-                                    <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0"
-                                               @click="applyColumnValueChange(column)"/>
-                                    <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0"
-                                           @click="denyColumnValueChange(column)"/>
+                                        @focusout="applyColumnValueChange(column)"
+                                        @keyup.enter="applyColumnValueChange(column)">
                                 </div>
                             </div>
                             <Menu v-show="showMenu === column.id && !column.showColorMenu" as="div"
@@ -169,9 +131,6 @@
             </table>
         </div>
     </InventoryHeader>
-    <AddColumnModal v-if="showAddColumnModal"
-                    :show="showAddColumnModal"
-                    @closed="closeAddColumnModal"/>
     <EditColumnSelectOptionsModal v-if="showEditColumnSelectOptionsModal"
                                   :show="showEditColumnSelectOptionsModal"
                                   :column="selectOptionsColumnToEdit"
@@ -190,12 +149,10 @@
 <script setup>
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
 import {
-    IconSearch,
     IconCopy,
     IconDotsVertical,
     IconTrash,
-    IconX,
-    IconCheck
+    IconX
 } from "@tabler/icons-vue";
 import {
     Listbox,
@@ -207,17 +164,14 @@ import {
     MenuItems
 } from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
-import {PlusIcon, CheckIcon} from "@heroicons/vue/solid";
+import {CheckIcon} from "@heroicons/vue/solid";
 import {computed, ref} from "vue";
 import InventoryCraft from "@/Pages/Inventory/InventoryManagement/InventoryCraft.vue";
-import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
-import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import AddColumnModal from "@/Pages/Inventory/InventoryManagement/AddColumnModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import EditColumnSelectOptionsModal from "@/Pages/Inventory/InventoryManagement/EditColumnSelectOptionsModal.vue";
+import InventoryTopBar from "@/Pages/Inventory/InventoryManagement/InventoryTopBar.vue";
 
 const props = defineProps({
         columns: Array,
@@ -228,7 +182,6 @@ const props = defineProps({
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
     searchValue = ref(''),
-    showAddColumnModal = ref(false),
     showEditColumnSelectOptionsModal  = ref(false),
     selectOptionsColumnToEdit = ref(null),
     showConfirmDeleteColumnModal = ref(false),
@@ -268,11 +221,13 @@ const props = defineProps({
         ].join(' ');
     },
     getColumnWidthCls = (index, column) => {
-        return (index === 0 || (index > 2 && isTextColumn(column))) ? 'w-[5%] max-w-[5%]' :
-            (index === 1 || (index > 2 && isDateColumn(column))) ? 'w-[1%] max-w-[1%]' :
-                index === 2 ? 'w-[15%] max-w-[15%]' :
-                    isCheckboxColumn(column) ? 'w-[2%] max-w-[2%]' : 'w-[7.5%] max-w-[7.5%]'
-
+        return index === 0 ? 'w-[0.75%] min-w-[0.75%]' :
+            index === 1 ? 'w-[0.25%] min-w-[0.25%]' :
+            index === 2 ? 'w-auto' :
+            isTextColumn(column) ? 'w-[15%] min-w-[15%]' :
+            isDateColumn(column) ? 'w-[7.5%] min-w-[7.5%]' :
+            isSelectColumn(column) ? 'w-[10%] min-w-[10%]' :
+            isCheckboxColumn(column) ? 'w-[1%] min-w-[1%]' : '';
     },
     getColumnBackgroundCls = (column) => {
         return column.background_color !== '' ? column.background_color : 'bg-secondary';
@@ -284,12 +239,6 @@ const props = defineProps({
     closeEditColumnSelectOptionsModal = () => {
         selectOptionsColumnToEdit.value = null;
         showEditColumnSelectOptionsModal.value = false;
-    },
-    openAddColumnModal = () => {
-        showAddColumnModal.value = true;
-    },
-    closeAddColumnModal = () => {
-        showAddColumnModal.value = false;
     },
     createDynamicColumnNameInputRef = (element, columnId) => {
         dynamicColumnNameInputRefs[columnId] = ref(element);
@@ -305,20 +254,20 @@ const props = defineProps({
         }
     },
     applyColumnValueChange = (column) => {
+        if (column.name === column.newValue) {
+            toggleColumnEdit(column);
+            return;
+        }
+
         router.patch(
             route('inventory-management.inventory.column.update.name', {craftsInventoryColumn: column.id}),
             {
                 name: column.newValue
             },
             {
-                preserveState: true,
                 preserveScroll: true
             }
         );
-    },
-    denyColumnValueChange = (column) => {
-        column.newValue = column.name;
-        toggleColumnEdit(column);
     },
     applyColumnBackgroundColorChange = (backgroundColor, column) => {
         router.patch(
@@ -363,15 +312,18 @@ const props = defineProps({
             }
         );
     },
-    changeCraftFilter = (args = {list: []}) => {
+    updateSearchValue = (value) => {
+        searchValue.value = value;
+    },
+    updateCraftFilters = (args = {list: []}) => {
         router.patch(
             route('inventory-management.inventory.filter.update'),
             {
                 filter: args.list
                     .filter((arg) => arg.checked === true)
                     .map((arg) => {
-                    return {craftId: arg.id }
-                })
+                        return {craftId: arg.id }
+                    })
             },
             {
                 preserveScroll: true
@@ -431,25 +383,3 @@ const props = defineProps({
     });
 </script>
 
-<style scoped lang="scss">
-
-.inventory-search-container :deep(label) {
-    @apply text-white;
-}
-
-.inventory-search-container :deep(input) {
-    color: rgb(37 99 235 / 1);
-}
-
-.inventory-search-container :deep(input):focus {
-    border-color: rgb(37 99 235 / 1);
-}
-
-.craft-checkbox-filter {
-    @apply flex flex-col gap-y-2;
-}
-
-.craft-checkbox-filter :deep(div) {
-    @apply mb-0;
-}
-</style>

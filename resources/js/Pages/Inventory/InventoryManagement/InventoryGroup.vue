@@ -8,8 +8,8 @@
         <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs border border-secondary">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
-                    class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
-                    @dblclick="toggleGroupEdit()">
+                    class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    @click="toggleGroupEdit()">
                     {{ group.name }}
                 </div>
                 <div @click="toggleGroup()">
@@ -23,10 +23,8 @@
                         ref="groupInputRef"
                         class="w-full p-1 border-0 text-xs text-black"
                         v-model="groupValue"
-                        @keyup.enter="applyGroupValueChange()"
-                        @keyup.esc="denyGroupValueChange()">
-                    <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0" @click="applyGroupValueChange()"/>
-                    <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0" @click="denyGroupValueChange()"/>
+                        @focusout="applyGroupValueChange()"
+                        @keyup.enter="applyGroupValueChange()">
                 </div>
             </div>
         </td>
@@ -68,7 +66,7 @@
 
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
-import {IconCheck, IconChevronDown, IconChevronUp, IconTrashXFilled, IconX} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
 import AddNewItem from "@/Pages/Inventory/InventoryManagement/AddNewItem.vue";
 import DropItem from "@/Pages/Inventory/InventoryManagement/DropItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -112,6 +110,10 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         }
     },
     applyGroupValueChange = () => {
+        if (props.group.name === groupValue.value) {
+            toggleGroupEdit();
+            return;
+        }
         router.patch(
             route(
                 'inventory-management.inventory.group.update.name',
@@ -127,10 +129,6 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
                 onSuccess: toggleGroupEdit
             }
         );
-    },
-    denyGroupValueChange = () => {
-        groupValue.value = props.group.name;
-        toggleGroupEdit();
     },
     handleGroupMouseover = () => {
         groupMouseover.value = true;

@@ -1,6 +1,6 @@
 <template>
     <tr>
-        <td :colspan="colspan" class="h-24 pl-3 subpixel-antialiased text-2xl font-bold">
+        <td :colspan="colspan" class="subpixel-antialiased text-lg">
             <div class="flex flex-row items-center gap-x-2">
                 <div class="flex flex-row items-center w-auto gap-x-2 cursor-pointer"
                      @click="toggleCraft()">
@@ -11,9 +11,6 @@
                 <IconLink class="w-5 h-5 cursor-pointer" @click="openShiftSettingsInNewTab()"/>
             </div>
         </td>
-    </tr>
-    <tr>
-        <td :colspan="colspan" class="h-5"/>
     </tr>
     <DropCategory v-if="showFirstDropCategory"
                   :colspan="colspan"

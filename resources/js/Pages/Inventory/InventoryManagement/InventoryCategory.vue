@@ -9,8 +9,8 @@
             :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'px-3 py-2 bg-primary text-white subpixel-antialiased text-sm']">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
                 <div
-                    class="cursor-pointer overflow-hidden overflow-ellipsis whitespace-nowrap"
-                    @dblclick="toggleCategoryEdit()">
+                    class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    @click="toggleCategoryEdit()">
                     {{ category.name }}
                 </div>
                 <div @click="toggleCategory()"
@@ -25,12 +25,8 @@
                         ref="categoryInputRef"
                         class="w-full p-1 border-0 text-xs text-black"
                         v-model="categoryValue"
-                        @keyup.enter="applyCategoryValueChange()"
-                        @keyup.esc="denyCategoryValueChange()">
-                    <IconCheck class="w-5 h-5 hover:text-green-500 flex-shrink-0"
-                               @click="applyCategoryValueChange()"/>
-                    <IconX class="w-5 h-5 hover:text-red-500 flex-shrink-0"
-                           @click="denyCategoryValueChange()"/>
+                        @focusout="applyCategoryValueChange()"
+                        @keyup.enter="applyCategoryValueChange()">
                 </div>
             </div>
         </td>
@@ -74,7 +70,7 @@
 
 <script setup>
 import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup.vue";
-import {IconCheck, IconChevronDown, IconChevronUp, IconX, IconTrashXFilled} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import AddNewGroup from "@/Pages/Inventory/InventoryManagement/AddNewGroup.vue";
@@ -120,6 +116,10 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         }
     },
     applyCategoryValueChange = () => {
+        if (props.category.name === categoryValue.value) {
+            toggleCategoryEdit();
+            return;
+        }
         router.patch(
             route(
                 'inventory-management.inventory.category.update.name',
@@ -137,10 +137,6 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
                 }
             }
         );
-    },
-    denyCategoryValueChange = () => {
-        categoryValue.value = props.category.name;
-        toggleCategoryEdit();
     },
     handleCategoryMouseover = () => {
         categoryMouseover.value = true;

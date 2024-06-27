@@ -1,5 +1,6 @@
 <template>
    <div class="text-sm"
+        :id="event.id"
         @dragover="onDragOver"
         @drop="onDrop">
        <div class="py-1.5 px-2 border flex items-center" :style="{
@@ -10,12 +11,12 @@
         :class="isLastEvent ? 'rounded-b-lg' : ''">
            <div v-if="multiEdit">
                <div class="flex items-center mr-1">
-                   <input :checked="event.checked" @change="event.checked = !event.checked" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="focus:ring-0 text-green-600 ring-0 h-3 w-3 border-gray-300" />
+                   <input :checked="event.checked" @change="event.checked = !event.checked" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="focus:ring-0 text-green-600 ring-0 h-4 w-4 border-gray-300" />
                </div>
            </div>
-           <div class="flex items-center justify-between gap-x-1">
+           <div class="flex items-center justify-between w-full">
                {{ event.eventName ?? event.title }}
-               <span class="text-xs" v-if="!event.allDay">
+               <span class="text-[10px]" v-if="!event.allDay">
                    {{ event.timesWithoutDates.start }} - {{ event.timesWithoutDates.end }}
                </span>
                <span v-else class="text-xs">

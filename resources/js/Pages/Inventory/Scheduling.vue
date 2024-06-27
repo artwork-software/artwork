@@ -5,6 +5,14 @@
             <InventoryFunctionBar :date-value="dateValue" />
         </div>
 
+        <button @click="showDebug = !showDebug">showDebug</button>
+
+       <div v-if="showDebug">
+           <pre>
+                {{ crafts }}
+           </pre>
+       </div>
+
        <div class="-ml-5">
            <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                <div @scroll="syncScrollShiftPlan" ref="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -91,25 +99,26 @@
            </div>
        </div>
 
-        <div v-if="multiEditMode">
+        <div v-if="multiEditMode" class="pointer-events-none">
             <div class="fixed bg-artwork-navigation-background/80 w-full h-24 z-50 bottom-0 -ml-9">
                 <div class="flex items-center justify-center h-full gap-x-2">
                     <div>
-                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" i text="Abbrechen" class="text-xs" />
+                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" i text="Abbrechen" class="text-xs pointer-events-auto" />
                     </div>
                     <div>
                         <!-- Button with text checkedItems.length + ' Elemente ausgewählt' -->
                         <AddButtonSmall @click="openMultiEditModal"
                                         :disabled="!itemIsSelectedForMultiEdit"
                                         :text="checkedItems.length + ' Element(e) Buchen'"
-                                        class="text-xs"
+                                        class="text-xs pointer-events-auto"
                         />
                     </div>
                 </div>
             </div>
         </div>
 
-        <MultiEditInventoryModal :selected-items="checkedItems" :events="selectedEvents" v-if="showMultiEditModal" @closed="showMultiEditModal = false" />
+        <MultiEditInventoryModal :selected-items="checkedItems" :events="selectedEvents" v-if="showMultiEditModal" @closed="closeMultiEditModal" />
+
 
     </InventoryHeader>
 
@@ -153,25 +162,29 @@ const props = defineProps({
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);
 const windowHeight = ref(window.innerHeight);
-const userOverviewHeight = ref(600);
+const userOverviewHeight = ref((window.innerHeight / 2) + 50);
 const userOverview = ref(null);
 const shiftPlan = ref(null);
 const currentDayOnView = ref([]);
 const startY = ref(0);
 const startHeight = ref(0);
 const roomHeights = ref([]);
-const closedCrafts = ref([]);
 const multiEditMode = ref(false);
 const itemIsSelectedForMultiEdit = ref(false);
 const checkedItems = ref([]);
 const selectedEvents = ref([]);
 const showMultiEditModal = ref(false);
-
+const showDebug = ref(false);
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
     updateHeight();
     calculateAllRoomHeights();
 });
+
+const closeMultiEditModal = () => {
+    toggleMultiEditMode()
+    showMultiEditModal.value = false;
+}
 
 const toggleMultiEditMode = () => {
     multiEditMode.value = !multiEditMode.value;
@@ -194,6 +207,8 @@ const toggleMultiEditMode = () => {
                 })
             })
         })
+        checkedItems.value = [];
+        selectedEvents.value = [];
     }
 }
 
@@ -221,6 +236,8 @@ const openMultiEditModal = () => {
     if (!eventIsSelected) {
         return;
     }
+
+    // group selected Items by craft
 
     // open modal
     showMultiEditModal.value = true;
@@ -259,7 +276,7 @@ const resizing = (event) => {
     }
 
     if ((window.innerHeight - 160) - (startHeight.value + diff) < 160) {
-        userOverviewHeight.value = (window.innerHeight - 160) - 200;
+        userOverviewHeight.value = (window.innerHeight - 160) - 250;
         updateHeight()
         return;
     }
@@ -277,11 +294,11 @@ const updateHeight = () => {
     if(!showUserOverview){
         windowHeight.value = (window.innerHeight - 250);
     } else {
-        windowHeight.value = (window.innerHeight - 260) - userOverviewHeight.value;
+        windowHeight.value = (window.innerHeight - 270) - userOverviewHeight.value;
     }
 
     if (window.innerHeight - 160 < 400) {
-        userOverviewHeight.value = window.innerHeight - 300;
+        userOverviewHeight.value = window.innerHeight - 350;
     }
 
     // check if userOverviewHeight is not smaller than 100
@@ -333,7 +350,14 @@ watch(() => props.crafts, (newCrafts) => {
                 group.items.forEach((item) => {
                     if (item.checked) {
                         if(!checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
-                            checkedItems.value.push(item)
+                            const ItemToAdd  = {
+                                id: item.id,
+                                name: item.name,
+                                craft: craft.name,
+                                category: category.name,
+                                group: group.name
+                            }
+                            checkedItems.value.push(ItemToAdd)
                             itemIsSelectedForMultiEdit.value = true;
                         }
                     } else {

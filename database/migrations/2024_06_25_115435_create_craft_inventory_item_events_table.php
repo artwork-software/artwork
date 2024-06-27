@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->integer('quantity');
             $table->string('comment')->nullable();
-            $table->date('date');
+            $table->dateTime('start')->nullable();
+            $table->dateTime('end')->nullable();
+            $table->boolean('is_all_day')->default(false);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });

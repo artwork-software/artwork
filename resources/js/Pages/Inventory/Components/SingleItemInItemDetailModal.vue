@@ -1,22 +1,25 @@
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-3 px-4 py-2 bg-gray-100 rounded-lg group">
-        <div class="flex items-start gap-x-3">
+    <div class="grid grid-cols-1 md:grid-cols-3 rounded-lg group">
+        <div class="flex items-start justify-between gap-x-3 rounded-l-lg px-3 py-2" :style="{
+            backgroundColor: backgroundColorWithOpacity(event.eventInfo.event_type.hex_code, 40),
+            color: textColorWithDarken(event.eventInfo.event_type.hex_code, 60)
+            }">
             <div class="text-sm">
                 <div>
                     {{ event.eventInfo.name ?? event.eventInfo.project_name }}
                 </div>
-                <div class="xxsLight">
+                <div class="text-gray-500 text-xs">
                     {{ $t('Project') }}: {{ event.eventInfo.project_name ?? $t('No Project') }}
                 </div>
             </div>
-            <span class="rounded-full text-[9px] bg-gray-200 px-2">
+            <span class="rounded-full text-[9px] bg-gray-100 px-2">
                 {{ event.quantity }}
-                <span v-if="item.count < event.quantity" class="text-red-500">
-                    / {{ event.quantity - item.count }}
+                <span v-if="event.overbooked > 0" class="text-red-500">
+                    / {{ event.overbooked }}
                 </span>
             </span>
         </div>
-        <div class="flex items-center">
+        <div class="flex items-center bg-gray-100 pl-2">
             <div class="flex items-center gap-x-2">
                 <img :src="event.user.profile_photo_url" class="h-8 w-8 object-cover rounded-full">
                 <div class="xsLight">
@@ -24,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2 ">
+        <div class="flex items-center justify-end gap-x-2 bg-gray-100 rounded-r-lg px-3">
             <IconEditCircle class="h-5 w-5 text-blue-500 hidden group-hover:block cursor-pointer" @click="showAssignedItemToEventModal = true" />
             <IconCircleX @click="removeEvent" class="h-5 w-5 text-red-500 hidden group-hover:block cursor-pointer" />
         </div>
@@ -85,6 +88,15 @@ const deleteEvent = () => {
             showDeleteModal.value = false;
         },
     });
+}
+
+const backgroundColorWithOpacity = (color, percent = 15) => {
+    if (!color) return `rgb(255, 255, 255, ${percent}%)`;
+    return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent}%)`;
+}
+const textColorWithDarken = (color, percent = 75) => {
+    if (!color) return 'rgb(180, 180, 180)';
+    return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
 }
 
 </script>

@@ -12,8 +12,8 @@
                         </div>
                         <div class="rounded-full text-[9px] bg-gray-100/20 px-2 ">
                             {{ event.quantity }}
-                            <span v-if="item.count < event.quantity" class="text-red-300">
-                                / {{ event.quantity - item.count }}
+                            <span v-if="event.overbooked > 0" class="text-red-300">
+                                / {{ event.overbooked }}
                             </span>
                         </div>
                     </div>

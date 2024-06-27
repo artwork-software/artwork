@@ -2,11 +2,22 @@
 
 namespace Artwork\Modules\InventoryManagement\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $craft_inventory_item_id
+ * @property int $event_id
+ * @property int $quantity
+ * @property string $comment
+ * @property \Carbon\Carbon $start
+ * @property \Carbon\Carbon $end
+ * @property bool $is_all_day
+ * @property int $user_id
+ */
 class CraftInventoryItemEvent extends Model
 {
     use HasFactory;
@@ -16,8 +27,16 @@ class CraftInventoryItemEvent extends Model
         'event_id',
         'quantity',
         'comment',
-        'date',
+        'start',
+        'end',
+        'is_all_day',
         'user_id',
+    ];
+
+    protected $casts = [
+        'start' => 'datetime',
+        'end' => 'datetime',
+        'is_all_day' => 'boolean',
     ];
 
 

@@ -11,23 +11,22 @@
                         :key="column.id"
                         @mouseover="showMenu = column.id"
                         @mouseout="showMenu = null"
-                        :class="getColumnCls(index, column)">
+                        :class="getColumnCls(index, column) + ' bg-secondary'">
                         <div class="w-full h-full flex flex-row items-center relative">
                             <div class="flex flex-row w-full h-full py-2 text-left items-center cursor-pointer">
                                 <div
-                                    class="w-full indent-3 overflow-hidden overflow-ellipsis whitespace-nowrap"
+                                    class="w-[99%] px-2 overflow-hidden overflow-ellipsis whitespace-nowrap"
                                     @click="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
                                 <div
-                                    :class="[column.clicked ? '' : 'hidden', getColumnBackgroundCls(column) + ' flex flex-row items-center px-1 top-[4px] text-white gap-x-2 w-full z-50 absolute']">
+                                    :class="[column.clicked ? '' : 'hidden', ' bg-secondary flex flex-row items-center px-1 top-[4px] text-white gap-x-2 w-full z-50 absolute']">
                                     <input
                                         type="text"
                                         :ref="(element) => createDynamicColumnNameInputRef(element, column.id)"
                                         class="w-full p-1 pl-2 border-0 text-xs text-black"
                                         v-model="column.newValue"
-                                        @focusout="applyColumnValueChange(column)"
-                                        @keyup.enter="applyColumnValueChange(column)">
+                                        @focusout="applyColumnValueChange(column)">
                                 </div>
                             </div>
                             <Menu v-show="showMenu === column.id && !column.showColorMenu" as="div"
@@ -96,7 +95,7 @@
                                 <ListboxOptions :static="column.showColorMenu"
                                                 class="absolute -translate-x-[107%] translate-y-[8px] z-40 flex flex-col gap-2 p-2  shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
                                     <ListboxOption as="template"
-                                                   v-for="(color) in ['bg-secondary', 'bg-blue-500', 'bg-red-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-cyan-500', 'bg-orange-500']"
+                                                   v-for="(color) in columnBgColors"
                                                    :key="color"
                                                    :value="color"
                                                    v-slot="{ active, selected }">
@@ -176,9 +175,20 @@ import InventoryTopBar from "@/Pages/Inventory/InventoryManagement/InventoryTopB
 const props = defineProps({
         columns: Array,
         crafts: Array,
-        craftFilters: Array,
-        colors: Array
+        craftFilters: Array
     }),
+    columnBgColors = [
+        'whiteColumn',
+        'darkBlueColumn',
+        'darkGreenColumn',
+        'darkLightBlueColumn',
+        'lightBlueNew',
+        'greenColumn',
+        'lightGreenColumn',
+        'orangeColumn',
+        'redColumn',
+        'pinkColumn'
+    ],
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
     searchValue = ref(''),
@@ -215,22 +225,16 @@ const props = defineProps({
         });
     },
     getColumnCls = (index, column) => {
-        return [
-            getColumnWidthCls(index, column),
-            getColumnBackgroundCls(column)
-        ].join(' ');
+        return getColumnWidthCls(index, column);
     },
     getColumnWidthCls = (index, column) => {
         return index === 0 ? 'w-[0.75%] min-w-[0.75%]' :
-            index === 1 ? 'w-[0.25%] min-w-[0.25%]' :
+            index === 1 ? 'w-[5%] min-w-[5%]' :
             index === 2 ? 'w-auto' :
             isTextColumn(column) ? 'w-[15%] min-w-[15%]' :
-            isDateColumn(column) ? 'w-[7.5%] min-w-[7.5%]' :
+            isDateColumn(column) ? 'w-[9%] min-w-[9%]' :
             isSelectColumn(column) ? 'w-[10%] min-w-[10%]' :
-            isCheckboxColumn(column) ? 'w-[1%] min-w-[1%]' : '';
-    },
-    getColumnBackgroundCls = (column) => {
-        return column.background_color !== '' ? column.background_color : 'bg-secondary';
+            isCheckboxColumn(column) ? 'w-[5%] min-w-[5%]' : '';
     },
     openEditColumnSelectOptionsModal = (column) => {
         selectOptionsColumnToEdit.value = column;
@@ -382,4 +386,50 @@ const props = defineProps({
         return props.crafts;
     });
 </script>
+
+<style scoped>
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.darkBlueColumn {
+    background-color: #21485C;
+}
+
+.darkGreenColumn {
+    background-color: #4D908E;
+}
+
+.darkLightBlueColumn {
+    background-color: #168FC3;
+}
+
+.lightBlueNew {
+    background-color: #3DC3CB;
+}
+
+.greenColumn {
+    background-color: #2EAA63;
+}
+
+.lightGreenColumn {
+    background-color: #86C554;
+}
+
+.yellowColumn {
+    background-color: #F1B640;
+}
+
+.orangeColumn {
+    background-color: #EB7A3D;
+}
+
+.redColumn {
+    background-color: #DA3F87;
+}
+
+.pinkColumn {
+    background-color: #641A54;
+}
+</style>
 

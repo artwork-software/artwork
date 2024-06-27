@@ -41,12 +41,12 @@ readonly class CraftInventoryItemCellService
     /**
      * @throws Throwable
      */
-    public function updateCellValue(string $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
+    public function updateCellValue(string|null $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
     {
         $this->craftInventoryItemCellRepository->updateOrFail(
             $craftInventoryItemCell,
             [
-                'cell_value' => $cellValue
+                'cell_value' => ($cellValue ?? '')
             ]
         );
     }

@@ -4,7 +4,13 @@
               :class="getCellValueCls()"
               @click="toggleCellEdit()">
             <template v-if="isTextColumn() || isSelectColumn()">
-                {{ cell.cell_value }}
+                <span v-if="isTextColumn()"
+                      :title="cell.cell_value">
+                    {{ cell.cell_value }}
+                </span>
+                <template v-else>
+                    {{ cell.cell_value }}
+                </template>
             </template>
             <template v-else-if="isDateColumn()">
                 {{ formatDate(cell.cell_value) }}
@@ -35,16 +41,16 @@
                    type="date"
                    class="w-full text-xs px-1 flex"
                    v-model="cellValue"
-                   @focusout="applyCellValueChange()"/>
+                   @change="applyCellValueChange()"/>
         </div>
         <!-- Checkbox -->
         <div v-else-if="isCheckboxColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="checkbox"
-                   class="w-5 h-5 text-xs px-1 flex"
+                   class="w-5 h-5 mx-auto text-xs px-1 flex"
                    v-model="cellValue"
-                   @focusout="applyCellValueChange()"/>
+                   @change="applyCellValueChange()"/>
         </div>
         <!-- Auswahlbox -->
         <div v-else-if="isSelectColumn() && cellClicked"
@@ -71,7 +77,7 @@ const emits = defineEmits(['isEditingCellValue']),
         cell: {
             type: Object,
             required: true
-        },
+        }
     }),
     cellValueInputRef = ref(null),
     cellValue = ref(props.cell.cell_value),
@@ -83,8 +89,8 @@ const emits = defineEmits(['isEditingCellValue']),
         ].join(' ');
     },
     getBackgroundCls = () => {
-        return props.cell.column.background_color !== 'bg-secondary' ?
-            props.cell.column.background_color :
+        return props.cell.column.background_color !== 'whiteColumn' ?
+            props.cell.column.background_color:
             '';
     },
     getInputCls = () => {
@@ -163,3 +169,49 @@ const emits = defineEmits(['isEditingCellValue']),
         );
     };
 </script>
+
+<style scoped>
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.darkBlueColumn {
+    background-color: #D3DADE;
+}
+
+.darkGreenColumn {
+    background-color: #DBE9E8;
+}
+
+.darkLightBlueColumn {
+    background-color: #D2E9F3;
+}
+
+.lightBlueNew {
+    background-color: #DAF3F6;
+}
+
+.greenColumn {
+    background-color: #D7EEE0;
+}
+
+.lightGreenColumn {
+    background-color: #E7F3DE;
+}
+
+.yellowColumn {
+    background-color: #FCF0DB;
+}
+
+.orangeColumn {
+    background-color: #FBE4DA;
+}
+
+.redColumn {
+    background-color: #F7D9E7;
+}
+
+.pinkColumn {
+    background-color: #E1D1DC;
+}
+</style>

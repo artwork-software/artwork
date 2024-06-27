@@ -39,8 +39,14 @@
                     <div class="w-full flex flex-col items-center text-xs">
                         <div v-for="(option, index) in newColumnForm.typeOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
                             <span class="text-primary underline">Auswahlmöglichkeit {{ (index + 1) }}:</span>
-                            <div class="flex flex-row justify-between">
-                                <span class="w-[90%] break-words">{{ option }}</span>
+                            <div class="flex flex-row justify-between items-center">
+                                <span class="w-3/4 break-words">{{ option }}</span>
+                                <input :id="'radio-option-' + index"
+                                       name="default-option"
+                                       v-model="newColumnForm.defaultOption"
+                                       :value="option"
+                                       type="radio"/>
+                                <label :for="'radio-option-' + index">{{ $t('Standardwert') }}</label>
                                 <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
                                            @click="removeNewColumnNewSelectOption(index)"/>
                             </div>
@@ -95,7 +101,8 @@ const emits = defineEmits(['closed']),
     newColumnForm = useForm({
         name: null,
         type: null,
-        typeOptions: []
+        typeOptions: [],
+        defaultOption: null
     }),
     showNewColumnFormNameError = ref(false),
     showNewColumnFormTypeOptionsError = ref(false),

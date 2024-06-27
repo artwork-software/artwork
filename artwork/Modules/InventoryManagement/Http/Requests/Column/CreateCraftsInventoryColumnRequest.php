@@ -22,7 +22,8 @@ class CreateCraftsInventoryColumnRequest extends FormRequest
                 'array',
                 'min:1'
             ],
-            'selectOptions.*' => 'required|string'
+            'selectOptions.*' => 'required|string',
+            'defaultOption' => 'nullable|string'
         ];
     }
 }

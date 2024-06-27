@@ -35,7 +35,8 @@ readonly class CraftsInventoryColumnService
         string $name,
         CraftsInventoryColumnTypeEnum $type,
         array $typeOptions = [],
-        string $background_color = ''
+        string $background_color = '',
+        string|null $defaultOption = null
     ): CraftsInventoryColumn {
         $craftsInventoryColumn = $this->getNewCraftsInventoryColumn([
             'name' => $name,
@@ -46,7 +47,10 @@ readonly class CraftsInventoryColumnService
         $this->craftsInventoryColumnRepository->saveOrFail($craftsInventoryColumn);
 
         try {
-            $this->craftInventoryItemService->createCellsInItemsForColumn($craftsInventoryColumn);
+            $this->craftInventoryItemService->createCellsInItemsForColumn(
+                $craftsInventoryColumn,
+                $defaultOption ?? ''
+            );
         } catch (Throwable $t) {
             //if any cell could not be created revert the newly created cell and throw to controller
             //so no column is created if not also all cells are created
@@ -124,7 +128,7 @@ readonly class CraftsInventoryColumnService
         $this->craftsInventoryColumnRepository->getAllItemCells($craftsInventoryColumn)->each(
             function (CraftInventoryItemCell $craftInventoryItemCell) use ($removedTypeOptions): void {
                 if (in_array($craftInventoryItemCell->cell_value, $removedTypeOptions)) {
-                    $this->craftInventoryItemCellService->updateCellValue('', $craftInventoryItemCell);
+                    $this->craftInventoryItemCellService->updateCellValue(null, $craftInventoryItemCell);
                     $craftInventoryItemCell->cell_value = '';
                     $craftInventoryItemCell->save();
                 }

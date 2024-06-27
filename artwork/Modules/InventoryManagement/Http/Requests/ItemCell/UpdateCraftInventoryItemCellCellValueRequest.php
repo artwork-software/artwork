@@ -12,7 +12,7 @@ class UpdateCraftInventoryItemCellCellValueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cell_value' => 'required|string'
+            'cell_value' => 'nullable|string'
         ];
     }
 }

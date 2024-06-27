@@ -53,16 +53,19 @@ readonly class CraftInventoryItemService
     /**
      * @throws Throwable
      */
-    public function createCellsInItemsForColumn(CraftsInventoryColumn $craftsInventoryColumn): void
-    {
+    public function createCellsInItemsForColumn(
+        CraftsInventoryColumn $craftsInventoryColumn,
+        string $cellValue = ''
+    ): void {
         $this->craftInventoryItemRepository->getAll()->each(
             /**
              * @throws Throwable
              */
-            function (CraftInventoryItem $craftInventoryItem) use ($craftsInventoryColumn): void {
+            function (CraftInventoryItem $craftInventoryItem) use ($cellValue, $craftsInventoryColumn): void {
                 $this->craftInventoryItemCellService->create(
                     $craftsInventoryColumn->id,
-                    $craftInventoryItem->id
+                    $craftInventoryItem->id,
+                    $cellValue
                 );
             }
         );

@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import InventoryCell from "@/Pages/Inventory/InventoryItemCell.vue";
+import InventoryCell from "@/Pages/Inventory/InventoryManagement/InventoryItemCell.vue";
 import {computed, ref} from "vue";
 import {IconTrashXFilled} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";

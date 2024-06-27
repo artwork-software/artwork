@@ -66,11 +66,11 @@
 
 <script setup>
 
-import InventoryItem from "@/Pages/Inventory/InventoryItem.vue";
+import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
 import {IconCheck, IconChevronDown, IconChevronUp, IconTrashXFilled, IconX} from "@tabler/icons-vue";
-import AddNewItem from "@/Pages/Inventory/AddNewItem.vue";
-import DropItem from "@/Pages/Inventory/DropItem.vue";
+import AddNewItem from "@/Pages/Inventory/InventoryManagement/AddNewItem.vue";
+import DropItem from "@/Pages/Inventory/InventoryManagement/DropItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 

@@ -73,12 +73,12 @@
 </template>
 
 <script setup>
-import InventoryGroup from "@/Pages/Inventory/InventoryGroup.vue";
+import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup.vue";
 import {IconCheck, IconChevronDown, IconChevronUp, IconX, IconTrashXFilled} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import AddNewGroup from "@/Pages/Inventory/AddNewGroup.vue";
-import DropGroup from "@/Pages/Inventory/DropGroup.vue";
+import AddNewGroup from "@/Pages/Inventory/InventoryManagement/AddNewGroup.vue";
+import DropGroup from "@/Pages/Inventory/InventoryManagement/DropGroup.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 

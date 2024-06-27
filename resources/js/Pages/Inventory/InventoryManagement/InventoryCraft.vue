@@ -56,12 +56,12 @@
 </template>
 
 <script setup>
-import InventoryCategory from "@/Pages/Inventory/InventoryCategory.vue";
+import InventoryCategory from "@/Pages/Inventory/InventoryManagement/InventoryCategory.vue";
 import {IconCirclePlus, IconChevronDown, IconChevronUp, IconLink} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
-import AddNewCategory from "@/Pages/Inventory/AddNewCategory.vue";
-import DropCategory from "@/Pages/Inventory/DropCategory.vue";
-import AddCategoryOrGroupModal from "@/Pages/Inventory/AddCategoryOrGroupModal.vue";
+import AddNewCategory from "@/Pages/Inventory/InventoryManagement/AddNewCategory.vue";
+import DropCategory from "@/Pages/Inventory/InventoryManagement/DropCategory.vue";
+import AddCategoryOrGroupModal from "@/Pages/Inventory/InventoryManagement/AddCategoryOrGroupModal.vue";
 import {router} from "@inertiajs/vue3";
 
 const props = defineProps({

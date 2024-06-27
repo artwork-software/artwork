@@ -209,15 +209,15 @@ import {
 import {router, usePage} from "@inertiajs/vue3";
 import {PlusIcon, CheckIcon} from "@heroicons/vue/solid";
 import {computed, ref} from "vue";
-import InventoryCraft from "@/Pages/Inventory/InventoryCraft.vue";
+import InventoryCraft from "@/Pages/Inventory/InventoryManagement/InventoryCraft.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import AddColumnModal from "@/Pages/Inventory/AddColumnModal.vue";
+import AddColumnModal from "@/Pages/Inventory/InventoryManagement/AddColumnModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import EditColumnSelectOptionsModal from "@/Pages/Inventory/EditColumnSelectOptionsModal.vue";
+import EditColumnSelectOptionsModal from "@/Pages/Inventory/InventoryManagement/EditColumnSelectOptionsModal.vue";
 
 const props = defineProps({
         columns: Array,
@@ -268,8 +268,8 @@ const props = defineProps({
         ].join(' ');
     },
     getColumnWidthCls = (index, column) => {
-        return (index === 0 || (index > 2 && isTextColumn(column))) ? 'w-[10%] max-w-[10%]' :
-            (index === 1 || (index > 2 && isDateColumn(column))) ? 'w-[9%] max-w-[9%]' :
+        return (index === 0 || (index > 2 && isTextColumn(column))) ? 'w-[5%] max-w-[5%]' :
+            (index === 1 || (index > 2 && isDateColumn(column))) ? 'w-[1%] max-w-[1%]' :
                 index === 2 ? 'w-[15%] max-w-[15%]' :
                     isCheckboxColumn(column) ? 'w-[2%] max-w-[2%]' : 'w-[7.5%] max-w-[7.5%]'
 

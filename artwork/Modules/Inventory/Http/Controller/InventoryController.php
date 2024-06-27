@@ -23,7 +23,7 @@ class InventoryController extends Controller
     public function inventory(): Response
     {
         return Inertia::render(
-            'Inventory/Inventory',
+            'Inventory/InventoryManagement/Inventory',
             [
                 'columns' => $this->craftsInventoryColumnService->getAllOrdered(),
                 'crafts' => $this->craftService->getAllWithInventoryCategoriesRelations(),

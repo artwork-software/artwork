@@ -37,7 +37,7 @@ class CalendarShowEventResource extends JsonResource
         $start = $this->start_time->utc()->toIso8601String();
         $startTime = $this->start_time;
         $end = $this->end_time->utc()->toIso8601String();
-        $title = $project?->name ?: $this->eventName ?: $this->getEventType()?->name;
+        $title = $project?->name ?: $this->eventName ?: $eventType?->name;
         $alwaysEventName = $this->eventName;
         $eventName = $this->eventName;
         $description = $this->description;

@@ -12,7 +12,7 @@ readonly class CraftsInventoryColumnRepository extends BaseRepository
     {
         return CraftsInventoryColumn::query()
             ->orderBy($orderBy, $orderByDirection)
-            ->get();
+            ->get(['id', 'name', 'type', 'type_options', 'background_color']);
     }
 
     public function find(int $id): CraftsInventoryColumn

@@ -30,7 +30,7 @@
                     @click="toggleSearch()"/>
         <IconX v-else
                class="h-7 w-7 cursor-pointer hover:text-blue-500"
-               @click="toggleSearch()"/>
+               @click="toggleSearch(true)"/>
         <IconFileExport class="h-7 w-7 cursor-pointer text-artwork-buttons-context" aria-hidden="true"
                         @click="openSelectExportTypeModal()"/>
         <button type="button"
@@ -74,7 +74,11 @@ const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
     showAddColumnModal = ref(false),
     showSelectExportTypeModal = ref(false),
     searchValue = ref(''),
-    toggleSearch = () => {
+    toggleSearch = (close = false) => {
+        if (close) {
+            searchValue.value = '';
+            emits.call(this, 'updatesSearchValue', '');
+        }
         searchOpened.value = !searchOpened.value;
     },
     openAddColumnModal = () => {

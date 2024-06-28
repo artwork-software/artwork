@@ -30,7 +30,7 @@ class CraftInventoryGroup extends Model
             'craft_inventory_category_id',
             'id',
             'craft_inventory_categories'
-        );
+        )->select(['id', 'craft_id', 'name', 'order']);
     }
 
     public function items(): HasMany
@@ -39,6 +39,8 @@ class CraftInventoryGroup extends Model
             CraftInventoryItem::class,
             'craft_inventory_group_id',
             'id'
-        )->orderBy('order');
+        )
+            ->orderBy('order')
+            ->select(['id', 'craft_inventory_group_id', 'order']);
     }
 }

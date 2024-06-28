@@ -64,7 +64,16 @@ const emits = defineEmits(['closed']),
                 route('inventory-management.inventory.export.pdf') :
                 route('inventory-management.inventory.export.xlsx'),
             {
-                data: props.craftsToExport
+                data: props.craftsToExport.map(
+                    (craft) => {
+                        return {
+                            craftId: craft.id,
+                            craftName: craft.name,
+                            abbreviation: craft.abbreviation,
+                            filteredInventoryCategories: craft.filtered_inventory_categories
+                        }
+                    }
+                )
             },
             {
                 onSuccess: () => emits.call(this, 'closed')

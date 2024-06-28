@@ -27,7 +27,7 @@ class CraftInventoryItemCell extends Model
             'craft_inventory_item_id',
             'id',
             'craft_inventory_items'
-        );
+        )->select(['id', 'craft_inventory_group_id', 'order']);
     }
 
     public function column(): BelongsTo
@@ -37,6 +37,6 @@ class CraftInventoryItemCell extends Model
             'crafts_inventory_column_id',
             'id',
             'crafts_inventory_columns'
-        );
+        )->select(['id', 'name', 'type', 'type_options', 'background_color']);
     }
 }

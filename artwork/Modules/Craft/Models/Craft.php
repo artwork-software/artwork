@@ -62,6 +62,8 @@ class Craft extends Model
             CraftInventoryCategory::class,
             'craft_id',
             'id'
-        )->orderBy('order');
+        )
+            ->orderBy('order')
+            ->select(['id', 'craft_id', 'name', 'order']);
     }
 }

@@ -35,6 +35,6 @@ class CraftsInventoryColumn extends Model
             CraftInventoryItemCell::class,
             'crafts_inventory_column_id',
             'id'
-        );
+        )->select(['id', 'crafts_inventory_column_id', 'craft_inventory_item_id', 'cell_value']);
     }
 }

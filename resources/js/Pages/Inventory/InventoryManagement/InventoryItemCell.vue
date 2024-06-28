@@ -148,7 +148,6 @@ const emits = defineEmits(['isEditingCellValue']),
         }
     },
     applyCellValueChange = () => {
-        console.debug('called');
         //compare as strings in case of checkbox which are preserved as string in database
         if (props.cell.cell_value.toString() === cellValue.value.toString()) {
             toggleCellEdit();

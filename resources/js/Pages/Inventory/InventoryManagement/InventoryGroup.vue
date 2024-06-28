@@ -48,7 +48,9 @@
               :colspan="colspan"
               :destination-index="0"
               @item-requests-drag-move="moveItemToDestination"/>
-    <template v-if="groupShown" v-for="(item, index) in group.items">
+    <template v-if="groupShown"
+              v-for="(item, index) in group.items"
+              :key="item.id">
         <InventoryItem :index="index"
                        :item="item"
                        :colspan="colspan"

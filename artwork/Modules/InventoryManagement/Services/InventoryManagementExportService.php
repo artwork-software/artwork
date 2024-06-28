@@ -9,11 +9,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class InventoryManagementExportService
+readonly class InventoryManagementExportService
 {
-
-    public function __construct(private readonly CacheManager $cacheManager)
-    {
+    public function __construct(
+        private CacheManager $cacheManager,
+        private CraftsInventoryColumnService $craftsInventoryColumnService
+    ) {
     }
 
     /**
@@ -23,11 +24,15 @@ class InventoryManagementExportService
     {
         $token = Str::random(128);
 
-        $this->cacheManager->set($token, $data, 20);
+        //cache forgets the item after 10 seconds, time enough to download
+        $this->cacheManager->set($token, $data, 10);
 
         return $token;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getCachedRequestData(string $token): Collection
     {
         $data = $this->cacheManager->get($token);
@@ -45,8 +50,14 @@ class InventoryManagementExportService
         );
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function createXlsxExport(string $token): InventoryManagementXlsxExport
     {
-        return new InventoryManagementXlsxExport($this->getCachedRequestData($token));
+        return new InventoryManagementXlsxExport(
+            $this->craftsInventoryColumnService->getAllOrdered(),
+            $this->getCachedRequestData($token)
+        );
     }
 }

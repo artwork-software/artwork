@@ -39,8 +39,13 @@ import {ref} from "vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconFileExport} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
+import {usePage} from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n(),
+    $t = t;
 
 const emits = defineEmits(['closed']),
+    page = usePage(),
     props = defineProps({
         show: {
             type: Boolean,
@@ -85,7 +90,7 @@ const emits = defineEmits(['closed']),
                     }
                 )
             );
-        });
+        }).catch(() => page.props.flash.error = $t('Export konnte nicht erzeugt werden. Bitte erneut versuchen.'));
 
         emits.call(this, 'closed');
     }

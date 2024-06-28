@@ -14,13 +14,21 @@ class InventoryManagementXlsxExport implements FromView, ShouldAutoSize, WithSty
 {
     use Exportable;
 
-    public function __construct(private readonly Collection|array $data)
-    {
+    public function __construct(
+        private readonly Collection $columns,
+        private readonly Collection $crafts
+    ) {
     }
 
     public function view(): View
     {
-        return view('exports.inventoryManagementXlsx', ['data' => $this->data]);
+        return view(
+            'exports.inventoryManagementXlsx',
+            [
+                'columns' => $this->columns,
+                'crafts' => $this->crafts
+            ]
+        );
     }
 
     /**

@@ -8,7 +8,8 @@
         @mouseover="handleItemMouseover()"
         @mouseout="handleItemMouseout()"
         :class="'cursor-grab h-10 ' + trCls">
-        <template v-for="(cell) in item.cells">
+        <template v-for="(cell) in item.cells"
+                  :key="cell.id">
             <InventoryCell :cell="cell"
                            @is-editing-cell-value="handleCellIsEditing"/>
         </template>

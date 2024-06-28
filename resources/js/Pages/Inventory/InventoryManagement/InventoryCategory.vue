@@ -51,7 +51,9 @@
     <tr>
         <td :colspan="colspan" class="h-0.5"/>
     </tr>
-    <template v-if="categoryShown" v-for="(group, index) in category.groups">
+    <template v-if="categoryShown"
+              v-for="(group, index) in category.groups"
+              :key="group.id">
         <InventoryGroup :index="index"
                         :group="group"
                         :colspan="colspan"
@@ -116,6 +118,7 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         }
     },
     applyCategoryValueChange = () => {
+        console.debug(props.category.name === categoryValue.value);
         if (props.category.name === categoryValue.value) {
             toggleCategoryEdit();
             return;

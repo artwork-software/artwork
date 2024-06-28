@@ -1346,8 +1346,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
 
-
-
         Route::group(['prefix' => 'inventory'], function (): void {
             Route::group(['prefix' => 'export'], function (): void {
                 Route::post(

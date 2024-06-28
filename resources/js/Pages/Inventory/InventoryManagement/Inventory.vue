@@ -117,7 +117,8 @@
                 </tr>
                 </thead>
                 <tbody>
-                <template v-for="(craft, index) in filteredCrafts">
+                <template v-for="(craft, index) in filteredCrafts"
+                          :key="craft.id">
                     <tr v-if="index === 0">
                         <td :colspan="getColSpan()" class="h-5"/>
                     </tr>
@@ -334,16 +335,18 @@ const props = defineProps({
         );
     },
     filteredCrafts = computed(() => {
+        let crafts = JSON.parse(JSON.stringify(props.crafts));
+
         if (searchValue.value.length === 0) {
-            props.crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
-            return props.crafts.filter(
+            crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
+            return crafts.filter(
                 (craft) => {
                     return props.craftFilters.length === 0 || props.craftFilters.includes(craft.id);
                 }
             );
         }
 
-        props.crafts.forEach((craft) => {
+        crafts.forEach((craft) => {
             if (props.craftFilters.length > 0 && !props.craftFilters.includes(craft.id) ) {
                 return;
             }
@@ -382,7 +385,7 @@ const props = defineProps({
             craft.filtered_inventory_categories = filteredCategories;
         });
 
-        return props.crafts;
+        return crafts;
     });
 </script>
 

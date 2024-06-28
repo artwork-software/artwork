@@ -351,7 +351,6 @@ const props = defineProps({
         //@todo: move logic to own class / composeable
         let crafts = JSON.parse(JSON.stringify(props.crafts));
 
-        //no search, just filter for crafts
         if (searchValue.value.length === 0) {
             crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
             return crafts.filter(
@@ -361,7 +360,6 @@ const props = defineProps({
             );
         }
 
-        //search and craft filters
         crafts.forEach((craft) => {
             if (props.craftFilters.length > 0 && !props.craftFilters.includes(craft.id) ) {
                 //fully ignore crafts which are not included in filter

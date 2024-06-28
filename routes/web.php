@@ -1351,13 +1351,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'inventory'], function (): void {
             Route::group(['prefix' => 'export'], function (): void {
                 Route::post(
-                    '/xlsx',
-                    [InventoryManagementExportController::class, 'xlsx']
-                )->name('inventory-management.inventory.export.xlsx');
-                Route::post(
-                    '/pdf',
-                    [InventoryManagementExportController::class, 'pdf']
-                )->name('inventory-management.inventory.export.pdf');
+                    '/cache-export-data',
+                    [InventoryManagementExportController::class, 'cacheExportData']
+                )->name('inventory-management.inventory.export.cacheExportData');
+                Route::get(
+                    '/create/xlsx/{cacheToken}',
+                    [InventoryManagementExportController::class, 'downloadXlsx']
+                )->name('inventory-management.inventory.export.download-xlsx');
+                Route::get(
+                    '/create/pdf/{cacheToken}',
+                    [InventoryManagementExportController::class, 'downloadPdf']
+                )->name('inventory-management.inventory.export.download-pdf');
             });
             Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
                 ->name('inventory-management.inventory.filter.update');

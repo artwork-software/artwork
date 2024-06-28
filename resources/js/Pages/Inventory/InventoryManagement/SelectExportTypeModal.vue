@@ -39,7 +39,6 @@ import {ref} from "vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconFileExport} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {router} from "@inertiajs/vue3";
 
 const emits = defineEmits(['closed']),
     props = defineProps({
@@ -58,11 +57,9 @@ const emits = defineEmits(['closed']),
             emits.call(this, 'closed');
             return;
         }
-        console.debug('close', closedOnPurpose);
-        router.post(
-            type.value === 'pdf' ?
-                route('inventory-management.inventory.export.pdf') :
-                route('inventory-management.inventory.export.xlsx'),
+
+        axios.post(
+            route('inventory-management.inventory.export.cacheExportData'),
             {
                 data: props.craftsToExport.map(
                     (craft) => {
@@ -74,10 +71,22 @@ const emits = defineEmits(['closed']),
                         }
                     }
                 )
-            },
-            {
-                onSuccess: () => emits.call(this, 'closed')
             }
-        );
+        ).then((response) => {
+            window.open(
+                route(
+                    (
+                        type.value === 'pdf' ?
+                            'inventory-management.inventory.export.download-pdf' :
+                            'inventory-management.inventory.export.download-xlsx'
+                    ),
+                    {
+                        cacheToken: response.data
+                    }
+                )
+            );
+        });
+
+        emits.call(this, 'closed');
     }
 </script>

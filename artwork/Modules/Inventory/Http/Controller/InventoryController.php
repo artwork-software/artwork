@@ -5,14 +5,12 @@ namespace Artwork\Modules\Inventory\Http\Controller;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
@@ -23,7 +21,6 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -219,8 +216,7 @@ class InventoryController extends Controller
 
 
     /**
-     * Berechnet die Überbuchung eines CraftInventoryItems für
-     * alle Events und gibt die fehlende Menge für jedes Event zurück.
+     * Berechnet die Überbuchung eines CraftInventoryItems für alle Events und gibt die fehlende Menge für jedes Event zurück.
      *
      * @param CraftInventoryItem $item
      * @return array<int, int>
@@ -250,6 +246,7 @@ class InventoryController extends Controller
             $availableQuantity = $initialQuantity;
 
             foreach ($dayEvents as $itemEvent) {
+                // Überprüfen, ob das Event den ganzen Tag dauert oder ob es Überschneidungen gibt
                 if (
                     $itemEvent->is_all_day ||
                     $dayEvents->firstWhere(function ($otherEvent) use ($itemEvent) {
@@ -276,9 +273,24 @@ class InventoryController extends Controller
             }
         }
 
+        // Spezielle Behandlung für jeden Tag
+        foreach ($eventsByDay as $day => $dayEvents) {
+            $availableQuantity = $initialQuantity;
+
+            foreach ($dayEvents as $itemEvent) {
+                if ($availableQuantity >= $itemEvent->quantity) {
+                    $overbookedQuantities[$itemEvent->id] = 0;
+                    $availableQuantity -= $itemEvent->quantity;
+                } else {
+                    $missingQuantity = $itemEvent->quantity - $availableQuantity;
+                    $overbookedQuantities[$itemEvent->id] = $missingQuantity;
+                    $availableQuantity = 0;
+                }
+            }
+        }
+
         return $overbookedQuantities;
     }
-
 
     public function dropItemToEvent(
         Request $request,

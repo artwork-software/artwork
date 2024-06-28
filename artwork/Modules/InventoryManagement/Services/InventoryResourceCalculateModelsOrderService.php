@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Collection;
 class InventoryResourceCalculateModelsOrderService
 {
     /**
-     * @param Collection $modelsToOrder
-     * @param int $order
-     * @param Model $movingModel
      * @return array<int, Model>
      */
     public function getReorderedModels(

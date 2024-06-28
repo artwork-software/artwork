@@ -64,7 +64,7 @@ const emits = defineEmits(['closed']),
         }
 
         axios.post(
-            route('inventory-management.inventory.export.cacheExportData'),
+            route('inventory-management.inventory.export.saveExportDataInCache'),
             {
                 data: props.craftsToExport.map(
                     (craft) => {

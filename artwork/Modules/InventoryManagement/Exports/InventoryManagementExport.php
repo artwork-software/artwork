@@ -9,13 +9,13 @@ use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class InventoryManagementExport implements FromView, WithStyles
+readonly class InventoryManagementExport implements FromView, WithStyles
 {
     use Exportable;
 
     public function __construct(
-        private readonly Collection $columns,
-        private readonly Collection $crafts
+        private Collection $columns,
+        private Collection $crafts
     ) {
     }
 

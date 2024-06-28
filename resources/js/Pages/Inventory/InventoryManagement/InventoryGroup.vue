@@ -34,12 +34,6 @@
                       @mouseout="handleGroupDeleteMouseout"
                       :class="[groupDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showGroupDeleteConfirmModal()"/>
-    <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
-                        :title="$t('Delete group?')"
-                        :button="$t('Yes')"
-                        :description="$t('Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.')"
-                        @delete="deleteGroup()"
-                        @closed="closeGroupDeleteConfirmModal()"/>
     <AddNewItem v-if="groupShown" @click="addNewItem()"/>
     <tr>
         <td></td>
@@ -62,10 +56,15 @@
                   :destination-index="(index + 1)"
                   @item-requests-drag-move="moveItemToDestination"/>
     </template>
+    <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
+                        :title="$t('Delete group?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.')"
+                        @delete="deleteGroup()"
+                        @closed="closeGroupDeleteConfirmModal()"/>
 </template>
 
 <script setup>
-
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
 import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";

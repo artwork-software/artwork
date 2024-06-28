@@ -19,13 +19,12 @@
                 {{ cell.cell_value === 'true' ? $t('Yes') : $t('No') }}
             </template>
         </span>
-        <div v-else-if="!hasCellValue() && isCheckboxColumn()"
+        <div v-else-if="isCheckboxColumn()"
              class="w-full text-center cursor-text"
              @click="toggleCellEdit()">
             {{ $t('No') }}
         </div>
         <div v-else class="w-full h-full cursor-text" @click="toggleCellEdit()"/>
-        <!-- Freitextfeld -->
         <div v-if="isTextColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"
@@ -34,7 +33,6 @@
                    v-model="cellValue"
                    @focusout="applyCellValueChange()"/>
         </div>
-        <!-- Datum -->
         <div v-else-if="isDateColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"
@@ -44,7 +42,6 @@
                    @change="applyCellValueChange()"
                    @focusout="applyCellValueChange()"/>
         </div>
-        <!-- Checkbox -->
         <div v-else-if="isCheckboxColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"
@@ -53,7 +50,6 @@
                    v-model="cellValue"
                    @focusout="applyCellValueChange()"/>
         </div>
-        <!-- Auswahlbox -->
         <div v-else-if="isSelectColumn() && cellClicked"
              :class="getInputCls()">
             <select ref="cellValueInputRef"

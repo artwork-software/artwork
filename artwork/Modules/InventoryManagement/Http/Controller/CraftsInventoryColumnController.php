@@ -129,6 +129,7 @@ class CraftsInventoryColumnController extends Controller
         UpdateCraftsInventoryColumnTypeOptionsRequest $request
     ): RedirectResponse {
         $selectOptions = $request->get('selectOptions');
+
         try {
             $this->craftsInventoryColumnService->updateTypeOptions($selectOptions, $craftsInventoryColumn);
         } catch (Throwable $t) {

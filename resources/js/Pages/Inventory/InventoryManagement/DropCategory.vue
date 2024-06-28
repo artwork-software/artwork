@@ -19,7 +19,7 @@
 import {IconDragDrop} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 
-const emits = defineEmits(['categroyRequestsDragMove']),
+const emits = defineEmits(['categoryRequestsDragMove']),
     props = defineProps({
         colspan: Number,
         destinationIndex: Number
@@ -38,7 +38,7 @@ const emits = defineEmits(['categroyRequestsDragMove']),
     categoryDrop = (e) => {
         emits.call(
             this,
-            'categroyRequestsDragMove',
+            'categoryRequestsDragMove',
             e.dataTransfer.getData('categoryId'),
             props.destinationIndex
         );

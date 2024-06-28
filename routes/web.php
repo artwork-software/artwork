@@ -1347,22 +1347,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.inventory');
 
         Route::group(['prefix' => 'inventory'], function (): void {
-            Route::group(['prefix' => 'export'], function (): void {
-                Route::post(
-                    '/cache-export-data',
-                    [InventoryManagementExportController::class, 'cacheExportData']
-                )->name('inventory-management.inventory.export.cacheExportData');
-                Route::get(
-                    '/create/xlsx/{cacheToken}',
-                    [InventoryManagementExportController::class, 'downloadXlsx']
-                )->name('inventory-management.inventory.export.download-xlsx');
-                Route::get(
-                    '/create/pdf/{cacheToken}',
-                    [InventoryManagementExportController::class, 'downloadPdf']
-                )->name('inventory-management.inventory.export.download-pdf');
-            });
-            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
-                ->name('inventory-management.inventory.filter.update');
             Route::group(['prefix' => 'column'], function (): void {
                 Route::post(
                     '/create',
@@ -1389,7 +1373,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftsInventoryColumnController::class, 'forceDelete']
                 )->name('inventory-management.inventory.column.delete');
             });
-
             Route::group(['prefix' => 'category'], function (): void {
                 Route::post(
                     '/create',
@@ -1408,7 +1391,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftInventoryCategoryController::class, 'forceDelete']
                 )->name('inventory-management.inventory.category.delete');
             });
-
             Route::group(['prefix' => 'group'], function (): void {
                 Route::post(
                     '/create',
@@ -1427,7 +1409,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftInventoryGroupController::class, 'forceDelete']
                 )->name('inventory-management.inventory.group.delete');
             });
-
             Route::group(['prefix' => 'item'], function (): void {
                 Route::post(
                     '/create',
@@ -1442,15 +1423,31 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftInventoryItemController::class, 'forceDelete']
                 )->name('inventory-management.inventory.item.delete');
             });
-
             Route::group(['prefix' => 'cells'], function (): void {
                 Route::patch(
                     '/{craftInventoryItemCell}/cell-value',
                     [CraftInventoryItemCellController::class, 'updateCellValue']
                 )->name('inventory-management.inventory.item-cell.update.cell-value');
             });
+            Route::group(['prefix' => 'export'], function (): void {
+                Route::post(
+                    '/data',
+                    [InventoryManagementExportController::class, 'saveExportDataInCache']
+                )->name('inventory-management.inventory.export.saveExportDataInCache');
+                Route::group(['prefix' => 'create/{cacheToken}'], function (): void {
+                    Route::get(
+                        '/xlsx',
+                        [InventoryManagementExportController::class, 'downloadXlsx']
+                    )->name('inventory-management.inventory.export.download-xlsx');
+                    Route::get(
+                        '/pdf',
+                        [InventoryManagementExportController::class, 'downloadPdf']
+                    )->name('inventory-management.inventory.export.download-pdf');
+                });
+            });
+            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
+                ->name('inventory-management.inventory.filter.update');
         });
-
 
         Route::get('/scheduling', [InventoryController::class, 'scheduling'])
             ->name('inventory-management.scheduling');

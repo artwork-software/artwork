@@ -196,10 +196,10 @@ const props = defineProps({
     selectOptionsColumnToEdit = ref(null),
     showConfirmDeleteColumnModal = ref(false),
     columnIdToDelete = ref(null),
-    getProps = () => usePage().props,
-    hasFlashError = () => getProps().flash.error?.length > 0,
-    getFlashError = () => getProps().flash.error,
-    resetFlashError = () => getProps().flash.error = null,
+    getPageProps = () => usePage().props,
+    hasFlashError = () => getPageProps().flash.error?.length > 0,
+    getFlashError = () => getPageProps().flash.error,
+    resetFlashError = () => getPageProps().flash.error = null,
     getColSpan = () => {
         return props.columns.length;
     },
@@ -264,7 +264,12 @@ const props = defineProps({
         }
 
         router.patch(
-            route('inventory-management.inventory.column.update.name', {craftsInventoryColumn: column.id}),
+            route(
+                'inventory-management.inventory.column.update.name',
+                {
+                    craftsInventoryColumn: column.id
+                }
+            ),
             {
                 name: column.newValue
             },
@@ -275,7 +280,12 @@ const props = defineProps({
     },
     applyColumnBackgroundColorChange = (backgroundColor, column) => {
         router.patch(
-            route('inventory-management.inventory.column.update.background_color', {craftsInventoryColumn: column.id}),
+            route(
+                'inventory-management.inventory.column.update.background_color',
+                {
+                    craftsInventoryColumn: column.id
+                }
+            ),
             {
                 background_color: backgroundColor
             },
@@ -293,7 +303,9 @@ const props = defineProps({
             router.delete(
                 route(
                     'inventory-management.inventory.column.delete',
-                    {craftsInventoryColumn: columnIdToDelete.value}
+                    {
+                        craftsInventoryColumn: columnIdToDelete.value
+                    }
                 )
             );
         }
@@ -326,7 +338,7 @@ const props = defineProps({
                 filter: args.list
                     .filter((arg) => arg.checked === true)
                     .map((arg) => {
-                        return {craftId: arg.id }
+                        return {craftId: arg.id}
                     })
             },
             {

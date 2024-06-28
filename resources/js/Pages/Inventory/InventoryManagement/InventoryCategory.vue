@@ -8,8 +8,7 @@
         <td :colspan="colspan"
             :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'px-3 py-2 bg-primary text-white subpixel-antialiased text-sm']">
             <div class="w-full h-full flex flex-row items-center relative gap-x-2">
-                <div
-                    class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
+                <div class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
                     @click="toggleCategoryEdit()">
                     {{ category.name }}
                 </div>
@@ -18,8 +17,7 @@
                     <IconChevronUp v-if="categoryShown" class="w-5 h-5"/>
                     <IconChevronDown v-else class="w-5 h-5"/>
                 </div>
-                <div
-                    :class="[categoryClicked ? '' : 'hidden', 'flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
+                <div :class="[categoryClicked ? '' : 'hidden', 'flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
                     <input
                         type="text"
                         ref="categoryInputRef"
@@ -36,13 +34,6 @@
                       @mouseout="handleCategoryDeleteMouseout"
                       :class="[categoryDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showCategoryDeleteConfirmModal()"/>
-    <ConfirmDeleteModal v-if="categoryConfirmDeleteModalShown"
-                        :title="$t('Delete category?')"
-                        :button="$t('Yes')"
-                        :description="$t('Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.')"
-                        @delete="deleteCategory()"
-                        @closed="closeCategoryDeleteConfirmModal()"
-    />
     <AddNewGroup v-if="categoryShown" @click="openAddCategoryOrGroupModal()"/>
     <DropGroup v-if="showFirstDropGroup"
                :colspan="colspan"
@@ -68,6 +59,13 @@
                    :destination-index="(index + 1)"
                    @group-requests-drag-move="moveGroupToDestination"/>
     </template>
+    <ConfirmDeleteModal v-if="categoryConfirmDeleteModalShown"
+                        :title="$t('Delete category?')"
+                        :button="$t('Yes')"
+                        :description="$t('Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.')"
+                        @delete="deleteCategory()"
+                        @closed="closeCategoryDeleteConfirmModal()"
+    />
 </template>
 
 <script setup>

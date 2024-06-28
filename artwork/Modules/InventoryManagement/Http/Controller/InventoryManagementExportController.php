@@ -24,14 +24,14 @@ class InventoryManagementExportController extends Controller
     /**
      * @throws Throwable
      */
-    public function cacheExportData(CreateInventoryManagementExportRequest $request): string
+    public function saveExportDataInCache(CreateInventoryManagementExportRequest $request): string
     {
         try {
             //used for any type of export (pdf, xlsx)
             return $this->inventoryManagementExportService->cacheRequestData($request->collect('data'));
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not cache export data for reason "%s"', $t->getMessage()));
-            //throw for axios for proper handling with (.catch())
+            //throw for axios for proper handling with .catch()
             throw $t;
         }
     }

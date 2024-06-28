@@ -15,11 +15,12 @@
     <DropCategory v-if="showFirstDropCategory"
                   :colspan="colspan"
                   :destination-index="0"
-                  @categroy-requests-drag-move="moveCategoryToDestination"/>
+                  @category-requests-drag-move="moveCategoryToDestination"/>
     <template v-if="craftShown && craft.filtered_inventory_categories.length > 0"
               v-for="(category, index) in craft.filtered_inventory_categories"
               :key="category.id">
-        <AddNewCategory v-if="craftShown && index === 0" @click="openAddCategoryOrGroupModal('category', props.craft.id)"/>
+        <AddNewCategory v-if="craftShown && index === 0"
+                        @click="openAddCategoryOrGroupModal('category', props.craft.id)"/>
         <InventoryCategory :index="index"
                            :category="category"
                            :colspan="colspan"
@@ -31,7 +32,7 @@
         <DropCategory v-if="showTemplateDropCategory(index)"
                       :colspan="colspan"
                       :destination-index="(index + 1)"
-                      @categroy-requests-drag-move="moveCategoryToDestination"/>
+                      @category-requests-drag-move="moveCategoryToDestination"/>
         <template v-if="(index + 1) === craft.inventory_categories.length">
             <tr>
                 <td :colspan="colspan" class="h-5"/>

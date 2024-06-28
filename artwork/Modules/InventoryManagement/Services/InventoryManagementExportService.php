@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Exports\InventoryManagementXlsxExport;
+use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
 use Carbon\Carbon;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
@@ -53,11 +53,19 @@ readonly class InventoryManagementExportService
     /**
      * @throws InvalidArgumentException
      */
-    public function createXlsxExport(string $token): InventoryManagementXlsxExport
+    public function createExport(string $token): InventoryManagementExport
     {
-        return new InventoryManagementXlsxExport(
+        return new InventoryManagementExport(
             $this->craftsInventoryColumnService->getAllOrdered(),
             $this->getCachedRequestData($token)
+        );
+    }
+
+    public function createPdfExportFilename(): string
+    {
+        return sprintf(
+            'artwork_inventory_management_%s.pdf',
+            Carbon::now()->format('d-m-Y_H_i_s')
         );
     }
 }

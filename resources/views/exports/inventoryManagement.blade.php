@@ -23,13 +23,15 @@
                 @foreach($group['items'] as $item)
                     <tr>
                         @foreach($item['cells'] as $cell)
+                            <td>
                             @if($cell['column']['type'] === \Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum::DATE->value)
-                                <td>{{ \Carbon\Carbon::parse($cell['cell_value'])->format('d.m.y') }}</td>
+                                {{ \Carbon\Carbon::parse($cell['cell_value'])->format('d.m.y') }}
                             @elseif($cell['column']['type'] === \Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum::CHECKBOX->value)
-                                <td>{{ $cell['cell_value'] == 'true' ? 'Ja' : 'Nein' }}</td>
+                                {{ $cell['cell_value'] == 'true' ? 'Ja' : 'Nein' }}
                             @else
-                                <td>{{ $cell['cell_value'] }}</td>
+                                {{ $cell['cell_value'] }}
                             @endif
+                            </td>
                         @endforeach
                     </tr>
                 @endforeach

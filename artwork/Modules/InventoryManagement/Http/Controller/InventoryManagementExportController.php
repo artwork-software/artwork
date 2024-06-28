@@ -7,6 +7,7 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Export\CreateInventoryMana
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Maatwebsite\Excel\Excel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
@@ -39,7 +40,7 @@ class InventoryManagementExportController extends Controller
     {
         try {
             return $this->inventoryManagementExportService
-                ->createXlsxExport($cacheToken)
+                ->createExport($cacheToken)
                 ->download($this->inventoryManagementExportService->createXlsxExportFilename())
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {
@@ -52,9 +53,8 @@ class InventoryManagementExportController extends Controller
     {
         try {
             return $this->inventoryManagementExportService
-                //@todo: implement pdf
-                ->createXlsxExport($cacheToken)
-                ->download($this->inventoryManagementExportService->createXlsxExportFilename())
+                ->createExport($cacheToken)
+                ->download($this->inventoryManagementExportService->createPdfExportFilename(), Excel::DOMPDF)
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not create pdf export for reason "%s"', $t->getMessage()));

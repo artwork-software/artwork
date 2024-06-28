@@ -6,11 +6,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class InventoryManagementXlsxExport implements FromView, ShouldAutoSize, WithStyles
+class InventoryManagementExport implements FromView, WithStyles
 {
     use Exportable;
 
@@ -23,7 +22,7 @@ class InventoryManagementXlsxExport implements FromView, ShouldAutoSize, WithSty
     public function view(): View
     {
         return view(
-            'exports.inventoryManagementXlsx',
+            'exports.inventoryManagement',
             [
                 'columns' => $this->columns,
                 'crafts' => $this->crafts

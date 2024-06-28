@@ -347,8 +347,11 @@ const props = defineProps({
         );
     },
     filteredCrafts = computed(() => {
+        //@todo: make umlauts searchable Stühl -> Stuhl
+        //@todo: move logic to own class / composeable
         let crafts = JSON.parse(JSON.stringify(props.crafts));
 
+        //no search, just filter for crafts
         if (searchValue.value.length === 0) {
             crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
             return crafts.filter(
@@ -358,39 +361,73 @@ const props = defineProps({
             );
         }
 
+        //search and craft filters
         crafts.forEach((craft) => {
             if (props.craftFilters.length > 0 && !props.craftFilters.includes(craft.id) ) {
+                //fully ignore crafts which are not included in filter
                 return;
             }
 
             let filteredCategories = [];
 
             craft.inventory_categories.forEach((category) => {
+                let categoryMatches = false,
+                    matchedGroups = [];
+
                 if (category.name.indexOf(searchValue.value) > -1) {
-                    filteredCategories.push(category);
-
-                    //show category if search value included in name
-                    return;
+                    categoryMatches = true;
                 }
 
-                if (category.groups.some((group) => group.name.indexOf(searchValue.value) > -1)) {
-                    filteredCategories.push(category);
+                category.groups.forEach((group) => {
+                    let currentGroupMatched = false,
+                        matchedItems = [];
 
-                    //show category if some group includes search value
-                    return;
-                }
+                    if (group.name.indexOf(searchValue.value) > -1) {
+                        currentGroupMatched = true;
+                    }
+
+                    //even if group is not matched we need to filter the items
+                    //if group is matched we show all items if no item matches, if at least one item
+                    //matches we show only matching items
+                    group.items.forEach((item) => {
+                        let matchingCells = item.cells.filter((cell) => {
+                                return cell.cell_value.indexOf(searchValue.value) > -1
+                            });
+
+                        if (matchingCells.length > 0) {
+                            matchedItems.push(item);
+                        }
+                    });
+
+                    //no items found and group not matching, just push if category matched
+                    if (matchedItems.length === 0 && !currentGroupMatched) {
+                        if (!categoryMatches) {
+                            //nothing found
+                            return;
+                        }
+                        //still push group if category matches
+                        matchedGroups.push(group);
+                        return;
+                    }
+
+                    //no items found but group is matching, push it
+                    if (matchedItems.length === 0 && currentGroupMatched) {
+                        matchedGroups.push(group);
+                        return;
+                    }
+
+                    //group matched and items too, replace with matched item and push it
+                    group.items = matchedItems;
+                    matchedGroups.push(group);
+                });
 
                 if (
-                    category.groups.some(
-                        //category name matches
-                        (group) => group.name.indexOf(searchValue.value) > -1 ||
-                            //or some items have some matching cell values
-                            group.items.some((item) => item.cells.some(
-                                (cell) => cell.cell_value.indexOf(searchValue.value) > -1
-                            ))
-                    )
+                    categoryMatches && matchedGroups.length === 0 ||
+                    categoryMatches && matchedGroups.length > 0 ||
+                    !categoryMatches && matchedGroups.length > 0
                 ) {
-                    filteredCategories.push(category)
+                    category.groups = matchedGroups;
+                    filteredCategories.push(category);
                 }
             });
 

@@ -45,6 +45,7 @@
                     @closed="closeAddColumnModal"/>
     <SelectExportTypeModal v-if="showSelectExportTypeModal"
                            :show="showSelectExportTypeModal"
+                           :crafts-to-export="crafts"
                            @closed="closeSelectExportTypeModal"/>
 </template>
 
@@ -62,6 +63,10 @@ const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
     props = defineProps({
         craftFilters: {
             type: Array,
+            required: true
+        },
+        crafts: {
+            type: Object,
             required: true
         }
     }),

@@ -89,6 +89,7 @@ use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupContr
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -1345,10 +1346,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
 
-        Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
-            ->name('inventory-management.inventory.filter.update');
+
 
         Route::group(['prefix' => 'inventory'], function (): void {
+            Route::group(['prefix' => 'export'], function (): void {
+                Route::post(
+                    '/xlsx',
+                    [InventoryManagementExportController::class, 'xlsx']
+                )->name('inventory-management.inventory.export.xlsx');
+                Route::post(
+                    '/pdf',
+                    [InventoryManagementExportController::class, 'pdf']
+                )->name('inventory-management.inventory.export.pdf');
+            });
+            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
+                ->name('inventory-management.inventory.filter.update');
             Route::group(['prefix' => 'column'], function (): void {
                 Route::post(
                     '/create',

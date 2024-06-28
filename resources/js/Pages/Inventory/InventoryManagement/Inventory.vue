@@ -3,7 +3,8 @@
         <div class="flex flex-col relative">
             <InventoryTopBar :craft-filters="getCraftFilters()"
                              @updates-search-value="updateSearchValue"
-                             @updates-craft-filters="updateCraftFilters"/>
+                             @updates-craft-filters="updateCraftFilters"
+                             :crafts="filteredCrafts"/>
             <table>
                 <thead class="sticky z-20 top-0 transition-all duration-300 shadow-sm text-white">
                 <tr class="text-xs">
@@ -29,8 +30,9 @@
                                         @focusout="applyColumnValueChange(column)">
                                 </div>
                             </div>
-                            <Menu v-show="showMenu === column.id && !column.showColorMenu" as="div"
-                                  class="absolute right-0 cursor-pointer flex flex-row items-center">
+                            <Menu v-show="showMenu === column.id && !column.showColorMenu"
+                                  as="div"
+                                  class="absolute z-50 right-0 cursor-pointer flex flex-row items-center">
                                 <MenuButton as="div">
                                     <IconDotsVertical class="w-5 h-5 flex-shrink-0 z-50" stroke-width="1.5"
                                                       aria-hidden="true"/>
@@ -42,8 +44,16 @@
                                                 leave-active-class="transition ease-in duration-75"
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="absolute -translate-x-[110%] z-40 top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
+                                        <MenuItems class="absolute z-50 -translate-x-[110%] top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
+                                            <MenuItem v-if="column.type === 3"
+                                                      v-slot="{ active }"
+                                                      as="div">
+                                                <a @click="openEditColumnSelectOptionsModal(column)"
+                                                   :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
+                                                    <IconEdit class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    {{ $t('Edit') }}
+                                                </a>
+                                            </MenuItem>
                                             <MenuItem v-slot="{ active }" as="div">
                                                 <a @click="column.showColorMenu = true"
                                                    :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
@@ -60,8 +70,7 @@
                                             <MenuItem v-slot="{ active }" as="div">
                                                 <a @click="duplicateColumn(column.id)"
                                                    :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
-                                                    <IconCopy
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Duplicate') }}
                                                 </a>
                                             </MenuItem>
@@ -70,19 +79,8 @@
                                                       as="div">
                                                 <a @click="openConfirmDeleteColumnModal(column.id)"
                                                    :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
-                                                    <IconTrash
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Delete') }}
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-if="column.type === 3"
-                                                      v-slot="{ active }"
-                                                      as="div">
-                                                <a @click="openEditColumnSelectOptionsModal(column)"
-                                                   :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
-                                                    <IconTrash
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                    {{ $t('Optionen bearbeiten') }}
                                                 </a>
                                             </MenuItem>
                                         </MenuItems>
@@ -151,7 +149,8 @@ import {
     IconCopy,
     IconDotsVertical,
     IconTrash,
-    IconX
+    IconX,
+    IconEdit
 } from "@tabler/icons-vue";
 import {
     Listbox,

@@ -41,7 +41,8 @@
                    type="date"
                    class="w-full text-xs px-1 flex"
                    v-model="cellValue"
-                   @change="applyCellValueChange()"/>
+                   @change="applyCellValueChange()"
+                   @focusout="applyCellValueChange()"/>
         </div>
         <!-- Checkbox -->
         <div v-else-if="isCheckboxColumn() && cellClicked"
@@ -50,7 +51,7 @@
                    type="checkbox"
                    class="w-5 h-5 mx-auto text-xs px-1 flex"
                    v-model="cellValue"
-                   @change="applyCellValueChange()"/>
+                   @focusout="applyCellValueChange()"/>
         </div>
         <!-- Auswahlbox -->
         <div v-else-if="isSelectColumn() && cellClicked"
@@ -58,7 +59,8 @@
             <select ref="cellValueInputRef"
                     class="w-full text-xs px-1"
                     v-model="cellValue"
-                    @change="applyCellValueChange">
+                    @change="applyCellValueChange()"
+                    @focusout="applyCellValueChange()">
                 <option v-for="(option) in cell.column.type_options">
                     {{ option }}
                 </option>
@@ -146,6 +148,7 @@ const emits = defineEmits(['isEditingCellValue']),
         }
     },
     applyCellValueChange = () => {
+        console.debug('called');
         //compare as strings in case of checkbox which are preserved as string in database
         if (props.cell.cell_value.toString() === cellValue.value.toString()) {
             toggleCellEdit();

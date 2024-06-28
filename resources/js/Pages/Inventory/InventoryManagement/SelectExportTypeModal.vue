@@ -22,7 +22,7 @@
                 <label for="rb-csv">{{ $t('XLSX') }}</label>
             </div>
             <div class="flex flex-row justify-between items-center">
-                <button :disabled="type.length === 0 ? 'disabled' : ''" type="button"
+                <button :disabled="type.length === 0" type="button"
                         :class="[type.length === 0 ? 'cursor-not-allowed bg-gray-600 hover:bg-gray-800' : 'cursor-pointer', 'flex flex-row p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover']"
                         @click="close(true)">
                     <IconFileExport stroke-width="2" class="h-4 w-4 mr-2"/>
@@ -39,10 +39,18 @@ import {ref} from "vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconFileExport} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
+import {router} from "@inertiajs/vue3";
 
 const emits = defineEmits(['closed']),
     props = defineProps({
-        show: Boolean
+        show: {
+            type: Boolean,
+            required: true
+        },
+        craftsToExport: {
+            type: Object,
+            required: true
+        }
     }),
     type = ref(''),
     close = (closedOnPurpose = false) => {
@@ -50,7 +58,17 @@ const emits = defineEmits(['closed']),
             emits.call(this, 'closed');
             return;
         }
-
-        //send request
+        console.debug('close', closedOnPurpose);
+        router.post(
+            type.value === 'pdf' ?
+                route('inventory-management.inventory.export.pdf') :
+                route('inventory-management.inventory.export.xlsx'),
+            {
+                data: props.craftsToExport
+            },
+            {
+                onSuccess: () => emits.call(this, 'closed')
+            }
+        );
     }
 </script>

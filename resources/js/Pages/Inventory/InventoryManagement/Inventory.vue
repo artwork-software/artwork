@@ -422,8 +422,7 @@ const props = defineProps({
                 });
 
                 if (
-                    categoryMatches && matchedGroups.length === 0 ||
-                    categoryMatches && matchedGroups.length > 0 ||
+                    categoryMatches ||
                     !categoryMatches && matchedGroups.length > 0
                 ) {
                     category.groups = matchedGroups;

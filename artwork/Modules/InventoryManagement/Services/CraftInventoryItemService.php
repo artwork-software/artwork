@@ -101,4 +101,20 @@ readonly class CraftInventoryItemService
 
         return $this->craftInventoryItemRepository->forceDelete($craftInventoryItem);
     }
+
+    public function getItemName($item): string
+    {
+        $cell = $item->cells->first(function ($cell) {
+            return is_string($cell->cell_value);
+        });
+        return $cell ? $cell->cell_value : '';
+    }
+
+    public function getItemCount($item): int
+    {
+        $cell = $item->cells->first(function ($cell) {
+            return is_numeric($cell->cell_value);
+        });
+        return $cell ? (int) $cell->cell_value : 0;
+    }
 }

@@ -24,6 +24,7 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -924,5 +925,12 @@ readonly class EventService
     public function save(Event $event): Event
     {
         return $this->eventRepository->save($event);
+    }
+
+
+    public function findEventById(
+        int $eventId
+    ): \Artwork\Core\Database\Models\CanSubstituteBaseModel|Model|\Artwork\Core\Database\Models\Pivot {
+        return $this->eventRepository->findById($eventId);
     }
 }

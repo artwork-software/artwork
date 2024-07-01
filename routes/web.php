@@ -1451,6 +1451,31 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/scheduling', [InventoryController::class, 'scheduling'])
             ->name('inventory-management.scheduling');
+
+        // inventory.dropItemToEvent
+        Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
+            ->name('inventory.dropItemToEvent');
+
+        // inventory.events.destroy
+        Route::delete(
+            '/inventory/events/{craftInventoryItemEvent}',
+            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'destroy']
+        )
+            ->name('inventory.events.destroy');
+
+        // patch inventory.updateEvent
+        Route::patch(
+            '/inventory/updateEvent/{craftInventoryItemEvent}',
+            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'update']
+        )
+            ->name('inventory.updateEvent');
+
+        // post inventory.multi.events.store
+        Route::post(
+            '/inventory/multi/events/store',
+            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'storeMultiple']
+        )
+            ->name('inventory.multi.events.store');
     });
 
     Route::group(['prefix' => 'searching'], function (): void {

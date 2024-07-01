@@ -1,10 +1,10 @@
 <template>
-    <app-layout :title="this.title + '-' + this.$t('Inventory Management')">
+    <app-layout :title="title + '-' + $t('Inventory Management')">
         <div class="w-full pl-14">
             <div class="mb-5">
-                <h2 class="headline1 mb-2">{{ this.$t('Inventory Management') }}</h2>
+                <h2 class="headline1 mb-2">{{ $t('Inventory Management') }}</h2>
                 <div class="headline3Light">
-                    {{ this.$t('Maintain the inventory of all projects for your artwork.') }}
+                    {{ $t('Maintain the inventory of all projects for your artwork.') }}
                 </div>
             </div>
             <InventoryTabs class="mb-5"/>

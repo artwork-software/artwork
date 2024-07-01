@@ -67,4 +67,16 @@ readonly class CraftService
     {
         return $this->craftRepository->findById($id);
     }
+
+    public function getCraftsWithInventory(): \Illuminate\Support\Collection
+    {
+        // Eager load the necessary relationships
+        $crafts = $this->craftRepository->getAll([
+            'inventoryCategories.groups.items.events.user',
+            'inventoryCategories.groups.items.cells',
+            'inventoryCategories.groups.items.events.event.project',
+        ]);
+
+        return $crafts;
+    }
 }

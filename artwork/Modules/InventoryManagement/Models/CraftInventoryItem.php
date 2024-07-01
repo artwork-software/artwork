@@ -44,4 +44,9 @@ class CraftInventoryItem extends Model
             ->orderBy('id')
             ->select(['id', 'crafts_inventory_column_id', 'craft_inventory_item_id', 'cell_value']);
     }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(CraftInventoryItemEvent::class, 'craft_inventory_item_id', 'id');
+    }
 }

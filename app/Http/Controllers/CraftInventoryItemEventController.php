@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMultipleInventoryItemsInEvent;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
@@ -36,10 +37,10 @@ class CraftInventoryItemEventController extends Controller
         $craftInventoryItemEvent->delete();
     }
 
-    public function storeMultiple(Request $request): void
+    public function storeMultiple(StoreMultipleInventoryItemsInEvent $request): void
     {
         $this->craftInventoryItemEventServices->storeMultiple(
-            $request,
+            $request->collect('events'),
             $this->authManager->id()
         );
     }

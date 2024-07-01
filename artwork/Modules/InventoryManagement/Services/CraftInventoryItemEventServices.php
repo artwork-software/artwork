@@ -15,10 +15,10 @@ use Illuminate\Http\Request;
 
 readonly class CraftInventoryItemEventServices
 {
+
     public function __construct(
-        private readonly CraftInventoryItemEventRepository $craftInventoryItemEventRepository,
-        private readonly EventService $eventService,
-        private readonly AuthManager $authManager,
+        private CraftInventoryItemEventRepository $craftInventoryItemEventRepository,
+        private EventService $eventService,
     ) {
     }
 
@@ -179,24 +179,29 @@ readonly class CraftInventoryItemEventServices
         $this->craftInventoryItemEventRepository->update($craftInventoryItemEvent, ['quantity' => $quantity]);
     }
 
-    public function storeMultiple(Request $request, int $userId): void
+    public function createNewCraftInventoryItem(array $attributes = []): CraftInventoryItemEvent
     {
-        $events = $request->input('events', []);
+        return new CraftInventoryItemEvent($attributes);
+    }
 
+    public function storeMultiple(Collection $events, int $userId): CraftInventoryItemEvent|Model|null
+    {
+        $lastEvent = null;
         foreach ($events as $event) {
-            $foundedEvent = $this->eventService->findEventById($event['id']);
+            $eventObject = $this->eventService->findEventById($event['id']);
             $items = $event['items'] ?? [];
             foreach ($items as $item) {
-                $itemEvent = new CraftInventoryItemEvent([
+                $itemEvent = $this->createNewCraftInventoryItem([
                     'craft_inventory_item_id' => $item['id'],
-                    'event_id' => $foundedEvent->id,
-                    'start' => $foundedEvent->start_time,
-                    'end' => $foundedEvent->end_time,
+                    'event_id' => $eventObject->id,
+                    'start' => $eventObject->start_time,
+                    'end' => $eventObject->end_time,
                     'user_id' => $userId,
                     'quantity' => $item['count'],
                 ]);
-                $this->craftInventoryItemEventRepository->save($itemEvent);
+                $lastEvent = $this->craftInventoryItemEventRepository->save($itemEvent);
             }
         }
+        return $lastEvent;
     }
 }

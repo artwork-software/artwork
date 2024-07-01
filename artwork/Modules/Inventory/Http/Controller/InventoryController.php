@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
@@ -80,32 +83,7 @@ class InventoryController extends Controller
             $this->authManager->user()?->calendar_filter
         );
 
-        $crafts = $this->craftService->getCraftsWithInventory()->map(function ($craft) {
-            return [
-                'id' => $craft->id,
-                'name' => $craft->name,
-                'inventory_categories' => $craft->inventoryCategories->map(function ($category) {
-                    return [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                        'groups' => $category->groups->map(function ($group) {
-                            return [
-                                'id' => $group->id,
-                                'name' => $group->name,
-                                'items' => $group->items->map(function ($item) {
-                                    return [
-                                        'id' => $item->id,
-                                        'name' => $this->craftInventoryItemService->getItemName($item),
-                                        'count' => $this->craftInventoryItemService->getItemCount($item),
-                                        'events' => $this->craftInventoryItemEventServices->getItemEvents($item),
-                                    ];
-                                }),
-                            ];
-                        }),
-                    ];
-                }),
-            ];
-        });
+        $crafts = $this->craftService->getCraftsWithInventory();
 
         return Inertia::render('Inventory/Scheduling', [
             'dateValue' => $showCalendar['dateValue'],

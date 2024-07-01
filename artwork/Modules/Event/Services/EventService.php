@@ -922,7 +922,7 @@ readonly class EventService
         return $this->eventRepository->save($event);
     }
 
-    public function save(Event $event): Event
+    public function save(Event $event): Event|Model
     {
         return $this->eventRepository->save($event);
     }
@@ -930,7 +930,7 @@ readonly class EventService
 
     public function findEventById(
         int $eventId
-    ): \Artwork\Core\Database\Models\CanSubstituteBaseModel|Model|\Artwork\Core\Database\Models\Pivot {
+    ): Event {
         return $this->eventRepository->findById($eventId);
     }
 }

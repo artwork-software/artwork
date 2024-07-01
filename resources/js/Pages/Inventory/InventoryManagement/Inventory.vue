@@ -39,12 +39,12 @@
                                                       aria-hidden="true"/>
                                 </MenuButton>
                                 <div class="inventory-th-menu">
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
+                                    <transition enter-active-class="transition-enter-active"
+                                                enter-from-class="transition-enter-from"
+                                                enter-to-class="transition-enter-to"
+                                                leave-active-class="transition-leave-active"
+                                                leave-from-class="transition-leave-from"
+                                                leave-to-class="transition-leave-to">
                                         <MenuItems class="menu-items">
                                             <MenuItem v-slot="{ active }" as="div">
                                                 <a @click="column.showColorMenu = true"

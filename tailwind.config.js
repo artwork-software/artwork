@@ -3,6 +3,15 @@ const colors = require("tailwindcss/colors")
 
 module.exports = {
     mode: 'jit',
+    safelist: [
+        //required for transition tags as classes are not applied directly
+        'transition-enter-active',
+        'transition-enter-from',
+        'transition-leave-to',
+        'transition-enter-to',
+        'transition-leave-from',
+        'transition-leave-active',
+    ],
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './vendor/laravel/jetstream/**/*.blade.php',
@@ -45,7 +54,6 @@ module.exports = {
                 linkOnDarkColor: '#BDB6F0',
                 "vtd-primary": colors.sky,
                 "vtd-secondary": colors.gray,
-                // Artwork colors
                 artwork: {
                     navigation: {
                         background: '#222',
@@ -70,9 +78,6 @@ module.exports = {
                     },
                     project: {
                         background: '#eee'
-                    },
-                    calendar: {
-
                     },
                     icons: {
                         default: {

@@ -58,12 +58,12 @@
                                     </div>
                                 </div>
                             </MenuButton>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
+                            <transition enter-active-class="transition-enter-active"
+                                        enter-from-class="transition-enter-from"
+                                        enter-to-class="transition-enter-to"
+                                        leave-active-class="transition-leave-active"
+                                        leave-from-class="transition-leave-from"
+                                        leave-to-class="transition-leave-to">
                                 <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-40' : 'ml-14'"
                                            class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                     <div class="z-50" v-for="item in managementNavigation" :key="item.name">
@@ -107,12 +107,12 @@
                                 </div>
                             </div>
                         </MenuButton>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
+                        <transition enter-active-class="transition-enter-active"
+                                    enter-from-class="transition-enter-from"
+                                    enter-to-class="transition-enter-to"
+                                    leave-active-class="transition-leave-active"
+                                    leave-from-class="transition-leave-from"
+                                    leave-to-class="transition-leave-to">
                             <MenuItems ref="menuItems" :class="[fullSidenav ? 'ml-40' : 'ml-14', '']" class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-44 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                 <div class="z-50">
                                     <MenuItem v-slot="{ active }">

@@ -50,13 +50,12 @@ export default {
                     <p>Zeilen pro Seite: {{ entities.per_page }}</p>
                     <IconChevronDown class="w-5 h-5"/>
                 </MenuButton>
-
-                <transition enter-active-class="transition duration-100 ease-out"
-                            enter-from-class="transform scale-95 opacity-0"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0">
+                <transition enter-active-class="transition-enter-active"
+                            enter-from-class="transition-enter-from"
+                            enter-to-class="transition-enter-to"
+                            leave-active-class="transition-leave-active"
+                            leave-from-class="transition-leave-from"
+                            leave-to-class="transition-leave-to">
                     <MenuItems
                         class="absolute origin-top-left z-50 bottom-0 right-0 mb-6 p-1 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
                         <MenuItem v-for="entitiesToShow in entitiesPerPage" :key="entities" as="template" v-slot="{ active }">

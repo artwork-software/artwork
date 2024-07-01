@@ -83,7 +83,10 @@ class InventoryController extends Controller
             $this->authManager->user()?->calendar_filter
         );
 
-        $crafts = $this->craftService->getCraftsWithInventory();
+        $crafts = $this->craftService->getCraftsWithInventory(
+            $this->craftInventoryItemService,
+            $this->craftInventoryItemEventServices,
+        );
 
         return Inertia::render('Inventory/Scheduling', [
             'dateValue' => $showCalendar['dateValue'],

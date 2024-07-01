@@ -2,12 +2,30 @@ import {computed, ref} from "vue";
 
 const crafts = ref([]),
     searchValue = ref(''),
-    craftFilters = ref([]);
+    craftFilters = ref([]),
+    valueIncludesSearchValueWithUmlauts = (value, isDateColumn = false) => {
+        let tmpSearchValue = searchValue.value.toLowerCase(),
+            tmpValue = value.toLowerCase();
+
+        if (isDateColumn) {
+            let parts = value.split('-');
+
+            tmpValue = parts[2] + '.' + parts[1] + '.' + parts[0];
+        }
+
+        return (
+            tmpValue.indexOf(tmpSearchValue) > -1 ||
+            tmpValue.indexOf(tmpSearchValue.replace('o', 'ö')) > -1 ||
+            tmpValue.indexOf(tmpSearchValue.replace('u', 'ü')) > -1 ||
+            tmpValue.indexOf(tmpSearchValue.replace('a', 'ä')) > -1
+        );
+    };
 
 export default function useCraftFilterAndSearch() {
     const filteredCrafts = computed(() => {
-        //handle craft filters
-        let filteringCrafts = JSON.parse(JSON.stringify(crafts.value));
+        //clone object is important for replaceState after any updates from backend
+        //(change craft filter for example)
+        let filteringCrafts = JSON.parse(JSON.stringify(crafts.value));;
 
         if (craftFilters.value.length > 0) {
             filteringCrafts = filteringCrafts.filter(
@@ -18,7 +36,6 @@ export default function useCraftFilterAndSearch() {
         }
 
         if (searchValue.value.length === 0) {
-            //if nothing is searched we just append categories properly to the craft object
             filteringCrafts.forEach(
                 (craft) => craft.filtered_inventory_categories = craft.inventory_categories
             );
@@ -26,8 +43,6 @@ export default function useCraftFilterAndSearch() {
             return filteringCrafts;
         }
 
-        //handle search value
-        //@todo: make umlauts searchable Stühl -> Stuhl
         filteringCrafts.forEach((craft) => {
             let filteredCategories = [];
 
@@ -35,7 +50,7 @@ export default function useCraftFilterAndSearch() {
                 let categoryMatches = false,
                     matchedGroups = [];
 
-                if (category.name.indexOf(searchValue.value) > -1) {
+                if (valueIncludesSearchValueWithUmlauts(category.name)) {
                     categoryMatches = true;
                 }
 
@@ -43,7 +58,7 @@ export default function useCraftFilterAndSearch() {
                     let currentGroupMatched = false,
                         matchedItems = [];
 
-                    if (group.name.indexOf(searchValue.value) > -1) {
+                    if (valueIncludesSearchValueWithUmlauts(group.name)) {
                         currentGroupMatched = true;
                     }
 
@@ -52,7 +67,7 @@ export default function useCraftFilterAndSearch() {
                     //matches we show only matching items
                     group.items.forEach((item) => {
                         let matchingCells = item.cells.filter((cell) => {
-                            return cell.cell_value.indexOf(searchValue.value) > -1
+                            return valueIncludesSearchValueWithUmlauts(cell.cell_value, (cell.column.type === 1));
                         });
 
                         if (matchingCells.length > 0) {
@@ -63,10 +78,8 @@ export default function useCraftFilterAndSearch() {
                     //no items found and group not matching, just push if category matched
                     if (matchedItems.length === 0 && !currentGroupMatched) {
                         if (!categoryMatches) {
-                            //nothing found
                             return;
                         }
-                        //still push group if category matches
                         matchedGroups.push(group);
                         return;
                     }
@@ -91,7 +104,6 @@ export default function useCraftFilterAndSearch() {
                 }
             });
 
-
             craft.filtered_inventory_categories = filteredCategories;
         });
 
@@ -100,3 +112,4 @@ export default function useCraftFilterAndSearch() {
 
     return {searchValue, craftFilters, crafts, filteredCrafts};
 }
+

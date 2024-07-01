@@ -1,5 +1,7 @@
-@import "./Timeline/timeline";
-@import "./Inventory/inventory";
+@import "Timeline/Timeline";
+@import "Inventory/Inventory";
+@import "Inventory/InventoryManagement";
+@import "Inventory/InventoryScheduling";
 
 @tailwind base;
 @tailwind components;

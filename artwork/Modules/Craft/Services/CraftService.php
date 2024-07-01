@@ -6,6 +6,11 @@ use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class CraftService
@@ -68,15 +73,44 @@ readonly class CraftService
         return $this->craftRepository->findById($id);
     }
 
-    public function getCraftsWithInventory(): \Illuminate\Support\Collection
-    {
+    public function getCraftsWithInventory(
+        CraftInventoryItemService $craftInventoryItemService,
+        CraftInventoryItemEventServices $craftInventoryItemEventServices
+    ): \Illuminate\Support\Collection {
         // Eager load the necessary relationships
-        $crafts = $this->craftRepository->getAll([
+        return $this->craftRepository->getAll([
             'inventoryCategories.groups.items.events.user',
             'inventoryCategories.groups.items.cells',
             'inventoryCategories.groups.items.events.event.project',
-        ]);
-
-        return $crafts;
+        ])->map(function (Craft $craft) use ($craftInventoryItemEventServices, $craftInventoryItemService) {
+            return [
+                'id' => $craft->id,
+                'name' => $craft->name,
+                'inventory_categories' =>
+                    $craft->inventoryCategories->map(function (CraftInventoryCategory $category)
+ use ($craftInventoryItemEventServices, $craftInventoryItemService) {
+                        return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'groups' => $category->groups->map(function (CraftInventoryGroup $group)
+ use ($craftInventoryItemEventServices, $craftInventoryItemService) {
+                            return [
+                                'id' => $group->id,
+                                'name' => $group->name,
+                                'items' => $group->items->map(function (CraftInventoryItem $item)
+ use ($craftInventoryItemEventServices, $craftInventoryItemService) {
+                                    return [
+                                        'id' => $item->id,
+                                        'name' => $craftInventoryItemService->getItemName($item),
+                                        'count' => $craftInventoryItemService->getItemCount($item),
+                                        'events' => $craftInventoryItemEventServices->getItemEvents($item),
+                                    ];
+                                }),
+                            ];
+                        }),
+                        ];
+                    }),
+            ];
+        });
     }
 }

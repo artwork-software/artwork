@@ -109,23 +109,6 @@ readonly class ProjectTabService implements ServiceWithArrayCache
             $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
             $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
         }
-        /**
-         *
-         * $startDate,
-         * $endDate,
-         * $userService,
-         * $filterService,
-         * $filterController,
-         * $roomService,
-         * $roomCategoryService,
-         * $roomAttributeService,
-         * $eventTypeService,
-         * $areaService,
-         * $projectService,
-         * Auth::user()->getCalendarFilter(),
-         * null,
-         * $project
-         */
 
         $calendarData = $calendarService->createCalendarData(
             startDate: $startDate,

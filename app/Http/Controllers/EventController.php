@@ -1203,9 +1203,7 @@ class EventController extends Controller
         }
 
         // update event time in inventory
-        $isInInventoryEvent = $this->craftInventoryItemEventServices->checkIfEventIsInInventoryPlaning($event);
-
-        if ($isInInventoryEvent) {
+        if ($isInInventoryEvent = $this->craftInventoryItemEventServices->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventServices->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 

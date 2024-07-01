@@ -1,10 +1,10 @@
 <template>
 <BaseModal v-if="true" @closed="$emit('closed')">
     <h1 class="headline1" v-if="!booking">
-        {{ item.name }} zu {{ event.alwaysEventName ?? event.name }} hinzufügen
+        {{ $t('Add {0} to {1}', [item.name, event.alwaysEventName ?? event.name])}}
     </h1>
     <h1 class="headline1" v-else>
-        {{ item.name }} in {{ event.alwaysEventName ?? event.name }} bearbeiten
+        {{ $t('Edit {0} in {1}', [item.name, event.alwaysEventName ?? event.name])}}
     </h1>
 
 
@@ -17,7 +17,7 @@
                  @click="$emit('closed')">
                 {{ $t('No, not really') }}
             </div>
-            <FormButton class="mt-5" type="submit" text="Buchen" />
+            <FormButton class="mt-5" type="submit" :text="$t('Book')" />
         </div>
     </form>
 

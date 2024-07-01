@@ -928,5 +928,11 @@ readonly class EventService
     }
 
 
+    public function findEventById(int $eventId): \Artwork\Core\Database\Models\CanSubstituteBaseModel|Model|\Artwork\Core\Database\Models\Pivot
+    {
+        return $this->eventRepository->findById($eventId);
+    }
+
+
 
 }

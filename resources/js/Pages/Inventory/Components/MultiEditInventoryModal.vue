@@ -3,28 +3,26 @@
         <div class="mb-5 px-6">
             <h1 class="headline1 mb-4">
                 <!-- Headline Text für MultiEdit -->
-                Buche Inventar für mehrere Termine
+                {{ $t('Book inventory for multiple events') }}
             </h1>
             <p class="xsLight">
                 <!-- Beschreibungstext für MultiEdit -->
-                Wähle die Anzahl der Inventar-Artikel aus, die für jeden Termin gebucht werden sollen.
+                {{ $t('Select the number of inventory items to be booked for each event.')}}
             </p>
         </div>
 
         <div class="bg-gray-100 py-4 px-6">
             <div class="flex items-center justify-between">
-                <AlertComponent classes="!text-artwork-buttons-create cursor-pointer" show-icon icon-size="h-5 w-5" :text="showInfoText ? 'Hilfe ausblenden' : 'Hilfe anzeigen'" @click="openCloseShowInfoText" />
+                <AlertComponent classes="!text-artwork-buttons-create cursor-pointer" show-icon icon-size="h-5 w-5" :text="showInfoText ? $t('Hide help') : $t('Show help')" @click="openCloseShowInfoText" />
                 <div v-if="autoCloseInfoText < 15">
                     <p class="xxsLight">
-                        Die Hilfe wird in {{ autoCloseInfoText }} Sekunden ausgeblendet.
+                        {{ $t('The help is hidden in {0} seconds.', [autoCloseInfoText])}}
                     </p>
                 </div>
             </div>
             <div class="mt-2" v-if="showInfoText">
                 <p class="text-xs">
-                    Du kannst zwischen den Ereignissen wechseln, indem du auf "Nächster Termin" oder "Vorheriger Termin" klickst.
-                    Die Anzahl der Inventar-Artikel wird für jeden Termin separat gespeichert. Du kannst die Buchung abschließen, wenn du alle Termine durchgegangen bist.
-                    Wenn du ein Inventar-Artikel für ein Termin nicht benötigst, kannst du die Anzahl auf 0 setzen oder das Feld einfach leer lassen.
+                    {{ $t('You can switch between events by clicking on "Next event" or "Previous event". The number of inventory items is saved separately for each event. You can finalise the booking when you have gone through all the appointments. If you do not need an inventory item for an appointment, you can set the number to 0 or simply leave the field empty.')}}
                 </p>
             </div>
         </div>
@@ -59,11 +57,11 @@
 
         <div class="flex items-center justify-between p-6">
             <div>
-                <AddButtonSmall v-if="!checkIfFirstEvent()" @click="previousEvent" no-icon text="Vorheriger Termin" />
+                <AddButtonSmall v-if="!checkIfFirstEvent()" @click="previousEvent" no-icon :text="$t('Previous Event')" />
             </div>
             <div>
-                <AddButtonSmall v-if="!checkIfLastEvent()" @click="nextEvent" no-icon text="Nächster Termin" />
-                <AddButtonSmall v-else @click="bookInventory" no-icon text="Inventar Buchen" />
+                <AddButtonSmall v-if="!checkIfLastEvent()" @click="nextEvent" no-icon :text="$t('Next Event')" />
+                <AddButtonSmall v-else @click="bookInventory" no-icon :text="$t('Book inventory')" />
             </div>
         </div>
     </BaseModal>

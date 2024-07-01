@@ -201,9 +201,15 @@ readonly class CalendarService
                         $calendarFilter
                     ),
                     $calendarPeriod,
+                    $calendarFilter,
                     $project
                 ) :
-                $roomService->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter),
+                $roomService->collectEventsForRoom(
+                    room: $room,
+                    calendarPeriod: $calendarPeriod,
+                    calendarFilter: $calendarFilter,
+                    project: $project,
+                ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
                 [],

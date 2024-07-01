@@ -1855,5 +1855,19 @@
     "No Project": "No Project",
     "All events on which \"{0}\" was booked on \"{1}\" are listed here. There are a total of {2} event(s).": " All events on which \"{0}\" was booked on \"{1}\" are listed here. There are a total of {2} event(s).",
     "There are no events on this day.": "There are no events on this day.",
-    "All bookings on {0} from \"{1}\"": "All bookings on {0} from \"{1}\""
+    "All bookings on {0} from \"{1}\"": "All bookings on {0} from \"{1}\"",
+    "Add {0} to {1}": "Add {0} to {1}",
+    "Edit {0} in {1}": "Edit {0} in {1}",
+    "Book": "Book",
+    "Book inventory for multiple events": "Book inventory for multiple events",
+    "Select the number of inventory items to be booked for each event.": "Select the number of inventory items to be booked for each event.",
+    "The help is hidden in {0} seconds.": "The help is hidden in {0} seconds.",
+    "You can switch between events by clicking on \"Next event\" or \"Previous event\". The number of inventory items is saved separately for each event. You can finalise the booking when you have gone through all the appointments. If you do not need an inventory item for an appointment, you can set the number to 0 or simply leave the field empty.": "You can switch between events by clicking on \"Next event\" or \"Previous event\". The number of inventory items is saved separately for each event. You can finalise the booking when you have gone through all the appointments. If you do not need an inventory item for an appointment, you can set the number to 0 or simply leave the field empty.",
+    "Previous Event": "Previous Event",
+    "Next Event": "Next Event",
+    "Book inventory": "Book inventory",
+    "Hide help": "Hide help",
+    "{0} Element(s) Book": "{0} Element(s) Book",
+    "Please select at least one inventory item.": "Please select at least one inventory item.",
+    "Please select at least one event.": "Please select at least one event."
 }

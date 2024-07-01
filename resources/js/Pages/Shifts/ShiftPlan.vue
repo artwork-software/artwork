@@ -24,7 +24,7 @@
                             <div class="stickyHeader">
                             <TableHead id="stickyTableHead" ref="stickyTableHead">
                                 <th class="z-0" style="width:192px;"></th>
-                                <th  v-for="day in days" :style="{width: day.week_separator ? '40px' : '200px'}" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                <th  v-for="day in days" :style="{width:  '200px'}" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                                     <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                         {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                     </div>
@@ -697,78 +697,55 @@ export default {
                 }
             }
         },
-        selectGoToNextMode(){
-            if (this.$page.props.user.goto_mode === 'day'){
-                this.goToDay('next')
-            } else if (this.$page.props.user.goto_mode === 'week'){
-                this.goToWeek('next')
-            } else if (this.$page.props.user.goto_mode === 'month'){
-                this.goToMonth('next')
-            }
+        selectGoToMode(direction) {
+            const gotoMode = this.$page.props.user.goto_mode;
+            this.scrollToPeriod(gotoMode, direction);
         },
-        selectGoToPreviousMode(){
-            if (this.$page.props.user.goto_mode === 'day'){
-                this.goToDay('previous')
-            } else if (this.$page.props.user.goto_mode === 'week'){
-                this.goToWeek('previous')
-            } else if (this.$page.props.user.goto_mode === 'month'){
-                this.goToMonth('previous')
-            }
-        },
-        goToWeek(type = 'next'){
-            if (type === 'next') {
-                const nextKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number + 1);
 
-                // bring the new kw in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextKwDay);
-            } else {
-                const previousKwDay = this.days.find(day => day.is_monday && day.week_number === this.currentDayOnView.week_number - 1);
+        scrollToPeriod(period, direction) {
+            let indexModifier = direction === 'next' ? 1 : -1;
+            let periodKey, periodValue, scrollOffset;
 
-                // bring the new kw in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousKwDay);
-            }
-        },
-        goToDay(type = 'next') {
-            if (type === 'next') {
-                const nextDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
-                const nextDayIndex = this.days.indexOf(this.currentDayOnView) + 1;
-                if (nextDayIndex < this.days.length) {
-                    const nextDay = this.days[nextDayIndex];
-                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                    scrollableContainer.scrollLeft = firstDay.offsetWidth * nextDayIndex;
+            if (period === 'day') {
+                const currentIndex = this.days.indexOf(this.currentDayOnView);
+                const targetIndex = currentIndex + indexModifier;
+                if (targetIndex >= 0 && targetIndex < this.days.length) {
+                    periodKey = 'full_day';
+                    periodValue = this.currentDayOnView.full_day;
+                    scrollOffset = targetIndex;
                 }
-            } else {
-                const previousDay = this.days.find(day => day.full_day === this.currentDayOnView.full_day);
-                const previousDayIndex = this.days.indexOf(this.currentDayOnView) - 1;
-                if (previousDayIndex >= 0) {
-                    const previousDay = this.days[previousDayIndex];
-                    const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                    const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                    scrollableContainer.scrollLeft = firstDay.offsetWidth * previousDayIndex;
-                }
+            } else if (period === 'week') {
+                periodKey = 'week_number';
+                periodValue = this.currentDayOnView.week_number;
+                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_monday);
+            } else if (period === 'month') {
+                periodKey = 'month_number';
+                periodValue = this.currentDayOnView.month_number;
+                scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_first_day_of_month);
+            }
+
+            if (scrollOffset !== undefined) {
+                const firstDay = document.getElementById(this.currentDayOnView.full_day);
+                const scrollableContainer = this.$refs.shiftPlan;
+                scrollableContainer.scrollLeft = firstDay.offsetWidth * scrollOffset;
             }
         },
-        goToMonth(type = 'next'){
-            if (type === 'next') {
-                const nextMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number + 1);
 
-                // bring the new month in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(nextMonthDay);
-            } else {
-                const previousMonthDay = this.days.find(day => day.is_first_day_of_month && day.month_number === this.currentDayOnView.month_number - 1);
-
-                // bring the new month in the scroll position of the currentDayOnView
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * this.days.indexOf(previousMonthDay);
+        getIndexForWeekOrMonth(period, key, value, indexModifier, filterFn) {
+            const targetValue = value + indexModifier;
+            const targetDay = this.days.find(day => filterFn(day) && day[key] === targetValue);
+            if (targetDay) {
+                return this.days.indexOf(targetDay);
             }
+            return undefined;
+        },
+
+        selectGoToNextMode() {
+            this.selectGoToMode('next');
+        },
+
+        selectGoToPreviousMode() {
+            this.selectGoToMode('previous');
         },
         syncScrollUserOverview(event) {
             if (this.$refs.shiftPlan) {

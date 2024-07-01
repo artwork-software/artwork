@@ -98,4 +98,5 @@ abstract readonly class BaseRepository
     ): Model|Pivot|CanSubstituteBaseModel {
         return $model->replicate($except);
     }
+
 }

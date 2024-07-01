@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center w-full">
         <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
-        <div class="flex items-center mx-4 gap-x-1">
+        <div class="flex items-center mx-4 gap-x-1 select-none">
             <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
             <Menu as="div" class="relative inline-block text-left">
                 <div class="flex items-center">
@@ -13,7 +13,7 @@
                 </div>
 
                 <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems class="absolute right-0 z-10 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <MenuItems class="absolute right-0 z-50 mt-2 w-fit origin-top-right rounded-md bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1">
                             <MenuItem v-slot="{ active }">
                                 <div @click="changeUserSelectedGoTo('day')" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-white', 'block px-4 py-2 text-sm']">
@@ -55,6 +55,11 @@ const props = defineProps({
     }
 })
 
+const emits = defineEmits([
+    'scrollToPrevious',
+    'scrollToNext',
+])
+
 const changeUserSelectedGoTo = (type) => {
     router.patch(route('user.calendar.go.to.stepper', {user: usePage().props.user.id}), {
         goto_mode: type,
@@ -63,12 +68,14 @@ const changeUserSelectedGoTo = (type) => {
     });
 }
 
-const scrollToPreviousDay = () => {
-    console.log('scrollToPreviousDay');
+const scrollToPreviousDay = (event) => {
+    event.preventDefault();
+    emits('scrollToPrevious');
 }
 
-const scrollToNextDay = () => {
-    console.log('scrollToNextDay');
+const scrollToNextDay = (event) => {
+    event.preventDefault();
+    emits('scrollToNext');
 }
 
 </script>

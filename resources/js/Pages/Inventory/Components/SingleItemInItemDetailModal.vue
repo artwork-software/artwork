@@ -1,8 +1,8 @@
 <template>
-    <div class="grid grid-cols-1 md:grid-cols-3 rounded-lg group">
+    <div class="grid grid-cols-1 md:grid-cols-2 rounded-lg group">
         <div class="flex items-start justify-between gap-x-3 rounded-l-lg px-3 py-2" :style="{
-            backgroundColor: backgroundColorWithOpacity(event.eventInfo.event_type.hex_code, 40),
-            color: textColorWithDarken(event.eventInfo.event_type.hex_code, 60)
+            backgroundColor: backgroundColorWithOpacity(event.eventInfo?.event_type?.hex_code),
+            color: textColorWithDarken(event.eventInfo?.event_type?.hex_code)
             }">
             <div class="text-sm">
                 <div>
@@ -12,25 +12,26 @@
                     {{ $t('Project') }}: {{ event.eventInfo.project_name ?? $t('No Project') }}
                 </div>
             </div>
-            <span class="rounded-full text-[9px] bg-gray-100 px-2">
+            <span class="stock-badge bg-gray-100">
                 {{ event.quantity }}
                 <span v-if="event.overbooked > 0" class="text-red-500">
                     / {{ event.overbooked }}
                 </span>
             </span>
         </div>
-        <div class="flex items-center bg-gray-100 pl-2">
+        <div class="flex justify-between bg-gray-100 pl-2 rounded-r-lg">
             <div class="flex items-center gap-x-2">
                 <img :src="event.user.profile_photo_url" class="h-8 w-8 object-cover rounded-full">
                 <div class="xsLight">
                     {{ event.user.name }}
                 </div>
             </div>
+            <div class="flex items-center justify-end gap-x-2 bg-gray-100 rounded-r-lg px-3">
+                <IconEditCircle class="h-5 w-5 text-blue-500 hidden group-hover:block cursor-pointer" @click="showAssignedItemToEventModal = true" />
+                <IconCircleX @click="removeEvent" class="h-5 w-5 text-red-500 hidden group-hover:block cursor-pointer" />
+            </div>
         </div>
-        <div class="flex items-center justify-end gap-x-2 bg-gray-100 rounded-r-lg px-3">
-            <IconEditCircle class="h-5 w-5 text-blue-500 hidden group-hover:block cursor-pointer" @click="showAssignedItemToEventModal = true" />
-            <IconCircleX @click="removeEvent" class="h-5 w-5 text-red-500 hidden group-hover:block cursor-pointer" />
-        </div>
+
     </div>
 
     <ConfirmDeleteModal

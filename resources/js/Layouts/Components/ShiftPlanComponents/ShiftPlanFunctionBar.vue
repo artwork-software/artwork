@@ -2,7 +2,7 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
-            <div class="flex items-center mx-4 gap-x-1">
+            <div class="flex items-center mx-4 gap-x-1 select-none">
                 <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
                 <Menu as="div" class="relative inline-block text-left">
                     <div class="flex items-center">

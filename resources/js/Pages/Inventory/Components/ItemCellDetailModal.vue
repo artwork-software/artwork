@@ -9,7 +9,7 @@
 
        <div class="my-5">
            <div v-if="calculateTotalEventCountByDay(day) > 0" v-for="event in item.events" class="mb-1">
-               <div v-if="event.date === day.full_day">
+               <div v-if="event.period.includes(day.full_day)">
                    <SingleItemInItemDetailModal :day="day.full_day" :item="item" :event="event" />
                </div>
            </div>
@@ -38,7 +38,7 @@ const props = defineProps({
 });
 
 const calculateTotalEventCountByDay = (day) => {
-    return props.item.events.filter(event => event.date === day.full_day).length;
+    return props.item.events.filter(event => event.period.includes(day.full_day)).length;
 }
 
 </script>

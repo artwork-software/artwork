@@ -116,7 +116,6 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         }
     },
     applyCategoryValueChange = () => {
-        console.debug(props.category.name === categoryValue.value);
         if (props.category.name === categoryValue.value) {
             toggleCategoryEdit();
             return;

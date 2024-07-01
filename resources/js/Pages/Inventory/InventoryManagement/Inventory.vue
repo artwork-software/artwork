@@ -164,13 +164,14 @@ import {
 } from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {CheckIcon} from "@heroicons/vue/solid";
-import {computed, ref} from "vue";
+import {onMounted, onUpdated, ref} from "vue";
 import InventoryCraft from "@/Pages/Inventory/InventoryManagement/InventoryCraft.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import EditColumnSelectOptionsModal from "@/Pages/Inventory/InventoryManagement/EditColumnSelectOptionsModal.vue";
 import InventoryTopBar from "@/Pages/Inventory/InventoryManagement/InventoryTopBar.vue";
+import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
 
 const props = defineProps({
         columns: Array,
@@ -191,11 +192,11 @@ const props = defineProps({
     ],
     dynamicColumnNameInputRefs = ref({}),
     showMenu = ref(null),
-    searchValue = ref(''),
     showEditColumnSelectOptionsModal  = ref(false),
     selectOptionsColumnToEdit = ref(null),
     showConfirmDeleteColumnModal = ref(false),
     columnIdToDelete = ref(null),
+    { searchValue, craftFilters, crafts, filteredCrafts } = useCraftFilterAndSearch(),
     getPageProps = () => usePage().props,
     hasFlashError = () => getPageProps().flash.error?.length > 0,
     getFlashError = () => getPageProps().flash.error,
@@ -346,93 +347,18 @@ const props = defineProps({
             }
         );
     },
-    filteredCrafts = computed(() => {
-        //@todo: make umlauts searchable Stühl -> Stuhl
-        //@todo: move logic to own class / composeable
-        let crafts = JSON.parse(JSON.stringify(props.crafts));
+    setFilterAndSearchData = () => {
+        crafts.value = props.crafts;
+        craftFilters.value = props.craftFilters;
+    };
 
-        if (searchValue.value.length === 0) {
-            crafts.forEach((craft) => craft.filtered_inventory_categories = craft.inventory_categories);
-            return crafts.filter(
-                (craft) => {
-                    return props.craftFilters.length === 0 || props.craftFilters.includes(craft.id);
-                }
-            );
-        }
+onMounted(() => {
+    setFilterAndSearchData();
+});
 
-        crafts.forEach((craft) => {
-            if (props.craftFilters.length > 0 && !props.craftFilters.includes(craft.id) ) {
-                //fully ignore crafts which are not included in filter
-                return;
-            }
-
-            let filteredCategories = [];
-
-            craft.inventory_categories.forEach((category) => {
-                let categoryMatches = false,
-                    matchedGroups = [];
-
-                if (category.name.indexOf(searchValue.value) > -1) {
-                    categoryMatches = true;
-                }
-
-                category.groups.forEach((group) => {
-                    let currentGroupMatched = false,
-                        matchedItems = [];
-
-                    if (group.name.indexOf(searchValue.value) > -1) {
-                        currentGroupMatched = true;
-                    }
-
-                    //even if group is not matched we need to filter the items
-                    //if group is matched we show all items if no item matches, if at least one item
-                    //matches we show only matching items
-                    group.items.forEach((item) => {
-                        let matchingCells = item.cells.filter((cell) => {
-                                return cell.cell_value.indexOf(searchValue.value) > -1
-                            });
-
-                        if (matchingCells.length > 0) {
-                            matchedItems.push(item);
-                        }
-                    });
-
-                    //no items found and group not matching, just push if category matched
-                    if (matchedItems.length === 0 && !currentGroupMatched) {
-                        if (!categoryMatches) {
-                            //nothing found
-                            return;
-                        }
-                        //still push group if category matches
-                        matchedGroups.push(group);
-                        return;
-                    }
-
-                    //no items found but group is matching, push it
-                    if (matchedItems.length === 0 && currentGroupMatched) {
-                        matchedGroups.push(group);
-                        return;
-                    }
-
-                    //group matched and items too, replace with matched item and push it
-                    group.items = matchedItems;
-                    matchedGroups.push(group);
-                });
-
-                if (
-                    categoryMatches ||
-                    !categoryMatches && matchedGroups.length > 0
-                ) {
-                    category.groups = matchedGroups;
-                    filteredCategories.push(category);
-                }
-            });
-
-            craft.filtered_inventory_categories = filteredCategories;
-        });
-
-        return crafts;
-    });
+onUpdated(() => {
+    setFilterAndSearchData();
+});
 </script>
 
 <style scoped>

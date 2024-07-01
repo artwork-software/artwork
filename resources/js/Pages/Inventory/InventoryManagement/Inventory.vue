@@ -58,15 +58,6 @@
                                                     {{ $t('Coloring') }}
                                                 </a>
                                             </MenuItem>
-                                            <MenuItem v-if="column.type === 3"
-                                                      v-slot="{ active }"
-                                                      as="div">
-                                                <a @click="openEditColumnSelectOptionsModal(column)"
-                                                   :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
-                                                    <IconEdit class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
-                                                    {{ $t('Edit') }}
-                                                </a>
-                                            </MenuItem>
                                             <MenuItem v-slot="{ active }" as="div">
                                                 <a @click="duplicateColumn(column.id)"
                                                    :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
@@ -81,6 +72,15 @@
                                                    :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
                                                     <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Delete') }}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-if="column.type === 3"
+                                                      v-slot="{ active }"
+                                                      as="div">
+                                                <a @click="openEditColumnSelectOptionsModal(column)"
+                                                   :class="[active ? 'rounded-xl bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 subpixel-antialiased']">
+                                                    <IconEdit class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    {{ $t('Edit') }}
                                                 </a>
                                             </MenuItem>
                                         </MenuItems>

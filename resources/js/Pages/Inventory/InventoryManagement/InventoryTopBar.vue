@@ -1,14 +1,14 @@
 <template>
-    <div class="flex flex-row w-full h-10 items-center gap-x-2 absolute justify-end -top-12 z-30 rounded-t-md subpixel-antialiased">
+    <div class="inventory-top-bar-container">
         <BaseFilter :only-icon="true">
-            <div class="flex flex-col w-full gap-y-2">
-                <div class="flex justify-between">
-                    <span> {{ $t('Filter') }}</span>
-                    <span class="xxsLight cursor-pointer text-right w-full" @click="updatesCraftFilters()">
+            <div class="inventory-top-bar-filter-container">
+                <div class="reset-filter-container">
+                    <span>{{ $t('Filter') }}</span>
+                    <span class="reset-btn" @click="updatesCraftFilters()">
                         {{ $t('Reset') }}
                     </span>
                 </div>
-                <div class="text-sm border-b">{{ $t('Crafts') }}</div>
+                <div class="title">{{ $t('Crafts') }}</div>
                 <div class="craft-checkbox-filter">
                     <BaseFilterCheckboxList :list="craftFilters"
                                             filter-name="inventory-management-crafts-filter"
@@ -17,24 +17,23 @@
             </div>
         </BaseFilter>
         <input v-if="searchOpened"
-               class="w-60 h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+               class="inventory-top-bar-search-input"
                type="text"
-               id="inventory-search-input"
                aria-label="ajax search text input"
                :placeholder="$t('Search')"
                v-model="searchValue"
                @update:model-value="updateSearchValue()"
         />
         <IconSearch v-if="!searchOpened"
-                    class="h-7 w-7 cursor-pointer hover:text-blue-500"
+                    class="inventory-top-bar-search-icon"
                     @click="toggleSearch()"/>
         <IconX v-else
-               class="h-7 w-7 cursor-pointer hover:text-blue-500"
+               class="inventory-top-bar-search-close-icon"
                @click="toggleSearch(true)"/>
-        <IconFileExport class="h-7 w-7 cursor-pointer text-artwork-buttons-context" aria-hidden="true"
+        <IconFileExport class="inventory-top-bar-export-icon"
                         @click="openSelectExportTypeModal()"/>
         <button type="button"
-                class="flex p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover"
+                class="inventory-top-bar-new-column-btn"
                 @click="openAddColumnModal()">
             <PlusIcon stroke-width="2" class="h-4 w-4 mr-2"/>
             <p class="text-sm">{{ $t('New column') }}</p>
@@ -100,13 +99,3 @@ const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
         emits.call(this, 'updatesSearchValue', searchValue.value);
     };
 </script>
-
-<style scoped>
-.craft-checkbox-filter {
-    @apply flex flex-col gap-y-2;
-}
-
-.craft-checkbox-filter :deep(div) {
-    @apply mb-0;
-}
-</style>

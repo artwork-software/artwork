@@ -62,12 +62,12 @@
                                 <span class="hind ml-1 my-auto">{{ $t('Assign users directly to your teams')}}</span>
                             </div>
                         </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
+                        <transition enter-active-class="transition-enter-active"
+                                    enter-from-class="transition-enter-from"
+                                    enter-to-class="transition-enter-to"
+                                    leave-active-class="transition-leave-active"
+                                    leave-from-class="transition-leave-from"
+                                    leave-to-class="transition-leave-to">
                             <DisclosurePanel
                                 class="origin-top-right absolute z-30 overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div v-if="departments.length === 0">

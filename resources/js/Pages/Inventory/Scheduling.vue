@@ -1,5 +1,5 @@
 <template>
-    <InventoryHeader :title="t('Inventory Scheduling')">
+    <InventoryHeader :title="$t('Inventory Scheduling')">
         <div class="mb-3">
             <InventoryFunctionBar :date-value="dateValue" @scroll-to-next="scrollToNext" @scroll-to-previous="scrollToPrevious" />
         </div>
@@ -66,7 +66,7 @@
                                         >
                                             <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
                                                 <span>
-                                                    {{ index === 'null' ? t('No Project') : index }}
+                                                    {{ index === 'null' ? $t('No Project') : index }}
                                                 </span>
                                             </div>
                                             <SingleEventInInventoryScheduling
@@ -102,7 +102,7 @@
                         @mousedown="startResize"
                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
-                        :title="t('Hold and drag to change the size')"
+                        :title="$t('Hold and drag to change the size')"
                     >
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <IconCaretUpDown class="h-3 w-6 text-gray-400" />

@@ -2,24 +2,13 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 const colors = require("tailwindcss/colors")
 
 module.exports = {
-    mode: 'jit',
-    safelist: [
-        //required for transition tags as classes are not applied directly
-        'transition-enter-active',
-        'transition-enter-from',
-        'transition-leave-to',
-        'transition-enter-to',
-        'transition-leave-from',
-        'transition-leave-active',
-    ],
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './vendor/laravel/jetstream/**/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
-        './resources/js/**/*.vue',
+        './resources/js/**/*.{vue,js,ts,jsx,tsx}',
         "./index.html",
-        "./src/**/*.{vue,js,ts,jsx,tsx}",
         "./node_modules/vue-tailwind-datepicker/**/*.js"
     ],
     theme: {

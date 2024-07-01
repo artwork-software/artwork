@@ -1,6 +1,6 @@
 <template>
     <BaseModal v-if="show" @closed="close">
-        <div class="flex flex-col mx-4 gap-y-2">
+        <div class="add-category-or-group-modal-container">
             <h1 v-if="typeIsCategory()"
                 class="headline1">
                 {{ $t('Add category') }}
@@ -9,8 +9,7 @@
                 class="headline1">
                 {{ $t('Add group') }}
             </h1>
-            <div id="new-column-form"
-                 class="flex flex-col gap-y-2">
+            <div class="new-category-or-group-form">
                 <TextInputComponent v-if="typeIsCategory()"
                                     id="new-category-name"
                                     v-model="newCategoryOrGroupForm.name"
@@ -22,10 +21,10 @@
                                     :label="$t('Group name*')"
                 />
                 <span v-if="showInvalidNameErrorText"
-                      class="text-xs subpixel-antialiased text-error">
+                      class="new-category-or-group-error-text">
                     {{ $t('A name must be entered.') }}
                 </span>
-                <div class="w-full flex flex-row justify-center mt-4">
+                <div class="button-container">
                     <FormButton :text="$t('Save')"
                                 @click="saveNewCategoryOrGroup()"/>
                 </div>

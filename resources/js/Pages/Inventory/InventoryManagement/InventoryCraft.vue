@@ -1,14 +1,14 @@
 <template>
     <tr>
-        <td :colspan="colspan" class="subpixel-antialiased text-lg">
-            <div class="flex flex-row items-center gap-x-2">
-                <div class="flex flex-row items-center w-auto gap-x-2 cursor-pointer"
+        <td :colspan="colspan" class="craft-td">
+            <div class="craft-container">
+                <div class="title"
                      @click="toggleCraft()">
                     <span>{{ craft.name }}</span>
-                    <IconChevronUp v-if="craftShown" class="w-5 h-5"/>
-                    <IconChevronDown v-else class="w-5 h-5"/>
+                    <IconChevronUp v-if="craftShown" class="icon"/>
+                    <IconChevronDown v-else class="icon"/>
                 </div>
-                <IconLink class="w-5 h-5 cursor-pointer" @click="openShiftSettingsInNewTab()"/>
+                <IconLink class="icon" @click="openShiftSettingsInNewTab()"/>
             </div>
         </td>
     </tr>
@@ -35,15 +35,15 @@
                       @category-requests-drag-move="moveCategoryToDestination"/>
         <template v-if="(index + 1) === craft.inventory_categories.length">
             <tr>
-                <td :colspan="colspan" class="h-5"/>
+                <td :colspan="colspan" class="empty-row-td"/>
             </tr>
         </template>
     </template>
     <tr v-else-if="craftShown && craft.inventory_categories.length === 0">
         <td :colspan="colspan">
             <div @click="openAddCategoryOrGroupModal('category', props.craft.id)"
-                 class="w-full flex flex-row cursor-pointer items-center justify-center border-2 border-dashed p-10 text-xs transition-all duration-300 hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover">
-                <IconCirclePlus class="w-8 h-8"/>
+                 class="add-category-container">
+                <IconCirclePlus class="icon"/>
                 {{ $t('Add category') }}
             </div>
         </td>

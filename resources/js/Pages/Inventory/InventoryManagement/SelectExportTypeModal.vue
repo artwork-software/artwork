@@ -40,7 +40,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconFileExport} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {usePage} from "@inertiajs/vue3";
-import {useTranslation} from "@/Pages/Composeables/Translation.js";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation(),
     emits = defineEmits(['closed']),

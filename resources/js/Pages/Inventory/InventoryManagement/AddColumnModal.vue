@@ -74,7 +74,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import {useTranslation} from "@/Pages/Composeables/Translation.js";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation(),
     emits = defineEmits(['closed']),

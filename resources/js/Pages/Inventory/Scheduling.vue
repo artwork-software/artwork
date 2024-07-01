@@ -207,7 +207,7 @@ import SingleCraftInUserOverview from "@/Pages/Inventory/Components/SingleCraftI
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInventoryModal.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
-import {useTranslation} from "@/Pages/Composeables/Translation.js";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 const $t = useTranslation(),
     props = defineProps({

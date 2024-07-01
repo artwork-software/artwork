@@ -2,21 +2,21 @@
     <BaseModal v-if="show" @closed="close">
         <div class="flex flex-col mx-4 gap-y-2">
             <h1 class="headline1">
-                {{ $t('Neue Spalte erstellen') }}
+                {{ $t('Create new column') }}
             </h1>
             <div id="new-column-form"
                  class="flex flex-col gap-y-2">
                 <TextInputComponent id="new-column-name"
                                     v-model="newColumnForm.name"
-                                    :label="$t('Spaltenname*')"
+                                    :label="$t('Column name*')"
                 />
                 <span v-if="showNewColumnFormNameError"
                       class="text-xs subpixel-antialiased text-error">
-                    {{ $t('Es muss ein Name angegeben werden.') }}
+                    {{ $t('A name must be entered.') }}
                 </span>
                 <SelectComponent id="new-column-type"
                                  v-model="newColumnForm.type"
-                                 :label="$t('Spaltentyp')"
+                                 :label="$t('Column type')"
                                  :options="getTypeOptions()"
                                  :getter-for-options-to-display="(type) => type.value"
                                  selected-property-to-display="value"
@@ -28,7 +28,7 @@
                         <div class="flex flex-row w-full items-center gap-x-2">
                         <TextInputComponent id="new-select-option-name"
                                             v-model="newColumnNewSelectOptionName"
-                                            :label="$t('Neue Auswahlmöglichkeit')"
+                                            :label="$t('New selection option')"
                                             @keyup.enter="addNewColumnNewSelectOption()"/>
                         <PlusCircleIcon v-if="newColumnNewSelectOptionName.length > 0"
                                   class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full"
@@ -38,7 +38,7 @@
                     </div>
                     <div class="w-full flex flex-col items-center text-xs">
                         <div v-for="(option, index) in newColumnForm.typeOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
-                            <span class="text-primary underline">Auswahlmöglichkeit {{ (index + 1) }}:</span>
+                            <span class="text-primary underline">{{ $t('Selection option') + (index + 1) }}:</span>
                             <div class="flex flex-row justify-between items-center">
                                 <span class="w-3/4 break-words">{{ option }}</span>
                                 <input :id="'radio-option-' + index"
@@ -46,7 +46,7 @@
                                        v-model="newColumnForm.defaultOption"
                                        :value="option"
                                        type="radio"/>
-                                <label :for="'radio-option-' + index">{{ $t('Standardwert') }}</label>
+                                <label :for="'radio-option-' + index">{{ $t('Default value') }}</label>
                                 <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
                                            @click="removeNewColumnNewSelectOption(index)"/>
                             </div>
@@ -54,7 +54,7 @@
                     </div>
                     <span v-if="showNewColumnFormTypeOptionsError"
                           class="text-xs subpixel-antialiased text-error mt-2">
-                        {{ $t('Es muss mindestens eine Auswahloption hinzugefügt werden.') }}
+                        {{ $t('At least one selection option must be added.') }}
                     </span>
                 </div>
                 <div class="w-full flex flex-row justify-center mt-4">
@@ -74,24 +74,26 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {useTranslation} from "@/Pages/Composeables/Translation.js";
 
-const emits = defineEmits(['closed']),
+const $t = useTranslation(),
+    emits = defineEmits(['closed']),
     NEW_COLUMN_TYPE = {
         TEXT: {
             id: 0,
-            translation: 'Freitextfeld'
+            translation: $t('Text field')
         },
         DATE: {
             id: 1,
-            translation: 'Datumsfeld'
+            translation: $t('Date field')
         },
         CHECKBOX: {
             id: 2,
-            translation: 'Checkbox'
+            translation: $t('Checkbox')
         },
         SELECT: {
             id: 3,
-            translation: 'Auswahlbox'
+            translation: $t('Select box')
         },
     },
     props = defineProps({
@@ -99,7 +101,7 @@ const emits = defineEmits(['closed']),
     }),
     newColumnNewSelectOptionName = ref(''),
     newColumnForm = useForm({
-        name: null,
+        name: '',
         type: null,
         typeOptions: [],
         defaultOption: null

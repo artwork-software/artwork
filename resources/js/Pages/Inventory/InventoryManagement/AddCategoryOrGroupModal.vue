@@ -3,27 +3,27 @@
         <div class="flex flex-col mx-4 gap-y-2">
             <h1 v-if="typeIsCategory()"
                 class="headline1">
-                {{ $t('Kategorie hinzufügen') }}
+                {{ $t('Add category') }}
             </h1>
             <h1 v-if="typeIsGroup()"
                 class="headline1">
-                {{ $t('Gruppe hinzufügen') }}
+                {{ $t('Add group') }}
             </h1>
             <div id="new-column-form"
                  class="flex flex-col gap-y-2">
                 <TextInputComponent v-if="typeIsCategory()"
                                     id="new-category-name"
                                     v-model="newCategoryOrGroupForm.name"
-                                    :label="$t('Kategoriename*')"
+                                    :label="$t('Category name*')"
                 />
                 <TextInputComponent v-if="typeIsGroup()"
                                     id="new-group-name"
                                     v-model="newCategoryOrGroupForm.name"
-                                    :label="$t('Gruppenname*')"
+                                    :label="$t('Group name*')"
                 />
                 <span v-if="showInvalidNameErrorText"
                       class="text-xs subpixel-antialiased text-error">
-                    {{ $t('Es muss ein Name angegeben werden.') }}
+                    {{ $t('A name must be entered.') }}
                 </span>
                 <div class="w-full flex flex-row justify-center mt-4">
                     <FormButton :text="$t('Save')"

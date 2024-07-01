@@ -26,7 +26,7 @@
     <ConfirmDeleteModal v-if="itemConfirmDeleteModalShown"
                         :title="$t('Delete item?')"
                         :button="$t('Yes')"
-                        :description="$t('Really delete this item? This cannot be undone and is only possible if item is not scheduled.')"
+                        :description="$t('Really delete this item? This cannot be undone.')"
                         @delete="deleteItem()"
                         @closed="closeItemDeleteConfirmModal()"/>
 </template>

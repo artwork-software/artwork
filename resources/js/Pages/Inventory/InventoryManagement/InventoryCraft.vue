@@ -44,7 +44,7 @@
             <div @click="openAddCategoryOrGroupModal('category', props.craft.id)"
                  class="w-full flex flex-row cursor-pointer items-center justify-center border-2 border-dashed p-10 text-xs transition-all duration-300 hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover">
                 <IconCirclePlus class="w-8 h-8"/>
-                {{ $t('Kategorie hinzufügen') }}
+                {{ $t('Add category') }}
             </div>
         </td>
     </tr>

@@ -2,9 +2,9 @@
     <BaseModal v-if="show" @closed="close(false)">
         <div class="flex flex-col mx-4 gap-y-5">
             <h1 class="headline1">
-                {{ $t('Bestandsexport') }}
+                {{ $t('Inventory export') }}
             </h1>
-            <span>{{ $t('Bitte wählen in welchem Format der Export erstellt werden soll')}}</span>
+            <span>{{ $t('Please select the format in which the export is to be created.')}}</span>
             <div class="flex flex-row gap-3 items-center">
                 <input id="rb-pdf"
                        value="pdf"
@@ -40,11 +40,10 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconFileExport} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {usePage} from "@inertiajs/vue3";
-import { useI18n } from "vue-i18n";
-const { t } = useI18n(),
-    $t = t;
+import {useTranslation} from "@/Pages/Composeables/Translation.js";
 
-const emits = defineEmits(['closed']),
+const $t = useTranslation(),
+    emits = defineEmits(['closed']),
     page = usePage(),
     props = defineProps({
         show: {
@@ -90,7 +89,9 @@ const emits = defineEmits(['closed']),
                     }
                 )
             );
-        }).catch(() => page.props.flash.error = $t('Export konnte nicht erzeugt werden. Bitte erneut versuchen.'));
+        }).catch(
+            () => page.props.flash.error = $t('Export could not be created. Please try again.')
+        );
 
         emits.call(this, 'closed');
     }

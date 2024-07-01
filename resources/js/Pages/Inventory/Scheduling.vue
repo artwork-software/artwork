@@ -207,29 +207,27 @@ import SingleCraftInUserOverview from "@/Pages/Inventory/Components/SingleCraftI
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInventoryModal.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
-import { useI18n } from "vue-i18n";
-const { t } = useI18n()
-const $t = t;
+import {useTranslation} from "@/Pages/Composeables/Translation.js";
 
-
-const props = defineProps({
-    dateValue: {
-        type: Array,
-        required: true
-    },
-    calendar: {
-        type: Object,
-        required: true
-    },
-    days: {
-        type: Object,
-        required: true
-    },
-    crafts: {
-        type: Object,
-        required: true
-    }
-});
+const $t = useTranslation(),
+    props = defineProps({
+        dateValue: {
+            type: Array,
+            required: true
+        },
+        calendar: {
+            type: Object,
+            required: true
+        },
+        days: {
+            type: Object,
+            required: true
+        },
+        crafts: {
+            type: Object,
+            required: true
+        }
+    });
 
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);

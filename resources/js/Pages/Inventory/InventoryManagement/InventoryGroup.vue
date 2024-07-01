@@ -59,7 +59,7 @@
     <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
                         :title="$t('Delete group?')"
                         :button="$t('Yes')"
-                        :description="$t('Really delete this group? This cannot be undone and is only possible if no items in this group are scheduled.')"
+                        :description="$t('Really delete this group? This cannot be undone.')"
                         @delete="deleteGroup()"
                         @closed="closeGroupDeleteConfirmModal()"/>
 </template>

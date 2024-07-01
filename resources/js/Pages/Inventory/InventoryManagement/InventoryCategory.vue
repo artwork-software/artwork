@@ -62,7 +62,7 @@
     <ConfirmDeleteModal v-if="categoryConfirmDeleteModalShown"
                         :title="$t('Delete category?')"
                         :button="$t('Yes')"
-                        :description="$t('Really delete a category? This cannot be undone and is only possible if no items in the associated groups are scheduled.')"
+                        :description="$t('Really delete this category? This cannot be undone.')"
                         @delete="deleteCategory()"
                         @closed="closeCategoryDeleteConfirmModal()"
     />

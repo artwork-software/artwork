@@ -138,8 +138,8 @@
                     :description="getFlashError()"
                     @closed="resetFlashError"/>
     <ConfirmationComponent v-if="showConfirmDeleteColumnModal"
-                           :titel="$t('Wirklich löschen')"
-                           :description="$t('Spalte wirklich löschen? Das kann nicht rückgängig gemacht werden. Alle Werte gehen verloren.')"
+                           :titel="$t('Really delete?')"
+                           :description="$t('Really delete a column? This cannot be undone. All values will be lost.')"
                            @closed="handleColumnDeletion"/>
     <div id="remove-icon-container"></div>
 </template>

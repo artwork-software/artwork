@@ -2,14 +2,14 @@
     <BaseModal v-if="show" @closed="close">
         <div class="flex flex-col mx-4 gap-y-2">
             <h1 class="headline1">
-                {{ $t('Spaltenoptionen bearbeiten') }}
+                {{ $t('Edit column options') }}
             </h1>
-            <span>Sollte eine Option entfernt werden und diese wird in einer Zelle verwendet, wird die entsprechende Zelle geleert.</span>
+            <span>{{ $t('If an option is removed and it is used in a cell, the corresponding cell is emptied.') }}</span>
             <div class="flex flex-row w-full items-start gap-x-2">
                 <div class="flex flex-row w-full items-center gap-x-2">
                     <TextInputComponent id="new-select-option-name"
                                         v-model="columnNewSelectOptionName"
-                                        :label="$t('Neue Auswahlmöglichkeit')"
+                                        :label="$t('New selection option')"
                                         @keyup.enter="addNewColumnNewSelectOption()"/>
                     <PlusCircleIcon v-if="columnNewSelectOptionName.length > 0"
                                     class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full"
@@ -19,7 +19,7 @@
             </div>
             <div class="w-full flex flex-col items-center text-xs">
                 <div v-for="(option, index) in selectOptionColumnForm.selectOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
-                    <span class="text-primary underline">Auswahlmöglichkeit {{ (index + 1) }}:</span>
+                    <span class="text-primary underline">{{ $t('Selection option') + (index + 1) }}:</span>
                     <div class="flex flex-row justify-between">
                         <span class="w-[90%] break-words">{{ option }}</span>
                         <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
@@ -29,7 +29,7 @@
             </div>
             <span v-if="showNewSelectOptionError"
                   class="text-xs subpixel-antialiased text-error">
-                {{ $t('Es muss mindestens eine Auswahloption hinzugefügt werden.') }}
+                {{ $t('At least one selection option must be added.') }}
             </span>
         </div>
         <div class="w-full flex flex-row justify-center mt-4">

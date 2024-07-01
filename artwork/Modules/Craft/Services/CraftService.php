@@ -68,5 +68,4 @@ readonly class CraftService
 
         return $crafts;
     }
-
 }

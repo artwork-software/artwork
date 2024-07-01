@@ -84,8 +84,4 @@ readonly class CraftInventoryItemService
         });
         return $cell ? (int) $cell->cell_value : 0;
     }
-
-
-
-
 }

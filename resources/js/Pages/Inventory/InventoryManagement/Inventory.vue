@@ -121,7 +121,8 @@
                 <template v-for="(craft, index) in filteredCrafts"
                           :key="craft.id">
                     <tr v-if="index === 0">
-                        <td :colspan="getColSpan()" class="h-5"/>
+                        <td :colspan="getColSpan()"
+                            class="empty-row-td"/>
                     </tr>
                     <InventoryCraft :craft="craft"
                                     :colspan="getColSpan()"/>

@@ -2,6 +2,10 @@
     .inventory-container {
         @apply flex flex-col relative;
 
+        .empty-row-td {
+            @apply h-5;
+        }
+
         .inventory-top-bar-container {
             @apply flex flex-row w-full h-10 items-center gap-x-2 absolute justify-end -top-12 z-30 rounded-t-md subpixel-antialiased;
 

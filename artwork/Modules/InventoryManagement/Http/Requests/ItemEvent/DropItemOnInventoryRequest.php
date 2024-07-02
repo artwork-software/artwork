@@ -23,8 +23,6 @@ class DropItemOnInventoryRequest extends FormRequest
     {
         return [
             'quantity' => 'required|integer',
-            'events' => 'required|array|min:1',
-            'events.*' => 'required|integer|exists:events,id',
         ];
     }
 }

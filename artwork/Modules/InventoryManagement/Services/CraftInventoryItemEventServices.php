@@ -152,8 +152,12 @@ readonly class CraftInventoryItemEventServices
     }
 
 
-    public function dropItemToEvent(CraftInventoryItem $item, Event $event, int $userId, int $quantity): Model
-    {
+    public function dropItemToEvent(
+        CraftInventoryItem $item,
+        Event $event,
+        int $userId,
+        int $quantity
+    ): Model|CraftInventoryItemEvent {
         $itemEvent = $this->createNewCraftInventoryItem([
             'craft_inventory_item_id' => $item->id,
             'event_id' => $event->id,
@@ -178,7 +182,7 @@ readonly class CraftInventoryItemEventServices
         return new CraftInventoryItemEvent($attributes);
     }
 
-    public function storeMultiple(Collection $events, int $userId): CraftInventoryItemEvent|Model|null
+    public function storeMultiple(Collection $events, int $userId): CraftInventoryItemEvent|null
     {
         $lastEvent = null;
         foreach ($events as $event) {
@@ -193,6 +197,7 @@ readonly class CraftInventoryItemEventServices
                     'user_id' => $userId,
                     'quantity' => $item['count'],
                 ]);
+                /** @var CraftInventoryItemEvent $lastEvent */
                 $lastEvent = $this->craftInventoryItemEventRepository->save($itemEvent);
             }
         }

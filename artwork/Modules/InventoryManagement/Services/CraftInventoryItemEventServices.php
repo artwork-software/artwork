@@ -31,8 +31,8 @@ readonly class CraftInventoryItemEventServices
     public function updateEventTimeInInventory(
         CraftInventoryItemEvent $craftInventoryItemEvent,
         Event $event
-    ): void {
-        $this->craftInventoryItemEventRepository->update($craftInventoryItemEvent, [
+    ): Model|CraftInventoryItemEvent {
+        return $this->craftInventoryItemEventRepository->update($craftInventoryItemEvent, [
             'start' => $event->start_time,
             'end' => $event->end_time,
             'is_all_day' => $event->allDay,
@@ -91,30 +91,24 @@ readonly class CraftInventoryItemEventServices
      */
     private function calculateOverbookedForAllEvents(CraftInventoryItem $item): array
     {
-        // Sortiere alle Events des Items nach Startzeit.
         $events = $item->events->sortBy(function ($itemEvent) {
             return $itemEvent->start;
         });
 
-        // Initialisiere die verfügbare Menge des Items.
         $initialQuantity = $item->cells->first(function ($cell) {
             return is_numeric($cell->cell_value);
         })?->cell_value ?? 0;
 
-        // Array, um die fehlende Menge für jedes Event zu speichern.
         $overbookedQuantities = [];
 
-        // Gruppiere die Events nach ihrem Startdatum.
         $eventsByDay = $events->groupBy(function ($itemEvent) {
             return $itemEvent->start->format('Y-m-d');
         });
 
-        // Berechne die benötigte Menge für jedes Event, pro Tag.
         foreach ($eventsByDay as $day => $dayEvents) {
             $availableQuantity = $initialQuantity;
 
             foreach ($dayEvents as $itemEvent) {
-                // Überprüfen, ob das Event den ganzen Tag dauert oder ob es Überschneidungen gibt
                 if (
                     $itemEvent->is_all_day ||
                     $dayEvents->firstWhere(function ($otherEvent) use ($itemEvent) {
@@ -126,11 +120,9 @@ readonly class CraftInventoryItemEventServices
                     })
                 ) {
                     if ($availableQuantity >= $itemEvent->quantity) {
-                        // Reduziere die verfügbare Menge um die Menge des aktuellen Events.
                         $overbookedQuantities[$itemEvent->id] = 0;
                         $availableQuantity -= $itemEvent->quantity;
                     } else {
-                        // Berechne die fehlende Menge.
                         $missingQuantity = $itemEvent->quantity - $availableQuantity;
                         $overbookedQuantities[$itemEvent->id] = $missingQuantity;
                         $availableQuantity = 0;
@@ -141,7 +133,6 @@ readonly class CraftInventoryItemEventServices
             }
         }
 
-        // Spezielle Behandlung für jeden Tag
         foreach ($eventsByDay as $day => $dayEvents) {
             $availableQuantity = $initialQuantity;
 
@@ -163,20 +154,23 @@ readonly class CraftInventoryItemEventServices
 
     public function dropItemToEvent(CraftInventoryItem $item, Event $event, int $userId, int $quantity): Model
     {
-        $itemEvent = new CraftInventoryItemEvent();
-        $itemEvent->craft_inventory_item_id = $item->id;
-        $itemEvent->event_id = $event->id;
-        $itemEvent->start = $event->start_time;
-        $itemEvent->end = $event->end_time;
-        $itemEvent->is_all_day = $event->allDay;
-        $itemEvent->user_id = $userId;
-        $itemEvent->quantity = $quantity;
+        $itemEvent = $this->createNewCraftInventoryItem([
+            'craft_inventory_item_id' => $item->id,
+            'event_id' => $event->id,
+            'start' => $event->start_time,
+            'end' => $event->end_time,
+            'is_all_day' => $event->allDay,
+            'user_id' => $userId,
+            'quantity' => $quantity,
+        ]);
         return $this->craftInventoryItemEventRepository->save($itemEvent);
     }
 
-    public function updateQuantity(int $quantity, CraftInventoryItemEvent $craftInventoryItemEvent): void
-    {
-        $this->craftInventoryItemEventRepository->update($craftInventoryItemEvent, ['quantity' => $quantity]);
+    public function updateQuantity(
+        int $quantity,
+        CraftInventoryItemEvent $craftInventoryItemEvent
+    ): Model|CraftInventoryItemEvent {
+        return $this->craftInventoryItemEventRepository->update($craftInventoryItemEvent, ['quantity' => $quantity]);
     }
 
     public function createNewCraftInventoryItem(array $attributes = []): CraftInventoryItemEvent

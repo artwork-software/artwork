@@ -22,7 +22,9 @@ class DropItemOnInventoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'quantity' => 'required|integer'
+            'quantity' => 'required|integer',
+            'events' => 'required|array|min:1',
+            'events.*' => 'required|integer|exists:events,id',
         ];
     }
 }

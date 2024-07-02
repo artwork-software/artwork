@@ -32,7 +32,7 @@
     <IconTrashXFilled v-if="!groupClicked && groupMouseover && !groupDragged"
                       @mouseover="handleGroupDeleteMouseover"
                       @mouseout="handleGroupDeleteMouseout"
-                      :class="[groupDeleteCls + ' remove-group-container']"
+                      :class="[groupDeleteCls + ' remove-group-icon']"
                       @click="showGroupDeleteConfirmModal()"/>
     <AddNewResource v-if="groupShown"
             @click="addNewItem()"
@@ -223,10 +223,4 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         );
     };
 </script>
-
-<style scoped>
-.onDragBackground :deep(td) {
-    opacity: 35%;
-}
-</style>
 

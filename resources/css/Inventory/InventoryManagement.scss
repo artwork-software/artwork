@@ -454,8 +454,18 @@
             }
 
             .remove-category-icon,
-            .remove-group-container {
+            .remove-group-icon {
                 @apply absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%];
+            }
+
+            .remove-item-icon {
+                @apply absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[115%] translate-x-[40%];
+            }
+
+            .onDragBackground {
+                td {
+                    @apply opacity-50;
+                }
             }
         }
     }

@@ -218,9 +218,3 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         );
     };
 </script>
-
-<style scoped>
-.onDragBackground :deep(td) {
-    opacity: 50%;
-}
-</style>

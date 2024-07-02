@@ -1,6 +1,6 @@
 <template>
     <tr>
-        <td></td>
+        <td class="empty-row-xxs-td"></td>
     </tr>
     <tr :draggable="isDraggable"
         @dragstart="itemDragStart"
@@ -19,7 +19,7 @@
             <IconTrashXFilled v-if="!isAnyCellEditing && itemMouseover && !itemDragged"
                               @mouseover="handleItemDeleteMouseover"
                               @mouseout="handleItemDeleteMouseout"
-                              :class="[itemDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[115%] translate-x-[40%]']"
+                              :class="[itemDeleteCls + ' remove-item-icon']"
                               @click="showItemDeleteConfirmModal()"/>
         </td>
     </tr>
@@ -112,10 +112,4 @@ const emits = defineEmits(['itemDragging', 'itemDragEnd']),
         emits.call(this, 'itemDragEnd');
     }
 </script>
-
-<style scoped>
-.onDragBackground :deep(td) {
-    opacity: 50%;
-}
-</style>
 

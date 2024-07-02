@@ -79,6 +79,54 @@
                 }
             }
         }
+
+        .edit-column-select-options-modal-container {
+            @apply flex flex-col mx-4 gap-y-2;
+
+            .new-option-container {
+                @apply flex flex-row w-full items-start gap-x-2;
+
+                .layout {
+                    @apply flex flex-row w-full items-center gap-x-2;
+
+                    .icon {
+                        @apply w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full;
+                    }
+                }
+            }
+
+            .select-options-container {
+                @apply w-full flex flex-col items-center text-xs;
+
+                .select-option-container {
+                    @apply w-full flex flex-col border-b py-2 gap-y-2;
+
+                    .option-index {
+                        @apply text-primary underline;
+                    }
+
+                    .option-container {
+                        @apply flex flex-row justify-between;
+
+                        .option {
+                            @apply w-[90%] break-words;
+                        }
+
+                        .icon {
+                            @apply w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full;
+                        }
+                    }
+                }
+            }
+
+            .error-text {
+                @apply text-xs subpixel-antialiased text-error;
+            }
+
+            .button-container {
+                @apply w-full flex flex-row justify-center mt-4;
+            }
+        }
     }
 
     .inventory-container {

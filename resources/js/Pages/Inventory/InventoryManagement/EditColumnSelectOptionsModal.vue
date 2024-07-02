@@ -1,40 +1,39 @@
 <template>
     <BaseModal v-if="show" @closed="close">
-        <div class="flex flex-col mx-4 gap-y-2">
+        <div class="edit-column-select-options-modal-container">
             <h1 class="headline1">
                 {{ $t('Edit column options') }}
             </h1>
             <span>{{ $t('If an option is removed and it is used in a cell, the corresponding cell is emptied.') }}</span>
-            <div class="flex flex-row w-full items-start gap-x-2">
-                <div class="flex flex-row w-full items-center gap-x-2">
+            <div class="new-option-container">
+                <div class="layout">
                     <TextInputComponent id="new-select-option-name"
                                         v-model="columnNewSelectOptionName"
                                         :label="$t('New selection option')"
                                         @keyup.enter="addNewColumnNewSelectOption()"/>
                     <PlusCircleIcon v-if="columnNewSelectOptionName.length > 0"
-                                    class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full"
+                                    class="icon"
                                     @click="addNewColumnNewSelectOption()"/>
                 </div>
-
             </div>
-            <div class="w-full flex flex-col items-center text-xs">
-                <div v-for="(option, index) in selectOptionColumnForm.selectOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
-                    <span class="text-primary underline">{{ $t('Selection option') + (index + 1) }}:</span>
-                    <div class="flex flex-row justify-between">
-                        <span class="w-[90%] break-words">{{ option }}</span>
-                        <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
+            <div class="select-options-container">
+                <div v-for="(option, index) in selectOptionColumnForm.selectOptions" class="select-option-container">
+                    <span class="option-index">{{ $t('Selection option') + (index + 1) }}:</span>
+                    <div class="option-container">
+                        <span class="option">{{ option }}</span>
+                        <TrashIcon class="icon"
                                    @click="removeNewColumnNewSelectOption(index)"/>
                     </div>
                 </div>
             </div>
             <span v-if="showNewSelectOptionError"
-                  class="text-xs subpixel-antialiased text-error">
+                  class="error-text">
                 {{ $t('At least one selection option must be added.') }}
             </span>
-        </div>
-        <div class="w-full flex flex-row justify-center mt-4">
-            <FormButton :text="$t('Save')"
-                        @click="updateSelectOptions()"/>
+            <div class="button-container">
+                <FormButton :text="$t('Save')"
+                            @click="updateSelectOptions()"/>
+            </div>
         </div>
     </BaseModal>
 </template>

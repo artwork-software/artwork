@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreMultipleInventoryItemsInEvent;
-use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\StoreMultipleInventoryItemsInEvent;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
 use Illuminate\Auth\AuthManager;
-use Illuminate\Http\Request;
 
 class CraftInventoryItemEventController extends Controller
 {

@@ -24,7 +24,7 @@
              @click="toggleCellEdit()">
             {{ $t('No') }}
         </div>
-        <div v-else class="w-full h-full cursor-text" @click="toggleCellEdit()"/>
+        <div v-else class="w-full min-h-8 h-full cursor-text" @click="toggleCellEdit()"/>
         <div v-if="isTextColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"

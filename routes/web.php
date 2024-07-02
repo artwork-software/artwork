@@ -605,7 +605,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('event.shift.update.updateDescription');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])
             ->name('project.sum.money.source.update');
-
+        Route::patch('/{presetShift}/preset/update/description', [ShiftPresetController::class, 'updateDescription'])
+            ->name('preset.shift.update.updateDescription');
         // DELETE
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])

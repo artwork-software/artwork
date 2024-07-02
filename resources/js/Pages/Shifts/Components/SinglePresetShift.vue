@@ -1,5 +1,5 @@
 <template>
-    <div class=" flex items-center justify-between px-4 text-white text-xs relative bg-gray-500">
+    <div class=" flex items-center justify-between px-4 text-white text-xs relative bg-gray-500 rounded-t-lg">
         <div class="h-9 flex items-center">
             {{ presetShift.craft.abbreviation }}
             (0/{{ computedMaxWorkerCount }})
@@ -38,12 +38,12 @@
             </div>
         </div>
     </div>
-    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
+    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll rounded-b-lg">
         <p class="text-xs mb-1">
             {{ presetShift.start }} - {{ presetShift.end }}
             <span v-if="presetShift.break_minutes">| {{ presetShift.break_formatted }}</span>
         </p>
-        <p class="text-xs mb-3">{{ presetShift.description }}</p>
+        <ShiftNoteComponent :shift="presetShift" is-preset />
         <div v-for="shiftsQualification in this.presetShift.shifts_qualifications">
             <div v-for="(count) in shiftsQualification.value">
                 <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
@@ -77,6 +77,7 @@ import {router} from "@inertiajs/vue3";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",
@@ -87,6 +88,7 @@ export default defineComponent({
         }
     },
     components: {
+        ShiftNoteComponent,
         BaseMenu,
         ShiftQualificationIconCollection,
         AddEditShiftPresetModal,

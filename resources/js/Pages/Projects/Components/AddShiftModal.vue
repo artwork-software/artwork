@@ -120,23 +120,23 @@
                                             <DateInputComponent v-if="!shiftForm.automaticMode"
                                                                 v-model="shiftForm.start_date"
                                                                 :label="$t('Shift start date')"
-                                                                @change="validateShiftDates()"/>
+                                                                @change="validateShiftDates()" id=""/>
                                             <TimeInputComponent v-model="shiftForm.start"
                                                                 :label="$t('Start-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
-                                                                @change="validateShiftDates()"/>
+                                                                @change="validateShiftDates()" id=""/>
                                         </div>
                                         <div class="flex flex-row">
                                             <DateInputComponent v-if="!shiftForm.automaticMode"
                                                                 v-model="shiftForm.end_date"
                                                                 :label="$t('Shift end date')"
                                                                 @change="validateShiftDates()"
-                                            />
+                                             id=""/>
                                             <TimeInputComponent v-model="shiftForm.end"
                                                                 :label="$t('End-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
                                                                 @change="validateShiftDates()"
-                                            />
+                                             id=""/>
                                         </div>
                                         <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||

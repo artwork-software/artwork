@@ -511,10 +511,10 @@ const goToPeriod = (period, type) => {
 
 
 watch(
-    () => props.crafts,
+    () => crafts,
     (newCrafts) => {
-        newCrafts.forEach((craft) => {
-            craft.inventory_categories.forEach((category) => {
+        newCrafts?.forEach((craft) => {
+            craft.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {
                         if (item.checked && !checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {

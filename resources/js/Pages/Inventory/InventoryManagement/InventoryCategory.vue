@@ -34,7 +34,10 @@
                       @mouseout="handleCategoryDeleteMouseout"
                       :class="[categoryDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showCategoryDeleteConfirmModal()"/>
-    <AddNewGroup v-if="categoryShown" @click="openAddCategoryOrGroupModal()"/>
+    <AddNewResource v-if="categoryShown"
+            @click="openAddCategoryOrGroupModal()"
+            :text="$t('Add new group')"
+            :colspan="colspan"/>
     <DropGroup v-if="showFirstDropGroup"
                :colspan="colspan"
                :destination-index="0"
@@ -73,10 +76,10 @@ import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup
 import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import AddNewGroup from "@/Pages/Inventory/InventoryManagement/AddNewGroup.vue";
 import DropGroup from "@/Pages/Inventory/InventoryManagement/DropGroup.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
+import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
 
 const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNewGroup']),
     props = defineProps({

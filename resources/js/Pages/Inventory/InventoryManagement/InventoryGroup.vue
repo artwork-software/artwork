@@ -34,7 +34,10 @@
                       @mouseout="handleGroupDeleteMouseout"
                       :class="[groupDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
                       @click="showGroupDeleteConfirmModal()"/>
-    <AddNewItem v-if="groupShown" @click="addNewItem()"/>
+    <AddNewResource v-if="groupShown"
+            @click="addNewItem()"
+            :text="$t('Add new item')"
+            :colspan="colspan"/>
     <tr>
         <td></td>
     </tr>
@@ -68,10 +71,10 @@
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
 import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
-import AddNewItem from "@/Pages/Inventory/InventoryManagement/AddNewItem.vue";
 import DropItem from "@/Pages/Inventory/InventoryManagement/DropItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
+import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
 
 const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     props = defineProps({

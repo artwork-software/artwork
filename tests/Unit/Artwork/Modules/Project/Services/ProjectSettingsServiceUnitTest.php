@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\Project\Services;
 
-use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingRequest;
+use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -48,7 +48,7 @@ class ProjectSettingsServiceUnitTest extends TestCase
         $projectSettingsService = app()->make(ProjectSettingsService::class);
 
         //create mock
-        $requestMock = $this->getMockBuilder(ProjectCreateSettingRequest::class)
+        $requestMock = $this->getMockBuilder(ProjectCreateSettingsUpdateRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['boolean'])
             ->getMock();

@@ -35,7 +35,12 @@ export default {
                 <IconDotsVertical stroke-width="1.5" class=" flex-shrink-0" aria-hidden="true" :class="[dotsColor, dotsSize]"/>
             </MenuButton>
         </div>
-        <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+        <transition enter-active-class="transition-enter-active"
+                    enter-from-class="transition-enter-from"
+                    enter-to-class="transition-enter-to"
+                    leave-active-class="transition-leave-active"
+                    leave-from-class="transition-leave-from"
+                    leave-to-class="transition-leave-to">
             <MenuItems class="z-50 absolute rounded-lg w-80 shadow-lg bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none" :class="right ? 'origin-top-right right-0' : 'origin-top-left left-0'">
                 <div class="py-1">
                     <slot />

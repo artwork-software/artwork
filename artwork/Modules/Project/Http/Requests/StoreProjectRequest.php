@@ -18,8 +18,12 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'assigned_users' => 'sometimes|array',
-            'assigned_departments' => 'sometimes|array'
+            'assigned_users.*' => 'exists:users,id',
+            'isGroup' => 'required|boolean',
+            'budget_deadline' => 'nullable|date',
+            'state' => 'required|integer|exists:project_states,id',
+            'cost_center' => 'required|string|max:255',
+            'projects.*' => 'exists:projects,id',
         ];
     }
 }

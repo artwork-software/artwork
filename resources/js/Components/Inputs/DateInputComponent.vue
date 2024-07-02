@@ -17,11 +17,20 @@ import Label from "@/Components/Inputs/Labels/Label.vue";
 
 export default defineComponent({
     components: {Label, InputLabelContainer},
-    props: [
-        'id',
-        'label',
-        'modelValue'
-    ],
+    props: {
+        id: {
+            type: String,
+            required: true
+        },
+        label: {
+            type: String,
+            required: true
+        },
+        modelValue: {
+            type: String,
+            required: true
+        }
+    },
     emits: [
         'update:modelValue'
     ]

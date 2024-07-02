@@ -1,10 +1,10 @@
 <template>
-    <BaseModal @closed="this.$emit('closeCreateProjectModal')" v-if="show" modal-image="/Svgs/Overlays/illu_project_new.svg">
+    <BaseModal @closed="this.$emit('closeCreateProjectModal')" v-if="show" :modal-image="project ? '/Svgs/Overlays/illu_project_edit.svg' : '/Svgs/Overlays/illu_project_new.svg'">
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    {{ $t('New project') }}
+                    {{ project ? $t('Edit basic data') : $t('New project') }}
                 </div>
-                <div class="mb-4">
+                <div class="mb-4" v-if="!project">
                     <div class="hidden sm:block">
                         <div class="border-gray-200">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
@@ -19,297 +19,243 @@
                     </div>
                 </div>
                 <div v-if="isCreateProjectTab">
-                    <div class="mt-2 divide-y divide-gray-300 divide-dashed">
-                        <div class="py-3">
-                            <div class="relative flex w-full">
-                                <input id="projectName" v-model="createProjectForm.name" type="text"
-                                       :placeholder="$t('Project name*')"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
-                        </div>
-                        <div class="py-3" v-if="createSettings.attributes">
-                            <Menu as="div" class="inline-block text-left w-full">
-                                <div>
-                                    <MenuButton
-                                        class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                    >
-                                        <span class="float-left xsLight">{{ $t('Select properties') }}</span>
-                                        <ChevronDownIcon
-                                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                            aria-hidden="true"
+                    <form @submit.prevent="addProject">
+                        <KeyVisual :project="project" v-if="project" />
+                        <div class="mt-2 divide-y divide-gray-300 divide-dashed">
+                            <div class="py-3">
+                                <div class="relative flex w-full">
+                                    <TextInputComponent
+                                        v-model="createProjectForm.name"
+                                        :label="$t('Project name*')"
                                         />
-                                    </MenuButton>
-                                </div>
-                                <transition
-                                    enter-active-class="transition duration-50 ease-out"
-                                    enter-from-class="transform scale-100 opacity-100"
-                                    enter-to-class="transform scale-100 opacity-100"
-                                    leave-active-class="transition duration-75 ease-in"
-                                    leave-from-class="transform scale-100 opacity-100"
-                                    leave-to-class="transform scale-95 opacity-0"
-                                >
-                                    <MenuItems
-                                        class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div
-                                            class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                        {{ $t('Category') }}
-                                                    </span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="categories.length > 0"
-                                                         v-for="category in categories"
-                                                         :key="category.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="createProjectForm.assignedCategoryIds"
-                                                               :value="category.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ category.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">
-                                                        {{ $t('No categories created yet') }}
-                                                    </div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                        {{ $t('Genre') }}
-                                                    </span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="genres.length > 0"
-                                                         v-for="genre in genres"
-                                                         :key="genre.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="createProjectForm.assignedGenreIds"
-                                                               :value="genre.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ genre.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">
-                                                        {{ $t('No genres created yet') }}
-                                                    </div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
-                                                        {{ $t('Area') }}
-                                                    </span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="sectors.length > 0"
-                                                         v-for="sector in sectors"
-                                                         :key="sector.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="createProjectForm.assignedSectorIds"
-                                                               :value="sector.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ sector.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">
-                                                        {{ $t('No areas created yet') }}
-                                                    </div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-                            <div class="flex" :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
-                                <div v-for="categoryId in createProjectForm.assignedCategoryIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
-                                </div>
-                                <div v-for="genreId in createProjectForm.assignedGenreIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
-                                </div>
-                                <div v-for="sectorId in createProjectForm.assignedSectorIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                                 </div>
                             </div>
-                        </div>
+                            <div class="py-3" v-if="createSettings.attributes">
+                                <Menu as="div" class="inline-block text-left w-full">
+                                    <div>
+                                        <MenuButton
+                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        >
+                                            <span class="float-left xsLight">{{ $t('Select properties') }}</span>
+                                            <ChevronDownIcon
+                                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                                aria-hidden="true"
+                                            />
+                                        </MenuButton>
+                                    </div>
+                                    <transition
+                                        enter-active-class="transition duration-50 ease-out"
+                                        enter-from-class="transform scale-100 opacity-100"
+                                        enter-to-class="transform scale-100 opacity-100"
+                                        leave-active-class="transition duration-75 ease-in"
+                                        leave-from-class="transform scale-100 opacity-100"
+                                        leave-to-class="transform scale-95 opacity-0"
+                                    >
+                                        <MenuItems
+                                            class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                            <div
+                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                                <Disclosure v-slot="{ open }">
+                                                    <DisclosureButton
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    >
+                                                        <span
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            {{ $t('Category') }}
+                                                        </span>
+                                                        <ChevronDownIcon
+                                                            :class="open ? 'rotate-180 transform' : ''"
+                                                            class="h-4 w-4 mt-0.5 text-white"
+                                                        />
+                                                    </DisclosureButton>
+                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                                        <div v-if="categories.length > 0"
+                                                             v-for="category in categories"
+                                                             :key="category.id"
+                                                             class="flex w-full mb-2">
+                                                            <input type="checkbox"
+                                                                   v-model="createProjectForm.assignedCategoryIds"
+                                                                   :value="category.id"
+                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                            <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
+                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                                {{ category.name }}
+                                                            </p>
+                                                        </div>
+                                                        <div v-else class="text-secondary">
+                                                            {{ $t('No categories created yet') }}
+                                                        </div>
+                                                    </DisclosurePanel>
+                                                </Disclosure>
+                                                <hr class="border-gray-500 mt-2 mb-2">
+                                                <Disclosure v-slot="{ open }">
+                                                    <DisclosureButton
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    >
+                                                        <span
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            {{ $t('Genre') }}
+                                                        </span>
+                                                        <ChevronDownIcon
+                                                            :class="open ? 'rotate-180 transform' : ''"
+                                                            class="h-4 w-4 mt-0.5 text-white"
+                                                        />
+                                                    </DisclosureButton>
+                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                                        <div v-if="genres.length > 0"
+                                                             v-for="genre in genres"
+                                                             :key="genre.id"
+                                                             class="flex w-full mb-2">
+                                                            <input type="checkbox"
+                                                                   v-model="createProjectForm.assignedGenreIds"
+                                                                   :value="genre.id"
+                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                            <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
+                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                                {{ genre.name }}
+                                                            </p>
+                                                        </div>
+                                                        <div v-else class="text-secondary">
+                                                            {{ $t('No genres created yet') }}
+                                                        </div>
+                                                    </DisclosurePanel>
+                                                </Disclosure>
+                                                <hr class="border-gray-500 mt-2 mb-2">
+                                                <Disclosure v-slot="{ open }">
+                                                    <DisclosureButton
+                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                    >
+                                                        <span
+                                                            :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                            {{ $t('Area') }}
+                                                        </span>
+                                                        <ChevronDownIcon
+                                                            :class="open ? 'rotate-180 transform' : ''"
+                                                            class="h-4 w-4 mt-0.5 text-white"
+                                                        />
+                                                    </DisclosureButton>
+                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                                        <div v-if="sectors.length > 0"
+                                                             v-for="sector in sectors"
+                                                             :key="sector.id"
+                                                             class="flex w-full mb-2">
+                                                            <input type="checkbox"
+                                                                   v-model="createProjectForm.assignedSectorIds"
+                                                                   :value="sector.id"
+                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                            <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
+                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                                {{ sector.name }}
+                                                            </p>
+                                                        </div>
+                                                        <div v-else class="text-secondary">
+                                                            {{ $t('No areas created yet') }}
+                                                        </div>
+                                                    </DisclosurePanel>
+                                                </Disclosure>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                                <div class="flex" :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
+                                    <div v-for="categoryId in createProjectForm.assignedCategoryIds">
+                                        <TagComponent hide-x="true"
+                                                      :displayed-text="this.categories.find(category => category.id === categoryId).name"
+                                                      :property="this.categories.find(category => category.id === categoryId)"
+                                        />
+                                    </div>
+                                    <div v-for="genreId in createProjectForm.assignedGenreIds">
+                                        <TagComponent hide-x="true"
+                                                      :displayed-text="this.genres.find(genre => genre.id === genreId).name"
+                                                      :property="this.genres.find(genre => genre.id === genreId)"
+                                        />
+                                    </div>
+                                    <div v-for="sectorId in createProjectForm.assignedSectorIds">
+                                        <TagComponent hide-x="true"
+                                                      :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
+                                                      :property="this.sectors.find(sector => sector.id === sectorId)"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div class="flex py-2 w-full" v-if="createSettings.state">
-                            <Listbox as="div" class="flex w-full" v-model="selectedState">
-                                <ListboxButton class="w-full text-left">
-                                    <button class="w-full h-12 flex justify-between xsDark items-center text-left border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                                        <span class="w-full" v-if="!selectedState">
-                                            {{ $t('Select project status') }}
-                                        </span>
-                                        <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"
-                                              :style="{
-                                            backgroundColor: backgroundColorWithOpacity(states.find(state => state.id === selectedState)?.color),
-                                            color: TextColorWithDarken(states.find(state => state.id === selectedState)?.color),
-                                            borderColor: TextColorWithDarken(states.find(state => state.id === selectedState)?.color)
-                                        }">
-                                            {{ this.states.find(state => state.id === selectedState)?.name}}
-                                        </span>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </button>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100"
-                                            leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-[88%] z-10 mt-12 bg-white shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class=""
-                                                       v-for="state in states"
-                                                       :key="state.id"
-                                                       :value="state.id" v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
-                                                <div class="flex">
-                                                    <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: TextColorWithDarken(state.color), borderColor: TextColorWithDarken(state.color)}">
-                                                        {{ state.name }}
-                                                    </span>
+                            <div class="flex py-2 w-full" v-if="createSettings.state">
+                                <ProjectStateListbox :projectStates="states"
+                                                     :selectedProjectState="selectedState"
+                                                     @update:selectedProjectState="selectedState = $event"/>
+                            </div>
+
+                            <div class="py-2" v-if="createSettings.managers">
+                                <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
+                                <UserSearch @user-selected="addUserToProject" only-manager class="mb-2" />
+
+                                <div v-if="assignedUsers.length > 0">
+                                    <div v-for="(user, index) in assignedUsers">
+                                        <div class="flex items-center justify-between mb-3 group">
+                                            <div class="flex items-center gap-x-2">
+                                                <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
+                                                <div>
+                                                    {{ user.full_name}}
                                                 </div>
-                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                    <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                        </div>
-
-                        <div class="py-2" v-if="createSettings.managers">
-                            <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
-                            <UserSearch @user-selected="addUserToProject" class="mb-2" />
-
-                            <div v-if="assignedUsers.length > 0">
-                                <div v-for="(user, index) in assignedUsers">
-                                    <div class="flex items-center justify-between mb-3 group">
-                                        <div class="flex items-center gap-x-2">
-                                            <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
-                                            <div>
-                                                {{ user.full_name}}
+                                            </div>
+                                            <div class="hidden group-hover:block">
+                                                <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
                                             </div>
                                         </div>
-                                        <div class="hidden group-hover:block">
-                                            <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="py-3" v-if="createSettings.cost_center">
-                            <TextInputComponent
-                                v-model="createProjectForm.cost_center"
-                                :label="$t('Name of the cost unit')"
+                            <div class="py-3" v-if="createSettings.cost_center">
+                                <TextInputComponent
+                                    v-model="createProjectForm.cost_center"
+                                    :label="$t('Name of the cost unit')"
+                                />
+                            </div>
+
+                            <div class="flex items-center py-3">
+                                <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
+                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                <label for="addToProjectGroup"
+                                       :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    {{ $t('Belongs to project group') }}
+                                </label>
+                            </div>
+                            <div v-if="this.addToProjectGroup" class="py-3">
+                                <ProjectGroupListbox
+                                    :selected-project-group="createProjectForm.selectedGroup"
+                                    :project-groups="projectGroups"
+                                    @update:selected-project-group="createProjectForm.selectedGroup = $event"
+                                />
+                            </div>
+                            <div class="py-3" v-if="createSettings.budget_deadline">
+                                <div class="xsLight">
+                                    <span>{{ $t('Budget deadline') }}</span>
+                                </div>
+                                <div class="flex mt-1">
+                                    <input v-model="this.createProjectForm.budget_deadline"
+                                           id="budgetDeadline"
+                                           type="date"
+                                           class="border-gray-300 inputMain xsDark placeholder-secondary placeholder:text-secondary disabled:border-none flex-grow"/>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="w-full items-center text-center">
+                            <FormButton
+                                type="submit"
+                                :text="project ? $t('Save') : $t('Create')"
+                                class="mt-8 inline-flex items-center"
                             />
                         </div>
-
-                        <div class="flex items-center py-3">
-                            <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <label for="addToProjectGroup"
-                                   :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                   class="ml-2">
-                                {{ $t('Belongs to project group') }}
-                            </label>
-                        </div>
-                        <div v-if="this.addToProjectGroup" class="py-3">
-                            <Listbox as="div" v-model="this.createProjectForm.selectedGroup" id="room">
-                                <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                    <div class="flex-grow flex text-left xsDark">
-                                        {{
-                                            this.createProjectForm.selectedGroup ? this.createProjectForm.selectedGroup.name : $t('Search project group')
-                                        }}
-                                    </div>
-                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </ListboxButton>
-                                <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                    <ListboxOption v-if="this.projectGroups.length === 0"
-                                                   class="w-full text-secondary cursor-pointer p-2 flex justify-between"
-                                                   :value="null">
-                                        {{ $t('No project group has been created yet') }}
-                                    </ListboxOption>
-                                    <ListboxOption v-for="projectGroup in this.projectGroups"
-                                                   class="hover:bg-artwork-buttons-create text-secondary cursor-pointer p-2 flex justify-between "
-                                                   :key="projectGroup.id"
-                                                   :value="projectGroup"
-                                                   v-slot="{ active, selected }">
-                                        <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                            {{ projectGroup.name }}
-                                        </div>
-                                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </Listbox>
-                        </div>
-                        <div class="py-3" v-if="createSettings.budget_deadline">
-                            <div class="xsLight">
-                                <span>{{ $t('Budget deadline') }}</span>
-                            </div>
-                            <div class="flex mt-1">
-                                <input v-model="this.createProjectForm.budgetDeadline"
-                                       id="budgetDeadline"
-                                       type="date"
-                                       required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary placeholder:text-secondary disabled:border-none flex-grow"/>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="w-full items-center text-center">
-                        <FormButton
-                            @click="addProject"
-                            :disabled="this.createProjectForm.name === ''"
-                            :text="$t('Create')"
-                            class="mt-8 inline-flex items-center"
-                        />
-                    </div>
+                    </form>
                 </div>
-                <div v-if="isCreateProjectGroupTab">
-                    <div class="">
+                <div v-if="isCreateProjectGroupTab && !project">
+                    <form @submit.prevent="addProject" class="">
                         <div class="mb-2 w-full">
                             <input type="text"
                                    v-model="createProjectForm.name"
@@ -462,7 +408,7 @@
                                               :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
-                        <div class="mb-2"  v-if="createSettings.attributes">
+                        <div class="mb-2">
                             <div class="relative w-full">
                                 <div class="w-full">
                                     <input id="projectGroupQuery" v-model="projectGroupQuery" type="text"
@@ -509,10 +455,10 @@
                         </div>
                         <div class="w-full items-center text-center">
                             <FormButton
-                                @click="addProject"
+                                type="submit"
                                 :disabled="this.createProjectForm.name === ''" :text="$t('Create')"/>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
     </BaseModal>
@@ -544,11 +490,19 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import ProjectStateListbox from "@/Components/Listboxes/ProjectStateListbox.vue";
+import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue";
+import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper],
     components: {
+        KeyVisual,
+        ProjectGroupListbox,
+        ProjectStateListbox,
+        JetInputError,
         TextInputComponent,
         UserSearch,
         BaseModal,
@@ -579,7 +533,8 @@ export default {
         'sectors',
         'projectGroups',
         'states',
-        'createSettings'
+        'createSettings',
+        'project'
     ],
     data() {
         return {
@@ -587,23 +542,27 @@ export default {
             isCreateProjectGroupTab: false,
             addToProjectGroup: false,
             createProjectForm: useForm({
-                name: "",
-                assignedSectorIds: [],
-                assignedCategoryIds: [],
-                assignedGenreIds: [],
-                isGroup: false,
+                name: this.project ? this.project.name : '',
+                assignedSectorIds: this.project ? this.project?.sectors?.map(sector => sector.id) : [],
+                assignedCategoryIds: this.project ? this.project?.categories?.map(category => category.id) : [],
+                assignedGenreIds: this.project ? this.project?.genres?.map(genre => genre.id) : [],
+                isGroup: this.project ? this.project.is_group : false,
                 projects: [],
                 selectedGroup: null,
-                budgetDeadline: null,
+                budget_deadline: this.project ? this.project.budget_deadline : '',
                 state: null,
                 assignedUsers: [],
-                cost_center: '',
+                cost_center: this.project ? this.project?.cost_center?.name : '',
             }),
             projectGroupProjects: [],
             projectGroupSearchResults: [],
             projectGroupQuery: '',
-            selectedState: null,
-            assignedUsers: [],
+            selectedState: this.project ? this.project?.state?.id : null,
+            assignedUsers: this.project ? this.project?.manager_users : [],
+            keyVisualForm: useForm({
+                keyVisual: null,
+            }),
+            uploadKeyVisualFeedback: "",
         }
     },
     computed: {
@@ -648,13 +607,23 @@ export default {
             this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
 
-            this.createProjectForm.post(
-                route('projects.store'), {
-                    onSuccess: () => {
-                        this.$emit('closeCreateProjectModal', true);
+            if (this.project) {
+                this.createProjectForm.patch(
+                    route('projects.update', this.project.id), {
+                        onSuccess: () => {
+                            this.$emit('closeCreateProjectModal', true);
+                        }
                     }
-                }
-            );
+                );
+            } else {
+                this.createProjectForm.post(
+                    route('projects.store'), {
+                        onSuccess: () => {
+                            this.$emit('closeCreateProjectModal', true);
+                        }
+                    }
+                );
+            }
         },
         addProjectToProjectGroup(project) {
             this.projectGroupProjects.push(project);
@@ -663,6 +632,7 @@ export default {
         deleteProjectFromProjectGroup(index) {
             this.projectGroupProjects.splice(index, 1);
         },
+
     },
     watch: {
         projectGroupQuery: {

@@ -28,7 +28,7 @@
                                     <div class="bg-lightBackgroundGray px-6 py-2 mb-3">
                                         <div class="flex items-center justify-between my-2">
                                             <div>
-                                                <SwitchGroup as="div" class="flex items-center" v-if="!shift?.id">
+                                                <SwitchGroup as="div" class="flex items-center" v-if="!event?.is_series">
                                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="shiftForm.automaticMode ? 'font-bold' : 'text-gray-400'">
                                                         Automatischer Modus
                                                     </SwitchLabel>
@@ -120,23 +120,23 @@
                                             <DateInputComponent v-if="!shiftForm.automaticMode"
                                                                 v-model="shiftForm.start_date"
                                                                 :label="$t('Shift start date')"
-                                                                @change="validateShiftDates()"/>
+                                                                @change="validateShiftDates()" id=""/>
                                             <TimeInputComponent v-model="shiftForm.start"
                                                                 :label="$t('Start-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
-                                                                @change="validateShiftDates()"/>
+                                                                @change="validateShiftDates()" id=""/>
                                         </div>
                                         <div class="flex flex-row">
                                             <DateInputComponent v-if="!shiftForm.automaticMode"
                                                                 v-model="shiftForm.end_date"
                                                                 :label="$t('Shift end date')"
                                                                 @change="validateShiftDates()"
-                                            />
+                                             id=""/>
                                             <TimeInputComponent v-model="shiftForm.end"
                                                                 :label="$t('End-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
                                                                 @change="validateShiftDates()"
-                                            />
+                                             id=""/>
                                         </div>
                                         <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||
@@ -268,10 +268,12 @@
                             <div class="flex justify-center px-6">
                                 <FormButton :text="$t('Save')" @click="saveShift"/>
                             </div>
+
                         </DialogPanel>
                     </TransitionChild>
                 </div>
             </div>
+
         </Dialog>
     </TransitionRoot>
 </template>

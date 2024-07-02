@@ -24,6 +24,7 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -921,8 +922,15 @@ readonly class EventService
         return $this->eventRepository->save($event);
     }
 
-    public function save(Event $event): Event
+    public function save(Event $event): Event|Model
     {
         return $this->eventRepository->save($event);
+    }
+
+
+    public function findEventById(
+        int $eventId
+    ): Event {
+        return $this->eventRepository->findById($eventId);
     }
 }

@@ -14,11 +14,23 @@ export default {
             users: []
         }
     },
+    props: {
+        onlyManager: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: ['user-selected'],
     methods: {
         selectUser(user) {
             this.$emit('user-selected', user);
             this.user_search_query = '';
+        },
+        checkIfOnlyManager(user) {
+            if (this.onlyManager) {
+                return user.project_manager_permission;
+            }
+            return true;
         }
     },
     watch: {
@@ -45,7 +57,7 @@ export default {
                 :label="$t('Search for users')"
                 class="w-full"
                 @focus="user_search_query = ''"/>
-            <div class="absolute right-2 top-1.5">
+            <div class="absolute right-2 top-3">
                 <IconX class="h-6 w-6 text-gray-400" v-if="user_search_query.length > 0" @click="user_search_query = ''"/>
             </div>
         </div>
@@ -53,7 +65,7 @@ export default {
             <div v-if="users?.length > 0" class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200">
                     <div v-for="(user, index) in users" :key="index" class="flex items-center cursor-pointer">
-                        <div class="flex-1 text-sm py-4" @click="selectUser(user)">
+                        <div class="flex-1 text-sm py-4" @click="selectUser(user)" v-if="checkIfOnlyManager(user)">
                             <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
                                 <img :src="user.profile_photo_url" :alt="user.name" class="rounded-full h-8 w-8 object-cover"/>
                                 <span class="ml-2 truncate">{{ user.first_name }} {{ user.last_name }}</span>

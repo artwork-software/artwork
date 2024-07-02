@@ -70,7 +70,8 @@ export default {
         'loadedProjectInformation',
         'first_project_tab_id',
         'first_project_calendar_tab_id',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'createSettings'
     ],
     data() {
         return {
@@ -99,7 +100,7 @@ export default {
 </script>
 
 <template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab">
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings">
         <div class="my-10 w-full">
             <div v-for="component in currentTab.components"  :class="removeML(component.component?.type)">
                 <Component

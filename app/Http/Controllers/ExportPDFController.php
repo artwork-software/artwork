@@ -43,38 +43,37 @@ class ExportPDFController extends Controller
         $startDate = Carbon::parse($request->get('start'));
         $endDate = Carbon::parse($request->get('end'));
 
-        if (($project = $request->get('project'))) {
-            if (
-                ($firstEventInProject = $projectService->getFirstEventInProject($project)) &&
-                ($lastEventInProject = $projectService->getLastEventInProject($project))
-            ) {
+        if (
+            ($project = $request->get('project'))
+            && ($firstEventInProject = $projectService->getFirstEventInProject($project))
+            && ($lastEventInProject = $projectService->getLastEventInProject($project))
+        ) {
                 $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-            }
         }
-
+        $projectObject = $projectService->findById($project);
         $showCalendar = $calendarService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $projectService,
-            Auth::user()->calendar_filter,
-            null,
-            $project
+            startDate: $startDate,
+            endDate: $endDate,
+            userService: $userService,
+            filterService:  $filterService,
+            filterController:  $filterController,
+            roomService:  $roomService,
+            roomCategoryService:  $roomCategoryService,
+            roomAttributeService:   $roomAttributeService,
+            eventTypeService:  $eventTypeService,
+            areaService:  $areaService,
+            projectService:  $projectService,
+            calendarFilter:  Auth::user()->calendar_filter,
+            room: null,
+            project:  $projectObject
         );
 
         $pdf = Pdf::loadView('pdf.calendar', [
             'title' => $request->title,
             'rooms' => $roomService->getFilteredRooms(
-                $request->input('start'),
-                $request->input('end'),
+                Carbon::parse($request->input('start')),
+                Carbon::parse($request->input('end')),
                 $userService->getAuthUser()->calendar_filter
             ),
             'filterRooms' => RoomPdfResource::collection(Room::all()),

@@ -1,10 +1,10 @@
 <?php
 
-namespace Artwork\Modules\Project\Http\Requests;
+namespace Artwork\Modules\ShiftPreset\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ProjectCreateSettingRequest extends FormRequest
+class UpdateShiftPresetNoteRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,7 @@ class ProjectCreateSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'attributes' => 'required|boolean',
-            'state' => 'required|boolean',
-            'managers' => 'required|boolean',
-            'cost_center' => 'required|boolean',
-            'budget_deadline' => 'required|boolean',
+            'description' => 'required|max:250'
         ];
     }
 }

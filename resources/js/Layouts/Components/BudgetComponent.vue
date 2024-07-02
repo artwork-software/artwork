@@ -1168,7 +1168,6 @@ export default {
             });
         },
         openCellDetailModal(cell, type) {
-            console.log('hier');
             router.get(
                 route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {

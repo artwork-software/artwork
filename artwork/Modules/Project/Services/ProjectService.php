@@ -8,6 +8,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -24,8 +25,10 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Scout\Builder;
+use Illuminate\Support\Collection as IlluminateCollection;
 
 readonly class ProjectService
 {
@@ -51,6 +54,9 @@ readonly class ProjectService
             },
             'categories',
             'genres',
+            'sectors',
+            'costCenter',
+            'groups',
             'managerUsers' => function ($query): void {
                 $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
             },
@@ -70,9 +76,14 @@ readonly class ProjectService
     }
 
     public function paginateProjects(
-        Builder|\Illuminate\Database\Eloquent\Builder $projectQuery,
+        string $search = '',
         int $perPage = 10
     ): \Illuminate\Pagination\LengthAwarePaginator {
+        $projectQuery = $this->getProjects();
+        if ($search) {
+            $projectQuery = $this->scoutSearch($search);
+        }
+
         return $projectQuery->paginate($perPage);
     }
 
@@ -548,5 +559,71 @@ readonly class ProjectService
     public function pinnedProjects(): Collection
     {
         return $this->projectRepository->pinnedProjects();
+    }
+
+    public function attachManagementUsersWithoutSelf(Project $project, IlluminateCollection $userIds, int $authId): void
+    {
+        $usersToAttach = $userIds->filter(fn($user) => $user !== $authId)
+            ->mapWithKeys(fn($user) => [$user => [
+                'access_budget' => false,
+                'is_manager' => true,
+                'can_write' => false,
+                'delete_permission' => false
+            ]]);
+
+        $project->users()->attach($usersToAttach);
+    }
+
+    public function attachManagementUsers(Project $project, array $userIds): void
+    {
+        $usersToAttach = collect($userIds)
+            ->mapWithKeys(fn($user) => [$user => [
+                'access_budget' => false,
+                'is_manager' => true,
+                'can_write' => false,
+                'delete_permission' => false
+            ]]);
+
+        $project->users()->attach($usersToAttach);
+    }
+
+    public function attachUserToProject(Project $project, int $userId, bool $isManager): void
+    {
+        $project->users()->attach($userId, [
+            'access_budget' => false,
+            'is_manager' => $isManager,
+            'can_write' => false,
+            'delete_permission' => false
+        ]);
+    }
+
+    public function syncCategories(Project $project, IlluminateCollection $categories): void
+    {
+        $project->categories()->sync($categories);
+    }
+
+    public function syncGenres(Project $project, IlluminateCollection $genres): void
+    {
+        $project->genres()->sync($genres);
+    }
+
+    public function syncSectors(Project $project, IlluminateCollection $sectors): void
+    {
+        $project->sectors()->sync($sectors);
+    }
+
+    public function detachManagementUsers(Project $project, bool $detachingAll = false, array $userIds = []): void
+    {
+        if ($detachingAll) {
+            $project->managerUsers()->detach();
+        } else {
+            $project->managerUsers()->detach($userIds);
+        }
+    }
+
+    public function updateProject(Project $project, array $data): Project
+    {
+        $this->projectRepository->update($project, $data);
+        return $project;
     }
 }

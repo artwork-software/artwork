@@ -150,7 +150,7 @@ readonly class RoomService
 
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
-            if (!in_array($newCategory->id, $oldCategoryIds)) {
+            if (!in_array($newCategory->id, $oldCategoryIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -163,7 +163,7 @@ readonly class RoomService
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
-            if (!in_array($oldCategoryId, $newCategoryIds)) {
+            if (!in_array($oldCategoryId, $newCategoryIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -189,7 +189,7 @@ readonly class RoomService
 
         foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
-            if (!in_array($newAttribute->id, $oldAttributeIds)) {
+            if (!in_array($newAttribute->id, $oldAttributeIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -202,7 +202,7 @@ readonly class RoomService
         }
 
         foreach ($oldAttributeIds as $oldAttributeId) {
-            if (!in_array($oldAttributeId, $newAttributeIds)) {
+            if (!in_array($oldAttributeId, $newAttributeIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -263,7 +263,7 @@ readonly class RoomService
 
         foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
-            if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
+            if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -276,7 +276,7 @@ readonly class RoomService
         }
 
         foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
-            if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
+            if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds, true)) {
                 $changeService->saveFromBuilder(
                     $changeService
                         ->createBuilder()
@@ -304,7 +304,7 @@ readonly class RoomService
 
         foreach ($roomAdminsAfter as $roomAdminAfter) {
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
-            if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore)) {
+            if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore, true)) {
                 $user = User::find($roomAdminAfter->id);
                 $notificationTitle = __(
                     'notifications.room.leader.add',
@@ -336,7 +336,7 @@ readonly class RoomService
 
         // check if user remove as room admin
         foreach ($roomAdminIdsBefore as $roomAdminBefore) {
-            if (!in_array($roomAdminBefore, $roomAdminIdsAfter)) {
+            if (!in_array($roomAdminBefore, $roomAdminIdsAfter, true)) {
                 $user = User::find($roomAdminBefore);
                 $notificationTitle = __(
                     'notifications.room.leader.remove',
@@ -382,8 +382,8 @@ readonly class RoomService
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
+        CalendarFilter $calendarFilter,
         ?Project $project = null,
-        ?CalendarFilter $calendarFilter = null,
     ): Collection {
         if (!$calendarFilter) {
             $calendarFilter = new \stdClass();
@@ -587,13 +587,17 @@ readonly class RoomService
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
-        $shiftPlan = false
     ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
             $roomEvents->add(
-                $this->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter)
+                $this->collectEventsForRoom(
+                    room: $room,
+                    calendarPeriod: $calendarPeriod,
+                    project: $project,
+                    calendarFilter: $calendarFilter
+                )
             );
         }
         return $roomEvents;

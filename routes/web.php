@@ -17,11 +17,14 @@ use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CollectingSocietyController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompanyTypeController;
+use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CraftController;
+use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -41,9 +44,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PermissionPresetController;
 use App\Http\Controllers\PresetShiftController;
 use App\Http\Controllers\PresetTimeLineController;
+use App\Http\Controllers\ProjectComponentValueController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectRoleController;
 use App\Http\Controllers\ProjectStatesController;
+use App\Http\Controllers\ProjectTabController;
+use App\Http\Controllers\ProjectTabSidebarTabController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
@@ -59,6 +66,8 @@ use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\ShiftPresetController;
 use App\Http\Controllers\ShiftQualificationController;
 use App\Http\Controllers\ShiftSettingsController;
+use App\Http\Controllers\ShiftTimePresetController;
+use App\Http\Controllers\SidebarTabComponentController;
 use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
@@ -68,11 +77,20 @@ use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
 use App\Http\Controllers\UserCalendarFilterController;
+use App\Http\Controllers\UserCalenderAboController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use Artwork\Modules\Inventory\Http\Controller\InventoryController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -605,7 +623,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('event.shift.update.updateDescription');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])
             ->name('project.sum.money.source.update');
-
+        Route::patch('/{presetShift}/preset/update/description', [ShiftPresetController::class, 'updateDescription'])
+            ->name('preset.shift.update.updateDescription');
         // DELETE
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
         Route::delete('/timeline/delete/{timeline}', [ProjectController::class, 'deleteTimeLineRow'])
@@ -1169,94 +1188,94 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('shift-qualifications', ShiftQualificationController::class)->only(['store', 'update']);
 
     Route::group(['prefix' => 'day-service'], function (): void {
-        Route::get('index', [\App\Http\Controllers\DayServiceController::class, 'index'])->name('day-service.index');
-        Route::post('store', [\App\Http\Controllers\DayServiceController::class, 'store'])->name('day-service.store');
-        Route::patch('update/{dayService}', [\App\Http\Controllers\DayServiceController::class, 'update'])
+        Route::get('index', [DayServiceController::class, 'index'])->name('day-service.index');
+        Route::post('store', [DayServiceController::class, 'store'])->name('day-service.store');
+        Route::patch('update/{dayService}', [DayServiceController::class, 'update'])
             ->name('day-service.update');
     });
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
-            Route::get('index', [\App\Http\Controllers\ProjectTabController::class, 'index'])->name('tab.index');
-            Route::post('/{projectTab}/update/component/order', [\App\Http\Controllers\ProjectTabController::class,
+            Route::get('index', [ProjectTabController::class, 'index'])->name('tab.index');
+            Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
             //tab.add.component
-            Route::post('/{projectTab}/add/component', [\App\Http\Controllers\ProjectTabController::class,
+            Route::post('/{projectTab}/add/component', [ProjectTabController::class,
                 'addComponent'])->name('tab.add.component');
             // tab.remove.component
             Route::delete('/{projectTab}/remove/component', [
-                \App\Http\Controllers\ProjectTabController::class,
+                ProjectTabController::class,
                 'removeComponent'
             ])->name('tab.remove.component');
             // tab.destroy
-            Route::delete('/{projectTab}/destroy', [\App\Http\Controllers\ProjectTabController::class, 'destroy'])
+            Route::delete('/{projectTab}/destroy', [ProjectTabController::class, 'destroy'])
                 ->name('tab.destroy');
             // tab.update
-            Route::patch('/{projectTab}/update', [\App\Http\Controllers\ProjectTabController::class, 'update'])
+            Route::patch('/{projectTab}/update', [ProjectTabController::class, 'update'])
                 ->name('tab.update');
             // tab.store
-            Route::post('/store', [\App\Http\Controllers\ProjectTabController::class, 'store'])->name('tab.store');
+            Route::post('/store', [ProjectTabController::class, 'store'])->name('tab.store');
             //tab.reorder
-            Route::post('/reorder', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
+            Route::post('/reorder', [ProjectTabController::class, 'reorder'])
                 ->name('tab.reorder');
             //tab.add.component.sidebar
             Route::post(
                 '/{projectTabSidebarTab}/add/component/sidebar',
-                [\App\Http\Controllers\ProjectTabController::class,
+                [ProjectTabController::class,
                 'addComponentSidebar']
             )
                 ->name('tab.add.component.sidebar');
             // tab.add.component.with.scopes
             Route::post('/{projectTab}/add/component/with/scopes', [
-                \App\Http\Controllers\ProjectTabController::class,
+                ProjectTabController::class,
                 'addComponentWithScopes'
             ])->name('tab.add.component.with.scopes');
         });
         Route::group(['prefix' => 'component'], function (): void {
             // index
-            Route::get('index', [\App\Http\Controllers\ComponentController::class, 'index'])
+            Route::get('index', [ComponentController::class, 'index'])
                 ->name('component.index');
             // project.tab.component.update
-            Route::patch('/{project}/{component}/update', [\App\Http\Controllers\ProjectComponentValueController::class,
+            Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])
                 ->name('project.tab.component.update');
             //component.store
-            Route::post('/store', [\App\Http\Controllers\ComponentController::class, 'store'])
+            Route::post('/store', [ComponentController::class, 'store'])
                 ->name('component.store');
             //component.update
-            Route::patch('/{component}/update', [\App\Http\Controllers\ComponentController::class, 'update'])
+            Route::patch('/{component}/update', [ComponentController::class, 'update'])
                 ->name('component.update');
             // component.destroy
-            Route::delete('/{component}/destroy', [\App\Http\Controllers\ComponentController::class, 'destroy'])
+            Route::delete('/{component}/destroy', [ComponentController::class, 'destroy'])
                 ->name('component.destroy');
         });
         Route::group(['prefix' => 'sidebar'], function (): void {
             Route::delete('/component/{sidebarTabComponent}/remove', [
-                \App\Http\Controllers\SidebarTabComponentController::class,
+                SidebarTabComponentController::class,
                 'removeComponent'
             ])
                 ->name('sidebar.component.remove');
             //tab.sidebar.update
-            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+            Route::patch('/{projectTabSidebarTab}/update', [ProjectTabSidebarTabController::class,
                 'update'])
                 ->name('tab.sidebar.update');
 
             //tab.sidebar.store
-            Route::post('/{projectTab}/store', [\App\Http\Controllers\ProjectTabSidebarTabController::class, 'store'])
+            Route::post('/{projectTab}/store', [ProjectTabSidebarTabController::class, 'store'])
                 ->name('tab.sidebar.store');
             //sidebar.tab.update.component.order
             Route::post('/{projectTabSidebarTab}/update/component/order', [
-                \App\Http\Controllers\ProjectTabSidebarTabController::class,
+                ProjectTabSidebarTabController::class,
                 'updateComponentOrder'
             ])
                 ->name('sidebar.tab.update.component.order');
             // tab.sidebar.update
-            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+            Route::patch('/{projectTabSidebarTab}/update', [ProjectTabSidebarTabController::class,
                 'update'])
                 ->name('tab.sidebar.update');
             //sidebar.tab.reorder
-            Route::post('/reorder', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+            Route::post('/reorder', [ProjectTabSidebarTabController::class,
                 'reorder'])
                 ->name('sidebar.tab.reorder');
         });
@@ -1278,73 +1297,200 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // save user shift calendar abo
         Route::post(
             '/shift/calendar/abo/create',
-            [\App\Http\Controllers\UserShiftCalendarAboController::class, 'store']
+            [UserShiftCalendarAboController::class, 'store']
         )->name('user.shift.calendar.abo.create');
 
         // user.shift.calendar.abo.update
         Route::patch(
             '/shift/calendar/abo/{userShiftCalendarAbo}/update',
-            [\App\Http\Controllers\UserShiftCalendarAboController::class, 'update']
+            [UserShiftCalendarAboController::class, 'update']
         )->name('user.shift.calendar.abo.update');
 
         // save user calendar abo
         Route::post(
             '/calendar/abo/create',
-            [\App\Http\Controllers\UserCalenderAboController::class, 'store']
+            [UserCalenderAboController::class, 'store']
         )->name('user.calendar.abo.create');
 
         // user.shift.calendar.abo.update
         Route::patch(
             '/calendar/abo/{userCalenderAbo}/update',
-            [\App\Http\Controllers\UserCalenderAboController::class, 'update']
+            [UserCalenderAboController::class, 'update']
         )->name('user.calendar.abo.update');
     });
 
     Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::resource('project-roles', \App\Http\Controllers\ProjectRoleController::class)
+        Route::resource('project-roles', ProjectRoleController::class)
             ->only(['index', 'store', 'update', 'destroy']);
     });
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {
-        Route::resource('shift-time-preset', \App\Http\Controllers\ShiftTimePresetController::class)
+        Route::resource('shift-time-preset', ShiftTimePresetController::class)
             ->only(['store', 'update', 'destroy']);
     });
 
     // attach DayService to entity
     Route::post(
         '/day-service/{dayService}/attach/{dayServiceable}',
-        [\App\Http\Controllers\DayServiceController::class, 'attachDayServiceable']
+        [DayServiceController::class, 'attachDayServiceable']
     )
         ->name('day-service.attach');
 
     //remove.day.service.from.user
     Route::patch(
         '/day-service/remove/{dayServiceable}',
-        [\App\Http\Controllers\DayServiceController::class, 'removeDayServiceable']
+        [DayServiceController::class, 'removeDayServiceable']
     )
         ->name('remove.day.service.from.user');
 
     Route::group(['prefix' => 'inventory-management'], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
+
+        Route::group(['prefix' => 'inventory'], function (): void {
+            Route::group(['prefix' => 'column'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftsInventoryColumnController::class, 'create']
+                )->name('inventory-management.inventory.column.create');
+                Route::post(
+                    '/duplicate',
+                    [CraftsInventoryColumnController::class, 'duplicate']
+                )->name('inventory-management.inventory.column.duplicate');
+                Route::patch(
+                    '/{craftsInventoryColumn}/name',
+                    [CraftsInventoryColumnController::class, 'updateName']
+                )->name('inventory-management.inventory.column.update.name');
+                Route::patch(
+                    '/{craftsInventoryColumn}/select-options',
+                    [CraftsInventoryColumnController::class, 'updateTypeOptions']
+                )->name('inventory-management.inventory.column.update.type_options');
+                Route::patch(
+                    '/{craftsInventoryColumn}/background_color',
+                    [CraftsInventoryColumnController::class, 'updateBackgroundColor']
+                )->name('inventory-management.inventory.column.update.background_color');
+                Route::delete(
+                    '/{craftsInventoryColumn}',
+                    [CraftsInventoryColumnController::class, 'forceDelete']
+                )->name('inventory-management.inventory.column.delete');
+            });
+            Route::group(['prefix' => 'category'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftInventoryCategoryController::class, 'create']
+                )->name('inventory-management.inventory.category.create');
+                Route::patch(
+                    '/{craftInventoryCategory}/name',
+                    [CraftInventoryCategoryController::class, 'updateName']
+                )->name('inventory-management.inventory.category.update.name');
+                Route::patch(
+                    '/{craftInventoryCategory}/order',
+                    [CraftInventoryCategoryController::class, 'updateOrder']
+                )->name('inventory-management.inventory.category.update.order');
+                Route::delete(
+                    '/{craftInventoryCategory}',
+                    [CraftInventoryCategoryController::class, 'forceDelete']
+                )->name('inventory-management.inventory.category.delete');
+            });
+            Route::group(['prefix' => 'group'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftInventoryGroupController::class, 'create']
+                )->name('inventory-management.inventory.group.create');
+                Route::patch(
+                    '/{craftInventoryGroup}/name',
+                    [CraftInventoryGroupController::class, 'updateName']
+                )->name('inventory-management.inventory.group.update.name');
+                Route::patch(
+                    '/{craftInventoryGroup}/order',
+                    [CraftInventoryGroupController::class, 'updateOrder']
+                )->name('inventory-management.inventory.group.update.order');
+                Route::delete(
+                    '/{craftInventoryGroup}',
+                    [CraftInventoryGroupController::class, 'forceDelete']
+                )->name('inventory-management.inventory.group.delete');
+            });
+            Route::group(['prefix' => 'item'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftInventoryItemController::class, 'create']
+                )->name('inventory-management.inventory.item.create');
+                Route::patch(
+                    '/{craftInventoryItem}/order',
+                    [CraftInventoryItemController::class, 'updateOrder']
+                )->name('inventory-management.inventory.item.update.order');
+                Route::delete(
+                    '/{craftInventoryItem}',
+                    [CraftInventoryItemController::class, 'forceDelete']
+                )->name('inventory-management.inventory.item.delete');
+            });
+            Route::group(['prefix' => 'cells'], function (): void {
+                Route::patch(
+                    '/{craftInventoryItemCell}/cell-value',
+                    [CraftInventoryItemCellController::class, 'updateCellValue']
+                )->name('inventory-management.inventory.item-cell.update.cell-value');
+            });
+            Route::group(['prefix' => 'export'], function (): void {
+                Route::post(
+                    '/data',
+                    [InventoryManagementExportController::class, 'saveExportDataInCache']
+                )->name('inventory-management.inventory.export.saveExportDataInCache');
+                Route::group(['prefix' => 'create/{cacheToken}'], function (): void {
+                    Route::get(
+                        '/xlsx',
+                        [InventoryManagementExportController::class, 'downloadXlsx']
+                    )->name('inventory-management.inventory.export.download-xlsx');
+                    Route::get(
+                        '/pdf',
+                        [InventoryManagementExportController::class, 'downloadPdf']
+                    )->name('inventory-management.inventory.export.download-pdf');
+                });
+            });
+            Route::patch('/filter', [CraftInventoryFilterController::class, 'updateOrCreate'])
+                ->name('inventory-management.inventory.filter.update');
+        });
+
         Route::get('/scheduling', [InventoryController::class, 'scheduling'])
             ->name('inventory-management.scheduling');
+
+        // inventory.dropItemToEvent
+        Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
+            ->name('inventory.dropItemToEvent');
+
+        // inventory.events.destroy
+        Route::delete(
+            '/inventory/events/{craftInventoryItemEvent}',
+            [CraftInventoryItemEventController::class, 'destroy']
+        )
+            ->name('inventory.events.destroy');
+
+        // patch inventory.updateEvent
+        Route::patch(
+            '/inventory/updateEvent/{craftInventoryItemEvent}',
+            [CraftInventoryItemEventController::class, 'update']
+        )
+            ->name('inventory.updateEvent');
+
+        // post inventory.multi.events.store
+        Route::post(
+            '/inventory/multi/events/store',
+            [CraftInventoryItemEventController::class, 'storeMultiple']
+        )
+            ->name('inventory.multi.events.store');
     });
 
-    Route::group(['prefix' => 'searching'], function(){
+    Route::group(['prefix' => 'searching'], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
     });
 });
 
 Route::get(
     '/shift/calendar/abo/{calendar_abo_id}',
-    [\App\Http\Controllers\UserShiftCalendarAboController::class, 'show']
+    [UserShiftCalendarAboController::class, 'show']
 )->name('user-shift-calendar-abo.show');
 
 Route::get(
     '/calendar/abo/{calendar_abo_id}',
-    [\App\Http\Controllers\UserCalenderAboController::class, 'show']
+    [UserCalenderAboController::class, 'show']
 )->name('user-calendar-abo.show');
-
-

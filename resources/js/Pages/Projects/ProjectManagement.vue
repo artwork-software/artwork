@@ -124,12 +124,12 @@
 
                     <div class="my-3 w-full">
                         <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in pinnedProjects" :key="project.id">
-                            <SingleProject :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
+                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
                     <div class="my-3 w-full">
                         <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in filteredProjects" :key="project.id">
-                            <SingleProject :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
+                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project"  :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
 
@@ -145,10 +145,11 @@
             :categories="categories"
             :genres="genres"
             :sectors="sectors"
-            :project-groups="this.projectGroups"
+            :project-groups="projectGroups"
             :states="states"
             @close-create-project-modal="closeCreateProjectModal"
             :create-settings="createSettings"
+            :project="null"
         />
 
         <!-- Success Modal - Delete project -->
@@ -337,7 +338,7 @@ export default defineComponent({
             projectFilter: {'name': this.$t('All projects')},
             isSingleTab: true,
             isGroupTab: false,
-            showSearchbar: false,
+            showSearchbar: this.$page.props.urlParameters.search !== undefined,
             project_query: '',
             project_search_results: [],
             addingProject: false,
@@ -480,7 +481,6 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-
         openProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = true;
         },

@@ -30,7 +30,7 @@ class CalendarShowEventResource extends JsonResource
             'creator'
         ])->first();
 
-        $creator = $this->creator->without(['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'])->get();
+        //$creator = $this->creator->without(['calendar_settings', 'shiftCalendarAbo', 'calendarAbo'])->get();
 
         $resource = class_basename($this);
         $id = $this->id;
@@ -64,6 +64,8 @@ class CalendarShowEventResource extends JsonResource
         $projectLeaders = $project?->managerUsers;
         $is_series = $this->is_series;
         $series = $this->series;
+        $formatted_dates = $this->formattedDates;
+        $timesWithoutDates = $this->times_without_dates;
 
         return [
             'resource' => $resource,
@@ -88,7 +90,7 @@ class CalendarShowEventResource extends JsonResource
             'event_type_color' => $event_type_color,
             'areaId' => $areaId,
             'created_at' => $created_at,
-            'created_by' => $creator,
+            //'created_by' => $creator,
             'occupancy_option' => $occupancy_option,
             'allDay' => $allDay,
             'shifts' => $shifts,
@@ -101,7 +103,9 @@ class CalendarShowEventResource extends JsonResource
             'option_string' => $option_string,
             'projectLeaders' => $projectLeaders,
             'is_series' => $is_series,
-            'series' => $series
+            'series' => $series,
+            'formatted_dates' => $formatted_dates,
+            'timesWithoutDates' => $timesWithoutDates,
         ];
     }
 }

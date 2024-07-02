@@ -105,6 +105,32 @@
                         </transition>
                     </Listbox>
                 </div>
+                <div class="py-2" v-if="createSettings.managers">
+                    <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
+                    <UserSearch @user-selected="addUserToProject" class="mb-2" />
+
+                    <div v-if="assignedUsers.length > 0">
+                        <div v-for="(user, index) in assignedUsers">
+                            <div class="flex items-center justify-between mb-3 group">
+                                <div class="flex items-center gap-x-2">
+                                    <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
+                                    <div>
+                                        {{ user.full_name}}
+                                    </div>
+                                </div>
+                                <div class="hidden group-hover:block">
+                                    <IconCircleX class="h-6 w-6 text-gray-600 hover:text-red-600 cursor-pointer transition-all duration-150 ease-in-out" @click="removeUserFromProject(index)"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="py-3" v-if="createSettings.cost_center">
+                    <TextInputComponent
+                        v-model="cost_center"
+                        :label="$t('Name of the cost unit')"
+                    />
+                </div>
                 <div class="mt-4">
                     <div class="flex items-center mb-2" v-if="!project.is_group">
                         <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
@@ -158,6 +184,9 @@
                     </div>
                 </div>
             </div>
+        <pre>
+            {{ project }}
+        </pre>
             <div class="justify-center flex w-full my-6">
                 <FormButton :text="$t('Save')" :disabled="name.length < 1"
                             @click="updateProjectData"/>
@@ -188,6 +217,8 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default {
     mixins: [
@@ -201,9 +232,12 @@ export default {
         project: Object,
         groupProjects: Array,
         currentGroup: Object|String,
-        states: Array
+        states: Array,
+        createSettings: Object
     },
     components: {
+        UserSearch,
+        TextInputComponent,
         BaseModal,
         FormButton,
         Input,
@@ -245,6 +279,8 @@ export default {
                 keyVisual: null,
             }),
             uploadKeyVisualFeedback: "",
+            assignedUsers: this.project.users.filter(user => user.pivot.is_manager),
+            cost_center: this.project.cost_center ? this.project.cost_center.name : "",
         }
     },
     methods: {
@@ -252,7 +288,10 @@ export default {
             this.$inertia.patch(route('projects.update', {project: this.project.id}), {
                 name: this.name,
                 selectedGroup: this.selectedGroup,
-                budget_deadline: this.budgetDeadline
+                budget_deadline: this.budgetDeadline,
+                state: this.selectedState,
+                assignedUsers: this.assignedUsers.map(user => user.id),
+                cost_center: this.cost_center,
             }, {
                 preserveState: true,
                 preserveScroll: true
@@ -261,6 +300,14 @@ export default {
         },
         closeModal(bool) {
             this.$emit('closed', bool);
+        },
+        addUserToProject(user) {
+            if (!this.assignedUsers.includes(user)) {
+                this.assignedUsers.push(user);
+            }
+        },
+        removeUserFromProject(index) {
+            this.assignedUsers.splice(index, 1);
         },
         removeSelectedGroup() {
             if (!this.hasGroup) {

@@ -15,6 +15,8 @@
     <exclude-pattern>storage/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>
     <exclude-pattern>node_modules/</exclude-pattern>
+    <exclude-pattern>**/*.js</exclude-pattern>
+    <exclude-pattern>**/*.vue</exclude-pattern>
 
     <!-- PSR standard -->
     <rule ref="PSR12">

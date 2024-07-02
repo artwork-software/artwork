@@ -25,7 +25,7 @@ export default function useCraftFilterAndSearch() {
     const filteredCrafts = computed(() => {
         //clone object is important for replaceState after any updates from backend
         //(change craft filter for example)
-        let filteringCrafts = JSON.parse(JSON.stringify(crafts.value));;
+        let filteringCrafts = JSON.parse(JSON.stringify(crafts.value));
 
         if (craftFilters.value.length > 0) {
             filteringCrafts = filteringCrafts.filter(

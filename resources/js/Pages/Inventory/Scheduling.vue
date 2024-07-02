@@ -511,9 +511,9 @@ const goToPeriod = (period, type) => {
 
 
 watch(
-    () => crafts,
+    () => filteredCrafts,
     (newCrafts) => {
-        newCrafts?.forEach((craft) => {
+        newCrafts.value.forEach((craft) => {
             craft.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {

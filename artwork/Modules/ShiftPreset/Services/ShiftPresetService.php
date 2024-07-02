@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ShiftPreset\Services;
 
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Services\PresetShiftService;
 use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
@@ -147,4 +148,5 @@ readonly class ShiftPresetService
     {
         $this->shiftPresetRepository->delete($shiftPreset);
     }
+
 }

@@ -595,7 +595,7 @@ export default {
             return this.showUserOverview ? this.userOverviewHeight + 'px' : '0';
         },
         checkIfEventHasShiftsToDisplay(event) {
-            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null){
+            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined){
                 return event.shifts.length > 0;
             } else {
                 return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));

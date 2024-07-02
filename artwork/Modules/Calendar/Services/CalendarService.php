@@ -195,20 +195,20 @@ readonly class CalendarService
                 null,
             'roomsWithEvents' => empty($room) ?
                 $roomService->collectEventsForRooms(
-                    $roomService->getFilteredRooms(
+                    roomsWithEvents:  $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
                         $calendarFilter
                     ),
-                    $calendarPeriod,
-                    $calendarFilter,
-                    $project
+                    calendarPeriod: $calendarPeriod,
+                    calendarFilter: $calendarFilter,
+                    project: $project,
                 ) :
                 $roomService->collectEventsForRoom(
                     room: $room,
                     calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
                     project: $project,
+                    calendarFilter: $calendarFilter,
                 ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :

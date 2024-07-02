@@ -1,6 +1,6 @@
 <template>
     <div class="mb-3">
-        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm" :style="{backgroundColor: preset.event_type.hex_code}">
+        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg" :style="{backgroundColor: preset.event_type.hex_code}">
             <div class="flex items-center uppercase">
                 {{ preset.event_type.abbreviation }} | {{ preset.name }}
                 <div class="ml-4 cursor-pointer" @click="showShift = !showShift">

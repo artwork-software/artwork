@@ -308,6 +308,31 @@
                 }
             }
 
+            .drop-group-container {
+                @apply flex flex-row h-8 border text-black border-dashed border-blue-700 justify-center items-center;
+
+                .icon {
+                    @apply w-5 h-5;
+                }
+
+                .text {
+                    @apply text-xs subpixel-antialiased;
+                }
+            }
+
+            .drop-item-container {
+                @apply flex flex-row py-1 border border-dashed border-blue-700 justify-center items-center;
+
+                .icon {
+                    @apply w-5 h-5;
+                }
+
+                .text {
+                    @apply text-xs subpixel-antialiased;
+                }
+            }
+
+
             .add-new-row {
                 @apply w-full flex flex-row absolute justify-center -translate-y-[2px] h-0.5 z-10;
 

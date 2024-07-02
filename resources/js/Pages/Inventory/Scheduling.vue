@@ -297,7 +297,7 @@ const toggleMultiEditMode = () => {
     multiEditMode.value = !multiEditMode.value;
 
     if (!multiEditMode.value) {
-        filteredCrafts.forEach((craft) => {
+        filteredCrafts.value.forEach((craft) => {
             craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {

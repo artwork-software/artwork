@@ -4,7 +4,7 @@
             <div class="craft-container">
                 <div class="title"
                      @click="toggleCraft()">
-                    <span>{{ craft.name }}</span>
+                    <span>{{ craft.value.name }}</span>
                     <IconChevronUp v-if="craftShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
@@ -16,11 +16,11 @@
                   :colspan="colspan"
                   :destination-index="0"
                   @category-requests-drag-move="moveCategoryToDestination"/>
-    <template v-if="craftShown && craft.filtered_inventory_categories.length > 0"
-              v-for="(category, index) in craft.filtered_inventory_categories"
+    <template v-if="craftShown && craft.value.filtered_inventory_categories.length > 0"
+              v-for="(category, index) in craft.value.filtered_inventory_categories"
               :key="category.id">
         <AddNewCategory v-if="craftShown && index === 0"
-                        @click="openAddCategoryOrGroupModal('category', props.craft.id)"/>
+                        @click="openAddCategoryOrGroupModal('category', craft.value.id)"/>
         <InventoryCategory :index="index"
                            :category="category"
                            :colspan="colspan"
@@ -33,15 +33,15 @@
                       :colspan="colspan"
                       :destination-index="(index + 1)"
                       @category-requests-drag-move="moveCategoryToDestination"/>
-        <template v-if="(index + 1) === craft.inventory_categories.length">
+        <template v-if="(index + 1) === craft.value.inventory_categories.length">
             <tr>
                 <td :colspan="colspan" class="empty-row-td"/>
             </tr>
         </template>
     </template>
-    <tr v-else-if="craftShown && craft.inventory_categories.length === 0">
+    <tr v-else-if="craftShown && craft.value.inventory_categories.length === 0">
         <td :colspan="colspan">
-            <div @click="openAddCategoryOrGroupModal('category', props.craft.id)"
+            <div @click="openAddCategoryOrGroupModal('category', craft.value.id)"
                  class="add-category-container">
                 <IconCirclePlus class="icon"/>
                 {{ $t('Add category') }}

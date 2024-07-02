@@ -41,7 +41,6 @@ const onDragStart = (event) => {
         name: props.item.name,
     }
     event.dataTransfer.setData('application/json', JSON.stringify(transferItem));
-    console.log('dragging', transferItem);
 }
 
 </script>

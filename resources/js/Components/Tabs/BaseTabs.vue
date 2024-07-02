@@ -30,7 +30,6 @@ const makeCurrent = (tabName) => {
        props.tabs.forEach(tab => {
             tab.current = tab.name === tabName;
         });
-        console.log(props.tabs);
 }
 
 </script>

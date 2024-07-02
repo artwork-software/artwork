@@ -297,8 +297,8 @@ const toggleMultiEditMode = () => {
     multiEditMode.value = !multiEditMode.value;
 
     if (!multiEditMode.value) {
-        props.crafts.forEach((craft) => {
-            craft.inventory_categories.forEach((category) => {
+        filteredCrafts.crafts.forEach((craft) => {
+            craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {
                         item.checked = false;
@@ -509,19 +509,18 @@ const goToPeriod = (period, type) => {
     }
 };
 
-
 watch(
     () => filteredCrafts,
     (newCrafts) => {
         newCrafts.value.forEach((craft) => {
-            craft.filtered_inventory_categories.forEach((category) => {
+            craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {
                         if (item.checked && !checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
                             checkedItems.value.push({
                                 id: item.id,
                                 name: item.name,
-                                craft: craft.name,
+                                craft: craft.value.name,
                                 category: category.name,
                                 group: group.name
                             });

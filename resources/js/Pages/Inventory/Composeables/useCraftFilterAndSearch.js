@@ -38,9 +38,10 @@ export default function useCraftFilterAndSearch() {
         if (searchValue.value.length === 0) {
             filteringCrafts.forEach(
                 (craft) => craft.filtered_inventory_categories = craft.inventory_categories
+            )
+            return filteringCrafts.map(
+                (craft) => ref(craft)
             );
-
-            return filteringCrafts;
         }
 
         filteringCrafts.forEach((craft) => {
@@ -107,7 +108,9 @@ export default function useCraftFilterAndSearch() {
             craft.filtered_inventory_categories = filteredCategories;
         });
 
-        return filteringCrafts;
+        return filteringCrafts.map(
+            (craft) => ref(craft)
+        );
     });
 
     return {searchValue, craftFilters, crafts, filteredCrafts};

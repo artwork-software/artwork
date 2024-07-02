@@ -85,7 +85,6 @@ const onDrop = (event) =>  {
     event.preventDefault();
 
     const droppedItem = JSON.parse(event.dataTransfer.getData('application/json'));
-    console.log('dropped', droppedItem);
     ItemDragElement.value = droppedItem;
     showAssignedItemToEventModal.value = true;
 

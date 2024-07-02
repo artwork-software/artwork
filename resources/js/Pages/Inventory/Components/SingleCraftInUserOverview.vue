@@ -12,7 +12,7 @@
             </div>
         </td>
     </tr>
-    <SingleCategoryInCraft v-for="category in craft.filtered_inventory_categories"
+    <SingleCategoryInCraft v-for="category in craft.value.filtered_inventory_categories"
                            :multi-edit="multiEdit"
                            :category="category" :days="days" v-if="!craft.closed"/>
 </template>

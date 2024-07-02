@@ -22,6 +22,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CraftController;
+use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
@@ -1460,21 +1461,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // inventory.events.destroy
         Route::delete(
             '/inventory/events/{craftInventoryItemEvent}',
-            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'destroy']
+            [CraftInventoryItemEventController::class, 'destroy']
         )
             ->name('inventory.events.destroy');
 
         // patch inventory.updateEvent
         Route::patch(
             '/inventory/updateEvent/{craftInventoryItemEvent}',
-            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'update']
+            [CraftInventoryItemEventController::class, 'update']
         )
             ->name('inventory.updateEvent');
 
         // post inventory.multi.events.store
         Route::post(
             '/inventory/multi/events/store',
-            [\App\Http\Controllers\CraftInventoryItemEventController::class, 'storeMultiple']
+            [CraftInventoryItemEventController::class, 'storeMultiple']
         )
             ->name('inventory.multi.events.store');
     });

@@ -167,7 +167,6 @@ const currentTab = ref(addItemsToEvent.value[0]);
 
 const makeCurrent = (tab) => {
     currentTab.value = tab;
-    console.log(currentTab.value);
 }
 
 const nextEvent = () => {

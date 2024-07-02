@@ -255,15 +255,6 @@ export default {
                 preserveScroll: true,
                 preserveState: true,
             })
-
-            /*axios.post('/shifts/commit', { events: filteredEvents })
-                .then(() => {
-                    console.log("All shifts committed");
-                    this.showConfirmCommitModal = false;
-                })
-                .catch(error => {
-                    console.log(error)
-                })*/
         },
     },
 }

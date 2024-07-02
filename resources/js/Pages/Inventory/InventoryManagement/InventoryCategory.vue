@@ -29,7 +29,7 @@
             </div>
         </td>
     </tr>
-    <IconTrashXFilled
+    <IconTrashXFilled v-if="!categoryClicked && categoryMouseover && !categoryDragged"
                       @mouseover="handleCategoryDeleteMouseover"
                       @mouseout="handleCategoryDeleteMouseout"
                       :class="[categoryDeleteCls + ' remove-category-icon']"

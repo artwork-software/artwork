@@ -5,23 +5,23 @@
         @mouseover="handleGroupMouseover()"
         @mouseout="handleGroupMouseout()"
         :class="'cursor-grab ' + trCls">
-        <td :colspan="colspan" class="pl-3 p-2 cursor-pointer bg-secondary text-xs border border-secondary">
-            <div class="w-full h-full flex flex-row items-center relative gap-x-2">
+        <td :colspan="colspan" class="group-td">
+            <div class="group-td-container">
                 <div
-                    class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    class="name"
                     @click="toggleGroupEdit()">
                     {{ group.name }}
                 </div>
                 <div @click="toggleGroup()">
-                    <IconChevronUp v-if="groupShown" class="w-5 h-5"/>
-                    <IconChevronDown v-else class="w-5 h-5"/>
+                    <IconChevronUp v-if="groupShown" class="icon"/>
+                    <IconChevronDown v-else class="icon"/>
                 </div>
                 <div
-                    :class="[groupClicked ? '' : 'hidden', 'flex flex-row items-center bg-secondary text-black gap-x-2 w-full -left-[4px] z-10 absolute']">
+                    :class="[groupClicked ? '' : '!hidden', 'group-input-container']">
                     <input
                         type="text"
                         ref="groupInputRef"
-                        class="w-full p-1 border-0 text-xs text-black"
+                        class="group-input"
                         v-model="groupValue"
                         @focusout="applyGroupValueChange()"
                         @keyup.enter="applyGroupValueChange()">
@@ -32,14 +32,14 @@
     <IconTrashXFilled v-if="!groupClicked && groupMouseover && !groupDragged"
                       @mouseover="handleGroupDeleteMouseover"
                       @mouseout="handleGroupDeleteMouseout"
-                      :class="[groupDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
+                      :class="[groupDeleteCls + ' remove-group-container']"
                       @click="showGroupDeleteConfirmModal()"/>
     <AddNewResource v-if="groupShown"
             @click="addNewItem()"
             :text="$t('Add new item')"
             :colspan="colspan"/>
     <tr>
-        <td></td>
+        <td class="empty-row-xxs-td"></td>
     </tr>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
@@ -142,11 +142,11 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     },
     handleGroupDeleteMouseover = () => {
         groupMouseover.value = true;
-        groupDeleteCls.value = 'bg-red-600';
+        groupDeleteCls.value = '!bg-red-600';
     },
     handleGroupDeleteMouseout = () => {
         groupMouseover.value = false;
-        groupDeleteCls.value = 'bg-black';
+        groupDeleteCls.value = '!bg-black';
     },
     showGroupDeleteConfirmModal = () => {
         groupConfirmDeleteModalShown.value = true;

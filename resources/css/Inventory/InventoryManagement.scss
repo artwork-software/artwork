@@ -93,7 +93,7 @@
         }
 
         .inventory-top-bar-container {
-            @apply flex flex-row w-full h-10 items-center gap-x-2 absolute justify-end -top-12 z-30 rounded-t-md subpixel-antialiased;
+            @apply flex flex-row w-[80%] h-10 items-center gap-x-2 absolute justify-end right-0 -top-12 z-30 rounded-t-md subpixel-antialiased;
 
             .inventory-top-bar-filter-container {
                 @apply flex flex-col w-full gap-y-2;

@@ -28,7 +28,7 @@
                                     <div class="bg-lightBackgroundGray px-6 py-2 mb-3">
                                         <div class="flex items-center justify-between my-2">
                                             <div>
-                                                <SwitchGroup as="div" class="flex items-center" v-if="!shift?.id">
+                                                <SwitchGroup as="div" class="flex items-center" v-if="!event?.is_series">
                                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="shiftForm.automaticMode ? 'font-bold' : 'text-gray-400'">
                                                         Automatischer Modus
                                                     </SwitchLabel>
@@ -268,10 +268,12 @@
                             <div class="flex justify-center px-6">
                                 <FormButton :text="$t('Save')" @click="saveShift"/>
                             </div>
+
                         </DialogPanel>
                     </TransitionChild>
                 </div>
             </div>
+
         </Dialog>
     </TransitionRoot>
 </template>

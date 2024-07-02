@@ -404,6 +404,34 @@
                     }
                 }
             }
+
+            .category-td {
+                @apply px-3 py-2 bg-primary text-white subpixel-antialiased text-sm;
+
+                .category-td-container {
+                    @apply w-full h-full flex flex-row items-center relative gap-x-2;
+
+                    .name {
+                        @apply cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap;
+                    }
+
+                    .icon {
+                        @apply w-5 h-5;
+                    }
+
+                    .category-input-container {
+                        @apply flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute;
+
+                        .category-input {
+                            @apply w-full p-1 border-0 text-xs text-black;
+                        }
+                    }
+                }
+            }
+
+            .remove-category-icon {
+                @apply absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%];
+            }
         }
     }
 }

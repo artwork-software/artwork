@@ -1,17 +1,16 @@
 <template>
     <BaseModal v-if="show" @closed="close">
-        <div class="flex flex-col mx-4 gap-y-2">
+        <div class="add-column-modal-container">
             <h1 class="headline1">
                 {{ $t('Create new column') }}
             </h1>
-            <div id="new-column-form"
-                 class="flex flex-col gap-y-2">
+            <div class="new-column-form">
                 <TextInputComponent id="new-column-name"
                                     v-model="newColumnForm.name"
                                     :label="$t('Column name*')"
                 />
                 <span v-if="showNewColumnFormNameError"
-                      class="text-xs subpixel-antialiased text-error">
+                      class="error-text">
                     {{ $t('A name must be entered.') }}
                 </span>
                 <SelectComponent id="new-column-type"
@@ -22,42 +21,40 @@
                                  selected-property-to-display="value"
                 />
                 <div v-if="newColumnForm.type?.id === NEW_COLUMN_TYPE.SELECT.id"
-                     class="w-full flex flex-col">
-
-                    <div class="flex flex-row w-full items-start gap-x-2">
-                        <div class="flex flex-row w-full items-center gap-x-2">
-                        <TextInputComponent id="new-select-option-name"
-                                            v-model="newColumnNewSelectOptionName"
-                                            :label="$t('New selection option')"
-                                            @keyup.enter="addNewColumnNewSelectOption()"/>
-                        <PlusCircleIcon v-if="newColumnNewSelectOptionName.length > 0"
-                                  class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full"
-                                  @click="addNewColumnNewSelectOption()"/>
+                     class="new-select-options-container">
+                    <div class="add-select-option-container">
+                        <div class="layout">
+                            <TextInputComponent id="new-select-option-name"
+                                                v-model="newColumnNewSelectOptionName"
+                                                :label="$t('New selection option')"
+                                                @keyup.enter="addNewColumnNewSelectOption()"/>
+                            <PlusCircleIcon v-if="newColumnNewSelectOptionName.length > 0"
+                                      class="icon"
+                                      @click="addNewColumnNewSelectOption()"/>
                         </div>
-
                     </div>
-                    <div class="w-full flex flex-col items-center text-xs">
-                        <div v-for="(option, index) in newColumnForm.typeOptions" class="w-full flex flex-col border-b py-2 gap-y-2">
-                            <span class="text-primary underline">{{ $t('Selection option') + (index + 1) }}:</span>
-                            <div class="flex flex-row justify-between items-center">
-                                <span class="w-3/4 break-words">{{ option }}</span>
+                    <div class="new-select-options-list-container">
+                        <div v-for="(option, index) in newColumnForm.typeOptions" class="new-option-container">
+                            <span class="title">{{ $t('Selection option') + (index + 1) }}:</span>
+                            <div class="select-option-container">
+                                <span class="select-option-name">{{ option }}</span>
                                 <input :id="'radio-option-' + index"
                                        name="default-option"
                                        v-model="newColumnForm.defaultOption"
                                        :value="option"
                                        type="radio"/>
                                 <label :for="'radio-option-' + index">{{ $t('Default value') }}</label>
-                                <TrashIcon class="w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full"
+                                <TrashIcon class="icon"
                                            @click="removeNewColumnNewSelectOption(index)"/>
                             </div>
                         </div>
                     </div>
                     <span v-if="showNewColumnFormTypeOptionsError"
-                          class="text-xs subpixel-antialiased text-error mt-2">
+                          class="select-options-error-text">
                         {{ $t('At least one selection option must be added.') }}
                     </span>
                 </div>
-                <div class="w-full flex flex-row justify-center mt-4">
+                <div class="button-container">
                     <FormButton :text="$t('Save')"
                                 @click="saveNewColumn()"/>
                 </div>
@@ -165,9 +162,3 @@ const $t = useTranslation(),
         emits.call(this, 'closed');
     }
 </script>
-
-<style scoped>
-#new-column-form:deep(ul) {
-    max-height: 10rem !important;
-}
-</style>

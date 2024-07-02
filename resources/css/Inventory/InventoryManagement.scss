@@ -15,6 +15,70 @@
                 }
             }
         }
+
+        .add-column-modal-container {
+            @apply flex flex-col mx-4 gap-y-2;
+
+            .new-column-form {
+                @apply flex flex-col gap-y-2;
+
+                ul {
+                    @apply max-h-40;
+                }
+
+                .error-text {
+                    @apply text-xs subpixel-antialiased text-error;
+                }
+
+                .new-select-options-container {
+                    @apply w-full flex flex-col;
+
+                    .add-select-option-container {
+                        @apply flex flex-row w-full items-start gap-x-2;
+
+                        .layout {
+                            @apply flex flex-row w-full items-center gap-x-2;
+
+                            .icon {
+                                @apply w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer translate-y-2.5 p-1 subpixel-antialiased rounded-full;
+                            }
+                        }
+                    }
+
+                    .new-select-options-list-container {
+                        @apply w-full flex flex-col items-center text-xs;
+
+                        .new-option-container {
+                            @apply w-full flex flex-col border-b py-2 gap-y-2;
+
+                            .title {
+                                @apply text-primary underline;
+                            }
+
+                            .select-option-container {
+                                @apply flex flex-row justify-between items-center;
+
+                                .select-option-name {
+                                    @apply w-3/4 break-words;
+                                }
+
+                                .icon {
+                                    @apply w-8 h-8 bg-artwork-buttons-create hover:bg-artwork-buttons-hover text-white cursor-pointer p-1 subpixel-antialiased rounded-full;
+                                }
+                            }
+                        }
+                    }
+
+                    .select-options-error-text {
+                        @apply text-xs subpixel-antialiased text-error mt-2;
+                    }
+                }
+
+                .button-container {
+                    @apply w-full flex flex-row justify-center mt-4;
+                }
+            }
+        }
     }
 
     .inventory-container {

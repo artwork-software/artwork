@@ -261,11 +261,10 @@ const selectedEvents = ref([]);
 const showMultiEditModal = ref(false);
 const selectedEventsForMultiEdit = ref([]);
 const errorMessagesMultiEdit = ref('');
-const { searchValue, craftFilters, crafts, filteredCrafts } = useCraftFilterAndSearch()
+const { searchValue, crafts, filteredCrafts } = useCraftFilterAndSearch()
 const searchOpened = ref(false);
-const  setFilterAndSearchData = () => {
+const  setSearchData = () => {
     crafts.value = props.crafts;
-    //craftFilters.value = props.craftFilters;
 };
 
 const toggleSearch = (close = false) => {
@@ -281,13 +280,12 @@ onMounted(() => {
     calculateAllRoomHeights();
 });
 
-
 onMounted(() => {
-    setFilterAndSearchData();
+    setSearchData();
 });
 
 onUpdated(() => {
-    setFilterAndSearchData();
+    setSearchData();
 });
 
 const closeMultiEditModal = () => {

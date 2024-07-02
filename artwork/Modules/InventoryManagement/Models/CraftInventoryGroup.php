@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\InventoryManagement\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $craft_inventory_category_id
  * @property string $name
  * @property int $order
+ * @property Collection $items
  */
 class CraftInventoryGroup extends Model
 {

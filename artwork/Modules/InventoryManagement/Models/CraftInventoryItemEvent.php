@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property \Carbon\Carbon $end
  * @property bool $is_all_day
  * @property int $user_id
+ * @property CraftInventoryItem $item
+ * @property Event $event
+ * @property User $user
  */
 class CraftInventoryItemEvent extends Model
 {

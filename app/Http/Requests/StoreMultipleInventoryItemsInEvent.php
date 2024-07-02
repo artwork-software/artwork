@@ -23,9 +23,9 @@ class StoreMultipleInventoryItemsInEvent extends FormRequest
     {
         return [
             'events' => 'required|array|min:1',
-            'events.*' => 'required|integer|exists:events,id',
+            'events.*' => 'required|exists:events,id',
             'events.*.items' => 'required|array|min:1',
-            'events.*.items.*' => 'required|integer|exists:craft_inventory_items,id',
+            'events.*.items.*' => 'required|exists:craft_inventory_items,id',
             'events.*.items.*.quantity' => 'nullable|integer',
         ];
     }

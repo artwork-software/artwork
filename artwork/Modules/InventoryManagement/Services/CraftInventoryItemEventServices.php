@@ -6,12 +6,12 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemEventRepository;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Request;
+use Illuminate\Support\Carbon as SupportCarbon;
+use Carbon\Carbon;
 
 readonly class CraftInventoryItemEventServices
 {
@@ -39,7 +39,6 @@ readonly class CraftInventoryItemEventServices
         ]);
     }
 
-
     /**
      * @param $item
      * @return Collection
@@ -48,12 +47,10 @@ readonly class CraftInventoryItemEventServices
     {
         $overbooked = $this->calculateOverbookedForAllEvents($item);
 
-        return $item->events->map(function ($event) use ($overbooked) {
-            // create date array period for event to get start and end time of event [date1, date2, date3]
-
+        return $item->events->map(function (CraftInventoryItemEvent $event) use ($overbooked): array {
             $period = [];
-            $start = Carbon::parse($event->start);
-            $end = Carbon::parse($event->end);
+            $start = SupportCarbon::parse($event->start);
+            $end = SupportCarbon::parse($event->end);
             $diff = $start->diffInDays($end);
             for ($i = 0; $i <= $diff; $i++) {
                 $period[] = $start->copy()->addDays($i)->format('d.m.Y');
@@ -64,7 +61,7 @@ readonly class CraftInventoryItemEventServices
                 'booking_id' => $event->id,
                 'quantity' => $event->quantity,
                 'comment' => $event->comment,
-                'date' => Carbon::parse($event->start)->format('d.m.Y'),
+                'date' => SupportCarbon::parse($event->start)->format('d.m.Y'),
                 'user' => [
                     'id' => $event->user->id,
                     'name' => $event->user->full_name,
@@ -91,17 +88,17 @@ readonly class CraftInventoryItemEventServices
      */
     private function calculateOverbookedForAllEvents(CraftInventoryItem $item): array
     {
-        $events = $item->events->sortBy(function ($itemEvent) {
+        $events = $item->events->sortBy(function (CraftInventoryItemEvent $itemEvent): Carbon {
             return $itemEvent->start;
         });
 
-        $initialQuantity = $item->cells->first(function ($cell) {
+        $initialQuantity = $item->cells->first(function (CraftInventoryItemCell $cell): bool {
             return is_numeric($cell->cell_value);
         })?->cell_value ?? 0;
 
         $overbookedQuantities = [];
 
-        $eventsByDay = $events->groupBy(function ($itemEvent) {
+        $eventsByDay = $events->groupBy(function (CraftInventoryItemEvent $itemEvent): string {
             return $itemEvent->start->format('Y-m-d');
         });
 
@@ -111,7 +108,7 @@ readonly class CraftInventoryItemEventServices
             foreach ($dayEvents as $itemEvent) {
                 if (
                     $itemEvent->is_all_day ||
-                    $dayEvents->firstWhere(function ($otherEvent) use ($itemEvent) {
+                    $dayEvents->firstWhere(function (CraftInventoryItemEvent $otherEvent) use ($itemEvent): bool {
                         return $otherEvent->id !== $itemEvent->id &&
                             ($otherEvent->start->between($itemEvent->start, $itemEvent->end) ||
                                 $otherEvent->end->between($itemEvent->start, $itemEvent->end) ||

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $order
  * @property CraftInventoryGroup $group
  * @property Collection $cells
+ * @property Collection $events
  */
 class CraftInventoryItem extends Model
 {

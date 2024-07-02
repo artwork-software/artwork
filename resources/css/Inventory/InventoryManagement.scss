@@ -175,7 +175,14 @@
 
                     .menu-items {
                         @apply absolute z-50 -translate-x-[110%] top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none;
+                    }
 
+                    .first-column-menu-items {
+                        @apply absolute z-50 -translate-x-[5%] top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none;
+                    }
+
+                    .menu-items,
+                    .first-column-menu-items {
                         .active {
                             @apply rounded-xl bg-artwork-navigation-color/10 text-white;
                         }

@@ -45,7 +45,7 @@
                                                 leave-active-class="transition-leave-active"
                                                 leave-from-class="transition-leave-from"
                                                 leave-to-class="transition-leave-to">
-                                        <MenuItems class="menu-items">
+                                        <MenuItems :class="index === 0 ? 'first-column-menu-items' : 'menu-items'">
                                             <MenuItem v-slot="{ active }" as="div">
                                                 <a @click="column.showColorMenu = true"
                                                    :class="[active ? 'active' : 'not-active', 'default group']">

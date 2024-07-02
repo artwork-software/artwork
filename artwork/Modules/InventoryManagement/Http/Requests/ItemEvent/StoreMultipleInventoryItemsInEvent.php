@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +25,7 @@ class StoreMultipleInventoryItemsInEvent extends FormRequest
             'events' => 'required|array|min:1',
             'events.*.id' => 'required|exists:events,id',
             'events.*.items' => 'required|array|min:1',
-            'events.*.items.*' => 'required|exists:craft_inventory_items,id',
+            'events.*.items.*.id' => 'required|exists:craft_inventory_items,id',
             'events.*.items.*.quantity' => 'nullable|integer',
         ];
     }

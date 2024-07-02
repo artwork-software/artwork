@@ -127,6 +127,34 @@
                 @apply w-full flex flex-row justify-center mt-4;
             }
         }
+
+        .select-export-type-modal-container {
+            @apply flex flex-col mx-4 gap-y-5;
+
+            .radio-container {
+                @apply flex flex-row gap-3 items-center;
+
+                .radio-input {
+                    @apply h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-600;
+                }
+            }
+
+            .button-container {
+                @apply flex flex-row justify-between items-center;
+
+                .export-button {
+                    @apply flex flex-row p-2 px-3 items-center border border-transparent rounded-lg shadow-sm text-white focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover;
+
+                    .icon {
+                        @apply h-4 w-4 mr-2;
+                    }
+                }
+
+                .close-modal-button {
+                    @apply cursor-pointer xsLight;
+                }
+            }
+        }
     }
 
     .inventory-container {

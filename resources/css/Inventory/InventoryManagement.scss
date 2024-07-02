@@ -467,6 +467,30 @@
                     @apply opacity-50;
                 }
             }
+
+            .checkbox-container {
+                @apply w-full text-center cursor-text;
+            }
+
+            .empty-cell-container {
+                @apply w-full min-h-8 h-full cursor-text;
+            }
+
+            .text-input {
+                @apply w-full text-xs px-1 flex;
+            }
+
+            .date-input {
+                @apply w-full text-xs px-1 flex;
+            }
+
+            .checkbox-input {
+                @apply w-5 h-5 mx-auto text-xs px-1 flex;
+            }
+
+            .select-input {
+                @apply w-full text-xs px-1;
+            }
         }
     }
 }

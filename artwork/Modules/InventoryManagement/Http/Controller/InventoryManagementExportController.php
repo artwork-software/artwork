@@ -66,6 +66,6 @@ class InventoryManagementExportController extends Controller
     {
         return $this->redirector
             ->route('inventory-management.inventory')
-            ->with('error', 'Export konnte nicht erzeugt werden. Bitte erneut versuchen.');
+            ->with('error', __('flash-messages.inventory-management.export.errors.download'));
     }
 }

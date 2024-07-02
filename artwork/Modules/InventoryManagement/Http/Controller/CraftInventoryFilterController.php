@@ -43,7 +43,7 @@ class CraftInventoryFilterController
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Filtereinstellungen konnten nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.filter.errors.updateOrCreate'));
         }
 
         return $this->redirector->back();

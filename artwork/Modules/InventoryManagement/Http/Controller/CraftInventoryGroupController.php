@@ -39,7 +39,7 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Gruppe konnte nicht gespeichert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.group.errors.create'));
         }
 
         return $this->redirector->back();
@@ -64,7 +64,7 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Gruppenname konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.group.errors.updateName'));
         }
 
         return $this->redirector->back();
@@ -89,7 +89,7 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Gruppenposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.group.errors.updateOrder'));
         }
 
         return $this->redirector->back();
@@ -100,7 +100,7 @@ class CraftInventoryGroupController extends Controller
         if (!$this->craftInventoryGroupService->forceDelete($craftInventoryGroup)) {
             return $this->redirector
                 ->back()
-                ->with('error', 'Gruppe konnte nicht gelöscht werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.group.errors.delete'));
         }
 
         return $this->redirector->back();

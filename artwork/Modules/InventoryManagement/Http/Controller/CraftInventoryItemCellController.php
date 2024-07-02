@@ -39,7 +39,7 @@ class CraftInventoryItemCellController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Wert konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.item-cell.errors.updateCellValue'));
         }
 
         return $this->redirector->back();

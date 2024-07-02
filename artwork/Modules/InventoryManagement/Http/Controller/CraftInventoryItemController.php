@@ -38,18 +38,7 @@ class CraftInventoryItemController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Gegenstand konnte nicht gespeichert werden. Bitte versuche es erneut.');
-        }
-
-        return $this->redirector->back();
-    }
-
-    public function forceDelete(CraftInventoryItem $craftInventoryItem): RedirectResponse
-    {
-        if (!$this->craftInventoryItemService->forceDelete($craftInventoryItem)) {
-            return $this->redirector
-                ->back()
-                ->with('error', 'Gruppe konnte nicht gelöscht werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.item.errors.create'));
         }
 
         return $this->redirector->back();
@@ -74,7 +63,18 @@ class CraftInventoryItemController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Gegenstandsposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.item.errors.updateOrder'));
+        }
+
+        return $this->redirector->back();
+    }
+
+    public function forceDelete(CraftInventoryItem $craftInventoryItem): RedirectResponse
+    {
+        if (!$this->craftInventoryItemService->forceDelete($craftInventoryItem)) {
+            return $this->redirector
+                ->back()
+                ->with('error', __('flash-messages.inventory-management.item.errors.delete'));
         }
 
         return $this->redirector->back();

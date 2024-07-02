@@ -39,7 +39,7 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Kategorie konnte nicht gespeichert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.category.errors.create'));
         }
 
         return $this->redirector->back();
@@ -64,7 +64,7 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Kategoriename konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.category.errors.updateName'));
         }
 
         return $this->redirector->back();
@@ -89,7 +89,7 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Kategorieposition konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.category.errors.updateOrder'));
         }
 
         return $this->redirector->back();
@@ -100,7 +100,7 @@ class CraftInventoryCategoryController extends Controller
         if (!$this->craftsInventoryCategoryService->forceDelete($craftInventoryCategory)) {
             return $this->redirector
                 ->back()
-                ->with('error', 'Kategorie konnte nicht gelöscht werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.category.errors.delete'));
         }
 
         return $this->redirector->back();

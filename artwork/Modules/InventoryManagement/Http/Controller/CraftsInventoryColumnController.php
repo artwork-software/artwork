@@ -45,7 +45,7 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Spalte konnte nicht gespeichert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.create'));
         }
 
         return $this->redirector->back();
@@ -68,7 +68,7 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Spalte konnte nicht dupliziert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.duplicate'));
         }
 
         return $this->redirector->back();
@@ -93,7 +93,7 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Spaltenname konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.updateName'));
         }
 
         return $this->redirector->back();
@@ -118,7 +118,7 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Spaltenfarbe konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.updateBackgroundColor'));
         }
 
         return $this->redirector->back();
@@ -143,7 +143,7 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', 'Spalten-Auswahloptionen konnte nicht aktualisiert werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.updateTypeOptions'));
         }
 
         return $this->redirector->back();
@@ -154,7 +154,7 @@ class CraftsInventoryColumnController extends Controller
         if (!$this->craftsInventoryColumnService->forceDelete($craftsInventoryColumn)) {
             return $this->redirector
                 ->back()
-                ->with('error', 'Spalte konnte nicht gelöscht werden. Bitte versuche es erneut.');
+                ->with('error', __('flash-messages.inventory-management.column.errors.delete'));
         }
 
         return $this->redirector->back();

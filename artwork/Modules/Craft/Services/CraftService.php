@@ -9,6 +9,7 @@ use Artwork\Modules\Craft\Repositories\CraftRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Database\Eloquent\Collection;
@@ -104,6 +105,12 @@ readonly class CraftService
                                         'name' => $craftInventoryItemService->getItemName($item),
                                         'count' => $craftInventoryItemService->getItemCount($item),
                                         'events' => $craftInventoryItemEventServices->getItemEvents($item),
+                                        'cells' => $item->cells->map(function ($cell) {
+                                            return [
+                                                $cell,
+                                                'column' => $cell->column,
+                                            ];
+                                        }),
                                     ];
                                 }),
                             ];

@@ -155,12 +155,27 @@
                                 </span>
                             </span>
                         </Switch>
+                        <div class="mr-20 flex items-center">
+                            <input v-if="searchOpened"
+                                   class="w-60 h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300"
+                                   type="text"
+                                   aria-label="ajax search text input"
+                                   :placeholder="$t('Search')"
+                                   v-model="searchValue"
+                            />
+                            <IconSearch v-if="!searchOpened"
+                                        class="h-7 w-7 cursor-pointer hover:text-blue-500 text-white"
+                                        @click="toggleSearch()"/>
+                            <IconX v-else
+                                   class="h-7 w-7 cursor-pointer hover:text-blue-500 text-white"
+                                   @click="toggleSearch(true)"/>
+                        </div>
                     </div>
                     <div class="pt-16">
                         <table class="w-full text-white overflow-y-scroll">
                             <div class="w-full">
-                                <tbody class="w-full pt-3" v-for="craft in crafts">
-                                <SingleCraftInUserOverview :multi-edit="multiEditMode" :days="days" :craft="craft" />
+                                <tbody class="w-full pt-3" v-for="craft in filteredCrafts">
+                                    <SingleCraftInUserOverview :multi-edit="multiEditMode" :days="days" :craft="craft" />
                                 </tbody>
                             </div>
                         </table>
@@ -192,9 +207,9 @@
 </template>
 
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {onMounted, onUpdated, ref, watch} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
-import {IconCaretUpDown, IconChevronsDown, IconPencil} from "@tabler/icons-vue";
+import {IconCaretUpDown, IconChevronsDown, IconPencil, IconSearch, IconX} from "@tabler/icons-vue";
 import {Switch} from "@headlessui/vue";
 
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
@@ -208,7 +223,7 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInventoryModal.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-
+import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
 const $t = useTranslation(),
     props = defineProps({
         dateValue: {
@@ -246,11 +261,33 @@ const selectedEvents = ref([]);
 const showMultiEditModal = ref(false);
 const selectedEventsForMultiEdit = ref([]);
 const errorMessagesMultiEdit = ref('');
+const { searchValue, craftFilters, crafts, filteredCrafts } = useCraftFilterAndSearch()
+const searchOpened = ref(false);
+const  setFilterAndSearchData = () => {
+    crafts.value = props.crafts;
+    //craftFilters.value = props.craftFilters;
+};
+
+const toggleSearch = (close = false) => {
+    if (close) {
+        searchValue.value = '';
+    }
+    searchOpened.value = !searchOpened.value;
+}
 
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
     updateHeight();
     calculateAllRoomHeights();
+});
+
+
+onMounted(() => {
+    setFilterAndSearchData();
+});
+
+onUpdated(() => {
+    setFilterAndSearchData();
 });
 
 const closeMultiEditModal = () => {

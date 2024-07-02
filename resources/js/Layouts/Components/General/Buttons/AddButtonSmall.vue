@@ -7,12 +7,17 @@ export default {
     props: {
         text: String,
         disabled: Boolean,
+        noIcon: {
+            type: Boolean,
+            default: false
+        },
+        type: String
     }
 }
 </script>
 
 <template>
-    <AddButtonBase :text="text" :disabled="disabled" horizontalPadding="px-4"/>
+    <AddButtonBase :type="type" :text="text" :no-icon="noIcon" :disabled="disabled" horizontalPadding="px-4"/>
 </template>
 
 <style scoped>

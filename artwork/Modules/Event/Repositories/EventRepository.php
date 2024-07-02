@@ -72,4 +72,9 @@ readonly class EventRepository extends BaseRepository
             ->without(['series'])
             ->get();
     }
+
+    public function findById(int $id): Event
+    {
+        return Event::find($id);
+    }
 }

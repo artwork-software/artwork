@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\InventoryManagement\Dev\InventoryManagementDevSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,6 +27,7 @@ class DatabaseSeeder extends Seeder
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
+            InventoryManagementDevSeeder::class
         ]);
     }
 }

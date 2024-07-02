@@ -5,7 +5,7 @@ export default {
 </script>
 
 <template>
-    <tbody class="w-full pt-3">
+    <tbody class="w-full">
         <slot />
     </tbody>
 </template>

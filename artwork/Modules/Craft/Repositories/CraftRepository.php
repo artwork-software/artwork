@@ -21,9 +21,9 @@ readonly class CraftRepository extends BaseRepository
         return $craft->users()->detach();
     }
 
-    public function getAll(): Collection
+    public function getAll(array $with = []): Collection
     {
-        return Craft::all();
+        return Craft::query()->with($with)->get();
     }
 
     public function getAssignableByAllCrafts(): Collection

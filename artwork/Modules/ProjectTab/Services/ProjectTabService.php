@@ -37,6 +37,7 @@ use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,7 +45,8 @@ readonly class ProjectTabService implements ServiceWithArrayCache
 {
     public function __construct(
         private ProjectTabRepository $projectTabRepository,
-        private readonly ShiftTimePresetService $shiftTimePresetService
+        private readonly ShiftTimePresetService $shiftTimePresetService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -109,18 +111,20 @@ readonly class ProjectTabService implements ServiceWithArrayCache
         }
 
         $calendarData = $calendarService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $projectService,
-            Auth::user()->getCalendarFilter(),
+            startDate: $startDate,
+            endDate: $endDate,
+            userService: $userService,
+            filterService: $filterService,
+            filterController: $filterController,
+            roomService: $roomService,
+            roomCategoryService: $roomCategoryService,
+            roomAttributeService: $roomAttributeService,
+            eventTypeService: $eventTypeService,
+            areaService: $areaService,
+            projectService: $projectService,
+            calendarFilter: $this->authManager->user()->getCalendarFilter(),
+            room: null,
+            project: $project,
         );
 
         $eventsAtAGlance = Collection::make();

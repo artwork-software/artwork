@@ -10,14 +10,19 @@ export default {
     props: {
         text: String,
         disabled: Boolean,
-        horizontalPadding: String
+        horizontalPadding: String,
+        noIcon:{
+            type: Boolean,
+            default: false
+        },
+        type: String
     }
 }
 </script>
 
 <template>
-    <BaseButton :text="text" :disabled="disabled" :horizontalPadding="horizontalPadding">
-        <IconCirclePlus stroke-width="1.5" class="h-4 w-4 mr-2" aria-hidden="true"/>
+    <BaseButton :type="type" :text="text" :disabled="disabled" :horizontalPadding="horizontalPadding">
+        <IconCirclePlus stroke-width="1.5" class="h-4 w-4 mr-2" aria-hidden="true" v-if="!noIcon" />
     </BaseButton>
 </template>
 

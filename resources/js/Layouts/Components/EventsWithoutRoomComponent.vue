@@ -377,7 +377,6 @@ export default {
                 .catch(error => event.error = error.response.data.errors);
         },
         openDeleteEventModal(event) {
-            console.log(event)
             this.eventToDelete = event;
             this.deleteComponentVisible = true;
         },

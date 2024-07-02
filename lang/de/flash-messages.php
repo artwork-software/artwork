@@ -85,4 +85,54 @@ return [
             'delete' => 'Budget konnte nicht gelöscht werden, bitte versuche es erneut.',
         ]
     ],
+    'inventory-management' => [
+        'column' => [
+            'errors' => [
+                'create' => 'Spalte konnte nicht gespeichert werden. Bitte versuche es erneut.',
+                'duplicate' => 'Spalte konnte nicht dupliziert werden. Bitte versuche es erneut.',
+                'updateName' => 'Spaltenname konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'updateBackgroundColor' => 'Spaltenfarbe konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'updateTypeOptions' => 'Spalten-Auswahloptionen konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'delete' => 'Spalte konnte nicht gelöscht werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'category' => [
+            'errors' => [
+                'create' => 'Kategorie konnte nicht gespeichert werden. Bitte versuche es erneut.',
+                'updateName' => 'Kategoriename konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'updateOrder' => 'Kategorieposition konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'delete' => 'Kategorie konnte nicht gelöscht werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'group' => [
+            'errors' => [
+                'create' => 'Gruppe konnte nicht gespeichert werden. Bitte versuche es erneut.',
+                'updateName' => 'Gruppenname konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'updateOrder' => 'Gruppenposition konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'delete' => 'Gruppe konnte nicht gelöscht werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'item' => [
+            'errors' => [
+                'create' => 'Gegenstand konnte nicht gespeichert werden. Bitte versuche es erneut.',
+                'updateOrder' => 'Gegenstandsposition konnte nicht aktualisiert werden. Bitte versuche es erneut.',
+                'delete' => 'Gegenstand konnte nicht gelöscht werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'item-cell' => [
+            'errors' => [
+                'updateCellValue' => 'Wert konnte nicht aktualisiert werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'filter' => [
+            'errors' => [
+                'updateOrCreate' => 'Filtereinstellungen konnten nicht aktualisiert werden. Bitte versuche es erneut.'
+            ]
+        ],
+        'export' => [
+            'errors' => [
+                'download' => 'Export konnte nicht erzeugt werden. Bitte erneut versuchen.'
+            ]
+        ]
+    ]
 ];

@@ -148,5 +148,4 @@ readonly class ShiftPresetService
     {
         $this->shiftPresetRepository->delete($shiftPreset);
     }
-
 }

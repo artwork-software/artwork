@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Project;
+namespace Tests\Feature\Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;

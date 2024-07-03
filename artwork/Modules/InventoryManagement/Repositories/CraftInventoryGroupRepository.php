@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CraftInventoryGroupRepository extends BaseRepository
+class CraftInventoryGroupRepository extends BaseRepository
 {
     public function find(int $id): CraftInventoryGroup
     {

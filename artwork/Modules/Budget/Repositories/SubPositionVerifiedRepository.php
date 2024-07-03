@@ -4,6 +4,6 @@ namespace Artwork\Modules\Budget\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-readonly class SubPositionVerifiedRepository extends BaseRepository
+class SubPositionVerifiedRepository extends BaseRepository
 {
 }

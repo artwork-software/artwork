@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class EventRepository extends BaseRepository
+class EventRepository extends BaseRepository
 {
     public function getEventsByProjectIdAndEventTypeId(int $projectId, int $eventTypeId): Collection
     {

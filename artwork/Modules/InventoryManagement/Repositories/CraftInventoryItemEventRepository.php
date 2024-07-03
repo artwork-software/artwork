@@ -5,7 +5,7 @@ namespace Artwork\Modules\InventoryManagement\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 
-readonly class CraftInventoryItemEventRepository extends BaseRepository
+class CraftInventoryItemEventRepository extends BaseRepository
 {
     public function findEventByEventId(int $eventId): ?CraftInventoryItemEvent
     {

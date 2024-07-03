@@ -5,7 +5,7 @@ namespace Artwork\Modules\Shift\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 
-readonly class ShiftsQualificationsRepository extends BaseRepository
+class ShiftsQualificationsRepository extends BaseRepository
 {
     public function findByShiftIdAndShiftQualificationId(
         int $shiftId,

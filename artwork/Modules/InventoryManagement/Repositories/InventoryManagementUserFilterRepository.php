@@ -5,7 +5,7 @@ namespace Artwork\Modules\InventoryManagement\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 
-readonly class InventoryManagementUserFilterRepository extends BaseRepository
+class InventoryManagementUserFilterRepository extends BaseRepository
 {
     public function findForUser(int $id): InventoryManagementUserFilter|null
     {

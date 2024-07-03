@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CraftsInventoryColumnRepository extends BaseRepository
+class CraftsInventoryColumnRepository extends BaseRepository
 {
     public function getAllOrdered($orderBy = 'id', $orderByDirection = 'asc'): Collection
     {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Throwable;
 
-abstract readonly class BaseRepository
+abstract class BaseRepository
 {
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
     {

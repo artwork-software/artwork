@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CraftInventoryItemRepository extends BaseRepository
+class CraftInventoryItemRepository extends BaseRepository
 {
     public function getAll(): Collection
     {

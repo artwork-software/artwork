@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 
-readonly class ProjectTabRepository extends BaseRepository
+class ProjectTabRepository extends BaseRepository
 {
     public function findFirstProjectTab(): ProjectTab|null
     {

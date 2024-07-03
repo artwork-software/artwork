@@ -20,14 +20,14 @@ class CraftInventoryCategoryController extends Controller
         private readonly Translator $translator,
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
-        private readonly CraftInventoryCategoryService $craftsInventoryCategoryService
+        private readonly CraftInventoryCategoryService $craftInventoryCategoryService
     ) {
     }
 
     public function create(CreateCraftInventoryCategoryRequest $request): RedirectResponse
     {
         try {
-            $this->craftsInventoryCategoryService->create(
+            $this->craftInventoryCategoryService->create(
                 $request->integer('craftId'),
                 $request->string('name')
             );
@@ -51,10 +51,10 @@ class CraftInventoryCategoryController extends Controller
         CraftInventoryCategory $craftInventoryCategory,
         UpdateCraftInventoryCategoryNameRequest $request
     ): RedirectResponse {
-        $name = $request->get('name');
+        $name = $request->string('name');
 
         try {
-            $this->craftsInventoryCategoryService->updateName($name, $craftInventoryCategory);
+            $this->craftInventoryCategoryService->updateName($name, $craftInventoryCategory);
         } catch (Throwable $t) {
             $this->logger->error(
                 sprintf(
@@ -82,11 +82,11 @@ class CraftInventoryCategoryController extends Controller
         $order = $request->integer('order');
 
         try {
-            $this->craftsInventoryCategoryService->updateOrder($craftInventoryCategory, $order);
+            $this->craftInventoryCategoryService->updateOrder($craftInventoryCategory, $order);
         } catch (Throwable $t) {
             $this->logger->error(
                 sprintf(
-                    'Could not update crafts inventory category order to: "%s" for reason: "%s"',
+                    'Could not update crafts inventory category order to: "%d" for reason: "%s"',
                     $order,
                     $t->getMessage()
                 )
@@ -105,7 +105,7 @@ class CraftInventoryCategoryController extends Controller
 
     public function forceDelete(CraftInventoryCategory $craftInventoryCategory): RedirectResponse
     {
-        if (!$this->craftsInventoryCategoryService->forceDelete($craftInventoryCategory)) {
+        if (!$this->craftInventoryCategoryService->forceDelete($craftInventoryCategory)) {
             return $this->redirector
                 ->back()
                 ->with(

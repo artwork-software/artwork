@@ -611,11 +611,6 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $translatorMock = $this->getMockBuilder(Translator::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['get'])
-            ->getMock();
-
         $craftInventoryCategoryServiceMock->expects(self::once())
             ->method('forceDelete')
             ->with($craftInventoryCategoryMock)

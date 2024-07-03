@@ -114,7 +114,7 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         }
     },
     applyGroupValueChange = () => {
-        if (props.group.name === groupValue.value) {
+        if (props.group.name === groupValue.value || groupValue.value.length === 0) {
             toggleGroupEdit();
             return;
         }

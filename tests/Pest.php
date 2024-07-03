@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /*
@@ -13,5 +14,10 @@ use Tests\TestCase;
 |
 */
 
-uses(TestCase::class, \Illuminate\Foundation\Testing\DatabaseTransactions::class)->beforeEach(function () {
-})->in('Feature', 'Unit');
+uses(
+    TestCase::class,
+    DatabaseTransactions::class
+)->beforeEach(
+    function (): void {
+    }
+)->in('Feature', 'Unit');

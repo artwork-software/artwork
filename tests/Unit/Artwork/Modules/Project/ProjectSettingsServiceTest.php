@@ -52,7 +52,7 @@ class ProjectSettingsServiceTest extends TestCase
 
     /**
      * @dataProvider storeTestDataProvider
-     * @throws Exception|BindingResolutionException
+     * @throws Exception
      */
     public function testStore(array $requestKeys, $requestReturns): void
     {

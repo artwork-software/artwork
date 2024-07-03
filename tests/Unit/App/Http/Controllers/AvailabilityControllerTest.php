@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Unit\App\Http\Controllers;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;

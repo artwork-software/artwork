@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Artwork\Modules\Availability\Services;
+namespace Tests\Unit\Artwork\Modules\Availability\Services;
 
 
 use Artwork\Modules\Availability\Models\Availability;

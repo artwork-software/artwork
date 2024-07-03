@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\App\Exports;
+namespace Tests\Unit\Artwork\Modules\Project\Exports;
 
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Illuminate\Support\Facades\View;

@@ -9,7 +9,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
-class ProjectSettingsServiceUnitTest extends TestCase
+class ProjectSettingsServiceTest extends TestCase
 {
 
     /**
@@ -54,19 +54,36 @@ class ProjectSettingsServiceUnitTest extends TestCase
             ->getMock();
 
         //add expectations
+        //how often function boolean() is called? which parameters are used, what is returned on each call?
         $matcher = self::exactly(5);
         $requestMock->expects($matcher)
             ->method('boolean')
-            ->willReturnCallback(function (string $key) use ($matcher, $requestKeys): void {
-                //assert function argument on each call
-                match ($matcher->numberOfInvocations()) {
-                    1 => $this->assertEquals($requestKeys[0], $key),
-                    2 => $this->assertEquals($requestKeys[1], $key),
-                    3 => $this->assertEquals($requestKeys[2], $key),
-                    4 => $this->assertEquals($requestKeys[3], $key),
-                    5 => $this->assertEquals($requestKeys[4], $key),
-                };
-            })->willReturnOnConsecutiveCalls(...$requestReturns);
+            ->willReturnCallback(
+                function (string $key) use ($matcher, $requestKeys, $requestReturns): bool {
+                    //assert function argument on each call and return desired value for it
+                    switch ($matcher->numberOfInvocations()) {
+                        //each case assert the parameter which was passed to boolean function call
+                        //and return value which shall be returned by boolean function call
+                        case 1:
+                            $this->assertSame($requestKeys[0], $key);
+                            return $requestReturns[0];
+                        case 2:
+                            $this->assertSame($requestKeys[1], $key);
+                            return $requestReturns[1];
+                        case 3:
+                            $this->assertSame($requestKeys[2], $key);
+                            return $requestReturns[2];
+                        case 4:
+                            $this->assertSame($requestKeys[3], $key);
+                            return $requestReturns[3];
+                        case 5:
+                            $this->assertSame($requestKeys[4], $key);
+                            return $requestReturns[4];
+                        default:
+                            throw new \AssertionError('Parameter was not expected.');
+                    }
+                }
+            );
 
         //create mock
         $settingsModelMock = $this->getMockBuilder(ProjectCreateSettings::class)
@@ -74,17 +91,16 @@ class ProjectSettingsServiceUnitTest extends TestCase
             ->onlyMethods(['save'])
             ->getMock();
 
-        //add expectations
+        //add expectation that save method is called exactly one time
         $settingsModelMock->expects(self::once())
             ->method('save');
 
         //run method with configured mocks
         $projectSettingsService->store($requestMock, $settingsModelMock);
 
-        //now assert that properties are properly placed inside the model
-        //not necessary (usually part of FeatureTest) but more assertions = more security
+        //now assert that properties are properly placed inside the model (returned by willReturnCallback)
         foreach ($requestKeys as $index => $key) {
-            self::assertEquals($requestReturns[$index], $settingsModelMock->{$key});
+            self::assertSame($requestReturns[$index], $settingsModelMock->{$key});
         }
     }
 }

@@ -30,15 +30,19 @@ class ProjectSettingsServiceTest extends TestCase
      */
     public static function storeTestDataProvider(): array
     {
+        //yield could also be used
+        //each array in the array is used for exactly one run. The first index is the first parameter -> $requestKeys,
+        //the second index is the second paramter -> $requestReturns, passed to testStore
+        $expectedRequestKeys = [
+            'attributes',
+            'state',
+            'managers',
+            'cost_center',
+            'budget_deadline'
+        ];
         return [
-            [
-                [
-                    'attributes',
-                    'state',
-                    'managers',
-                    'cost_center',
-                    'budget_deadline'
-                ],
+            'save model with true values' => [
+                $expectedRequestKeys,
                 [
                     true,
                     true,
@@ -46,7 +50,28 @@ class ProjectSettingsServiceTest extends TestCase
                     true,
                     true
                 ]
-            ]
+            ],
+            'save model with false values' => [
+                $expectedRequestKeys,
+                [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                ]
+            ],
+            //just an example, not necessary as true and false are already tested
+            'save model with mixed values' => [
+                $expectedRequestKeys,
+                [
+                    true,
+                    false,
+                    true,
+                    false,
+                    true
+                ]
+            ],
         ];
     }
 

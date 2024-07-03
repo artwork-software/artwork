@@ -14,11 +14,6 @@ class CraftInventoryCategoryService
     ) {
     }
 
-    public function getNewCraftInventoryCategory(array $attributes): CraftInventoryCategory
-    {
-        return new CraftInventoryCategory($attributes);
-    }
-
     /**
      * @throws Throwable
      */
@@ -26,7 +21,7 @@ class CraftInventoryCategoryService
         int $craftId,
         string $name
     ): CraftInventoryCategory {
-        $craftsInventoryCategory = $this->getNewCraftInventoryCategory(
+        $craftsInventoryCategory = $this->craftInventoryCategoryRepository->getNewModelInstance(
             [
                 'craft_id' => $craftId,
                 'name' => $name,

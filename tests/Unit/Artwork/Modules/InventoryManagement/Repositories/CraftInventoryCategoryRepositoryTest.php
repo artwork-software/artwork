@@ -26,7 +26,7 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
     {
         $this->craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['newModelQuery', 'newEloquentBuilder', 'newBaseQueryBuilder'])
+            ->onlyMethods(['newModelQuery', 'newEloquentBuilder', 'newBaseQueryBuilder', 'newInstance'])
             ->getMock();
 
         $this->eloquentBuilderMock = $this->createMock(Builder::class);
@@ -51,6 +51,18 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
         );
     }
 
+    public function testGetNewModelInstance(): void
+    {
+        $this->craftInventoryCategoryMock->expects(self::once())
+            ->method('newInstance')
+            ->willReturn($this->craftInventoryCategoryMock);
+
+        self::assertInstanceOf(
+            CraftInventoryCategory::class,
+            $this->getRepository()->getNewModelInstance()
+        );
+    }
+
     /**
      * @throws Exception
      */
@@ -60,7 +72,7 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
             ->method('newModelQuery')
             ->willReturn($this->eloquentBuilderMock);
 
-        $query = $this->getRepository()->getModelQuery();
+        $query = $this->getRepository()->getNewModelQuery();
         self::assertInstanceOf(Builder::class, $query);
     }
 

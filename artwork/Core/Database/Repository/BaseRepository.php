@@ -14,13 +14,18 @@ use Throwable;
 
 abstract class BaseRepository
 {
+    public function getNewModelInstance(): Model
+    {
+        throw new BadMethodCallException('Implement in derived repository.');
+    }
+
     /**
      * base builder return type is required for some unit tests where orderBy or count has to be tested
      * which are only mixed into the eloquent builder so the mock breaks while configuring methods
      * see: CraftInventoryCategoryRepositoryTest.php -> testGetAllByCraftIdOrderedByOrder or
      * testGetCategoryCountForCraft for example
      **/
-    public function getModelQuery(): BaseBuilder|Builder
+    public function getNewModelQuery(): BaseBuilder|Builder
     {
         throw new BadMethodCallException('Implement in derived repository.');
     }

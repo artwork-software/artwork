@@ -6,11 +6,11 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryCategoryRepository;
 use Throwable;
 
-readonly class CraftInventoryCategoryService
+class CraftInventoryCategoryService
 {
     public function __construct(
-        private CraftInventoryCategoryRepository $craftInventoryCategoryRepository,
-        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
+        private readonly CraftInventoryCategoryRepository $craftInventoryCategoryRepository,
+        private readonly InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
     }
 

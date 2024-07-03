@@ -9,12 +9,12 @@ use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnReposi
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
-readonly class CraftsInventoryColumnService
+class CraftsInventoryColumnService
 {
     public function __construct(
-        private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
-        private CraftInventoryItemService $craftInventoryItemService,
-        private CraftInventoryItemCellService $craftInventoryItemCellService
+        private readonly CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
+        private readonly CraftInventoryItemService $craftInventoryItemService,
+        private readonly CraftInventoryItemCellService $craftInventoryItemCellService
     ) {
     }
 

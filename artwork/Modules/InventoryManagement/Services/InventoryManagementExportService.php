@@ -5,6 +5,7 @@ namespace Artwork\Modules\InventoryManagement\Services;
 use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
 use Carbon\Carbon;
 use Illuminate\Cache\CacheManager;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -12,6 +13,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 readonly class InventoryManagementExportService
 {
     public function __construct(
+        private ViewFactory $viewFactory,
         private CacheManager $cacheManager,
         private CraftsInventoryColumnService $craftsInventoryColumnService
     ) {
@@ -56,6 +58,7 @@ readonly class InventoryManagementExportService
     public function createExport(string $token): InventoryManagementExport
     {
         return new InventoryManagementExport(
+            $this->viewFactory,
             $this->craftsInventoryColumnService->getAllOrdered(),
             $this->getCachedRequestData($token)
         );

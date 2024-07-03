@@ -13,12 +13,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Carbon\Carbon;
 
-readonly class CraftInventoryItemEventService
+class CraftInventoryItemEventService
 {
 
     public function __construct(
-        private CraftInventoryItemEventRepository $craftInventoryItemEventRepository,
-        private EventService $eventService,
+        private readonly CraftInventoryItemEventRepository $craftInventoryItemEventRepository,
+        private readonly EventService $eventService,
     ) {
     }
 

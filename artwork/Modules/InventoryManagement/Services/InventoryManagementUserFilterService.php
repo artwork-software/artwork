@@ -7,10 +7,10 @@ use Artwork\Modules\InventoryManagement\Repositories\InventoryManagementUserFilt
 use Illuminate\Support\Collection;
 use Throwable;
 
-readonly class InventoryManagementUserFilterService
+class InventoryManagementUserFilterService
 {
     public function __construct(
-        private InventoryManagementUserFilterRepository $inventoryManagementUserFilterRepository
+        private readonly InventoryManagementUserFilterRepository $inventoryManagementUserFilterRepository
     ) {
     }
 

@@ -14,9 +14,9 @@ use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
-readonly class CraftService
+class CraftService
 {
-    public function __construct(private CraftRepository $craftRepository)
+    public function __construct(private readonly CraftRepository $craftRepository)
     {
     }
 

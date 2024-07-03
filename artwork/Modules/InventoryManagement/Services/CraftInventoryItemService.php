@@ -8,13 +8,13 @@ use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemRepositor
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
 use Throwable;
 
-readonly class CraftInventoryItemService
+class CraftInventoryItemService
 {
     public function __construct(
-        private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
-        private CraftInventoryItemRepository $craftInventoryItemRepository,
-        private CraftInventoryItemCellService $craftInventoryItemCellService,
-        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
+        private readonly CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
+        private readonly CraftInventoryItemRepository $craftInventoryItemRepository,
+        private readonly CraftInventoryItemCellService $craftInventoryItemCellService,
+        private readonly InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
     }
 

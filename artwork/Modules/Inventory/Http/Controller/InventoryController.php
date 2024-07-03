@@ -24,6 +24,7 @@ use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class InventoryController extends Controller
 {
@@ -35,12 +36,13 @@ class InventoryController extends Controller
         private readonly CalendarService $calendarService,
         private readonly CraftInventoryItemService $craftInventoryItemService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly ResponseFactory $responseFactory
     ) {
     }
 
     public function inventory(): Response
     {
-        return Inertia::render(
+        return $this->responseFactory->render(
             'Inventory/InventoryManagement/Inventory',
             [
                 'columns' => $this->craftsInventoryColumnService->getAllOrdered(),

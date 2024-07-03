@@ -10,12 +10,14 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryCategoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 class CraftInventoryCategoryController extends Controller
 {
     public function __construct(
+        private readonly Translator $translator,
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
         private readonly CraftInventoryCategoryService $craftsInventoryCategoryService
@@ -39,7 +41,7 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.category.errors.create'));
+                ->with('error', $this->translator->get('flash-messages.inventory-management.category.errors.create'));
         }
 
         return $this->redirector->back();
@@ -64,7 +66,10 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.category.errors.updateName'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.category.errors.updateName')
+                );
         }
 
         return $this->redirector->back();
@@ -89,7 +94,10 @@ class CraftInventoryCategoryController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.category.errors.updateOrder'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.category.errors.updateOrder')
+                );
         }
 
         return $this->redirector->back();
@@ -100,7 +108,10 @@ class CraftInventoryCategoryController extends Controller
         if (!$this->craftsInventoryCategoryService->forceDelete($craftInventoryCategory)) {
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.category.errors.delete'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.category.errors.delete')
+                );
         }
 
         return $this->redirector->back();

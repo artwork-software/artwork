@@ -8,12 +8,14 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 
 readonly class InventoryManagementExport implements FromView, WithStyles
 {
     use Exportable;
 
     public function __construct(
+        private ViewFactory $viewFactory,
         private Collection $columns,
         private Collection $crafts
     ) {
@@ -21,7 +23,7 @@ readonly class InventoryManagementExport implements FromView, WithStyles
 
     public function view(): View
     {
-        return view(
+        return $this->viewFactory->make(
             'exports.inventoryManagement',
             [
                 'columns' => $this->columns,

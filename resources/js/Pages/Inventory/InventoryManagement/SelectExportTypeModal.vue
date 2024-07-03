@@ -68,10 +68,10 @@ const $t = useTranslation(),
                 data: props.craftsToExport.map(
                     (craft) => {
                         return {
-                            craftId: craft.id,
-                            craftName: craft.name,
-                            abbreviation: craft.abbreviation,
-                            filteredInventoryCategories: craft.filtered_inventory_categories
+                            craftId: craft.value.id,
+                            craftName: craft.value.name,
+                            abbreviation: craft.value.abbreviation,
+                            filteredInventoryCategories: craft.value.filtered_inventory_categories
                         }
                     }
                 )

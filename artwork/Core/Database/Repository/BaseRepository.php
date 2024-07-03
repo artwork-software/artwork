@@ -5,12 +5,19 @@ namespace Artwork\Core\Database\Repository;
 use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
+use BadMethodCallException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
 {
+    public function getModelQuery(): Builder
+    {
+        throw new BadMethodCallException('Implement in derived repository.');
+    }
+
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
     {
         $model->save();

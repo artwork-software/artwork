@@ -13,7 +13,7 @@ class CraftInventoryCategoryRepository extends BaseRepository
     {
     }
 
-    public function getQuery(): Builder
+    public function getModelQuery(): Builder
     {
         /** @var Builder $builder */
         $builder = $this->craftInventoryCategory->newModelQuery();
@@ -24,14 +24,14 @@ class CraftInventoryCategoryRepository extends BaseRepository
     public function find(int $id): CraftInventoryCategory
     {
         /** @var CraftInventoryCategory $craftInventoryCategory */
-        $craftInventoryCategory = $this->getQuery()->find($id);
+        $craftInventoryCategory = $this->getModelQuery()->find($id);
 
         return $craftInventoryCategory;
     }
 
     public function getAllByCraftIdOrderedByOrder(int $craftId): Collection
     {
-        return $this->getQuery()
+        return $this->getModelQuery()
             ->where('craft_id', $craftId)
             ->orderBy('order')
             ->get();
@@ -39,7 +39,7 @@ class CraftInventoryCategoryRepository extends BaseRepository
 
     public function getCategoryCountForCraft(int $craftId): int
     {
-        return $this->getQuery()
+        return $this->getModelQuery()
             ->where('craft_id', $craftId)
             ->count();
     }

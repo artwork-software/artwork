@@ -6,16 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
@@ -37,7 +34,7 @@ class InventoryController extends Controller
         private readonly InventoryManagementUserFilterService $inventoryManagementUserFilterService,
         private readonly CalendarService $calendarService,
         private readonly CraftInventoryItemService $craftInventoryItemService,
-        private readonly CraftInventoryItemEventServices $craftInventoryItemEventServices,
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
     ) {
     }
 
@@ -85,7 +82,7 @@ class InventoryController extends Controller
 
         $crafts = $this->craftService->getCraftsWithInventory(
             $this->craftInventoryItemService,
-            $this->craftInventoryItemEventServices,
+            $this->craftInventoryItemEventService,
         );
 
         return Inertia::render('Inventory/Scheduling', [
@@ -101,7 +98,7 @@ class InventoryController extends Controller
         CraftInventoryItem $item,
         Event $event
     ): void {
-        $this->craftInventoryItemEventServices->dropItemToEvent(
+        $this->craftInventoryItemEventService->dropItemToEvent(
             $item,
             $event,
             $this->authManager->id(),

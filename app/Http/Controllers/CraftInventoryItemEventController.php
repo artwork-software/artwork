@@ -5,14 +5,14 @@ namespace App\Http\Controllers;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\StoreMultipleInventoryItemsInEvent;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
 use Illuminate\Auth\AuthManager;
 
 class CraftInventoryItemEventController extends Controller
 {
     public function __construct(
         private readonly AuthManager $authManager,
-        private readonly CraftInventoryItemEventServices $craftInventoryItemEventServices,
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
     ) {
     }
 
@@ -21,7 +21,7 @@ class CraftInventoryItemEventController extends Controller
      */
     public function update(DropItemOnInventoryRequest $request, CraftInventoryItemEvent $craftInventoryItemEvent): void
     {
-        $this->craftInventoryItemEventServices->updateQuantity(
+        $this->craftInventoryItemEventService->updateQuantity(
             $request->integer('quantity'),
             $craftInventoryItemEvent
         );
@@ -37,7 +37,7 @@ class CraftInventoryItemEventController extends Controller
 
     public function storeMultiple(StoreMultipleInventoryItemsInEvent $request): void
     {
-        $this->craftInventoryItemEventServices->storeMultiple(
+        $this->craftInventoryItemEventService->storeMultiple(
             $request->collect('events'),
             $this->authManager->id()
         );

@@ -27,7 +27,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -79,7 +79,7 @@ class EventController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly CraftInventoryItemEventServices $craftInventoryItemEventServices
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService
     ) {
     }
 
@@ -1203,8 +1203,8 @@ class EventController extends Controller
         }
 
         // update event time in inventory
-        if ($isInInventoryEvent = $this->craftInventoryItemEventServices->checkIfEventIsInInventoryPlaning($event)) {
-            $this->craftInventoryItemEventServices->updateEventTimeInInventory($isInInventoryEvent, $event);
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
         return new CalendarEventResource($event);

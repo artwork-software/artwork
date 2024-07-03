@@ -6,6 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 
 class CraftInventoryCategoryRepository extends BaseRepository
 {
@@ -13,9 +14,9 @@ class CraftInventoryCategoryRepository extends BaseRepository
     {
     }
 
-    public function getModelQuery(): Builder
+    public function getModelQuery(): BaseBuilder|Builder
     {
-        /** @var Builder $builder */
+        /** @var BaseBuilder|Builder $builder */
         $builder = $this->craftInventoryCategory->newModelQuery();
 
         return $builder;

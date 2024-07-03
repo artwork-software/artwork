@@ -7,13 +7,20 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use BadMethodCallException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
 {
-    public function getModelQuery(): Builder
+    /**
+     * base builder return type is required for some unit tests where orderBy or count has to be tested
+     * which are only mixed into the eloquent builder so the mock breaks while configuring methods
+     * see: CraftInventoryCategoryRepositoryTest.php -> testGetAllByCraftIdOrderedByOrder or
+     * testGetCategoryCountForCraft for example
+     **/
+    public function getModelQuery(): BaseBuilder|Builder
     {
         throw new BadMethodCallException('Implement in derived repository.');
     }

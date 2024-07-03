@@ -11,6 +11,19 @@ use PHPUnit\Framework\TestCase;
 
 class ProjectSettingsServiceTest extends TestCase
 {
+    private readonly ProjectSettingsService $projectSettingsService;
+
+    /**
+     * @throws BindingResolutionException
+     */
+    protected function setUp(): void
+    {
+        //setup is called before each test is executed (means fresh instances)
+
+        //get UUT (unit under test)
+        /** @var ProjectSettingsService $projectSettingsService */
+        $this->projectSettingsService = app()->make(ProjectSettingsService::class);
+    }
 
     /**
      * @return array<array<int, mixed>>
@@ -43,10 +56,6 @@ class ProjectSettingsServiceTest extends TestCase
      */
     public function testStore(array $requestKeys, $requestReturns): void
     {
-        //get UUT (unit under test)
-        /** @var ProjectSettingsService $projectSettingsService */
-        $projectSettingsService = app()->make(ProjectSettingsService::class);
-
         //create mock
         $requestMock = $this->getMockBuilder(ProjectCreateSettingsUpdateRequest::class)
             ->disableOriginalConstructor()
@@ -96,7 +105,7 @@ class ProjectSettingsServiceTest extends TestCase
             ->method('save');
 
         //run method with configured mocks
-        $projectSettingsService->store($requestMock, $settingsModelMock);
+        $this->projectSettingsService->store($requestMock, $settingsModelMock);
 
         //now assert that properties are properly placed inside the model (returned by willReturnCallback)
         foreach ($requestKeys as $index => $key) {

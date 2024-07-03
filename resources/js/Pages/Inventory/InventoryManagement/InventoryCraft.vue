@@ -19,8 +19,10 @@
     <template v-if="craftShown && craft.value.filtered_inventory_categories.length > 0"
               v-for="(category, index) in craft.value.filtered_inventory_categories"
               :key="category.id">
-        <AddNewCategory v-if="craftShown && index === 0"
-                        @click="openAddCategoryOrGroupModal('category', craft.value.id)"/>
+        <AddNewResource v-if="craftShown && index === 0"
+                @click="openAddCategoryOrGroupModal('category', craft.value.id)"
+                :text="$t('Add new category')"
+                :colspan="colspan"/>
         <InventoryCategory :index="index"
                            :category="category"
                            :colspan="colspan"
@@ -58,10 +60,10 @@
 import InventoryCategory from "@/Pages/Inventory/InventoryManagement/InventoryCategory.vue";
 import {IconCirclePlus, IconChevronDown, IconChevronUp, IconLink} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
-import AddNewCategory from "@/Pages/Inventory/InventoryManagement/AddNewCategory.vue";
 import DropCategory from "@/Pages/Inventory/InventoryManagement/DropCategory.vue";
 import AddCategoryOrGroupModal from "@/Pages/Inventory/InventoryManagement/AddCategoryOrGroupModal.vue";
 import {router} from "@inertiajs/vue3";
+import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
 
 const props = defineProps({
         colspan: Number,

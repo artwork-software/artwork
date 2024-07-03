@@ -5,9 +5,9 @@
         @drop="itemDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row py-1 border border-dashed border-blue-700 justify-center items-center">
-                <IconDragDrop class="w-5 h-5"/>
-                <span class="text-xs subpixel-antialiased">{{ $t('Place here') }}</span>
+            <div class="drop-item-container">
+                <IconDragDrop class="icon"/>
+                <span class="text">{{ $t('Place here') }}</span>
             </div>
         </td>
     </tr>

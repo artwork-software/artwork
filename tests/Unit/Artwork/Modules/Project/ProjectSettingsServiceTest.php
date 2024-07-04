@@ -30,7 +30,7 @@ class ProjectSettingsServiceTest extends TestCase
     {
         //yield could also be used
         //each array in the array is used for exactly one run. The first index is the first parameter -> $requestKeys,
-        //the second index is the second paramter -> $requestReturns, passed to testStore
+        //the second index is the second parameter -> $requestReturns, passed to testStore
         $expectedRequestKeys = [
             'attributes',
             'state',

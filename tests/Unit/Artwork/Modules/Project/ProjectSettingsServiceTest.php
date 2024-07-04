@@ -5,6 +5,7 @@ namespace Tests\Unit\Artwork\Modules\Project;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
+use AssertionError;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
@@ -114,7 +115,7 @@ class ProjectSettingsServiceTest extends TestCase
                             $this->assertSame($requestKeys[4], $key);
                             return $requestReturns[4];
                         default:
-                            throw new \AssertionError('Parameter was not expected.');
+                            throw new AssertionError('Parameter was not expected.');
                     }
                 }
             );

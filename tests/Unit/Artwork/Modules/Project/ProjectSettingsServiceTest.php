@@ -14,16 +14,13 @@ class ProjectSettingsServiceTest extends TestCase
 {
     private readonly ProjectSettingsService $projectSettingsService;
 
-    /**
-     * @throws BindingResolutionException
-     */
     protected function setUp(): void
     {
         //setup is called before each test is executed (means fresh instances)
 
         //get UUT (unit under test)
         /** @var ProjectSettingsService $projectSettingsService */
-        $this->projectSettingsService = app()->make(ProjectSettingsService::class);
+        $this->projectSettingsService = new ProjectSettingsService();
     }
 
     /**
@@ -85,7 +82,7 @@ class ProjectSettingsServiceTest extends TestCase
         //create mock
         $requestMock = $this->getMockBuilder(ProjectCreateSettingsUpdateRequest::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['boolean'])
+            ->onlyMethods(['boolean', 'string', 'integer'])
             ->getMock();
 
         //add expectations

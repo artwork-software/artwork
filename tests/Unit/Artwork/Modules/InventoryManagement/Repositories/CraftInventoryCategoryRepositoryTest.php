@@ -89,6 +89,9 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
         $this->getRepository()->find(1);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testGetAllByCraftIdOrderedByOrder(): void
     {
         $this->craftInventoryCategoryMock->expects(self::once())

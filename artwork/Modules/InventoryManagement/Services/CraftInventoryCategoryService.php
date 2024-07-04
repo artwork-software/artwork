@@ -54,7 +54,7 @@ class CraftInventoryCategoryService
         foreach (
             $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
                 $this->craftInventoryCategoryRepository
-                    ->getAllByCraftIdOrderedByOrder($craftInventoryCategory->craft_id),
+                    ->getAllByCraftIdOrderedByOrder($craftInventoryCategory->getAttribute('craft_id')),
                 $order,
                 $craftInventoryCategory
             ) as $index => $orderedCategory

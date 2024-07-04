@@ -87,8 +87,7 @@ class ProjectSettingsServiceTest extends TestCase
 
         //add expectations
         //how often function boolean() is called? which parameters are used, what is returned on each call?
-        $matcher = self::exactly(5);
-        $requestMock->expects($matcher)
+        $requestMock->expects($matcher = self::exactly(5))
             ->method('boolean')
             ->willReturnCallback(
                 function (string $key) use ($matcher, $requestKeys, $requestReturns): bool {
@@ -112,7 +111,7 @@ class ProjectSettingsServiceTest extends TestCase
                             $this->assertSame($requestKeys[4], $key);
                             return $requestReturns[4];
                         default:
-                            throw new AssertionError('Parameter was not expected.');
+                            throw new AssertionError('Number of invocations not expected.');
                     }
                 }
             );

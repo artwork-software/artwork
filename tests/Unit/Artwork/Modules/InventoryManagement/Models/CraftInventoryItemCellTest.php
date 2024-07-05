@@ -2,15 +2,15 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Models;
 
-use Artwork\Modules\Craft\Models\Craft;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
+use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionResolver;
 use Illuminate\Database\Query\Builder;
 use PHPUnit\Framework\TestCase;
 
-class CraftInventoryCategoryTest extends TestCase
+class CraftInventoryItemCellTest extends TestCase
 {
     private readonly Builder $queryBuilderMock;
 
@@ -18,12 +18,12 @@ class CraftInventoryCategoryTest extends TestCase
 
     private readonly ConnectionResolver $connectionResolverMock;
 
-    private readonly CraftInventoryCategory $category;
+    private readonly CraftInventoryItemCell $cell;
 
     protected function setUp(): void
     {
         $this->queryBuilderMock = $this->getMockBuilder(Builder::class)
-            ->onlyMethods(['orderBy', 'select'])
+            ->onlyMethods(['select'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -37,24 +37,24 @@ class CraftInventoryCategoryTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->category = new CraftInventoryCategory();
-        $this->category->setConnection('mysql');
-        $this->category::setConnectionResolver($this->connectionResolverMock);
+        $this->cell = new CraftInventoryItemCell();
+        $this->cell->setConnection('mysql');
+        $this->cell::setConnectionResolver($this->connectionResolverMock);
     }
 
     public function testFillable(): void
     {
         self::assertSame(
             [
-                'craft_id',
-                'name',
-                'order'
+                'crafts_inventory_column_id',
+                'craft_inventory_item_id',
+                'cell_value',
             ],
-            $this->category->getFillable()
+            $this->cell->getFillable()
         );
     }
 
-    public function testBelongsToCraft(): void
+    public function testBelongsToCraftInventoryItem(): void
     {
         $this->connectionResolverMock->expects(self::once())
             ->method('connection')
@@ -63,40 +63,40 @@ class CraftInventoryCategoryTest extends TestCase
 
         $this->connectionMock->expects(self::once())
             ->method('query')
-            ->willReturn($this->queryBuilderMock);
-
-        $belongsTo = $this->category->craft();
-
-        self::assertSame('craft_id', $belongsTo->getForeignKeyName());
-        self::assertSame('id', $belongsTo->getOwnerKeyName());
-        self::assertSame('crafts', $belongsTo->getRelationName());
-        self::assertSame(Craft::class, $belongsTo->getRelated()::class);
-    }
-
-    public function testHasManyGroups(): void
-    {
-        $this->connectionResolverMock->expects(self::once())
-            ->method('connection')
-            ->with('mysql')
-            ->willReturn($this->connectionMock);
-
-        $this->connectionMock->expects(self::once())
-            ->method('query')
-            ->willReturn($this->queryBuilderMock);
-
-        $this->queryBuilderMock->expects(self::once())
-            ->method('orderBy')
-            ->with('order')
             ->willReturn($this->queryBuilderMock);
 
         $this->queryBuilderMock->expects(self::once())
             ->method('select')
-            ->with(['id', 'craft_inventory_category_id', 'name', 'order']);
+            ->with(['id', 'craft_inventory_group_id', 'order']);
 
-        $hasMany = $this->category->groups();
+        $belongsTo = $this->cell->item();
 
-        self::assertSame('id', $hasMany->getLocalKeyName());
-        self::assertSame('craft_inventory_category_id', $hasMany->getForeignKeyName());
-        self::assertSame(CraftInventoryGroup::class, $hasMany->getRelated()::class);
+        self::assertSame('craft_inventory_item_id', $belongsTo->getForeignKeyName());
+        self::assertSame('id', $belongsTo->getOwnerKeyName());
+        self::assertSame('craft_inventory_items', $belongsTo->getRelationName());
+        self::assertSame(CraftInventoryItem::class, $belongsTo->getRelated()::class);
+    }
+
+    public function testBelongsToCraftsInventoryColumn(): void
+    {
+        $this->connectionResolverMock->expects(self::once())
+            ->method('connection')
+            ->with('mysql')
+            ->willReturn($this->connectionMock);
+
+        $this->connectionMock->expects(self::once())
+            ->method('query')
+            ->willReturn($this->queryBuilderMock);
+
+        $this->queryBuilderMock->expects(self::once())
+            ->method('select')
+            ->with(['id', 'name', 'type', 'type_options', 'background_color']);
+
+        $belongsTo = $this->cell->column();
+
+        self::assertSame('crafts_inventory_column_id', $belongsTo->getForeignKeyName());
+        self::assertSame('id', $belongsTo->getOwnerKeyName());
+        self::assertSame('crafts_inventory_columns', $belongsTo->getRelationName());
+        self::assertSame(CraftsInventoryColumn::class, $belongsTo->getRelated()::class);
     }
 }

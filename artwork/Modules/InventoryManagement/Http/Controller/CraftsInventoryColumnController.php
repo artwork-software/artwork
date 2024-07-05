@@ -13,6 +13,7 @@ use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -21,7 +22,8 @@ class CraftsInventoryColumnController extends Controller
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
-        private readonly CraftsInventoryColumnService $craftsInventoryColumnService
+        private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
+        private readonly Translator $translator
     ) {
     }
 
@@ -45,7 +47,10 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.create'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.create')
+                );
         }
 
         return $this->redirector->back();
@@ -68,7 +73,10 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.duplicate'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.duplicate')
+                );
         }
 
         return $this->redirector->back();
@@ -78,7 +86,7 @@ class CraftsInventoryColumnController extends Controller
         CraftsInventoryColumn $craftsInventoryColumn,
         UpdateCraftsInventoryColumnNameRequest $request
     ): RedirectResponse {
-        $name = $request->get('name');
+        $name = $request->string('name');
 
         try {
             $this->craftsInventoryColumnService->updateName($name, $craftsInventoryColumn);
@@ -93,7 +101,10 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.updateName'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.updateName')
+                );
         }
 
         return $this->redirector->back();
@@ -103,7 +114,7 @@ class CraftsInventoryColumnController extends Controller
         CraftsInventoryColumn $craftsInventoryColumn,
         UpdateCraftsInventoryColumnBackgroundColorRequest $request
     ): RedirectResponse {
-        $backgroundColor = $request->get('background_color');
+        $backgroundColor = $request->string('background_color');
 
         try {
             $this->craftsInventoryColumnService->updateBackgroundColor($backgroundColor, $craftsInventoryColumn);
@@ -118,7 +129,10 @@ class CraftsInventoryColumnController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.updateBackgroundColor'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.updateBackgroundColor')
+                );
         }
 
         return $this->redirector->back();
@@ -136,14 +150,17 @@ class CraftsInventoryColumnController extends Controller
             $this->logger->error(
                 sprintf(
                     'Could not update crafts inventory column type options to: "%s" for reason: "%s"',
-                    $selectOptions,
+                    implode(',', $selectOptions),
                     $t->getMessage()
                 )
             );
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.updateTypeOptions'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.updateTypeOptions')
+                );
         }
 
         return $this->redirector->back();
@@ -154,7 +171,10 @@ class CraftsInventoryColumnController extends Controller
         if (!$this->craftsInventoryColumnService->forceDelete($craftsInventoryColumn)) {
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.column.errors.delete'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.column.errors.delete')
+                );
         }
 
         return $this->redirector->back();

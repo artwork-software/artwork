@@ -2,16 +2,15 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
-readonly class CraftInventoryItemCellService
+class CraftInventoryItemCellService
 {
     public function __construct(
-        private CraftInventoryItemCellRepository $craftInventoryItemCellRepository
+        private readonly CraftInventoryItemCellRepository $craftInventoryItemCellRepository
     ) {
     }
 

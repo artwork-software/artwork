@@ -7,6 +7,7 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Export\CreateInventoryMana
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementExportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Maatwebsite\Excel\Excel;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -17,7 +18,8 @@ class InventoryManagementExportController extends Controller
     public function __construct(
         private readonly InventoryManagementExportService $inventoryManagementExportService,
         private readonly Redirector $redirector,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly Translator $translator
     ) {
     }
 
@@ -45,7 +47,12 @@ class InventoryManagementExportController extends Controller
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not create xlsx export for reason "%s"', $t->getMessage()));
-            return $this->getExportErrorRedirectResponse();
+            return $this->redirector
+                ->route('inventory-management.inventory')
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.export.errors.download')
+                );
         }
     }
 
@@ -58,14 +65,12 @@ class InventoryManagementExportController extends Controller
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {
             $this->logger->error(sprintf('Could not create pdf export for reason "%s"', $t->getMessage()));
-            return $this->getExportErrorRedirectResponse();
+            return $this->redirector
+                ->route('inventory-management.inventory')
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.export.errors.download')
+                );
         }
-    }
-
-    private function getExportErrorRedirectResponse(): RedirectResponse
-    {
-        return $this->redirector
-            ->route('inventory-management.inventory')
-            ->with('error', __('flash-messages.inventory-management.export.errors.download'));
     }
 }

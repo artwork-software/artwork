@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Requests\Item;
 
-use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupOrderRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Item\UpdateCraftInventoryItemOrderRequest;
 use PHPUnit\Framework\TestCase;
 
 class UpdateCraftInventoryItemOrderRequestTest extends TestCase
@@ -11,7 +11,7 @@ class UpdateCraftInventoryItemOrderRequestTest extends TestCase
     {
         self::assertSame(
             ['order' => 'required|integer'],
-            (new UpdateCraftInventoryGroupOrderRequest())->rules()
+            (new UpdateCraftInventoryItemOrderRequest())->rules()
         );
     }
 }

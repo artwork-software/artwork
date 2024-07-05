@@ -8,6 +8,7 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -16,7 +17,8 @@ class CraftInventoryItemCellController extends Controller
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
-        private readonly CraftInventoryItemCellService $craftInventoryItemCellService
+        private readonly CraftInventoryItemCellService $craftInventoryItemCellService,
+        private readonly Translator $translator
     ) {
     }
 
@@ -39,7 +41,10 @@ class CraftInventoryItemCellController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.item-cell.errors.updateCellValue'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.item-cell.errors.updateCellValue')
+                );
         }
 
         return $this->redirector->back();

@@ -113,13 +113,16 @@ class CraftInventoryGroupControllerTest extends TestCase
             ->method('back')
             ->willReturn($redirectResponseMock);
 
-        self::assertInstanceOf(RedirectResponse::class, $this->getController()->create($requestMock));
+        self::assertInstanceOf(
+            RedirectResponse::class,
+            $this->getController()->create($requestMock)
+        );
     }
 
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function createTestExceptionDataProvider(): array
+    public static function createExceptionTestDataProvider(): array
     {
         return [
             'test create exception' => [
@@ -135,7 +138,7 @@ class CraftInventoryGroupControllerTest extends TestCase
         ];
     }
 
-    /** @dataProvider createTestExceptionDataProvider */
+    /** @dataProvider createExceptionTestDataProvider */
     public function testCreateException(
         string $expectedIntegerKey,
         int $expectedIntegerResult,
@@ -189,13 +192,16 @@ class CraftInventoryGroupControllerTest extends TestCase
             ->with($expectedWithKey, $expectedTranslation)
             ->willReturn($redirectResponseMock);
 
-        self::assertInstanceOf(RedirectResponse::class, $this->getController()->create($requestMock));
+        self::assertInstanceOf(
+            RedirectResponse::class,
+            $this->getController()->create($requestMock)
+        );
     }
 
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function updateNameTestSuccessDataProvider(): array
+    public static function updateNameSuccessTestDataProvider(): array
     {
         return [
             'test updateName success' => [
@@ -205,7 +211,7 @@ class CraftInventoryGroupControllerTest extends TestCase
         ];
     }
 
-    /** @dataProvider updateNameTestSuccessDataProvider */
+    /** @dataProvider updateNameSuccessTestDataProvider */
     public function testUpdateNameSuccess(
         string $expectedStringKey,
         string $expectedStringResult
@@ -245,7 +251,7 @@ class CraftInventoryGroupControllerTest extends TestCase
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function updateNameTestExceptionDataProvider(): array
+    public static function updateNameExceptionTestDataProvider(): array
     {
         return [
             'test updateName exception' => [
@@ -259,7 +265,7 @@ class CraftInventoryGroupControllerTest extends TestCase
         ];
     }
 
-    /** @dataProvider updateNameTestExceptionDataProvider */
+    /** @dataProvider updateNameExceptionTestDataProvider */
     public function testUpdateNameException(
         string $expectedStringKey,
         string $expectedStringResult,
@@ -323,17 +329,17 @@ class CraftInventoryGroupControllerTest extends TestCase
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function updateOrderTestSuccessDataProvider(): array
+    public static function updateOrderSuccessTestDataProvider(): array
     {
         return [
-            'test updateName success' => [
+            'test updateOrder success' => [
                 'order',
                 0,
             ]
         ];
     }
 
-    /** @dataProvider updateOrderTestSuccessDataProvider */
+    /** @dataProvider updateOrderSuccessTestDataProvider */
     public function testUpdateOrderSuccess(
         string $expectedIntegerKey,
         int $expectedIntegerResult
@@ -373,7 +379,7 @@ class CraftInventoryGroupControllerTest extends TestCase
     /**
      * @return array<string, array<int, mixed>>
      */
-    public static function updateOrderTestExceptionDataProvider(): array
+    public static function updateOrderExceptionTestDataProvider(): array
     {
         return [
             'test updateOrder exception' => [
@@ -387,7 +393,7 @@ class CraftInventoryGroupControllerTest extends TestCase
         ];
     }
 
-    /** @dataProvider updateOrderTestExceptionDataProvider */
+    /** @dataProvider updateOrderExceptionTestDataProvider */
     public function testUpdateOrderException(
         string $expectedIntegerKey,
         int $expectedIntegerResult,
@@ -479,7 +485,7 @@ class CraftInventoryGroupControllerTest extends TestCase
     public static function forceDeleteFailureTestDataProvider(): array
     {
         return [
-            'test creat exception' => [
+            'test force delete failure' => [
                 'error',
                 'flash-messages.inventory-management.group.errors.delete',
                 'translation'

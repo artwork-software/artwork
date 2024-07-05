@@ -36,7 +36,7 @@ class CraftsInventoryColumnService
         CraftsInventoryColumnTypeEnum $type,
         array $typeOptions = [],
         string $background_color = '',
-        string|null $defaultOption = null
+        ?string $defaultOption = null
     ): CraftsInventoryColumn {
         $craftsInventoryColumn = $this->getNewCraftsInventoryColumn([
             'name' => $name,

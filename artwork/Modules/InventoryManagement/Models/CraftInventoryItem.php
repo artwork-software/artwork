@@ -49,6 +49,10 @@ class CraftInventoryItem extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(CraftInventoryItemEvent::class, 'craft_inventory_item_id', 'id');
+        return $this->hasMany(
+            CraftInventoryItemEvent::class,
+            'craft_inventory_item_id',
+            'id'
+        );
     }
 }

@@ -113,7 +113,10 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->method('back')
             ->willReturn($redirectResponseMock);
 
-        self::assertInstanceOf(RedirectResponse::class, $this->getController()->create($requestMock));
+        self::assertInstanceOf(
+            RedirectResponse::class,
+            $this->getController()->create($requestMock)
+        );
     }
 
     /**
@@ -194,7 +197,10 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedWithKey, $expectedTranslation)
             ->willReturn($redirectResponseMock);
 
-        self::assertInstanceOf(RedirectResponse::class, $this->getController()->create($requestMock));
+        self::assertInstanceOf(
+            RedirectResponse::class,
+            $this->getController()->create($requestMock)
+        );
     }
 
     /**

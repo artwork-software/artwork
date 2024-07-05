@@ -25,6 +25,6 @@ class CraftsInventoryColumnRepository extends BaseRepository
 
     public function getAllItemCells(CraftsInventoryColumn $craftsInventoryColumn): Collection
     {
-        return $craftsInventoryColumn->itemCells()->get();
+        return $craftsInventoryColumn->cells()->get();
     }
 }

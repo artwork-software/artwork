@@ -10,14 +10,14 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 
-readonly class InventoryManagementExport implements FromView, WithStyles
+class InventoryManagementExport implements FromView, WithStyles
 {
     use Exportable;
 
     public function __construct(
-        private ViewFactory $viewFactory,
-        private Collection $columns,
-        private Collection $crafts
+        private readonly ViewFactory $viewFactory,
+        private readonly Collection $columns,
+        private readonly Collection $crafts
     ) {
     }
 

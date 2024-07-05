@@ -10,12 +10,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Psr\SimpleCache\InvalidArgumentException;
 
-readonly class InventoryManagementExportService
+class InventoryManagementExportService
 {
     public function __construct(
-        private ViewFactory $viewFactory,
-        private CacheManager $cacheManager,
-        private CraftsInventoryColumnService $craftsInventoryColumnService
+        private readonly ViewFactory $viewFactory,
+        private readonly CacheManager $cacheManager,
+        private readonly CraftsInventoryColumnService $craftsInventoryColumnService
     ) {
     }
 

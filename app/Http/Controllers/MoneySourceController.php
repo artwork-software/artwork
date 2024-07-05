@@ -26,7 +26,9 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Log\Logger;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -180,7 +182,7 @@ class MoneySourceController extends Controller
                     ->setTranslationKey('Money source created')
             );
         } catch (\Throwable $t) {
-            dd($t->getMessage());
+            Log::error('Could not create history entry for reason: ' . $t->getMessage());
         }
 
         return back()->with(['recentlyCreatedMoneySourceId' => $moneySource->id]);

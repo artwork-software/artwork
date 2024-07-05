@@ -27,7 +27,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -84,6 +84,7 @@ class EventController extends Controller
     }
 
     public function viewEventIndex(
+        User $user,
         Request $request,
         EventService $eventService,
         CalendarService $calendarService,
@@ -112,7 +113,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
-                Auth::user()->getCalendarFilter(),
+                $user,
                 $request->boolean('atAGlance')
             )
         );
@@ -230,8 +231,6 @@ class EventController extends Controller
                     ];
                 }
             }
-
-            //dd($historyObjects);
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\StoreMultipleInventoryItemsInEvent;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
+use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
+use Artwork\Modules\InventoryScheduling\Http\Requests\StoreMultipleInventoryItemsInEvent;
+use Artwork\Modules\InventoryScheduling\Models\CraftInventoryItemEvent;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Illuminate\Auth\AuthManager;
 
 class CraftInventoryItemEventController extends Controller

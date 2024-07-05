@@ -5,15 +5,13 @@ namespace Tests\Unit\Artwork\Modules\Inventory\Http\Controller;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Inventory\Http\Controller\InventoryController;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Illuminate\Auth\AuthManager;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Database\Eloquent\Collection;
 use Inertia\ResponseFactory;
-use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
 class InventoryControllerTest extends TestCase
@@ -116,7 +114,6 @@ class InventoryControllerTest extends TestCase
             $craftsInventoryColumnServiceMock,
             $inventoryManagementUserFilterServiceMock,
             $calendarServiceMock,
-            $craftInventoryItemServiceMock,
             $craftInventoryItemEventServicesMock,
             $responseFactoryMock
         );

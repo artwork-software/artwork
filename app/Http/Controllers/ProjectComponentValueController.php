@@ -57,7 +57,6 @@ class ProjectComponentValueController extends Controller
         $value = ProjectComponentValue::where('project_id', $project->id)
             ->where('component_id', $component->id)->first();
 
-        //dd($request->input('data')['text']);
         $valueInput = null;
         if (array_key_exists('text', $request->input('data'))) {
             // add nl2br to the text input

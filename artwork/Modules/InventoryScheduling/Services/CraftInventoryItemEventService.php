@@ -1,17 +1,17 @@
 <?php
 
-namespace Artwork\Modules\InventoryManagement\Services;
+namespace Artwork\Modules\InventoryScheduling\Services;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
-use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemEventRepository;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Carbon as SupportCarbon;
+use Artwork\Modules\InventoryScheduling\Models\CraftInventoryItemEvent;
+use Artwork\Modules\InventoryScheduling\Repositories\CraftInventoryItemEventRepository;
 use Carbon\Carbon;
+use Illuminate\Support\Carbon as SupportCarbon;
+use Illuminate\Support\Collection;
 
 class CraftInventoryItemEventService
 {

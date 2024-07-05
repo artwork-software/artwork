@@ -1,9 +1,10 @@
 <?php
 
-namespace Artwork\Modules\InventoryManagement\Models;
+namespace Artwork\Modules\InventoryScheduling\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Artwork\Modules\InventoryManagement\Repositories;
+namespace Artwork\Modules\InventoryScheduling\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
+use Artwork\Modules\InventoryScheduling\Models\CraftInventoryItemEvent;
 
 class CraftInventoryItemEventRepository extends BaseRepository
 {

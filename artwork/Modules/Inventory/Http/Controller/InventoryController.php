@@ -10,16 +10,17 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventService;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
+use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
@@ -34,7 +35,6 @@ class InventoryController extends Controller
         private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
         private readonly InventoryManagementUserFilterService $inventoryManagementUserFilterService,
         private readonly CalendarService $calendarService,
-        private readonly CraftInventoryItemService $craftInventoryItemService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly ResponseFactory $responseFactory
     ) {
@@ -54,6 +54,7 @@ class InventoryController extends Controller
     }
 
     public function scheduling(
+        User $user,
         ProjectService $projectService,
         RoomService $roomService,
         UserService $userService,
@@ -65,7 +66,7 @@ class InventoryController extends Controller
         AreaService $areaService,
     ): Response {
         [$startDate, $endDate] =
-            $userService->getUserCalendarFilterDatesOrDefault($this->authManager->user()?->getCalendarFilter(),);
+            $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $showCalendar = $this->calendarService->createCalendarData(
             $startDate,
@@ -79,13 +80,10 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             $projectService,
-            $this->authManager->user()?->calendar_filter
+            $user->calendar_filter
         );
 
-        $crafts = $this->craftService->getCraftsWithInventory(
-            $this->craftInventoryItemService,
-            $this->craftInventoryItemEventService,
-        );
+        $crafts = $this->craftService->getCraftsWithInventory();
 
         return Inertia::render('Inventory/Scheduling', [
             'dateValue' => $showCalendar['dateValue'],

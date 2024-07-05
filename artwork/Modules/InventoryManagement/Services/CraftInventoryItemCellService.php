@@ -2,8 +2,10 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 readonly class CraftInventoryItemCellService
@@ -49,5 +51,24 @@ readonly class CraftInventoryItemCellService
                 'cell_value' => ($cellValue ?? '')
             ]
         );
+    }
+
+
+    public function getNameForSchedulingFromCells(Collection $cells): string
+    {
+        /** @var CraftInventoryItemCell $cell */
+        $cell = $cells->first(function (CraftInventoryItemCell $cell) {
+            return is_string($cell->cell_value);
+        });
+        return $cell ? $cell->cell_value : '';
+    }
+
+    public function getItemCountForSchedulingFromCells(Collection $cells): int
+    {
+        /** @var CraftInventoryItemCell $cell */
+        $cell = $cells->first(function (CraftInventoryItemCell $cell) {
+            return is_numeric($cell->cell_value);
+        });
+        return (int) $cell?->cell_value;
     }
 }

@@ -461,8 +461,6 @@ class User extends Model implements
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        //dd($startDate, $endDate);
-
         // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
 
         $shiftsInDateRange = $this->shifts()
@@ -503,11 +501,6 @@ class User extends Model implements
     public function scopeCanWorkShifts(Builder $builder): Builder
     {
         return $builder->where('can_work_shifts', true);
-    }
-
-    public function getCalendarFilter(): ?CalendarFilter
-    {
-        return $this->calendar_filter()->first();
     }
 
     public function getHasProjectManagerPermission(): bool

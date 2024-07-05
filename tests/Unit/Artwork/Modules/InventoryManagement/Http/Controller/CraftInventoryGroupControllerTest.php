@@ -2,12 +2,12 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Controller;
 
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Requests\Category\CreateCraftInventoryCategoryRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\Category\UpdateCraftInventoryCategoryNameRequest;
-use Artwork\Modules\InventoryManagement\Http\Requests\Category\UpdateCraftInventoryCategoryOrderRequest;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryCategoryService;
+use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Requests\Group\CreateCraftInventoryGroupRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupNameRequest;
+use Artwork\Modules\InventoryManagement\Http\Requests\Group\UpdateCraftInventoryGroupOrderRequest;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryGroupService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
@@ -16,26 +16,26 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class CraftInventoryCategoryControllerTest extends TestCase
+class CraftInventoryGroupControllerTest extends TestCase
 {
-    private Translator $translatorMock;
+    private readonly LoggerInterface $loggerMock;
 
-    private LoggerInterface $loggerMock;
+    private readonly Redirector $redirectorMock;
 
-    private Redirector $redirectorMock;
+    private readonly CraftInventoryGroupService $craftInventoryGroupServiceMock;
 
-    private CraftInventoryCategoryService $craftInventoryCategoryServiceMock;
+    private readonly Translator $translatorMock;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->translatorMock = $this->getMockBuilder(Translator::class)
-            ->onlyMethods(['get'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['get'])
             ->getMock();
 
         $this->loggerMock = $this->getMockBuilder(NullLogger::class)
-            ->onlyMethods(['error'])
             ->disableOriginalConstructor()
+            ->onlyMethods(['error'])
             ->getMock();
 
         $this->redirectorMock = $this->getMockBuilder(Redirector::class)
@@ -43,19 +43,19 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->onlyMethods(['back'])
             ->getMock();
 
-        $this->craftInventoryCategoryServiceMock = $this->getMockBuilder(CraftInventoryCategoryService::class)
+        $this->craftInventoryGroupServiceMock = $this->getMockBuilder(CraftInventoryGroupService::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['create', 'updateName', 'updateOrder', 'forceDelete'])
             ->getMock();
     }
 
-    private function getController(): CraftInventoryCategoryController
+    private function getController(): CraftInventoryGroupController
     {
-        return new CraftInventoryCategoryController(
-            $this->translatorMock,
+        return new CraftInventoryGroupController(
             $this->loggerMock,
             $this->redirectorMock,
-            $this->craftInventoryCategoryServiceMock
+            $this->craftInventoryGroupServiceMock,
+            $this->translatorMock
         );
     }
 
@@ -66,7 +66,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
     {
         return [
             'test create success' => [
-                'craftId',
+                'categoryId',
                 1,
                 'name',
                 'Test',
@@ -85,11 +85,11 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $requestMock = $this->getMockBuilder(CreateCraftInventoryCategoryRequest::class)
+        $requestMock = $this->getMockBuilder(CreateCraftInventoryGroupRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['integer', 'string'])
             ->getMock();
@@ -104,10 +104,10 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedStringKey)
             ->willReturn($expectedStringResult);
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('create')
             ->with($expectedIntegerResult, $expectedStringResult)
-            ->willReturn($craftInventoryCategoryMock);
+            ->willReturn($craftInventoryGroupMock);
 
         $this->redirectorMock->expects(self::once())
             ->method('back')
@@ -123,12 +123,12 @@ class CraftInventoryCategoryControllerTest extends TestCase
     {
         return [
             'test create exception' => [
-                'craftId',
+                'categoryId',
                 1,
                 'name',
                 'Test',
                 'error',
-                'flash-messages.inventory-management.category.errors.create',
+                'flash-messages.inventory-management.group.errors.create',
                 'translation',
                 new Exception('Test')
             ]
@@ -146,22 +146,12 @@ class CraftInventoryCategoryControllerTest extends TestCase
         string $expectedTranslation,
         Exception $thrownException
     ): void {
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
-            ->method('create')
-            ->with($expectedIntegerResult, $expectedStringResult)
-            ->willThrowException($thrownException);
-
-        $this->loggerMock = $this->getMockBuilder(NullLogger::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['error'])
-            ->getMock();
-
         $redirectResponseMock = $this->getMockBuilder(RedirectResponse::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['with'])
             ->getMock();
 
-        $requestMock = $this->getMockBuilder(CreateCraftInventoryCategoryRequest::class)
+        $requestMock = $this->getMockBuilder(CreateCraftInventoryGroupRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['integer', 'string'])
             ->getMock();
@@ -176,9 +166,14 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedStringKey)
             ->willReturn($expectedStringResult);
 
+        $this->craftInventoryGroupServiceMock->expects(self::once())
+            ->method('create')
+            ->with($expectedIntegerResult, $expectedStringResult)
+            ->willThrowException($thrownException);
+
         $this->loggerMock->expects(self::once())
             ->method('error')
-            ->with('Could not create crafts inventory category for reason: "Test"');
+            ->with('Could not create crafts inventory group for reason: "Test"');
 
         $this->translatorMock->expects(self::once())
             ->method('get')
@@ -215,7 +210,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
         string $expectedStringKey,
         string $expectedStringResult
     ): void {
-        $requestMock = $this->getMockBuilder(UpdateCraftInventoryCategoryNameRequest::class)
+        $requestMock = $this->getMockBuilder(UpdateCraftInventoryGroupNameRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['string'])
             ->getMock();
@@ -224,7 +219,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -233,9 +228,9 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedStringKey)
             ->willReturn($expectedStringResult);
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('updateName')
-            ->with($expectedStringResult, $craftInventoryCategoryMock);
+            ->with($expectedStringResult, $craftInventoryGroupMock);
 
         $this->redirectorMock->expects(self::once())
             ->method('back')
@@ -243,7 +238,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->updateName($craftInventoryCategoryMock, $requestMock)
+            $this->getController()->updateName($craftInventoryGroupMock, $requestMock)
         );
     }
 
@@ -257,7 +252,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
                 'name',
                 'Test',
                 'error',
-                'flash-messages.inventory-management.category.errors.updateName',
+                'flash-messages.inventory-management.group.errors.updateName',
                 'translation',
                 new Exception('Test')
             ]
@@ -278,12 +273,12 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->onlyMethods(['with'])
             ->getMock();
 
-        $requestMock = $this->getMockBuilder(UpdateCraftInventoryCategoryNameRequest::class)
+        $requestMock = $this->getMockBuilder(UpdateCraftInventoryGroupNameRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['string'])
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -292,15 +287,15 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedStringKey)
             ->willReturn($expectedStringResult);
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('updateName')
-            ->with($expectedStringResult, $craftInventoryCategoryMock)
+            ->with($expectedStringResult, $craftInventoryGroupMock)
             ->willThrowException($thrownException);
 
         $this->loggerMock->expects(self::once())
             ->method('error')
             ->with(sprintf(
-                'Could not update crafts inventory category name to: "%s" for reason: "%s"',
+                'Could not update crafts inventory group name to: "%s" for reason: "%s"',
                 $expectedStringResult,
                 'Test'
             ));
@@ -321,7 +316,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->updateName($craftInventoryCategoryMock, $requestMock)
+            $this->getController()->updateName($craftInventoryGroupMock, $requestMock)
         );
     }
 
@@ -331,7 +326,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
     public static function updateOrderTestSuccessDataProvider(): array
     {
         return [
-            'test updateOrder success' => [
+            'test updateName success' => [
                 'order',
                 0,
             ]
@@ -343,7 +338,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
         string $expectedIntegerKey,
         int $expectedIntegerResult
     ): void {
-        $requestMock = $this->getMockBuilder(UpdateCraftInventoryCategoryOrderRequest::class)
+        $requestMock = $this->getMockBuilder(UpdateCraftInventoryGroupOrderRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['integer'])
             ->getMock();
@@ -352,7 +347,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -361,9 +356,9 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedIntegerKey)
             ->willReturn($expectedIntegerResult);
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('updateOrder')
-            ->with($craftInventoryCategoryMock, $expectedIntegerResult);
+            ->with($craftInventoryGroupMock, $expectedIntegerResult);
 
         $this->redirectorMock->expects(self::once())
             ->method('back')
@@ -371,7 +366,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->updateOrder($craftInventoryCategoryMock, $requestMock)
+            $this->getController()->updateOrder($craftInventoryGroupMock, $requestMock)
         );
     }
 
@@ -385,7 +380,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
                 'order',
                 0,
                 'error',
-                'flash-messages.inventory-management.category.errors.updateOrder',
+                'flash-messages.inventory-management.group.errors.updateOrder',
                 'translation',
                 new Exception('Test')
             ]
@@ -406,12 +401,12 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->onlyMethods(['with'])
             ->getMock();
 
-        $requestMock = $this->getMockBuilder(UpdateCraftInventoryCategoryOrderRequest::class)
+        $requestMock = $this->getMockBuilder(UpdateCraftInventoryGroupOrderRequest::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['integer'])
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -420,15 +415,15 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->with($expectedIntegerKey)
             ->willReturn($expectedIntegerResult);
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('updateOrder')
-            ->with($craftInventoryCategoryMock, $expectedIntegerResult)
+            ->with($craftInventoryGroupMock, $expectedIntegerResult)
             ->willThrowException($thrownException);
 
         $this->loggerMock->expects(self::once())
             ->method('error')
             ->with(sprintf(
-                'Could not update crafts inventory category order to: "%d" for reason: "%s"',
+                'Could not update crafts inventory group order to: "%s" for reason: "%s"',
                 $expectedIntegerResult,
                 'Test'
             ));
@@ -449,7 +444,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->updateOrder($craftInventoryCategoryMock, $requestMock)
+            $this->getController()->updateOrder($craftInventoryGroupMock, $requestMock)
         );
     }
 
@@ -459,13 +454,13 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('forceDelete')
-            ->with($craftInventoryCategoryMock)
+            ->with($craftInventoryGroupMock)
             ->willReturn(true);
 
         $this->redirectorMock->expects(self::once())
@@ -474,7 +469,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->forceDelete($craftInventoryCategoryMock)
+            $this->getController()->forceDelete($craftInventoryGroupMock)
         );
     }
 
@@ -484,9 +479,9 @@ class CraftInventoryCategoryControllerTest extends TestCase
     public static function forceDeleteFailureTestDataProvider(): array
     {
         return [
-            'test forceDelete failure' => [
+            'test creat exception' => [
                 'error',
-                'flash-messages.inventory-management.category.errors.delete',
+                'flash-messages.inventory-management.group.errors.delete',
                 'translation'
             ]
         ];
@@ -503,13 +498,13 @@ class CraftInventoryCategoryControllerTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->craftInventoryCategoryServiceMock->expects(self::once())
+        $this->craftInventoryGroupServiceMock->expects(self::once())
             ->method('forceDelete')
-            ->with($craftInventoryCategoryMock)
+            ->with($craftInventoryGroupMock)
             ->willReturn(false);
 
         $this->redirectorMock->expects(self::once())
@@ -528,7 +523,7 @@ class CraftInventoryCategoryControllerTest extends TestCase
 
         self::assertInstanceOf(
             RedirectResponse::class,
-            $this->getController()->forceDelete($craftInventoryCategoryMock)
+            $this->getController()->forceDelete($craftInventoryGroupMock)
         );
     }
 }

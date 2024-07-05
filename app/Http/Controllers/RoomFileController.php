@@ -71,7 +71,6 @@ class RoomFileController extends Controller
 
     public function destroy(RoomFile $roomFile): RedirectResponse
     {
-        //dd($roomFile);
         $this->authorize('view', $roomFile->room->area);
 
         $this->changeService->saveFromBuilder(

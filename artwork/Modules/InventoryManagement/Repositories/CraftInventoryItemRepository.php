@@ -2,9 +2,10 @@
 
 namespace Artwork\Modules\InventoryManagement\Repositories;
 
-use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\Collection;
 
 class CraftInventoryItemRepository extends BaseRepository
@@ -19,22 +20,30 @@ class CraftInventoryItemRepository extends BaseRepository
         return $this->craftInventoryItem->newInstance($attributes);
     }
 
-    public function getAll(): Collection
+    public function getNewModelQuery(): BaseBuilder|Builder
     {
-        return CraftInventoryItem::all();
+        /** @var BaseBuilder|Builder $builder */
+        $builder = $this->craftInventoryItem->newModelQuery();
+
+        return $builder;
     }
 
-    public function find(int $id): CraftInventoryItem
+    public function getAll(): Collection
     {
-        /** @var CraftInventoryItem $craftInventoryItem */
-        $craftInventoryItem = CraftInventoryItem::find($id);
+        return $this->getNewModelQuery()->get();
+    }
+
+    public function find(int $id): CraftInventoryItem|null
+    {
+        /** @var CraftInventoryItem|null $craftInventoryItem */
+        $craftInventoryItem = $this->getNewModelQuery()->find($id);
 
         return $craftInventoryItem;
     }
 
     public function getAllOfGroupOrderedByOrder(int $id): Collection
     {
-        return CraftInventoryItem::query()
+        return $this->getNewModelQuery()
             ->where('craft_inventory_group_id', $id)
             ->orderBy('order')
             ->get();

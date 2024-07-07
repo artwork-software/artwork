@@ -16,18 +16,24 @@ abstract class BaseRepository
 {
     public function getNewModelInstance(): Model
     {
-        throw new BadMethodCallException('Implement in derived repository.');
+        throw new BadMethodCallException(
+            'Implement in derived repository. Copy already derived functions and adapt.'
+        );
     }
 
     /**
      * base builder return type is required for some unit tests where orderBy or count has to be tested
      * which are only mixed into the eloquent builder so the mock breaks while configuring methods
-     * see: CraftInventoryCategoryRepositoryTest.php -> testGetAllByCraftIdOrderedByOrder or
-     * testGetCategoryCountForCraft for example
+     * sadly we can't use addMethods on the mock as its deprecated and will be removed in next
+     * PHPUnit version
+     *
+     * example @see CraftInventoryCategoryRepositoryTest::testGetAllByCraftIdOrderedByOrder()
      **/
     public function getNewModelQuery(): BaseBuilder|Builder
     {
-        throw new BadMethodCallException('Implement in derived repository.');
+        throw new BadMethodCallException(
+            'Implement in derived repository. Copy already derived functions and adapt.'
+        );
     }
 
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel

@@ -2,18 +2,18 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Repositories;
 
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryCategoryRepository;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
+use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryGroupRepository;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
-class CraftInventoryCategoryRepositoryTest extends TestCase
+class CraftInventoryGroupRepositoryTest extends TestCase
 {
-    private readonly CraftInventoryCategory $craftInventoryCategoryMock;
+    private readonly CraftInventoryGroup $craftInventoryGroupMock;
 
     private readonly Builder $eloquentBuilderMock;
 
@@ -24,7 +24,7 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $this->craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['newModelQuery', 'newEloquentBuilder', 'newBaseQueryBuilder', 'newInstance'])
             ->getMock();
@@ -33,32 +33,32 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
         $this->baseBuilderMock = $this->createMock(BaseBuilder::class);
     }
 
-    private function getRepository(): CraftInventoryCategoryRepository
+    private function getRepository(): CraftInventoryGroupRepository
     {
-        return new CraftInventoryCategoryRepository($this->craftInventoryCategoryMock);
+        return new CraftInventoryGroupRepository($this->craftInventoryGroupMock);
     }
 
     private function getReflectedRepository(): ReflectionClass
     {
-        return new ReflectionClass(CraftInventoryCategoryRepository::class);
+        return new ReflectionClass(CraftInventoryGroupRepository::class);
     }
 
     public function testConstructorHasDesiredModel(): void
     {
         self::assertSame(
             $this->getReflectedRepository()->getConstructor()->getParameters()[0]->getType()->getName(),
-            CraftInventoryCategory::class
+            CraftInventoryGroup::class
         );
     }
 
     public function testGetNewModelInstance(): void
     {
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newInstance')
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->willReturn($this->craftInventoryGroupMock);
 
         self::assertInstanceOf(
-            CraftInventoryCategory::class,
+            CraftInventoryGroup::class,
             $this->getRepository()->getNewModelInstance()
         );
     }
@@ -68,7 +68,7 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
      */
     public function testGetModelQuery(): void
     {
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newModelQuery')
             ->willReturn($this->eloquentBuilderMock);
 
@@ -82,14 +82,14 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
     {
         $this->eloquentBuilderMock->expects(self::once())
             ->method('find')
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->willReturn($this->craftInventoryGroupMock);
 
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newModelQuery')
             ->willReturn($this->eloquentBuilderMock);
 
         self::assertInstanceOf(
-            CraftInventoryCategory::class,
+            CraftInventoryGroup::class,
             $this->getRepository()->find(1)
         );
     }
@@ -100,7 +100,7 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
             ->method('find')
             ->willReturn(null);
 
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newModelQuery')
             ->willReturn($this->eloquentBuilderMock);
 
@@ -110,15 +110,15 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testGetAllByCraftIdOrderedByOrder(): void
+    public function testGetAllByCategoryIdOrderedByOrder(): void
     {
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newModelQuery')
             ->willReturn($this->baseBuilderMock);
 
         $this->baseBuilderMock->expects(self::once())
             ->method('where')
-            ->with('craft_id', 1)
+            ->with('craft_inventory_category_id', 1)
             ->willReturn($this->baseBuilderMock);
 
         $this->baseBuilderMock->expects(self::once())
@@ -134,27 +134,31 @@ class CraftInventoryCategoryRepositoryTest extends TestCase
 
         self::assertInstanceOf(
             Collection::class,
-            $this->getRepository()->getAllByCraftIdOrderedByOrder(1)
+            $this->getRepository()->getAllByCategoryIdOrderedByOrder(1)
         );
     }
 
-    public function testGetCategoryCountForCraft(): void
+    /**
+     * @throws Exception
+     */
+    public function testGetGroupCountForCategory(): void
     {
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('newModelQuery')
             ->willReturn($this->baseBuilderMock);
 
         $this->baseBuilderMock->expects(self::once())
             ->method('where')
-            ->with('craft_id', 1)
+            ->with('craft_inventory_category_id', 1)
             ->willReturn($this->baseBuilderMock);
 
         $this->baseBuilderMock->expects(self::once())
             ->method('count')
             ->willReturn(1);
 
-        $result = $this->getRepository()->getCategoryCountForCraft(1);
-
-        self::assertSame(1, $result);
+        self::assertSame(
+            1,
+            $this->getRepository()->getGroupCountForCategory(1)
+        );
     }
 }

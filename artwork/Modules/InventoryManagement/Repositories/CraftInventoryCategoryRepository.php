@@ -27,9 +27,9 @@ class CraftInventoryCategoryRepository extends BaseRepository
         return $builder;
     }
 
-    public function find(int $id): CraftInventoryCategory
+    public function find(int $id): CraftInventoryCategory|null
     {
-        /** @var CraftInventoryCategory $craftInventoryCategory */
+        /** @var CraftInventoryCategory|null $craftInventoryCategory */
         $craftInventoryCategory = $this->getNewModelQuery()->find($id);
 
         return $craftInventoryCategory;

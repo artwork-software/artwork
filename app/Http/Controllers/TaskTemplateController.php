@@ -52,4 +52,5 @@ class TaskTemplateController extends Controller
 
         return Redirect::back();
     }
+
 }

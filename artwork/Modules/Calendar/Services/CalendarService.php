@@ -178,6 +178,8 @@ readonly class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
             ];
         }
 
@@ -207,8 +209,8 @@ readonly class CalendarService
                 $roomService->collectEventsForRoom(
                     room: $room,
                     calendarPeriod: $calendarPeriod,
-                    project: $project,
                     calendarFilter: $calendarFilter,
+                    project: $project,
                 ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :

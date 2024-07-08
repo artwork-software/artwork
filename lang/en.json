@@ -1898,5 +1898,14 @@
     "Please select the format in which the export is to be created.": "Please select the format in which the export is to be created.",
     "PDF": "PDF",
     "XLSX": "XLSX",
-    "Export could not be created. Please try again.": "Export could not be created. Please try again."
+    "Export could not be created. Please try again.": "Export could not be created. Please try again.",
+    "Only users who have the \"Project management\" right are displayed": "Only users who have the \"Project management\" right are displayed",
+    "Only users who are part of the project are displayed": "Only users who are part of the project are displayed",
+    "There are no tasks related to the sources of funding.": "There are no tasks related to the sources of funding.",
+    "Completed by": "Completed by",
+    "Assigned to": "Assigned to",
+    "Are you sure you want to delete this task?": "Are you sure you want to delete this task?",
+    "Delete task": "Delete task",
+    "Grid": "Grid",
+    "List": "List"
 }

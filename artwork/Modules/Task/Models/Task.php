@@ -52,6 +52,8 @@ class Task extends Model
         'deadline' => 'datetime'
     ];
 
+    protected $appends = ['formatted_dates'];
+
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contracts');
@@ -61,7 +63,8 @@ class Task extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'task_user', 'task_id');
+        return $this->belongsToMany(User::class, 'task_user', 'task_id')
+            ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
     }
 
     //@todo: fix phpcs error - refactor function name to userWhoDone
@@ -87,5 +90,14 @@ class Task extends Model
     public function money_source_task()
     {
         return $this->belongsToMany(MoneySourceTask::class);
+    }
+
+    public function getFormattedDatesAttribute(): array
+    {
+        return [
+            'deadline' => $this->deadline ? $this->deadline->translatedFormat('l, d. F Y') : null,
+            'done_at' => $this->done_at ? $this->done_at->translatedFormat('d. F Y') : null,
+            'done_at_with_day' => $this->done_at ? $this->done_at->translatedFormat('l, d. F Y') : null,
+        ];
     }
 }

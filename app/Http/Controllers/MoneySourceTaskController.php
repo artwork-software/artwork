@@ -41,7 +41,7 @@ class MoneySourceTaskController extends Controller
 
     public function markAsDone(MoneySourceTask $moneySourceTask): void
     {
-        $moneySourceTask->update(['done' => true]);
+        $moneySourceTask->update(['done' => !$moneySourceTask->done]);
     }
 
     public function markAsUnDone(MoneySourceTask $moneySourceTask): void

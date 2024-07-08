@@ -166,7 +166,8 @@ class User extends Model implements
         'is_sidebar_opened',
         'compact_mode',
         'show_crafts',
-        'goto_mode'
+        'goto_mode',
+        'checklist_style'
     ];
 
     protected $casts = [

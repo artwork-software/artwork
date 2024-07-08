@@ -1,32 +1,41 @@
 <template>
     <app-layout :title="$t('Checklist templates')">
-        <div class="max-w-screen-lg ml-14 mr-40">
-            <div class="flex flex-1 flex-wrap">
-                <div class="flex justify-between w-full">
-                    <div class="flex gap-x-4">
-                        <h2 class="headline1 flex">{{ $t('Checklist templates')}}</h2>
+        <div class="ml-14">
+
+            <div>
+                <ChecklistFunctionBar :title="$t('Checklist templates')">
+                    <template v-slot:buttons>
                         <Link class="-mt-1" :href="route('checklist_templates.create')">
                             <AddButtonSmall :text="$t('New template')" />
                         </Link>
-                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                            <span
-                                class="ml-1 mt-2 hind">{{$t('Create new checklist templates')}}</span>
+                    </template>
+                </ChecklistFunctionBar>
+            </div>
+
+            <div class="my-10">
+                <div v-if="$page.props.user.checklist_style === 'list'">
+                    <div class="bg-gray-100 px-5 py-2 rounded-lg xxsLight mb-5">
+                        <div class="grid grid-cols-12 grid-rows-1 gap-4">
+                            <div class="col-span-8">Name</div>
+                            <div class="col-span-4 col-start-9">Creator</div>
                         </div>
                     </div>
-                    <div class="flex items-center">
-                        <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                             class="cursor-pointer inset-y-0 mr-12">
-                            <IconSearch stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
-                        </div>
-                        <div v-else class="flex items-center w-full w-64 mr-12">
-                            <inputComponent v-model="template_query" :placeholder="$t('Search for projects')" />
-                            <IconX stroke-width="1.5" class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                        </div>
+                    <SingleChecklistTemplateListView
+                        v-for="(template,index) in checklist_templates"
+                        :checklist_template="template"
+                    />
+                </div>
+                <div v-else>
+                    <div class="grid grid-cols-1 md:grid-cols-8 gap-4">
+                        <SingleChecklistTemplateGridView
+                            v-for="(template,index) in checklist_templates"
+                            :checklist_template="template"
+                        />
                     </div>
                 </div>
             </div>
-            <ul role="list" class="mt-6 mb-32 w-full">
+
+            <!-- <ul role="list" class="mt-6 mb-32 w-full">
                 <li v-if="template_query < 1" v-for="(template,index) in checklist_templates" :key="template.email"
                     class="py-3 flex justify-between">
                     <div class="flex">
@@ -123,7 +132,7 @@
                         </div>
                     </div>
                 </li>
-            </ul>
+            </ul>-->
         </div>
         <!-- Delete Project Modal -->
         <BaseModal @closed="closeDeleteTemplateModal" v-if="showDeleteTemplateModal" modal-image="/Svgs/Overlays/illu_warning.svg">
@@ -160,7 +169,7 @@
 
 <script>
 
-import  {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -177,12 +186,18 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
+import SingleChecklistTemplateListView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateListView.vue";
+import SingleChecklistTemplateGridView from "@/Pages/ChecklistTemplates/Components/SingleChecklistTemplateGridView.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        SingleChecklistTemplateGridView,
+        SingleChecklistTemplateListView,
+        ChecklistFunctionBar,
         BaseModal,
         BaseMenu,
         AddButtonSmall,
@@ -228,6 +243,7 @@ export default {
         }
     },
     methods: {
+        usePage,
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.template_query = ''

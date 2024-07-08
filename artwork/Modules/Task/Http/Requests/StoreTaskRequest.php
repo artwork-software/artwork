@@ -21,6 +21,8 @@ class StoreTaskRequest extends FormRequest
             'description' => 'nullable|string|max:10000',
             'deadline' => 'sometimes',
             'checklist_id' => 'required|integer|exists:checklists,id',
+            'users' => 'array|nullable',
+            'users.*.id' => 'integer|exists:users,id',
         ];
     }
 }

@@ -23,13 +23,17 @@ export default {
         right: {
             type: Boolean,
             default: true
+        },
+        noRelative: {
+            type: Boolean,
+            default: false
         }
     }
 }
 </script>
 
 <template>
-    <Menu as="div" class="relative">
+    <Menu as="div" class="z-50" :class="noRelative ? '' : 'relative'">
         <div class="flex">
             <MenuButton class="flex">
                 <IconDotsVertical stroke-width="1.5" class=" flex-shrink-0" aria-hidden="true" :class="[dotsColor, dotsSize]"/>

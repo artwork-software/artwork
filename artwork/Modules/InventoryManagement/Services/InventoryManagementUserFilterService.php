@@ -20,18 +20,13 @@ class InventoryManagementUserFilterService
      */
     public function getFilterOfUser(int $id): array
     {
-        $filter = $this->inventoryManagementUserFilterRepository->findForUser($id);
+        $inventoryManagementUserFilter = $this->inventoryManagementUserFilterRepository->findForUser($id);
 
-        if ($filter) {
-            return $filter->filter;
+        if ($inventoryManagementUserFilter) {
+            return $inventoryManagementUserFilter->getAttribute('filter');
         }
 
         return [];
-    }
-
-    public function createNewInventoryManagementUserFilter(array $attributes = []): InventoryManagementUserFilter
-    {
-        return new InventoryManagementUserFilter($attributes);
     }
 
     /**
@@ -46,13 +41,11 @@ class InventoryManagementUserFilterService
         $filter = $this->inventoryManagementUserFilterRepository->findForUser($userId);
         if (!$filter instanceof InventoryManagementUserFilter) {
             $this->inventoryManagementUserFilterRepository->saveOrFail(
-                $this->createNewInventoryManagementUserFilter(
-                    $attributes
-                )
+                $this->inventoryManagementUserFilterRepository->getNewModelInstance($attributes)
             );
             return;
         }
 
-        $filter->updateOrFail($attributes);
+        $this->inventoryManagementUserFilterRepository->updateOrFail($filter, $attributes);
     }
 }

@@ -14,11 +14,12 @@ class InventoryManagementExport implements FromView, WithStyles
 {
     use Exportable;
 
-    public function __construct(
-        private readonly ViewFactory $viewFactory,
-        private readonly Collection $columns,
-        private readonly Collection $crafts
-    ) {
+    private Collection $columns;
+
+    private Collection $crafts;
+
+    public function __construct(private readonly ViewFactory $viewFactory)
+    {
     }
 
     public function view(): View
@@ -30,6 +31,30 @@ class InventoryManagementExport implements FromView, WithStyles
                 'crafts' => $this->crafts
             ]
         );
+    }
+
+    public function setColumns(Collection $columns): self
+    {
+        $this->columns = $columns;
+
+        return $this;
+    }
+
+    public function getColumns(): Collection
+    {
+        return $this->columns;
+    }
+
+    public function setCrafts(Collection $crafts): self
+    {
+        $this->crafts = $crafts;
+
+        return $this;
+    }
+
+    public function getCrafts(): Collection
+    {
+        return $this->crafts;
     }
 
     /**

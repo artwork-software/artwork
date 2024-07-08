@@ -23,22 +23,17 @@ class CraftsInventoryColumnService
         return $this->craftsInventoryColumnRepository->getAllOrdered();
     }
 
-    public function getNewCraftsInventoryColumn(array $attributes): CraftsInventoryColumn
-    {
-        return new CraftsInventoryColumn($attributes);
-    }
-
     /**
      * @throws Throwable
      */
     public function create(
         string $name,
         CraftsInventoryColumnTypeEnum $type,
-        array $typeOptions = [],
-        string $background_color = '',
-        ?string $defaultOption = null
+        string $defaultOption,
+        array $typeOptions,
+        string $background_color
     ): CraftsInventoryColumn {
-        $craftsInventoryColumn = $this->getNewCraftsInventoryColumn([
+        $craftsInventoryColumn = $this->craftsInventoryColumnRepository->getNewModelInstance([
             'name' => $name,
             'type' => $type,
             'type_options' => $typeOptions,
@@ -49,10 +44,10 @@ class CraftsInventoryColumnService
         try {
             $this->craftInventoryItemService->createCellsInItemsForColumn(
                 $craftsInventoryColumn,
-                $defaultOption ?? ''
+                $defaultOption
             );
         } catch (Throwable $t) {
-            //if any cell could not be created revert the newly created cell and throw to controller
+            //if any cell was not created revert the newly created column and throw to controller
             //so no column is created if not also all cells are created
             $this->craftsInventoryColumnRepository->deleteOrFail($craftsInventoryColumn);
 
@@ -114,7 +109,7 @@ class CraftsInventoryColumnService
         array $typeOptions,
         CraftsInventoryColumn $craftsInventoryColumn
     ): void {
-        $oldTypeOptions = $craftsInventoryColumn->type_options;
+        $oldTypeOptions = $craftsInventoryColumn->getAttribute('type_options');
 
         $this->craftsInventoryColumnRepository->updateOrFail(
             $craftsInventoryColumn,
@@ -123,17 +118,16 @@ class CraftsInventoryColumnService
             ]
         );
 
-        $removedTypeOptions = array_diff($oldTypeOptions, $craftsInventoryColumn->type_options);
+        $removedTypeOptions = array_diff($oldTypeOptions, $craftsInventoryColumn->getAttribute('type_options'));
 
-        $this->craftsInventoryColumnRepository->getAllItemCells($craftsInventoryColumn)->each(
-            function (CraftInventoryItemCell $craftInventoryItemCell) use ($removedTypeOptions): void {
-                if (in_array($craftInventoryItemCell->cell_value, $removedTypeOptions)) {
-                    $this->craftInventoryItemCellService->updateCellValue(null, $craftInventoryItemCell);
-                    $craftInventoryItemCell->cell_value = '';
-                    $craftInventoryItemCell->save();
-                }
+        /** @var CraftInventoryItemCell $craftInventoryItemCell */
+        foreach (
+            $this->craftsInventoryColumnRepository->getAllItemCells($craftsInventoryColumn) as $craftInventoryItemCell
+        ) {
+            if (in_array($craftInventoryItemCell->getAttribute('cell_value'), $removedTypeOptions)) {
+                $this->craftInventoryItemCellService->updateCellValue('', $craftInventoryItemCell);
             }
-        );
+        }
     }
 
     public function forceDelete(int|CraftsInventoryColumn $craftsInventoryColumn): bool

@@ -33,14 +33,13 @@ class CraftInventoryItemService
         );
         $this->craftInventoryItemRepository->saveOrFail($craftInventoryItem);
 
-        $this->craftsInventoryColumnRepository->getAllOrdered()->each(
-            function (CraftsInventoryColumn $column) use ($craftInventoryItem): void {
-                $this->craftInventoryItemCellService->create(
-                    $column->id,
-                    $craftInventoryItem->id
-                );
-            }
-        );
+        /** @var CraftsInventoryColumn $column */
+        foreach ($this->craftsInventoryColumnRepository->getAllOrdered() as $column) {
+            $this->craftInventoryItemCellService->create(
+                $column->getAttribute('id'),
+                $craftInventoryItem->getAttribute('id')
+            );
+        }
 
         return $craftInventoryItem;
     }
@@ -52,18 +51,14 @@ class CraftInventoryItemService
         CraftsInventoryColumn $craftsInventoryColumn,
         string $cellValue = ''
     ): void {
-        $this->craftInventoryItemRepository->getAll()->each(
-            /**
-             * @throws Throwable
-             */
-            function (CraftInventoryItem $craftInventoryItem) use ($cellValue, $craftsInventoryColumn): void {
-                $this->craftInventoryItemCellService->create(
-                    $craftsInventoryColumn->id,
-                    $craftInventoryItem->id,
-                    $cellValue
-                );
-            }
-        );
+        /** @var CraftInventoryItem $craftInventoryItem */
+        foreach ($this->craftInventoryItemRepository->getAll() as $craftInventoryItem) {
+            $this->craftInventoryItemCellService->create(
+                $craftsInventoryColumn->getAttribute('id'),
+                $craftInventoryItem->getAttribute('id'),
+                $cellValue
+            );
+        }
     }
 
     /**
@@ -73,8 +68,9 @@ class CraftInventoryItemService
     {
         foreach (
             $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
-                $this->craftInventoryItemRepository
-                    ->getAllOfGroupOrderedByOrder($craftInventoryItem->craft_inventory_group_id),
+                $this->craftInventoryItemRepository->getAllOfGroupOrderedByOrder(
+                    $craftInventoryItem->getAttribute('craft_inventory_group_id')
+                ),
                 $order,
                 $craftInventoryItem
             ) as $index => $orderedItem

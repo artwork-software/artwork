@@ -33,9 +33,9 @@ class CraftsInventoryColumnController extends Controller
             $this->craftsInventoryColumnService->create(
                 $request->string('name'),
                 $request->enum('type.id', CraftsInventoryColumnTypeEnum::class),
-                $request->get('typeOptions'),
-                '',
-                $request->get('defaultOption')
+                $request->get('defaultOption', ''),
+                $request->get('typeOptions', []),
+                ''
             );
         } catch (Throwable $t) {
             $this->logger->error(

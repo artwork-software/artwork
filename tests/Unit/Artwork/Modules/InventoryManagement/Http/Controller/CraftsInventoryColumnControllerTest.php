@@ -82,8 +82,10 @@ class CraftsInventoryColumnControllerTest extends TestCase
                 CraftsInventoryColumnTypeEnum::TEXT,
                 'typeOptions',
                 [],
+                [],
                 '',
                 'defaultOption',
+                '',
                 ''
             ]
         ];
@@ -99,9 +101,11 @@ class CraftsInventoryColumnControllerTest extends TestCase
         string $expectedColumnTypeEnumClass,
         CraftsInventoryColumnTypeEnum $expectedColumnTypeEnum,
         string $expectedTypeOptionsKey,
+        array $expectedTypeOptionsDefault,
         array $expectedTypeOptions,
         string $expectedBackgroundColor,
         string $expectedDefaultOptionKey,
+        string $expectedDefaultOptionDefault,
         string $expectedDefaultOption
     ): void {
         $requestMock = $this->getMockBuilder(CreateCraftsInventoryColumnRequest::class)
@@ -131,21 +135,28 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->method('get')
             ->willReturnCallback(
                 function (
-                    string $key
+                    string $key,
+                    string|array $default
                 ) use (
                     $matcher,
                     $expectedTypeOptionsKey,
+                    $expectedTypeOptionsDefault,
                     $expectedTypeOptions,
                     $expectedDefaultOptionKey,
+                    $expectedDefaultOptionDefault,
                     $expectedDefaultOption
                 ): string|array {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
-                            self::assertSame($expectedTypeOptionsKey, $key);
-                            return $expectedTypeOptions;
-                        case 2:
                             self::assertSame($expectedDefaultOptionKey, $key);
+                            self::assertSame($expectedDefaultOptionDefault, $default);
+
                             return $expectedDefaultOption;
+                        case 2:
+                            self::assertSame($expectedTypeOptionsKey, $key);
+                            self::assertSame($expectedTypeOptionsDefault, $default);
+
+                            return $expectedTypeOptions;
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -157,9 +168,9 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->with(
                 $expectedName,
                 $expectedColumnTypeEnum,
+                $expectedDefaultOption,
                 $expectedTypeOptions,
-                $expectedBackgroundColor,
-                $expectedDefaultOption
+                $expectedBackgroundColor
             )->willReturn($craftInventoryColumnMock);
 
         $this->redirectorMock->expects(self::once())
@@ -186,8 +197,10 @@ class CraftsInventoryColumnControllerTest extends TestCase
                 CraftsInventoryColumnTypeEnum::TEXT,
                 'typeOptions',
                 [],
+                [],
                 '',
                 'defaultOption',
+                '',
                 ''
             ]
         ];
@@ -201,9 +214,11 @@ class CraftsInventoryColumnControllerTest extends TestCase
         string $expectedColumnTypeEnumClass,
         CraftsInventoryColumnTypeEnum $expectedColumnTypeEnum,
         string $expectedTypeOptionsKey,
+        array $expectedTypeOptionsDefault,
         array $expectedTypeOptions,
         string $expectedBackgroundColor,
         string $expectedDefaultOptionKey,
+        string $expectedDefaultOptionDefault,
         string $expectedDefaultOption
     ): void {
         $redirectResponseMock = $this->getMockBuilder(RedirectResponse::class)
@@ -230,21 +245,28 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->method('get')
             ->willReturnCallback(
                 function (
-                    string $key
+                    string $key,
+                    string|array $default
                 ) use (
                     $matcher,
                     $expectedTypeOptionsKey,
+                    $expectedTypeOptionsDefault,
                     $expectedTypeOptions,
                     $expectedDefaultOptionKey,
+                    $expectedDefaultOptionDefault,
                     $expectedDefaultOption
                 ): string|array {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
-                            self::assertSame($expectedTypeOptionsKey, $key);
-                            return $expectedTypeOptions;
-                        case 2:
                             self::assertSame($expectedDefaultOptionKey, $key);
+                            self::assertSame($expectedDefaultOptionDefault, $default);
+
                             return $expectedDefaultOption;
+                        case 2:
+                            self::assertSame($expectedTypeOptionsKey, $key);
+                            self::assertSame($expectedTypeOptionsDefault, $default);
+
+                            return $expectedTypeOptions;
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -256,9 +278,9 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->with(
                 $expectedName,
                 $expectedColumnTypeEnum,
+                $expectedDefaultOption,
                 $expectedTypeOptions,
                 $expectedBackgroundColor,
-                $expectedDefaultOption
             )->willThrowException(new Exception('Test'));
 
         $this->loggerMock->expects(self::once())

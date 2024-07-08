@@ -14,11 +14,6 @@ class CraftInventoryGroupService
     ) {
     }
 
-    public function getNewCraftInventoryGroup(array $attributes): CraftInventoryGroup
-    {
-        return new CraftInventoryGroup($attributes);
-    }
-
     /**
      * @throws Throwable
      */
@@ -26,7 +21,7 @@ class CraftInventoryGroupService
         int $categoryId,
         string $name
     ): CraftInventoryGroup {
-        $craftsInventoryGroup = $this->getNewCraftInventoryGroup(
+        $craftsInventoryGroup = $this->craftsInventoryGroupRepository->getNewModelInstance(
             [
                 'craft_inventory_category_id' => $categoryId,
                 'name' => $name,
@@ -59,7 +54,9 @@ class CraftInventoryGroupService
         foreach (
             $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
                 $this->craftsInventoryGroupRepository
-                    ->getAllByCategoryIdOrderedByOrder($craftInventoryGroup->craft_inventory_category_id),
+                    ->getAllByCategoryIdOrderedByOrder(
+                        $craftInventoryGroup->getAttribute('craft_inventory_category_id')
+                    ),
                 $order,
                 $craftInventoryGroup
             ) as $index => $orderedGroup

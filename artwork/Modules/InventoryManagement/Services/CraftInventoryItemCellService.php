@@ -14,11 +14,6 @@ class CraftInventoryItemCellService
     ) {
     }
 
-    public function getNewCraftInventoryItemCell(array $attributes): CraftInventoryItemCell
-    {
-        return new CraftInventoryItemCell($attributes);
-    }
-
     /**
      * @throws Throwable
      */
@@ -27,7 +22,7 @@ class CraftInventoryItemCellService
         int $itemId,
         string $cellValue = ''
     ): CraftInventoryItemCell {
-        $craftInventoryItemCell = $this->getNewCraftInventoryItemCell(
+        $craftInventoryItemCell = $this->craftInventoryItemCellRepository->getNewModelInstance(
             [
                 'crafts_inventory_column_id' => $columnId,
                 'craft_inventory_item_id' => $itemId,
@@ -42,12 +37,12 @@ class CraftInventoryItemCellService
     /**
      * @throws Throwable
      */
-    public function updateCellValue(string|null $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
+    public function updateCellValue(string $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
     {
         $this->craftInventoryItemCellRepository->updateOrFail(
             $craftInventoryItemCell,
             [
-                'cell_value' => ($cellValue ?? '')
+                'cell_value' => $cellValue
             ]
         );
     }
@@ -56,18 +51,18 @@ class CraftInventoryItemCellService
     public function getNameForSchedulingFromCells(Collection $cells): string
     {
         /** @var CraftInventoryItemCell $cell */
-        $cell = $cells->first(function (CraftInventoryItemCell $cell) {
-            return is_string($cell->cell_value);
+        $cell = $cells->first(function (CraftInventoryItemCell $cell): bool {
+            return is_string($cell->getAttribute('cell_value'));
         });
-        return $cell ? $cell->cell_value : '';
+        return strval($cell?->getAttribute('cell_value'));
     }
 
     public function getItemCountForSchedulingFromCells(Collection $cells): int
     {
         /** @var CraftInventoryItemCell $cell */
-        $cell = $cells->first(function (CraftInventoryItemCell $cell) {
-            return is_numeric($cell->cell_value);
+        $cell = $cells->first(function (CraftInventoryItemCell $cell): bool {
+            return is_numeric($cell->getAttribute('cell_value'));
         });
-        return (int) $cell?->cell_value;
+        return intval($cell?->getAttribute('cell_value'));
     }
 }

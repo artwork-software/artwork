@@ -26,7 +26,7 @@ class CraftInventoryItemCellController extends Controller
         CraftInventoryItemCell $craftInventoryItemCell,
         UpdateCraftInventoryItemCellCellValueRequest $request
     ): RedirectResponse {
-        $cellValue = $request->get('cell_value');
+        $cellValue = $request->get('cell_value', '');
 
         try {
             $this->craftInventoryItemCellService->updateCellValue($cellValue, $craftInventoryItemCell);

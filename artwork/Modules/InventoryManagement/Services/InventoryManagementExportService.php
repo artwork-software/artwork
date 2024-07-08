@@ -4,30 +4,30 @@ namespace Artwork\Modules\InventoryManagement\Services;
 
 use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
 use Carbon\Carbon;
+use DragonCode\Support\Helpers\Str;
+use Exception;
 use Illuminate\Cache\CacheManager;
-use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class InventoryManagementExportService
 {
     public function __construct(
-        private readonly ViewFactory $viewFactory,
         private readonly CacheManager $cacheManager,
-        private readonly CraftsInventoryColumnService $craftsInventoryColumnService
+        private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
+        private readonly InventoryManagementExport $inventoryManagementExport,
+        private readonly Str $str
     ) {
     }
 
     /**
      * @throws InvalidArgumentException
+     * @throws Exception
      */
     public function cacheRequestData(Collection $data): string
     {
-        $token = Str::random(128);
-
         //cache forgets the item after 10 seconds, time enough to download
-        $this->cacheManager->set($token, $data, 10);
+        $this->cacheManager->set($token = $this->str->random(128), $data, 10);
 
         return $token;
     }
@@ -44,23 +44,21 @@ class InventoryManagementExportService
         return $data;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function getConfiguredExport(string $token): InventoryManagementExport
+    {
+        return $this->inventoryManagementExport
+            ->setColumns($this->craftsInventoryColumnService->getAllOrdered())
+            ->setCrafts($this->getCachedRequestData($token));
+    }
+
     public function createXlsxExportFilename(): string
     {
         return sprintf(
             'artwork_inventory_management_%s.xlsx',
             Carbon::now()->format('d-m-Y_H_i_s')
-        );
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function createExport(string $token): InventoryManagementExport
-    {
-        return new InventoryManagementExport(
-            $this->viewFactory,
-            $this->craftsInventoryColumnService->getAllOrdered(),
-            $this->getCachedRequestData($token)
         );
     }
 

@@ -34,7 +34,7 @@ class InventoryManagementExportControllerTest extends TestCase
             ->onlyMethods(
                 [
                     'cacheRequestData',
-                    'createExport',
+                    'getConfiguredExport',
                     'createXlsxExportFilename',
                     'createPdfExportFilename',
                     'getCachedRequestData',
@@ -161,7 +161,7 @@ class InventoryManagementExportControllerTest extends TestCase
             ->getMock();
 
         $this->inventoryManagementExportServiceMock->expects(self::once())
-            ->method('createExport')
+            ->method('getConfiguredExport')
             ->with($expectedCacheToken)
             ->willReturn($inventoryExportMock);
 
@@ -227,7 +227,7 @@ class InventoryManagementExportControllerTest extends TestCase
             ->getMock();
 
         $this->inventoryManagementExportServiceMock->expects(self::once())
-            ->method('createExport')
+            ->method('getConfiguredExport')
             ->with($expectedCacheToken)
             ->willReturn($inventoryExportMock);
 
@@ -303,7 +303,7 @@ class InventoryManagementExportControllerTest extends TestCase
             ->getMock();
 
         $this->inventoryManagementExportServiceMock->expects(self::once())
-            ->method('createExport')
+            ->method('getConfiguredExport')
             ->with($expectedCacheToken)
             ->willReturn($inventoryExportMock);
 
@@ -369,7 +369,7 @@ class InventoryManagementExportControllerTest extends TestCase
             ->getMock();
 
         $this->inventoryManagementExportServiceMock->expects(self::once())
-            ->method('createExport')
+            ->method('getConfiguredExport')
             ->with($expectedCacheToken)
             ->willReturn($inventoryExportMock);
 

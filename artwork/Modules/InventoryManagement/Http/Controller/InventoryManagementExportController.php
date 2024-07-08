@@ -42,7 +42,7 @@ class InventoryManagementExportController extends Controller
     {
         try {
             return $this->inventoryManagementExportService
-                ->createExport($cacheToken)
+                ->getConfiguredExport($cacheToken)
                 ->download($this->inventoryManagementExportService->createXlsxExportFilename())
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {
@@ -60,7 +60,7 @@ class InventoryManagementExportController extends Controller
     {
         try {
             return $this->inventoryManagementExportService
-                ->createExport($cacheToken)
+                ->getConfiguredExport($cacheToken)
                 ->download($this->inventoryManagementExportService->createPdfExportFilename(), Excel::DOMPDF)
                 ->deleteFileAfterSend();
         } catch (Throwable $t) {

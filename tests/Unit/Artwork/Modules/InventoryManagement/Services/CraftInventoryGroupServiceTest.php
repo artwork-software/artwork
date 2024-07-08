@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Services;
 
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryCategoryRepository;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryCategoryService;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
+use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryGroupRepository;
+use Artwork\Modules\InventoryManagement\Services\CraftInventoryGroupService;
 use Artwork\Modules\InventoryManagement\Services\InventoryResourceCalculateModelsOrderService;
 use AssertionError;
 use Exception;
@@ -12,27 +12,27 @@ use Illuminate\Database\Eloquent\Collection;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
-class CraftInventoryCategoryServiceTest extends TestCase
+class CraftInventoryGroupServiceTest extends TestCase
 {
-    private readonly CraftInventoryCategoryRepository $craftInventoryCategoryRepositoryMock;
+    private readonly CraftInventoryGroupRepository $craftInventoryGroupRepositoryMock;
 
     private readonly InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderServiceMock;
 
-    private readonly CraftInventoryCategory $craftInventoryCategoryMock;
+    private readonly CraftInventoryGroup $craftInventoryGroupMock;
 
     protected function setUp(): void
     {
-        $this->craftInventoryCategoryRepositoryMock = $this
-            ->getMockBuilder(CraftInventoryCategoryRepository::class)
+        $this->craftInventoryGroupRepositoryMock = $this
+            ->getMockBuilder(CraftInventoryGroupRepository::class)
             ->disableOriginalConstructor()
             ->onlyMethods([
                 'getNewModelInstance',
-                'getCategoryCountForCraft',
                 'saveOrFail',
                 'updateOrFail',
-                'getAllByCraftIdOrderedByOrder',
                 'find',
-                'forceDelete'
+                'forceDelete',
+                'getAllByCategoryIdOrderedByOrder',
+                'getGroupCountForCategory'
             ])
             ->getMock();
 
@@ -42,16 +42,16 @@ class CraftInventoryCategoryServiceTest extends TestCase
             ->onlyMethods(['getReorderedModels'])
             ->getMock();
 
-        $this->craftInventoryCategoryMock = $this->getMockBuilder(CraftInventoryCategory::class)
+        $this->craftInventoryGroupMock = $this->getMockBuilder(CraftInventoryGroup::class)
             ->onlyMethods(['getAttribute'])
             ->disableOriginalConstructor()
             ->getMock();
     }
 
-    public function getService(): CraftInventoryCategoryService
+    public function getService(): CraftInventoryGroupService
     {
-        return new CraftInventoryCategoryService(
-            $this->craftInventoryCategoryRepositoryMock,
+        return new CraftInventoryGroupService(
+            $this->craftInventoryGroupRepositoryMock,
             $this->inventoryResourceCalculateModelsOrderServiceMock
         );
     }
@@ -61,16 +61,16 @@ class CraftInventoryCategoryServiceTest extends TestCase
      */
     public static function createTestDataProvider(): array
     {
-        $craftId = 1;
+        $categoryId = 1;
         $order = 1;
         $name = 'Test';
         return [
             'test create' => [
-                $craftId,
+                $categoryId,
                 $order,
                 $name,
                 [
-                    'craft_id' => $craftId,
+                    'craft_inventory_category_id' => $categoryId,
                     'name' => $name,
                     'order' => $order
                 ]
@@ -83,28 +83,28 @@ class CraftInventoryCategoryServiceTest extends TestCase
      * @throws Throwable
      */
     public function testCreate(
-        int $expectedCraftId,
+        int $expectedCategoryId,
         int $expectedOrder,
         string $expectedName,
         array $expectedNewModelInstanceArgs
     ): void {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('getNewModelInstance')
             ->with($expectedNewModelInstanceArgs)
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->willReturn($this->craftInventoryGroupMock);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
-            ->method('getCategoryCountForCraft')
-            ->with($expectedCraftId)
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
+            ->method('getGroupCountForCategory')
+            ->with($expectedCategoryId)
             ->willReturn($expectedOrder);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('saveOrFail')
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->willReturn($this->craftInventoryGroupMock);
 
         self::assertInstanceOf(
-            CraftInventoryCategory::class,
-            $this->getService()->create($expectedCraftId, $expectedName)
+            CraftInventoryGroup::class,
+            $this->getService()->create($expectedCategoryId, $expectedName)
         );
     }
 
@@ -113,16 +113,16 @@ class CraftInventoryCategoryServiceTest extends TestCase
      */
     public static function createExceptionTestDataProvider(): array
     {
-        $craftId = 1;
+        $categoryId = 1;
         $order = 1;
         $name = 'Test';
         return [
             'test create exception' => [
-                $craftId,
+                $categoryId,
                 $order,
                 $name,
                 [
-                    'craft_id' => $craftId,
+                    'craft_inventory_category_id' => $categoryId,
                     'name' => $name,
                     'order' => $order
                 ],
@@ -141,17 +141,17 @@ class CraftInventoryCategoryServiceTest extends TestCase
         array $expectedNewModelInstanceArgs,
         Exception $expectedException
     ): void {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('getNewModelInstance')
             ->with($expectedNewModelInstanceArgs)
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->willReturn($this->craftInventoryGroupMock);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
-            ->method('getCategoryCountForCraft')
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
+            ->method('getGroupCountForCategory')
             ->with($expectedCraftId)
             ->willReturn($expectedOrder);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('saveOrFail')
             ->willThrowException($expectedException);
 
@@ -186,12 +186,12 @@ class CraftInventoryCategoryServiceTest extends TestCase
         string $expectedName,
         array $expectedUpdateOrFailArgs
     ): void {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('updateOrFail')
-            ->with($this->craftInventoryCategoryMock, $expectedUpdateOrFailArgs)
-            ->willReturn($this->craftInventoryCategoryMock);
+            ->with($this->craftInventoryGroupMock, $expectedUpdateOrFailArgs)
+            ->willReturn($this->craftInventoryGroupMock);
 
-        $this->getService()->updateName($expectedName, $this->craftInventoryCategoryMock);
+        $this->getService()->updateName($expectedName, $this->craftInventoryGroupMock);
     }
 
     /**
@@ -219,13 +219,13 @@ class CraftInventoryCategoryServiceTest extends TestCase
         array $expectedUpdateOrFailArgs,
         Exception $expectedException
     ): void {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('updateOrFail')
-            ->with($this->craftInventoryCategoryMock, $expectedUpdateOrFailArgs)
+            ->with($this->craftInventoryGroupMock, $expectedUpdateOrFailArgs)
             ->willThrowException($expectedException);
 
         try {
-            $this->getService()->updateName($expectedName, $this->craftInventoryCategoryMock);
+            $this->getService()->updateName($expectedName, $this->craftInventoryGroupMock);
         } catch (Throwable $t) {
             self::assertSame($expectedException, $t);
         }
@@ -249,23 +249,23 @@ class CraftInventoryCategoryServiceTest extends TestCase
      * @throws Throwable
      */
     public function testUpdateOrder(
-        int $expectedCraftId,
+        int $expectedCategoryId,
         int $expectedOrder
     ): void {
         $expectedCategoryModels = Collection::make([
-            $this->craftInventoryCategoryMock,
-            $this->craftInventoryCategoryMock,
-            $this->craftInventoryCategoryMock
+            $this->craftInventoryGroupMock,
+            $this->craftInventoryGroupMock,
+            $this->craftInventoryGroupMock
         ]);
 
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('getAttribute')
-            ->with('craft_id')
-            ->willReturn($expectedCraftId);
+            ->with('craft_inventory_category_id')
+            ->willReturn($expectedCategoryId);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
-            ->method('getAllByCraftIdOrderedByOrder')
-            ->with($expectedCraftId)
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
+            ->method('getAllByCategoryIdOrderedByOrder')
+            ->with($expectedCategoryId)
             ->willReturn($expectedCategoryModels);
 
         $this->inventoryResourceCalculateModelsOrderServiceMock->expects(self::once())
@@ -273,23 +273,23 @@ class CraftInventoryCategoryServiceTest extends TestCase
             ->with(
                 $expectedCategoryModels,
                 $expectedOrder,
-                $this->craftInventoryCategoryMock
+                $this->craftInventoryGroupMock
             )->willReturn($expectedCategoryModels->all());
 
-        $this->craftInventoryCategoryRepositoryMock->expects($matcher = self::exactly(3))
+        $this->craftInventoryGroupRepositoryMock->expects($matcher = self::exactly(3))
             ->method('updateOrFail')
             ->willReturnCallback(
-                function ($shouldBeCraftInventoryCategory, $shouldBeAttributes) use ($matcher): CraftInventoryCategory {
+                function ($shouldBeCraftInventoryGroup, $shouldBeAttributes) use ($matcher): CraftInventoryGroup {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
                         case 2:
                         case 3:
-                            self::assertInstanceOf(CraftInventoryCategory::class, $shouldBeCraftInventoryCategory);
+                            self::assertInstanceOf(CraftInventoryGroup::class, $shouldBeCraftInventoryGroup);
                             self::assertIsArray($shouldBeAttributes);
                             self::assertArrayHasKey('order', $shouldBeAttributes);
                             self::assertSame($shouldBeAttributes['order'], ($matcher->numberOfInvocations() - 1));
 
-                            return $shouldBeCraftInventoryCategory;
+                            return $shouldBeCraftInventoryGroup;
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -297,7 +297,7 @@ class CraftInventoryCategoryServiceTest extends TestCase
             );
 
         $this->getService()->updateOrder(
-            $this->craftInventoryCategoryMock,
+            $this->craftInventoryGroupMock,
             $expectedOrder
         );
     }
@@ -320,24 +320,24 @@ class CraftInventoryCategoryServiceTest extends TestCase
      * @dataProvider updateOrderExceptionTestDataProvider
      */
     public function testUpdateOrderException(
-        int $expectedCraftId,
+        int $expectedCategoryId,
         int $expectedOrder,
         Exception $expectedException
     ): void {
         $expectedCategoryModels = Collection::make([
-            $this->craftInventoryCategoryMock,
-            $this->craftInventoryCategoryMock,
-            $this->craftInventoryCategoryMock
+            $this->craftInventoryGroupMock,
+            $this->craftInventoryGroupMock,
+            $this->craftInventoryGroupMock
         ]);
 
-        $this->craftInventoryCategoryMock->expects(self::once())
+        $this->craftInventoryGroupMock->expects(self::once())
             ->method('getAttribute')
-            ->with('craft_id')
-            ->willReturn($expectedCraftId);
+            ->with('craft_inventory_category_id')
+            ->willReturn($expectedCategoryId);
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
-            ->method('getAllByCraftIdOrderedByOrder')
-            ->with($expectedCraftId)
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
+            ->method('getAllByCategoryIdOrderedByOrder')
+            ->with($expectedCategoryId)
             ->willReturn($expectedCategoryModels);
 
         $this->inventoryResourceCalculateModelsOrderServiceMock->expects(self::once())
@@ -345,16 +345,16 @@ class CraftInventoryCategoryServiceTest extends TestCase
             ->with(
                 $expectedCategoryModels,
                 $expectedOrder,
-                $this->craftInventoryCategoryMock
+                $this->craftInventoryGroupMock
             )->willReturn($expectedCategoryModels->all());
 
-        $this->craftInventoryCategoryRepositoryMock->expects(self::once())
+        $this->craftInventoryGroupRepositoryMock->expects(self::once())
             ->method('updateOrFail')
             ->willThrowException($expectedException);
 
         try {
             $this->getService()->updateOrder(
-                $this->craftInventoryCategoryMock,
+                $this->craftInventoryGroupMock,
                 $expectedOrder
             );
         } catch (Throwable $t) {
@@ -364,36 +364,36 @@ class CraftInventoryCategoryServiceTest extends TestCase
 
     public function testForceDeleteWithCategoryModel(): void
     {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::exactly(2))
+        $this->craftInventoryGroupRepositoryMock->expects(self::exactly(2))
             ->method('forceDelete')
-            ->with($this->craftInventoryCategoryMock)
+            ->with($this->craftInventoryGroupMock)
             ->willReturnOnConsecutiveCalls(true, false);
 
-        self::assertTrue($this->getService()->forceDelete($this->craftInventoryCategoryMock));
-        self::assertFalse($this->getService()->forceDelete($this->craftInventoryCategoryMock));
+        self::assertTrue($this->getService()->forceDelete($this->craftInventoryGroupMock));
+        self::assertFalse($this->getService()->forceDelete($this->craftInventoryGroupMock));
     }
 
     public function testForceDeleteWithInt(): void
     {
-        $this->craftInventoryCategoryRepositoryMock->expects(self::exactly(4))
+        $this->craftInventoryGroupRepositoryMock->expects(self::exactly(4))
             ->method('forceDelete')
-            ->with($this->craftInventoryCategoryMock)
+            ->with($this->craftInventoryGroupMock)
             ->willReturnOnConsecutiveCalls(true, false, true, false);
 
         $firstId = 1;
         $secondId = 2;
-        $this->craftInventoryCategoryRepositoryMock->expects($matcher = self::exactly(4))
+        $this->craftInventoryGroupRepositoryMock->expects($matcher = self::exactly(4))
             ->method('find')
-            ->willReturnCallback(function (int $id) use ($matcher, $firstId, $secondId): CraftInventoryCategory {
+            ->willReturnCallback(function (int $id) use ($matcher, $firstId, $secondId): CraftInventoryGroup {
                 switch ($matcher->numberOfInvocations()) {
                     case 1:
                     case 2:
                         self::assertSame($firstId, $id);
-                        return $this->craftInventoryCategoryMock;
+                        return $this->craftInventoryGroupMock;
                     case 3:
                     case 4:
                         self::assertSame($secondId, $id);
-                        return $this->craftInventoryCategoryMock;
+                        return $this->craftInventoryGroupMock;
                     default:
                         throw new AssertionError('Number of invocations not expected.');
                 }

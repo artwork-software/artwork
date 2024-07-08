@@ -23,7 +23,7 @@
                 <div class="bg-gray-100 py-4 px-24 mt-10">
                     <div>
                         <div class="headline4 flex items-center gap-x-5">
-                            Checklist Nutzer*innen
+                            {{ $t('Checklist users') }}
                             <div @click="openChangeUsersModal"
                                  class="text-secondary flex items-center text-sm subpixel-antialiased cursor-pointer">
                                 <IconEdit stroke-width="2"
@@ -35,7 +35,7 @@
                             class="mt-2 mb-2 w-1/3"
                             type="info"
                             text-size="text-sm"
-                            text="Aufgaben in dieser Checklist werden automatisch an alle Nutzer*innen zugewiesen. Nutzer*innen die nicht im Projekt sind, werden automatisch hinzugefügt."
+                            :text="$t('The tasks in this checklist are automatically assigned to all users. Users who are not in the project are added automatically.')"
                         />
                     </div>
                     <div class="flex items-center">

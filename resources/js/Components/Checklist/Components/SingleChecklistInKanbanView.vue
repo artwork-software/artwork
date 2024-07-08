@@ -1,6 +1,6 @@
 <template>
-    <div class="checklist-card w-72 rounded-lg relative">
-        <div class="checklist-card-header px-4 py-2 bg-artwork-buttons-create flex items-center justify-between text-white truncate rounded-t-lg">
+    <div class="checklist-card">
+        <div class="checklist-card-header">
             <div class="flex items-center gap-x-1">
                         <span v-if="checklist.private">
                             <IconLock stroke-width="1.5" class="h-6 w-6 text-white" />
@@ -62,8 +62,8 @@
             </BaseMenu>
 
         </div>
-        <div class="bg-gray-100 rounded-b-lg">
-            <div class="xxsLight w-full text-xs mb-2 flex items-start gap-x-2 px-4 py-2" v-if="isInOwnTaskManagement">
+        <div class="checklist-card-body">
+            <div class="checklist-card-body-project" v-if="isInOwnTaskManagement">
                 {{ $t('Project') }}:
                 <Link v-if="checklist.project.id" :href="route('projects.tab', {project: checklist.project.id, projectTab: checklist.checklist_tab_id})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
                     {{ checklist.project.name }}
@@ -87,8 +87,8 @@
                     />
                 </template>
             </draggable>
-            <div v-if="!isInOwnTaskManagement" class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
-                <AlertComponent text="Klicke hier um eine Aufgabe zu erstellen" type="info" />
+            <div v-if="!isInOwnTaskManagement" class="checklist-body-add-task" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
+                <AlertComponent :text="$t('Click here to create a task')" type="info" />
             </div>
         </div>
     </div>

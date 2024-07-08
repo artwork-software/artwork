@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center justify-between mb-3 relative">
-        <div class="w-96 flex items-center gap-x-5 justify-between cursor-pointer relative" @click="changeChecklistStatus(checklist)">
-            <div class="flex items-center gap-x-1 headline3">
+        <div class="w-96 flex items-center gap-x-5 justify-between cursor-pointer relative">
+            <div class="flex items-center gap-x-1 headline3" @click="changeChecklistStatus(checklist)">
                 <span v-if="checklist.private">
                     <IconLock stroke-width="1.5" class="h-6 w-6 text-primary" />
                 </span>
@@ -12,7 +12,7 @@
             </div>
             <BaseMenu v-if="!isInOwnTaskManagement && canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))" no-relative>
                 <!--<MenuItem v-slot="{ active }" v-if="!checklist.private">
-                    <a @click="openEditChecklistTeamsModal()"
+                    <a @click="openEditChecklistTeamsModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Assign users') }}
@@ -109,7 +109,7 @@
                 </template>
             </draggable>
             <div v-if="!isInOwnTaskManagement" class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
-                <AlertComponent text="Klicke hier um eine Aufgabe zu erstellen " type="info" />
+                <AlertComponent :text="$t('Click here to create a task')" type="info" />
             </div>
         </div>
     </div>
@@ -139,6 +139,14 @@
         :is-private="checklist.private"
     />
 
+    <AddChecklistUserModal
+        :checklistId="checklist?.id"
+        :users="checklist?.users"
+        :project="project"
+        @closed="openEditChecklistTeamsModal = false"
+        v-if="openEditChecklistTeamsModal"
+    />
+
 </template>
 
 <script setup>
@@ -162,6 +170,7 @@ import {computed, ref} from "vue";
 import DeleteChecklistModal from "@/Components/Checklist/Modals/DeleteChecklistModal.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
+import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 
 const props = defineProps({
     checklist: {
@@ -211,6 +220,7 @@ const dragging = ref(false);
 const showChecklistEditModal = ref(false);
 const showDeleteChecklistModal = ref(false);
 const openAddTaskModal = ref(false);
+const openEditChecklistTeamsModal = ref(false);
 
 const checkIfAllTasksChecked = computed(() => {
     const tasks = props.checklist.tasks;

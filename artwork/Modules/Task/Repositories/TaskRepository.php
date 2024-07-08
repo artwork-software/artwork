@@ -8,7 +8,7 @@ use Artwork\Modules\Task\Models\Task;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-readonly class TaskRepository extends BaseRepository
+class TaskRepository extends BaseRepository
 {
     public function deleteByModel(Model $model): void
     {

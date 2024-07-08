@@ -38,15 +38,6 @@
         </div>
     </div>
 
-    <!--
-<AddChecklistUserModal
-        :checklistId="checklistToEdit?.id"
-        :users="checklistToEdit?.users"
-        :editingChecklistTeams="editingChecklistTeams"
-        @closed="closeEditChecklistTeamsModal"
-    />
-
-    -->
 </template>
 
 <script>

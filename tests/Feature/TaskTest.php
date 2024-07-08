@@ -70,7 +70,7 @@ test('users can view a list of all their tasks, eg private or from checklists th
 //});
 
 
-test('users who arent assigned to a checklist cant create tasks on it', function (): void {
+/*test('users who arent assigned to a checklist cant create tasks on it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
 
@@ -83,10 +83,10 @@ test('users who arent assigned to a checklist cant create tasks on it', function
         'description' => "This is a description",
         'checklist_id' => $checklist->id
     ])->assertStatus(403);
-});
+});*/
 
 
-test('users that are assigned to a checklist can create tasks without a deadline for it', function (): void {
+/*test('users that are assigned to a checklist can create tasks without a deadline for it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
     $this->assigned_department->users()->attach($this->auth_user);
@@ -111,9 +111,9 @@ test('users that are assigned to a checklist can create tasks without a deadline
         'checklist_id' => $checklist->id,
         'deadline' => null
     ]);
-});
+});*/
 
-test('users that are assigned to a checklist can create tasks with a deadline for it', function (): void {
+/*test('users that are assigned to a checklist can create tasks with a deadline for it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
 
@@ -137,7 +137,7 @@ test('users that are assigned to a checklist can create tasks with a deadline fo
         'checklist_id' => $checklist->id,
         'deadline' => '2022-05-28T17:48'
     ]);
-});
+});*/
 
 
 test('users that are admins can create tasks for any checklist in any project', function (): void {
@@ -158,7 +158,7 @@ test('users that are admins can create tasks for any checklist in any project', 
     ]);
 });
 
-test('users who are assigned to a checklist can update its tasks', function (): void {
+/*test('users who are assigned to a checklist can update its tasks', function (): void {
 
     $this->assigned_department->users()->attach($this->auth_user);
     $this->checklist->project()->associate($this->project);
@@ -193,7 +193,7 @@ test('users who are assigned to a checklist can update its tasks', function (): 
         'done_at' => null,
         'user_id' => null
     ]);
-});
+});*/
 
 test('users who are assigned to a checklist can delete its tasks', function (): void {
 

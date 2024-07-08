@@ -5,7 +5,7 @@
                 <div class="">
                     <div class="flex items-center headline3">{{ checklist_template.name }}</div>
                     <div>
-                        <p>{{ checklist_template.task_templates?.length ?? 0 }} Aufgaben</p>
+                        <p>{{ checklist_template.task_templates?.length ?? 0 }} {{ $t('Tasks') }}</p>
                     </div>
                 </div>
 

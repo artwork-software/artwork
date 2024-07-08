@@ -7,7 +7,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-center text-xs mt-2">
-                <p>{{ checklist_template.task_templates?.length ?? 0 }} Aufgaben</p>
+                <p>{{ checklist_template.task_templates?.length ?? 0 }} {{ $t('Tasks') }}</p>
             </div>
         </div>
     </Link>

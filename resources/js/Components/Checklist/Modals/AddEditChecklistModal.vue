@@ -88,7 +88,7 @@
                 </div>
                 <AlertComponent
                     v-if="checklistForm.private"
-                    text="Diese Checkliste kannst nur du sehen. Wenn du die Checkliste mit anderen teilen möchtest, kannst du sie später bearbeiten und für alle sichtbar machen."
+                    :text="$t('Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone.')"
                     show-icon
                     icon-size="h-6 w-6"
                 />

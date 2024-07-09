@@ -41,6 +41,9 @@
             </Menu>
         </td>
     </tr>
+    <tr>
+        <td class="empty-row-xxs-td"></td>
+    </tr>
     <ConfirmDeleteModal v-if="itemConfirmDeleteModalShown"
                         :title="$t('Delete item?')"
                         :button="$t('Yes')"

@@ -17,6 +17,8 @@
                     <IconChevronUp v-if="categoryShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
+                <AddNewResource @click="openAddCategoryOrGroupModal()"
+                                :text="$t('Add new group')"/>
                 <div :class="[categoryClicked ? '' : '!hidden', 'category-input-container']">
                     <input
                         type="text"
@@ -59,10 +61,6 @@
             </Menu>
         </td>
     </tr>
-    <AddNewResource v-if="categoryShown"
-            @click="openAddCategoryOrGroupModal()"
-            :text="$t('Add new group')"
-            :colspan="colspan"/>
     <DropGroup v-if="showFirstDropGroup"
                :colspan="colspan"
                :destination-index="0"

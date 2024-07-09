@@ -9,6 +9,8 @@
                     <IconChevronDown v-else class="icon"/>
                 </div>
                 <IconLink class="icon" @click="openShiftSettingsInNewTab()"/>
+                <AddNewResource @click="openAddCategoryOrGroupModal('category', craft.value.id)"
+                                :text="$t('Add new category')"/>
             </div>
         </td>
     </tr>
@@ -19,10 +21,6 @@
     <template v-if="craftShown && craft.value.filtered_inventory_categories.length > 0"
               v-for="(category, index) in craft.value.filtered_inventory_categories"
               :key="category.id">
-        <AddNewResource v-if="craftShown && index === 0"
-                @click="openAddCategoryOrGroupModal('category', craft.value.id)"
-                :text="$t('Add new category')"
-                :colspan="colspan"/>
         <InventoryCategory :index="index"
                            :category="category"
                            :colspan="colspan"
@@ -36,15 +34,6 @@
                       :destination-index="(index + 1)"
                       @category-requests-drag-move="moveCategoryToDestination"/>
     </template>
-    <tr v-else-if="craftShown && craft.value.inventory_categories.length === 0">
-        <td :colspan="colspan">
-            <div @click="openAddCategoryOrGroupModal('category', craft.value.id)"
-                 class="add-category-container">
-                <IconCirclePlus class="icon"/>
-                {{ $t('Add category') }}
-            </div>
-        </td>
-    </tr>
     <AddCategoryOrGroupModal :resource-id="addCategoryOrGroupResourceId"
                              :show="showAddCategoryOrGroupModal"
                              :type="addCategoryOrGroupModalType"

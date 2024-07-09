@@ -16,6 +16,9 @@
                     <IconChevronUp v-if="groupShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
+                <AddNewResource @click="addNewItem()"
+                                :text="$t('Add new item')"
+                                :colspan="colspan"/>
                 <div
                     :class="[groupClicked ? '' : '!hidden', 'group-input-container']">
                     <input
@@ -59,14 +62,15 @@
             </Menu>
         </td>
     </tr>
-    <AddNewResource v-if="groupShown"
-            @click="addNewItem()"
-            :text="$t('Add new item')"
-            :colspan="colspan"/>
+
+    <tr v-if="group.items.length > 0">
+        <td class="empty-row-xxs-td"></td>
+    </tr>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
               :destination-index="0"
-              @item-requests-drag-move="moveItemToDestination"/>
+              @item-requests-drag-move="moveItemToDestination"
+              :max-index="1"/>
     <template v-if="groupShown"
               v-for="(item, index) in group.items"
               :key="item.id">
@@ -79,7 +83,8 @@
         <DropItem v-if="showTemplateDropItem(index)"
                   :colspan="colspan"
                   :destination-index="(index + 1)"
-                  @item-requests-drag-move="moveItemToDestination"/>
+                  @item-requests-drag-move="moveItemToDestination"
+                  :max-index="group.items.length"/>
     </template>
     <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
                         :title="$t('Delete group?')"

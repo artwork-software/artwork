@@ -5,10 +5,9 @@ namespace Artwork\Modules\InventoryManagement\Services;
 use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
 use Carbon\Carbon;
 use DragonCode\Support\Helpers\Str;
-use Exception;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
-use Psr\SimpleCache\InvalidArgumentException;
+use Throwable;
 
 class InventoryManagementExportService
 {
@@ -21,8 +20,7 @@ class InventoryManagementExportService
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws Exception
+     * @throws Throwable
      */
     public function cacheRequestData(Collection $data): string
     {
@@ -33,7 +31,7 @@ class InventoryManagementExportService
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function getCachedRequestData(string $token): Collection
     {
@@ -45,7 +43,7 @@ class InventoryManagementExportService
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     public function getConfiguredExport(string $token): InventoryManagementExport
     {

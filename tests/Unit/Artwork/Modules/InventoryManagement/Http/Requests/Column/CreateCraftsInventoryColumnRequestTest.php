@@ -13,16 +13,30 @@ use Tests\TestCase;
 
 class CreateCraftsInventoryColumnRequestTest extends TestCase
 {
-    public function testRules(): void
+    /** @return array<int, array<int, mixed>> */
+    public static function ruleTestDataProvider(): array
     {
-        //test with required select option types
-        $request = new CreateCraftsInventoryColumnRequest();
+        return [
+            [
+                new CreateCraftsInventoryColumnRequest(),
+                new CreateCraftsInventoryColumnRequest()
+            ]
+        ];
+    }
 
-        $request->request = $this->getMockBuilder(ParameterBag::class)
+    /**
+     * @dataProvider ruleTestDataProvider
+     */
+    public function testRules(
+        CreateCraftsInventoryColumnRequest $firstRequest,
+        CreateCraftsInventoryColumnRequest $secondRequest
+    ): void {
+        //test with required select option types
+        $firstRequest->request = $this->getMockBuilder(ParameterBag::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['all'])
             ->getMock();
-        $request->request->expects(self::once())
+        $firstRequest->request->expects(self::once())
             ->method('all')
             ->willReturn([
                 'type' => [
@@ -30,7 +44,7 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
                 ]
             ]);
 
-        $rules = $request->rules();
+        $rules = $firstRequest->rules();
 
         self::assertArrayHasKey('name', $rules);
         self::assertSame('required|string', $rules['name']);
@@ -69,12 +83,11 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
         self::assertSame('nullable|string', $rules['defaultOption']);
 
         //test without required select option types
-        $request = new CreateCraftsInventoryColumnRequest();
-        $request->request = $this->getMockBuilder(Request::class)
+        $secondRequest->request = $this->getMockBuilder(Request::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['all'])
             ->getMock();
-        $request->request->expects(self::once())
+        $secondRequest->request->expects(self::once())
             ->method('all')
             ->willReturn([
                 'type' => [
@@ -82,7 +95,7 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
                 ]
             ]);
 
-        $rules = $request->rules();
+        $rules = $secondRequest->rules();
 
         self::assertFalse($rules['selectOptions'][0]->condition);
     }

@@ -62,8 +62,7 @@
             </Menu>
         </td>
     </tr>
-
-    <tr v-if="group.items.length > 0">
+    <tr v-if="group.items.length > 0 && groupShown">
         <td class="empty-row-xxs-td"></td>
     </tr>
     <DropItem v-if="showFirstDropItem"
@@ -80,6 +79,9 @@
                        :tr-cls="getItemOnDragCls(index)"
                        @item-dragging="handleItemDragging"
                        @item-drag-end="handleItemDragEnd"/>
+        <tr v-if="(index + 1) < group.items.length">
+            <td class="empty-row-xxs-td"></td>
+        </tr>
         <DropItem v-if="showTemplateDropItem(index)"
                   :colspan="colspan"
                   :destination-index="(index + 1)"

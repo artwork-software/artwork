@@ -62,13 +62,26 @@ class InventoryManagementExportTest extends TestCase
     }
 
     /**
+     * @return array<string, array<int, mixed>>
      * @throws Exception
      */
-    public function testGettersAndSetters(): void
+    public static function gettersAndSettersTestDataProvider(): array
     {
-        $expectedCollection = SupportCollection::make(['abc', 'def', 'hij']);
-        $inventoryManagementExport = new InventoryManagementExport($this->createStub(Factory::class));
+        return [
+            'test getters and setters' => [
+                SupportCollection::make(['abc', 'def', 'hij']),
+                new InventoryManagementExport(self::createStub(Factory::class)),
+            ]
+        ];
+    }
 
+    /**
+     * @dataProvider gettersAndSettersTestDataProvider
+     */
+    public function testGettersAndSetters(
+        SupportCollection $expectedCollection,
+        InventoryManagementExport $inventoryManagementExport
+    ): void {
         //assert returns self instance
         self::assertSame($inventoryManagementExport, $inventoryManagementExport->setColumns($expectedCollection));
         self::assertSame($inventoryManagementExport, $inventoryManagementExport->setCrafts($expectedCollection));

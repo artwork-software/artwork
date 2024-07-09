@@ -19,21 +19,30 @@ class CraftsInventoryColumnTypeEnumTest extends TestCase
                     'DATE',
                     'CHECKBOX',
                     'SELECT'
-                ]
+                ],
+                0,
+                1,
+                2,
+                3
             ]
         ];
     }
 
     /** @dataProvider enumTestDataProvider */
-    public function testEnums(array $expectedCases): void
-    {
+    public function testEnums(
+        array $expectedNames,
+        int $expectedTextValue,
+        int $expectedDateValue,
+        int $expectedCheckboxValue,
+        int $expectedSelectValue
+    ): void {
         foreach (CraftsInventoryColumnTypeEnum::cases() as $craftsInventoryColumnTypeEnum) {
-            self::assertTrue(in_array($craftsInventoryColumnTypeEnum->name, $expectedCases, true));
+            self::assertTrue(in_array($craftsInventoryColumnTypeEnum->name, $expectedNames, true));
         }
 
-        self::assertSame(CraftsInventoryColumnTypeEnum::TEXT->value, 0);
-        self::assertSame(CraftsInventoryColumnTypeEnum::DATE->value, 1);
-        self::assertSame(CraftsInventoryColumnTypeEnum::CHECKBOX->value, 2);
-        self::assertSame(CraftsInventoryColumnTypeEnum::SELECT->value, 3);
+        self::assertSame(CraftsInventoryColumnTypeEnum::TEXT->value, $expectedTextValue);
+        self::assertSame(CraftsInventoryColumnTypeEnum::DATE->value, $expectedDateValue);
+        self::assertSame(CraftsInventoryColumnTypeEnum::CHECKBOX->value, $expectedCheckboxValue);
+        self::assertSame(CraftsInventoryColumnTypeEnum::SELECT->value, $expectedSelectValue);
     }
 }

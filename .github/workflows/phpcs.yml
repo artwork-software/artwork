@@ -1,11 +1,9 @@
-name: PHPCS
+name: PHP CS
 
 on:
   push:
     branches:
       - dev
-      - main
-      - staging
       - pipeline
   pull_request:
     paths:

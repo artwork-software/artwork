@@ -19,6 +19,23 @@ permissions:
   contents: read
 
 jobs:
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Composer Setup
+        uses: php-actions/composer@v6
+        with:
+          php_version: 8.2
+          php_extensions: gd zip bcmath pcntl
+
+      - name: PHPStan Static Analysis
+        uses: php-actions/phpstan@v3
+        with:
+          path: app/ artwork/
+          php_version: 8.2
+          php_extensions: gd zip bcmath pcntl
   tests:
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15

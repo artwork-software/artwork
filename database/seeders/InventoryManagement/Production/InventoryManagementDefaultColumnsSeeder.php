@@ -17,21 +17,31 @@ class InventoryManagementDefaultColumnsSeeder extends Seeder
      */
     public function run(): void
     {
+        /** @var CraftsInventoryColumnService $craftsInventoryColumnService */
         $craftsInventoryColumnService = app()->make(CraftsInventoryColumnService::class);
 
         $craftsInventoryColumnService->create(
             'Name',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
 
         $craftsInventoryColumnService->create(
             'Anzahl',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
 
         $craftsInventoryColumnService->create(
             'Kommentar',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
     }
 }

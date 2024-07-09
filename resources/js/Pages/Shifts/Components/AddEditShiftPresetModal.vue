@@ -24,24 +24,16 @@
                                 </p>
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                                        <div>
-                                            <input type="time"
-                                                   :placeholder="$t('Shift start')"
-                                                   v-model="shiftForm.start"
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                   required
-                                                   @change="this.validateShiftDates()"
-                                            />
+                                        <div class="flex flex-row">
+                                            <TimeInputComponent v-model="shiftForm.start"
+                                                                :label="$t('Start-Time')"
+                                                                @change="validateShiftDates()" id=""/>
                                         </div>
-                                        <div>
-                                            <input type="time"
-                                                   :placeholder="$t('Shift end')"
-                                                   v-model="shiftForm.end"
-                                                   maxlength="3"
-                                                   required
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                   @change="this.validateShiftDates()"
-                                            />
+                                        <div class="flex flex-row">
+                                            <TimeInputComponent v-model="shiftForm.end"
+                                                                :label="$t('End-Time')"
+                                                                @change="validateShiftDates()"
+                                                                id=""/>
                                         </div>
                                         <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||
@@ -82,42 +74,20 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <input type="number"
-                                                   :placeholder="$t('Length of break in minutes*')"
-                                                   v-model="shiftForm.break_minutes"
-                                                   minlength="0"
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                   required
-                                                   @change="this.validateShiftBreak()"
+                                            <NumberComponent id="shift-break-minutes-input"
+                                                             :label="$t('Length of break in minutes*')"
+                                                             v-model="shiftForm.break_minutes"
+                                                             @change="validateShiftBreak()"
                                             />
                                         </div>
                                         <div>
-                                            <Listbox as="div"
-                                                     v-model="selectedCraft"
-                                                     @update:modelValue="this.validateShiftCraft()"
-                                                     by="id"
-                                            >
-                                                <div class="relative">
-                                                    <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft') + '*'}} </span>
-                                                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                                        </span>
-                                                    </ListboxButton>
-                                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                        <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                            <ListboxOption as="template" v-for="craft in crafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
-                                                                <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
-                                                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                                                    </span>
-                                                                </li>
-                                                            </ListboxOption>
-                                                        </ListboxOptions>
-                                                    </transition>
-                                                </div>
-                                            </Listbox>
+                                            <SelectComponent id="addShiftCraftSelectComponent"
+                                                             :label="$t('Craft') + '*'"
+                                                             v-model="this.selectedCraft"
+                                                             :options="this.crafts"
+                                                             selected-property-to-display="name"
+                                                             :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                                            />
                                         </div>
                                         <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
                                                     this.validationMessages.errors.break_length.length > 0 ||
@@ -157,15 +127,13 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <div v-for="computedShiftQualification in this.computedShiftQualifications"
+                                        <div v-for="(computedShiftQualification, index) in this.computedShiftQualifications"
                                              v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
-                                            <input v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
-                                                   v-model="computedShiftQualification.value"
-                                                   type="number"
-                                                   :placeholder="$t('Amount {0}', [computedShiftQualification.name])"
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                   @change="this.validateShiftsQualification(computedShiftQualification)"
-                                            />
+                                            <NumberComponent v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
+                                                             v-model="computedShiftQualification.value"
+                                                             :id="'shift-qualification-' + index"
+                                                             :label="$t('Amount {0}', [computedShiftQualification.name])"
+                                                             @change="this.validateShiftsQualification(computedShiftQualification)"/>
                                             <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
                                                  class="mt-2 space-y-2"
                                             >
@@ -219,11 +187,18 @@ import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        SelectComponent,
+        NumberComponent,
+        DateInputComponent, TimeInputComponent,
         FormButton,
         ConfirmationModal,
         CheckIcon,

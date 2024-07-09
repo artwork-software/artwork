@@ -204,7 +204,7 @@ export default {
     },
     computed: {
         textStyle() {
-            const fontSize = `max(calc(${this.zoomFactor} * 0.875rem), 12px)`;
+            const fontSize = `max(calc(${this.zoomFactor} * 0.875rem), 10px)`;
             const lineHeight = `max(calc(${this.zoomFactor} * 1.25rem), 1.3)`;
             return {
                 fontSize,

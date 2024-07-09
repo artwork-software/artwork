@@ -3,9 +3,11 @@
 namespace Artwork\Modules\Craft\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $notify_days
  * @property User[] $users
  * @property Shift[] $shifts
+ * @property Collection $inventoryCategories
  */
 class Craft extends Model
 {
@@ -53,5 +56,16 @@ class Craft extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'craft_id', 'id');
+    }
+
+    public function inventoryCategories(): HasMany
+    {
+        return $this->hasMany(
+            CraftInventoryCategory::class,
+            'craft_id',
+            'id'
+        )
+            ->orderBy('order')
+            ->select(['id', 'craft_id', 'name', 'order']);
     }
 }

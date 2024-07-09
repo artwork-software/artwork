@@ -32,3 +32,5 @@ summary*
 !infection.phar.asc
 !infection.json5
 public/build
+profiling.*
+cachegrind.*

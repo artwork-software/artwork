@@ -31,7 +31,6 @@ export default {
             if (!item.inputId) {
                 item.inputId = this.filterName + '-cb-' + Math.floor(Math.random() * 1000000);
             }
-            console.debug(item.inputId);
             return item.inputId;
         }
     }

@@ -51,21 +51,22 @@ class ExportPDFController extends Controller
                 $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
         }
+        $projectObject = $projectService->findById($project);
         $showCalendar = $calendarService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $projectService,
-            Auth::user()->calendar_filter,
-            null,
-            $project
+            startDate: $startDate,
+            endDate: $endDate,
+            userService: $userService,
+            filterService:  $filterService,
+            filterController:  $filterController,
+            roomService:  $roomService,
+            roomCategoryService:  $roomCategoryService,
+            roomAttributeService:   $roomAttributeService,
+            eventTypeService:  $eventTypeService,
+            areaService:  $areaService,
+            projectService:  $projectService,
+            calendarFilter:  Auth::user()->calendar_filter,
+            room: null,
+            project:  $projectObject
         );
 
         $pdf = Pdf::loadView('pdf.calendar', [

@@ -4,7 +4,16 @@ import {useForm} from "@inertiajs/vue3";
 
 export default {
     name: "ShiftNoteComponent",
-    props: ['shift'],
+    props: {
+        shift: {
+            type: Object,
+            required: true
+        },
+        isPreset: {
+            type: Boolean,
+            default: false
+        }
+    },
     mixins: [IconLib],
     computed: {
         cutDescription() {
@@ -22,13 +31,23 @@ export default {
     methods: {
         updateDescription(){
             if(this.shiftDescription.isDirty){
-                this.shiftDescription.patch(route('event.shift.update.updateDescription', this.shift.id), {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.showTextField = false
-                    }
-                })
+                if (this.isPreset) {
+                    this.shiftDescription.patch(route('preset.shift.update.updateDescription', this.shift.id), {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.showTextField = false
+                        }
+                    })
+                } else {
+                    this.shiftDescription.patch(route('event.shift.update.updateDescription', this.shift.id), {
+                        preserveState: true,
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.showTextField = false
+                        }
+                    })
+                }
             } else {
                 this.showTextField = false
             }

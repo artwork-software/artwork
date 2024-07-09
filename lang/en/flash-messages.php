@@ -70,5 +70,55 @@ return [
                 'delete' => 'Cost unit could not be deleted, please try again.'
             ]
         ]
+    ],
+    'inventory-management' => [
+        'column' => [
+            'errors' => [
+                'create' => 'Column could not be saved. Please try again',
+                'duplicate' => 'Column could not be duplicated. Please try again.',
+                'updateName' => 'Column name could not be updated. Please try again.',
+                'updateBackgroundColor' => 'Column color could not be updated. Please try again.',
+                'updateTypeOptions' => 'Column selection options could not be updated. Please try again.',
+                'delete' => 'Column could not be deleted. Please try again.'
+            ]
+        ],
+        'category' => [
+            'errors' => [
+                'create' => 'Category could not be saved. Please try again.',
+                'updateName' => 'Category name could not be updated. Please try again.',
+                'updateOrder' => 'Category position could not be updated. Please try again.',
+                'delete' => 'Category could not be deleted. Please try again.'
+            ]
+        ],
+        'group' => [
+            'errors' => [
+                'create' => 'Group could not be saved. Please try again.',
+                'updateName' => 'Group name could not be updated. Please try again.',
+                'updateOrder' => 'Group position could not be updated. Please try again',
+                'delete' => 'Group could not be deleted. Please try again.'
+            ]
+        ],
+        'item' => [
+            'errors' => [
+                'create' => 'Item could not be saved. Please try again',
+                'updateOrder' => 'Item position could not be updated. Please try again',
+                'delete' => 'Item could not be deleted. Please try again.'
+            ]
+        ],
+        'item-cell' => [
+            'errors' => [
+                'updateCellValue' => 'Value could not be updated. Please try again.'
+            ]
+        ],
+        'filter' => [
+            'errors' => [
+                'updateOrCreate' => 'Filter settings could not be updated. Please try again.'
+            ]
+        ],
+        'export' => [
+            'errors' => [
+                'download' => 'Export could not be created. Please try again.'
+            ]
+        ]
     ]
 ];

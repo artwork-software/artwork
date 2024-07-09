@@ -645,7 +645,6 @@ export default {
             });
         },
         openCellDetailModal(cell) {
-            console.log('openCellDetailModal', cell)
             this.$emit('openCellDetailModal', cell)
         },
         openSubPositionSumDetailModal(subPosition, column, type = 'comment') {

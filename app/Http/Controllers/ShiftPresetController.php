@@ -6,10 +6,12 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Services\PresetShiftService;
 use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\ShiftPreset\Http\Requests\UpdateShiftPresetNoteRequest;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
 use Artwork\Modules\ShiftPresetTimeline\Services\ShiftPresetTimelineService;
@@ -116,6 +118,14 @@ class ShiftPresetController extends Controller
             $shiftService,
             $shiftQualificationService,
             $shiftsQualificationsService
+        );
+    }
+
+    public function updateDescription(UpdateShiftPresetNoteRequest $request, PresetShift $presetShift): void
+    {
+        $this->presetShiftService->updateDescription(
+            $request->string('description'),
+            $presetShift
         );
     }
 }

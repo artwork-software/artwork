@@ -91,4 +91,11 @@ abstract readonly class BaseRepository
         //restore is available by SoftDeletes trait
         return $model->restoreQuietly();
     }
+
+    public function replicate(
+        Model|Pivot|CanSubstituteBaseModel $model,
+        array $except = []
+    ): Model|Pivot|CanSubstituteBaseModel {
+        return $model->replicate($except);
+    }
 }

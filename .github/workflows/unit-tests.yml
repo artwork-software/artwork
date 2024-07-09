@@ -1,4 +1,5 @@
-name: Code-Quality
+name: Unit Tests
+
 on:
   push:
     branches:
@@ -13,48 +14,11 @@ on:
       - "*"
   schedule:
     - cron: '0 0 * * *'
+
 permissions:
   contents: read
+
 jobs:
-  phpstan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Composer Setup
-        uses: php-actions/composer@v6
-        with:
-          php_version: 8.2
-          php_extensions: gd zip bcmath pcntl
-
-      - name: PHPStan Static Analysis
-        uses: php-actions/phpstan@v3
-        with:
-          path: app/ artwork/
-          php_version: 8.2
-          php_extensions: gd zip bcmath pcntl
-  phpcs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # important!
-
-      - name: Install PHP and Composer
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: gd zip bcmath pcntl
-
-      - name: Install Dependencies
-        run: composer install --no-progress --no-suggest --no-interaction
-
-      - name: Sniff
-        uses: tinovyatkin/action-php-codesniffer@v1
-        with:
-          files: "**.php"
-          phpcs_path: php vendor/bin/phpcs
-          standard: phpcs.xml
   tests:
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
@@ -115,9 +79,10 @@ jobs:
 
       - name: Running Test
         run: vendor/bin/pest --colors=always --coverage --min=20
+
   push_to_registry:
     name: Push Docker image to Docker Hub
-    needs: [phpcs, phpstan, tests]
+    needs: [tests, phpstan]
     if:  github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
@@ -153,4 +118,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-

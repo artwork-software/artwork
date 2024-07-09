@@ -53,7 +53,11 @@ class AvailabilityConflictServiceTest extends TestCase
         $shift = Shift::factory()->create();
         $notificationService = app(NotificationService::class);
         Event::fake();
-        $this->availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $this->adminUser());
+        $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+            $shift,
+            $notificationService,
+            $this->adminUser()
+        );
         Event::assertNotDispatched(NotificationEnum::NOTIFICATION_CONFLICT->value);
     }
 }

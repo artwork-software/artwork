@@ -5,6 +5,7 @@ namespace Tests\Feature\Artwork\Modules\Setup;
 use Artwork\Modules\Setup\Database\ModifiesBaseData;
 use Artwork\Modules\Setup\DataProvider\BaseDataProvider;
 use Artwork\Modules\Setup\DataProvider\RoleAndPermissionDataProvider;
+use Closure;
 use Tests\TestCase;
 
 class ModifyBaseDataTest extends TestCase
@@ -13,6 +14,7 @@ class ModifyBaseDataTest extends TestCase
     {
         yield 'add new permission and roles' => [
             new class extends BaseDataProvider {
+                /** @return array <string, string> */
                 public function getPermissions(): array
                 {
                     $permissions = parent::getPermissions();
@@ -25,6 +27,7 @@ class ModifyBaseDataTest extends TestCase
                     return $permissions;
                 }
 
+                /** @return array <string, string> */
                 public function getRoles(): array
                 {
                     $roles = parent::getRoles();
@@ -70,6 +73,7 @@ class ModifyBaseDataTest extends TestCase
 
         yield 'adds only new permission' => [
             new class extends BaseDataProvider {
+                /** @return array <string, string> */
                 public function getPermissions(): array
                 {
                     $permissions = parent::getPermissions();
@@ -120,6 +124,7 @@ class ModifyBaseDataTest extends TestCase
 
         yield 'modifies existing data' => [
             new class extends BaseDataProvider {
+                /** @return array <string, string> */
                 public function getPermissions(): array
                 {
                     $permissions = parent::getPermissions();
@@ -133,16 +138,19 @@ class ModifyBaseDataTest extends TestCase
                     return $permissions;
                 }
 
+                /** @return array <string, string> */
                 public function getOriginalPermissions(): array
                 {
                     return parent::getPermissions();
                 }
 
+                /** @return array <string, string> */
                 public function getOriginalRoles(): array
                 {
                     return parent::getRoles();
                 }
 
+                /** @return array <string, string> */
                 public function getRoles(): array
                 {
                     $roles = parent::getRoles();
@@ -238,6 +246,7 @@ class ModifyBaseDataTest extends TestCase
 
             yield 'unknown column does not crash' => [
                 new class extends BaseDataProvider {
+                    /** @return array <string, string> */
                     public function getPermissions(): array
                     {
                         $permissions = parent::getPermissions();
@@ -258,6 +267,7 @@ class ModifyBaseDataTest extends TestCase
 
                         return $permissions;
                     }
+                    /** @return array <string, string> */
                     public function getOriginalPermissions(): array
                     {
                         return parent::getPermissions();
@@ -297,8 +307,11 @@ class ModifyBaseDataTest extends TestCase
     }
 
     /** @dataProvider modifyDataProvider */
-    public function testModifyBaseData(BaseDataProvider $provider, \Closure $assertionsBefore, \Closure $assertionsAfter): void
-    {
+    public function testModifyBaseData(
+        BaseDataProvider $provider,
+        Closure $assertionsBefore,
+        Closure $assertionsAfter
+    ): void {
         $modifier = new class {
             use ModifiesBaseData;
         };

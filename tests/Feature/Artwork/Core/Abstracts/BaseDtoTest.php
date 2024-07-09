@@ -18,7 +18,8 @@ class BaseDtoTest extends TestCase
 
     public function testJsonSerialize(): void
     {
-        $baseDto = new class(['testProperty' => 'testValue']) extends BaseDto {};
+        $baseDto = new class (['testProperty' => 'testValue']) extends BaseDto {
+        };
         $expectedResult = ['test_property' => 'testValue'];
 
         $this->assertEquals($expectedResult, $baseDto->jsonSerialize());
@@ -26,7 +27,8 @@ class BaseDtoTest extends TestCase
 
     public function testToArray(): void
     {
-        $baseDto = new class(['testProperty' => 'testValue']) extends  BaseDto{};
+        $baseDto = new class (['testProperty' => 'testValue']) extends  BaseDto{
+        };
         $expectedResult = ['test_property' => 'testValue'];
 
         $this->assertEquals($expectedResult, $baseDto->toArray());

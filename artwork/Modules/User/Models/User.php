@@ -5,7 +5,6 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;

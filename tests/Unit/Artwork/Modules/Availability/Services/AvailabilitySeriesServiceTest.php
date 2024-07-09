@@ -5,8 +5,8 @@ namespace Tests\Unit\Artwork\Modules\Availability\Services;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
-use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Repositories\AvailabilitySeriesRepository;
+use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Tests\TestCase;
 
 class AvailabilitySeriesServiceTest extends TestCase

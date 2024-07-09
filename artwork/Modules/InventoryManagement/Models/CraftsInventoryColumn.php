@@ -29,7 +29,7 @@ class CraftsInventoryColumn extends Model
         'type_options' => 'array'
     ];
 
-    public function itemCells(): HasMany
+    public function cells(): HasMany
     {
         return $this->hasMany(
             CraftInventoryItemCell::class,

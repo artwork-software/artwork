@@ -359,7 +359,6 @@ class NotificationController extends Controller
 
     public function setOnReadAll(Request $request): void
     {
-        //dd($request->notificationIds);
         // get user
         $user = User::find(Auth::id());
         // get all notifications within ids in $request->notificationId

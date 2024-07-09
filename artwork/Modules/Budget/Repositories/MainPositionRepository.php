@@ -4,6 +4,6 @@ namespace Artwork\Modules\Budget\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-readonly class MainPositionRepository extends BaseRepository
+class MainPositionRepository extends BaseRepository
 {
 }

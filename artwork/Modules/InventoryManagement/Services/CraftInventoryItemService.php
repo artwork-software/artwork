@@ -8,19 +8,14 @@ use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemRepositor
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
 use Throwable;
 
-readonly class CraftInventoryItemService
+class CraftInventoryItemService
 {
     public function __construct(
-        private CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
-        private CraftInventoryItemRepository $craftInventoryItemRepository,
-        private CraftInventoryItemCellService $craftInventoryItemCellService,
-        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
+        private readonly CraftsInventoryColumnRepository $craftsInventoryColumnRepository,
+        private readonly CraftInventoryItemRepository $craftInventoryItemRepository,
+        private readonly CraftInventoryItemCellService $craftInventoryItemCellService,
+        private readonly InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
-    }
-
-    public function getNewCraftInventoryItem(array $attributes): CraftInventoryItem
-    {
-        return new CraftInventoryItem($attributes);
     }
 
     /**
@@ -30,7 +25,7 @@ readonly class CraftInventoryItemService
         int $groupId,
         int $order
     ): CraftInventoryItem {
-        $craftInventoryItem = $this->getNewCraftInventoryItem(
+        $craftInventoryItem = $this->craftInventoryItemRepository->getNewModelInstance(
             [
                 'craft_inventory_group_id' => $groupId,
                 'order' => $order
@@ -38,14 +33,13 @@ readonly class CraftInventoryItemService
         );
         $this->craftInventoryItemRepository->saveOrFail($craftInventoryItem);
 
-        $this->craftsInventoryColumnRepository->getAllOrdered()->each(
-            function (CraftsInventoryColumn $column) use ($craftInventoryItem): void {
-                $this->craftInventoryItemCellService->create(
-                    $column->id,
-                    $craftInventoryItem->id
-                );
-            }
-        );
+        /** @var CraftsInventoryColumn $column */
+        foreach ($this->craftsInventoryColumnRepository->getAllOrdered() as $column) {
+            $this->craftInventoryItemCellService->create(
+                $column->getAttribute('id'),
+                $craftInventoryItem->getAttribute('id')
+            );
+        }
 
         return $craftInventoryItem;
     }
@@ -57,18 +51,14 @@ readonly class CraftInventoryItemService
         CraftsInventoryColumn $craftsInventoryColumn,
         string $cellValue = ''
     ): void {
-        $this->craftInventoryItemRepository->getAll()->each(
-            /**
-             * @throws Throwable
-             */
-            function (CraftInventoryItem $craftInventoryItem) use ($cellValue, $craftsInventoryColumn): void {
-                $this->craftInventoryItemCellService->create(
-                    $craftsInventoryColumn->id,
-                    $craftInventoryItem->id,
-                    $cellValue
-                );
-            }
-        );
+        /** @var CraftInventoryItem $craftInventoryItem */
+        foreach ($this->craftInventoryItemRepository->getAll() as $craftInventoryItem) {
+            $this->craftInventoryItemCellService->create(
+                $craftsInventoryColumn->getAttribute('id'),
+                $craftInventoryItem->getAttribute('id'),
+                $cellValue
+            );
+        }
     }
 
     /**
@@ -78,8 +68,9 @@ readonly class CraftInventoryItemService
     {
         foreach (
             $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
-                $this->craftInventoryItemRepository
-                    ->getAllOfGroupOrderedByOrder($craftInventoryItem->craft_inventory_group_id),
+                $this->craftInventoryItemRepository->getAllOfGroupOrderedByOrder(
+                    $craftInventoryItem->getAttribute('craft_inventory_group_id')
+                ),
                 $order,
                 $craftInventoryItem
             ) as $index => $orderedItem
@@ -100,21 +91,5 @@ readonly class CraftInventoryItemService
         }
 
         return $this->craftInventoryItemRepository->forceDelete($craftInventoryItem);
-    }
-
-    public function getItemName($item): string
-    {
-        $cell = $item->cells->first(function ($cell) {
-            return is_string($cell->cell_value);
-        });
-        return $cell ? $cell->cell_value : '';
-    }
-
-    public function getItemCount($item): int
-    {
-        $cell = $item->cells->first(function ($cell) {
-            return is_numeric($cell->cell_value);
-        });
-        return $cell ? (int) $cell->cell_value : 0;
     }
 }

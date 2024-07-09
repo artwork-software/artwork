@@ -9,6 +9,7 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -17,7 +18,8 @@ class CraftInventoryItemController extends Controller
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
-        private readonly CraftInventoryItemService $craftInventoryItemService
+        private readonly CraftInventoryItemService $craftInventoryItemService,
+        private readonly Translator $translator
     ) {
     }
 
@@ -38,7 +40,7 @@ class CraftInventoryItemController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.item.errors.create'));
+                ->with('error', $this->translator->get('flash-messages.inventory-management.item.errors.create'));
         }
 
         return $this->redirector->back();
@@ -63,7 +65,7 @@ class CraftInventoryItemController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.item.errors.updateOrder'));
+                ->with('error', $this->translator->get('flash-messages.inventory-management.item.errors.updateOrder'));
         }
 
         return $this->redirector->back();
@@ -74,7 +76,7 @@ class CraftInventoryItemController extends Controller
         if (!$this->craftInventoryItemService->forceDelete($craftInventoryItem)) {
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.item.errors.delete'));
+                ->with('error', $this->translator->get('flash-messages.inventory-management.item.errors.delete'));
         }
 
         return $this->redirector->back();

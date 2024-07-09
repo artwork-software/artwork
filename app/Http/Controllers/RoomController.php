@@ -153,7 +153,7 @@ class RoomController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                Auth::user()->getCalendarFilter()
+                $userService->getAuthUser()
             )
         );
     }

@@ -115,6 +115,7 @@
                             </Listbox>
                         </div>
                     </th>
+                    <th class="w-5"></th>
                 </tr>
                 </thead>
                 <tbody>

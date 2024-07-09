@@ -83,7 +83,7 @@ const emits = defineEmits(['isEditingCellValue']),
     getCellCls = () => {
         return [
             getBackgroundCls(),
-            'max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
+            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
         ].join(' ');
     },
     getBackgroundCls = () => {

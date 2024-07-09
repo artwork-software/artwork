@@ -7,12 +7,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBudgetManagementCostUnitRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        //handled in controller
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *

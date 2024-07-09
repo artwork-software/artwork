@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class BudgetColumnSettingRepository extends BaseRepository
+class BudgetColumnSettingRepository extends BaseRepository
 {
     public function getAll(): Collection
     {

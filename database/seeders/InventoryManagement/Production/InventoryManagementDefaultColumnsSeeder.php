@@ -9,12 +9,6 @@ use Throwable;
 
 class InventoryManagementDefaultColumnsSeeder extends Seeder
 {
-    public function __construct(
-        private readonly CraftsInventoryColumnService $craftsInventoryColumnService
-    ) {
-    }
-
-
     /**
      * Adds default columns to crafts_inventory_columns table
      *
@@ -23,19 +17,31 @@ class InventoryManagementDefaultColumnsSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->craftsInventoryColumnService->create(
+        /** @var CraftsInventoryColumnService $craftsInventoryColumnService */
+        $craftsInventoryColumnService = app()->make(CraftsInventoryColumnService::class);
+
+        $craftsInventoryColumnService->create(
             'Name',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
 
-        $this->craftsInventoryColumnService->create(
+        $craftsInventoryColumnService->create(
             'Anzahl',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
 
-        $this->craftsInventoryColumnService->create(
+        $craftsInventoryColumnService->create(
             'Kommentar',
-            CraftsInventoryColumnTypeEnum::TEXT
+            CraftsInventoryColumnTypeEnum::TEXT,
+            '',
+            [],
+            ''
         );
     }
 }

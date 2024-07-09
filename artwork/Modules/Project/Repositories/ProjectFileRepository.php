@@ -4,6 +4,6 @@ namespace Artwork\Modules\Project\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-readonly class ProjectFileRepository extends BaseRepository
+class ProjectFileRepository extends BaseRepository
 {
 }

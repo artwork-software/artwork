@@ -9,11 +9,6 @@ class StoreOrUpdateEvent extends FormRequest
 {
     use DryRunnable;
 
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * @return string[]
      */

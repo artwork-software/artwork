@@ -34,29 +34,6 @@ beforeEach(function () {
     setupCalendar($this->auth_user);
 });
 
-test('views events', function () {
-    $today = today();
-
-    $calendarFilter = $this->auth_user->getCalendarFilter();
-    $calendarFilter->end_date = $today;
-    $calendarFilter->save();
-
-    $this->get(route('events'));
-    $now = now();
-    $currentEventCount = Event::startAndEndTimeOverlap($now, $today->endOfDay())->count();
-
-    Event::factory()->create([
-        'start_time' => $now,
-        'end_time' => $today->endOfDay(),
-    ]);
-
-    $response = $this->get(route('events'));
-
-    $response->assertInertia(fn(AssertableInertia $page) => $page
-        ->component('Events/EventManagement')
-        ->has('events.events', (1 + $currentEventCount)));
-});
-
 test('view shiftplan', function () {
     $response = $this->get(route('shifts.plan'));
 

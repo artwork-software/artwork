@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-readonly class CalendarService
+class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {

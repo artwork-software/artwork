@@ -7,7 +7,7 @@ use Artwork\Modules\Scheduling\Models\Scheduling;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class SchedulingRepository extends BaseRepository
+class SchedulingRepository extends BaseRepository
 {
     public function getByUserIdAndTypeAndModelAndModelId(
         int $userId,

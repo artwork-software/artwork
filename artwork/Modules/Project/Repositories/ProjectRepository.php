@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Scout\Builder;
 
-readonly class ProjectRepository extends BaseRepository
+class ProjectRepository extends BaseRepository
 {
     public function findManagers(Project $project): Collection
     {

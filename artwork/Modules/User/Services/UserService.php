@@ -234,11 +234,10 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(?CalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(User $user): array
     {
-        if (!$userCalendarFilter) {
-            $userCalendarFilter = new \stdClass();
-        }
+        $userCalendarFilter = $user->calendar_filter;
+
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
             !is_null($userCalendarFilter?->end_date);
         $startDate = $hasUserCalendarFilterDates ?

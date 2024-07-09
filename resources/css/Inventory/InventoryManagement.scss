@@ -169,7 +169,7 @@
         }
 
         .inventory-top-bar-container {
-            @apply flex flex-row w-[80%] h-10 items-center gap-x-2 absolute justify-end right-0 -top-12 z-30 rounded-t-md subpixel-antialiased;
+            @apply flex flex-row w-[60%] pr-5 h-10 items-center gap-x-2 absolute justify-end right-0 -top-12 z-30 rounded-t-md subpixel-antialiased;
 
             .inventory-top-bar-filter-container {
                 @apply flex flex-col w-full gap-y-2;
@@ -217,7 +217,7 @@
         }
 
         .inventory-table-head {
-            @apply sticky z-20 top-0 transition-all duration-300 shadow-sm text-white;
+            @apply sticky z-20 top-0 transition-all duration-300 text-white;
 
             .inventory-th-container {
                 @apply w-full h-full flex flex-row items-center relative text-xs;
@@ -413,10 +413,10 @@
                 @apply w-full flex flex-row absolute justify-center -translate-y-[2px] h-0.5 z-10;
 
                 .add-new-td {
-                    @apply w-full flex flex-row justify-center;
+                    @apply w-[98.5%] flex flex-row;
 
                     .container {
-                        @apply w-[99%] h-0.5 cursor-pointer flex flex-row justify-center relative border-dashed max-w-full;
+                        @apply w-[98.5%] h-0.5 cursor-pointer flex flex-row justify-center justify-self-center relative border-dashed max-w-full;
 
                         .absolute-container {
                             @apply absolute -top-[39px] hidden flex-col gap-y-2 items-center uppercase text-xs subpixel-antialiased;
@@ -481,15 +481,6 @@
                 }
             }
 
-            .remove-category-icon,
-            .remove-group-icon {
-                @apply absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%];
-            }
-
-            .remove-item-icon {
-                @apply absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[115%] translate-x-[40%];
-            }
-
             .onDragBackground {
                 td {
                     @apply opacity-50;
@@ -518,6 +509,41 @@
 
             .select-input {
                 @apply w-full text-xs px-1;
+            }
+
+            .inventory-menu-container {
+                @apply absolute z-50 bottom-2 right-0 cursor-pointer flex flex-row items-center text-xs;
+
+                .menu-button {
+                    @apply w-5 h-5 flex-shrink-0 z-50;
+                }
+
+                .inventory-menu {
+                    @apply w-full h-full relative;
+                }
+
+                .menu-items {
+                    @apply absolute -translate-x-[110%] top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none;
+                }
+
+                .menu-items,
+                .first-column-menu-items {
+                    .active {
+                        @apply rounded-xl bg-artwork-navigation-color/10 text-white;
+                    }
+
+                    .not-active {
+                        @apply text-secondary;
+                    }
+
+                    .default {
+                        @apply cursor-pointer flex items-center px-4 py-2 subpixel-antialiased;
+                    }
+
+                    .icon {
+                        @apply mr-3 h-5 w-5;
+                    }
+                }
             }
         }
     }

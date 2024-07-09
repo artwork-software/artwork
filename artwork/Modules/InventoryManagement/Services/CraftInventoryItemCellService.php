@@ -47,7 +47,6 @@ class CraftInventoryItemCellService
         );
     }
 
-
     public function getNameForSchedulingFromCells(Collection $cells): string
     {
         /** @var CraftInventoryItemCell $cell */

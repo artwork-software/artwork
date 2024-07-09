@@ -1,4 +1,7 @@
 <template>
+    <tr>
+        <td class="empty-row-xxs-td"></td>
+    </tr>
     <tr draggable="true"
         @dragover="itemDragOver"
         @dragleave="itemDragLeave"
@@ -10,6 +13,9 @@
                 <span class="text">{{ $t('Place here') }}</span>
             </div>
         </td>
+    </tr>
+    <tr>
+        <td class="empty-row-xxs-td"></td>
     </tr>
 </template>
 <script setup>

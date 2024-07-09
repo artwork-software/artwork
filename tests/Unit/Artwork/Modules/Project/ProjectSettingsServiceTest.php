@@ -6,7 +6,6 @@ use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectSettingsService;
 use AssertionError;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 

@@ -35,11 +35,6 @@
                       :colspan="colspan"
                       :destination-index="(index + 1)"
                       @category-requests-drag-move="moveCategoryToDestination"/>
-        <template v-if="(index + 1) === craft.value.inventory_categories.length">
-            <tr>
-                <td :colspan="colspan" class="empty-row-td"/>
-            </tr>
-        </template>
     </template>
     <tr v-else-if="craftShown && craft.value.inventory_categories.length === 0">
         <td :colspan="colspan">

@@ -2,8 +2,8 @@
     <tr :draggable="groupIsDraggable()"
         @dragstart="groupDragStart"
         @dragend="groupDragEnd"
-        @mouseover="handleGroupMouseover()"
-        @mouseout="handleGroupMouseout()"
+        @mouseover="showGroupMenu()"
+        @mouseout="closeGroupMenu()"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan" class="group-td">
             <div class="group-td-container">
@@ -28,19 +28,41 @@
                 </div>
             </div>
         </td>
+        <td class="relative">
+            <Menu v-show="groupMenuShown && !groupDragged"
+                  as="div"
+                  class="inventory-menu-container">
+                <MenuButton as="div">
+                    <IconDotsVertical class="menu-button"
+                                      stroke-width="1.5"
+                                      aria-hidden="true"/>
+                </MenuButton>
+                <div class="inventory-menu">
+                    <transition enter-active-class="transition-enter-active"
+                                enter-from-class="transition-enter-from"
+                                enter-to-class="transition-enter-to"
+                                leave-active-class="transition-leave-active"
+                                leave-from-class="transition-leave-from"
+                                leave-to-class="transition-leave-to">
+                        <MenuItems class="menu-items">
+                            <MenuItem v-slot="{ active }"
+                                      as="div">
+                                <a @click="showGroupDeleteConfirmModal()"
+                                   :class="[active ? 'active' : 'not-active', 'default group']">
+                                    <IconTrash class="icon group-hover:text-white"/>
+                                    {{ $t('Delete') }}
+                                </a>
+                            </MenuItem>
+                        </MenuItems>
+                    </transition>
+                </div>
+            </Menu>
+        </td>
     </tr>
-    <IconTrashXFilled v-if="!groupClicked && groupMouseover && !groupDragged"
-                      @mouseover="handleGroupDeleteMouseover"
-                      @mouseout="handleGroupDeleteMouseout"
-                      :class="[groupDeleteCls + ' remove-group-icon']"
-                      @click="showGroupDeleteConfirmModal()"/>
     <AddNewResource v-if="groupShown"
             @click="addNewItem()"
             :text="$t('Add new item')"
             :colspan="colspan"/>
-    <tr>
-        <td class="empty-row-xxs-td"></td>
-    </tr>
     <DropItem v-if="showFirstDropItem"
               :colspan="colspan"
               :destination-index="0"
@@ -70,11 +92,12 @@
 <script setup>
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
-import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconTrash, IconTrashXFilled} from "@tabler/icons-vue";
 import DropItem from "@/Pages/Inventory/InventoryManagement/DropItem.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     props = defineProps({
@@ -83,13 +106,12 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         group: Object,
         trCls: String
     }),
+    groupMenuShown = ref(false),
     groupInputRef = ref(null),
     groupShown = ref(true),
     groupDragged = ref(false),
     groupClicked = ref(false),
     groupValue = ref(props.group.name),
-    groupMouseover = ref(false),
-    groupDeleteCls = ref(''),
     groupConfirmDeleteModalShown = ref(false),
     itemDragging = ref(false),
     draggedItemIndex = ref(null),
@@ -134,19 +156,11 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
             }
         );
     },
-    handleGroupMouseover = () => {
-        groupMouseover.value = true;
+    showGroupMenu = () => {
+        groupMenuShown.value = true;
     },
-    handleGroupMouseout = () => {
-        groupMouseover.value = false;
-    },
-    handleGroupDeleteMouseover = () => {
-        groupMouseover.value = true;
-        groupDeleteCls.value = '!bg-red-600';
-    },
-    handleGroupDeleteMouseout = () => {
-        groupMouseover.value = false;
-        groupDeleteCls.value = '!bg-black';
+    closeGroupMenu = () => {
+        groupMenuShown.value = false;
     },
     showGroupDeleteConfirmModal = () => {
         groupConfirmDeleteModalShown.value = true;
@@ -186,7 +200,11 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     },
     groupDragStart = (e) => {
         groupDragged.value = true;
-        emits.call(this, 'groupDragging', props.index);
+
+        //fix for chrome engine, timeout 1ms before emit otherwise dragend is called immediately
+        //causing drag and drop not working properly if items in between are dragged
+        //@see: https://stackoverflow.com/a/36617714
+        setTimeout(() => emits.call(this, 'groupDragging', props.index), 1);
 
         e.dataTransfer.setData('groupId', props.group.id);
         e.dataTransfer.setData('currentGroupIndex', props.index.toString());

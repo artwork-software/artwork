@@ -1,26 +1,44 @@
 <template>
-    <tr>
-        <td class="empty-row-xxs-td"></td>
-    </tr>
     <tr :draggable="isDraggable"
         @dragstart="itemDragStart"
         @dragend="itemDragEnd"
-        @mouseover="handleItemMouseover()"
-        @mouseout="handleItemMouseout()"
-        :class="'cursor-grab h-10 ' + trCls">
+        @mouseover="showItemMenu()"
+        @mouseout="closeItemMenu()"
+        :class="'cursor-grab ' + trCls">
         <template v-for="(cell) in item.cells"
                   :key="cell.id">
             <InventoryCell :cell="cell"
                            @is-editing-cell-value="handleCellIsEditing"/>
         </template>
-    </tr>
-    <tr>
-        <td>
-            <IconTrashXFilled v-if="!isAnyCellEditing && itemMouseover && !itemDragged"
-                              @mouseover="handleItemDeleteMouseover"
-                              @mouseout="handleItemDeleteMouseout"
-                              :class="[itemDeleteCls + ' remove-item-icon']"
-                              @click="showItemDeleteConfirmModal()"/>
+        <td class="relative">
+            <Menu v-show="itemMenuShown && !itemDragged"
+                  as="div"
+                  class="inventory-menu-container !bottom-2.5 !right-0">
+                <MenuButton as="div">
+                    <IconDotsVertical class="menu-button"
+                                      stroke-width="1.5"
+                                      aria-hidden="true"/>
+                </MenuButton>
+                <div class="inventory-menu">
+                    <transition enter-active-class="transition-enter-active"
+                                enter-from-class="transition-enter-from"
+                                enter-to-class="transition-enter-to"
+                                leave-active-class="transition-leave-active"
+                                leave-from-class="transition-leave-from"
+                                leave-to-class="transition-leave-to">
+                        <MenuItems class="menu-items">
+                            <MenuItem v-slot="{ active }"
+                                      as="div">
+                                <a @click="showItemDeleteConfirmModal()"
+                                   :class="[active ? 'active' : 'not-active', 'default group']">
+                                    <IconTrash class="icon group-hover:text-white"/>
+                                    {{ $t('Delete') }}
+                                </a>
+                            </MenuItem>
+                        </MenuItems>
+                    </transition>
+                </div>
+            </Menu>
         </td>
     </tr>
     <ConfirmDeleteModal v-if="itemConfirmDeleteModalShown"
@@ -34,9 +52,10 @@
 <script setup>
 import InventoryCell from "@/Pages/Inventory/InventoryManagement/InventoryItemCell.vue";
 import {computed, ref} from "vue";
-import {IconTrashXFilled} from "@tabler/icons-vue";
+import {IconDotsVertical, IconTrash, IconTrashXFilled} from "@tabler/icons-vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 const emits = defineEmits(['itemDragging', 'itemDragEnd']),
     props = defineProps({
@@ -45,18 +64,13 @@ const emits = defineEmits(['itemDragging', 'itemDragEnd']),
         item: Object,
         trCls: String
     }),
+    itemMenuShown = ref(false),
     inventoryCellsEditing = ref([]),
     itemDragged = ref(false),
-    itemMouseover = ref(false),
-    itemDeleteCls = ref(''),
     itemConfirmDeleteModalShown = ref(false),
-    isAnyCellEditing = computed(() => {
-        return inventoryCellsEditing.value.length > 0;
-    }),
     isDraggable = computed(() => inventoryCellsEditing.value.length === 0),
     handleCellIsEditing = (isEditing, cellId) => {
         if (isEditing) {
-            //append
             inventoryCellsEditing.value.push({cellId: cellId, isEditing: true});
             return
         }
@@ -65,19 +79,11 @@ const emits = defineEmits(['itemDragging', 'itemDragEnd']),
             (editingCell) => editingCell.cellId !== cellId
         );
     },
-    handleItemMouseover = () => {
-        itemMouseover.value = true;
+    showItemMenu = () => {
+        itemMenuShown.value = true;
     },
-    handleItemMouseout = () => {
-        itemMouseover.value = false;
-    },
-    handleItemDeleteMouseover = () => {
-        itemMouseover.value = true;
-        itemDeleteCls.value = 'bg-red-600';
-    },
-    handleItemDeleteMouseout = () => {
-        itemMouseover.value = false;
-        itemDeleteCls.value = 'bg-black';
+    closeItemMenu = () => {
+        itemMenuShown.value = false;
     },
     showItemDeleteConfirmModal = () => {
         itemConfirmDeleteModalShown.value = true;
@@ -102,7 +108,10 @@ const emits = defineEmits(['itemDragging', 'itemDragEnd']),
     itemDragStart = (e) => {
         itemDragged.value = true;
 
-        emits.call(this,'itemDragging', props.index);
+        //fix for chrome engine, timeout 1ms before emit otherwise dragend is called immediately
+        //causing drag and drop not working properly if items in between are dragged
+        //@see: https://stackoverflow.com/a/36617714
+        setTimeout(() => emits.call(this,'itemDragging', props.index), 1);
 
         e.dataTransfer.setData('itemId', props.item.id);
         e.dataTransfer.setData('currentItemIndex', props.index.toString());

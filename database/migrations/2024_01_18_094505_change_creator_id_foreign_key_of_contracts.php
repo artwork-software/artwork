@@ -14,6 +14,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('contracts', function (Blueprint $table): void {
+            $table->dropForeign('contracts_creator_id_foreign');
+
             $table->foreign('creator_id')->references('id')->on('users')->nullOnDelete();
         });
     }
@@ -26,6 +28,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('contracts', function (Blueprint $table): void {
+            $table->dropForeign('contracts_creator_id_foreign');
+
             $table->foreign('creator_id')->references('id')->on('users');
         });
     }

@@ -1,12 +1,12 @@
-name: Unit Tests
+name: Code-Quality
 
 on:
   push:
     branches:
-      - dev
-      - main
-      - staging
       - pipeline
+      - dev
+      - staging
+      - main
     tags:
       - 'v*'
   pull_request:
@@ -19,7 +19,31 @@ permissions:
   contents: read
 
 jobs:
+  phpcs:
+    name: phpcs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: gd zip bcmath pcntl
+
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest --no-interaction
+
+      - name: Sniff
+        uses: tinovyatkin/action-php-codesniffer@v1
+        with:
+          files: "**.php"
+          phpcs_path: php vendor/bin/phpcs
+          standard: phpcs.xml
   phpstan:
+    name: phpstan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -37,12 +61,13 @@ jobs:
           php_version: 8.2
           php_extensions: gd zip bcmath pcntl
   tests:
+    name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+    needs: [phpcs, phpstan]
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
     env:
       COMPOSER_NO_INTERACTION: 1
       XDEBUG_MODE: coverage
-
     strategy:
       matrix:
         php: [ 8.2]
@@ -51,9 +76,6 @@ jobs:
         exclude:
           - php: 8.0
         operating-systems: [ubuntu-latest]
-
-    name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
-
     services:
       mysql:
         image: mysql:8.0
@@ -63,7 +85,6 @@ jobs:
         ports:
           - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,10 +117,9 @@ jobs:
 
       - name: Running Test
         run: vendor/bin/pest --colors=always --coverage --min=20
-
   push_to_registry:
     name: Push Docker image to Docker Hub
-    needs: [tests, phpstan]
+    needs: [tests]
     if:  github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:

@@ -113,7 +113,7 @@ class ExportPDFController extends Controller
             $request->float('dpi', '')
         );
 
-        if ($filesystemManager->exists('pdf')) {
+        if ($filesystemManager->directoryMissing('pdf')) {
             $filesystemManager->makeDirectory('pdf');
         }
 

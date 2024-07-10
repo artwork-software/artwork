@@ -13,10 +13,20 @@ return new class extends Migration
     {
         Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('num_of_guests');
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('entry_fee');
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('registration_required');
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('register_by');
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('registration_deadline');
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->dropColumn('closed_society');
         });
     }
@@ -28,11 +38,21 @@ return new class extends Migration
     {
         Schema::table('projects', function (Blueprint $table) {
             $table->string('num_of_guests')->nullable()->default(null);
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->string('entry_fee')->nullable()->default(null);
-            $table->boolean('registration_required')->nullable()->default(false);
+        });
+        Schema::table('projects', function (Blueprint $table) {
+            $table->string('registration_required')->nullable()->default(null);
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->string('register_by')->nullable()->default(null);
+        });
+        Schema::table('projects', function (Blueprint $table) {
             $table->string('registration_deadline')->nullable()->default(null);
-            $table->boolean('closed_society')->nullable()->default(false);
+        });
+        Schema::table('projects', function (Blueprint $table) {
+            $table->string('closed_society')->nullable()->default(null);
         });
     }
 };

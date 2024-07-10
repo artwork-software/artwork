@@ -57,6 +57,9 @@ jobs:
     needs: [phpcs, phpstan]
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
+    env:
+      COMPOSER_NO_INTERACTION: 1
+      XDEBUG_MODE: coverage
     strategy:
       matrix:
         php: [ 8.2]
@@ -75,8 +78,6 @@ jobs:
           php-version: ${{ matrix.php-versions }}
           extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl
       - name: Composer Install
-        env:
-          COMPOSER_NO_INTERACTION: 1
         run: composer install
       - name: Directory Permissions
         run: chmod -R 777 storage
@@ -86,7 +87,6 @@ jobs:
         run: cp .env.example .env && php artisan key:generate && php artisan optimize && php artisan migrate:fresh
       - name: Execute tests (Unit and Feature tests) via pest
         env:
-          XDEBUG_MODE: coverage
           APP_ENV: testing
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite

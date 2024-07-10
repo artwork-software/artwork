@@ -80,11 +80,16 @@ jobs:
       - name: Composer Install
         run: composer install
       - name: Directory Permissions
-        run: chmod -R 777 storage
+        run: chmod -R 777 storage bootstrap/cache
       - name: Create Database
-        run: mkdir -p storage/database && touch storage/database/database.sqlite
+        run: |
+          mkdir -p storage/database
+          touch storage/database/database.sqlite
       - name: Setup Application
-        run: cp .env.example .env && php artisan key:generate && php artisan optimize && php artisan migrate:fresh
+        run: |
+          php artisan key:generate --env=testing
+          php artisan optimize --env=testing
+          php artisan migrate:fresh --env=testing
       - name: Execute tests (Unit and Feature tests) via pest
         env:
           APP_ENV: testing

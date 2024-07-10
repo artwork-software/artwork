@@ -96,8 +96,6 @@ class InventoryManagementExportTest extends TestCase
      */
     public static function stylesTestDataProvider(): array
     {
-        $columns = Collection::make();
-        $crafts = SupportCollection::make();
         return [
             'test styles' => [
                 $columns,
@@ -113,16 +111,12 @@ class InventoryManagementExportTest extends TestCase
      * @dataProvider stylesTestDataProvider
      */
     public function testStyles(
-        Collection $columns,
-        SupportCollection $crafts,
         array $expectedStyles
     ): void {
         $styles = (new InventoryManagementExport(
             $this->getMockBuilder(Factory::class)
                 ->disableOriginalConstructor()
-                ->getMock(),
-            $columns,
-            $crafts
+                ->getMock()
         ))->styles(
             $this->getMockBuilder(Worksheet::class)
                 ->disableOriginalConstructor()

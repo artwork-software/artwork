@@ -14,14 +14,14 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\User\Services\UserService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF;
+use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
+use Illuminate\Routing\UrlGenerator;
+use Inertia\ResponseFactory as InertiaResponseFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -39,22 +39,24 @@ class ExportPDFController extends Controller
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
+        FilesystemManager $filesystemManager,
+        InertiaResponseFactory $inertiaResponseFactory,
+        UrlGenerator $urlGenerator,
+        PDF $domPdf,
+        Carbon $carbon
     ): Response {
-        $startDate = Carbon::parse($request->get('start'));
-        $endDate = Carbon::parse($request->get('end'));
-
-        if (
-            ($project = $request->get('project'))
-            && ($firstEventInProject = $projectService->getFirstEventInProject($project))
-            && ($lastEventInProject = $projectService->getLastEventInProject($project))
-        ) {
-                $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-                $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-        }
-        $projectObject = $projectService->findById($project);
+        $projectId = $request->get('project');
         $showCalendar = $calendarService->createCalendarData(
-            startDate: $startDate,
-            endDate: $endDate,
+            startDate: $projectId ?
+                $carbon->create(
+                    $projectService->getFirstEventInProject($projectId)->getAttribute('start_time')
+                )->startOfDay() :
+                $carbon->parse($request->get('start')),
+            endDate: $projectId ?
+                $carbon->create(
+                    $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
+                )->endOfDay() :
+                $carbon->parse($request->get('end')),
             userService: $userService,
             filterService:  $filterService,
             filterController:  $filterController,
@@ -64,57 +66,91 @@ class ExportPDFController extends Controller
             eventTypeService:  $eventTypeService,
             areaService:  $areaService,
             projectService:  $projectService,
-            calendarFilter:  Auth::user()->calendar_filter,
-            room: null,
-            project:  $projectObject
+            calendarFilter:  $userService->getAuthUser()->getAttribute('calendar_filter'),
+            project: $projectId ? $projectService->findById($projectId) : null
         );
 
-        $pdf = Pdf::loadView('pdf.calendar', [
-            'title' => $request->title,
-            'rooms' => $roomService->getFilteredRooms(
-                Carbon::parse($request->input('start')),
-                Carbon::parse($request->input('end')),
-                $userService->getAuthUser()->calendar_filter
-            ),
-            'filterRooms' => RoomPdfResource::collection(Room::all()),
-            'calendar' => $showCalendar['roomsWithEvents'],
-            'dateValue' => $showCalendar['dateValue'],
-            'days' => $showCalendar['days'],
-            'selectedDate' => $showCalendar['selectedDate'],
-            'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters'],
-            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'user_filters' => $showCalendar['user_filters'],
-            'events' => CalendarEventDto::newInstance()
-                ->setAreas($showCalendar['filterOptions']['areas'])
-                ->setProjects(new Collection())
-                ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
-                ->setEvents(new Collection())
-        ])
-            ->setPaper($request->input('paperSize'), $request->input('paperOrientation'))
-            ->setOptions(['dpi' => $request->input('dpi'), 'defaultFont' => 'sans-serif']);
+        $pdf = $domPdf->loadView(
+            'pdf.calendar',
+            [
+                'title' => $request->get('title'),
+                'rooms' => $roomService->getFilteredRooms(
+                    $carbon->parse($request->input('start')),
+                    $carbon->parse($request->input('end')),
+                    $userService->getAuthUser()->getAttribute('calendar_filter')
+                ),
+                'filterRooms' => RoomPdfResource::collection(Room::all()),
+                'calendar' => $showCalendar['roomsWithEvents'],
+                'dateValue' => $showCalendar['dateValue'],
+                'days' => $showCalendar['days'],
+                'selectedDate' => $showCalendar['selectedDate'],
+                'filterOptions' => $showCalendar["filterOptions"],
+                'personalFilters' => $showCalendar['personalFilters'],
+                'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
+                'user_filters' => $showCalendar['user_filters'],
+                'events' => CalendarEventDto::newInstance()
+                    ->setAreas($showCalendar['filterOptions']['areas'])
+                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                    ->setProjects(new Collection())
+                    ->setEvents(new Collection())
+            ]
+        )->setPaper(
+            $request->string('paperSize'),
+            $request->string('paperOrientation')
+        )->setOptions(
+            [
+                'dpi' => $request->float('dpi'),
+                'defaultFont' => 'sans-serif'
+            ]
+        );
 
+        $filename = $this->createFilename(
+            $carbon,
+            $request->string('paperOrientation', ''),
+            $request->string('title', ''),
+            $request->float('dpi', '')
+        );
 
-        $pdfName = Carbon::now()
-                ->format('Y-m-d_H-i-s') . '_' . $request
-                ->input('paperOrientation') . '_' . str_replace(' ', '_', $request->title) . '_dpi' . $request
-                ->input('dpi') . '.pdf';
-
-        if (!Storage::exists('pdf')) {
-            Storage::makeDirectory('pdf');
+        if ($filesystemManager->exists('pdf')) {
+            $filesystemManager->makeDirectory('pdf');
         }
 
-        $pdf->save(storage_path('app/pdf/' . $pdfName));
+        $pdf->save($this->createStoragePath($filesystemManager, $filename));
 
-        return Inertia::location(\route('calendar.export.pdf.download', ['filename' => $pdfName]));
+        return $inertiaResponseFactory->location(
+            $urlGenerator->route('calendar.export.pdf.download', ['filename' => $filename])
+        );
     }
 
-    public function download($filename, ResponseFactory $responseFactory): BinaryFileResponse
+    public function download(
+        string $filename,
+        ResponseFactory $responseFactory,
+        FilesystemManager $filesystemManager
+    ): BinaryFileResponse {
+        return $responseFactory->download(
+            $this->createStoragePath($filesystemManager, $filename)
+        )->deleteFileAfterSend();
+    }
+
+    private function createStoragePath(FilesystemManager $filesystemManager, string $filename): string
     {
-        //file is deleted immediately after the request object is populated with pdf content so no cron job to delete
-        //old pdfs is required
-        return $responseFactory->download(Storage::path('pdf/' . $filename))->deleteFileAfterSend();
+        return $filesystemManager->path('pdf/' . $filename);
+    }
+
+    private function createFilename(
+        Carbon $carbon,
+        string $paperOrientation,
+        string $title,
+        string $dpi
+    ): string {
+        return sprintf(
+            '%s_%s_%s_dpi_%s.pdf',
+            $carbon->now()->format('d.m.Y-H:i:s'),
+            $paperOrientation,
+            str_replace(' ', '_', $title),
+            $dpi
+        );
     }
 }

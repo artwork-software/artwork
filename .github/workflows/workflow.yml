@@ -21,7 +21,7 @@ jobs:
     name: phpcs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -39,11 +39,15 @@ jobs:
     name: phpstan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: php-actions/composer@v6
+      - name: Composer Setup
+        uses: php-actions/composer@v6
+        with:
+          php_version: 8.2
+          php_extensions: gd zip bcmath pcntl
 
       - name: PHPStan Static Analysis
         uses: php-actions/phpstan@v3
@@ -76,7 +80,7 @@ jobs:
           - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 

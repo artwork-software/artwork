@@ -84,6 +84,11 @@ jobs:
         run: mkdir -p storage/database && touch storage/database/database.sqlite
       - name: Setup Application
         run: cp .env.example .env && php artisan key:generate && php artisan optimize && php artisan migrate:fresh
+        env:
+          XDEBUG_MODE: coverage
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
       - name: Execute tests (Unit and Feature tests) via pest
         env:
           XDEBUG_MODE: coverage

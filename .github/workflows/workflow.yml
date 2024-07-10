@@ -1,4 +1,4 @@
-name: Code-Quality
+name: CI/CD
 
 on:
   push:
@@ -12,8 +12,6 @@ on:
   pull_request:
     branches:
       - "*"
-  schedule:
-    - cron: '0 0 * * *'
 
 permissions:
   contents: read
@@ -23,30 +21,27 @@ jobs:
     name: phpcs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.7
         with:
           fetch-depth: 0
 
-      - name: Install PHP and Composer
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: gd zip bcmath pcntl
+      - name: Install PHP_CodeSniffer
+        run: |
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          php phpcs.phar --version
 
-      - name: Install Dependencies
-        run: composer install --no-progress --no-suggest --no-interaction
-
-      - name: Sniff
-        uses: tinovyatkin/action-php-codesniffer@v1
+      - uses: tinovyatkin/action-php-codesniffer@v1
         with:
-          files: "**.php"
-          phpcs_path: php vendor/bin/phpcs
+          files: "**.php" # you may customize glob as needed
+          phpcs_path: php phpcs.phar
           standard: phpcs.xml
   phpstan:
     name: phpstan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
 
       - name: Composer Setup
         uses: php-actions/composer@v6
@@ -86,8 +81,9 @@ jobs:
           - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.7
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

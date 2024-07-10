@@ -68,6 +68,15 @@ jobs:
         exclude:
           - php: 8.0
         operating-systems: [ubuntu-latest]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: artwork_tools
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,22 +88,22 @@ jobs:
           extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl
       - name: Composer Install
         run: composer install
-      - name: Directory Permissions
-        run: chmod -R 777 storage bootstrap/cache
-      - name: Create Database
+      - name: Set Testing Environment
         run: |
-          mkdir -p storage/database
-          touch storage/database/database.sqlite
+          cp .env.example .env.testing
+          sed -i "s|^\(APP_ENV=\s*\).*$|\1testing|" .env.testing
+          sed -i "s|^\(DB_HOST=\s*\).*$|\1127.0.0.1|" .env.testing
+          sed -i "s|^\(DB_PORT=\s*\).*$|\1${{ job.services.mysql.ports['3306'] }}|" .env.testing
+          sed -i "s|^\(DB_DATABASE=\s*\).*$|\1artwork_tools|" .env.testing
+          sed -i "s|^\(DB_USERNAME=\s*\).*$|\1root|" .env.testing
+          sed -i "s|^\(DB_PASSWORD=\s*\).*$|\1root|" .env.testing
       - name: Setup Application
         run: |
           php artisan key:generate --env=testing
           php artisan optimize --env=testing
           php artisan migrate:fresh --env=testing
-      - name: Execute tests (Unit and Feature tests) via pest
-        env:
-          APP_ENV: testing
-          DB_CONNECTION: sqlite
-          DB_DATABASE: database/database.sqlite
+          php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
+      - name: Running Test
         run: vendor/bin/pest --colors=always --coverage --min=20
 
   push_to_registry:

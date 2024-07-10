@@ -98,8 +98,6 @@ class InventoryManagementExportTest extends TestCase
     {
         return [
             'test styles' => [
-                $columns,
-                $crafts,
                 [
                     1 => ['font' => ['bold' => true]]
                 ]

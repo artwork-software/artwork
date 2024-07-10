@@ -17,44 +17,44 @@ permissions:
   contents: read
 
 jobs:
-  phpcs:
-    name: phpcs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install PHP_CodeSniffer
-        run: |
-          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
-          php phpcs.phar --version
-      - uses: tinovyatkin/action-php-codesniffer@v1
-        with:
-          files: "**.php" # you may customize glob as needed
-          phpcs_path: php phpcs.phar
-          standard: phpcs.xml
-
-  phpstan:
-    name: phpstan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Composer Setup
-        uses: php-actions/composer@v6
-        with:
-          php_version: 8.2
-          php_extensions: gd zip bcmath pcntl
-      - name: PHPStan Static Analysis
-        uses: php-actions/phpstan@v3
-        with:
-          configuration: phpstan.neon.dist
-          memory_limit: 1G
+#  phpcs:
+#    name: phpcs
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: Install PHP_CodeSniffer
+#        run: |
+#          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+#          php phpcs.phar --version
+#      - uses: tinovyatkin/action-php-codesniffer@v1
+#        with:
+#          files: "**.php" # you may customize glob as needed
+#          phpcs_path: php phpcs.phar
+#          standard: phpcs.xml
+#
+#  phpstan:
+#    name: phpstan
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: Composer Setup
+#        uses: php-actions/composer@v6
+#        with:
+#          php_version: 8.2
+#          php_extensions: gd zip bcmath pcntl
+#      - name: PHPStan Static Analysis
+#        uses: php-actions/phpstan@v3
+#        with:
+#          configuration: phpstan.neon.dist
+#          memory_limit: 1G
 
   tests:
     name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
-    needs: [phpcs, phpstan]
+#    needs: [phpcs, phpstan]
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
     strategy:

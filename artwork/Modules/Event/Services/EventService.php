@@ -50,13 +50,16 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
 readonly class EventService
 {
-    public function __construct(private EventRepository $eventRepository)
-    {
+    public function __construct(
+        private EventRepository $eventRepository,
+        private readonly AuthManager $authManager
+    ) {
     }
 
     public function importShiftPreset(
@@ -640,9 +643,10 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        DayServicesService $dayServicesService
+        DayServicesService $dayServicesService,
+        User $user
     ): ShiftPlanDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {

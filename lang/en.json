@@ -1898,5 +1898,8 @@
     "Please select the format in which the export is to be created.": "Please select the format in which the export is to be created.",
     "PDF": "PDF",
     "XLSX": "XLSX",
-    "Export could not be created. Please try again.": "Export could not be created. Please try again."
+    "Export could not be created. Please try again.": "Export could not be created. Please try again.",
+    "Inventory-relevant Event Types": "Inventory-relevant Event Types",
+    "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.",
+    "Define global settings for inventory planning.": "Define global settings for inventory planning."
 }

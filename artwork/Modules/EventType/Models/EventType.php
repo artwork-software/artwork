@@ -28,7 +28,8 @@ class EventType extends Model
         'project_mandatory',
         'individual_name',
         'abbreviation',
-        'relevant_for_shift'
+        'relevant_for_shift',
+        'relevant_for_inventory'
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class EventType extends Model
         'individual_name' => 'boolean',
         'relevant_for_shift' => 'boolean',
         'fallback_type' => 'boolean',
+        'relevant_for_inventory' => 'boolean'
     ];
 
     public function events(): HasMany

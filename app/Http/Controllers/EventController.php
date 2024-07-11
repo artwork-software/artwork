@@ -56,6 +56,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,12 +80,12 @@ class EventController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly CraftInventoryItemEventService $craftInventoryItemEventService
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
     public function viewEventIndex(
-        User $user,
         Request $request,
         EventService $eventService,
         CalendarService $calendarService,
@@ -113,7 +114,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
-                $user,
+                $this->authManager->user(),
                 $request->boolean('atAGlance')
             )
         );
@@ -153,7 +154,8 @@ class EventController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                $dayServicesService
+                $dayServicesService,
+                $this->authManager->user()
             )
         );
     }

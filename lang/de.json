@@ -1898,5 +1898,8 @@
     "Please select the format in which the export is to be created.": "Bitte auswählen in welchem Format der Export erstellt wird.",
     "PDF": "PDF",
     "XLSX": "XLSX",
-    "Export could not be created. Please try again.": "Export konnte nicht erzeugt werden. Bitte erneut versuchen."
+    "Export could not be created. Please try again.": "Export konnte nicht erzeugt werden. Bitte erneut versuchen.",
+    "Inventory-relevant Event Types": "Bestandsrelevante Terminarten",
+    "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Gib an, welche Terminarten standardmäßig als bestandsrelevant angezeigt werden. Bestand kann nur für diese Terminarten gebucht werden.",
+    "Define global settings for inventory planning.": "Definiere globale Einstellungen für die Bestandsplanung."
 }

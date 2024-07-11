@@ -1,7 +1,6 @@
 <template>
-    <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg relative group">
+    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: this.backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -44,7 +43,7 @@
             </div>
         </div>
         <div class="px-1 py-1 ">
-            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
+            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: this.TextColorWithDarken}"
                  :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center relative w-full">

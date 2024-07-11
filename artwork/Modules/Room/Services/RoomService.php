@@ -563,6 +563,7 @@ readonly class RoomService
                 );
             }
         }
+
         return collect($eventsForRoom);
     }
 

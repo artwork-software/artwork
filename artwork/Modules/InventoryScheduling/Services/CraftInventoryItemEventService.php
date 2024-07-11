@@ -39,6 +39,11 @@ class CraftInventoryItemEventService
         ]);
     }
 
+    public function deleteEventFromInventory(CraftInventoryItemEvent $craftInventoryItemEvent): bool
+    {
+        return $this->craftInventoryItemEventRepository->delete($craftInventoryItemEvent);
+    }
+
     /**
      * @param $item
      * @return Collection

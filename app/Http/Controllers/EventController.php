@@ -1843,8 +1843,14 @@ class EventController extends Controller
             $projectTabService
         );
 
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
+
         return Redirect::back();
     }
+
+
 
     /**
      * @throws AuthorizationException

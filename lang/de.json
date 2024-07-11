@@ -1912,4 +1912,7 @@
     "Checklist users": "Checklisten-Nutzer*innen",
     "Click here to create a task": "Klicke hier, um eine Aufgabe zu erstellen",
     "Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone.": "Nur du kannst diese Checkliste sehen. Wenn du die Checkliste mit anderen teilen möchtest, kannst du sie später bearbeiten und für alle sichtbar machen."
+    "Inventory-relevant Event Types": "Bestandsrelevante Terminarten",
+    "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Gib an, welche Terminarten standardmäßig als bestandsrelevant angezeigt werden. Bestand kann nur für diese Terminarten gebucht werden.",
+    "Define global settings for inventory planning.": "Definiere globale Einstellungen für die Bestandsplanung."
 }

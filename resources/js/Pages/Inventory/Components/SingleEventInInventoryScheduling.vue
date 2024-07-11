@@ -3,13 +3,8 @@
         :id="event.id"
         @dragover="onDragOver"
         @drop="onDrop">
-       <div class="py-1.5 px-2 border flex items-center" :style="{
-        backgroundColor: backgroundColorWithOpacity(event.event_type.hex_code),
-        color: textColorWithDarken(event.event_type.hex_code),
-        border: textColorWithDarken(event.event_type.hex_code)
-        }"
-        :class="isLastEvent ? 'rounded-b-lg' : ''">
-           <div v-if="multiEdit">
+       <div class="py-1.5 px-2 border flex items-center" :class="[isLastEvent ? 'rounded-b-lg' : '', !event.event_type.relevant_for_inventory ? 'event-disabled' : '']" :style="getStyling">
+           <div v-if="multiEdit && event.event_type.relevant_for_inventory">
                <div class="flex items-center mr-2">
                    <input @change="removeCheckedState" :checked="event.checked" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="focus:ring-transparent text-green-600 ring-transparent h-4 w-4 border-gray-300" />
                </div>
@@ -60,9 +55,6 @@ const props = defineProps({
     }
 })
 
-// computed add check state to event
-// 1. if event is in selectedEventIds, add checked: true
-// 2. if event is not in selectedEventIds, add checked: false
 props.event.checked = props.selectedEventIds.includes(props.event.id);
 
 const showAssignedItemToEventModal = ref(false);
@@ -84,10 +76,17 @@ const onDragOver = (event) => {
 const onDrop = (event) =>  {
     event.preventDefault();
 
+    if ( !props.event.event_type.relevant_for_inventory ) return;
+
     const droppedItem = JSON.parse(event.dataTransfer.getData('application/json'));
     ItemDragElement.value = droppedItem;
     showAssignedItemToEventModal.value = true;
 
+}
+
+const getStyling = {
+    backgroundColor: backgroundColorWithOpacity(props.event.event_type.hex_code),
+    color: textColorWithDarken(props.event.event_type.hex_code)
 }
 
 const removeCheckedState = () => {
@@ -102,6 +101,3 @@ watch(() => props.selectedEventIds, () => {
 
 </script>
 
-<style scoped>
-
-</style>

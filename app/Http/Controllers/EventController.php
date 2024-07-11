@@ -57,6 +57,7 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -82,12 +83,12 @@ class EventController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly CraftInventoryItemEventService $craftInventoryItemEventService
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
     public function viewEventIndex(
-        User $user,
         Request $request,
         EventService $eventService,
         CalendarService $calendarService,
@@ -116,7 +117,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
-                $user,
+                $this->authManager->user(),
                 $request->boolean('atAGlance')
             )
         );
@@ -172,7 +173,8 @@ class EventController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                $dayServicesService
+                $dayServicesService,
+                $this->authManager->user()
             )
         );
     }
@@ -1841,8 +1843,14 @@ class EventController extends Controller
             $projectTabService
         );
 
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
+
         return Redirect::back();
     }
+
+
 
     /**
      * @throws AuthorizationException

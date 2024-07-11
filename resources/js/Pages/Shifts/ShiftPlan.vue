@@ -38,9 +38,10 @@
                                 <tr v-for="(room,index) in shiftPlan" class="w-full flex">
                                     <th class="xsDark flex items-center h-28 w-48"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                        <Link class="flex font-semibold items-center ml-4">
+                                        <div class="flex font-semibold items-center ml-4" >
                                             {{ room[days[0].full_day].roomName }}
-                                        </Link>
+
+                                        </div>
                                     </th>
                                     <td v-for="day in days" :style="{width: day.week_separator ? '40px' : '200px'}" class="max-h-28 overflow-y-auto cell border-r-2 border-dotted" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
                                         <div v-for="event in room[day.full_day]?.events.data" class="mb-1">
@@ -223,7 +224,7 @@
                                         </div>
                                         <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
                                             <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number] }}
+                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
                                             </span>
                                         </div>
                                     </td>
@@ -293,7 +294,7 @@
                                         </div>
                                         <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
                                             <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number] }}
+                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
                                             </span>
                                         </div>
                                     </td>

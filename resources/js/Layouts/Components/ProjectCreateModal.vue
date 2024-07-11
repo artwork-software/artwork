@@ -609,6 +609,10 @@ export default {
             this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
 
+            if ( this.isCreateProjectGroupTab ){
+                this.createProjectForm.isGroup = true;
+            }
+
             if (this.project) {
                 this.createProjectForm.patch(
                     route('projects.update', this.project.id), {

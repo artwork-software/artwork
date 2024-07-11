@@ -52,6 +52,10 @@ export default {
         createSettings: {
             type: Object,
             required: false
+        },
+        first_project_tab_id: {
+            type: Number,
+            required: false
         }
     },
     data() {
@@ -122,8 +126,11 @@ export default {
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-artwork-buttons-create ml-1">
-                        {{ headerObject.currentGroup?.name }}</a>
+                        {{ $t('Belongs to') }}
+                        <!--:href="'/projects/' + headerObject.currentGroup?.id"-->
+                        <a :href="route('projects.tab', {project: headerObject.currentGroup?.id, projectTab: first_project_tab_id})" class="text-artwork-buttons-create ml-1">
+                            {{ headerObject.currentGroup?.name }}
+                        </a>
                     </div>
                 </div>
                 <div>

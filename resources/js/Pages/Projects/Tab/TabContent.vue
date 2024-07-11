@@ -115,8 +115,7 @@ const removeML = (componentType) => {
 </script>
 
 <template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab"
-                            :create-settings="createSettings">
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id">
         <div class="my-10 w-full">
             <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
                 <Component

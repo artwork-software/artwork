@@ -7,13 +7,13 @@
     },
     "timeout": 10,
     "logs": {
-        "text": "infection.log",
-        "html": "infection.html",
-        "summary": "summary.log",
-        "json": "infection-log.json",
-        "perMutator": "per-mutator.md",n O
+        "text": "storage/logs/infection.log",
+        "html": "storage/infection.html",
+        "summary": "storage/logs/infection_summary.log",
+        "json": "storage/logs/infection-log.json",
+        "perMutator": "storage/infection-per-mutator.md",
         "github": true,
-        "summaryJson": "summary.json"
+        "summaryJson": "storage/logs/infection_summary.json"
     },
     "tmpDir": ".phpunit.cache",
     "mutators": {

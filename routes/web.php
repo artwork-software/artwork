@@ -479,9 +479,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
+    Route::get('/calendar/room/{room}/{date}', [EventController::class, 'viewEventsForDateAndRoom'])
+        ->name('events.events-for-date-and-room');
 
     // Event Api
-    Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');

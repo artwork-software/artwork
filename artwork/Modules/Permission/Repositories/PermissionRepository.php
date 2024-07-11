@@ -2,16 +2,13 @@
 
 namespace Artwork\Modules\Permission\Repositories;
 
-use Artwork\Core\Database\Models\CanSubstituteBaseModel;
-use Artwork\Core\Database\Models\Model;
-use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Contracts\Permission as PermissionContract;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
-readonly class PermissionRepository extends BaseRepository
+class PermissionRepository extends BaseRepository
 {
     public function getPermissionsGroupedByPermissionGroup(): Collection
     {

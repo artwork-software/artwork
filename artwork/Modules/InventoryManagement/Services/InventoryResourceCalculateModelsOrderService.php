@@ -26,7 +26,7 @@ class InventoryResourceCalculateModelsOrderService
                 &$orderedModels,
                 $movingModel
             ): void {
-                if ($model->id === $movingModel->id) {
+                if ($model->getAttribute('id') === $movingModel->getAttribute('id')) {
                     return;
                 }
 

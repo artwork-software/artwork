@@ -1,4 +1,5 @@
 <template>
+
     <tr draggable="true"
         @dragover="itemDragOver"
         @dragleave="itemDragLeave"
@@ -11,6 +12,9 @@
             </div>
         </td>
     </tr>
+    <tr v-if="destinationIndex !== maxIndex">
+        <td class="empty-row-xxs-td"></td>
+    </tr>
 </template>
 <script setup>
 import {IconDragDrop} from "@tabler/icons-vue";
@@ -19,7 +23,8 @@ import {computed, ref} from "vue";
 const emits = defineEmits(['itemRequestsDragMove']),
     props = defineProps({
         colspan: Number,
-        destinationIndex: Number
+        destinationIndex: Number,
+        maxIndex: Number
     }),
     draggedOver = ref(false),
     dragOverClass = computed(() => {

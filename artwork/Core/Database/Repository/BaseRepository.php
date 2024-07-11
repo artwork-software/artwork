@@ -5,12 +5,37 @@ namespace Artwork\Core\Database\Repository;
 use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
+use BadMethodCallException;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
 {
+    public function getNewModelInstance(): Model
+    {
+        throw new BadMethodCallException(
+            'Implement in derived repository. Copy already derived functions and adapt.'
+        );
+    }
+
+    /**
+     * base builder return type is required for some unit tests where orderBy or count has to be tested
+     * which are only mixed into the eloquent builder so the mock breaks while configuring methods
+     * sadly we can't use addMethods on the mock as its deprecated and will be removed in next
+     * PHPUnit version
+     *
+     * example @see CraftInventoryCategoryRepositoryTest::testGetAllByCraftIdOrderedByOrder()
+     **/
+    public function getNewModelQuery(): BaseBuilder|Builder
+    {
+        throw new BadMethodCallException(
+            'Implement in derived repository. Copy already derived functions and adapt.'
+        );
+    }
+
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
     {
         $model->save();

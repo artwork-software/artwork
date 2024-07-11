@@ -8,12 +8,6 @@ use Illuminate\Validation\Rule;
 
 class UpdatePermissionPresetRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        //authorized by web.php middleware
-        return true;
-    }
-
     /**
      * @return array<string, mixed>
      */

@@ -44,7 +44,6 @@ class ContractController extends Controller
             $query->where('user_id', Auth::id());
         })->get();
         $contracts = $contracts->merge($accessing_contracts);
-        //dd(ContractResource::collection($contracts)->resolve());
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts)->resolve(),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
@@ -313,7 +312,6 @@ class ContractController extends Controller
                         'order' => 1
                     ]);
                 } else {
-                    //dd($task_obj);
                     $task = Task::where('id', $task_obj->id)->update(['done' => $task_obj->done]);
                 }
             }

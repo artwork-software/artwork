@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class PermissionPresetRepository extends BaseRepository
+class PermissionPresetRepository extends BaseRepository
 {
     public function getPermissionPresets(): Collection
     {

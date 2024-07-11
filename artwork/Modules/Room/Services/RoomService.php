@@ -38,8 +38,10 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use stdClass;
 
 readonly class RoomService
 {
@@ -49,7 +51,10 @@ readonly class RoomService
 
     public function save(Room $room): Room
     {
-        return $this->roomRepository->save($room);
+        /** @var Room $room */
+        $room = $this->roomRepository->save($room);
+
+        return $room;
     }
 
     public function delete(Room $room): bool
@@ -382,11 +387,86 @@ readonly class RoomService
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        CalendarFilter $calendarFilter,
+        ?CalendarFilter $calendarFilter,
         ?Project $project = null,
     ): Collection {
+
+        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+            $room,
+            $calendarFilter,
+            $project
+        );
+        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
+        $actualEvents = [];
+
+        $roomEventsQuery->where(function ($query) use ($calendarPeriod): void {
+            $query->where(function ($q) use ($calendarPeriod): void {
+                // Events, die vor der Periode beginnen und nach der Periode enden
+                $q->where('start_time', '<', $calendarPeriod->start)
+                    ->where('end_time', '>', $calendarPeriod->end);
+            })->orWhere(function ($q) use ($calendarPeriod): void {
+                // Events, die innerhalb der Periode starten oder enden
+                $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+            });
+        });
+
+        $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
+            // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $event->start_time;
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $event;
+            }
+        });
+
+        foreach ($actualEvents as $key => $value) {
+            $eventsForRoom[$key] = [
+                'roomName' => $room->name,
+                'events' => CalendarShowEventResource::collection($value)
+            ];
+        }
+        return collect($eventsForRoom);
+    }
+
+    public function collectEventsForRoomOnSpecificDay(
+        Room $room,
+        Carbon $date,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project = null,
+    ): Collection {
+        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+            $room,
+            $calendarFilter,
+            $project
+        );
+        [$startDate, $endDate] = app()->get(UserService::class)->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
+            $query->where(function ($q) use ($calendarPeriod, $date): void {
+                $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                    ->whereDate('start_time', $date);
+            })->orWhere(function ($q) use ($calendarPeriod, $date): void {
+                $q->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end])
+                    ->whereDate('end_time', $date);
+            });
+        });
+
+        return  $roomEventsQuery->get();
+    }
+
+    private function buildRoomCollectionBaseQuery(
+        Room $room,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project,
+    ): HasMany {
         if (!$calendarFilter) {
-            $calendarFilter = new \stdClass();
+            $calendarFilter = new stdClass();
         }
 
         $isLoud = $calendarFilter->is_loud ?? false;
@@ -399,21 +479,8 @@ readonly class RoomService
         $areaIds = $calendarFilter->areas ?? null;
         $roomAttributeIds = $calendarFilter->room_attributes ?? null;
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
-        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
-        $actualEvents = [];
 
         $roomEventsQuery = $room->events()
-            ->where(function ($query) use ($calendarPeriod): void {
-                $query->where(function ($q) use ($calendarPeriod): void {
-                    // Events, die vor der Periode beginnen und nach der Periode enden
-                    $q->where('start_time', '<', $calendarPeriod->start)
-                        ->where('end_time', '>', $calendarPeriod->end);
-                })->orWhere(function ($q) use ($calendarPeriod): void {
-                    // Events, die innerhalb der Periode starten oder enden
-                    $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-                });
-            })
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -458,27 +525,7 @@ readonly class RoomService
         // order $roomEventsQuery by start_time
         $roomEventsQuery->orderBy('start_time', 'asc');
 
-        $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-            // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
-            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                $calendarPeriod->start :
-                $event->start_time;
-            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
-            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
-
-            foreach ($eventPeriod as $date) {
-                $dateKey = $date->format('d.m.Y');
-                $actualEvents[$dateKey][] = $event;
-            }
-        });
-
-        foreach ($actualEvents as $key => $value) {
-            $eventsForRoom[$key] = [
-                'roomName' => $room->name,
-                'events' => CalendarShowEventResource::collection($value)
-            ];
-        }
-        return collect($eventsForRoom);
+        return $roomEventsQuery;
     }
 
     //@todo: fix phpcs error - complexity too high
@@ -511,19 +558,7 @@ readonly class RoomService
 
 
         $room->events()->with('shifts')
-            ->without(['created_by', 'shift_relevant_event_types']) // Lade die Schichten der Events vor
-            /*->whereHas('shifts', function ($query) use ($calendarPeriod): void {
-                $query->where(function ($q) use ($calendarPeriod): void {
-                    // Schichten, die vor der Periode beginnen und nach der Periode enden
-                    $q->where('start_date', '<', $calendarPeriod->start)
-                        ->where('end_date', '>', $calendarPeriod->end);
-                })->orWhere(function ($q) use ($calendarPeriod): void {
-                    // Schichten, die innerhalb der Periode starten oder enden
-                    $q->whereBetween('start_date', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_date', [$calendarPeriod->start, $calendarPeriod->end]);
-                });
-            })*/
-            // Weitere Bedingungen und Filter wie vorher
+            ->without(['created_by', 'shift_relevant_event_types'])
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
@@ -554,7 +589,6 @@ readonly class RoomService
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-                // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
                 $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                     $calendarPeriod->start :
                     $event->start_time;
@@ -570,12 +604,10 @@ readonly class RoomService
             });
 
         foreach ($actualEvents as $key => $value) {
-            // check if $value is already in the array $eventsForRoom[$key]['events] if yes then skip
             if (isset($eventsForRoom[$key])) {
                 $eventsForRoom[$key]['events'] = CalendarShowEventInShiftPlan::collection(
                     collect($eventsForRoom[$key]['events'])->merge($value)->unique()
                 );
-                continue;
             }
         }
         return collect($eventsForRoom);
@@ -595,8 +627,8 @@ readonly class RoomService
                 $this->collectEventsForRoom(
                     room: $room,
                     calendarPeriod: $calendarPeriod,
-                    project: $project,
-                    calendarFilter: $calendarFilter
+                    calendarFilter: $calendarFilter,
+                    project: $project
                 )
             );
         }
@@ -673,9 +705,9 @@ readonly class RoomService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        ?CalendarFilter $calendarFilter,
+        User $user
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $calendarData = $calendarService->createCalendarData(
             $startDate,
@@ -689,7 +721,7 @@ readonly class RoomService
             $eventTypeService,
             $areaService,
             $projectService,
-            $calendarFilter,
+            $user->calendar_filter,
             $room
         );
 

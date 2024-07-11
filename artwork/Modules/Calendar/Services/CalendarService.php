@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-readonly class CalendarService
+class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
@@ -152,7 +152,7 @@ readonly class CalendarService
     /**
      * @return array<string, mixed>
      */
-    public function createCalendarData(
+    public function createCalendarDataWithoutEvents(
         Carbon $startDate,
         Carbon $endDate,
         UserService $userService,
@@ -195,7 +195,53 @@ readonly class CalendarService
             'selectedDate' => $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
                 $startDate->format('Y-m-d') :
                 null,
-            'roomsWithEvents' => empty($room) ?
+            'filterOptions' => $filterService->getCalendarFilterDefinitions(
+                $roomCategoryService,
+                $roomAttributeService,
+                $eventTypeService,
+                $areaService,
+                $projectService,
+                $roomService
+            ),
+            'personalFilters' => $filterController->index(),
+            'user_filters' => $userService->getAuthUser()->calendar_filter,
+        ];
+    }
+
+    public function createCalendarData(
+        Carbon $startDate,
+        Carbon $endDate,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomService $roomService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        EventTypeService $eventTypeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
+        ?Room $room = null,
+        ?Project $project = null,
+    ): array {
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $data = $this->createCalendarDataWithoutEvents(
+            $startDate,
+            $endDate,
+            $userService,
+            $filterService,
+            $filterController,
+            $roomService,
+            $roomCategoryService,
+            $roomAttributeService,
+            $eventTypeService,
+            $areaService,
+            $projectService,
+            $calendarFilter,
+            $room,
+            $project,
+        );
+        $data['roomsWithEvents'] = $room === null ?
                 $roomService->collectEventsForRooms(
                     roomsWithEvents:  $roomService->getFilteredRooms(
                         $startDate,
@@ -211,21 +257,11 @@ readonly class CalendarService
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
                     project: $project,
-                ),
-            'eventsWithoutRoom' => empty($room) ?
+                );
+            $data['eventsWithoutRoom'] = $room === null ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
-                [],
-            'filterOptions' => $filterService->getCalendarFilterDefinitions(
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService,
-                $roomService
-            ),
-            'personalFilters' => $filterController->index(),
-            'user_filters' => $userService->getAuthUser()->calendar_filter,
-        ];
+                [];
+        return $data;
     }
 
     public function getEventsAtAGlance($startDate, $endDate): Collection

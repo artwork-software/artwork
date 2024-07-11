@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class DepartmentRepository extends BaseRepository
+class DepartmentRepository extends BaseRepository
 {
     /**
      * @param string $query

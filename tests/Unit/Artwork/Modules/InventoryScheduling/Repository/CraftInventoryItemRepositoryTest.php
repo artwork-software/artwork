@@ -5,7 +5,7 @@ namespace Tests\Unit\Artwork\Modules\InventoryScheduling\Repository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemRepository;
 use Illuminate\Database\Eloquent\Builder;
-use \Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use PHPUnit\Framework\TestCase;
 use Throwable;

@@ -63,7 +63,10 @@ class EventTypeService
 
     public function save(EventType $eventType): EventType
     {
-        return $this->eventTypeRepository->save($eventType);
+        /** @var EventType $eventType */
+        $eventType = $this->eventTypeRepository->save($eventType);
+
+        return $eventType;
     }
 
     public function findByName(?string $name): ?EventType

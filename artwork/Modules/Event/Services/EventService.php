@@ -797,7 +797,7 @@ readonly class EventService
                 $eventTypeService,
                 $areaService,
                 $projectService,
-                $calendarFilter,
+                $user->calendar_filter,
             );
         }
 

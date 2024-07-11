@@ -36,6 +36,7 @@ jobs:
           files: "**.php"
           phpcs_path: php vendor/bin/phpcs
           standard: phpcs.xml
+          scope: 'file'
 
   phpstan:
     runs-on: ubuntu-latest

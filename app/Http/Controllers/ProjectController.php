@@ -1837,10 +1837,7 @@ class ProjectController extends Controller
         $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         }, 'components' => function ($query): void {
-            $query->orderBy('order');
-        }, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
+            $query->orderBy('order');}, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {$query->where('project_id', $project->id);}]);
 
         $projectTabComponents = $projectTab->components()->with('component')->get()->concat(
             $projectTab->sidebarTabs->flatMap->componentsInSidebar->unique('id')

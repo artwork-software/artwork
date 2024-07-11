@@ -91,6 +91,7 @@ use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellCo
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
+use Artwork\Modules\InventorySetting\Http\Controller\InventorySettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -1132,6 +1133,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'shift/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevant']
         )->name('event-type.update.relevant');
+        Route::patch(
+            'inventory/update/relevant/event-type/{eventType}',
+            [EventTypeController::class, 'updateRelevantForInventory']
+        )->name('event-type.update.inventory.relevant');
     });
 
     Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
@@ -1348,6 +1353,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'inventory-management'], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
+
+        Route::group(['prefix' => 'settings'], function (): void {
+            Route::get('/index', [InventorySettingsController::class, 'index'])
+                ->name('inventory-management.settings');
+        });
 
         Route::group(['prefix' => 'inventory'], function (): void {
             Route::group(['prefix' => 'column'], function (): void {

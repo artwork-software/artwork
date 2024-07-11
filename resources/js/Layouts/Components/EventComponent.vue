@@ -16,14 +16,14 @@
                     <div v-else class="flex items-center">
                         {{ $t('Created by')}}
                         <div v-if="this.event.created_by">
-                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"
-                                                width="7" class="ml-2"/>
+                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"  width="7" class="ml-2"/>
                         </div>
                         <div class="xsLight ml-3" v-else>
                             {{ $t('deleted User')}}
                         </div>
                     </div>
                 </div>
+
                 <div v-else class="flex-grow headline1">
                     {{ $t('Event')}}
                 </div>

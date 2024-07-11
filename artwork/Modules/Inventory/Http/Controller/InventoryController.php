@@ -54,7 +54,6 @@ class InventoryController extends Controller
     }
 
     public function scheduling(
-        User $user,
         ProjectService $projectService,
         RoomService $roomService,
         UserService $userService,
@@ -65,8 +64,7 @@ class InventoryController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
     ): Response {
-        [$startDate, $endDate] =
-            $userService->getUserCalendarFilterDatesOrDefault($user);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($this->authManager->user());
 
         $showCalendar = $this->calendarService->createCalendarData(
             $startDate,
@@ -80,7 +78,7 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             $projectService,
-            $user->calendar_filter
+            $this->authManager->user()->calendar_filter
         );
 
         $crafts = $this->craftService->getCraftsWithInventory();

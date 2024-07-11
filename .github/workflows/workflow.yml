@@ -31,14 +31,13 @@ jobs:
           extensions: gd, zip, bcmath, pcntl
       - name: Composer Install
         run: composer install
-      - name: Install PHP_CodeSniffer
-        run: |
-          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
-          php phpcs.phar --version
       - uses: tinovyatkin/action-php-codesniffer@v1
+        run:
+          pwd
+          cat phpcs.xml
         with:
           files: "**.php" # you may customize glob as needed
-          phpcs_path: php phpcs.phar
+          phpcs_path: vendor/bin/phpcs
           standard: phpcs.xml
 
   phpstan:

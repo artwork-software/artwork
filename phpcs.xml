@@ -32,7 +32,6 @@
         </properties>
     </rule>
 
-    <config name="installed_paths" value="../../slevomat/coding-standard"/>
     <!-- SlevomatCodingStandard rules -->
     <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint" />
     <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingTraversableTypeHintSpecification" />

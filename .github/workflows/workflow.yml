@@ -28,6 +28,7 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: 8.2
+          php_extensions: gd zip bcmath pcntl
       - name: Install PHP_CodeSniffer
         run: |
           curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar

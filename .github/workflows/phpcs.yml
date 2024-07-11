@@ -33,4 +33,3 @@ jobs:
         with:
           files: "**.php"
           phpcs_path: php vendor/bin/phpcs
-          standard: phpcs.xml

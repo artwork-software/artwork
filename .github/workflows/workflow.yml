@@ -10,6 +10,10 @@ on:
     tags:
       - 'v*'
   pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
     branches:
       - "*"
 

@@ -7,9 +7,9 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Repositories\EventTypeRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class EventTypeService
+class EventTypeService
 {
-    public function __construct(private EventTypeRepository $eventTypeRepository)
+    public function __construct(private readonly EventTypeRepository $eventTypeRepository)
     {
     }
 

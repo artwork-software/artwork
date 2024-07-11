@@ -10,9 +10,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
-readonly class AreaService
+class AreaService
 {
-    public function __construct(private AreaRepository $areaRepository)
+    public function __construct(private readonly AreaRepository $areaRepository)
     {
     }
 

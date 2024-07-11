@@ -57,6 +57,7 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -74,6 +75,7 @@ class EventController extends Controller
         private readonly NotificationService $notificationService,
         private readonly BudgetService $budgetService,
         private readonly EventService $eventService,
+        private readonly RoomService $roomService,
         private readonly ShiftService $shiftService,
         private readonly TimelineService $timelineService,
         private readonly ProjectTabService $projectTabService,
@@ -117,6 +119,22 @@ class EventController extends Controller
                 $request->boolean('atAGlance')
             )
         );
+    }
+
+    public function viewEventsForDateAndRoom(Request $request, Room $room, string $day): JsonResponse
+    {
+        $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
+            $room,
+            Carbon::parse($day),
+            $request->user()->getCalendarFilter()
+        );
+        $return = [];
+        foreach ($roomsWithData as $event) {
+                $return[] = new CalendarEventResource($event);
+        }
+        return new JsonResponse(['data' =>
+            $return
+        ]);
     }
 
     public function viewShiftPlan(
@@ -184,7 +202,7 @@ class EventController extends Controller
             ->whereDate(
                 'event_start_day',
                 Carbon::now()->format('Y-m-d')
-            )->with(['event','event.project','event.room'])->get();
+            )->with(['event', 'event.project', 'event.room'])->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
@@ -201,7 +219,7 @@ class EventController extends Controller
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
             \session()->get('locale') ??
-                config('app.fallback_locale')
+            config('app.fallback_locale')
         )->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
@@ -472,7 +490,7 @@ class EventController extends Controller
                                             'start' =>
                                                 Carbon::parse($firstShift->event_start_day . '
                                                  ' . $firstShift->start)
-                                                ->format('d.m.Y H:i'),
+                                                    ->format('d.m.Y H:i'),
                                             'end' =>
                                                 Carbon::parse($lastShift->event_end_day . '
                                                 ' . $lastShift->end)->format('d.m.Y H:i')
@@ -542,7 +560,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -592,7 +610,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -666,7 +684,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1760,7 +1778,7 @@ class EventController extends Controller
     public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Events', [
-            'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
+            'trashed_events' => Event::onlyTrashed()->get()->map(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->eventName,
                 'project' => $event->project,

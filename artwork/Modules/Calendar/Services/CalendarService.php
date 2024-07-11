@@ -193,26 +193,6 @@ class CalendarService
             'selectedDate' => $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
                 $startDate->format('Y-m-d') :
                 null,
-            'roomsWithEvents' => empty($room) ?
-                $roomService->collectEventsForRooms(
-                    roomsWithEvents:  $roomService->getFilteredRooms(
-                        $startDate,
-                        $endDate,
-                        $calendarFilter
-                    ),
-                    calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
-                    project: $project,
-                ) :
-                $roomService->collectEventsForRoom(
-                    room: $room,
-                    calendarPeriod: $calendarPeriod,
-                    project: $project,
-                    calendarFilter: $calendarFilter,
-                ),
-            'eventsWithoutRoom' => empty($room) ?
-                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
-                [],
             'filterOptions' => $filterService->getCalendarFilterDefinitions(
                 $roomCategoryService,
                 $roomAttributeService,

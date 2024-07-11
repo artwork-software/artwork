@@ -786,43 +786,16 @@ readonly class EventService
 
         return EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
             ->setDateValue($showCalendar['dateValue'])
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
-            ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-            ->setEventsAtAGlance(
-                $atAGlance ?
-                    $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                    SupportCollection::make()
-            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
                     $endDate,
                     $userService->getAuthUser()->calendar_filter
                 ),
-            )
-            ->setEvents(
-                CalendarEventDto::newInstance()
-                    ->setAreas($showCalendar['filterOptions']['areas'])
-                    ->setProjects($showCalendar['filterOptions']['projects'])
-                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
-                    ->setEvents(
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            SupportCollection::make(
-                                CalendarEventResource::collection(
-                                    $calendarService->getEventsOfInterval(
-                                        $startDate,
-                                        $endDate
-                                    )
-                                )->resolve()
-                            ) :
-                            SupportCollection::make()
-                    )
             )
             ->setFilterOptions($showCalendar["filterOptions"],)
             ->setPersonalFilters($showCalendar['personalFilters'])

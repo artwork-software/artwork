@@ -14,9 +14,9 @@ use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
-readonly class FilterService
+class FilterService
 {
-    public function __construct(private FilterRepository $filterRepository)
+    public function __construct(private readonly FilterRepository $filterRepository)
     {
     }
 

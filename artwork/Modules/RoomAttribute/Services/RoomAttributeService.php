@@ -5,9 +5,9 @@ namespace Artwork\Modules\RoomAttribute\Services;
 use Artwork\Modules\RoomAttribute\Repositories\RoomAttributeRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class RoomAttributeService
+class RoomAttributeService
 {
-    public function __construct(private RoomAttributeRepository $roomAttributeRepository)
+    public function __construct(private readonly RoomAttributeRepository $roomAttributeRepository)
     {
     }
 

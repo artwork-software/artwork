@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Artwork\Modules\InventoryScheduling\Http\Controller;
 
+use App\Http\Controllers\Controller;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryScheduling\Http\Requests\StoreMultipleInventoryItemsInEvent;
 use Artwork\Modules\InventoryScheduling\Models\CraftInventoryItemEvent;
@@ -40,6 +43,19 @@ class CraftInventoryItemEventController extends Controller
         $this->craftInventoryItemEventService->storeMultiple(
             $request->collect('events'),
             $this->authManager->id()
+        );
+    }
+
+    public function dropItemToEvent(
+        DropItemOnInventoryRequest $request,
+        CraftInventoryItem $item,
+        Event $event
+    ): void {
+        $this->craftInventoryItemEventService->dropItemToEvent(
+            $item,
+            $event,
+            $this->authManager->id(),
+            $request->integer('quantity')
         );
     }
 }

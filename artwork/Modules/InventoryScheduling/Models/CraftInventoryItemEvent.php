@@ -6,7 +6,9 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\User\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -14,8 +16,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int $event_id
  * @property int $quantity
  * @property string $comment
- * @property \Carbon\Carbon $start
- * @property \Carbon\Carbon $end
+ * @property Carbon $start
+ * @property Carbon $end
  * @property bool $is_all_day
  * @property int $user_id
  * @property CraftInventoryItem $item
@@ -44,18 +46,33 @@ class CraftInventoryItemEvent extends Model
     ];
 
 
-    public function item(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function item(): BelongsTo
     {
-        return $this->belongsTo(CraftInventoryItem::class, 'craft_inventory_item_id', 'id', 'craft_inventory_items');
+        return $this->belongsTo(
+            CraftInventoryItem::class,
+            'craft_inventory_item_id',
+            'id',
+            'craft_inventory_items'
+        );
     }
 
-    public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class, 'event_id', 'id', 'events');
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        );
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
+        return $this->belongsTo(
+            User::class,
+            'user_id',
+            'id',
+            'users'
+        );
     }
 }

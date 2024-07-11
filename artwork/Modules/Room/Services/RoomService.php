@@ -41,9 +41,9 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
-readonly class RoomService
+class RoomService
 {
-    public function __construct(private RoomRepository $roomRepository)
+    public function __construct(private readonly RoomRepository $roomRepository)
     {
     }
 

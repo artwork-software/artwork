@@ -22,12 +22,12 @@ use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-readonly class UserService
+class UserService
 {
     /**
      * @param UserRepository $userRepository
      */
-    public function __construct(private UserRepository $userRepository)
+    public function __construct(private readonly UserRepository $userRepository)
     {
     }
 

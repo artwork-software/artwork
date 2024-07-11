@@ -22,7 +22,6 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CraftController;
-use App\Http\Controllers\CraftInventoryItemEventController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
@@ -91,6 +90,7 @@ use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellCo
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
+use Artwork\Modules\InventoryScheduling\Http\Controller\CraftInventoryItemEventController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -1454,8 +1454,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('inventory-management.scheduling');
 
         // inventory.dropItemToEvent
-        Route::post('/inventory/dropItemToEvent/{item}/{event}', [InventoryController::class, 'dropItemToEvent'])
-            ->name('inventory.dropItemToEvent');
+        Route::post(
+            '/inventory/dropItemToEvent/{item}/{event}',
+            [
+                CraftInventoryItemEventController::class,
+                'dropItemToEvent'
+            ]
+        )->name('inventory.dropItemToEvent');
 
         // inventory.events.destroy
         Route::delete(

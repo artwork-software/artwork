@@ -45,10 +45,6 @@ class CraftInventoryItemEventService
         return $craftInventoryItemEvent;
     }
 
-    public function createNewCraftInventoryItem(array $attributes = []): CraftInventoryItemEvent
-    {
-        return new CraftInventoryItemEvent($attributes);
-    }
 
     public function dropItemToEvent(
         CraftInventoryItem $item,
@@ -56,8 +52,7 @@ class CraftInventoryItemEventService
         int $userId,
         int $quantity
     ): CraftInventoryItemEvent {
-        /** @todo use repo getNewModelInstance */
-        $itemEvent = $this->createNewCraftInventoryItem([
+        $itemEvent = $this->craftInventoryItemEventRepository->getNewModelInstance([
             'craft_inventory_item_id' => $item->getAttribute('id'),
             'event_id' => $event->getAttribute('id'),
             'start' => $event->getAttribute('start_time'),
@@ -96,7 +91,7 @@ class CraftInventoryItemEventService
             $eventObject = $this->eventService->findEventById($event['id']);
             $items = $event['items'] ?? [];
             foreach ($items as $item) {
-                $itemEvent = $this->createNewCraftInventoryItem([
+                $itemEvent = $this->craftInventoryItemEventRepository->getNewModelInstance([
                     'craft_inventory_item_id' => $item['id'],
                     'event_id' => $eventObject->getAttribute('id'),
                     'start' => $eventObject->getAttribute('start_time'),

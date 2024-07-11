@@ -17,7 +17,6 @@ use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
-use function Clue\StreamFilter\fun;
 
 readonly class ChecklistService
 {

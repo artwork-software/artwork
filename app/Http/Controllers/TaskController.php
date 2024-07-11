@@ -3,32 +3,24 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\Checklist\Http\Resources\ChecklistIndexResource;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\MoneySource\Services\MoneySourceService;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Task\Http\Requests\FilterOwnTasksRequest;
 use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
 use Artwork\Modules\Task\Http\Requests\UpdateTaskOrderInChecklistRequest;
 use Artwork\Modules\Task\Http\Requests\UpdateTaskRequest;
 use Artwork\Modules\Task\Http\Resources\ShowOwnTasksResource;
 use Artwork\Modules\Task\Http\Resources\TaskIndexResource;
-use Artwork\Modules\Task\Http\Resources\TaskShowResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
-use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\AuthManager;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -50,22 +42,24 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
-    public function indexOwnTasks(ProjectTabService $projectTabService): Response|ResponseFactory
-    {
+    public function indexOwnTasks(
+        ProjectTabService $projectTabService,
+        FilterOwnTasksRequest $request
+    ): Response|ResponseFactory {
 
         $checklists = $this->checklistService->getChecklistsWithMyTask(
             $this->authManager->id(),
-            \request()->integer('filter')
+            $request->integer('filter')
         );
 
         $privateChecklists = $this->checklistService->getPrivateChecklists(
             $this->authManager->id(),
-            \request()->integer('filter')
+            $request->integer('filter')
         );
 
         $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks(
             $this->authManager->id(),
-            \request()->integer('filter')
+            $request->integer('filter')
         );
 
 

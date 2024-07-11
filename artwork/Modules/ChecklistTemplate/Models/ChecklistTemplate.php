@@ -17,6 +17,8 @@ use Laravel\Scout\Searchable;
  * @property int $user_id
  * @property string $created_at
  * @property string $updated_at
+ * @property TaskTemplate[] $task_templates
+ * @property User[] $users
  */
 class ChecklistTemplate extends Model
 {

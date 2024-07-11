@@ -137,14 +137,12 @@ class ChecklistTemplateController extends Controller
 
     public function duplicate(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
-        $newChecklistTemplate = $this->checklistTemplateService->duplicate(
-            $checklistTemplate,
-            $this->authManager->id()
-        );
-
         $this->taskTemplateService->duplicateTaskTemplates(
             $checklistTemplate,
-            $newChecklistTemplate
+            $this->checklistTemplateService->duplicate(
+                $checklistTemplate,
+                $this->authManager->id()
+            )
         );
 
         return Redirect::back();

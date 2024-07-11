@@ -84,10 +84,9 @@ class ChecklistController extends Controller
                 'deadline' => Carbon::now()->addDays(3)
             ]);
             $task->task_users()->sync(
-                collect($template->users)
-                    ->map(function ($user) {
-                        return $user['id'];
-                    })
+                $template->users->map(function ($user) {
+                    return $user['id'];
+                })
             );
         }
 

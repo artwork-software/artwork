@@ -12,9 +12,6 @@ readonly class MoneySourceTaskService
     {
     }
 
-
-
-
     public function getMyMoneySourceTasks(
         int $userId,
         int $filter
@@ -24,14 +21,11 @@ readonly class MoneySourceTaskService
             $doneTask = true;
         }
 
-        return MoneySourceTask::with(['money_source_task_users', 'money_source'])
-            ->whereHas('money_source_task_users', function ($q) use ($userId): void {
-                $q->where('user_id', $userId);
-            })
-            ->where('done', $doneTask)
-            ->when($filter === 2, function ($q): void {
-                $q->orderBy('deadline');
-            })
-            ->get();
+        return $this->moneySourceTaskRepository->getMyMoneySourceTasks($userId, $filter, $doneTask);
+    }
+
+    public function markAsDone(MoneySourceTask $moneySourceTask): void
+    {
+        $moneySourceTask->update(['done' => true]);
     }
 }

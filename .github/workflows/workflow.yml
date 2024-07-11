@@ -24,13 +24,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Composer Setup
-        uses: php-actions/composer@v6
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          php_version: 8.2
-          php_extensions: gd zip bcmath pcntl
+          php-version: 8.2
+          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug, pcntl
       - name: Install PHP_CodeSniffer
         run: |
+          composer install
           curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
           php phpcs.phar --version
       - uses: tinovyatkin/action-php-codesniffer@v1

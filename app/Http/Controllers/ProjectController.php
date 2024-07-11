@@ -1834,11 +1834,7 @@ class ProjectController extends Controller
         $headerObject->project = $project;
         $loadedProjectInformation = [];
 
-        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }, 'components' => function ($query): void {
-            $query->orderBy('order');
-        }, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
+        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {$query->where('project_id', $project->id);}, 'components' => function ($query): void {$query->orderBy('order');}, 'sidebarTabs.componentsInSidebar.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         }]);
 

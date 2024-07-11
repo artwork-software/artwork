@@ -1939,7 +1939,7 @@ class ProjectController extends Controller
             }
         }
 
-        $groupOutput = $project->is_group ? '' : $this->getGroupOutput($project);
+        $groupOutput = $this->getGroupOutput($project);
 
         $this->addHistoryToHeaderObject($headerObject, $project);
 
@@ -2037,10 +2037,10 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function getGroupOutput($project): string
+    private function getGroupOutput($project): ?Project
     {
         $group = DB::table('project_groups')->select('*')->where('project_id', $project->id)->first();
-        return $group ? Project::find($group->group_id) : '';
+        return $group ? Project::find($group->group_id) : null;
     }
 
     private function addHistoryToHeaderObject(&$headerObject, $project): void

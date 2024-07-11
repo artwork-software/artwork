@@ -30,4 +30,7 @@ jobs:
 
       - name: Sniff
         uses: tinovyatkin/action-php-codesniffer@v1
-
+        with:
+          files: "**.php"
+          phpcs_path: php vendor/bin/phpcs
+          standard: phpcs.xml

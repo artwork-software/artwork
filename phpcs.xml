@@ -14,7 +14,6 @@
     <exclude-pattern>./database/migrations/</exclude-pattern>
     <exclude-pattern>storage/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>
-    <exclude-pattern>resources/</exclude-pattern>
     <exclude-pattern>node_modules/</exclude-pattern>
     <exclude-pattern>**/*.js</exclude-pattern>
     <exclude-pattern>**/*.vue</exclude-pattern>

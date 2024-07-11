@@ -31,7 +31,7 @@ jobs:
       - uses: tinovyatkin/action-php-codesniffer@v1
         with:
           files: "**.php" # you may customize glob as needed
-          phpcs_path: php phpcs.phar --standard=phpcs.xml
+          phpcs_path: phpcs.phar --standard=phpcs.xml
           standard: phpcs.xml
 
   phpstan:

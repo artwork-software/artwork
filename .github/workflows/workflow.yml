@@ -38,7 +38,6 @@ jobs:
         with:
           files: "**.php" # you may customize glob as needed
           phpcs_path: php vendor/bin/phpcs
-          standard: phpcs.xml
 
   phpstan:
     name: phpstan

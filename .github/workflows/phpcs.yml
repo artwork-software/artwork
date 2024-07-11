@@ -1,0 +1,36 @@
+name: PHP CS
+
+on:
+  push:
+    branches:
+      - dev
+      - pipeline
+  pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # important!
+
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: gd zip bcmath pcntl
+
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest --no-interaction
+
+      - name: Sniff
+        uses: tinovyatkin/action-php-codesniffer@v1
+        with:
+          files: "**.php"
+          phpcs_path: php vendor/bin/phpcs
+          standard: phpcs.xml

@@ -32,9 +32,6 @@ jobs:
       - name: Composer Install
         run: composer install
       - uses: tinovyatkin/action-php-codesniffer@v1
-        run:
-          pwd
-          cat phpcs.xml
         with:
           files: "**.php" # you may customize glob as needed
           phpcs_path: vendor/bin/phpcs

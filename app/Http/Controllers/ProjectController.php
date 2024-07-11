@@ -1830,7 +1830,6 @@ class ProjectController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService
     ): Response|ResponseFactory {
-        dd('abc');
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
         $loadedProjectInformation = [];

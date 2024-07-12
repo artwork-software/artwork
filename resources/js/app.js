@@ -9,8 +9,7 @@ import {resolvePageComponent} from "laravel-vite-plugin/inertia-helpers";
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n'
-import { provide } from 'vue';
-import { usePage } from '@inertiajs/vue3'; // oder wie auch immer Sie die Page-Props bekommen
+import mitt from "mitt";
 
 
 const svgColors = {
@@ -45,8 +44,6 @@ const i18n = VueI18n.createI18n({
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
-
-
 createInertiaApp({
     title: (title) => `${title}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue', {eager: true})),
@@ -54,7 +51,10 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route }})
+
         app.config.globalProperties.$svgColors = svgColors;
+        app.config.globalProperties.emitter = mitt();
+
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax)
         app.use(i18n)

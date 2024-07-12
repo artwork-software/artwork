@@ -30,7 +30,6 @@
 
 <script>
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
-import mitt from "mitt";
 
 export default {
     name: 'RoomWithEvents',
@@ -54,25 +53,17 @@ export default {
         }
     },
     async mounted() {
-        const emitter = mitt()
-        emitter.on('reloadCalendarCell', this.getEventsForReload)
-        await this.getEvents()
+        this.emitter.on('reloadCalendarCell', (event) => {
+            if (this.room.id === event.roomId && this.day.full_day === event.day) {
+                await this.getEvents();
+            }
+        });
+        await this.getEvents();
     },
     methods: {
         async getEvents() {
-                try {
-                    const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
-                    this.events = response.data.data;
-                } catch (error) {
-
-                }
-                this.isLoading = false;
-        },
-        async getEventsForReload(event){
-            console.log('abc');
-            this.isLoading = true;
             try {
-                const response = await axios.get(`/calendar/room/${event.roomId}/${event.day}`);
+                const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
                 this.events = response.data.data;
             } catch (error) {
 

@@ -53,17 +53,20 @@ export default {
         }
     },
     async mounted() {
-        await this.getEvents()
+        this.emitter.on('reloadCalendarCell', (event) => {
+            if (this.room.id === event.roomId && this.day.full_day === event.day) {
+                this.getEvents();
+            }
+        });
+        await this.getEvents();
     },
     methods: {
         async getEvents() {
-                try {
-                    const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
-                    this.events = response.data.data;
-                } catch (error) {
-
-                }
-                this.isLoading = false;
+            const response = await axios.get(
+                `/calendar/room/${this.room.id}/${this.day.full_day}/${this.project ? this.project.id : 0}`
+            );
+            this.events = response.data.data;
+            this.isLoading = false;
         },
         updateCheckedEvents(event) {
             this.$emit('check-event', event);

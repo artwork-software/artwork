@@ -445,8 +445,7 @@ readonly class RoomService
             $calendarFilter,
             $project
         );
-        [$startDate, $endDate] = app()->get(UserService::class)
-            ->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
+        [$startDate, $endDate] = app()->get(UserService::class)->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
             $query->where(function ($q) use ($calendarPeriod, $date): void {

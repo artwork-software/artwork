@@ -51,11 +51,11 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
-                        {{ event.eventName ?? event.project.name }}
+                        {{ event.eventName ?? event.project?.name }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.project?.state?.color"
-                             :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
+                             :class="[event.project?.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
                              class="rounded-full">
                         </div>
                     </div>
@@ -350,6 +350,7 @@ import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import IconLib from "@/Mixins/IconLib.vue";
+import dayjs from "dayjs";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -531,17 +532,59 @@ export default {
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;
         },
+        getDaysOfEvent(startDate, endDate) {
+            let days = [];
+            let start = new Date(startDate);
+            let end = new Date(endDate);
+            for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+                let dayParts = new Date(d).toISOString().slice(0, 10).split('-');
+                days.push(dayParts[2] + '.' + dayParts[1] + '.' + dayParts[0]);
+            }
+            return days;
+        },
         deleteEvent() {
+            let startDate = dayjs(this.event.start).format('YYYY-MM-DD'),
+                endDate = dayjs(this.event.end).format('YYYY-MM-DD'),
+                tmpEmitter = this.emitter,
+                tmpRoomId = this.event.roomId;
+
+            console.debug(startDate, endDate);
             if (this.type === 'main') {
                 this.$inertia.delete(route('events.delete', this.eventToDelete), {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.getDaysOfEvent(startDate, endDate).forEach(
+                            function (day) {
+                                tmpEmitter.emit(
+                                    'reloadCalendarCell',
+                                    {
+                                        day: day,
+                                        roomId: tmpRoomId
+                                    }
+                                );
+                            }
+                        );
+                    }
                 })
             }
             if (this.type === 'sub') {
                 this.$inertia.delete(route('subEvent.delete', this.eventToDelete), {
                     preserveScroll: true,
-                    preserveState: true
+                    preserveState: true,
+                    onSuccess: () => {
+                        this.getDaysOfEvent(startDate, endDate).forEach(
+                            function (day) {
+                                tmpEmitter.emit(
+                                    'reloadCalendarCell',
+                                    {
+                                        day: day,
+                                        roomId: tmpRoomId
+                                    }
+                                );
+                            }
+                        );
+                    }
                 })
             }
             this.deleteComponentVisible = false;

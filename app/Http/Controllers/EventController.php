@@ -123,8 +123,13 @@ class EventController extends Controller
         );
     }
 
-    public function viewEventsForDateAndRoom(Request $request, Room $room, string $day, ?Project $project = null): JsonResponse
-    {
+    public function viewEventsForDateAndRoom(
+        Request $request,
+        Room $room,
+        string $day,
+        ?Project $project = null
+    ): JsonResponse {
+        dd('test');
         $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
             $room,
             Carbon::parse($day),

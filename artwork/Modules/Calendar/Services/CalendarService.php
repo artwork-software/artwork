@@ -213,22 +213,21 @@ class CalendarService
      * @return array<string, mixed>
      */
     public function createCalendarData(
-        Carbon               $startDate,
-        Carbon               $endDate,
-        UserService          $userService,
-        FilterService        $filterService,
-        FilterController     $filterController,
-        RoomService          $roomService,
-        RoomCategoryService  $roomCategoryService,
+        Carbon $startDate,
+        Carbon $endDate,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomService $roomService,
+        RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        EventTypeService     $eventTypeService,
-        AreaService          $areaService,
-        ProjectService       $projectService,
-        ?CalendarFilter      $calendarFilter,
-        ?Room                $room = null,
-        ?Project             $project = null,
-    ): array
-    {
+        EventTypeService $eventTypeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
+        ?Room $room = null,
+        ?Project $project = null,
+    ): array {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $data = $this->createCalendarDataWithoutEvents(
             $startDate,
@@ -241,7 +240,8 @@ class CalendarService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService
+            $projectService,
+            $room
         );
         $data['roomsWithEvents'] = $room === null ?
             $roomService->collectEventsForRooms(
@@ -294,8 +294,7 @@ class CalendarService
         $endDate,
         ?Room $room,
         ?Project $project
-    ): Builder|HasMany
-    {
+    ): Builder|HasMany {
         $user = Auth::user();
         $calendarFilter = $user->shift_calendar_filter()->first();
 

@@ -153,22 +153,19 @@ class CalendarService
      * @return array<string, mixed>
      */
     public function createCalendarDataWithoutEvents(
-        Carbon               $startDate,
-        Carbon               $endDate,
-        UserService          $userService,
-        FilterService        $filterService,
-        FilterController     $filterController,
-        RoomService          $roomService,
-        RoomCategoryService  $roomCategoryService,
+        Carbon $startDate,
+        Carbon $endDate,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomService $roomService,
+        RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        EventTypeService     $eventTypeService,
-        AreaService          $areaService,
-        ProjectService       $projectService,
-        ?CalendarFilter      $calendarFilter,
-        ?Room                $room = null,
-        ?Project             $project = null,
-    ): array
-    {
+        EventTypeService $eventTypeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?Room $room = null,
+    ): array {
         $periodArray = [];
         foreach ((CarbonPeriod::create($startDate, $endDate)) as $period) {
             $periodArray[] = [
@@ -179,6 +176,8 @@ class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
             ];
         }
 
@@ -210,23 +209,25 @@ class CalendarService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function createCalendarData(
-        Carbon               $startDate,
-        Carbon               $endDate,
-        UserService          $userService,
-        FilterService        $filterService,
-        FilterController     $filterController,
-        RoomService          $roomService,
-        RoomCategoryService  $roomCategoryService,
+        Carbon $startDate,
+        Carbon $endDate,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        RoomService $roomService,
+        RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        EventTypeService     $eventTypeService,
-        AreaService          $areaService,
-        ProjectService       $projectService,
-        ?CalendarFilter      $calendarFilter,
-        ?Room                $room = null,
-        ?Project             $project = null,
-    ): array
-    {
+        EventTypeService $eventTypeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?CalendarFilter $calendarFilter,
+        ?Room $room = null,
+        ?Project $project = null,
+    ): array {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $data = $this->createCalendarDataWithoutEvents(
             $startDate,
@@ -240,9 +241,7 @@ class CalendarService
             $eventTypeService,
             $areaService,
             $projectService,
-            $calendarFilter,
-            $room,
-            $project,
+            $room
         );
         $data['roomsWithEvents'] = $room === null ?
             $roomService->collectEventsForRooms(
@@ -295,8 +294,7 @@ class CalendarService
         $endDate,
         ?Room $room,
         ?Project $project
-    ): Builder|HasMany
-    {
+    ): Builder|HasMany {
         $user = Auth::user();
         $calendarFilter = $user->shift_calendar_filter()->first();
 

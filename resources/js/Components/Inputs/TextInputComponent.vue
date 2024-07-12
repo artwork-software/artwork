@@ -4,6 +4,7 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="text"
+               :required="required"
                class="p-1.5 w-full text-sm peer border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0"
                :class="isSmall ? '' : 'h-12'"
                placeholder="placeholder"/>
@@ -32,6 +33,10 @@ export default defineComponent({
             required: true
         },
         isSmall: {
+            type: Boolean,
+            default: false
+        },
+        required: {
             type: Boolean,
             default: false
         }

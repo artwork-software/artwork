@@ -18,24 +18,26 @@ permissions:
 
 jobs:
   phpcs:
-    name: phpcs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Install PHP_CodeSniffer
-        run: |
-          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
-          php phpcs.phar --version
-      - uses: tinovyatkin/action-php-codesniffer@v1
+          fetch-depth: 0 # important!
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
         with:
-          files: "**.php" # you may customize glob as needed
-          phpcs_path: php phpcs.phar
+          php-version: '8.2'
+          extensions: gd zip bcmath pcntl
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest --no-interaction
+      - name: Sniff
+        uses: tinovyatkin/action-php-codesniffer@v1
+        with:
+          files: "**.php"
+          phpcs_path: php vendor/bin/phpcs
           standard: phpcs.xml
 
   phpstan:
-    name: phpstan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

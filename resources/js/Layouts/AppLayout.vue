@@ -466,7 +466,7 @@ export default {
             testModel: '',
             testModel2: '',
             testModel3: '',
-            testModel4: ''
+            testModel4: '',
         }
     },
     setup() {
@@ -483,7 +483,7 @@ export default {
         title: {
             type: String,
             default: 'Startseite'
-        }
+        },
     }
 }
 

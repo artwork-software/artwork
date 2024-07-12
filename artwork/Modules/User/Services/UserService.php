@@ -71,9 +71,8 @@ readonly class UserService
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        bool   $addVacationsAndAvailabilities = false
-    ): array
-    {
+        bool $addVacationsAndAvailabilities = false
+    ): array {
         $usersWithPlannedWorkingHours = [];
 
         /** @var User $user */
@@ -132,9 +131,9 @@ readonly class UserService
             $startDate = $week->copy()->startOfWeek();
             $endDate = $week->copy()->endOfWeek();
             $workingHours = $user->plannedWorkingHours(
-                    $startDate,
-                    $endDate
-                ) - $user->weekly_working_hours;
+                $startDate,
+                $endDate
+            ) - $user->weekly_working_hours;
             $weeklyWorkingHours[$week->format('W')] = $workingHours;
         }
 
@@ -151,19 +150,18 @@ readonly class UserService
      * @throws NotFoundExceptionInterface
      */
     public function getUserShiftPlanPageDto(
-        User                      $user,
-        CalendarService           $calendarService,
-        EventService              $eventService,
-        RoomService               $roomService,
-        EventTypeService          $eventTypeService,
-        ProjectService            $projectService,
+        User $user,
+        CalendarService $calendarService,
+        EventService $eventService,
+        RoomService $roomService,
+        EventTypeService $eventTypeService,
+        ProjectService $projectService,
         ShiftQualificationService $shiftQualificationService,
-        Carbon                    $selectedPeriodDate,
-        Carbon                    $selectedDate,
-        ?string                   $month,
-        ?string                   $vacationMonth
-    ): UserShiftPlanPageDto
-    {
+        Carbon $selectedPeriodDate,
+        Carbon $selectedDate,
+        ?string $month,
+        ?string $vacationMonth
+    ): UserShiftPlanPageDto {
         $hasUserShiftCalendarFilterDates = !is_null($user->shift_calendar_filter?->start_date) &&
             !is_null($user->shift_calendar_filter?->end_date);
         $startDate = $hasUserShiftCalendarFilterDates ?
@@ -248,11 +246,6 @@ readonly class UserService
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
-    }
-
-    public function getUserCalendarFilterDatesOrDefault(User $user): array
-    {
-        return $this->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
     }
 
     /**

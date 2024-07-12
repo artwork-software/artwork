@@ -6,6 +6,7 @@
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="date"
                dataformatas="dd.mm.yyyy"
+               :required="required"
                class="p-1.5 h-12 text-sm w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
     </InputLabelContainer>
 </template>
@@ -29,6 +30,11 @@ export default defineComponent({
         modelValue: {
             type: String,
             required: true
+        },
+        required: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
     emits: [

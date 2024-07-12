@@ -5,6 +5,7 @@ namespace Artwork\Modules\TaskTemplate\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $description
  * @property int $done
  * @property int $checklist_template_id
+ * @property Collection $task_users
  * @property string $created_at
  * @property string $updated_at
  */

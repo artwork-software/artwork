@@ -1,4 +1,6 @@
-<script>
+<script setup>
+import { ref, computed, provide } from 'vue';
+import { Link, usePage } from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
 import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
 import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
@@ -11,13 +13,11 @@ import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
 import BudgetTab from "@/Pages/Projects/Tab/Components/BudgetTab.vue";
 import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import {Link} from "@inertiajs/vue3";
 import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorComponent.vue";
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
-import RelevantDatesForShiftPlanningComponent
-    from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+import RelevantDatesForShiftPlanningComponent from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
 import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
@@ -27,88 +27,103 @@ import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocume
 import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
 import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
 import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
-import Permissions from "@/Mixins/Permissions.vue";
 import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
-export default {
-    name: "TabContent",
-    mixins: [Permissions],
-    computed: {
+import { usePermissions } from "@/Composeables/usePermissions.js";
+
+const pageProps = usePage().props;
+provide('pageProps', pageProps);
+
+const { canSeeComponent, canEditComponent } = usePermissions(usePage().props);
+
+const componentMapping = {
+    TextField,
+    Checkbox,
+    Title,
+    TextArea,
+    DropDown,
+    ProjectStateComponent,
+    CalendarTab,
+    ShiftTab,
+    BudgetTab,
+    ProjectBudgetDeadlineComponent,
+    SeparatorComponent,
+    ProjectGroupComponent,
+    ProjectTeamComponent,
+    ProjectAttributesComponent,
+    RelevantDatesForShiftPlanningComponent,
+    ShiftContactPersonsComponent,
+    GeneralShiftInformationComponent,
+    CommentTab,
+    ProjectTitleComponent,
+    ChecklistComponent,
+    ProjectDocumentsComponent,
+    ProjectAllDocumentsComponent,
+    ChecklistAllComponent,
+    CommentAllTab,
+    BudgetInformations
+};
+
+const props = defineProps({
+    headerObject: {
+        type: Object,
+        required: true
     },
-    components: {
-        Link,
-        BaseSidenav,
-        ProjectHeaderComponent,
-        TextField,
-        Checkbox,
-        Title,
-        TextArea,
-        DropDown,
-        ProjectStateComponent,
-        CalendarTab,
-        ShiftTab,
-        BudgetTab,
-        ProjectBudgetDeadlineComponent,
-        SeparatorComponent,
-        ProjectGroupComponent,
-        ProjectTeamComponent,
-        ProjectAttributesComponent,
-        RelevantDatesForShiftPlanningComponent,
-        ShiftContactPersonsComponent,
-        GeneralShiftInformationComponent,
-        CommentTab,
-        ProjectTitleComponent,
-        ChecklistComponent,
-        ProjectDocumentsComponent,
-        ProjectAllDocumentsComponent,
-        ChecklistAllComponent,
-        CommentAllTab,
-        BudgetInformations
+    currentTab: {
+        type: Object,
+        required: true
     },
-    props: [
-        'headerObject',
-        'currentTab',
-        'loadedProjectInformation',
-        'first_project_tab_id',
-        'first_project_calendar_tab_id',
-        'first_project_budget_tab_id',
-        'createSettings'
-    ],
-    data() {
-        return {
-            show: false,
-            currentSideBarTab: 0
-        }
+    loadedProjectInformation: {
+        type: Object,
+        required: true
     },
-    methods: {
-        removeML(componentType) {
-            if(
-                componentType === 'CalendarTab' ||
-                componentType === 'ShiftTab' ||
-                componentType === 'BudgetTab' ||
-                componentType === 'ChecklistComponent' ||
-                componentType === 'ChecklistAllComponent' ||
-                componentType === 'CommentTab' ||
-                componentType === 'CommentAllTab'
-            ){
-                return '-ml-14'
-            } else {
-                return 'max-w-7xl'
-            }
-        }
+    first_project_tab_id: {
+        type: Number,
+        required: true
+    },
+    first_project_calendar_tab_id: {
+        type: Number,
+        required: true
+    },
+    first_project_budget_tab_id: {
+        type: Number,
+        required: true
+    },
+    createSettings: {
+        type: Object,
+        required: true
     }
-}
+});
+
+const show = ref(false);
+const currentSideBarTab = ref(0);
+
+const removeML = (componentType) => {
+    if (
+        componentType === 'CalendarTab' ||
+        componentType === 'ShiftTab' ||
+        componentType === 'BudgetTab' ||
+        componentType === 'ChecklistComponent' ||
+        componentType === 'ChecklistAllComponent' ||
+        componentType === 'CommentTab' ||
+        componentType === 'CommentAllTab'
+    ) {
+        return '-ml-14';
+    } else {
+        return 'max-w-7xl';
+    }
+};
 </script>
 
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id">
         <div class="my-10 w-full">
-            <div v-for="component in currentTab.components"  :class="removeML(component.component?.type)">
+            <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
                 <Component
-                    v-if="this.$canSeeComponent(component.component)"
-                    :can-edit-component="this.$canEditComponent(component.component)"
+                    v-if="canSeeComponent(component.component)"
+                    :is="componentMapping[component.component?.type]"
+                    :can-edit-component="canEditComponent(component.component)"
                     :project="headerObject.project"
                     :in-sidebar="false"
-                    :is="component.component?.type"
                     :loadedProjectInformation="loadedProjectInformation"
                     :header-object="headerObject"
                     :data="component.component"
@@ -124,23 +139,26 @@ export default {
                     :projectSectorIds="headerObject.projectSectorIds"
                     :eventTypes="headerObject.eventTypes"
                     :opened_checklists="headerObject.project?.opened_checklists"
+                    :checklist_templates="headerObject.project?.checklist_templates"
                     :projectManagerIds="headerObject.projectManagerIds"
                     :tab_id="currentTab.id"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                    :first_project_budget_tab_id="this.first_project_budget_tab_id"
+                    :first_project_tab_id="first_project_tab_id"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                    :first_project_budget_tab_id="first_project_budget_tab_id"
                 />
             </div>
         </div>
-        <BaseSidenav @toggle="this.show =! this.show" v-if="currentTab.hasSidebarTabs">
+
+        <BaseSidenav @toggle="show = !show" v-if="currentTab.hasSidebarTabs">
             <div class="w-full">
                 <div class="mb-5 ml-3">
                     <div class="hidden sm:block">
                         <div class="border-gray-200">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                                <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name" @click="currentSideBarTab = index"
-                                      :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
-                                      :aria-current="index === currentSideBarTab ? 'page' : undefined">
+                                <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name"
+                                     @click="currentSideBarTab = index"
+                                     :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
+                                     :aria-current="index === currentSideBarTab ? 'page' : undefined">
                                     {{ tab.name }}
                                 </div>
                             </nav>
@@ -150,12 +168,12 @@ export default {
                 <div class="px-3">
                     <div v-for="component in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
                         <Component
-                            v-if="this.$canSeeComponent(component.component)"
-                            :can-edit-component="this.$canEditComponent(component.component)"
+                            v-if="canSeeComponent(component.component)"
+                            :is="componentMapping[component.component?.type]"
+                            :can-edit-component="canEditComponent(component.component)"
                             :project="headerObject.project"
-                            :is="component.component?.type"
-                            :loadedProjectInformation="loadedProjectInformation"
                             :in-sidebar="true"
+                            :loadedProjectInformation="loadedProjectInformation"
                             :header-object="headerObject"
                             :data="component.component"
                             :project-id="headerObject.project.id"
@@ -178,5 +196,4 @@ export default {
 </template>
 
 <style scoped>
-
 </style>

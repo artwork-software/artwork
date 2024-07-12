@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
+use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MoneySourceTaskController extends Controller
 {
+    public function __construct(
+        private readonly MoneySourceTaskService $moneySourceTaskService
+    ) {
+    }
+
     public function index(Request $request): JsonResponse
     {
         return response()->json(MoneySourceTask::where('money_source_id', $request->money_source_id)->get());
@@ -41,7 +47,7 @@ class MoneySourceTaskController extends Controller
 
     public function markAsDone(MoneySourceTask $moneySourceTask): void
     {
-        $moneySourceTask->update(['done' => true]);
+        $this->moneySourceTaskService->markAsDone($moneySourceTask);
     }
 
     public function markAsUnDone(MoneySourceTask $moneySourceTask): void

@@ -3,7 +3,6 @@
         <div class="mb-3">
             <InventoryFunctionBar :date-value="dateValue" @scroll-to-next="scrollToNext" @scroll-to-previous="scrollToPrevious" />
         </div>
-
         <div class="-ml-5">
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div
@@ -516,17 +515,21 @@ watch(
             craft.value.filtered_inventory_categories.forEach((category) => {
                 category.groups.forEach((group) => {
                     group.items.forEach((item) => {
-                        if (item.checked && !checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
-                            checkedItems.value.push({
-                                id: item.id,
-                                name: item.name,
-                                craft: craft.value.name,
-                                category: category.name,
-                                group: group.name
-                            });
-                            itemIsSelectedForMultiEdit.value = true;
+                        if (!checkedItems.value.find((checkedItem) => checkedItem.id === item.id)) {
+                            if(item.checked){
+                                checkedItems.value.push({
+                                    id: item.id,
+                                    name: item.name,
+                                    craft: craft.value.name,
+                                    category: category.name,
+                                    group: group.name
+                                });
+                                itemIsSelectedForMultiEdit.value = true;
+                            }
                         } else {
-                            checkedItems.value = checkedItems.value.filter((checkedItem) => checkedItem.id !== item.id);
+                            if (!item.checked) {
+                                checkedItems.value = checkedItems.value.filter((checkedItem) => checkedItem.id !== item.id);
+                            }
                             if (checkedItems.value.length === 0) {
                                 itemIsSelectedForMultiEdit.value = false;
                             }

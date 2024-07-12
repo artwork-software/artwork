@@ -36,6 +36,7 @@ use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use http\QueryString;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -451,10 +452,16 @@ readonly class RoomService
         $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
             $query->where(function ($q) use ($calendarPeriod, $date): void {
                 $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->whereDate('start_time', $date);
+                    ->where(function (Builder $builder) use ($date): void {
+                        $builder->whereDate('start_time',  '<=', $date)
+                            ->whereDate('end_time', '>=', $date);
+                    });
             })->orWhere(function ($q) use ($calendarPeriod, $date): void {
                 $q->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->whereDate('end_time', $date);
+                ->where(function (Builder $builder) use ($date): void {
+                    $builder->whereDate('start_time',  '<=', $date)
+                        ->whereDate('end_time', '>=', $date);
+                });
             });
         });
 

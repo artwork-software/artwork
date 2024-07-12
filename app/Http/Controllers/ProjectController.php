@@ -1803,8 +1803,6 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
         Request $request,
         Project $project,
@@ -1828,8 +1826,8 @@ class ProjectController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
-        AreaService $areaService
-    ): Response|ResponseFactory {
+        AreaService   $areaService
+    )   : Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
         $loadedProjectInformation = [];
@@ -3269,3 +3267,11 @@ class ProjectController extends Controller
         }
     }
 }
+
+
+
+
+
+
+
+

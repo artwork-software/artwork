@@ -22,6 +22,7 @@
                 @open-edit-event-modal="openEditEventModal"
                 @check-event="updateCheckedEvents"
                 :first_project_tab_id="first_project_tab_id"
+                @add-or-remove-event-to-multi-edit-function="addOrRemoveEventToMultiEdit"
             />
         </div>
     </div>
@@ -44,6 +45,7 @@ export default {
         'checkedEvents',
         'first_project_tab_id'
     ],
+    emits: ['AddOrRemoveEventToMultiEditFunction', 'open-edit-event-modal', 'check-event'],
     data() {
         return {
             events: {},
@@ -68,6 +70,9 @@ export default {
         },
         openEditEventModal(event) {
             this.$emit('open-edit-event-modal', event);
+        },
+        addOrRemoveEventToMultiEdit(eventId) {
+            this.$emit('AddOrRemoveEventToMultiEditFunction', eventId);
         }
     },
 }

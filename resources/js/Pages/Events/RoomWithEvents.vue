@@ -57,13 +57,14 @@ export default {
     },
     methods: {
         async getEvents() {
-                try {
-                    const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
-                    this.events = response.data.data;
-                } catch (error) {
+            const uri = this.project ? `/calendar/room/${this.room.id}/${this.day.full_day}/${this.project.id}` : `/calendar/room/${this.room.id}/${this.day.full_day}`;
+            try {
+                const response = await axios.get(uri);
+                this.events = response.data.data;
+            } catch (error) {
 
-                }
-                this.isLoading = false;
+            }
+            this.isLoading = false;
         },
         updateCheckedEvents(event) {
             this.$emit('check-event', event);

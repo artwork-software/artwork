@@ -1,15 +1,19 @@
 <template>
     <div class="w-full flex flex-wrap mt-3">
-        <CalendarFunctionBar
-            :project="project"
-            @open-event-component="openEditEventModal"
-            :dateValue="dateValue"
-            @change-at-a-glance="changeAtAGlance"
-            :at-a-glance="atAGlance"
-            :filter-options="filterOptions"
-            :personal-filters="personalFilters"
-            @change-multi-edit="changeMultiEdit"
-            :user_filters="user_filters"
+        <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
+                             @increment-zoom-factor="incrementZoomFactor"
+                             @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
+                             :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
+                             :dateValue="dateValue"
+                             @change-at-a-glance="changeAtAGlance"
+                             @change-multi-edit="changeMultiEdit"
+                             @previousTimeRange="previousTimeRange"
+                             @next-time-range="nextTimeRange"
+                             :at-a-glance="atAGlance"
+                             :filter-options="filterOptions"
+                             :personal-filters="personalFilters"
+                             :user_filters="user_filters"
+                             :multi-edit="multiEdit"
         />
 
         <!-- Calendar -->
@@ -32,6 +36,7 @@
                         :event-types="eventTypes"
                         @open-edit-event-modal="openEditEventModal"
                         :first_project_tab_id="this.first_project_tab_id"
+                        @add-or-remove-event-to-multi-edit-function="addOrRemoveEventToMultiEdit"
                     />
                 </div>
             </div>
@@ -78,7 +83,7 @@
                    :text="$t('Delete events')"/>
     </div>
 
-    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+    <MultiEditModal :checked-events="checkedEventIdsForMultiEdit" v-if="showMultiEditModal" :rooms="rooms"
                     @closed="closeMultiEditModal"/>
 
     <ConfirmDeleteModal
@@ -131,6 +136,8 @@ export default {
           showMultiEditModal: false,
           openDeleteSelectedEventsModal: false,
           allEvents: this.eventsAtAGlance,
+          dateValueCopy: this.dateValue ? this.dateValue : [],
+          checkedEventIdsForMultiEdit: [],
       }
     },
     props: [
@@ -148,6 +155,13 @@ export default {
     ],
     emits:['changeAtAGlance'],
     methods: {
+        addOrRemoveEventToMultiEdit(eventId){
+            if(this.checkedEventIdsForMultiEdit.includes(eventId)){
+                this.checkedEventIdsForMultiEdit = this.checkedEventIdsForMultiEdit.filter((id) => id !== eventId);
+            } else {
+                this.checkedEventIdsForMultiEdit.push(eventId);
+            }
+        },
         changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;
         },
@@ -196,37 +210,67 @@ export default {
             router.reload();
         },
         openMultiEditModal() {
-            this.getCheckedEvents();
-
             this.showMultiEditModal = true;
         },
         deleteSelectedEvents() {
-            this.getCheckedEvents();
             router.post(route('multi-edit.delete'), {
-                events: this.editEvents
+                events: this.checkedEventIdsForMultiEdit
             }, {
                 onSuccess: () => {
                     this.openDeleteSelectedEventsModal = false
                 }
             })
         },
-        getCheckedEvents() {
-            this.editEvents = [];
-            const eventArray = [];
-
-            this.rooms.forEach((room) => {
-                this.eventsAtAGlance[room.id]?.forEach((events) => {
-                    if (events.clicked) {
-                        if (!eventArray.includes(events.id)) {
-                            eventArray.push(events.id)
-                        }
-                    }
-                })
-            })
-            this.editEvents = eventArray
-        },
         closeMultiEditModal() {
             this.showMultiEditModal = false;
+            this.multiEdit = false;
+            this.checkedEventIdsForMultiEdit = [];
+        },
+        calculateDateDifference() {
+            const date1 = new Date(this.dateValueCopy[0]);
+            const date2 = new Date(this.dateValueCopy[1]);
+            const timeDifference = date2.getTime() - date1.getTime();
+            return timeDifference / (1000 * 3600 * 24);
+        },
+        previousTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValueCopy[1] = this.getPreviousDay(this.dateValueCopy[0]);
+            const newDate = new Date(this.dateValueCopy[1]);
+            newDate.setDate(newDate.getDate() - dayDifference);
+            this.dateValueCopy[0] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        nextTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValueCopy[0] = this.getNextDay(this.dateValueCopy[1]);
+            const newDate = new Date(this.dateValueCopy[1]);
+            newDate.setDate(newDate.getDate() + dayDifference + 1);
+            this.dateValueCopy[1] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        getNextDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() + 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        getPreviousDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() - 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        updateTimes() {
+            router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValueCopy[0],
+                end_date: this.dateValueCopy[1],
+            },{
+                preserveScroll: true
+            })
         },
     }
 }

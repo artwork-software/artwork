@@ -773,7 +773,9 @@ readonly class EventService
     ): EventManagementDto {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
 
-        if ($atAGlance) {
+        $sameDay = $startDate->format('Y-m-d') === $endDate->format('Y-m-d');
+
+        if ($atAGlance || $sameDay) {
             $showCalendar = $calendarService->createCalendarData(
                 $startDate,
                 $endDate,
@@ -821,14 +823,36 @@ readonly class EventService
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
+             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
         if ($atAGlance) {
-            $dto->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-                ->setEventsAtAGlance(
+                $dto->setEventsAtAGlance(
                     $atAGlance ?
                         $calendarService->getEventsAtAGlance($startDate, $endDate) :
                         SupportCollection::make()
                 );
+        }
+        if ($sameDay) {
+            $dto->setEvents(
+                CalendarEventDto::newInstance()
+                    ->setAreas($showCalendar['filterOptions']['areas'])
+                    ->setProjects($showCalendar['filterOptions']['projects'])
+                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                    ->setEvents(
+                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                            SupportCollection::make(
+                                CalendarEventResource::collection(
+                                    $calendarService->getEventsOfInterval(
+                                        $startDate,
+                                        $endDate
+                                    )
+                                )->resolve()
+                            ) :
+                            SupportCollection::make()
+                    )
+            );
         }
 
         return $dto;

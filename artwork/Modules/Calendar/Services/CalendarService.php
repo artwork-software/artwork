@@ -164,9 +164,10 @@ class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?Room $room = null,
     ): array {
         $periodArray = [];
-        foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+        foreach ((CarbonPeriod::create($startDate, $endDate)) as $period) {
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -181,6 +182,9 @@ class CalendarService
         }
 
         return [
+            'eventsWithoutRoom' => $room === null ?
+                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
+                [],
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
             // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
@@ -209,21 +213,22 @@ class CalendarService
      * @return array<string, mixed>
      */
     public function createCalendarData(
-        Carbon $startDate,
-        Carbon $endDate,
-        UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomService $roomService,
-        RoomCategoryService $roomCategoryService,
+        Carbon               $startDate,
+        Carbon               $endDate,
+        UserService          $userService,
+        FilterService        $filterService,
+        FilterController     $filterController,
+        RoomService          $roomService,
+        RoomCategoryService  $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
-        ProjectService $projectService,
-        ?CalendarFilter $calendarFilter,
-        ?Room $room = null,
-        ?Project $project = null,
-    ): array {
+        EventTypeService     $eventTypeService,
+        AreaService          $areaService,
+        ProjectService       $projectService,
+        ?CalendarFilter      $calendarFilter,
+        ?Room                $room = null,
+        ?Project             $project = null,
+    ): array
+    {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $data = $this->createCalendarDataWithoutEvents(
             $startDate,
@@ -239,25 +244,22 @@ class CalendarService
             $projectService
         );
         $data['roomsWithEvents'] = $room === null ?
-                $roomService->collectEventsForRooms(
-                    roomsWithEvents:  $roomService->getFilteredRooms(
-                        $startDate,
-                        $endDate,
-                        $calendarFilter
-                    ),
-                    calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
-                    project: $project,
-                ) :
-                $roomService->collectEventsForRoom(
-                    room: $room,
-                    calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
-                    project: $project,
-                );
-            $data['eventsWithoutRoom'] = $room === null ?
-                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
-                [];
+            $roomService->collectEventsForRooms(
+                roomsWithEvents: $roomService->getFilteredRooms(
+                    $startDate,
+                    $endDate,
+                    $calendarFilter
+                ),
+                calendarPeriod: $calendarPeriod,
+                calendarFilter: $calendarFilter,
+                project: $project,
+            ) :
+            $roomService->collectEventsForRoom(
+                room: $room,
+                calendarPeriod: $calendarPeriod,
+                calendarFilter: $calendarFilter,
+                project: $project,
+            );
         return $data;
     }
 
@@ -292,7 +294,8 @@ class CalendarService
         $endDate,
         ?Room $room,
         ?Project $project
-    ): Builder|HasMany {
+    ): Builder|HasMany
+    {
         $user = Auth::user();
         $calendarFilter = $user->shift_calendar_filter()->first();
 

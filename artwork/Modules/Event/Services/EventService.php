@@ -772,8 +772,8 @@ readonly class EventService
         ?bool $atAGlance
     ): EventManagementDto {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
-
-        if ($atAGlance) {
+        $sameDay = $startDate->format('Y-m-d') === $endDate->format('Y-m-d');
+        if ($atAGlance || $sameDay) {
             $showCalendar = $calendarService->createCalendarData(
                 $startDate,
                 $endDate,
@@ -830,6 +830,28 @@ readonly class EventService
                         $calendarService->getEventsAtAGlance($startDate, $endDate) :
                         SupportCollection::make()
                 );
+        }
+        if ($sameDay) {
+            $dto->setEvents(
+                    CalendarEventDto::newInstance()
+                        ->setAreas($showCalendar['filterOptions']['areas'])
+                        ->setProjects($showCalendar['filterOptions']['projects'])
+                        ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                        ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                        ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                        ->setEvents(
+                            $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                                SupportCollection::make(
+                                    CalendarEventResource::collection(
+                                        $calendarService->getEventsOfInterval(
+                                            $startDate,
+                                            $endDate
+                                        )
+                                    )->resolve()
+                                ) :
+                                SupportCollection::make()
+                        )
+            );
         }
 
         return $dto;

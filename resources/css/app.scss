@@ -50,13 +50,23 @@
 }
 
 @layer components {
+    @import "Base/BaseStyles";
     @import "Timeline/Timeline";
     @import "Inventory/Inventory";
     @import "Inventory/InventoryManagement";
     @import "Inventory/InventoryScheduling";
+    @import "Checklist/ChecklistListView";
+    @import "Checklist/ChecklistGridView";
 }
 
 @layer utilities {
+
+    .base-menu-link {
+        .base-menu-icon {
+            @apply text-secondary;
+        }
+    }
+
     .stripes {
         background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
     }
@@ -552,4 +562,19 @@
     .transition-leave-active {
         @apply transition ease-in duration-75;
     }
+
+
+    .event-disabled {
+        background: repeating-linear-gradient( -45deg, transparent, transparent 13px, rgba(136, 136, 136, 0.30) 10px, rgba(136, 136, 136, 0.30) 30px);
+    }
+}
+
+.tooltip {
+    @apply invisible absolute;
+}
+
+.has-tooltip:hover .tooltip {
+    margin-top: -1rem;
+    margin-left: 1.5rem;
+    @apply visible z-50;
 }

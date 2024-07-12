@@ -10,6 +10,7 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryGroupService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -18,7 +19,8 @@ class CraftInventoryGroupController extends Controller
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly Redirector $redirector,
-        private readonly CraftInventoryGroupService $craftInventoryGroupService
+        private readonly CraftInventoryGroupService $craftInventoryGroupService,
+        private readonly Translator $translator
     ) {
     }
 
@@ -39,7 +41,7 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.group.errors.create'));
+                ->with('error', $this->translator->get('flash-messages.inventory-management.group.errors.create'));
         }
 
         return $this->redirector->back();
@@ -49,7 +51,7 @@ class CraftInventoryGroupController extends Controller
         CraftInventoryGroup $craftInventoryGroup,
         UpdateCraftInventoryGroupNameRequest $request
     ): RedirectResponse {
-        $name = $request->get('name');
+        $name = $request->string('name');
 
         try {
             $this->craftInventoryGroupService->updateName($name, $craftInventoryGroup);
@@ -64,7 +66,10 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.group.errors.updateName'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.group.errors.updateName')
+                );
         }
 
         return $this->redirector->back();
@@ -89,7 +94,10 @@ class CraftInventoryGroupController extends Controller
 
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.group.errors.updateOrder'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.group.errors.updateOrder')
+                );
         }
 
         return $this->redirector->back();
@@ -100,7 +108,10 @@ class CraftInventoryGroupController extends Controller
         if (!$this->craftInventoryGroupService->forceDelete($craftInventoryGroup)) {
             return $this->redirector
                 ->back()
-                ->with('error', __('flash-messages.inventory-management.group.errors.delete'));
+                ->with(
+                    'error',
+                    $this->translator->get('flash-messages.inventory-management.group.errors.delete')
+                );
         }
 
         return $this->redirector->back();

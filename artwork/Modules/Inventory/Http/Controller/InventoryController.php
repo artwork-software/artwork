@@ -6,27 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\InventoryManagement\Http\Requests\ItemEvent\DropItemOnInventoryRequest;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
+use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class InventoryController extends Controller
 {
@@ -36,14 +35,14 @@ class InventoryController extends Controller
         private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
         private readonly InventoryManagementUserFilterService $inventoryManagementUserFilterService,
         private readonly CalendarService $calendarService,
-        private readonly CraftInventoryItemService $craftInventoryItemService,
-        private readonly CraftInventoryItemEventServices $craftInventoryItemEventServices,
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly ResponseFactory $responseFactory
     ) {
     }
 
     public function inventory(): Response
     {
-        return Inertia::render(
+        return $this->responseFactory->render(
             'Inventory/InventoryManagement/Inventory',
             [
                 'columns' => $this->craftsInventoryColumnService->getAllOrdered(),
@@ -65,8 +64,8 @@ class InventoryController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
     ): Response {
-        [$startDate, $endDate] =
-            $userService->getUserCalendarFilterDatesOrDefault($this->authManager->user()?->getCalendarFilter(),);
+        $calendarFilter = $this->authManager->user()->calendar_filter;
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
 
         $showCalendar = $this->calendarService->createCalendarData(
             $startDate,
@@ -80,13 +79,10 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             $projectService,
-            $this->authManager->user()?->calendar_filter
+            $calendarFilter
         );
 
-        $crafts = $this->craftService->getCraftsWithInventory(
-            $this->craftInventoryItemService,
-            $this->craftInventoryItemEventServices,
-        );
+        $crafts = $this->craftService->getCraftsWithInventory();
 
         return Inertia::render('Inventory/Scheduling', [
             'dateValue' => $showCalendar['dateValue'],
@@ -101,7 +97,7 @@ class InventoryController extends Controller
         CraftInventoryItem $item,
         Event $event
     ): void {
-        $this->craftInventoryItemEventServices->dropItemToEvent(
+        $this->craftInventoryItemEventService->dropItemToEvent(
             $item,
             $event,
             $this->authManager->id(),

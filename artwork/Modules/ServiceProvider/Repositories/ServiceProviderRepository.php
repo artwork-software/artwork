@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class ServiceProviderRepository extends BaseRepository
+class ServiceProviderRepository extends BaseRepository
 {
     public function getWorkers(): Collection
     {

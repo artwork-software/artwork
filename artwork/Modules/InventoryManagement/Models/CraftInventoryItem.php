@@ -2,9 +2,10 @@
 
 namespace Artwork\Modules\InventoryManagement\Models;
 
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\InventoryScheduling\Models\CraftInventoryItemEvent;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -48,6 +49,10 @@ class CraftInventoryItem extends Model
 
     public function events(): HasMany
     {
-        return $this->hasMany(CraftInventoryItemEvent::class, 'craft_inventory_item_id', 'id');
+        return $this->hasMany(
+            CraftInventoryItemEvent::class,
+            'craft_inventory_item_id',
+            'id'
+        );
     }
 }

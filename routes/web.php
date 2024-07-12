@@ -91,6 +91,7 @@ use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellCo
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
+use Artwork\Modules\InventorySetting\Http\Controller\InventorySettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -239,6 +240,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //user.sidebar.update
     Route::patch('/users/{user}/sidebar/update', [UserController::class, 'updateSidebar'])
         ->name('user.sidebar.update');
+    //user.checklist.style
+    Route::patch('/users/{user}/checklist/style', [UserController::class, 'updateChecklistStyle'])
+        ->name('user.checklist.style');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
@@ -324,9 +328,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
     Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
+    Route::post('/checklists/{checklist}/duplicate', [ChecklistController::class, 'duplicate'])
+        ->name('checklists.duplicate');
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
-    Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy']);
+    Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy'])->name('checklist.destroy');
+
+
+    //checklist.done.all.tasks
+    Route::patch('/checklists/{checklist}/doneOrUndone/all/tasks', [ChecklistController::class, 'doneOrUndoneAllTasks'])
+        ->name('checklists.doneOrUndone.all.tasks');
 
     //ChecklistTemplates
     Route::get('/checklist_templates', [ChecklistTemplateController::class, 'index'])
@@ -343,6 +354,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'update'])
         ->name('checklist_templates.update');
     Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy']);
+    // checklist_templates.duplicate
+    Route::post(
+        '/checklist_templates/{checklistTemplate}/duplicate',
+        [ChecklistTemplateController::class, 'duplicate']
+    )
+        ->name('checklist_templates.duplicate');
 
     //TaskTemplates
     Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
@@ -350,6 +367,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
     Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update']);
     Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy']);
+
+
 
     //Tasks
     Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
@@ -359,8 +378,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::patch('/money_source/tasks/{moneySourceTask}', [MoneySourceTaskController::class, 'markAsDone'])
         ->name('money_source.tasks.update');
-    Route::put('/tasks/order', [TaskController::class, 'updateOrder']);
-    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+    Route::put('/tasks/order', [TaskController::class, 'updateOrder'])->name('tasks.order');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::patch('/tasks/{task}/done', [TaskController::class, 'updateDoneStatus'])->name('tasks.done');
 
     //Categories
     Route::get('/settings/projects', [CategoryController::class, 'index'])->name('project.settings');
@@ -460,9 +480,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
+    Route::get('/calendar/room/{room}/{date}/{projectId}', [EventController::class, 'viewEventsForDateAndRoom'])
+        ->name('events.events-for-date-and-room');
 
     // Event Api
-    Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
@@ -1131,6 +1152,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             'shift/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevant']
         )->name('event-type.update.relevant');
+        Route::patch(
+            'inventory/update/relevant/event-type/{eventType}',
+            [EventTypeController::class, 'updateRelevantForInventory']
+        )->name('event-type.update.inventory.relevant');
     });
 
     Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
@@ -1347,6 +1372,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::group(['prefix' => 'inventory-management'], function (): void {
         Route::get('/', [InventoryController::class, 'inventory'])
             ->name('inventory-management.inventory');
+
+        Route::group(['prefix' => 'settings'], function (): void {
+            Route::get('/index', [InventorySettingsController::class, 'index'])
+                ->name('inventory-management.settings');
+        });
 
         Route::group(['prefix' => 'inventory'], function (): void {
             Route::group(['prefix' => 'column'], function (): void {

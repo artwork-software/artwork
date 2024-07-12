@@ -16,9 +16,4 @@ class UpdateOrCreateInventoryFilterRequest extends FormRequest
             'filter.*.craftId' => 'exists:crafts,id'
         ];
     }
-
-    public function collect($key = null)
-    {
-        return parent::collect($key)->map(fn($filter) => $filter['craftId']);
-    }
 }

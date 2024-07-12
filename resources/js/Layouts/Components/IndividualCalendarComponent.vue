@@ -25,6 +25,7 @@
                                  :filter-options="filterOptions"
                                  :personal-filters="personalFilters"
                                  :user_filters="user_filters"
+                                 :multi-edit="multiEdit"
             />
             <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
                 <!-- Calendar -->
@@ -56,24 +57,20 @@
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                v-for="room in calendarData">
-                                <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events">
-
-                                    <SingleCalendarEvent
-                                        class="relative"
-                                        :project="project ? project : false"
-                                        :multiEdit="multiEdit"
-                                        :zoom-factor="zoomFactor"
-                                        :width="zoomFactor * 204"
-                                        :event="event"
-                                        :rooms="rooms"
-                                        :event-types="eventTypes"
-                                        :checked-events="checkedEvents"
-                                        @open-edit-event-modal="openEditEventModal"
-                                        @check-event="updateCheckedEvents"
-                                        :first_project_tab_id="this.first_project_tab_id"
+                                v-for="room in rooms">
+                                <RoomWithEvents
+                                    :room="room"
+                                    :day="day"
+                                    :eventTypes="eventTypes"
+                                    :rooms="rooms"
+                                    :first_project_tab_id="this.first_project_tab_id"
+                                    :project="project"
+                                    :multi-edit="multiEdit"
+                                    :checked-events="checkedEvents"
+                                    :zoom-factor="zoomFactor"
+                                    @open-edit-event-modal="openEditEventModal"
+                                    @add-or-remove-event-to-multi-edit-function="addOrRemoveEventToMultiEdit"
                                     />
-                                </div>
                             </td>
                         </tr>
                         </tbody>
@@ -116,7 +113,7 @@
                        :text="$t('Delete events')"/>
         </div>
 
-        <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+        <MultiEditModal :checked-events="checkedEventIdsForMultiEdit" v-if="showMultiEditModal" :rooms="rooms"
                         @closed="closeMultiEditModal"/>
 
         <ConfirmDeleteModal
@@ -127,6 +124,7 @@
             :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
 
     </div>
+
 </template>
 
 <script>
@@ -144,12 +142,13 @@ import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-
+import RoomWithEvents from "@/Pages/Events/RoomWithEvents.vue";
 
 export default {
     name: "IndividualCalendarComponent",
     mixins: [Permissions, IconLib],
     components: {
+        RoomWithEvents,
         FormButton,
         Link,
         ConfirmDeleteModal,
@@ -178,6 +177,7 @@ export default {
             checkedEvents: [],
             isPageScrolled: false,
             dateValueCopy: this.dateValue ? this.dateValue : [],
+            checkedEventIdsForMultiEdit: [],
         }
     },
     props: [
@@ -232,6 +232,13 @@ export default {
         window.removeEventListener('scroll', this.handleScroll);
     },
     methods: {
+        addOrRemoveEventToMultiEdit(eventId){
+            if(this.checkedEventIdsForMultiEdit.includes(eventId)){
+                this.checkedEventIdsForMultiEdit = this.checkedEventIdsForMultiEdit.filter((id) => id !== eventId);
+            } else {
+                this.checkedEventIdsForMultiEdit.push(eventId);
+            }
+        },
         updateCheckedEvents(event) {
             if(!this.checkedEvents.includes(event.id))
                 this.checkedEvents.push(event.id);
@@ -293,9 +300,8 @@ export default {
             router.reload();
         },
         deleteSelectedEvents() {
-            this.getCheckedEvents();
             router.post(route('multi-edit.delete'), {
-                events: this.editEvents
+                events: this.checkedEventIdsForMultiEdit
             }, {
                 onSuccess: () => {
                     this.openDeleteSelectedEventsModal = false
@@ -303,28 +309,14 @@ export default {
             })
         },
         openMultiEditModal() {
-            this.getCheckedEvents();
+            //this.getCheckedEvents();
 
             this.showMultiEditModal = true;
         },
-        getCheckedEvents() {
-            this.editEvents = [];
-            const eventArray = [];
-            this.days.forEach((day) => {
-                this.calendarData.forEach((room) => {
-                    room[day.full_day].events.data.forEach((event) => {
-                        if (event.clicked) {
-                            if (!eventArray.includes(event.id)) {
-                                eventArray.push(event.id)
-                            }
-                        }
-                    })
-                })
-            })
-            this.editEvents = eventArray
-        },
         closeMultiEditModal() {
             this.showMultiEditModal = false;
+            this.multiEdit = false
+            this.checkedEventIdsForMultiEdit = [];
         },
         /* View in fullscreen */
         openFullscreen() {
@@ -416,7 +408,8 @@ export default {
                 start_date:  this.dateValueCopy[0],
                 end_date: this.dateValueCopy[1],
             },{
-                preserveScroll: true
+                preserveScroll: true,
+                preserveState: false
             })
         },
     }

@@ -1,6 +1,6 @@
 <template>
     <tr v-if="destinationIndex === 0">
-        <td colspan="6" class="h-0.5"/>
+        <td colspan="6" class="empty-row-xxs-td"/>
     </tr>
     <tr draggable="true"
         @dragover="groupDragOver"
@@ -8,14 +8,14 @@
         @drop="groupDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row h-8 border text-black border-dashed border-blue-700 justify-center items-center">
-                <IconDragDrop class="w-5 h-5"/>
-                <span class="text-xs subpixel-antialiased">{{ $t('Place here') }}</span>
+            <div class="drop-group-container">
+                <IconDragDrop class="icon"/>
+                <span class="text">{{ $t('Place here') }}</span>
             </div>
         </td>
     </tr>
     <tr v-if="destinationIndex > 0">
-        <td :colspan="colspan" class="h-0.5"/>
+        <td :colspan="colspan" class="empty-row-xxs-td"/>
     </tr>
 </template>
 <script setup>

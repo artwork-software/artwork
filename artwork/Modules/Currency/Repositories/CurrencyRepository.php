@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Currency\Models\Currency;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CurrencyRepository extends BaseRepository
+class CurrencyRepository extends BaseRepository
 {
     public function getAll(): Collection
     {

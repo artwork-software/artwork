@@ -6,17 +6,12 @@ use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryGroupRepository;
 use Throwable;
 
-readonly class CraftInventoryGroupService
+class CraftInventoryGroupService
 {
     public function __construct(
-        private CraftInventoryGroupRepository $craftsInventoryGroupRepository,
-        private InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
+        private readonly CraftInventoryGroupRepository $craftsInventoryGroupRepository,
+        private readonly InventoryResourceCalculateModelsOrderService $inventoryResourceCalculateModelsOrderService
     ) {
-    }
-
-    public function getNewCraftInventoryGroup(array $attributes): CraftInventoryGroup
-    {
-        return new CraftInventoryGroup($attributes);
     }
 
     /**
@@ -26,7 +21,7 @@ readonly class CraftInventoryGroupService
         int $categoryId,
         string $name
     ): CraftInventoryGroup {
-        $craftsInventoryGroup = $this->getNewCraftInventoryGroup(
+        $craftsInventoryGroup = $this->craftsInventoryGroupRepository->getNewModelInstance(
             [
                 'craft_inventory_category_id' => $categoryId,
                 'name' => $name,
@@ -59,7 +54,9 @@ readonly class CraftInventoryGroupService
         foreach (
             $this->inventoryResourceCalculateModelsOrderService->getReorderedModels(
                 $this->craftsInventoryGroupRepository
-                    ->getAllByCategoryIdOrderedByOrder($craftInventoryGroup->craft_inventory_category_id),
+                    ->getAllByCategoryIdOrderedByOrder(
+                        $craftInventoryGroup->getAttribute('craft_inventory_category_id')
+                    ),
                 $order,
                 $craftInventoryGroup
             ) as $index => $orderedGroup

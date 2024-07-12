@@ -4,18 +4,14 @@ namespace Artwork\Modules\InventoryManagement\Services;
 
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Repositories\CraftInventoryItemCellRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
-readonly class CraftInventoryItemCellService
+class CraftInventoryItemCellService
 {
     public function __construct(
-        private CraftInventoryItemCellRepository $craftInventoryItemCellRepository
+        private readonly CraftInventoryItemCellRepository $craftInventoryItemCellRepository
     ) {
-    }
-
-    public function getNewCraftInventoryItemCell(array $attributes): CraftInventoryItemCell
-    {
-        return new CraftInventoryItemCell($attributes);
     }
 
     /**
@@ -26,7 +22,7 @@ readonly class CraftInventoryItemCellService
         int $itemId,
         string $cellValue = ''
     ): CraftInventoryItemCell {
-        $craftInventoryItemCell = $this->getNewCraftInventoryItemCell(
+        $craftInventoryItemCell = $this->craftInventoryItemCellRepository->getNewModelInstance(
             [
                 'crafts_inventory_column_id' => $columnId,
                 'craft_inventory_item_id' => $itemId,
@@ -41,13 +37,31 @@ readonly class CraftInventoryItemCellService
     /**
      * @throws Throwable
      */
-    public function updateCellValue(string|null $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
+    public function updateCellValue(string $cellValue, CraftInventoryItemCell $craftInventoryItemCell): void
     {
         $this->craftInventoryItemCellRepository->updateOrFail(
             $craftInventoryItemCell,
             [
-                'cell_value' => ($cellValue ?? '')
+                'cell_value' => $cellValue
             ]
         );
+    }
+
+    public function getNameForSchedulingFromCells(Collection $cells): string
+    {
+        /** @var CraftInventoryItemCell $cell */
+        $cell = $cells->first(function (CraftInventoryItemCell $cell): bool {
+            return is_string($cell->getAttribute('cell_value'));
+        });
+        return strval($cell?->getAttribute('cell_value'));
+    }
+
+    public function getItemCountForSchedulingFromCells(Collection $cells): int
+    {
+        /** @var CraftInventoryItemCell $cell */
+        $cell = $cells->first(function (CraftInventoryItemCell $cell): bool {
+            return is_numeric($cell->getAttribute('cell_value'));
+        });
+        return intval($cell?->getAttribute('cell_value'));
     }
 }

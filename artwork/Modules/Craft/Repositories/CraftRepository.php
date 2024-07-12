@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CraftRepository extends BaseRepository
+class CraftRepository extends BaseRepository
 {
     /**
      * @return array<int, mixed>

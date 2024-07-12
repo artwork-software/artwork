@@ -27,7 +27,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemEventServices;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -55,8 +55,11 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -74,12 +77,14 @@ class EventController extends Controller
         private readonly NotificationService $notificationService,
         private readonly BudgetService $budgetService,
         private readonly EventService $eventService,
+        private readonly RoomService $roomService,
         private readonly ShiftService $shiftService,
         private readonly TimelineService $timelineService,
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
-        private readonly CraftInventoryItemEventServices $craftInventoryItemEventServices
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -112,10 +117,32 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
-                Auth::user()->getCalendarFilter(),
+                $this->authManager->user(),
                 $request->boolean('atAGlance')
             )
         );
+    }
+
+    public function viewEventsForDateAndRoom(
+        Request $request,
+        Room $room,
+        ProjectService $projectService,
+        string $day,
+        int $projectId
+    ): JsonResponse {
+        $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
+            $room,
+            Carbon::parse($day),
+            $request->user()->calendar_filter,
+            $projectId > 0 ? $projectService->findById($projectId) : null
+        );
+        $return = [];
+        foreach ($roomsWithData as $event) {
+                $return[] = new CalendarEventResource($event);
+        }
+        return new JsonResponse(['data' =>
+            $return
+        ]);
     }
 
     public function viewShiftPlan(
@@ -152,7 +179,8 @@ class EventController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                $dayServicesService
+                $dayServicesService,
+                $this->authManager->user()
             )
         );
     }
@@ -183,7 +211,7 @@ class EventController extends Controller
             ->whereDate(
                 'event_start_day',
                 Carbon::now()->format('Y-m-d')
-            )->with(['event','event.project','event.room'])->get();
+            )->with(['event', 'event.project', 'event.room'])->get();
 
         // get user events from Projects in which the user is currently working
         $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())
@@ -200,7 +228,7 @@ class EventController extends Controller
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale(
             \session()->get('locale') ??
-                config('app.fallback_locale')
+            config('app.fallback_locale')
         )->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
@@ -230,8 +258,6 @@ class EventController extends Controller
                     ];
                 }
             }
-
-            //dd($historyObjects);
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));
@@ -473,7 +499,7 @@ class EventController extends Controller
                                             'start' =>
                                                 Carbon::parse($firstShift->event_start_day . '
                                                  ' . $firstShift->start)
-                                                ->format('d.m.Y H:i'),
+                                                    ->format('d.m.Y H:i'),
                                             'end' =>
                                                 Carbon::parse($lastShift->event_end_day . '
                                                 ' . $lastShift->end)->format('d.m.Y H:i')
@@ -543,7 +569,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -593,7 +619,7 @@ class EventController extends Controller
             ],
             2 => [
                 'type' => 'string',
-                'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                 'href' => null
             ],
             3 => [
@@ -667,7 +693,7 @@ class EventController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' =>  $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
                     'href' => null
                 ],
                 3 => [
@@ -1203,8 +1229,8 @@ class EventController extends Controller
         }
 
         // update event time in inventory
-        if ($isInInventoryEvent = $this->craftInventoryItemEventServices->checkIfEventIsInInventoryPlaning($event)) {
-            $this->craftInventoryItemEventServices->updateEventTimeInInventory($isInInventoryEvent, $event);
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
         return new CalendarEventResource($event);
@@ -1761,7 +1787,7 @@ class EventController extends Controller
     public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Events', [
-            'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
+            'trashed_events' => Event::onlyTrashed()->get()->map(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->eventName,
                 'project' => $event->project,
@@ -1823,8 +1849,14 @@ class EventController extends Controller
             $projectTabService
         );
 
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
+
         return Redirect::back();
     }
+
+
 
     /**
      * @throws AuthorizationException

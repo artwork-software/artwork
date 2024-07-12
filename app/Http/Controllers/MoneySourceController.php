@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Psr\Log\LoggerInterface;
 
 class MoneySourceController extends Controller
 {
@@ -115,7 +116,7 @@ class MoneySourceController extends Controller
     {
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LoggerInterface $logger): RedirectResponse
     {
         foreach ($request->users as $requestUser) {
             $user = User::find($requestUser['user_id']);
@@ -180,7 +181,7 @@ class MoneySourceController extends Controller
                     ->setTranslationKey('Money source created')
             );
         } catch (\Throwable $t) {
-            dd($t->getMessage());
+            $logger->error('Could not create history entry for reason: ' . $t->getMessage());
         }
 
         return back()->with(['recentlyCreatedMoneySourceId' => $moneySource->id]);

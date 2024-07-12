@@ -25,6 +25,7 @@
                             <div class="py-3">
                                 <div class="relative flex w-full">
                                     <TextInputComponent
+                                        id="projectName"
                                         v-model="createProjectForm.name"
                                         :label="$t('Project name*')"
                                         />
@@ -211,6 +212,7 @@
 
                             <div class="py-3" v-if="createSettings.cost_center">
                                 <TextInputComponent
+                                    id="costCenter"
                                     v-model="createProjectForm.cost_center"
                                     :label="$t('Name of the cost unit')"
                                 />
@@ -606,6 +608,10 @@ export default {
 
             this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
+
+            if ( this.isCreateProjectGroupTab ){
+                this.createProjectForm.isGroup = true;
+            }
 
             if (this.project) {
                 this.createProjectForm.patch(

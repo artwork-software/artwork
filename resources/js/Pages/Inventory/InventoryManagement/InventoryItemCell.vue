@@ -20,16 +20,16 @@
             </template>
         </span>
         <div v-else-if="isCheckboxColumn()"
-             class="w-full text-center cursor-text"
+             class="checkbox-container"
              @click="toggleCellEdit()">
             {{ $t('No') }}
         </div>
-        <div v-else class="w-full min-h-8 h-full cursor-text" @click="toggleCellEdit()"/>
+        <div v-else class="empty-cell-container" @click="toggleCellEdit()"/>
         <div v-if="isTextColumn() && cellClicked"
              :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="text"
-                   class="w-full text-xs px-1 flex "
+                   class="text-input"
                    v-model="cellValue"
                    @focusout="applyCellValueChange()"/>
         </div>
@@ -37,7 +37,7 @@
              :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="date"
-                   class="w-full text-xs px-1 flex"
+                   class="date-input"
                    v-model="cellValue"
                    @change="applyCellValueChange()"
                    @focusout="applyCellValueChange()"/>
@@ -46,14 +46,14 @@
              :class="getInputCls()">
             <input ref="cellValueInputRef"
                    type="checkbox"
-                   class="w-5 h-5 mx-auto text-xs px-1 flex"
+                   class="checkbox-input"
                    v-model="cellValue"
                    @focusout="applyCellValueChange()"/>
         </div>
         <div v-else-if="isSelectColumn() && cellClicked"
              :class="getInputCls()">
             <select ref="cellValueInputRef"
-                    class="w-full text-xs px-1"
+                    class="select-input"
                     v-model="cellValue"
                     @change="applyCellValueChange()"
                     @focusout="applyCellValueChange()">
@@ -83,7 +83,7 @@ const emits = defineEmits(['isEditingCellValue']),
     getCellCls = () => {
         return [
             getBackgroundCls(),
-            'max-w-40 h-full px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
+            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
         ].join(' ');
     },
     getBackgroundCls = () => {

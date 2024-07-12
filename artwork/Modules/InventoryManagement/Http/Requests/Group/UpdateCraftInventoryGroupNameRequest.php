@@ -11,6 +11,6 @@ class UpdateCraftInventoryGroupNameRequest extends FormRequest
      */
     public function rules(): array
     {
-        return ['name' => 'string'];
+        return ['name' => 'required|string'];
     }
 }

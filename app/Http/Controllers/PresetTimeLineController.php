@@ -23,7 +23,6 @@ class PresetTimeLineController extends Controller
 
     public function update(Request $request): void
     {
-        //dd($request->timelines);
         foreach ($request->timelines as $timeline) {
             $findTimeLine = ShiftPresetTimeline::find($timeline['id']);
             $findTimeLine->update([

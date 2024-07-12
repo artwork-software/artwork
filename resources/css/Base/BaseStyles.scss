@@ -1,0 +1,10 @@
+@layer components {
+
+    .base-menu-link {
+        @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
+
+        .base-menu-icon {
+            @apply mr-3 h-5 w-5;
+        }
+    }
+}

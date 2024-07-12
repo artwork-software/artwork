@@ -8,7 +8,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class UserRepository extends BaseRepository
+class UserRepository extends BaseRepository
 {
     /**
      * @return Collection

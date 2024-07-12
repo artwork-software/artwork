@@ -1,15 +1,19 @@
 <template>
+
     <tr draggable="true"
         @dragover="itemDragOver"
         @dragleave="itemDragLeave"
         @drop="itemDrop"
         :class="dragOverClass">
         <td :colspan="colspan">
-            <div class="flex flex-row py-1 border border-dashed border-blue-700 justify-center items-center">
-                <IconDragDrop class="w-5 h-5"/>
-                <span class="text-xs subpixel-antialiased">{{ $t('Place here') }}</span>
+            <div class="drop-item-container">
+                <IconDragDrop class="icon"/>
+                <span class="text">{{ $t('Place here') }}</span>
             </div>
         </td>
+    </tr>
+    <tr v-if="destinationIndex !== maxIndex">
+        <td class="empty-row-xxs-td"></td>
     </tr>
 </template>
 <script setup>
@@ -19,7 +23,8 @@ import {computed, ref} from "vue";
 const emits = defineEmits(['itemRequestsDragMove']),
     props = defineProps({
         colspan: Number,
-        destinationIndex: Number
+        destinationIndex: Number,
+        maxIndex: Number
     }),
     draggedOver = ref(false),
     dragOverClass = computed(() => {

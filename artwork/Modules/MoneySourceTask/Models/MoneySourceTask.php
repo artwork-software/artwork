@@ -35,7 +35,8 @@ class MoneySourceTask extends Model
     ];
 
     protected $casts = [
-        'deadline' => 'datetime: d. F Y H:i:s'
+        'deadline' => 'datetime: d. F Y H:i:s',
+        'done' => 'boolean'
     ];
 
     //@todo: fix phpcs error - refactor function name to moneySource

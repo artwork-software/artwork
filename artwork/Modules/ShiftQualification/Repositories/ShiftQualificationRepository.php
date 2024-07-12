@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class ShiftQualificationRepository extends BaseRepository
+class ShiftQualificationRepository extends BaseRepository
 {
     public function findById(int $id): ShiftQualification|null
     {

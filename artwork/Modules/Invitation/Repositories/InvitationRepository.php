@@ -4,6 +4,6 @@ namespace Artwork\Modules\Invitation\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 
-readonly class InvitationRepository extends BaseRepository
+class InvitationRepository extends BaseRepository
 {
 }

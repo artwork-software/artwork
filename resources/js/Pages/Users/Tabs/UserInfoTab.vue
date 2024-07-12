@@ -140,7 +140,7 @@
                                             :iconName="team.svg_name"
                         />
                     </span>
-                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5">
+                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="false">
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="openChangeTeamsModal"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

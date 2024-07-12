@@ -258,6 +258,12 @@ export default {
                     isCurrent: route().current('shift.settings')
                 },
                 {
+                    has_permission: this.hasAdminRole(),
+                    name: this.$t('Inventory'),
+                    href: route('inventory-management.settings'),
+                    isCurrent: route().current('inventory-management.settings')
+                },
+                {
                     name: this.$t('Rooms'),
                     has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
@@ -460,7 +466,7 @@ export default {
             testModel: '',
             testModel2: '',
             testModel3: '',
-            testModel4: ''
+            testModel4: '',
         }
     },
     setup() {
@@ -477,7 +483,7 @@ export default {
         title: {
             type: String,
             default: 'Startseite'
-        }
+        },
     }
 }
 

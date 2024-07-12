@@ -20,6 +20,7 @@ class CraftInventoryItemCell extends Model
         'craft_inventory_item_id',
         'cell_value',
     ];
+
     public function item(): BelongsTo
     {
         return $this->belongsTo(

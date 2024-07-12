@@ -2,45 +2,71 @@
     <tr :draggable="categoryIsDraggable()"
         @dragstart="categoryDragStart"
         @dragend="categoryDragEnd"
-        @mouseover="handleCategoryMouseover()"
-        @mouseout="handleCategoryMouseout()"
+        @mouseover="showCategoryMenu()"
+        @mouseout="closeCategoryMenu()"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan"
-            :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'px-3 py-2 bg-primary text-white subpixel-antialiased text-sm']">
-            <div class="w-full h-full flex flex-row items-center relative gap-x-2">
-                <div class="cursor-text overflow-hidden overflow-ellipsis whitespace-nowrap"
+            :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'category-td']">
+            <div class="category-td-container">
+                <div class="name"
                     @click="toggleCategoryEdit()">
                     {{ category.name }}
                 </div>
                 <div @click="toggleCategory()"
                      class="cursor-pointer">
-                    <IconChevronUp v-if="categoryShown" class="w-5 h-5"/>
-                    <IconChevronDown v-else class="w-5 h-5"/>
+                    <IconChevronUp v-if="categoryShown" class="icon"/>
+                    <IconChevronDown v-else class="icon"/>
                 </div>
-                <div :class="[categoryClicked ? '' : 'hidden', 'flex flex-row cursor-pointer items-center bg-primary text-white gap-x-2 w-full -left-[4px] z-10 absolute']">
+                <AddNewResource @click="openAddCategoryOrGroupModal()"
+                                :text="$t('Add new group')"/>
+                <div :class="[categoryClicked ? '' : '!hidden', 'category-input-container']">
                     <input
                         type="text"
                         ref="categoryInputRef"
-                        class="w-full p-1 border-0 text-xs text-black"
+                        class="category-input"
                         v-model="categoryValue"
                         @focusout="applyCategoryValueChange()"
                         @keyup.enter="applyCategoryValueChange()">
                 </div>
             </div>
         </td>
+        <td class="relative">
+            <Menu v-show="categoryMenuShown && !categoryDragged"
+                  as="div"
+                  class="inventory-menu-container">
+                <MenuButton as="div">
+                    <IconDotsVertical class="menu-button"
+                                      stroke-width="1.5"
+                                      aria-hidden="true"/>
+                </MenuButton>
+                <div class="inventory-menu">
+                    <transition enter-active-class="transition-enter-active"
+                                enter-from-class="transition-enter-from"
+                                enter-to-class="transition-enter-to"
+                                leave-active-class="transition-leave-active"
+                                leave-from-class="transition-leave-from"
+                                leave-to-class="transition-leave-to">
+                        <MenuItems class="menu-items">
+                            <MenuItem v-slot="{ active }"
+                                      as="div">
+                                <a @click="showCategoryDeleteConfirmModal()"
+                                   :class="[active ? 'active' : 'not-active', 'default group']">
+                                    <IconTrash class="icon group-hover:text-white"/>
+                                    {{ $t('Delete') }}
+                                </a>
+                            </MenuItem>
+                        </MenuItems>
+                    </transition>
+                </div>
+            </Menu>
+        </td>
     </tr>
-    <IconTrashXFilled v-if="!categoryClicked && categoryMouseover && !categoryDragged"
-                      @mouseover="handleCategoryDeleteMouseover"
-                      @mouseout="handleCategoryDeleteMouseout"
-                      :class="[categoryDeleteCls + ' absolute z-50 w-8 h-8 p-1 cursor-pointer border border-white rounded-full text-white bg-black right-0 -translate-y-[105%] translate-x-[40%]']"
-                      @click="showCategoryDeleteConfirmModal()"/>
-    <AddNewGroup v-if="categoryShown" @click="openAddCategoryOrGroupModal()"/>
     <DropGroup v-if="showFirstDropGroup"
                :colspan="colspan"
                :destination-index="0"
                @group-requests-drag-move="moveGroupToDestination"/>
     <tr>
-        <td :colspan="colspan" class="h-0.5"/>
+        <td :colspan="colspan" class="empty-row-xxs-td"/>
     </tr>
     <template v-if="categoryShown"
               v-for="(group, index) in category.groups"
@@ -52,7 +78,7 @@
                         @group-dragging="handleGroupDragging"
                         @group-drag-end="handleGroupDragEnd"/>
         <tr>
-            <td :colspan="colspan" class="h-0.5"/>
+            <td :colspan="colspan" class="empty-row-xxs-td"/>
         </tr>
         <DropGroup v-if="showTemplateDropGroup(index)"
                    :colspan="colspan"
@@ -70,13 +96,21 @@
 
 <script setup>
 import InventoryGroup from "@/Pages/Inventory/InventoryManagement/InventoryGroup.vue";
-import {IconChevronDown, IconChevronUp, IconTrashXFilled} from "@tabler/icons-vue";
+import {
+    IconChevronDown,
+    IconChevronUp,
+    IconCopy,
+    IconDotsVertical, IconEdit,
+    IconTrash,
+    IconTrashXFilled
+} from "@tabler/icons-vue";
 import {computed, ref} from "vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import AddNewGroup from "@/Pages/Inventory/InventoryManagement/AddNewGroup.vue";
 import DropGroup from "@/Pages/Inventory/InventoryManagement/DropGroup.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
+import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNewGroup']),
     props = defineProps({
@@ -85,13 +119,12 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         colspan: Number,
         trCls: String
     }),
+    categoryMenuShown = ref(false),
     categoryInputRef = ref(null),
     categoryShown = ref(true),
     categoryDragged = ref(false),
     categoryClicked = ref(false),
     categoryValue = ref(props.category.name),
-    categoryMouseover = ref(false),
-    categoryDeleteCls = ref(''),
     categoryConfirmDeleteModalShown = ref(false),
     groupDragging = ref(false),
     draggedGroupIndex = ref(null),
@@ -116,7 +149,7 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         }
     },
     applyCategoryValueChange = () => {
-        if (props.category.name === categoryValue.value) {
+        if (props.category.name === categoryValue.value || categoryValue.value.length === 0) {
             toggleCategoryEdit();
             return;
         }
@@ -138,19 +171,11 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
             }
         );
     },
-    handleCategoryMouseover = () => {
-        categoryMouseover.value = true;
+    showCategoryMenu = () => {
+        categoryMenuShown.value = true;
     },
-    handleCategoryMouseout = () => {
-        categoryMouseover.value = false;
-    },
-    handleCategoryDeleteMouseover = () => {
-        categoryMouseover.value = true;
-        categoryDeleteCls.value = 'bg-red-600';
-    },
-    handleCategoryDeleteMouseout = () => {
-        categoryMouseover.value = false;
-        categoryDeleteCls.value = 'bg-black';
+    closeCategoryMenu = () => {
+        categoryMenuShown.value = false;
     },
     showCategoryDeleteConfirmModal = () => {
         categoryConfirmDeleteModalShown.value = true;
@@ -175,7 +200,11 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
     },
     categoryDragStart = (e) => {
         categoryDragged.value = true;
-        emits.call(this, 'categoryDragging', props.index);
+
+        //fix for chrome engine, timeout 1ms before emit otherwise dragend is called immediately
+        //causing drag and drop not working properly if items in between are dragged
+        //@see: https://stackoverflow.com/a/36617714
+        setTimeout(() => emits.call(this, 'categoryDragging', props.index), 1);
 
         e.dataTransfer.setData('categoryId', props.category.id);
         e.dataTransfer.setData('currentCategoryIndex', props.index.toString());
@@ -215,9 +244,3 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         );
     };
 </script>
-
-<style scoped>
-.onDragBackground :deep(td) {
-    opacity: 50%;
-}
-</style>

@@ -24,7 +24,6 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemEvent;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -47,18 +46,20 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 readonly class EventService
 {
-    public function __construct(private EventRepository $eventRepository)
-    {
+    public function __construct(
+        private EventRepository $eventRepository,
+        private readonly AuthManager $authManager
+    ) {
     }
 
     public function importShiftPreset(
@@ -642,9 +643,10 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        DayServicesService $dayServicesService
+        DayServicesService $dayServicesService,
+        User $user
     ): ShiftPlanDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
@@ -766,39 +768,50 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
-        ?CalendarFilter $calendarFilter,
+        User $user,
         ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
 
-        $showCalendar = $calendarService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $projectService,
-            $calendarFilter,
-        );
+        $sameDay = $startDate->format('Y-m-d') === $endDate->format('Y-m-d');
 
-        return EventManagementDto::newInstance()
+        if ($atAGlance || $sameDay) {
+            $showCalendar = $calendarService->createCalendarData(
+                $startDate,
+                $endDate,
+                $userService,
+                $filterService,
+                $filterController,
+                $roomService,
+                $roomCategoryService,
+                $roomAttributeService,
+                $eventTypeService,
+                $areaService,
+                $projectService,
+                $user->calendar_filter,
+            );
+        } else {
+            $showCalendar = $calendarService->createCalendarDataWithoutEvents(
+                $startDate,
+                $endDate,
+                $userService,
+                $filterService,
+                $filterController,
+                $roomService,
+                $roomCategoryService,
+                $roomAttributeService,
+                $eventTypeService,
+                $areaService,
+                $projectService
+            );
+        }
+
+        $dto = EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
             ->setDateValue($showCalendar['dateValue'])
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
-            ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-            ->setEventsAtAGlance(
-                $atAGlance ?
-                    $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                    SupportCollection::make()
-            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
@@ -806,7 +819,21 @@ readonly class EventService
                     $userService->getAuthUser()->calendar_filter
                 ),
             )
-            ->setEvents(
+            ->setFilterOptions($showCalendar["filterOptions"],)
+            ->setPersonalFilters($showCalendar['personalFilters'])
+            ->setUserFilters($showCalendar['user_filters'])
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
+             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
+            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
+        if ($atAGlance) {
+                $dto->setEventsAtAGlance(
+                    $atAGlance ?
+                        $calendarService->getEventsAtAGlance($startDate, $endDate) :
+                        SupportCollection::make()
+                );
+        }
+        if ($sameDay) {
+            $dto->setEvents(
                 CalendarEventDto::newInstance()
                     ->setAreas($showCalendar['filterOptions']['areas'])
                     ->setProjects($showCalendar['filterOptions']['projects'])
@@ -825,12 +852,10 @@ readonly class EventService
                             ) :
                             SupportCollection::make()
                     )
-            )
-            ->setFilterOptions($showCalendar["filterOptions"],)
-            ->setPersonalFilters($showCalendar['personalFilters'])
-            ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
+            );
+        }
+
+        return $dto;
     }
 
     /** @return Event[]|Collection */

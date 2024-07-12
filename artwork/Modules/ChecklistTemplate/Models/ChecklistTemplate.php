@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
 use Artwork\Modules\User\Models\Traits\BelongsToUser;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,8 +18,8 @@ use Laravel\Scout\Searchable;
  * @property int $user_id
  * @property string $created_at
  * @property string $updated_at
- * @property TaskTemplate[] $task_templates
- * @property User[] $users
+ * @property Collection<TaskTemplate> $task_templates
+ * @property Collection<User> $users
  */
 class ChecklistTemplate extends Model
 {

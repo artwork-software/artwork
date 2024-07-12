@@ -248,11 +248,6 @@ readonly class UserService
         return [$startDate, $endDate];
     }
 
-    public function getUserCalendarFilterDatesOrDefault(User $user): array
-    {
-        return $this->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
-    }
-
     /**
      * @return array<int, Carbon>
      */

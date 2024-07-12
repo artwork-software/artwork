@@ -15,6 +15,7 @@ class ShowOwnTasksResource extends JsonResource
      *
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray(Request $request): array
     {
         return [
@@ -44,7 +45,7 @@ class ShowOwnTasksResource extends JsonResource
                     'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
                     'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString(),
                     'users' => $task->task_users,
-                    'formatted_dates' => $task->formatted_dates,
+                    'formatted_dates' => $task->getFormattedDates(),
                 ];
             }),
         ];

@@ -1,6 +1,12 @@
 <?php
 
-namespace Tests\Unit\Task\Modules\Services;
+/**
+ * @todo:
+ * https://caldero-systems.atlassian.net/jira/software/projects/ARTWORK/boards/1?selectedIssue=ARTWORK-90
+ */
+
+/*
+namespace Tests\Unit\Artwork\Modules\Task\Services;
 
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Task\Models\Task;
@@ -11,58 +17,60 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
 use PHPUnit\Framework\TestCase;
-use Throwable;
-use Exception;
 
 class TaskServiceTest extends TestCase
 {
-    /* private readonly TaskRepository $taskRepositoryMock;
-     private readonly Checklist $checklistMock;
-     private readonly Task $taskMock;
-     private readonly SupportCollection $supportCollectionMock;
-     private readonly HasMany $hasManyMock;
+    private readonly TaskRepository $taskRepositoryMock;
 
-     protected function setUp(): void
-     {
-         $this->taskRepositoryMock = $this
-             ->getMockBuilder(TaskRepository::class)
-             ->disableOriginalConstructor()
-             ->onlyMethods(['save', 'deleteByModel', 'findByModel', 'syncWithDetach', 'findById'])
-             ->getMock();
+    private readonly Checklist $checklistMock;
 
-         $this->checklistMock = $this->getMockBuilder(Checklist::class)
-             ->disableOriginalConstructor()
-             ->getMock();
+    private readonly Task $taskMock;
 
-         $this->taskMock = $this->getMockBuilder(Task::class)
-             ->disableOriginalConstructor()
-             ->getMock();
+    private readonly SupportCollection $supportCollectionMock;
 
-         $this->supportCollectionMock = $this->getMockBuilder(SupportCollection::class)
-             ->disableOriginalConstructor()
-             ->getMock();
+    private readonly HasMany $hasManyMock;
 
-         $this->hasManyMock = $this->getMockBuilder(HasMany::class)
-             ->disableOriginalConstructor()
-             ->getMock();
-     }
+    protected function setUp(): void
+    {
+        $this->taskRepositoryMock = $this
+            ->getMockBuilder(TaskRepository::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['save', 'deleteByModel', 'findByModel', 'syncWithDetach', 'findById'])
+            ->getMock();
 
-     public function getService(): TaskService
-     {
-         return new TaskService($this->taskRepositoryMock);
-     }
+        $this->checklistMock = $this->getMockBuilder(Checklist::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-     public function testCreateNewTaskObject(): void
-     {
-         $attributes = ['name' => 'Test Task'];
-         $taskService = $this->getService();
-         $task = $taskService->createNewTaskObject($attributes);
+        $this->taskMock = $this->getMockBuilder(Task::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-         self::assertInstanceOf(Task::class, $task);
-         self::assertSame($attributes['name'], $task->name);
-     }*/
+        $this->supportCollectionMock = $this->getMockBuilder(SupportCollection::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-    /*public function testCreateTaskByRequest(): void
+        $this->hasManyMock = $this->getMockBuilder(HasMany::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    public function getService(): TaskService
+    {
+        return new TaskService($this->taskRepositoryMock);
+    }
+
+    public function testCreateNewTaskObject(): void
+    {
+        $attributes = ['name' => 'Test Task'];
+        $taskService = $this->getService();
+        $task = $taskService->createNewTaskObject($attributes);
+
+        self::assertInstanceOf(Task::class, $task);
+        self::assertSame($attributes['name'], $task->name);
+    }
+
+    public function testCreateTaskByRequest(): void
     {
         $data = new SupportCollection([
             'name' => 'Test Task',
@@ -216,5 +224,5 @@ class TaskServiceTest extends TestCase
 
         self::assertSame('Updated Task', $task->name);
         self::assertSame('Updated Description', $task->description);
-    }*/
-}
+    }
+}*/

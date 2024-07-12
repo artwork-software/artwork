@@ -42,34 +42,16 @@ readonly class ChecklistService
 
     public function getChecklistsWithMyTask(int $userId, int $filter): Collection
     {
-        // get all Checklists where has tasks with task_users with user_id = $userId.
-        // if there is a task with user_id = $userId, then the checklist is returned
-        // but return only tasks with user_id = $userId
-        // return only tasks where are not done an if in checklist all tasks are done, then return the checklist not
         $doneTask = false;
         if ($filter === 3) {
             $doneTask = true;
         }
 
-        return Checklist::query()
-            ->whereHas('tasks', function ($q) use ($userId): void {
-                $q->whereHas('task_users', function ($q) use ($userId): void {
-                    $q->where('user_id', $userId);
-                });
-            })
-            ->with(['tasks' => function ($q) use ($filter, $doneTask, $userId): void {
-                $q->where('done', $doneTask)
-                    ->when($filter === 1, function ($q): void {
-                        $q->orderBy('order');
-                    })
-                    ->when($filter === 2, function ($q): void {
-                        $q->orderBy('deadline');
-                    })
-                    ->whereHas('task_users', function ($q) use ($userId): void {
-                        $q->where('user_id', $userId);
-                    });
-            }])
-            ->get();
+        return $this->checklistRepository->getChecklistWhereHasTaskUsersWithFilteredTasks(
+            $userId,
+            $filter,
+            $doneTask
+        );
     }
 
     public function getPrivateChecklists(int $userId, int $filter): Collection
@@ -78,18 +60,8 @@ readonly class ChecklistService
         if ($filter === 3) {
             $doneTask = true;
         }
-        return Checklist::query()
-            ->where('user_id', $userId)
-            ->with(['tasks' => function ($q) use ($doneTask, $filter): void {
-                $q->where('done', $doneTask)
-                    ->when($filter === 1, function ($q): void {
-                        $q->orderBy('order');
-                    })
-                    ->when($filter === 2, function ($q): void {
-                        $q->orderBy('deadline');
-                    });
-            }])
-            ->get();
+
+        return $this->checklistRepository->getChecklistsForUserWithFilteredTasks($userId, $doneTask, $filter);
     }
 
     public function assignUsersById(Checklist $checklist, TaskService $taskService, array $ids): void

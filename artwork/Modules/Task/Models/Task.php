@@ -52,8 +52,6 @@ class Task extends Model
         'deadline' => 'datetime'
     ];
 
-    protected $appends = ['formatted_dates'];
-
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id', 'id', 'contracts');
@@ -92,7 +90,10 @@ class Task extends Model
         return $this->belongsToMany(MoneySourceTask::class);
     }
 
-    public function getFormattedDatesAttribute(): array
+    /**
+     * @return array<string, ?Carbon>
+     */
+    public function getFormattedDates(): array
     {
         return [
             'deadline' => $this->deadline ? $this->deadline->translatedFormat('l, d. F Y') : null,

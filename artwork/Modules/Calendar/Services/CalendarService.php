@@ -164,9 +164,6 @@ class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
-        ?CalendarFilter $calendarFilter,
-        ?Room $room = null,
-        ?Project $project = null,
     ): array {
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
@@ -208,6 +205,9 @@ class CalendarService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function createCalendarData(
         Carbon $startDate,
         Carbon $endDate,
@@ -236,10 +236,7 @@ class CalendarService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
-            $calendarFilter,
-            $room,
-            $project,
+            $projectService
         );
         $data['roomsWithEvents'] = $room === null ?
                 $roomService->collectEventsForRooms(

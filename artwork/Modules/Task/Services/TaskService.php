@@ -3,37 +3,49 @@
 namespace Artwork\Modules\Task\Services;
 
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Repositories\TaskRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
-readonly class TaskService
+class TaskService
 {
-    public function __construct(private TaskRepository $taskRepository)
-    {
+    public function __construct(
+        private readonly TaskRepository $taskRepository,
+        private readonly ChecklistRepository $checklistRepository
+    ) {
     }
-    public function createNewTaskObject(array $attributes): Task
+    public function createNewTask(array $attributes): Task
     {
         return new Task($attributes);
     }
 
-    public function createTaskByRequest(Checklist $checklist, SupportCollection $data): Task
-    {
-        $task = $this->createNewTaskObject([
-            'checklist_id' => $checklist->id,
-            'name' => $data->get('name'),
-            'description' => $data->get('description'),
-            'deadline' => Carbon::parse($data->get('deadline'))->endOfDay(),
-            'done' => false,
-            'order' => $checklist->tasks()->max('order') + 1,
-        ]);
-        $createdTask = $this->taskRepository->save($task);
-        /** @var Task $createdTask */
-        $createdTask->task_users()->sync($data->get('users'));
+    public function createTaskByRequest(
+        Checklist $checklist,
+        string $name,
+        ?string $description,
+        ?string $deadline,
+        ?array $userIds
+    ): Task {
+        /** @var Task $task */
+        $task = $this->taskRepository->save(
+            $this->createNewTask([
+                'checklist_id' => $checklist->id,
+                'name' => $name,
+                'description' => $description,
+                'deadline' => Carbon::parse($deadline)->endOfDay(),
+                'done' => false,
+                'order' => $this->checklistRepository->getOrderByChecklists($checklist),
+            ])
+        );
 
-        return $createdTask;
+        if ($userIds) {
+            $this->taskRepository->syncWithDetach($task->task_users(), $userIds);
+        }
+
+        return $task;
     }
 
     public function deleteByChecklist(Checklist $checklist): void
@@ -84,23 +96,22 @@ readonly class TaskService
         Checklist $checklist,
         bool $done,
         int $userId
-    ): Task|null {
+    ): Collection {
         $tasks = $this->getByChecklist($checklist);
-        $lastTask = null;
+
+        /** @var Task $task */
         foreach ($tasks as $task) {
-            $task->done = $done;
-            if ($done) {
-                $task->user_id = $userId;
-                $task->done_at = now();
-            } else {
-                $task->user_id = null;
-                $task->done_at = null;
-            }
-            /* @var Task $lastTask */
-            $lastTask = $this->taskRepository->save($task);
+            $this->taskRepository->update(
+                $task,
+                [
+                    'done' => $done,
+                    'user_id' => $done ? $userId : null,
+                    'done_at' => $done ? Carbon::now() : null
+                ]
+            );
         }
 
-        return $lastTask;
+        return $tasks;
     }
 
     public function duplicateTasksByChecklist(Checklist $checklist, Checklist $newChecklist): void
@@ -158,6 +169,6 @@ readonly class TaskService
 
     public function syncTaskUsers(Task $task, array $ids): void
     {
-        $task->task_users()->sync($ids);
+        $this->taskRepository->syncWithDetach($task->task_users(), $ids);
     }
 }

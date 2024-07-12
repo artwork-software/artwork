@@ -771,7 +771,7 @@ readonly class EventService
         User $user,
         ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
 
         if ($atAGlance) {
             $showCalendar = $calendarService->createCalendarData(
@@ -800,8 +800,7 @@ readonly class EventService
                 $roomAttributeService,
                 $eventTypeService,
                 $areaService,
-                $projectService,
-                $user->calendar_filter,
+                $projectService
             );
         }
 

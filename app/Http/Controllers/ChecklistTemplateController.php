@@ -6,7 +6,10 @@ use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\ChecklistTemplate\Http\Resources\ChecklistTemplateIndexResource;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
+use Artwork\Modules\ChecklistTemplate\Services\ChecklistTemplateService;
 use Artwork\Modules\TaskTemplate\Models\TaskTemplate;
+use Artwork\Modules\TaskTemplate\Services\TaskTemplateService;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -16,8 +19,11 @@ use Inertia\ResponseFactory;
 
 class ChecklistTemplateController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly ChecklistTemplateService $checklistTemplateService,
+        private readonly TaskTemplateService $taskTemplateService
+    ) {
         $this->authorizeResource(ChecklistTemplate::class);
     }
 
@@ -61,7 +67,7 @@ class ChecklistTemplateController extends Controller
 
         $checklist_template = ChecklistTemplate::create([
             'name' => $checklist->name,
-            'user_id' => $request->user_id
+            'user_id' => $this->authManager->id()
         ]);
 
         foreach ($checklist->tasks as $task) {
@@ -125,6 +131,19 @@ class ChecklistTemplateController extends Controller
     public function destroy(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
         $checklistTemplate->delete();
+
+        return Redirect::back();
+    }
+
+    public function duplicate(ChecklistTemplate $checklistTemplate): RedirectResponse
+    {
+        $this->taskTemplateService->duplicateTaskTemplates(
+            $checklistTemplate,
+            $this->checklistTemplateService->duplicate(
+                $checklistTemplate,
+                $this->authManager->id()
+            )
+        );
 
         return Redirect::back();
     }

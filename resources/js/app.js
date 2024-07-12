@@ -9,6 +9,9 @@ import {resolvePageComponent} from "laravel-vite-plugin/inertia-helpers";
 import '@vuepic/vue-datepicker/dist/main.css'
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n'
+import { provide } from 'vue';
+import { usePage } from '@inertiajs/vue3'; // oder wie auch immer Sie die Page-Props bekommen
+
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -60,6 +63,7 @@ createInertiaApp({
             this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3
             document.documentElement.lang = newLocale;
         };
+
     },
     progress: {
         color: '#3017AD',

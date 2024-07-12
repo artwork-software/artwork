@@ -64,7 +64,8 @@ class InventoryController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
     ): Response {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($this->authManager->user());
+        $calendarFilter = $this->authManager->user()->calendar_filter;
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
 
         $showCalendar = $this->calendarService->createCalendarData(
             $startDate,
@@ -78,7 +79,7 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             $projectService,
-            $this->authManager->user()->calendar_filter
+            $calendarFilter
         );
 
         $crafts = $this->craftService->getCraftsWithInventory();

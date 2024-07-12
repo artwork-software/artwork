@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Artwork\Modules\Availability\Services;
 
-
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitySeries;
 use Artwork\Modules\Availability\Repositories\AvailabilitySeriesRepository;

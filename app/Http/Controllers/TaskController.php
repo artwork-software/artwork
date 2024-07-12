@@ -4,22 +4,23 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
+use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\Task\Http\Requests\FilterOwnTasksRequest;
 use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
+use Artwork\Modules\Task\Http\Requests\UpdateTaskOrderInChecklistRequest;
+use Artwork\Modules\Task\Http\Requests\UpdateTaskRequest;
+use Artwork\Modules\Task\Http\Resources\ShowOwnTasksResource;
 use Artwork\Modules\Task\Http\Resources\TaskIndexResource;
-use Artwork\Modules\Task\Http\Resources\TaskShowResource;
 use Artwork\Modules\Task\Models\Task;
-use Artwork\Modules\User\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use Artwork\Modules\Task\Services\TaskService;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -28,7 +29,11 @@ class TaskController extends Controller
 {
     public function __construct(
         private readonly ChangeService $changeService,
-        private readonly SchedulingService $schedulingService
+        private readonly SchedulingService $schedulingService,
+        private readonly TaskService $taskService,
+        private readonly ChecklistService $checklistService,
+        private readonly AuthManager $authManager,
+        private readonly MoneySourceTaskService $moneySourceTaskService
     ) {
     }
 
@@ -37,21 +42,32 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
-    public function indexOwnTasks(ProjectTabService $projectTabService): Response|ResponseFactory
-    {
-        $tasks = Task::query()
-            ->with(['checklist.project', 'checklist.users'])
-            ->whereHas('checklist', fn(Builder $checklistBuilder) => $checklistBuilder
-                ->where('user_id', Auth::id()))
-            ->orWhereHas('task_users', function ($q): void {
-                $q->where('user_id', Auth::id());
-            })->get();
+    public function indexOwnTasks(
+        ProjectTabService $projectTabService,
+        FilterOwnTasksRequest $request
+    ): Response|ResponseFactory {
+
+        $checklists = $this->checklistService->getChecklistsWithMyTask(
+            $this->authManager->id(),
+            $request->integer('filter')
+        );
+
+        $privateChecklists = $this->checklistService->getPrivateChecklists(
+            $this->authManager->id(),
+            $request->integer('filter')
+        );
+
+        $moneySourceTasks = $this->moneySourceTaskService->getMyMoneySourceTasks(
+            $this->authManager->id(),
+            $request->integer('filter')
+        );
+
+
 
         return inertia('Tasks/OwnTasksManagement', [
-            'tasks' => TaskShowResource::collection($tasks),
-            'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function ($query) {
-                return $query->where('user_id', Auth::id());
-            }])->where('done', false)->get(),
+            'checklists' => ShowOwnTasksResource::collection($checklists)->resolve(),
+            'private_checklists' => ShowOwnTasksResource::collection($privateChecklists)->resolve(),
+            'money_source_task' => $moneySourceTasks,
             'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id
         ]);
     }
@@ -59,30 +75,16 @@ class TaskController extends Controller
     public function store(
         StoreTaskRequest $request
     ): JsonResponse|RedirectResponse {
-        $checklist = Checklist::where('id', $request->checklist_id)->first();
-        $authorized = false;
-        $created = false;
-        $user = User::where('id', Auth::id())->first();
-        $isManager = $user->projects()->find($checklist->project->id)?->pivot?->is_manager === 1;
-        $isAdmin = Auth::user()->hasRole(RoleEnum::ARTWORK_ADMIN->value);
-        if ($isAdmin || $isManager) {
-            $authorized = true;
-            $this->createTask($request);
-        } else {
-            foreach ($checklist->users()->get() as $user) {
-                if ($user->id === Auth::id()) {
-                    if ($created === false) {
-                        $authorized = true;
-                        $this->createTask($request);
-                        $created = true;
-                    }
-                }
-            }
-        }
+        /** @var Checklist $checklist */
+        $checklist = $this->checklistService->getById($request->integer('checklist_id'));
 
-        if (!$authorized) {
-            return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
-        }
+        $this->taskService->createTaskByRequest(
+            $checklist,
+            $request->string('name'),
+            $request->string('description'),
+            $request->string('deadline'),
+            $request->collect('users')->toArray()
+        );
 
         $this->changeService->saveFromBuilder(
             $this->changeService
@@ -117,28 +119,6 @@ class TaskController extends Controller
         }
     }
 
-    private function createTask(StoreTaskRequest $request): void
-    {
-        $task = Task::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'deadline' => $request->deadline,
-            'done' => false,
-            'order' => Task::max('order') + 1,
-            'checklist_id' => $request->checklist_id
-        ]);
-
-        if (!$request->private) {
-            if (!empty($request->users)) {
-                $task->task_users()->sync(collect($request->users));
-            }
-        }
-
-        $checklist = Checklist::find($request->checklist_id);
-        $checklistUsers = $checklist->users()->get();
-
-        $task->task_users()->syncWithoutDetaching(collect($checklistUsers)->pluck('id'));
-    }
 
     public function edit(Task $task): Response|ResponseFactory
     {
@@ -147,24 +127,13 @@ class TaskController extends Controller
         ]);
     }
 
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
-        $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
-        $task->user_id = null;
-        $task->done_at = null;
-        if (!empty($request->done)) {
-            if ($request->done === true) {
-                $task->user_who_done()->associate(Auth::user());
-                $task->done_at = Date::now();
-            }
-        }
 
-        $task->fill($update_properties);
-        $task->save();
-
-        if (!$request->private && !empty($request->users)) {
-            $task->task_users()->sync(collect($request->users));
-        }
+        $this->taskService->updateByRequest(
+            $task,
+            $request->collect()
+        );
 
         if ($checklist = $task->checklist()->first()) {
             $this->changeService->saveFromBuilder(
@@ -202,19 +171,18 @@ class TaskController extends Controller
         }
     }
 
-    public function updateOrder(Request $request): RedirectResponse
+    public function updateOrder(UpdateTaskOrderInChecklistRequest $request): RedirectResponse
     {
-        $firstTask = Task::findOrFail($request->tasks[0]['id']);
-
-        foreach ($request->tasks as $task) {
-            Task::findOrFail($task['id'])->update(['order' => $task['order']]);
-        }
+        $this->taskService->reorderTasks(
+            $request->collect('checklistTasks')
+        );
 
         return Redirect::back();
     }
 
     public function destroy(Task $task): RedirectResponse
     {
+        /** @var Checklist $checklist */
         $checklist = $task->checklist()->first();
 
         $this->changeService->saveFromBuilder(
@@ -230,6 +198,16 @@ class TaskController extends Controller
         );
 
         $task->forceDelete();
+
+        return Redirect::back();
+    }
+
+    public function updateDoneStatus(Task $task): RedirectResponse
+    {
+        $this->taskService->doneOrUndoneTask(
+            $task,
+            $this->authManager->id()
+        );
 
         return Redirect::back();
     }

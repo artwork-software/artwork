@@ -445,7 +445,8 @@ readonly class RoomService
             $calendarFilter,
             $project
         );
-        [$startDate, $endDate] = app()->get(UserService::class)->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
+        [$startDate, $endDate] = app()->get(UserService::class)
+            ->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
             $query->where(function ($q) use ($calendarPeriod, $date): void {
@@ -460,6 +461,8 @@ readonly class RoomService
         return  $roomEventsQuery->get();
     }
 
+    //@todo: refactor
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function buildRoomCollectionBaseQuery(
         Room $room,
         ?CalendarFilter $calendarFilter,
@@ -708,7 +711,7 @@ readonly class RoomService
         AreaService $areaService,
         User $user
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
 
         $calendarData = $calendarService->createCalendarData(
             $startDate,

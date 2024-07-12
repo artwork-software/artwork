@@ -771,8 +771,10 @@ readonly class EventService
         User $user,
         ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
+
         $sameDay = $startDate->format('Y-m-d') === $endDate->format('Y-m-d');
+
         if ($atAGlance || $sameDay) {
             $showCalendar = $calendarService->createCalendarData(
                 $startDate,
@@ -800,8 +802,7 @@ readonly class EventService
                 $roomAttributeService,
                 $eventTypeService,
                 $areaService,
-                $projectService,
-                $user->calendar_filter,
+                $projectService
             );
         }
 
@@ -833,24 +834,24 @@ readonly class EventService
         }
         if ($sameDay) {
             $dto->setEvents(
-                    CalendarEventDto::newInstance()
-                        ->setAreas($showCalendar['filterOptions']['areas'])
-                        ->setProjects($showCalendar['filterOptions']['projects'])
-                        ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                        ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                        ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
-                        ->setEvents(
-                            $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                                SupportCollection::make(
-                                    CalendarEventResource::collection(
-                                        $calendarService->getEventsOfInterval(
-                                            $startDate,
-                                            $endDate
-                                        )
-                                    )->resolve()
-                                ) :
-                                SupportCollection::make()
-                        )
+                CalendarEventDto::newInstance()
+                    ->setAreas($showCalendar['filterOptions']['areas'])
+                    ->setProjects($showCalendar['filterOptions']['projects'])
+                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
+                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
+                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
+                    ->setEvents(
+                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                            SupportCollection::make(
+                                CalendarEventResource::collection(
+                                    $calendarService->getEventsOfInterval(
+                                        $startDate,
+                                        $endDate
+                                    )
+                                )->resolve()
+                            ) :
+                            SupportCollection::make()
+                    )
             );
         }
 

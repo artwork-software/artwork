@@ -9,9 +9,12 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Task\Http\Requests\DoneOrUndoneTaskRequest;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -22,7 +25,9 @@ class ChecklistController extends Controller
 {
     public function __construct(
         private readonly ChecklistService $checklistService,
-        private readonly ChangeService $changeService
+        private readonly ChangeService $changeService,
+        private readonly TaskService $taskService,
+        private readonly AuthManager $authManager
     ) {
         $this->authorizeResource(Checklist::class);
     }
@@ -70,13 +75,19 @@ class ChecklistController extends Controller
         ]);
 
         foreach ($template->task_templates as $task_template) {
-            Task::create([
+            $task = Task::create([
                 'name' => $task_template->name,
                 'description' => $task_template->description,
                 'done' => false,
                 'checklist_id' => $checklist->id,
                 'order' => Task::max('order') + 1,
+                'deadline' => Carbon::now()->addDays(3)
             ]);
+            $task->task_users()->sync(
+                $template->users->map(function ($user) {
+                    return $user['id'];
+                })
+            );
         }
 
         $checklist->users()->sync(
@@ -150,6 +161,9 @@ class ChecklistController extends Controller
     public function destroy(
         Checklist $checklist
     ): RedirectResponse {
+        $checklist->tasks->each(function (Task $task): void {
+            $task->forceDelete();
+        });
         $checklist->forceDelete();
 
         $this->changeService->saveFromBuilder(
@@ -161,6 +175,41 @@ class ChecklistController extends Controller
                 ->setTranslationKeyPlaceholderValues([$checklist->name])
         );
 
+        return Redirect::back();
+    }
+
+    public function duplicate(Checklist $checklist): RedirectResponse
+    {
+        $newChecklist = $this->checklistService->duplicate(
+            $checklist
+        );
+
+        $this->taskService->duplicateTasksByChecklist(
+            $checklist,
+            $newChecklist
+        );
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($newChecklist->project_id)
+                ->setTranslationKey('Checklist duplicated')
+                ->setTranslationKeyPlaceholderValues([$newChecklist->name])
+        );
+
+        return Redirect::back();
+    }
+
+    public function doneOrUndoneAllTasks(
+        Checklist $checklist,
+        DoneOrUndoneTaskRequest $request
+    ): RedirectResponse {
+        $this->taskService->doneOrUndoneAllTasks(
+            $checklist,
+            $request->boolean('done'),
+            $this->authManager->id()
+        );
         return Redirect::back();
     }
 }

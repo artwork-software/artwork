@@ -62,7 +62,9 @@ export default {
     },
     methods: {
         async getEvents() {
-            const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
+            const response = await axios.get(
+                `/calendar/room/${this.room.id}/${this.day.full_day}/${this.project ? this.project.id : 0}`
+            );
             this.events = response.data.data;
             this.isLoading = false;
         },

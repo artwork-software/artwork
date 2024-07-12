@@ -1138,13 +1138,15 @@ export default {
             let tmpEmitter = this.emitter;
 
             if (!this.event?.id) {
-                const daysOfEvent = this.getDaysOfEvent(this.startDate, this.endDate);
+                const daysOfEvent = this.getDaysOfEvent(this.startDate, this.series ? this.seriesEndDate : this.endDate);
                 const tmpSelectedRoomId = this.selectedRoom.id
+                const eventData = this.eventData();
                 return await axios
-                    .post('/events', this.eventData())
+                    .post('/events', eventData)
                     .then(
                         () => {
                             this.closeModal(true);
+
                             daysOfEvent.forEach(function (day) {
                                 tmpEmitter.emit(
                                     'reloadCalendarCell',
@@ -1190,7 +1192,6 @@ export default {
                         .then(() => {
                             affectedRooms.forEach(function (roomId) {
                                 initialDaysOfEvent.forEach(function (day) {
-                                    console.debug('emit for', roomId, day);
                                     tmpEmitter.emit(
                                         'reloadCalendarCell',
                                         {

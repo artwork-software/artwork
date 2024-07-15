@@ -219,7 +219,7 @@ class CalendarService
             $this->projectStateService->getAll()->all()
         );
 
-        return [
+        $result = [
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
             // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
@@ -262,6 +262,12 @@ class CalendarService
             'personalFilters' => $filterController->index(),
             'user_filters' => $userService->getAuthUser()->calendar_filter,
         ];
+
+        $this->cacheManager->forget('projects');
+        $this->cacheManager->forget('shifts');
+        $this->cacheManager->forget('projectStates');
+
+        return $result;
     }
 
     public function getEventsAtAGlance($startDate, $endDate): Collection

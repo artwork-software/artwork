@@ -11,7 +11,6 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
-use Artwork\Modules\Event\Http\Resources\ProjectCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -474,11 +473,9 @@ readonly class RoomService
         });
 
         foreach ($actualEvents as $key => $value) {
-            $projectCalendarEventResource = new ProjectCalendarEventResource($value);
-
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
-                'events' => ProjectCalendarEventResource::collection($value)
+                'events' => CalendarShowEventResource::collection($value)
             ];
         }
         return collect($eventsForRoom);

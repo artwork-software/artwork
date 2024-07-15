@@ -56,20 +56,24 @@
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
-                                v-for="room in rooms">
-                                <RoomWithEvents
-                                    :room="room"
-                                    :day="day"
-                                    :eventTypes="eventTypes"
-                                    :rooms="rooms"
-                                    :first_project_tab_id="this.first_project_tab_id"
-                                    :project="project"
-                                    :multi-edit="multiEdit"
-                                    :checked-events="checkedEvents"
-                                    :zoom-factor="zoomFactor"
-                                    @open-edit-event-modal="openEditEventModal"
-                                    @chcheck-event="updateCheckedEvents"
-                                />
+                                v-for="room in calendarData">
+                                <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events">
+
+                                    <SingleCalendarEvent
+                                        class="relative"
+                                        :project="project ? project : false"
+                                        :multiEdit="multiEdit"
+                                        :zoom-factor="zoomFactor"
+                                        :width="zoomFactor * 204"
+                                        :event="event"
+                                        :rooms="rooms"
+                                        :event-types="eventTypes"
+                                        :checked-events="checkedEvents"
+                                        @open-edit-event-modal="openEditEventModal"
+                                        @check-event="updateCheckedEvents"
+                                        :first_project_tab_id="this.first_project_tab_id"
+                                    />
+                                </div>
                             </td>
                         </tr>
                         </tbody>
@@ -140,13 +144,12 @@ import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import RoomWithEvents from "@/Pages/Events/RoomWithEvents.vue";
+
 
 export default {
     name: "IndividualCalendarComponent",
     mixins: [Permissions, IconLib],
     components: {
-        RoomWithEvents,
         FormButton,
         Link,
         ConfirmDeleteModal,

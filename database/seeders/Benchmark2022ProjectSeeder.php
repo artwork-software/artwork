@@ -17,18 +17,19 @@ class Benchmark2022ProjectSeeder extends Seeder
     {
         $project = Project::create([
             'name' => 'Benchmark 2022',
+            'description' => 'Per Day 10 Events, 5 Rooms, 2 Events per Room per Day',
             'shift_description' => 'Events of Doom',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4,
         ]);
 
-        $startOfYear = Carbon::today()->year(2024)->startOfYear();
+        $startOfYear = Carbon::today()->year(2022)->startOfYear();
         $endOfYear = clone $startOfYear;
         $endOfYear->endOfYear();
         $dateRange = $startOfYear->range($endOfYear);
         $eventTypes = EventType::all()->pluck('name', 'id');
         //first 5 rooms
-        $roomIds = Room::all()->pluck('id');#->shift(5);
+        $roomIds = Room::all()->pluck('id')->shift(5);
         $faker = Factory::create('de_DE');
 
         //generate two events per room per day
@@ -49,7 +50,7 @@ class Benchmark2022ProjectSeeder extends Seeder
                     ->set('allDay', $faker->boolean())
                     ->set('user_id', User::find(1)->id)
                     ->set('audience', $faker->boolean())
-                    ->count(20)
+                    ->count(2)
                     ->create();
             }
         });

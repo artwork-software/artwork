@@ -35,6 +35,7 @@
         </div>
     </div>
 
+
     <AsyncMultiEditBar
         :class="multiEdit ? 'opacity-100' : 'opacity-0'"
         class="ease-in-out duration-500 transition-all"
@@ -85,14 +86,7 @@ const AsyncMultiEditBar = defineAsyncComponent(() =>
 const AsyncSingleEventInCalendar = defineAsyncComponent({
     // the loader function
     loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
-
-    // A component to use while the async component is loading
-    loadingComponent: LoadingComponent,
-    // Delay before showing the loading component. Default: 200ms.
-    delay: 200,
-    // The error component will be displayed if a timeout is
-    // provided and exceeded. Default: Infinity.
-    timeout: 3000
+    delay: 100,
 })
 
 const AsyncFunctionBarCalendar = defineAsyncComponent(() =>

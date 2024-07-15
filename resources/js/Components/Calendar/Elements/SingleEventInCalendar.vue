@@ -44,7 +44,7 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: zoom_factor * 204 - (64 * zoom_factor) + 'px'}" class=" truncate">
-                        {{ event.eventName ?? event.project.name }}
+                        {{ event.eventName ?? event.projectName }}
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.project?.state?.color"
@@ -179,14 +179,14 @@ const roomCanBeBookedByEveryone = computed(() => {
 
 const backgroundColorWithOpacity = computed(() => {
     const percent = 15;
-    const color = props.event.event_type.hex_code;
+    const color = props.event.event_type_color;
     if (!color) return `rgb(255, 255, 255, ${percent}%)`;
     return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent}%)`;
 })
 
 const textColorWithDarken = computed(() => {
     const percent = 75;
-    const color = props.event.event_type.hex_code;
+    const color = props.event.event_type_color;
     if (!color) return 'rgb(180, 180, 180)';
     return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
 })

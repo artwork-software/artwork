@@ -474,7 +474,7 @@ readonly class RoomService
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
-                'roomName' => $room->name,
+                'roomName' => $room->getAttribute('name'),
                 'events' => CalendarShowEventResource::collection($value)
             ];
         }
@@ -660,7 +660,7 @@ readonly class RoomService
         AreaService $areaService,
         User $user
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $calendarData = $calendarService->createCalendarData(
             $startDate,
@@ -674,6 +674,7 @@ readonly class RoomService
             $eventTypeService,
             $areaService,
             $projectService,
+            null,
             $user->calendar_filter,
             $room
         );

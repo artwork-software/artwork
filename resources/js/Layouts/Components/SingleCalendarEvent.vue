@@ -34,7 +34,7 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked" @click="AddOrRemoveEventToMultiEdit" id="candidates"
+                        <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates"
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
@@ -377,7 +377,7 @@ export default {
         "checkedEvents",
         'first_project_tab_id'
     ],
-    emits: ['openEditEventModal', 'checkEvent', 'AddOrRemoveEventToMultiEditFunction'],
+    emits: ['openEditEventModal', 'checkEvent'],
     computed: {
         backgroundColorWithOpacity() {
             const color = this.event.event_type_color;
@@ -433,9 +433,6 @@ export default {
         }
     },
     methods: {
-        AddOrRemoveEventToMultiEdit(){
-            this.$emit('AddOrRemoveEventToMultiEditFunction', this.event.id)
-        },
         getCurrentShiftWorkerCount(shift) {
             return shift.users.length + shift.freelancer.length + shift.service_provider.length;
         },

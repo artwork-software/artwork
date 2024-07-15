@@ -491,6 +491,11 @@ readonly class RoomService
                 'events' => MinimalCacheBasedCalendarEventResource::collection($value)
             ];
         }
+
+        $this->cacheManager->delete('projects');
+        $this->cacheManager->delete('shifts');
+        $this->cacheManager->delete('projectStates');
+
         return collect($eventsForRoom);
     }
 

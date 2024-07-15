@@ -440,14 +440,13 @@ readonly class RoomService
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
     ): Collection {
-        return $this->buildRoomCollectionBaseQuery(
+        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
             $room,
             $calendarFilter,
             $project
-        )->startAndEndTimeOverlap(
-            $date->startOfDay(),
-            $date->endOfDay()
-        )->get();
+        );
+
+        return $roomEventsQuery->startAndEndTimeOverlap($date->startOfDay(), $date->endOfDay())->get();
     }
 
     //@todo: refactor

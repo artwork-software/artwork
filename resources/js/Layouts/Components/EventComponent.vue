@@ -1140,6 +1140,7 @@ export default {
             if (!this.event?.id) {
                 const daysOfEvent = this.getDaysOfEvent(this.startDate, this.endDate);
                 const tmpSelectedRoomId = this.selectedRoom.id
+
                 return await axios
                     .post('/events', this.eventData())
                     .then(

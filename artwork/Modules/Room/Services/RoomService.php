@@ -488,7 +488,7 @@ readonly class RoomService
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
-                'events' => MinimalCacheBasedCalendarEventResource::collection($value)
+                'events' => MinimalCacheBasedCalendarEventResource::collection($value)->resolve()
             ];
         }
 
@@ -628,6 +628,11 @@ readonly class RoomService
                 )
             );
         }
+
+        $this->cacheManager->forget('projects');
+        $this->cacheManager->forget('shifts');
+        $this->cacheManager->forget('projectStates');
+
         return $roomEvents;
     }
 

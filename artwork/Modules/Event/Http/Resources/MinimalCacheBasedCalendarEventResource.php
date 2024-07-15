@@ -23,7 +23,7 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
      * @return array<string, mixed>
      */
     //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
-    public function toArray($request): array
+    public function toArray($request = null): array
     {
         /** @var array<int, Project> $cachedProjects */
         /** @var array<int, ProjectStates> $cachedProjectStates */

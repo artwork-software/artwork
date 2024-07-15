@@ -123,7 +123,7 @@ readonly class ProjectTabService implements ServiceWithArrayCache
             areaService: $areaService,
             projectService: $projectService,
             project: $project,
-            calendarFilter: $this->authManager->user()->calendar_filter,
+            calendarFilter: $userService->getAuthUser()->calendar_filter,
         );
 
         $eventsAtAGlance = Collection::make();

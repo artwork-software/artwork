@@ -50,6 +50,7 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
         return [
             'id' => $this->getAttribute('id'),
             'projectId' => $projectId,
+            'roomId' => $this->getAttribute('room_id'),
             'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
             'startTime' => $this->getAttribute('start_time'),
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),

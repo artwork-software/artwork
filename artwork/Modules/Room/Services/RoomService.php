@@ -440,24 +440,14 @@ readonly class RoomService
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
     ): Collection {
-        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+        return $this->buildRoomCollectionBaseQuery(
             $room,
             $calendarFilter,
             $project
-        );
-        [$startDate, $endDate] = app()->get(UserService::class)->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
-            $query->where(function ($q) use ($calendarPeriod, $date): void {
-                $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->whereDate('start_time', $date);
-            })->orWhere(function ($q) use ($calendarPeriod, $date): void {
-                $q->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->whereDate('end_time', $date);
-            });
-        });
-
-        return  $roomEventsQuery->get();
+        )->startAndEndTimeOverlap(
+            $date->startOfDay(),
+            $date->endOfDay()
+        )->get();
     }
 
     //@todo: refactor

@@ -377,6 +377,7 @@ export default {
         "checkedEvents",
         'first_project_tab_id'
     ],
+
     emits: ['openEditEventModal', 'checkEvent'],
     computed: {
         backgroundColorWithOpacity() {

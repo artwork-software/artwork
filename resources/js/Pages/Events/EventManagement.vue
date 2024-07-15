@@ -82,6 +82,7 @@ export default defineComponent({
         'calendarType',
         'selectedDate',
         'dateValue',
+        //'calendar',
         'rooms',
         'events',
         'days',

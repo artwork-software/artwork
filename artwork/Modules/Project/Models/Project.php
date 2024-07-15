@@ -40,7 +40,7 @@ use Laravel\Scout\Searchable;
  * @property string $updated_at
  * @property string $deleted_at
  * @property int $is_group
- * @property int $state
+ * @property ProjectStates $state
  * @property string $budget_deadline
  * @property Table|null $table
  * @property Collection<User> $managerUsers

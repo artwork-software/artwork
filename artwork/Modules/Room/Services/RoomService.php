@@ -11,6 +11,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCacheBasedCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -20,6 +21,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\DTOs\ShowDto;
 use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
@@ -30,21 +32,29 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Throwable;
 
 readonly class RoomService
 {
-    public function __construct(private RoomRepository $roomRepository)
-    {
+    public function __construct(
+        private RoomRepository $roomRepository,
+        private CacheManager $cacheManager,
+        private ProjectService $projectService,
+        private ProjectStateService $projectStateService,
+        private ShiftService $shiftService
+    ) {
     }
 
     public function save(Room $room): Room
@@ -380,6 +390,9 @@ readonly class RoomService
         return $this->roomRepository->allWithoutTrashed($with);
     }
 
+    /**
+     * @throws Throwable
+     */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function collectEventsForRoom(
@@ -475,7 +488,7 @@ readonly class RoomService
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
-                'events' => CalendarShowEventResource::collection($value)
+                'events' => MinimalCacheBasedCalendarEventResource::collection($value)
             ];
         }
         return collect($eventsForRoom);
@@ -567,6 +580,9 @@ readonly class RoomService
     }
 
 
+    /**
+     * @throws Throwable
+     */
     public function collectEventsForRooms(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
@@ -574,6 +590,32 @@ readonly class RoomService
         ?Project $project = null,
     ): Collection {
         $roomEvents = collect();
+
+        $this->cacheManager->setDefaultCacheTime(30);
+        $this->cacheManager->set(
+            'projects',
+            $this->projectService->getAll(
+                [
+                    'managerUsers',
+                    'state'
+                ]
+            )->all()
+        );
+        $this->cacheManager->set(
+            'shifts',
+            $this->shiftService->getAll(
+                [
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'shiftsQualifications'
+                ]
+            )->all()
+        );
+        $this->cacheManager->set(
+            'projectStates',
+            $this->projectStateService->getAll()->all()
+        );
 
         foreach ($roomsWithEvents as $room) {
             $roomEvents->add(

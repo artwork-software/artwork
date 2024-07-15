@@ -821,10 +821,10 @@ readonly class EventService
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
         if ($atAGlance) {
-                $dto->setEventsAtAGlance(
+            $dto->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
+                ->setEventsAtAGlance(
                     $atAGlance ?
                         $calendarService->getEventsAtAGlance($startDate, $endDate) :
                         SupportCollection::make()

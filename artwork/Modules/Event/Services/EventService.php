@@ -57,8 +57,7 @@ use Illuminate\Support\Collection as SupportCollection;
 readonly class EventService
 {
     public function __construct(
-        private EventRepository $eventRepository,
-        private readonly AuthManager $authManager
+        private EventRepository $eventRepository
     ) {
     }
 
@@ -769,6 +768,7 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         User $user,
+        bool $atAGlance
     ): EventManagementDto {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
@@ -784,6 +784,8 @@ readonly class EventService
             $eventTypeService,
             $areaService,
             $projectService,
+            null,
+            $user->calendar_filter
         );
 
         return EventManagementDto::newInstance()

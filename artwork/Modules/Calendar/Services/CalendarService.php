@@ -164,6 +164,8 @@ class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?Project $project,
+        ?CalendarFilter $calendarFilter,
         ?Room $room = null,
     ): array {
         $periodArray = [];
@@ -207,8 +209,8 @@ class CalendarService
                 $roomService->collectEventsForRoom(
                     room: $room,
                     calendarPeriod: $calendarPeriod,
-                    project: $project,
                     calendarFilter: $calendarFilter,
+                    project: $project,
                 ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :

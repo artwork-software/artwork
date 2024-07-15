@@ -122,9 +122,8 @@ readonly class ProjectTabService implements ServiceWithArrayCache
             eventTypeService: $eventTypeService,
             areaService: $areaService,
             projectService: $projectService,
-            calendarFilter: $this->authManager->user()->calendar_filter,
-            room: null,
             project: $project,
+            calendarFilter: $userService->getAuthUser()->calendar_filter,
         );
 
         $eventsAtAGlance = Collection::make();

@@ -32,7 +32,7 @@
         <div class="flex items-center gap-x-2">
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                <div class="flex items-center gap-x-2">
-                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                        <span class="sr-only">Use setting</span>
                        <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span :class="[multiEdit ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -237,14 +237,14 @@ export default {
         'roomMode',
         'filterOptions',
         'personalFilters',
-        'user_filters',
-        'multiEdit'
+        'user_filters'
     ],
     emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {
         return {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
+            multiEdit: false,
             activeFilters: [],
             userCalendarSettings: useForm({
                 project_status: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_status : false,

@@ -668,8 +668,7 @@ export default {
                 start_date:  this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             },{
-                preserveScroll: true,
-                preserveState: false,
+                preserveScroll: true
             })
         },
         previousDay() {
@@ -680,8 +679,7 @@ export default {
                 start_date:  this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             },{
-                preserveScroll: true,
-                preserveState: false,
+                preserveScroll: true
             })
         },
         formatDate(date) {

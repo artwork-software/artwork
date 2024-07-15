@@ -43,6 +43,7 @@
                     :project="null"
                     :atAGlance="this.atAGlance"
                     :eventTypes=this.eventTypes
+                    :calendarData="calendar"
                     :rooms="rooms"
                     :days="days"
                     :filter-options="filterOptions"
@@ -82,6 +83,7 @@ export default defineComponent({
         'calendarType',
         'selectedDate',
         'dateValue',
+        'calendar',
         'rooms',
         'events',
         'days',

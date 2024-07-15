@@ -46,6 +46,7 @@ class ExportPDFController extends Controller
         Carbon $carbon
     ): Response {
         $projectId = $request->get('project');
+
         $showCalendar = $calendarService->createCalendarData(
             startDate: $projectId ?
                 $carbon->create(
@@ -58,16 +59,16 @@ class ExportPDFController extends Controller
                 )->endOfDay() :
                 $carbon->parse($request->get('end')),
             userService: $userService,
-            filterService:  $filterService,
-            filterController:  $filterController,
-            roomService:  $roomService,
-            roomCategoryService:  $roomCategoryService,
-            roomAttributeService:   $roomAttributeService,
-            eventTypeService:  $eventTypeService,
-            areaService:  $areaService,
-            projectService:  $projectService,
-            calendarFilter:  $userService->getAuthUser()->getAttribute('calendar_filter'),
-            project: $projectId ? $projectService->findById($projectId) : null
+            filterService: $filterService,
+            filterController: $filterController,
+            roomService: $roomService,
+            roomCategoryService: $roomCategoryService,
+            roomAttributeService: $roomAttributeService,
+            eventTypeService: $eventTypeService,
+            areaService: $areaService,
+            projectService: $projectService,
+            project: $projectId ? $projectService->findById($projectId) : null,
+            calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter')
         );
 
         $pdf = $domPdf->loadView(

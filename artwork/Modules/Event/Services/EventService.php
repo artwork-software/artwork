@@ -57,8 +57,7 @@ use Illuminate\Support\Collection as SupportCollection;
 readonly class EventService
 {
     public function __construct(
-        private EventRepository $eventRepository,
-        private readonly AuthManager $authManager
+        private EventRepository $eventRepository
     ) {
     }
 
@@ -769,49 +768,39 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         User $user,
-        ?bool $atAGlance
+        bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
-        $sameDay = $startDate->format('Y-m-d') === $endDate->format('Y-m-d');
+        $showCalendar = $calendarService->createCalendarData(
+            $startDate,
+            $endDate,
+            $userService,
+            $filterService,
+            $filterController,
+            $roomService,
+            $roomCategoryService,
+            $roomAttributeService,
+            $eventTypeService,
+            $areaService,
+            $projectService,
+            null,
+            $user->calendar_filter
+        );
 
-        if ($atAGlance || $sameDay) {
-            $showCalendar = $calendarService->createCalendarData(
-                $startDate,
-                $endDate,
-                $userService,
-                $filterService,
-                $filterController,
-                $roomService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService,
-                $user->calendar_filter,
-            );
-        } else {
-            $showCalendar = $calendarService->createCalendarDataWithoutEvents(
-                $startDate,
-                $endDate,
-                $userService,
-                $filterService,
-                $filterController,
-                $roomService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService
-            );
-        }
-
-        $dto = EventManagementDto::newInstance()
+        return EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
             ->setDateValue($showCalendar['dateValue'])
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
+            ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
+            ->setEventsAtAGlance(
+                $atAGlance ?
+                    $calendarService->getEventsAtAGlance($startDate, $endDate) :
+                    SupportCollection::make()
+            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
@@ -819,21 +808,7 @@ readonly class EventService
                     $userService->getAuthUser()->calendar_filter
                 ),
             )
-            ->setFilterOptions($showCalendar["filterOptions"],)
-            ->setPersonalFilters($showCalendar['personalFilters'])
-            ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
-        if ($atAGlance) {
-                $dto->setEventsAtAGlance(
-                    $atAGlance ?
-                        $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                        SupportCollection::make()
-                );
-        }
-        if ($sameDay) {
-            $dto->setEvents(
+            ->setEvents(
                 CalendarEventDto::newInstance()
                     ->setAreas($showCalendar['filterOptions']['areas'])
                     ->setProjects($showCalendar['filterOptions']['projects'])
@@ -852,10 +827,12 @@ readonly class EventService
                             ) :
                             SupportCollection::make()
                     )
-            );
-        }
-
-        return $dto;
+            )
+            ->setFilterOptions($showCalendar["filterOptions"],)
+            ->setPersonalFilters($showCalendar['personalFilters'])
+            ->setUserFilters($showCalendar['user_filters'])
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
+            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
     }
 
     /** @return Event[]|Collection */

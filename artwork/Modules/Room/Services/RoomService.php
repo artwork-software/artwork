@@ -11,6 +11,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
+use Artwork\Modules\Event\Http\Resources\ProjectCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -473,9 +474,11 @@ readonly class RoomService
         });
 
         foreach ($actualEvents as $key => $value) {
+            $projectCalendarEventResource = new ProjectCalendarEventResource($value);
+
             $eventsForRoom[$key] = [
-                'roomName' => $room->name,
-                'events' => CalendarShowEventResource::collection($value)
+                'roomName' => $room->getAttribute('name'),
+                'events' => ProjectCalendarEventResource::collection($value)
             ];
         }
         return collect($eventsForRoom);
@@ -660,7 +663,7 @@ readonly class RoomService
         AreaService $areaService,
         User $user
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $calendarData = $calendarService->createCalendarData(
             $startDate,
@@ -674,6 +677,7 @@ readonly class RoomService
             $eventTypeService,
             $areaService,
             $projectService,
+            null,
             $user->calendar_filter,
             $room
         );

@@ -11,7 +11,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
 use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
@@ -20,7 +19,6 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
@@ -64,8 +62,7 @@ class InventoryController extends Controller
         EventTypeService $eventTypeService,
         AreaService $areaService,
     ): Response {
-        $calendarFilter = $this->authManager->user()->calendar_filter;
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($calendarFilter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
 
         $showCalendar = $this->calendarService->createCalendarData(
             $startDate,
@@ -79,7 +76,8 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             $projectService,
-            $calendarFilter
+            null,
+            $userService->getAuthUser()->getAttribute('calendar_filter')
         );
 
         $crafts = $this->craftService->getCraftsWithInventory();

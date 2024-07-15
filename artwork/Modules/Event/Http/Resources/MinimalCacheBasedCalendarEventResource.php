@@ -137,7 +137,7 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
         );
     }
 
-    private function determineProject(int $eventProjectId, array $cachedProjects): Project|null
+    private function determineProject(?int $eventProjectId, array $cachedProjects): Project|null
     {
         if ($eventProjectId) {
             foreach ($cachedProjects as $cachedProject) {

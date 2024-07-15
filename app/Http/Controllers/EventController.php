@@ -55,7 +55,6 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;

@@ -152,7 +152,7 @@ class CalendarService
     /**
      * @return array<string, mixed>
      */
-    public function createCalendarDataWithoutEvents(
+    public function createCalendarData(
         Carbon $startDate,
         Carbon $endDate,
         UserService $userService,
@@ -204,63 +204,6 @@ class CalendarService
             'personalFilters' => $filterController->index(),
             'user_filters' => $userService->getAuthUser()->calendar_filter,
         ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function createCalendarData(
-        Carbon $startDate,
-        Carbon $endDate,
-        UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomService $roomService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
-        ProjectService $projectService,
-        ?CalendarFilter $calendarFilter,
-        ?Room $room = null,
-        ?Project $project = null,
-    ): array {
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        $data = $this->createCalendarDataWithoutEvents(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $projectService,
-            $room
-        );
-        $data['roomsWithEvents'] = $room === null ?
-                $roomService->collectEventsForRooms(
-                    roomsWithEvents:  $roomService->getFilteredRooms(
-                        $startDate,
-                        $endDate,
-                        $calendarFilter
-                    ),
-                    calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
-                    project: $project,
-                ) :
-                $roomService->collectEventsForRoom(
-                    room: $room,
-                    calendarPeriod: $calendarPeriod,
-                    calendarFilter: $calendarFilter,
-                    project: $project,
-                );
-            $data['eventsWithoutRoom'] = $room === null ?
-                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
-                [];
-        return $data;
     }
 
     public function getEventsAtAGlance($startDate, $endDate): Collection

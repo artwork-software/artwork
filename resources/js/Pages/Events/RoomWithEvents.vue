@@ -57,9 +57,10 @@ export default {
         async getEvents() {
                 try {
                     const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
+                    console.log(response.data.data);
                     this.events = response.data.data;
                 } catch (error) {
-
+                    console.log(error);
                 }
                 this.isLoading = false;
         },

@@ -769,42 +769,24 @@ readonly class EventService
         AreaService $areaService,
         ProjectService $projectService,
         User $user,
-        ?bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefaultByFilter($user->calendar_filter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
-        if ($atAGlance) {
-            $showCalendar = $calendarService->createCalendarData(
-                $startDate,
-                $endDate,
-                $userService,
-                $filterService,
-                $filterController,
-                $roomService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService,
-                $user->calendar_filter,
-            );
-        } else {
-            $showCalendar = $calendarService->createCalendarDataWithoutEvents(
-                $startDate,
-                $endDate,
-                $userService,
-                $filterService,
-                $filterController,
-                $roomService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                $projectService
-            );
-        }
+        $showCalendar = $calendarService->createCalendarData(
+            $startDate,
+            $endDate,
+            $userService,
+            $filterService,
+            $filterController,
+            $roomService,
+            $roomCategoryService,
+            $roomAttributeService,
+            $eventTypeService,
+            $areaService,
+            $projectService,
+        );
 
-        $dto = EventManagementDto::newInstance()
+        return EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setDays($showCalendar['days'])
             ->setDateValue($showCalendar['dateValue'])
@@ -822,16 +804,6 @@ readonly class EventService
             ->setUserFilters($showCalendar['user_filters'])
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
             ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
-        if ($atAGlance) {
-            $dto->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-                ->setEventsAtAGlance(
-                    $atAGlance ?
-                        $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                        SupportCollection::make()
-                );
-        }
-
-        return $dto;
     }
 
     /** @return Event[]|Collection */

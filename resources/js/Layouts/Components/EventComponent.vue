@@ -1135,12 +1135,12 @@ export default {
                 this.isOption = true;
             }
 
-            const tmpEmitter = this.emitter,
-                eventData = this.eventData();
+            let tmpEmitter = this.emitter;
 
-            const daysOfEvent = this.getDaysOfEvent(this.startDate, this.series ? this.seriesEndDate : this.endDate);
             if (!this.event?.id) {
+                const daysOfEvent = this.getDaysOfEvent(this.startDate, this.series ? this.seriesEndDate : this.endDate);
                 const tmpSelectedRoomId = this.selectedRoom.id
+                const eventData = this.eventData();
                 return await axios
                     .post('/events', eventData)
                     .then(
@@ -1161,31 +1161,23 @@ export default {
             } else {
                 if (this.eventData().is_series) {
                     return await axios
-                        .put('/events/' + this.event?.id, eventData)
+                        .put('/events/' + this.event?.id, this.eventData())
                         .then(() => {
-                            daysOfEvent.forEach(function (day) {
-                                tmpEmitter.emit(
-                                    'reloadCalendarCell',
-                                    {
-                                        day: day,
-                                        roomId: eventData.roomId
-                                    }
-                                );
-                            });
                             this.closeModal(true);
                             this.closeSeriesEditModal();
                             this.showSeriesEdit = true;
                             this.$emit('closed', true);
                         }).catch(error => this.error = error.response.data.errors);
                 } else {
+                    //get initial day range
+                    let initialDaysOfEvent = this.getDaysOfEvent(
+                        this.initialEventData.startDate,
+                        this.initialEventData.endDate
+                    );
+
                     //get current day range, concat
-                    let allDesiredDaysOfEvent = new Set(
-                        this.getDaysOfEvent(
-                            this.initialEventData.startDate,
-                            this.initialEventData.endDate
-                        ).concat(
-                            this.getDaysOfEvent(this.startDate, this.endDate)
-                        )
+                    initialDaysOfEvent = new Set(
+                        initialDaysOfEvent.concat(this.getDaysOfEvent(this.startDate, this.endDate))
                     );
 
                     let affectedRooms = new Set(
@@ -1196,10 +1188,10 @@ export default {
                     );
 
                     return await axios
-                        .put('/events/' + this.event?.id, eventData)
+                        .put('/events/' + this.event?.id, this.eventData())
                         .then(() => {
                             affectedRooms.forEach(function (roomId) {
-                                allDesiredDaysOfEvent.forEach(function (day) {
+                                initialDaysOfEvent.forEach(function (day) {
                                     tmpEmitter.emit(
                                         'reloadCalendarCell',
                                         {

@@ -128,7 +128,7 @@ class EventController extends Controller
         $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
             $room,
             Carbon::parse($day),
-            $request->user()->calendar_filter
+            $request->user()->getCalendarFilter()
         );
         $return = [];
         foreach ($roomsWithData as $event) {

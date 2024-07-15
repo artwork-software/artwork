@@ -408,8 +408,7 @@ export default {
                 start_date:  this.dateValueCopy[0],
                 end_date: this.dateValueCopy[1],
             },{
-                preserveScroll: true,
-                preserveState: false
+                preserveScroll: true
             })
         },
     }

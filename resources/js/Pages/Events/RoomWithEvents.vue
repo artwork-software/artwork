@@ -55,15 +55,19 @@ export default {
     async mounted() {
         this.emitter.on('reloadCalendarCell', (event) => {
             if (this.room.id === event.roomId && this.day.full_day === event.day) {
-                this.getEvents();
+                await this.getEvents();
             }
         });
         await this.getEvents();
     },
     methods: {
         async getEvents() {
-            const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
-            this.events = response.data.data;
+            try {
+                const response = await axios.get(`/calendar/room/${this.room.id}/${this.day.full_day}`);
+                this.events = response.data.data;
+            } catch (error) {
+
+            }
             this.isLoading = false;
         },
         updateCheckedEvents(event) {

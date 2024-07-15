@@ -234,15 +234,17 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefaultByFilter(?CalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(User $user): array
     {
+        $userCalendarFilter = $user->calendar_filter;
+
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
             !is_null($userCalendarFilter?->end_date);
         $startDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter?->start_date)->startOfDay() :
+            Carbon::create($userCalendarFilter->start_date)->startOfDay() :
             Carbon::now()->startOfDay();
         $endDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter?->end_date)->endOfDay() :
+            Carbon::create($userCalendarFilter->end_date)->endOfDay() :
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];

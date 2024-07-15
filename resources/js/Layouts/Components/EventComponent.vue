@@ -628,6 +628,36 @@
 
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
+} from "@headlessui/vue";
+import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Input from "@/Jetstream/Input.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import {useForm} from "@inertiajs/vue3";
+import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import dayjs from "dayjs";
+import Permissions from "@/Mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 const options = [
     {
@@ -643,47 +673,6 @@ const options = [
         name: 'Option 4',
     },
 ];
-
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    PencilAltIcon,
-    XCircleIcon,
-    XIcon
-} from '@heroicons/vue/outline';
-import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
-} from "@headlessui/vue";
-import {
-    CheckIcon,
-    ChevronUpIcon,
-    TrashIcon
-} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Input from "@/Jetstream/Input.vue";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/vue3";
-import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import dayjs from "dayjs";
-import Permissions from "@/Mixins/Permissions.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     name: 'EventComponent',
@@ -931,6 +920,7 @@ export default {
             this.endTime = null;
             this.selectedRoom = null;
             this.selectedProject = null;
+
             this.$emit('closed', bool);
         },
         /**

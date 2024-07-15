@@ -82,7 +82,7 @@
             </div>
             <event-component
                 v-if="createEventComponentIsVisible"
-                @closed="onEventComponentClose()"
+                @closed="onEventComponentClose"
                 :showHints="this.$page.props.show_hints"
                 :eventTypes="eventTypes"
                 :rooms="rooms"
@@ -136,11 +136,10 @@ import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {Link} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -288,9 +287,11 @@ export default {
             this.createEventComponentIsVisible = true;
 
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            router.reload();
+            if (bool) {
+                router.reload();
+            }
         },
         deleteSelectedEvents() {
             this.getCheckedEvents();

@@ -491,6 +491,7 @@ readonly class RoomService
                 'events' => MinimalCacheBasedCalendarEventResource::collection($value)
             ];
         }
+
         return collect($eventsForRoom);
     }
 

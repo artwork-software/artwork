@@ -42,13 +42,15 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
             $projectState,
             $projectLeaders
         ] = $this->aggregateProjectRelevantData(
-            $this->getAttribute('project_id'),
+            $projectId = $this->getAttribute('project_id'),
             $cachedProjects,
             $cachedProjectStates
         );
 
         return [
             'id' => $this->getAttribute('id'),
+            'projectId' => $projectId,
+            'roomId' => $this->getAttribute('room_id'),
             'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
             'startTime' => $this->getAttribute('start_time'),
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),

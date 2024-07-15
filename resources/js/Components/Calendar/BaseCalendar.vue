@@ -51,6 +51,7 @@ import {computed, defineAsyncComponent, ref, watch} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import CalendarHeader from "@/Components/Calendar/Elements/CalendarHeader.vue";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
+import LoadingComponent from "@/Components/Calendar/Elements/LoadingComponent.vue";
 
 const multiEdit = ref(false)
 const isFullscreen = ref(false)
@@ -81,9 +82,18 @@ const AsyncMultiEditBar = defineAsyncComponent(() =>
     import('@/Components/Calendar/Elements/MultiEditBar.vue')
 )
 
-const AsyncSingleEventInCalendar = defineAsyncComponent(() =>
-    import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
-)
+const AsyncSingleEventInCalendar = defineAsyncComponent({
+    // the loader function
+    loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+
+    // A component to use while the async component is loading
+    loadingComponent: LoadingComponent,
+    // Delay before showing the loading component. Default: 200ms.
+    delay: 200,
+    // The error component will be displayed if a timeout is
+    // provided and exceeded. Default: Infinity.
+    timeout: 3000
+})
 
 const AsyncFunctionBarCalendar = defineAsyncComponent(() =>
     import('@/Components/FunctionBars/FunctionBarCalendar.vue')

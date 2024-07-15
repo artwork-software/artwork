@@ -450,16 +450,10 @@ readonly class RoomService
         $roomEventsQuery->where(function ($query) use ($calendarPeriod, $date): void {
             $query->where(function ($q) use ($calendarPeriod, $date): void {
                 $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->where(function (Builder $builder) use ($date): void {
-                        $builder->whereDate('start_time',  '<=', $date)
-                            ->whereDate('end_time', '>=', $date);
-                    });
+                    ->whereDate('start_time', $date);
             })->orWhere(function ($q) use ($calendarPeriod, $date): void {
                 $q->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->where(function (Builder $builder) use ($date): void {
-                        $builder->whereDate('start_time',  '<=', $date)
-                            ->whereDate('end_time', '>=', $date);
-                    });
+                    ->whereDate('end_time', $date);
             });
         });
 

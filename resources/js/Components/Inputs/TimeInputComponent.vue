@@ -5,7 +5,9 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="time"
-               class="p-1.5 text-sm h-12 w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
+               class="p-1.5 text-sm  w-full focus:border-primary focus:ring-0 border-2 border-gray-300"
+                :class="isSmall ? '' : 'h-12'"
+        />
     </InputLabelContainer>
 </template>
 
@@ -16,11 +18,24 @@ import Label from "@/Components/Inputs/Labels/Label.vue";
 
 export default defineComponent({
     components: {Label, InputLabelContainer},
-    props: [
-        'id',
-        'label',
-        'modelValue'
-    ],
+    props: {
+        id: {
+            type: String,
+            required: true
+        },
+        label: {
+            type: String,
+            required: true
+        },
+        modelValue: {
+            type: String,
+            required: true
+        },
+        isSmall: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: [
         'update:modelValue'
     ]

@@ -350,7 +350,6 @@ export default {
             this.$inertia.patch(route('currencies.update', currency.id), {name: currency.name, color: currency.color}, { preserveScroll: true});
         },
         openEditStateModal(state) {
-            console.log(state)
             this.$inertia.patch(route('state.update', {projectStates: state.id}), {name: state.name, color: state.color}, { preserveScroll: true});
         },
 

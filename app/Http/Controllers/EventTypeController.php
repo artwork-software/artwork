@@ -61,6 +61,11 @@ class EventTypeController extends Controller
         $eventType->update(['relevant_for_shift' => $request->relevant_for_shift]);
     }
 
+    public function updateRelevantForInventory(Request $request, EventType $eventType): void
+    {
+        $eventType->update(['relevant_for_inventory' => $request->relevant_for_inventory]);
+    }
+
     private function setProperties(EventType $eventType, Request $request): EventType
     {
         $eventType->name = $request->get('name', $eventType->name);

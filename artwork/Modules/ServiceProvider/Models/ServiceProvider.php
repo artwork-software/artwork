@@ -131,9 +131,8 @@ class ServiceProvider extends Model implements DayServiceable
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        return $this->profile_image ?
-            $this->profile_image :
-            'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
+        return $this->profile_image
+            ?: 'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
     }
 
     public function plannedWorkingHours($startDate, $endDate): float|int
@@ -164,5 +163,4 @@ class ServiceProvider extends Model implements DayServiceable
     {
         return $builder->where('can_work_shifts', true);
     }
-
 }

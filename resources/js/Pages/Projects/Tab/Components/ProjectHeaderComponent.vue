@@ -13,11 +13,13 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib, ColorHelper],
     components: {
+        ProjectCreateModal,
         TagComponent,
         BaseModal,
         BaseMenu,
@@ -47,6 +49,14 @@ export default {
             type: Object,
             required: true
         },
+        createSettings: {
+            type: Object,
+            required: false
+        },
+        first_project_tab_id: {
+            type: Number,
+            required: false
+        }
     },
     data() {
         return {
@@ -116,8 +126,11 @@ export default {
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-artwork-buttons-create ml-1">
-                        {{ headerObject.currentGroup?.name }}</a>
+                        {{ $t('Belongs to') }}
+                        <!--:href="'/projects/' + headerObject.currentGroup?.id"-->
+                        <a :href="route('projects.tab', {project: headerObject.currentGroup?.id, projectTab: first_project_tab_id})" class="text-artwork-buttons-create ml-1">
+                            {{ headerObject.currentGroup?.name }}
+                        </a>
                     </div>
                 </div>
                 <div>
@@ -237,7 +250,20 @@ export default {
             <slot />
         </div>
 
-        <project-data-edit-modal
+        <project-create-modal
+            v-if="editingProject"
+            :show="editingProject"
+            :categories="headerObject.categories"
+            :genres="headerObject.genres"
+            :sectors="headerObject.sectors"
+            :project-groups="headerObject.projectGroups"
+            :states="headerObject.states"
+            @close-create-project-modal="closeEditProjectModal"
+            :create-settings="createSettings"
+            :project="project"
+        />
+
+        <!--<project-data-edit-modal
             :show="editingProject"
             :project-state="headerObject.projectState"
             @closed="closeEditProjectModal"
@@ -245,7 +271,8 @@ export default {
             :group-projects="this.headerObject.groupProjects"
             :current-group="this.headerObject.currentGroup"
             :states="headerObject.states"
-        />
+        />-->
+
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"

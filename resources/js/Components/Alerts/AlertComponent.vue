@@ -11,7 +11,7 @@ const props = defineProps({
     type: {
         type: String,
         required: false,
-        default: 'info'
+        default: ''
     },
     iconSize: {
         type: String,
@@ -27,6 +27,11 @@ const props = defineProps({
         type: String,
         required: false,
         default: 'text-xs'
+    },
+    classes: {
+        type: String,
+        required: false,
+        default: ''
     }
 });
 
@@ -62,7 +67,7 @@ const textColor = computed(() => {
 </script>
 
 <template>
-    <div class="flex items-center gap-x-1" :class="[textColor, textSize]">
+    <div class="flex items-start gap-x-1" :class="[textColor, textSize, classes]">
         <component :is="icon" :class="iconSize" v-if="showIcon" />
         <span v-if="text">
             {{ text }}

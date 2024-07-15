@@ -6,12 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StorePermissionPresetRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        //authorized by web.php middleware
-        return true;
-    }
-
     /**
      * @return array<string, mixed>
      */

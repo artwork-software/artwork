@@ -1,7 +1,6 @@
 <template>
-    <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg relative group">
+    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: this.backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -44,7 +43,7 @@
             </div>
         </div>
         <div class="px-1 py-1 ">
-            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
+            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: this.TextColorWithDarken}"
                  :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center relative w-full">
@@ -174,12 +173,12 @@
                                     </p>
                                 </div>
                             </MenuButton>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
+                          <transition enter-active-class="transition-enter-active"
+                                      enter-from-class="transition-enter-from"
+                                      enter-to-class="transition-enter-to"
+                                      leave-active-class="transition-leave-active"
+                                      leave-from-class="transition-leave-from"
+                                      leave-to-class="transition-leave-to">
                                 <MenuItems
                                     class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">

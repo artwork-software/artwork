@@ -6,6 +6,7 @@
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="date"
                dataformatas="dd.mm.yyyy"
+               :required="required"
                class="p-1.5 h-12 text-sm w-full focus:border-primary focus:ring-0 border-2 border-gray-300"/>
     </InputLabelContainer>
 </template>
@@ -17,11 +18,25 @@ import Label from "@/Components/Inputs/Labels/Label.vue";
 
 export default defineComponent({
     components: {Label, InputLabelContainer},
-    props: [
-        'id',
-        'label',
-        'modelValue'
-    ],
+    props: {
+        id: {
+            type: String,
+            required: true
+        },
+        label: {
+            type: String,
+            required: true
+        },
+        modelValue: {
+            type: String,
+            required: true
+        },
+        required: {
+            type: Boolean,
+            required: false,
+            default: false
+        }
+    },
     emits: [
         'update:modelValue'
     ]

@@ -50,12 +50,12 @@
                                                         class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                                 </MenuButton>
                                             </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
+                                            <transition enter-active-class="transition-enter-active"
+                                                        enter-from-class="transition-enter-from"
+                                                        enter-to-class="transition-enter-to"
+                                                        leave-active-class="transition-leave-active"
+                                                        leave-from-class="transition-leave-from"
+                                                        leave-to-class="transition-leave-to">
                                                 <MenuItems
                                                     class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
@@ -129,12 +129,12 @@
                                                         class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                                 </MenuButton>
                                             </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
+                                            <transition enter-active-class="transition-enter-active"
+                                                        enter-from-class="transition-enter-from"
+                                                        enter-to-class="transition-enter-to"
+                                                        leave-active-class="transition-leave-active"
+                                                        leave-from-class="transition-leave-from"
+                                                        leave-to-class="transition-leave-to">
                                                 <MenuItems
                                                     class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 rounded-lg origin-top-right shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
@@ -212,12 +212,12 @@
                                                             :iconName=form.svg_name alt="TeamIcon"/>
                                     </MenuButton>
                                 </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
+                                <transition enter-active-class="transition-enter-active"
+                                            enter-from-class="transition-enter-from"
+                                            enter-to-class="transition-enter-to"
+                                            leave-active-class="transition-leave-active"
+                                            leave-from-class="transition-leave-from"
+                                            leave-to-class="transition-leave-to">
                                     <MenuItems
                                         class="z-40 origin-top-right absolute rounded-lg h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">

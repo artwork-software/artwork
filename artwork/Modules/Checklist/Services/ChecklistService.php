@@ -40,6 +40,30 @@ readonly class ChecklistService
         return $this->checklistRepository->save($checklist);
     }
 
+    public function getChecklistsWithMyTask(int $userId, int $filter): Collection
+    {
+        $doneTask = false;
+        if ($filter === 3) {
+            $doneTask = true;
+        }
+
+        return $this->checklistRepository->getChecklistWhereHasTaskUsersWithFilteredTasks(
+            $userId,
+            $filter,
+            $doneTask
+        );
+    }
+
+    public function getPrivateChecklists(int $userId, int $filter): Collection
+    {
+        $doneTask = false;
+        if ($filter === 3) {
+            $doneTask = true;
+        }
+
+        return $this->checklistRepository->getChecklistsForUserWithFilteredTasks($userId, $doneTask, $filter);
+    }
+
     public function assignUsersById(Checklist $checklist, TaskService $taskService, array $ids): void
     {
         $checklist->users()->sync($ids);
@@ -122,5 +146,26 @@ readonly class ChecklistService
             $project->checklists->where('user_id', Auth::id())
         )->resolve();
         return $headerObject;
+    }
+
+    public function createNewChecklist(array $attributes): Checklist
+    {
+        return new Checklist($attributes);
+    }
+
+    public function duplicate(
+        Checklist $checklist
+    ): Checklist {
+        return $this->createNewChecklist([
+            'name' => $checklist->name . ' (copy)',
+            'project_id' => $checklist->project_id,
+            'user_id' => $checklist->user_id,
+            'tab_id' => $checklist->tab_id
+        ]);
+    }
+
+    public function getById(int $id): Checklist|null
+    {
+        return $this->checklistRepository->getById($id);
     }
 }

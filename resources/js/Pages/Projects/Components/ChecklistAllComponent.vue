@@ -438,37 +438,9 @@
                         </div>
                     </div>
                     <div class="mb-2 mr-4" v-if="!taskForm.private">
-                        <div class="relative w-full">
-                            <div class="w-full">
-                                <input id="userSearch"
-                                       v-model="user_query"
-                                       type="text"
-                                       autocomplete="off"
-                                       :placeholder="$t('Who is responsible for the task?')"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                />
-                            </div>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100"
-                                        leave-to-class="opacity-0">
-                                <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-gray-200">
-                                        <div v-for="(user, index) in user_search_results" :key="index"
-                                             class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4">
-                                                <p @click="addUserToTask(user)"
-                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                    {{ user?.first_name }} {{ user?.last_name }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
+                        <UserSearch only-team :team-member="project.users.map((user) => user.id)"
+                                    @user-selected="addUserToTask"
+                        />
                         <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                             <span v-for="(user,index) in usersToAdd"
                                   class="flex mr-5 rounded-full items-center font-bold text-primary">
@@ -836,6 +808,7 @@ import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue"
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default {
     mixins: [Permissions, IconLib],
@@ -849,6 +822,7 @@ export default {
         'canEditComponent'
     ],
     components: {
+        UserSearch,
         BaseModal,
         BaseMenu,
         AddButtonBig,

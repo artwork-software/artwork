@@ -27,6 +27,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -55,6 +56,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -78,6 +80,8 @@ class EventController extends Controller
         private readonly ProjectTabService $projectTabService,
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -110,7 +114,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $projectService,
-                Auth::user()->getCalendarFilter(),
+                $userService->getAuthUser(),
                 $request->boolean('atAGlance')
             )
         );
@@ -150,7 +154,8 @@ class EventController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                $dayServicesService
+                $dayServicesService,
+                $this->authManager->user()
             )
         );
     }
@@ -228,8 +233,6 @@ class EventController extends Controller
                     ];
                 }
             }
-
-            //dd($historyObjects);
 
             if (request('historyType') === 'event') {
                 $event = Event::find(request('modelId'));
@@ -1200,6 +1203,11 @@ class EventController extends Controller
             ]);
         }
 
+        // update event time in inventory
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
+        }
+
         return new CalendarEventResource($event);
     }
 
@@ -1816,8 +1824,14 @@ class EventController extends Controller
             $projectTabService
         );
 
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
+
         return Redirect::back();
     }
+
+
 
     /**
      * @throws AuthorizationException

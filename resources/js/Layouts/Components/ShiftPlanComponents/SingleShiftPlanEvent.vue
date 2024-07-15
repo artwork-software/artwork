@@ -13,7 +13,7 @@
         </div>
         <div class="bg-backgroundGray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.is_weekend ? 'bg-white' : 'bg-backgroundGray']">
             <div v-for="shift in event.shifts" class="flex justify-between px-1">
-                <!-- Drop Element --->
+                <!-- Drop Element -->
                 <ShiftDropElement
                     :multiEditMode="multiEditMode"
                                   :craft-id="shift.craft.id"
@@ -72,9 +72,9 @@ export default defineComponent({
         },
         checkIfShiftInDayString(shift) {
             if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
-                return shift.days_of_shift?.includes(this.dayString['full_day']);
+                return shift.formatted_dates.start === this.dayString['full_day'];
             } else {
-                return shift.days_of_shift?.includes(this.dayString['full_day']) && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
+                return shift.formatted_dates.start === this.dayString['full_day'] && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
             }
 
         }

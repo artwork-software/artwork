@@ -96,6 +96,7 @@ class Shift extends Model
         'infringement',
         'formatted_dates',
         'max_users',
+        'days_of_shift'
     ];
 
     public function committedBy(): BelongsTo

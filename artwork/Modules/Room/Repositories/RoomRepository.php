@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
-readonly class RoomRepository extends BaseRepository
+class RoomRepository extends BaseRepository
 {
     public function allWithoutTrashed($with = []): Collection
     {

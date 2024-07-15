@@ -55,7 +55,3 @@ export default {
     props:['onlyIcon', 'left']
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -91,9 +91,8 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
 
     public function getProfilePhotoUrlAttribute(): string
     {
-        return $this->profile_image ?
-            $this->profile_image :
-            'https://ui-avatars.com/api/?name=' . $this->name . '&color=7F9CF5&background=EBF4FF';
+        return $this->profile_image
+            ?: 'https://ui-avatars.com/api/?name=' . $this->name . '&color=7F9CF5&background=EBF4FF';
     }
 
     public function getNameAttribute(): string
@@ -177,5 +176,4 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     {
         return $builder->where('can_work_shifts', true);
     }
-
 }

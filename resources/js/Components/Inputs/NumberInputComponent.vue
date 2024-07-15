@@ -4,9 +4,12 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="number"
-               class="p-1.5 w-full h-12 text-sm peer border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0"
-               placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label"/>
+               class="p-1.5 w-full text-sm peer border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0"
+               :class="isSmall ? '' : 'h-12'"
+               placeholder="placeholder"
+               min="0"
+        :required="required"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -17,11 +20,28 @@ import PlaceholderLabel from "@/Components/Inputs/Labels/PlaceholderLabel.vue";
 
 export default defineComponent({
     components: {PlaceholderLabel, PlaceholderInputLabelContainer},
-    props: [
-        'id',
-        'label',
-        'modelValue'
-    ],
+    props: {
+        id: {
+            type: String,
+            required: true
+        },
+        label: {
+            type: String,
+            required: true
+        },
+        modelValue: {
+            type: String,
+            required: true
+        },
+        isSmall: {
+            type: Boolean,
+            default: false
+        },
+        required: {
+            type: Boolean,
+            default: false
+        }
+    },
     emits: [
         'update:modelValue'
     ]

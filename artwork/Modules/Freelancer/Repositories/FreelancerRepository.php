@@ -7,7 +7,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class FreelancerRepository extends BaseRepository
+class FreelancerRepository extends BaseRepository
 {
     public function getWorkers(): Collection
     {

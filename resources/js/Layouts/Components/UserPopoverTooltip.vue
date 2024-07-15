@@ -1,17 +1,16 @@
 <template>
-    <Popover v-slot="{ open }" class="relative !ring-0">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
-            <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0" :class="['h-' + this.height, 'w-' + this.width, classes]">
+    <Popover v-slot="{ open }" class="!ring-0 -mb-1 -pb-1">
+        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0 -mb-1" @click="calculatePopoverPosition">
+            <img :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 " :class="['h-' + this.height, 'w-' + this.width, classes]">
         </PopoverButton>
         <Teleport to="body">
-            <transition enter-active-class="transition duration-200 ease-out"
-                        enter-from-class="translate-y-1 opacity-0"
-                        enter-to-class="translate-y-0 opacity-100"
-                        leave-active-class="transition duration-150 ease-in"
-                        leave-from-class="translate-y-0 opacity-100"
-                        leave-to-class="translate-y-1 opacity-0">
-
-                <PopoverPanel class="absolute left-1/2 z-50 mt-2 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5" :style="popoverStyle">
+            <transition enter-active-class="transition-enter-active"
+                        enter-from-class="transition-enter-from"
+                        enter-to-class="transition-enter-to"
+                        leave-active-class="transition-leave-active"
+                        leave-from-class="transition-leave-from"
+                        leave-to-class="transition-leave-to">
+                <PopoverPanel class="absolute left-1/2 z-50 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5" :style="popoverStyle">
                     <div class="shadow-lg ring-1 ring-black ring-opacity-5">
                         <div class="grid grid-cols-4 w-96">
                             <div class="col-span-1 shrink-0 ml-3 flex items-center justify-center">

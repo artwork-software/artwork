@@ -31,7 +31,7 @@ readonly class UserService
     {
     }
 
-    public function searchUsers(string $search): Collection
+    public function searchUsers(string $search): \Illuminate\Support\Collection
     {
         return $this->userRepository->searchUsers($search);
     }
@@ -40,7 +40,7 @@ readonly class UserService
     {
         /** @var User $user */
         $user = Auth::user();
-        if($needCalendarAbo && !$user->calendarAbo){
+        if ($needCalendarAbo && !$user->calendarAbo) {
             $user->load(['calendarAbo']);
         }
 
@@ -131,9 +131,9 @@ readonly class UserService
             $startDate = $week->copy()->startOfWeek();
             $endDate = $week->copy()->endOfWeek();
             $workingHours = $user->plannedWorkingHours(
-                    $startDate,
-                    $endDate
-                ) - $user->weekly_working_hours;
+                $startDate,
+                $endDate
+            ) - $user->weekly_working_hours;
             $weeklyWorkingHours[$week->format('W')] = $workingHours;
         }
 
@@ -234,11 +234,10 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(?CalendarFilter $userCalendarFilter): array
+    public function getUserCalendarFilterDatesOrDefault(User $user): array
     {
-        if (!$userCalendarFilter) {
-            $userCalendarFilter = new \stdClass();
-        }
+        $userCalendarFilter = $user->calendar_filter;
+
         $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
             !is_null($userCalendarFilter?->end_date);
         $startDate = $hasUserCalendarFilterDates ?

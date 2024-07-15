@@ -501,6 +501,13 @@ class UserController extends Controller
         ]));
     }
 
+    public function updateChecklistStyle(User $user, Request $request): void
+    {
+        $user->update($request->only([
+            'checklist_style'
+        ]));
+    }
+
     public function updateZoomFactor(User $user, Request $request): void
     {
         $user->update($request->only('zoom_factor'));

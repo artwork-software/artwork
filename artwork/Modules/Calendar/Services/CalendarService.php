@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
-readonly class CalendarService
+class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
@@ -164,9 +164,9 @@ readonly class CalendarService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ?Project $project,
         ?CalendarFilter $calendarFilter,
         ?Room $room = null,
-        ?Project $project = null,
     ): array {
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
@@ -178,6 +178,8 @@ readonly class CalendarService
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
             ];
         }
 
@@ -195,15 +197,21 @@ readonly class CalendarService
                 null,
             'roomsWithEvents' => empty($room) ?
                 $roomService->collectEventsForRooms(
-                    $roomService->getFilteredRooms(
+                    roomsWithEvents:  $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
                         $calendarFilter
                     ),
-                    $calendarPeriod,
-                    $project
+                    calendarPeriod: $calendarPeriod,
+                    calendarFilter: $calendarFilter,
+                    project: $project,
                 ) :
-                $roomService->collectEventsForRoom($room, $calendarPeriod, $project, $calendarFilter),
+                $roomService->collectEventsForRoom(
+                    room: $room,
+                    calendarPeriod: $calendarPeriod,
+                    calendarFilter: $calendarFilter,
+                    project: $project,
+                ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
                 [],

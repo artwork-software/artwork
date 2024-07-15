@@ -2,18 +2,15 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 const colors = require("tailwindcss/colors")
 
 module.exports = {
-    mode: 'jit',
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './vendor/laravel/jetstream/**/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
-        './resources/js/**/*.vue',
+        './resources/js/**/*.{vue,js,ts,jsx,tsx}',
         "./index.html",
-        "./src/**/*.{vue,js,ts,jsx,tsx}",
         "./node_modules/vue-tailwind-datepicker/**/*.js"
     ],
-
     theme: {
         extend: {
             colors: {
@@ -46,7 +43,6 @@ module.exports = {
                 linkOnDarkColor: '#BDB6F0',
                 "vtd-primary": colors.sky,
                 "vtd-secondary": colors.gray,
-                // Artwork colors
                 artwork: {
                     navigation: {
                         background: '#222',
@@ -71,9 +67,6 @@ module.exports = {
                     },
                     project: {
                         background: '#eee'
-                    },
-                    calendar: {
-
                     },
                     icons: {
                         default: {

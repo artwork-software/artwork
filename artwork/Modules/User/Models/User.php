@@ -5,22 +5,24 @@ namespace Artwork\Modules\User\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
@@ -163,7 +165,8 @@ class User extends Model implements
         'is_sidebar_opened',
         'compact_mode',
         'show_crafts',
-        'goto_mode'
+        'goto_mode',
+        'checklist_style'
     ];
 
     protected $casts = [
@@ -257,7 +260,10 @@ class User extends Model implements
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    public function getFormattedVacationDays()
+    /**
+     * @return array<string>
+     */
+    public function getFormattedVacationDays(): array
     {
         $vacations = $this->vacations;
         $returnInterval = [];
@@ -413,9 +419,7 @@ class User extends Model implements
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-    /**
-     * @return string[]
-     */
+
     /**
      * @return string[]
      */
@@ -430,6 +434,9 @@ class User extends Model implements
         return $permissions;
     }
 
+    /**
+     * @return string[]
+     */
     public function allRoles(): array
     {
         $rolesArray = [];
@@ -454,8 +461,6 @@ class User extends Model implements
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        //dd($startDate, $endDate);
-
         // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
 
         $shiftsInDateRange = $this->shifts()
@@ -498,8 +503,18 @@ class User extends Model implements
         return $builder->where('can_work_shifts', true);
     }
 
-    public function getCalendarFilter(): ?CalendarFilter
+    public function getHasProjectManagerPermission(): bool
     {
-        return $this->calendar_filter()->first();
+        return $this->hasPermissionTo(PermissionEnum::PROJECT_MANAGEMENT->value)
+            || $this->hasRole(RoleEnum::ARTWORK_ADMIN->value);
+    }
+
+    public function inventoryManagementFilter(): HasOne
+    {
+        return $this->hasOne(
+            InventoryManagementUserFilter::class,
+            'user_id',
+            'id'
+        );
     }
 }

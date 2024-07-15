@@ -46,18 +46,19 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 readonly class EventService
 {
-    public function __construct(private EventRepository $eventRepository)
-    {
+    public function __construct(
+        private EventRepository $eventRepository
+    ) {
     }
 
     public function importShiftPreset(
@@ -641,9 +642,10 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        DayServicesService $dayServicesService
+        DayServicesService $dayServicesService,
+        User $user
     ): ShiftPlanDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
@@ -765,10 +767,10 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
-        ?CalendarFilter $calendarFilter,
-        ?bool $atAGlance
+        User $user,
+        bool $atAGlance
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($calendarFilter);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
@@ -782,7 +784,8 @@ readonly class EventService
             $eventTypeService,
             $areaService,
             $projectService,
-            $calendarFilter,
+            null,
+            $user->calendar_filter
         );
 
         return EventManagementDto::newInstance()
@@ -921,8 +924,15 @@ readonly class EventService
         return $this->eventRepository->save($event);
     }
 
-    public function save(Event $event): Event
+    public function save(Event $event): Event|Model
     {
         return $this->eventRepository->save($event);
+    }
+
+
+    public function findEventById(
+        int $eventId
+    ): Event {
+        return $this->eventRepository->findById($eventId);
     }
 }

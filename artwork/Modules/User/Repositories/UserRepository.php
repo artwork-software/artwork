@@ -8,7 +8,7 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class UserRepository extends BaseRepository
+class UserRepository extends BaseRepository
 {
     /**
      * @return Collection
@@ -91,8 +91,16 @@ readonly class UserRepository extends BaseRepository
         return User::role(RoleEnum::ARTWORK_ADMIN->value)->first();
     }
 
-    public function searchUsers(string $search): Collection
+    public function searchUsers(string $search): \Illuminate\Support\Collection
     {
-        return User::search($search)->get();
+        return User::search($search)->get()->map(fn(User $user) => [
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'project_manager_permission' => $user->getHasProjectManagerPermission(),
+            'profile_photo_url' => $user->profile_photo_url,
+        ]);
     }
 }

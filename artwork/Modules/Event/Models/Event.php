@@ -122,7 +122,8 @@ class Event extends Model
         'end_time_without_day',
         'event_date_without_time',
         'formatted_dates',
-        'dates_for_series_event'
+        'dates_for_series_event',
+        'times_without_dates'
     ];
 
     public static function boot(): void
@@ -268,6 +269,10 @@ class Event extends Model
         return $days;
     }
 
+    /**
+     * @param Shift|Collection|null $shifts
+     * @return array<string>
+     */
     public function getDaysOfShifts(Shift|Collection $shifts = null): array
     {
         if ($shifts instanceof Shift) {

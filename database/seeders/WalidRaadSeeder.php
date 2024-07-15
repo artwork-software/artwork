@@ -106,7 +106,7 @@ class WalidRaadSeeder extends Seeder
         $project = Project::create([
             'name' => 'Walid Raad',
             'shift_description' => 'Wird blutig',
-            'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
+            'key_visual_path' => 'default_keyVisual.png',
             'state' => 4
         ]);
 
@@ -256,12 +256,16 @@ class WalidRaadSeeder extends Seeder
         /**
          * Create Project States
          */
-        ProjectStates::create(['name' => 'Optional', 'color' => 'stateColorDefault']);
-        ProjectStates::create(['name' => 'Läuft aktuell', 'color' => 'stateColorDefault']);
-        ProjectStates::create(['name' => 'Läuft', 'color' => 'stateColorDarkGreen']);
-        ProjectStates::create(['name' => 'In Planung', 'color' => 'stateColorOrange']);
-        ProjectStates::create(['name' => 'Läuft', 'color' => 'stateColorDarkGreen']);
-        ProjectStates::create(['name' => 'Abgeschlossen', 'color' => 'stateColorBlue']);
+        $faker = \Faker\Factory::create();
+        ProjectStates::create(['name' => 'Optional', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'Läuft aktuell', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'In Planung', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'Abgeschlossen', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'Abgebrochen', 'color' => $faker->hexColor()]);
+        ProjectStates::create(['name' => 'In Bearbeitung', 'color' => $faker->hexColor()]);
+
 
 
         /**

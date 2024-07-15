@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\PresetShift\Services;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Repositories\PresetShiftRepository;
 use Artwork\Modules\Shift\Models\Shift;
@@ -74,5 +75,11 @@ readonly class PresetShiftService
         $this->presetShiftRepository->save($duplicatedPresetShift);
 
         return $duplicatedPresetShift;
+    }
+
+    public function updateDescription(string $description, PresetShift $presetShift): PresetShift|Model
+    {
+        $presetShift->description = $description;
+        return $this->presetShiftRepository->save($presetShift);
     }
 }

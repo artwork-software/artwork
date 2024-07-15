@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\InventoryManagement\Production\InventoryManagementDefaultColumnsSeeder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +21,8 @@ class ProductionDatabaseSeeder extends Seeder
             SettingsSeeder::class,
             PermissionPresetSeeder::class,
             ShiftQualificationSeeder::class,
-            DefaultComponentSeeder::class
+            DefaultComponentSeeder::class,
+            InventoryManagementDefaultColumnsSeeder::class
         ]);
 
         DB::table('event_types')->insert([

@@ -6,7 +6,7 @@ use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Eloquent\Collection;
 
-readonly class CraftRepository extends BaseRepository
+class CraftRepository extends BaseRepository
 {
     /**
      * @return array<int, mixed>
@@ -21,9 +21,9 @@ readonly class CraftRepository extends BaseRepository
         return $craft->users()->detach();
     }
 
-    public function getAll(): Collection
+    public function getAll(array $with = []): Collection
     {
-        return Craft::all();
+        return Craft::query()->with($with)->get();
     }
 
     public function getAssignableByAllCrafts(): Collection

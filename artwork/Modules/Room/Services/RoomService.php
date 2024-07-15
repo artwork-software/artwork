@@ -492,10 +492,6 @@ readonly class RoomService
             ];
         }
 
-        $this->cacheManager->delete('projects');
-        $this->cacheManager->delete('shifts');
-        $this->cacheManager->delete('projectStates');
-
         return collect($eventsForRoom);
     }
 

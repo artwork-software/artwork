@@ -232,7 +232,7 @@
     <!-- Termin erstellen Modal-->
     <event-component
         v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
+        @closed="onEventComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -294,7 +294,7 @@ import {
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent.vue";
 import Button from "@/Jetstream/Button.vue";
@@ -304,7 +304,6 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -607,9 +606,13 @@ export default {
             this.showEventsWithoutRoomComponent = true;
         },
 
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            router.reload();
+
+            //only reload if closed on purpose
+            if (bool) {
+                router.reload();
+            }
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;

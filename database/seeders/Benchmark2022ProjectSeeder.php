@@ -17,7 +17,6 @@ class Benchmark2022ProjectSeeder extends Seeder
     {
         $project = Project::create([
             'name' => 'Benchmark 2022',
-            'description' => 'Per Day 10 Events, 5 Rooms, 2 Events per Room per Day',
             'shift_description' => 'Events of Doom',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4,

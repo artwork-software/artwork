@@ -51,11 +51,11 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
-                        {{ event.eventName ?? event.project.name }}
+                        {{ event.eventName ?? event.projectName }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
-                        <div v-if="event.project?.state?.color"
-                             :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
+                        <div v-if="event.projectStateColor"
+                             :class="[event.projectStateColor,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
                              class="rounded-full">
                         </div>
                     </div>
@@ -173,7 +173,7 @@
                                     </p>
                                 </div>
                             </MenuButton>
-                          <transition enter-active-class="transition-enter-active"
+                            <transition enter-active-class="transition-enter-active"
                                       enter-from-class="transition-enter-from"
                                       enter-to-class="transition-enter-to"
                                       leave-active-class="transition-leave-active"
@@ -190,7 +190,7 @@
                                                  alt=""/>
                                             <span class="ml-4">
                                                 {{ user.first_name }} {{ user.last_name }}
-                                                </span>
+                                            </span>
                                         </Link>
                                     </MenuItem>
                                 </MenuItems>
@@ -204,7 +204,7 @@
             <div v-for="shift in event.shifts">
                 <span>{{ shift.craft.abbreviation }}</span>
                 <span>
-                    &nbsp;({{ this.getCurrentShiftWorkerCount(shift) }}/{{ this.getMaxShiftWorkerCount(shift) }})
+                    &nbsp;({{ shift.worker_count }}/{{ shift.max_worker_count }})
                 </span>
             </div>
         </div>
@@ -434,18 +434,6 @@ export default {
         }
     },
     methods: {
-        getCurrentShiftWorkerCount(shift) {
-            return shift.users.length + shift.freelancer.length + shift.service_provider.length;
-        },
-        getMaxShiftWorkerCount(shift) {
-            let shiftWorkerCountByShiftsQualifications = 0;
-
-            shift.shifts_qualifications.forEach((shiftsQualification) => {
-                shiftWorkerCountByShiftsQualifications += shiftsQualification.value;
-            });
-
-            return shiftWorkerCountByShiftsQualifications;
-        },
         gcd(a, b) {
             return (b) ? this.gcd(b, a % b) : a;
         },

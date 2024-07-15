@@ -3,9 +3,9 @@
 namespace Artwork\Modules\Project\Models;
 
 use Artwork\Core\Database\Models\Model;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -27,8 +27,13 @@ class ProjectStates extends Model
         'color'
     ];
 
-    public function prunable(): Builder
+    public function project(): BelongsTo
     {
-        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+        return $this->belongsTo(
+            Project::class,
+            'state',
+            'id',
+            'projects'
+        );
     }
 }

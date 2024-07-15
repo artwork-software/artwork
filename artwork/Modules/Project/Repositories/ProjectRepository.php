@@ -37,9 +37,9 @@ class ProjectRepository extends BaseRepository
             ->first();
     }
 
-    public function getAll(): Collection
+    public function getAll(array $with = []): Collection
     {
-        return Project::all();
+        return Project::query()->with($with)->get();
     }
 
     public function getByName(string $query): Collection

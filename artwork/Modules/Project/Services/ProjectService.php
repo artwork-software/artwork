@@ -8,11 +8,9 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -22,13 +20,11 @@ use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Scout\Builder;
-use Illuminate\Support\Collection as IlluminateCollection;
 
 readonly class ProjectService
 {
@@ -404,9 +400,9 @@ readonly class ProjectService
         return true;
     }
 
-    public function getAll(): Collection
+    public function getAll(array $with = []): Collection
     {
-        return $this->projectRepository->getAll();
+        return $this->projectRepository->getAll($with);
     }
 
     public function getByName(string $query): Collection

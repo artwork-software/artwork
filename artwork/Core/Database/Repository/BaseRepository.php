@@ -7,14 +7,14 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use BadMethodCallException;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
 {
-    public function getNewModelInstance(): Model
+    public function getNewModelInstance(): Model|Pivot
     {
         throw new BadMethodCallException(
             'Implement in derived repository. Copy already derived functions and adapt.'

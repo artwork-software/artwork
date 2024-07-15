@@ -10,26 +10,35 @@ use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 class CalendarService
 {
+    public function __construct(
+        private readonly CacheManager $cacheManager,
+        private readonly ShiftService $shiftService,
+        private readonly ProjectStateService $projectStateService
+    ) {
+    }
+
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
@@ -151,6 +160,7 @@ class CalendarService
 
     /**
      * @return array<string, mixed>
+     * @throws Throwable
      */
     public function createCalendarData(
         Carbon $startDate,
@@ -182,6 +192,32 @@ class CalendarService
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
             ];
         }
+
+        $this->cacheManager->setDefaultCacheTime(30);
+        $this->cacheManager->set(
+            'projects',
+            $projectService->getAll(
+                [
+                    'managerUsers',
+                    'state'
+                ]
+            )->all()
+        );
+        $this->cacheManager->set(
+            'shifts',
+            $this->shiftService->getAll(
+                [
+                    'users',
+                    'freelancer',
+                    'serviceProvider',
+                    'shiftsQualifications'
+                ]
+            )->all()
+        );
+        $this->cacheManager->set(
+            'projectStates',
+            $this->projectStateService->getAll()->all()
+        );
 
         return [
             'days' => $periodArray,

@@ -3,6 +3,9 @@
 namespace Tests\Feature\Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Project\Services\ProjectStateService;
+use Artwork\Modules\Shift\Services\ShiftService;
+use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -17,7 +20,11 @@ class CalendarServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->calendarService = new CalendarService();
+        $this->calendarService = new CalendarService(
+            app()->get(CacheManager::class),
+            app()->get(ShiftService::class),
+            app()->get(ProjectStateService::class),
+        );
     }
 
     public function testCreateVacationAndAvailabilityPeriodCalendar(): void

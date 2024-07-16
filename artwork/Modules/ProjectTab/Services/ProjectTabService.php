@@ -36,15 +36,14 @@ use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Collection;
+use Throwable;
 
-readonly class ProjectTabService implements ServiceWithArrayCache
+class ProjectTabService implements ServiceWithArrayCache
 {
     public function __construct(
-        private ProjectTabRepository $projectTabRepository,
-        private readonly ShiftTimePresetService $shiftTimePresetService,
-        private readonly AuthManager $authManager,
+        private readonly ProjectTabRepository $projectTabRepository,
+        private readonly ShiftTimePresetService $shiftTimePresetService
     ) {
     }
 
@@ -84,6 +83,9 @@ readonly class ProjectTabService implements ServiceWithArrayCache
         return $projectTab;
     }
 
+    /**
+     * @throws Throwable
+     */
     public function getCalendarTab(
         Carbon $startDate,
         Carbon $endDate,
@@ -119,7 +121,6 @@ readonly class ProjectTabService implements ServiceWithArrayCache
             roomAttributeService: $roomAttributeService,
             eventTypeService: $eventTypeService,
             areaService: $areaService,
-            projectService: $projectService,
             project: $project,
             calendarFilter: $userService->getAuthUser()->calendar_filter,
         );

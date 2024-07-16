@@ -49,6 +49,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Throwable;
 
 readonly class EventService
 {
@@ -693,7 +694,6 @@ readonly class EventService
                     $roomAttributeService,
                     $eventTypeService,
                     $areaService,
-                    $projectService,
                     $roomService
                 )
             )
@@ -751,6 +751,9 @@ readonly class EventService
         })->all();
     }
 
+    /**
+     * @throws Throwable
+     */
     public function createEventManagementDto(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -762,7 +765,6 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        ProjectService $projectService,
         User $user,
         bool $atAGlance
     ): EventManagementDto {
@@ -779,7 +781,6 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
             null,
             $user->calendar_filter
         );

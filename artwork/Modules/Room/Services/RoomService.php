@@ -671,6 +671,9 @@ readonly class RoomService
         return $this->roomRepository->getUserWhereIsAdmin($room, $user->id)->count() > 0;
     }
 
+    /**
+     * @throws Throwable
+     */
     public function createShowDto(
         UserService $userService,
         Room $room,
@@ -698,7 +701,6 @@ readonly class RoomService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
             null,
             $user->calendar_filter,
             $room

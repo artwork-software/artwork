@@ -36,20 +36,23 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
 
         /** @var string|null $projectName */
         /** @var ProjectStates|null $projectState */
-        /** @var array<string, string> $projectLeaders */
-        [
-            $projectName,
-            $projectState,
-            $projectLeaders
-        ] = $this->aggregateProjectRelevantData(
-            $projectId = $this->getAttribute('project_id'),
-            $cachedProjects,
-            $cachedProjectStates
-        );
+        /** @var array<string, string>|null $projectLeaders */
+        $projectName = $projectState = $projectLeaders = null;
+        if ($eventProjectId = $this->getAttribute('project_id')) {
+            [
+                $projectName,
+                $projectState,
+                $projectLeaders
+            ] = $this->aggregateProjectRelevantData(
+                $eventProjectId,
+                $cachedProjects,
+                $cachedProjectStates
+            );
+        }
 
         return [
             'id' => $this->getAttribute('id'),
-            'projectId' => $projectId,
+            'projectId' => $eventProjectId,
             'roomId' => $this->getAttribute('room_id'),
             'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
             'startTime' => $this->getAttribute('start_time'),
@@ -95,26 +98,22 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
      * @throws Throwable
      */
     private function aggregateProjectRelevantData(
-        ?int $eventProjectId,
+        int $eventProjectId,
         array $cachedProjects,
         array $cachedProjectStates
     ): array {
-        $project = null;
-        if ($eventProjectId) {
-            $project = $this->determineProject($eventProjectId, $cachedProjects);
-        }
-
-        $projectState = null;
-        $projectLeaders = null;
-        if ($project) {
-            $projectState = $this->determineProjectState($cachedProjectStates, $project);
-            $projectLeaders = $this->determineProjectLeaders($project->getAttribute('managerUsers'));
+        if (!($project = $this->determineProject($eventProjectId, $cachedProjects))) {
+            return [
+                null,
+                null,
+                null
+            ];
         }
 
         return [
-            $project?->getAttribute('name'),
-            $projectState,
-            $projectLeaders
+            $project->getAttribute('name'),
+            $this->determineProjectState($cachedProjectStates, $project),
+            $this->determineProjectLeaders($project->getAttribute('managerUsers'))
         ];
     }
 

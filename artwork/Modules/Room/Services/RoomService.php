@@ -11,7 +11,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
-use Artwork\Modules\Event\Http\Resources\MinimalCacheBasedCalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -21,7 +21,6 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\DTOs\ShowDto;
 use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
@@ -32,14 +31,12 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
@@ -50,10 +47,6 @@ readonly class RoomService
 {
     public function __construct(
         private RoomRepository $roomRepository,
-        private CacheManager $cacheManager,
-        private ProjectService $projectService,
-        private ProjectStateService $projectStateService,
-        private ShiftService $shiftService
     ) {
     }
 
@@ -400,7 +393,7 @@ readonly class RoomService
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
-    ): Collection {
+    ): array {
         if (!$calendarFilter) {
             $calendarFilter = new \stdClass();
         }
@@ -419,6 +412,19 @@ readonly class RoomService
         $actualEvents = [];
 
         $roomEventsQuery = $room->events()
+            ->with(
+                [
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                ]
+            )
             ->where(function ($query) use ($calendarPeriod): void {
                 $query->where(function ($q) use ($calendarPeriod): void {
                     $q->where('start_time', '<', $calendarPeriod->start)
@@ -472,7 +478,7 @@ readonly class RoomService
         // order $roomEventsQuery by start_time
         $roomEventsQuery->orderBy('start_time', 'asc');
 
-        $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
+        foreach ($roomEventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                 $calendarPeriod->start :
                 $event->start_time;
@@ -483,16 +489,17 @@ readonly class RoomService
                 $dateKey = $date->format('d.m.Y');
                 $actualEvents[$dateKey][] = $event;
             }
-        });
+        }
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
-                'events' => MinimalCacheBasedCalendarEventResource::collection($value)->resolve()
+                //immediately resolve resource to free used memory
+                'events' => MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
 
-        return collect($eventsForRoom);
+        return $eventsForRoom;
     }
 
     //@todo: fix phpcs error - complexity too high
@@ -592,32 +599,6 @@ readonly class RoomService
     ): Collection {
         $roomEvents = collect();
 
-        $this->cacheManager->setDefaultCacheTime(30);
-        $this->cacheManager->set(
-            'projects',
-            $this->projectService->getAll(
-                [
-                    'managerUsers',
-                    'state'
-                ]
-            )->all()
-        );
-        $this->cacheManager->set(
-            'shifts',
-            $this->shiftService->getAll(
-                [
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'shiftsQualifications'
-                ]
-            )->all()
-        );
-        $this->cacheManager->set(
-            'projectStates',
-            $this->projectStateService->getAll()->all()
-        );
-
         foreach ($roomsWithEvents as $room) {
             $roomEvents->add(
                 $this->collectEventsForRoom(
@@ -628,10 +609,6 @@ readonly class RoomService
                 )
             );
         }
-
-        $this->cacheManager->forget('projects');
-        $this->cacheManager->forget('shifts');
-        $this->cacheManager->forget('projectStates');
 
         return $roomEvents;
     }

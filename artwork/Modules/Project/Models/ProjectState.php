@@ -5,7 +5,7 @@ namespace Artwork\Modules\Project\Models;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $updated_at
  * @property string $deleted_at
  */
-class ProjectStates extends Model
+class ProjectState extends Model
 {
     use HasFactory;
     use SoftDeletes;
@@ -27,13 +27,12 @@ class ProjectStates extends Model
         'color'
     ];
 
-    public function project(): BelongsTo
+    public function projects(): HasMany
     {
-        return $this->belongsTo(
+        return $this->hasMany(
             Project::class,
             'state',
-            'id',
-            'projects'
+            'id'
         );
     }
 }

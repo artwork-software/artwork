@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ width: zoom_factor * 204 + 'px', minHeight: totalHeight - heightSubtraction * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+    <div :style="{ width: zoom_factor * 212 + 'px', minHeight: totalHeight - heightSubtraction * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
          class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoom_factor > 0.4" class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center z-30" :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
@@ -7,11 +7,11 @@
                    class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconLink stroke-width="1.5" class="h-4 w-4"/>
                 </a>
-                <button type="button" @click="openEditEventModal(event)"
+                <button type="button" @click="openEditEventModal = true"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || hasAdminRole" @click="openAddSubEventModal"
+                <button v-if="isRoomAdmin || isCreator || hasAdminRole" @click="openAddSubEventModal = true"
                         v-show="event.eventTypeId === 1"
                         type="button"
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -24,7 +24,7 @@
                     <IconX stroke-width="1.5" stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || hasAdminRole"
-                        @click="openConfirmModal(event.id, 'main')" type="button"
+                        @click="openConfirmModal = true" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <IconTrash stroke-width="1.5" stroke="currentColor" class="w-4 h-4"/>
                 </button>
@@ -123,6 +123,10 @@ import Button from "@/Jetstream/Button.vue";
 
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false)
+const openAddSubEventModal = ref(false)
+const showDeclineEventModal = ref(false)
+const openConfirmModal = ref(false)
+const openEditEventModal = ref(false)
 
 const props = defineProps({
     event: {
@@ -170,7 +174,7 @@ const isRoomAdmin = computed(() => {
 })
 
 const isCreator = computed(() => {
-    return props.event?.created_by?.id === usePage().props.user.id
+    return props.event?.creator_id === usePage().props.user.id
 })
 
 const roomCanBeBookedByEveryone = computed(() => {

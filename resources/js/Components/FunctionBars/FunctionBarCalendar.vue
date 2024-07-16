@@ -271,7 +271,7 @@ const updateTimes = () => {
         end_date: dateValueCopy.value[1],
     },{
         preserveScroll: true,
-        preserveState: false
+        preserveState: true
     })
 }
 

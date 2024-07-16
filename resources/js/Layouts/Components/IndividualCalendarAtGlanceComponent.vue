@@ -46,7 +46,7 @@
 
     <event-component
         v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
+        @closed="onEventComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -100,7 +100,6 @@ import Permissions from "@/Mixins/Permissions.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-
 
 
 export default {
@@ -187,9 +186,12 @@ export default {
             this.createEventComponentIsVisible = true;
 
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            router.reload();
+
+            if (bool) {
+                router.reload();
+            }
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;

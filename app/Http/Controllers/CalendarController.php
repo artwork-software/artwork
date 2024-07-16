@@ -21,8 +21,8 @@ class CalendarController extends Controller
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        ProjectService $projectService,
-        RoomService $roomService
+        RoomService $roomService,
+        ProjectService $projectService
     ): array {
         return $filterService->getCalendarFilterDefinitions(
             $roomCategoryService,

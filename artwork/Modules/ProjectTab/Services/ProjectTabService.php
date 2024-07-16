@@ -12,7 +12,6 @@ use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerDropResource;
@@ -39,7 +38,6 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 
 readonly class ProjectTabService implements ServiceWithArrayCache
 {
@@ -153,15 +151,6 @@ readonly class ProjectTabService implements ServiceWithArrayCache
                     $endDate,
                     $userService->getAuthUser()->calendar_filter
                 )
-            )
-            ->setEvents(
-                CalendarEventDto::newInstance()
-                    ->setAreas($calendarData['filterOptions']['areas'])
-                    ->setProjects($calendarData['filterOptions']['projects'])
-                    ->setEventTypes($calendarData['filterOptions']['eventTypes'])
-                    ->setRoomCategories($calendarData['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($calendarData['filterOptions']['roomAttributes'])
-                    ->setEvents($calendarService->getEventsOfInterval($startDate, $endDate, $project))
             );
     }
 

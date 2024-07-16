@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Http\Resources;
 
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -49,7 +49,7 @@ class ProjectCalendarResource extends JsonResource
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,
-            'state' => ProjectStates::find($this->state),
+            'state' => ProjectState::find($this->state),
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
         ];

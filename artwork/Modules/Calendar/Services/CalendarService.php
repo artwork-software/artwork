@@ -12,16 +12,13 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Project\Services\ProjectStateService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -33,9 +30,6 @@ use Throwable;
 class CalendarService
 {
     public function __construct(
-        private readonly CacheManager $cacheManager,
-        private readonly ShiftService $shiftService,
-        private readonly ProjectStateService $projectStateService
     ) {
     }
 
@@ -193,33 +187,7 @@ class CalendarService
             ];
         }
 
-        $this->cacheManager->setDefaultCacheTime(30);
-        $this->cacheManager->set(
-            'projects',
-            $projectService->getAll(
-                [
-                    'managerUsers',
-                    'state'
-                ]
-            )->all()
-        );
-        $this->cacheManager->set(
-            'shifts',
-            $this->shiftService->getAll(
-                [
-                    'users',
-                    'freelancer',
-                    'serviceProvider',
-                    'shiftsQualifications'
-                ]
-            )->all()
-        );
-        $this->cacheManager->set(
-            'projectStates',
-            $this->projectStateService->getAll()->all()
-        );
-
-        return [
+        $result = [
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
             // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
@@ -246,7 +214,7 @@ class CalendarService
                     room: $room,
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
-                    project: $project,
+                    project: $project
                 ),
             'eventsWithoutRoom' => empty($room) ?
                 CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
@@ -262,6 +230,8 @@ class CalendarService
             'personalFilters' => $filterController->index(),
             'user_filters' => $userService->getAuthUser()->calendar_filter,
         ];
+
+        return $result;
     }
 
     public function getEventsAtAGlance($startDate, $endDate): Collection

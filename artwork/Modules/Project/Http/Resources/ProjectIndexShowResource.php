@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Project\Http\Resources;
 
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -52,7 +52,7 @@ class ProjectIndexShowResource extends JsonResource
             'users' => UserWithoutShiftsResource::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-            'state' => ProjectStates::find($this->state),
+            'state' => ProjectState::find($this->state),
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'budget_deadline' => $this->budget_deadline,

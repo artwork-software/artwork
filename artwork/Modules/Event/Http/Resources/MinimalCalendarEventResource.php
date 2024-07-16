@@ -4,19 +4,17 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
 use Artwork\Modules\User\Models\User;
-use Illuminate\Cache\CacheManager;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Throwable;
 
 /**
  * @mixin Event
  */
-class MinimalCacheBasedCalendarEventResource extends JsonResource
+class MinimalCalendarEventResource extends JsonResource
 {
     /**
      * @throws Throwable
@@ -25,30 +23,22 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
     //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        /** @var array<int, Project> $cachedProjects */
-        /** @var array<int, ProjectStates> $cachedProjectStates */
-        /** @var array<int, Shift> $cachedShifts */
-        [
-            $cachedProjects,
-            $cachedProjectStates,
-            $cachedShifts
-        ] = $this->getCacheData();
-
         /** @var string|null $projectName */
-        /** @var ProjectStates|null $projectState */
-        /** @var array<string, string> $projectLeaders */
-        [
-            $projectName,
-            $projectState,
-            $projectLeaders
-        ] = $this->aggregateProjectRelevantData(
-            $this->getAttribute('project_id'),
-            $cachedProjects,
-            $cachedProjectStates
-        );
+        /** @var ProjectState|null $projectState */
+        /** @var array<string, string>|null $projectLeaders */
+        $projectName = $projectState = $projectLeaders = null;
+        if ($eventProjectId = $this->getAttribute('project_id')) {
+            [
+                $projectName,
+                $projectState,
+                $projectLeaders
+            ] = $this->aggregateProjectRelevantData();
+        }
 
         return [
             'id' => $this->getAttribute('id'),
+            'projectId' => $eventProjectId,
+            'roomId' => $this->getAttribute('room_id'),
             'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
             'startTime' => $this->getAttribute('start_time'),
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
@@ -68,7 +58,7 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
             'projectStateColor' => $projectState?->getAttribute('color'),
             'projectLeaders' => $projectLeaders,
             'subEvents' => SubEventResource::collection($this->getAttribute('subEvents')),
-            'shifts' => $this->aggregateEventShifts($cachedShifts)
+            'shifts' => $this->aggregateEventShifts($this->getAttribute('shifts')->all())
         ];
     }
 
@@ -76,43 +66,29 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
      * @return array<int, array<int, mixed>>
      * @throws Throwable
      */
-    private function getCacheData(): array
+    private function aggregateProjectRelevantData(): array
     {
-        /** @var CacheManager $cacheManager */
-        $cacheManager = app()->get(CacheManager::class);
+        /** @var Project $project */
+        if (!($project = $this->getAttribute('project'))) {
+            return [
+                null,
+                null,
+                null
+            ];
+        }
 
         return [
-            $cacheManager->get('projects'),
-            $cacheManager->get('projectStates'),
-            $cacheManager->get('shifts')
-        ];
-    }
-
-    /**
-     * @return array<int, array<int, mixed>>
-     * @throws Throwable
-     */
-    private function aggregateProjectRelevantData(
-        ?int $eventProjectId,
-        array $cachedProjects,
-        array $cachedProjectStates
-    ): array {
-        $project = $this->determineProject($eventProjectId, $cachedProjects);
-
-        return [
-            $project?->getAttribute('name'),
-            $this->determineProjectState($cachedProjectStates, $project),
-            $this->determineProjectLeaders($project?->getAttribute('managerUsers'))
+            $project->getAttribute('name'),
+            $project->getRelation('state'),
+            $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
         ];
     }
 
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function aggregateEventShifts(array $cachedShifts): array
+    private function aggregateEventShifts(array $shifts): array
     {
-        $desiredShiftIds = $this->getAttribute('shifts')->pluck('id')->all();
-
         return array_map(
             function (Shift $shift): array {
                 return [
@@ -128,45 +104,16 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
                     'max_worker_count' => $shift->getAttribute('shiftsQualifications')->sum('value')
                 ];
             },
-            array_filter(
-                $cachedShifts,
-                function (Shift $shift) use ($desiredShiftIds): bool {
-                    return in_array($shift->getAttribute('id'), $desiredShiftIds);
-                }
-            )
+            $shifts
         );
-    }
-
-    private function determineProject(?int $eventProjectId, array $cachedProjects): Project|null
-    {
-        if ($eventProjectId) {
-            foreach ($cachedProjects as $cachedProject) {
-                if ($cachedProject->getAttribute('id') === $eventProjectId) {
-                    return $cachedProject;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private function determineProjectState(array $cachedProjectStates, ?Project $project): ?ProjectStates
-    {
-        foreach ($cachedProjectStates as $cachedProjectState) {
-            if ($cachedProjectState->getAttribute('id') === $project?->state) {
-                return $cachedProjectState;
-            }
-        }
-
-        return null;
     }
 
     /**
      * @return array<string, string>
      */
-    private function determineProjectLeaders(?Collection $managerUsers): array
+    private function determineProjectLeaders(array $managerUsers): array
     {
-        return $managerUsers?->count() > 0 ?
+        return count($managerUsers) > 0 ?
             array_map(
                 function (User $user): array {
                     return [
@@ -175,7 +122,7 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
                         'last_name' => $user->getAttribute('last_name')
                     ];
                 },
-                $managerUsers->all()
+                $managerUsers
             ) :
             [];
     }

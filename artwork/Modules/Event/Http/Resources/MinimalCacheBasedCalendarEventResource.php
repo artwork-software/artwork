@@ -99,12 +99,22 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
         array $cachedProjects,
         array $cachedProjectStates
     ): array {
-        $project = $this->determineProject($eventProjectId, $cachedProjects);
+        $project = null;
+        if ($eventProjectId) {
+            $project = $this->determineProject($eventProjectId, $cachedProjects);
+        }
+
+        $projectState = null;
+        $projectLeaders = null;
+        if ($project) {
+            $projectState = $this->determineProjectState($cachedProjectStates, $project);
+            $projectLeaders = $this->determineProjectLeaders($project->getAttribute('managerUsers'));
+        }
 
         return [
             $project?->getAttribute('name'),
-            $this->determineProjectState($cachedProjectStates, $project),
-            $this->determineProjectLeaders($project?->getAttribute('managerUsers'))
+            $projectState,
+            $projectLeaders
         ];
     }
 
@@ -139,23 +149,21 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
         );
     }
 
-    private function determineProject(?int $eventProjectId, array $cachedProjects): Project|null
+    private function determineProject(int $eventProjectId, array $cachedProjects): Project|null
     {
-        if ($eventProjectId) {
-            foreach ($cachedProjects as $cachedProject) {
-                if ($cachedProject->getAttribute('id') === $eventProjectId) {
-                    return $cachedProject;
-                }
+        foreach ($cachedProjects as $cachedProject) {
+            if ($cachedProject->getAttribute('id') === $eventProjectId) {
+                return $cachedProject;
             }
         }
 
         return null;
     }
 
-    private function determineProjectState(array $cachedProjectStates, ?Project $project): ?ProjectStates
+    private function determineProjectState(array $cachedProjectStates, Project $project): ?ProjectStates
     {
         foreach ($cachedProjectStates as $cachedProjectState) {
-            if ($cachedProjectState->getAttribute('id') === $project?->state) {
+            if ($cachedProjectState->getAttribute('id') === $project->getAttribute('state')) {
                 return $cachedProjectState;
             }
         }
@@ -166,9 +174,9 @@ class MinimalCacheBasedCalendarEventResource extends JsonResource
     /**
      * @return array<string, string>
      */
-    private function determineProjectLeaders(?Collection $managerUsers): array
+    private function determineProjectLeaders(Collection $managerUsers): array
     {
-        return $managerUsers?->count() > 0 ?
+        return $managerUsers->count() > 0 ?
             array_map(
                 function (User $user): array {
                     return [

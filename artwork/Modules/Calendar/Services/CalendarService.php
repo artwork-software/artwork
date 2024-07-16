@@ -224,6 +224,7 @@ class CalendarService
                 $roomAttributeService,
                 $eventTypeService,
                 $areaService,
+                $projectService,
                 $roomService
             ),
             'personalFilters' => $filterController->index(),

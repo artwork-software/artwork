@@ -693,6 +693,7 @@ readonly class EventService
                     $roomAttributeService,
                     $eventTypeService,
                     $areaService,
+                    $projectService,
                     $roomService
                 )
             )

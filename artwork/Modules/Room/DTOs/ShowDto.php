@@ -38,7 +38,7 @@ class ShowDto extends BaseDto
 
     public ?array $adjoiningRooms = null;
 
-    public ?SupportCollection $calendar = null;
+    public ?array $calendar = null;
 
     public ?array $days = null;
 
@@ -158,7 +158,7 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setCalendar(?SupportCollection $calendar): self
+    public function setCalendar(?array $calendar): self
     {
         $this->calendar = $calendar;
 
@@ -323,7 +323,10 @@ class ShowDto extends BaseDto
         return $this->adjoiningRooms;
     }
 
-    public function getCalendar(): ?SupportCollection
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getCalendar(): ?array
     {
         return $this->calendar;
     }

@@ -15,7 +15,6 @@ use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
 use Artwork\Modules\InventoryScheduling\Http\Requests\DropItemOnInventoryRequest;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
@@ -24,6 +23,7 @@ use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Throwable;
 
 class InventoryController extends Controller
 {
@@ -51,8 +51,10 @@ class InventoryController extends Controller
         );
     }
 
+    /**
+     * @throws Throwable
+     */
     public function scheduling(
-        ProjectService $projectService,
         RoomService $roomService,
         UserService $userService,
         FilterService $filterService,
@@ -75,7 +77,6 @@ class InventoryController extends Controller
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
             null,
             $userService->getAuthUser()->getAttribute('calendar_filter')
         );

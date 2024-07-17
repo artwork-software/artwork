@@ -11,7 +11,6 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
@@ -29,10 +28,6 @@ use Throwable;
 
 class CalendarService
 {
-    public function __construct(
-    ) {
-    }
-
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
@@ -167,7 +162,6 @@ class CalendarService
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        ProjectService $projectService,
         ?Project $project,
         ?CalendarFilter $calendarFilter,
         ?Room $room = null,
@@ -224,7 +218,6 @@ class CalendarService
                 $roomAttributeService,
                 $eventTypeService,
                 $areaService,
-                $projectService,
                 $roomService
             ),
             'personalFilters' => $filterController->index(),

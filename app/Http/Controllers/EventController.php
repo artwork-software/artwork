@@ -97,8 +97,7 @@ class EventController extends Controller
         EventTypeService $eventTypeService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
-        ProjectService $projectService
+        AreaService $areaService
     ): Response {
         return Inertia::render(
             'Events/EventManagement',
@@ -113,7 +112,6 @@ class EventController extends Controller
                 $roomCategoryService,
                 $roomAttributeService,
                 $areaService,
-                $projectService,
                 $userService->getAuthUser(),
                 $request->boolean('atAGlance')
             )

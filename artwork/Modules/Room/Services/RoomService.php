@@ -414,6 +414,7 @@ readonly class RoomService
         $roomEventsQuery = $room->events()
             ->with(
                 [
+                    'creator',
                     'project',
                     'project.managerUsers',
                     'project.state',

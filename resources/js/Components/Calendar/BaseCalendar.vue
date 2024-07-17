@@ -28,7 +28,6 @@
                             <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events" :key="event.id">
                                 <!-- Lazy-load events using useIntersectionObserver -->
                                 <AsyncSingleEventInCalendar
-
                                     :event="event"
                                     :multi-edit="multiEdit"
                                     :font-size="textStyle.fontSize"

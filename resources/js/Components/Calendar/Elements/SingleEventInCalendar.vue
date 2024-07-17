@@ -7,7 +7,7 @@
                    class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconLink stroke-width="1.5" class="h-4 w-4"/>
                 </a>
-                <button type="button" @click="openEditEventModal = true"
+                <button type="button" @click="createEventComponentIsVisible = true"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
@@ -111,22 +111,40 @@
             </div>
         </div>
     </div>
+
+    <EventComponent
+        v-if="createEventComponentIsVisible"
+        @closed="createEventComponentIsVisible = false "
+        :showHints="$page.props.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :event="event"
+        :wantedRoomId="wantedRoom"
+        :isAdmin="hasAdminRole"
+        :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="first_project_tab_id"
+    />
 </template>
 
 <script setup>
 
 
-import {computed, ref} from "vue";
+import {computed, inject, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconLink, IconTrash, IconX, IconUsersGroup} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
+import EventComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
 
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false)
 const openAddSubEventModal = ref(false)
 const showDeclineEventModal = ref(false)
 const openConfirmModal = ref(false)
-const openEditEventModal = ref(false)
+const createEventComponentIsVisible = ref(false)
+const wantedRoom = ref(null)
+const roomCollisions = ref([])
+const eventTypes = inject('eventTypes')
 
 const props = defineProps({
     event: {

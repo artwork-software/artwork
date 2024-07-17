@@ -117,6 +117,7 @@ const props = defineProps({
     first_project_calendar_tab_id: Number
 })
 
+provide('eventTypes', props.eventTypes);
 provide('dateValue', props.dateValue);
 
 

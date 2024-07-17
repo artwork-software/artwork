@@ -39,6 +39,7 @@
         "vue-observe-visibility": "^1.0.0",
         "vue-tailwind-datepicker": "^1.7.3",
         "vue-virtual-scroll-list": "^2.3.5",
+        "vue-virtual-scroller": "^2.0.0-beta.8",
         "vue3-colorpicker": "^2.3.0",
         "vuedraggable": "^4.1.0"
     }

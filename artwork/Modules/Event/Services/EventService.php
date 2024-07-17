@@ -6,16 +6,13 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
-use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -50,9 +47,9 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
+use Throwable;
 
 readonly class EventService
 {
@@ -697,7 +694,6 @@ readonly class EventService
                     $roomAttributeService,
                     $eventTypeService,
                     $areaService,
-                    $projectService,
                     $roomService
                 )
             )
@@ -755,6 +751,9 @@ readonly class EventService
         })->all();
     }
 
+    /**
+     * @throws Throwable
+     */
     public function createEventManagementDto(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -766,7 +765,6 @@ readonly class EventService
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        ProjectService $projectService,
         User $user,
         bool $atAGlance
     ): EventManagementDto {
@@ -783,7 +781,6 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
             null,
             $user->calendar_filter
         );
@@ -806,27 +803,7 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     $userService->getAuthUser()->calendar_filter
-                ),
-            )
-            ->setEvents(
-                CalendarEventDto::newInstance()
-                    ->setAreas($showCalendar['filterOptions']['areas'])
-                    ->setProjects($showCalendar['filterOptions']['projects'])
-                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
-                    ->setEvents(
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            SupportCollection::make(
-                                CalendarEventResource::collection(
-                                    $calendarService->getEventsOfInterval(
-                                        $startDate,
-                                        $endDate
-                                    )
-                                )->resolve()
-                            ) :
-                            SupportCollection::make()
-                    )
+                )
             )
             ->setFilterOptions($showCalendar["filterOptions"],)
             ->setPersonalFilters($showCalendar['personalFilters'])

@@ -9,7 +9,7 @@ use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Sector\Models\Sector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,7 +65,7 @@ class CategoryController extends Controller
                 'name' => $currency->name,
                 'color' => $currency->color,
             ]),
-            'states' => ProjectStates::all()->map(fn($state) => [
+            'states' => ProjectState::all()->map(fn($state) => [
                 'id' => $state->id,
                 'name' => $state->name,
                 'color' => $state->color

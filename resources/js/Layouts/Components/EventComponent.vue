@@ -882,10 +882,10 @@ export default {
             this.title = this.event.title;
             this.eventName = this.event.eventName;
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
-            if (!this.event.eventTypeId) {
+            if (!this.event.eventTypeName) {
                 this.selectedEventType = this.eventTypes[0];
             } else {
-                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
+                this.selectedEventType = this.eventTypes.find(type => type.name === this.event.eventTypeName);
                 if (this.selectedEventType.id === 1) {
                     this.disableEventTypeSelector = true;
                 }

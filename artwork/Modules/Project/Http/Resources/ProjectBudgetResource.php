@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Http\Resources;
 
 use Artwork\Modules\Contract\Http\Resources\ContractResource;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +46,7 @@ class ProjectBudgetResource extends JsonResource
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
             'access_budget' => $this->access_budget,
-            'state' => ProjectStates::find($this->state),
+            'state' => ProjectState::find($this->state),
             'write_auth' => $this->writeUsers,
             'users' => UserWithoutShiftsResource::collection($this->users)->resolve(),
             //needed for ProjectShowHeaderComponent

@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Project\Exports;
 
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -50,7 +50,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                     'project_name' => $project->name,
                     'artist_or_group' => 'Noch nicht angegeben',
                     'cost_center' => $project->costCenter?->name,
-                    'project_state' => ProjectStates::query()
+                    'project_state' => ProjectState::query()
                         ->where('id', '=', $project->state)->first('name')?->name,
                     'forecast_costs' => 'Keine Daten vorhanden',
                     'forecast_earnings' => 'Keine Daten vorhanden',
@@ -70,7 +70,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                 'project_name' => $project->name,
                 'artist_or_group' => 'Noch nicht angegeben',
                 'cost_center' => $project->costCenter?->name,
-                'project_state' => ProjectStates::query()
+                'project_state' => ProjectState::query()
                     ->where('id', '=', $project->state)->first('name')?->name,
                 'forecast_costs' => $costSumOfLastColumn,
                 'forecast_earnings' => $earningSumOfLastColumn,

@@ -58,9 +58,7 @@
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
                                 <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events">
-
                                     <SingleCalendarEvent
-                                        class="relative"
                                         :project="project ? project : false"
                                         :multiEdit="multiEdit"
                                         :zoom-factor="zoomFactor"

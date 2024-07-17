@@ -80,7 +80,7 @@ use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -1872,7 +1872,7 @@ class ProjectController extends Controller
                     $headerObject->project->project_files_all = $project->project_files;
                     break;
                 case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                    $headerObject->project->state = ProjectStates::find($project->state);
+                    $headerObject->project->state = ProjectState::find($project->state);
                     break;
                 case ProjectTabComponentEnum::PROJECT_TEAM->value:
                     $this->loadProjectTeamData($headerObject, $project);
@@ -2864,7 +2864,7 @@ class ProjectController extends Controller
             'trashed_genres' => Genre::onlyTrashed()->get(),
             'trashed_categories' => Category::onlyTrashed()->get(),
             'trashed_sectors' => Sector::onlyTrashed()->get(),
-            'trashed_project_states' => ProjectStates::onlyTrashed()->get(),
+            'trashed_project_states' => ProjectState::onlyTrashed()->get(),
             'trashed_contract_types' => ContractType::onlyTrashed()->get(),
             'trashed_company_types' => CompanyType::onlyTrashed()->get(),
             'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),

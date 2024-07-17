@@ -4,7 +4,7 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
@@ -23,7 +23,7 @@ beforeEach(function (): void {
 
     $this->genre = Genre::factory()->create();
 
-    $this->state = new ProjectStates(['name' => 'Test', 'color' => 'Test']);
+    $this->state = new ProjectState(['name' => 'Test', 'color' => 'Test']);
     $this->state->save();
 });
 

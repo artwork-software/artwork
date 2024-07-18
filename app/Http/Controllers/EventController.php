@@ -18,6 +18,7 @@ use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
@@ -58,6 +59,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -83,7 +85,30 @@ class EventController extends Controller
         private readonly SchedulingService $schedulingService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly AuthManager $authManager,
+        private readonly RoomService $roomService,
     ) {
+    }
+
+    public function viewEventsForDateAndRoom(
+        UserService $userService,
+        Request $request,
+        Room $room,
+        ProjectService $projectService,
+        string $day,
+        int $projectId
+    ): JsonResponse {
+        $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
+            $userService,
+            $room,
+            Carbon::parse($day),
+            $request->user()->calendar_filter,
+            $projectId > 0 ? $projectService->findById($projectId) : null
+        );
+        $return = [];
+        foreach ($roomsWithData as $event) {
+            $return[] = (new MinimalCalendarEventResource($event))->resolve();
+        }
+        return new JsonResponse($return);
     }
 
     /**
@@ -1829,8 +1854,6 @@ class EventController extends Controller
 
         return Redirect::back();
     }
-
-
 
     /**
      * @throws AuthorizationException

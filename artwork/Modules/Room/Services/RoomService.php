@@ -39,6 +39,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
@@ -383,34 +384,25 @@ readonly class RoomService
         return $this->roomRepository->allWithoutTrashed($with);
     }
 
-    /**
-     * @return array <string, mixed>
-     * @throws Throwable
-     */
-    //@todo: fix phpcs error - complexity too high
+    //@todo: refactor
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function collectEventsForRoom(
+    private function buildRoomCollectionBaseQuery(
         Room $room,
-        CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
-        ?Project $project = null,
-    ): array {
-        if (!$calendarFilter) {
-            $calendarFilter = new \stdClass();
-        }
-
-        $isLoud = $calendarFilter->is_loud ?? false;
-        $isNotLoud = $calendarFilter->is_not_loud ?? false;
-        $hasAudience = $calendarFilter->has_audience ?? false;
-        $hasNoAudience = $calendarFilter->has_no_audience ?? false;
-        $showAdjoiningRooms = $calendarFilter->show_adjoining_rooms ?? false;
-        $eventTypeIds = $calendarFilter->event_types ?? null;
-        $roomIds = $calendarFilter->rooms ?? null;
-        $areaIds = $calendarFilter->areas ?? null;
-        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter->room_categories ?? null;
-        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
-        $actualEvents = [];
+        ?Project $project,
+        ?CarbonPeriod $calendarPeriod,
+        ?Carbon $date
+    ): HasMany {
+        $isLoud = $calendarFilter?->is_loud ?? false;
+        $isNotLoud = $calendarFilter?->is_not_loud ?? false;
+        $hasAudience = $calendarFilter?->has_audience ?? false;
+        $hasNoAudience = $calendarFilter?->has_no_audience ?? false;
+        $showAdjoiningRooms = $calendarFilter?->show_adjoining_rooms ?? false;
+        $eventTypeIds = $calendarFilter?->event_types ?? null;
+        $roomIds = $calendarFilter?->rooms ?? null;
+        $areaIds = $calendarFilter?->areas ?? null;
+        $roomAttributeIds = $calendarFilter?->room_attributes ?? null;
+        $roomCategoryIds = $calendarFilter?->room_categories ?? null;
 
         $roomEventsQuery = $room->events()
             ->with(
@@ -427,15 +419,30 @@ readonly class RoomService
                     'shifts.shiftsQualifications',
                 ]
             )
-            ->where(function ($query) use ($calendarPeriod): void {
-                $query->where(function ($q) use ($calendarPeriod): void {
-                    $q->where('start_time', '<', $calendarPeriod->start)
-                        ->where('end_time', '>', $calendarPeriod->end);
-                })->orWhere(function ($q) use ($calendarPeriod): void {
-                    $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-                });
-            })
+            ->where(
+                function (Builder $query) use ($calendarPeriod, $date): void {
+                    $query->where(function (Builder $query) use ($calendarPeriod, $date): void {
+                        $query->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $query->when(
+                            $date,
+                            function (Builder $query) use ($date): void {
+                                $query
+                                    ->whereDate('start_time', '<=', $date)
+                                    ->whereDate('end_time', '>=', $date);
+                            }
+                        );
+                    })->orWhere(function (Builder $q) use ($calendarPeriod, $date): void {
+                        $q->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $q->when(
+                            $date,
+                            function (Builder $builder) use ($date): void {
+                                $builder->whereDate('start_time', '<=', $date)
+                                    ->whereDate('end_time', '>=', $date);
+                            }
+                        );
+                    });
+                }
+            )
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -478,7 +485,41 @@ readonly class RoomService
         }
 
         // order $roomEventsQuery by start_time
-        $roomEventsQuery->orderBy('start_time', 'asc');
+        $roomEventsQuery->orderBy('start_time');
+
+        return $roomEventsQuery;
+    }
+
+    /**
+     * @return array <string, mixed>
+     * @throws Throwable
+     */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    public function collectEventsForRoom(
+        Room $room,
+        CarbonPeriod $calendarPeriod,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project = null,
+    ): array {
+        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
+        $actualEvents = [];
+
+        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+            $room,
+            $calendarFilter,
+            $project,
+            $calendarPeriod,
+            null
+        )->where(function ($query) use ($calendarPeriod): void {
+            $query->where(function ($q) use ($calendarPeriod): void {
+                $q->where('start_time', '<', $calendarPeriod->start)
+                    ->where('end_time', '>', $calendarPeriod->end);
+            })->orWhere(function ($q) use ($calendarPeriod): void {
+                $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+            });
+        });
 
         foreach ($roomEventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
@@ -494,15 +535,32 @@ readonly class RoomService
         }
 
         foreach ($actualEvents as $key => $value) {
-
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
                 //immediately resolve resource to free used memory
-                'events' => $key ? MinimalCalendarEventResource::collection($value) : null
+                'events' => MinimalCalendarEventResource::collection($value)
             ];
         }
 
         return $eventsForRoom;
+    }
+
+    public function collectEventsForRoomOnSpecificDay(
+        UserService $userService,
+        Room $room,
+        Carbon $date,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project = null,
+    ): Collection {
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+
+        return  $this->buildRoomCollectionBaseQuery(
+            $room,
+            $calendarFilter,
+            $project,
+            CarbonPeriod::create($startDate, $endDate),
+            $date
+        )->get();
     }
 
     //@todo: fix phpcs error - complexity too high

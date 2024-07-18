@@ -769,7 +769,7 @@ readonly class EventService
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
 
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,

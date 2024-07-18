@@ -233,12 +233,16 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(User $user): array
+    public function getUserCalendarFilterDatesOrDefault(?User $user = null): array
     {
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        if (!$user instanceof User) {
+            $user = $this->getAuthUser();
+        }
 
-        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('->start_date')) &&
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&
             !is_null($userCalendarFilter?->getAttribute('end_date'));
+
         $startDate = $hasUserCalendarFilterDates ?
             Carbon::create($userCalendarFilter->getAttribute('start_date'))->startOfDay() :
             Carbon::now()->startOfDay();

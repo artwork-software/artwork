@@ -226,7 +226,7 @@ const $t = useTranslation(),
 
                         calendarDataRef.value.forEach(
                             (roomWithEvents) => {
-                                if (roomWithEvents[day]?.roomName === desiredRoomName) {
+                                if (roomWithEvents[day].roomName === desiredRoomName) {
                                     roomWithEvents[day].events.data = JSON.parse(JSON.stringify(events));
                                 }
                             }
@@ -305,30 +305,8 @@ const $t = useTranslation(),
             receivedNewData.value = true;
         }
     },
-    eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload) => {
-        if (closedOnPurpose) {
-            handleReload(
-                desiredRoomIdsToReload,
-                desiredDaysToReload
-            );
-        }
-
-        showEventComponent.value = false;
-        return true;
-    },
     formatEventDateByDayJs = (date) => {
         return dayjs(date).format('YYYY-MM-DD');
-    },
-    eventDeclined = (desiredRoomIdToReload, startDate, endDate) => {
-        handleReload(
-            [
-                desiredRoomIdToReload
-            ],
-            getDaysOfEvent(
-                formatEventDateByDayJs(startDate),
-                formatEventDateByDayJs(endDate)
-            )
-        );
     },
     updateMultiEdit = (value) => {
         multiEdit.value = value;
@@ -381,6 +359,28 @@ const $t = useTranslation(),
         removeCheckedState();
         multiEdit.value = false;
         showMultiEditModal.value = false;
+    },
+    eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload) => {
+        if (closedOnPurpose) {
+            handleReload(
+                desiredRoomIdsToReload,
+                desiredDaysToReload
+            );
+        }
+
+        showEventComponent.value = false;
+        return true;
+    },
+    eventDeclined = (desiredRoomIdToReload, startDate, endDate) => {
+        handleReload(
+            [
+                desiredRoomIdToReload
+            ],
+            getDaysOfEvent(
+                formatEventDateByDayJs(startDate),
+                formatEventDateByDayJs(endDate)
+            )
+        );
     },
     deleteEvent = () => {
         const onSuccess = () => {

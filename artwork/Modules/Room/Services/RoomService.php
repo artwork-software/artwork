@@ -384,10 +384,11 @@ readonly class RoomService
     }
 
     /**
+     * @return array <string, mixed>
      * @throws Throwable
      */
     //@todo: fix phpcs error - complexity too high
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,

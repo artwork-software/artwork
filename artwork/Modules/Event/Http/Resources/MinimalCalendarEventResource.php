@@ -36,6 +36,10 @@ class MinimalCalendarEventResource extends JsonResource
         }
 
         $creator = $this->getAttribute('creator');
+        $eventType = $this->getAttribute('event_type');
+        $eventName = $this->getAttribute('eventName');
+        $startTime = $this->getAttribute('start_time');
+
         return [
             'id' => $this->getAttribute('id'),
             'projectId' => $eventProjectId,
@@ -46,19 +50,17 @@ class MinimalCalendarEventResource extends JsonResource
                 'first_name' => $creator->getAttribute('first_name'),
                 'last_name' => $creator->getAttribute('last_name')
             ],
-            'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
-            'startTime' => $this->getAttribute('start_time'),
+            'start' => $startTime->utc()->toIso8601String(),
+            'startTime' => $startTime,
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
             'allDay' => $this->getAttribute('allDay'),
-            'alwaysEventName' => $this->getAttribute('eventName'),
-            'eventName' => $this->getAttribute('eventName'),
-            'title' => $projectName ?:
-                $this->getAttribute('eventName') ?:
-                    $this->getAttribute('event_type')->getAttribute('name'),
-            'event_type_color' => $this->getAttribute('event_type')->getAttribute('hex_code'),
-            'eventTypeColorBackground' => $this->getAttribute('event_type')->getAttribute('hex_code') . '33',
-            'eventTypeName' => $this->getAttribute('event_type')->getAttribute('name'),
-            'eventTypeAbbreviation' => $this->getAttribute('event_type')->getAttribute('abbreviation'),
+            'alwaysEventName' => $eventName,
+            'eventName' => $eventName,
+            'title' => $projectName ?: $eventName ?: $eventType->getAttribute('name'),
+            'event_type_color' => $eventType->getAttribute('hex_code'),
+            'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
+            'eventTypeName' => $eventType->getAttribute('name'),
+            'eventTypeAbbreviation' => $eventType->getAttribute('abbreviation'),
             'audience' => $this->getAttribute('audience'),
             'isLoud' => $this->getAttribute('is_loud'),
             'projectName' => $projectName,

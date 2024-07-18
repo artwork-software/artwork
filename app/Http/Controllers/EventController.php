@@ -113,7 +113,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $userService->getAuthUser(),
-                $request->boolean('atAGlance')
+                $this->authManager->user()->at_a_glance
             )
         );
     }

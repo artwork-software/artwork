@@ -494,10 +494,11 @@ readonly class RoomService
         }
 
         foreach ($actualEvents as $key => $value) {
+
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
                 //immediately resolve resource to free used memory
-                'events' => MinimalCalendarEventResource::collection($value)->resolve()
+                'events' => $key ? MinimalCalendarEventResource::collection($value) : null
             ];
         }
 

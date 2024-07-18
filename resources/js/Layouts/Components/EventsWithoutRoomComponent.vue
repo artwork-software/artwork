@@ -22,6 +22,7 @@
                         :rooms="rooms"
                         :isAdmin="isAdmin"
                         :remove-notification-on-action="removeNotificationOnAction"
+                        :show-hints="showHints"
                         />
                 </div>
             </div>

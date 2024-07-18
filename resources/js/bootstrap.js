@@ -27,7 +27,7 @@ window.Echo = new Echo({
     key: import.meta.env.MIX_PUSHER_APP_KEY ?? '12345',
     cluster: import.meta.env.MIX_PUSHER_APP_CLUSTER ?? 'eu',
     forceTLS: false,
-    wsHost: window.location.hostname,
+    wsHost: import.meta.env.MIX_PUSHER_HOST,
     wsPort: import.meta.env.MIX_PUSHER_PORT,
 });
 

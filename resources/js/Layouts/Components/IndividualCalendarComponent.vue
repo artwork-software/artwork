@@ -11,7 +11,6 @@
                 </div>
             </div>
 
-
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
                                  @increment-zoom-factor="incrementZoomFactor"
                                  @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
@@ -141,12 +140,14 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     mixins: [Permissions, IconLib],
     components: {
+        FunctionBarCalendar,
         FormButton,
         Link,
         ConfirmDeleteModal,

@@ -104,8 +104,8 @@ name: "SingleEventInEventsWithoutRoom",
         'removeNotificationOnAction',
         'first_project_calendar_tab_id',
         'event',
-        'computedEventsWithoutRoom'
-
+        'computedEventsWithoutRoom',
+        'showHints'
     ],
     emits: ['closed'],
     watch: {

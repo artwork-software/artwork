@@ -15,6 +15,7 @@ use Throwable;
  */
 class MinimalCalendarEventResource extends JsonResource
 {
+    public static $wrap = null;
     /**
      * @throws Throwable
      * @return array<string, mixed>

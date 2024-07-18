@@ -245,7 +245,7 @@ export default {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
-            activeFilters: [],
+
             userCalendarSettings: useForm({
                 project_status: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_status : false,
                 options: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.options : false,
@@ -269,7 +269,12 @@ export default {
             }
         },
         changeAtAGlance() {
-            this.$emit('changeAtAGlance')
+            router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
+                at_a_glance: !this.atAGlance
+            }, {
+                preserveState: false,
+                preserveScroll: true
+            })
         },
         changeMultiEdit(multiEdit) {
             this.$emit('changeMultiEdit', !multiEdit)

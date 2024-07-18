@@ -9,7 +9,7 @@
                         :eventTypes=eventTypes
                         initial-view="day"
                         :rooms="rooms"
-                        :events="events.events"
+                        :events="events"
                         :events-without-room="eventsWithoutRoom"
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
@@ -42,45 +42,8 @@
                     :rooms="rooms"
                     :days="days"
                     :calendar-data="calendar"
-                />
-
-                <!--
-                <IndividualCalendarAtGlanceComponent
-                    v-if="atAGlance"
-                    :dateValue="dateValue"
-                    :project="null"
-                    :atAGlance="this.atAGlance"
-                    :eventTypes=this.eventTypes
-                    :rooms="rooms"
-                    :eventsAtAGlance="eventsAtAGlance"
-                    :filter-options="filterOptions"
-                    :personal-filters="personalFilters"
-                    :user_filters="user_filters"
-                    @change-at-a-glance="changeAtAGlance"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                >
-                </IndividualCalendarAtGlanceComponent>
-
-                <IndividualCalendarComponent
-                    v-else
                     :events-without-room="eventsWithoutRoom"
-                    :dateValue="dateValue"
-                    :project="null"
-                    :atAGlance="this.atAGlance"
-                    :eventTypes=this.eventTypes
-                    :calendarData="calendar"
-                    :rooms="rooms"
-                    :days="days"
-                    :filter-options="filterOptions"
-                    :personal-filters="personalFilters"
-                    :user_filters="user_filters"
-                    @change-at-a-glance="changeAtAGlance"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
-
-                -->
             </div>
         </div>
     </app-layout>
@@ -119,16 +82,12 @@ const props = defineProps({
 
 provide('eventTypes', props.eventTypes);
 provide('dateValue', props.dateValue);
+provide('first_project_tab_id', props.first_project_tab_id);
+provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id);
+provide('user_filters', props.user_filters);
+provide('personalFilters', props.personalFilters);
+provide('filterOptions', props.filterOptions);
 
+const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
-const atAGlance = ref(usePage().props.urlParameters.atAGlance ? usePage().props.urlParameters.atAGlance : false);
-
-const changeAtAGlance = () => {
-    atAGlance.value = !atAGlance.value;
-    router.reload({
-        data: {
-            atAGlance: atAGlance.value,
-        }
-    })
-}
 </script>

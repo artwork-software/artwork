@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="text-secondary text-right bg-userBg">
+    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="text-secondary text-right bg-userBg">
         <div :style="textStyle" class="mt-3 mr-2">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}
@@ -43,5 +43,22 @@ const textStyle = computed(() => {
 </script>
 
 <style scoped>
+.stickyDays {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    left: 0px;
+    z-index: 22;
+    background-color: #EDEDEC;
+}
+
+.stickyDaysNoMarginleft {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    left: 0;
+    z-index: 22;
+    background-color: #EDEDEC;
+}
 
 </style>

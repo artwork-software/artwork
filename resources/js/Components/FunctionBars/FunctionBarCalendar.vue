@@ -51,7 +51,7 @@
                     <IconZoomOut @click="decrementZoomFactor" :disabled="zoom_factor >= 1.4"
                                  v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
                     <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
-                    <!--<IndividualCalendarFilterComponent
+                    <IndividualCalendarFilterComponent
                         class=""
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
@@ -59,17 +59,17 @@
                         :type="project ? 'project' : 'individual'"
                         :user_filters="user_filters"
                         :extern-updated="externUpdate"
-                    />-->
+                    />
 
 
-                    <!--<Menu as="div" class="relative inline-block items-center text-left">
+                    <Menu as="div" class="relative inline-block items-center text-left">
                         <div class="flex items-center">
                             <MenuButton>
                             <span class="items-center flex">
                                 <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
                                     <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
                                 </button>
-                                <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
+                                <span v-if="usePage().props.user.calendar_settings.project_status || usePage().props.user.calendar_settings.options || usePage().props.user.calendar_settings.project_management || usePage().props.user.calendar_settings.repeating_events || usePage().props.user.calendar_settings.work_shifts"
                                       class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
                                 </span>
                             </span>
@@ -113,7 +113,7 @@
                                         <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Repeat event')}}</p>
                                     </div>
-                                    <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
+                                    <div class="flex py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
                                         <input v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"
                                                class="checkBoxOnDark"/>
@@ -126,30 +126,54 @@
                                 </div>
                             </MenuItems>
                         </transition>
-                    </Menu>-->
+                    </Menu>
                 </div>
 
                 <div @click="showPDFConfigModal = true">
                     <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer" />
                 </div>
 
-                <PlusButton @click="openEventComponent()" />
+                <PlusButton @click="createEventComponentIsVisible = true" />
                 <AddButtonSmall
-                    @click="openEventComponent()"
+                    @click="createEventComponentIsVisible = true"
                     :text="$t('New occupancy')"
                     class="hidden"
                 />
             </div>
         </div>
+        <div class="w-full overflow-y-scroll" :class="activeFilters.length > 0 ? 'mt-10' : ''">
+            <div class="mb-1 ml-4 max-w-7xl">
+                <div class="flex">
+                    <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
+                </div>
+
+            </div>
+        </div>
     </div>
 
+    <EventComponent
+        v-if="createEventComponentIsVisible"
+        @closed="createEventComponentIsVisible = false"
+        :showHints="$page.props.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :wantedRoomId="wantedRoom"
+        :isAdmin="hasAdminRole()"
+        :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="first_project_tab_id"
+    />
+
+    <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
+
     <GeneralCalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="showCalendarAboSettingModal = false" />
+
 </template>
 
 <script setup>
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {inject, ref} from "vue";
+import {computed, inject, ref} from "vue";
 import {
     IconArrowsDiagonal,
     IconCalendarStar,
@@ -162,17 +186,42 @@ import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import {Switch} from "@headlessui/vue";
+import {MenuButton, MenuItems, Switch, Menu} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import {usePermissions} from "@/Composeables/usePermissions.js";
+import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
+import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
+const eventTypes = inject('eventTypes');
 const dateValue = inject('dateValue');
+const first_project_tab_id = inject('first_project_tab_id');
+const filterOptions = inject('filterOptions');
+const personalFilters = inject('personalFilters');
+const user_filters = inject('user_filters');
+
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const isFullscreen = ref(false);
 const dateValueCopy = ref(dateValue ?? []);
 const showPDFConfigModal = ref(false);
+const createEventComponentIsVisible = ref(false);
+const wantedRoom = ref(null)
+const roomCollisions = ref([])
+const externUpdate = ref(false)
+
+const userCalendarSettings = useForm({
+    project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
+    options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
+    project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
+    repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
+    work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false
+})
+
+const { hasAdminRole, canAny } = usePermissions(usePage().props);
 
 const emits = defineEmits(['updateMultiEdit'])
 
@@ -189,6 +238,73 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    rooms: {
+        type: Object,
+        required: true
+    },
+})
+
+const activeFilters = computed(() => {
+    let activeFiltersArray = []
+    filterOptions.rooms.forEach((room) => {
+        if(user_filters.rooms?.includes(room.id)){
+            activeFiltersArray.push(room)
+        }
+    })
+
+    filterOptions.areas.forEach((area) => {
+        if(user_filters.areas?.includes(area.id)){
+            activeFiltersArray.push(area)
+        }
+    })
+
+    filterOptions.eventTypes.forEach((eventType) => {
+        if(user_filters.event_types?.includes(eventType.id)){
+            activeFiltersArray.push(eventType)
+        }
+    })
+
+    filterOptions.roomCategories.forEach((category) => {
+        if(user_filters.room_categories?.includes(category.id)){
+            activeFiltersArray.push(category)
+        }
+    })
+
+    filterOptions.roomAttributes.forEach((attribute) => {
+        if(user_filters.room_attributes?.includes(attribute.id)){
+            activeFiltersArray.push(attribute)
+        }
+    })
+
+    if(user_filters.is_loud){
+        activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
+    }
+
+    if(user_filters.is_not_loud){
+        activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
+    }
+
+    if(user_filters.adjoining_no_audience){
+        activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum", value: 'adjoiningNoAudience', user_filter_key: 'adjoining_no_audience'})
+    }
+
+    if(user_filters.adjoining_not_loud){
+        activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung", value: 'adjoiningNotLoud', user_filter_key: 'adjoining_not_loud'})
+    }
+
+    if(user_filters.has_audience){
+        activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
+    }
+
+    if(user_filters.has_no_audience){
+        activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
+    }
+
+    if(user_filters.show_adjoining_rooms){
+        activeFiltersArray.push({name: "Nebenräume anzeigen", value: 'showAdjoiningRooms', user_filter_key: 'show_adjoining_rooms'})
+    }
+
+    return activeFiltersArray
 })
 
 const UpdateMultiEditEmits = (value) => {
@@ -196,8 +312,12 @@ const UpdateMultiEditEmits = (value) => {
 }
 
 const changeAtAGlance = () => {
+    console.log(!atAGlance.value)
     router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
         at_a_glance: !atAGlance.value
+    }, {
+        preserveState: false,
+        preserveScroll: true
     })
 }
 
@@ -275,8 +395,79 @@ const updateTimes = () => {
     })
 }
 
+const saveUserCalendarSettings = () => {
+    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
+}
+
 const enterFullscreenMode = () => {
 }
+
+
+const removeFilter = (filter) =>  {
+    if(filter.value === 'isLoud'){
+        updateFilterValue('is_loud', false);
+    }
+
+    if(filter.value === 'isNotLoud'){
+        updateFilterValue('is_not_loud', false)
+    }
+
+    if(filter.value === 'adjoiningNoAudience'){
+        updateFilterValue('adjoining_no_audience', false)
+    }
+
+    if(filter.value === 'adjoiningNotLoud'){
+        updateFilterValue('adjoining_not_loud', false)
+    }
+
+    if(filter.value === 'hasAudience'){
+        updateFilterValue('has_audience', false)
+    }
+
+    if(filter.value === 'hasNoAudience'){
+        updateFilterValue('has_no_audience', false)
+    }
+
+    if(filter.value === 'showAdjoiningRooms'){
+        updateFilterValue('show_adjoining_rooms', false)
+    }
+
+    if(filter === 'rooms'){
+        user_filters.rooms.splice(user_filters.rooms.indexOf(filter.id), 1);
+        updateFilterValue('rooms', user_filters.rooms.length > 0 ? user_filters.rooms : null)
+    }
+
+    if(filter === 'room_categories'){
+        user_filters.room_categories.splice(user_filters.room_categories.indexOf(filter.id), 1);
+        updateFilterValue('room_categories', user_filters.room_categories.length > 0 ? user_filters.room_categories : null)
+    }
+
+    if(filter === 'areas'){
+        user_filters.areas.splice(user_filters.areas.indexOf(filter.id), 1);
+        updateFilterValue('areas', user_filters.areas.length > 0 ? user_filters.areas : null)
+    }
+
+    if(filter === 'event_types'){
+        user_filters.event_types.splice(user_filters.event_types.indexOf(filter.id), 1);
+        updateFilterValue('event_types', user_filters.event_types.length > 0 ? user_filters.event_types : null)
+    }
+
+    if(filter === 'room_attributes'){
+        user_filters.room_attributes.splice(user_filters.room_attributes.indexOf(filter.id), 1);
+        updateFilterValue('room_attributes', user_filters.room_attributes.length > 0 ? user_filters.room_attributes : null)
+    }
+}
+
+const updateFilterValue = (key, value) => {
+    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
+        key: key,
+        value: value
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    });
+}
+
 </script>
 
 <style scoped>

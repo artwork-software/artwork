@@ -395,16 +395,10 @@ const $t = useTranslation(),
             );
         }
         if (deleteType.value === 'main') {
-            router.delete(route('events.delete', eventToDelete.value), {
-                preserveScroll: true,
-                onSuccess: onSuccess
-            })
+            axios.delete(route('events.delete', eventToDelete.value)).finally(() => onSuccess());
         }
         if (deleteType.value === 'sub') {
-            router.delete(route('subEvent.delete', eventToDelete.value), {
-                preserveScroll: true,
-                onSuccess: onSuccess
-            })
+            axios.delete(route('subEvent.delete', eventToDelete.value)).finally(() => onSuccess());
         }
         deleteComponentVisible.value = false;
     },

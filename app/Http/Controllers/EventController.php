@@ -1830,7 +1830,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): RedirectResponse {
+    ): bool {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -1852,7 +1852,7 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
 
-        return Redirect::back();
+        return true;
     }
 
     /**

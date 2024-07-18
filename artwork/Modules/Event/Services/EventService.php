@@ -764,10 +764,11 @@ readonly class EventService
         EventTypeService $eventTypeService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
-        User $user,
-        bool $atAGlance
+        AreaService $areaService
     ): EventManagementDto {
+        $user = $userService->getAuthUser();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
 
         $showCalendar = $calendarService->createCalendarData(
@@ -782,7 +783,7 @@ readonly class EventService
             $eventTypeService,
             $areaService,
             null,
-            $user->calendar_filter
+            $userCalendarFilter
         );
 
         return EventManagementDto::newInstance()
@@ -794,7 +795,7 @@ readonly class EventService
             ->setSelectedDate($showCalendar['selectedDate'])
             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
             ->setEventsAtAGlance(
-                $atAGlance ?
+                $user->getAttribute('at_a_glance') ?
                     $calendarService->getEventsAtAGlance($startDate, $endDate) :
                     SupportCollection::make()
             )
@@ -802,14 +803,16 @@ readonly class EventService
                 $roomService->getFilteredRooms(
                     $startDate,
                     $endDate,
-                    $userService->getAuthUser()->calendar_filter
+                    $userCalendarFilter
                 )
             )
             ->setFilterOptions($showCalendar["filterOptions"],)
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectCalendarTabId(
+                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+            );
     }
 
     /** @return Event[]|Collection */

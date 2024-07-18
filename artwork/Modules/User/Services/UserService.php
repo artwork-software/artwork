@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\User\Services;
 
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -236,15 +235,15 @@ readonly class UserService
      */
     public function getUserCalendarFilterDatesOrDefault(User $user): array
     {
-        $userCalendarFilter = $user->calendar_filter;
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
 
-        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
-            !is_null($userCalendarFilter?->end_date);
+        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('->start_date')) &&
+            !is_null($userCalendarFilter?->getAttribute('end_date'));
         $startDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->start_date)->startOfDay() :
+            Carbon::create($userCalendarFilter->getAttribute('start_date'))->startOfDay() :
             Carbon::now()->startOfDay();
         $endDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->end_date)->endOfDay() :
+            Carbon::create($userCalendarFilter->getAttribute('end_date'))->endOfDay() :
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];

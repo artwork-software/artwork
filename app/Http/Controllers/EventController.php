@@ -67,6 +67,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Throwable;
 
 class EventController extends Controller
 {
@@ -85,8 +86,10 @@ class EventController extends Controller
     ) {
     }
 
+    /**
+     * @throws Throwable
+     */
     public function viewEventIndex(
-        Request $request,
         EventService $eventService,
         CalendarService $calendarService,
         RoomService $roomService,
@@ -111,9 +114,7 @@ class EventController extends Controller
                 $eventTypeService,
                 $roomCategoryService,
                 $roomAttributeService,
-                $areaService,
-                $userService->getAuthUser(),
-                $this->authManager->user()->at_a_glance
+                $areaService
             )
         );
     }

@@ -4,7 +4,6 @@
             :project="project"
             @open-event-component="openEditEventModal"
             :dateValue="dateValue"
-            @change-at-a-glance="changeAtAGlance"
             :at-a-glance="atAGlance"
             :filter-options="filterOptions"
             :personal-filters="personalFilters"
@@ -145,13 +144,9 @@ export default {
         'first_project_tab_id',
         'first_project_calendar_tab_id'
     ],
-    emits:['changeAtAGlance'],
     methods: {
         changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;
-        },
-        changeAtAGlance(){
-            this.$emit('changeAtAGlance')
         },
         openEditEventModal(event = null) {
 

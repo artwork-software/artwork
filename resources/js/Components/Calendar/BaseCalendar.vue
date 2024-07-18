@@ -1,25 +1,36 @@
 <template>
-    <div id="myCalendar" ref="calendarRef" class="bg-white max-h-screen" :class="isFullscreen ? 'overflow-y-auto' : ''">
+    <div id="myCalendar"
+         ref="calendarRef"
+         class="bg-white max-h-screen"
+         :class="isFullscreen ? 'overflow-y-auto' : ''"
+    >
         <div class="-my-5 -mx-5 sticky top-0 z-40">
             <AsyncFunctionBarCalendar
                 :multi-edit="multiEdit"
                 @update-multi-edit="updateMultiEdit"
                 :rooms="rooms"
+                :is-fullscreen="isFullscreen"
+                @open-fullscreen-mode="openFullscreen"
             />
 
-            <div class="flex justify-center w-full bg-white" :class="filteredEvents?.length ? 'mt-5' : ''" v-if="filteredEvents?.length > 0">
+            <div class="flex justify-center w-full bg-white"
+                 :class="filteredEvents?.length ? 'mt-5' : ''"
+                 v-if="filteredEvents?.length > 0"
+            >
                 <div class="flex errorText items-center cursor-pointer mb-2"
                      @click="showEventsWithoutRoomComponent = true"
                      v-if="filteredEvents?.length > 0"
                 >
-                    <IconAlertTriangle class="h-6  mr-2"/>
+                    <IconAlertTriangle class="h-6 mr-2"/>
                     {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
             </div>
         </div>
 
         <div class="pl-14 -mx-5 my-5 overflow-auto h-[90vh]">
-            <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white'" class="px-5">
+            <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white'"
+                 class="px-5"
+            >
                 <!-- Calendar Header -->
                 <AsyncCalendarHeader
                     class=""
@@ -28,34 +39,47 @@
 
                 <!-- Calendar Body -->
                 <div class="divide-y divide-gray-200 divide-dashed" ref="calendarToCalculate">
-                    <div v-for="day in days" :key="day.full_day" :style="{ height: zoom_factor * 115 + 'px' }" class="flex gap-0.5 day-container" :class="day.is_weekend ? 'bg-userBg/30' : ''" :data-day="day.full_day">
-                        <SingleDayInCalendar :day="day" />
-                        <div
-                            v-for="room in calendarData"
-                            :key="room.id"
-                            :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
-                            :class="[day.is_weekend ? '' : '', zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                            class="group/container"
+                    <div v-for="day in days"
+                         :key="day.full_day"
+                         :style="{ height: zoom_factor * 115 + 'px' }"
+                         class="flex gap-0.5 day-container"
+                         :class="day.is_weekend ? 'bg-userBg/30' : ''"
+                         :data-day="day.full_day"
+                    >
+                        <SingleDayInCalendar :day="day"/>
+                        <div v-for="room in calendarData"
+                             :key="room.id"
+                             :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
+                             :class="[day.is_weekend ? '' : '', zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                             class="group/container"
                         >
                             <template v-if="currentDaysInView.has(day.full_day)">
-                                <div class="py-0.5" v-for="event in room[day.full_day].events.data" :key="event.id">
-                                    <AsyncSingleEventInCalendar
-                                        :event="event"
-                                        :multi-edit="multiEdit"
-                                        :font-size="textStyle.fontSize"
-                                        :line-height="textStyle.lineHeight"
-                                        :rooms="rooms"
-                                        :has-admin-role="hasAdminRole()"
-                                        :width="zoom_factor * 204"
-                                    />
+                                <div v-for="event in room[day.full_day].events.data">
+                                    <div class="py-0.5" :key="event.id">
+                                        <AsyncSingleEventInCalendar
+                                            :event="event"
+                                            :multi-edit="multiEdit"
+                                            :font-size="textStyle.fontSize"
+                                            :line-height="textStyle.lineHeight"
+                                            :rooms="rooms"
+                                            :has-admin-role="hasAdminRole()"
+                                            :width="zoom_factor * 204"
+                                            @edit-event="showEditEventModel"
+                                            @edit-sub-event="openAddSubEventModal"
+                                            @open-add-sub-event-modal="openAddSubEventModal"
+                                            @open-confirm-modal="openDeleteEventModal"
+                                            @show-decline-event-modal="openDeclineEventModal"
+                                        />
+                                    </div>
+                                    <div class="hidden group-hover/container:block" v-if="addInCalendarButton">
+                                        <div class="px-1 py-0.5 bg-artwork-navigation-background/30 rounded-lg text-xs text-center cursor-pointer"
+                                             :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px'}">
+                                            Klick hier um ein Event zu erstellen
+                                        </div>
+                                    </div>
+
                                 </div>
                             </template>
-                            <div class="hidden group-hover/container:block" v-if="addInCalendarButton">
-                                <div class="px-1 py-0.5 bg-artwork-navigation-background/30 rounded-lg text-xs text-center cursor-pointer"
-                                     :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px'}">
-                                    Klick hier um ein Event zu erstellen
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -64,22 +88,68 @@
     </div>
 
 
-    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-100 pointer-events-none" v-if="multiEdit">
+    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-100 pointer-events-none"
+         v-if="multiEdit">
         <div class="flex items-center justify-center h-full gap-4">
             <div>
-                <FormButton :disabled="checkedEventsForMultiEditCount === 0" :text="checkedEventsForMultiEditCount + ' Termin(e) verschieben'" class="transition-all duration-300 ease-in-out pointer-events-auto"/>
+                <FormButton :disabled="checkedEventsForMultiEditCount === 0"
+                            @click="showMultiEditModal = true"
+                            :text="checkedEventsForMultiEditCount + ' Termin(e) verschieben'"
+                            class="transition-all duration-300 ease-in-out pointer-events-auto"
+                />
             </div>
             <div>
-                <FormButton class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto" @click="openDeleteSelectedEventsModal = true" :disabled="checkedEventsForMultiEditCount === 0" :text="checkedEventsForMultiEditCount + ' ' + $t('Delete events')"/>
+                <FormButton class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                            @click="openDeleteSelectedEventsModal = true"
+                            :disabled="checkedEventsForMultiEditCount === 0"
+                            :text="checkedEventsForMultiEditCount + ' ' + $t('Delete events')"
+                />
             </div>
         </div>
 
     </div>
 
 
+    <EventComponent
+        v-if="createEventComponentIsVisible"
+        @closed="createEventComponentIsVisible = false"
+        :showHints="usePage().props.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :event="eventToEdit"
+        :wantedRoomId="wantedRoom"
+        :isAdmin="hasAdminRole()"
+        :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="first_project_calendar_tab_id"
+    />
+
+    <AddSubEventModal
+        v-if="showAddSubEventModal"
+        @close="showAddSubEventModal = false"
+        :event="eventToEdit"
+        :event-types="eventTypes"
+        :sub-event-to-edit="subEventToEdit"
+    />
+
+    <ConfirmDeleteModal
+        v-if="deleteComponentVisible"
+        :title="deleteTitle"
+        :description="deleteDescription"
+        @closed="deleteComponentVisible = false"
+        @delete="deleteEvent"
+    />
+
+    <DeclineEventModal
+        :request-to-decline="declineEvent"
+        :event-types="eventTypes"
+        @closed="showDeclineEventModal = false"
+        v-if="showDeclineEventModal"
+    />
+
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
-        @closed="openDeleteSelectedEventsModal = false"
+        @closed="closeDeleteSelectedEventsModal"
         @delete="deleteSelectedEvents"
         :title="$t('Delete assignments')"
         :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
@@ -109,6 +179,11 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {IconAlertTriangle} from "@tabler/icons-vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n(), $t = t;
 
 const { hasAdminRole } = usePermissions(usePage().props);
 
@@ -121,9 +196,26 @@ const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const checkedEventsForMultiEditCount = ref(0);
 const showMultiEditModal = ref(false);
 const editEvents = ref([]);
-const addInCalendarButton = ref(false);
 const openDeleteSelectedEventsModal = ref(false);
 const showEventsWithoutRoomComponent = ref(false);
+const addInCalendarButton = ref(false);
+
+const showAddSubEventModal = ref(false)
+const showDeclineEventModal = ref(false)
+const createEventComponentIsVisible = ref(false)
+
+const deleteComponentVisible = ref(false)
+const deleteTitle = ref('')
+const deleteDescription = ref('')
+const deleteType = ref('')
+
+const eventToEdit = ref(null)
+const subEventToEdit = ref(null)
+const declineEvent = ref(null)
+const eventToDelete = ref(null)
+
+const wantedRoom = ref(null)
+const roomCollisions = ref([])
 
 const currentDaysInView = ref(new Set());
 
@@ -151,11 +243,6 @@ const props = defineProps({
     },
 });
 
-const AsyncSingleEventInCalendar = defineAsyncComponent({
-    loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
-    delay: 100,
-});
-
 const AsyncFunctionBarCalendar = defineAsyncComponent(() =>
     import('@/Components/FunctionBars/FunctionBarCalendar.vue')
 );
@@ -163,6 +250,11 @@ const AsyncFunctionBarCalendar = defineAsyncComponent(() =>
 const AsyncCalendarHeader = defineAsyncComponent(() =>
     import('@/Components/Calendar/Elements/CalendarHeader.vue')
 );
+
+const AsyncSingleEventInCalendar = defineAsyncComponent({
+    loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue'),
+    delay: 100,
+});
 
 const updateMultiEdit = (value) => {
     multiEdit.value = value;
@@ -177,6 +269,35 @@ const textStyle = computed(() => {
     };
 });
 
+
+const openDeclineEventModal = (event) => {
+    declineEvent.value = event;
+    showDeclineEventModal.value = true;
+};
+
+const openDeleteEventModal = (event, type) => {
+    if (type === 'main') {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete event?');
+        deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
+    } else {
+        deleteType.value = type;
+        deleteTitle.value = $t('Delete sub-event?');
+        deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
+    }
+    eventToDelete.value = event;
+    deleteComponentVisible.value = true;
+};
+
+const openAddSubEventModal = (event) => {
+    subEventToEdit.value = event;
+    showAddSubEventModal.value = true;
+};
+
+const showEditEventModel = (event) => {
+    eventToEdit.value = event;
+    createEventComponentIsVisible.value = true;
+};
 
 const filteredEvents = computed(() => {
     return props.eventsWithoutRoom?.filter((event) => {
@@ -194,10 +315,53 @@ const filteredEvents = computed(() => {
         return false;
     });
 })
+const openFullscreen = () => {
+    let elem = document.getElementById('myCalendar');
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+        this.isFullscreen = true;
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+        elem.msRequestFullscreen();
+    }
+}
+
+const listenToFullscreen = () => {
+    if (window.innerHeight === screen.height) {
+        isFullscreen.value = true;
+    } else {
+        isFullscreen.value = false;
+        zoom_factor.value = 1;
+    }
+}
 
 const closeMultiEditModal = () => {
     removeCheckedState();
+    multiEdit.value = false;
     showMultiEditModal.value = false;
+};
+
+const deleteEvent = () => {
+    if (deleteType.value === 'main') {
+        router.delete(route('events.delete', eventToDelete), {
+            preserveScroll: true,
+            preserveState: false
+        })
+    }
+    if (deleteType.value === 'sub') {
+        router.delete(route('subEvent.delete', eventToDelete), {
+            preserveScroll: true,
+            preserveState: false
+        })
+    }
+    deleteComponentVisible.value = false;
+}
+
+const closeDeleteSelectedEventsModal = () => {
+    openDeleteSelectedEventsModal.value = false;
+    removeCheckedState()
+    multiEdit.value = false;
 };
 
 const removeCheckedState = () => {

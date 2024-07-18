@@ -239,7 +239,7 @@ export default {
         'personalFilters',
         'user_filters'
     ],
-    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
+    emits: ['changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {
         return {
             atAGlance: this.atAGlance,

@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
          class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoom_factor > 0.4"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
@@ -9,23 +9,23 @@
                    class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconLink stroke-width="1.5" class="h-4 w-4"/>
                 </a>
-                <button type="button" @click="createEventComponentIsVisible = true"
+                <button type="button" @click="$emit('editEvent', event)"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || hasAdminRole" @click="openAddSubEventModal"
+                <button v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openAddSubEventModal', event)"
                         v-show="event.eventTypeId === 1" type="button"
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || hasAdminRole" type="button"
-                        @click="showDeclineEventModal = true"
+                        @click="$emit('showDeclineEventModal', event)"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <IconX stroke-width="1.5"
                            stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || hasAdminRole"
-                        @click="openConfirmModal('main')" type="button"
+                        @click="$emit('openConfirmModal', event, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <IconTrash stroke-width="1.5"
                                stroke="currentColor" class="w-4 h-4"/>
@@ -34,9 +34,10 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked" id="candidates"
+                        <input v-model="event.clicked"
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
+                               :id="event.id"
                                class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
                     </div>
                 </div>
@@ -215,12 +216,12 @@
                 <div
                     class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
-                        <button @click="editSubEvent(subEvent)" type="button"
+                        <button @click="$emit('editSubEvent', subEvent)" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                             <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || hasAdminRole"
-                                @click="openConfirmModal(subEvent.id, 'sub')" type="button"
+                                @click="$emit('openConfirmModal', subEvent, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                             <IconTrash stroke-width="1.5"
                                        stroke="currentColor" class="w-4 h-4"/>
@@ -312,54 +313,15 @@
             </div>
         </div>
     </div>
-
-    <EventComponent
-        v-if="createEventComponentIsVisible"
-        @closed="createEventComponentIsVisible = false"
-        :showHints="usePage().props.show_hints"
-        :eventTypes="eventTypes"
-        :rooms="rooms"
-        :project="project"
-        :event="event"
-        :wantedRoomId="wantedRoom"
-        :isAdmin="hasAdminRole"
-        :roomCollisions="roomCollisions"
-        :first_project_calendar_tab_id="first_project_tab_id"
-    />
-
-    <AddSubEventModal
-        v-if="openAddSubEventModal"
-        @close="openAddSubEventModal = false"
-        :event="event"
-        :event-types="eventTypes"
-        :sub-event-to-edit="subEventToEdit"
-    />
-    <ConfirmDeleteModal
-        v-if="deleteComponentVisible"
-        :title="deleteTitle"
-        :description="deleteDescription"
-        @closed="deleteComponentVisible = false"
-        @delete="deleteEvent"
-    />
-    <DeclineEventModal
-        :request-to-decline="event"
-        :event-types="eventTypes"
-        @closed="showDeclineEventModal = false"
-        v-if="showDeclineEventModal"
-    />
 </template>
 
 <script setup>
 
 
-import {computed, inject, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {Link, router, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconLink, IconTrash, IconX, IconUsersGroup, IconRepeat} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import EventComponent from "@/Layouts/Components/EventComponent.vue";
-import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {MenuButton, MenuItem, MenuItems, Menu} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
 import { useI18n } from "vue-i18n";
@@ -367,19 +329,14 @@ const { t } = useI18n(), $t = t;
 
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false)
-const openAddSubEventModal = ref(false)
-const showDeclineEventModal = ref(false)
-const createEventComponentIsVisible = ref(false)
-const wantedRoom = ref(null)
-const roomCollisions = ref([])
-const eventTypes = inject('eventTypes')
-const first_project_calendar_tab_id = inject('first_project_calendar_tab_id')
+
 
 const deleteComponentVisible = ref(false)
 const deleteTitle = ref('')
 const deleteDescription = ref('')
-const subEventToEdit = ref(null)
 const deleteType = ref('')
+
+const emits = defineEmits(['editEvent', 'editSubEvent', 'openAddSubEventModal', 'openConfirmModal', 'showDeclineEventModal'])
 
 const props = defineProps({
     event: {
@@ -464,19 +421,19 @@ const totalHeight = computed(() => {
     return height;
 })
 
-const heightSubtraction = computed(() => {
+const heightSubtraction = (event) => {
     let heightSubtraction = 0;
-    if (usePage().props.user.calendar_settings.project_management && (!props.event.projectLeaders || props.event.projectLeaders?.length < 1)) {
+    if (usePage().props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
         heightSubtraction += 17;
     }
-    if (usePage().props.user.calendar_settings.repeating_events && (!props.event.is_series || props.event.is_series === false)) {
+    if (usePage().props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
         heightSubtraction += 20;
     }
-    if (usePage().props.user.calendar_settings.work_shifts && (!props.event.shifts || props.event.shifts?.length < 1)) {
+    if (usePage().props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
         heightSubtraction += 18;
     }
     return heightSubtraction;
-})
+}
 
 const convertToMathJax = (fraction) => {
     const parts = fraction.split(' ');
@@ -537,21 +494,7 @@ const openConfirmModal = (type) => {
     }
     deleteComponentVisible.value = true;
 }
-const deleteEvent = () => {
-    if (deleteType.value === 'main') {
-        router.delete(route('events.delete', props.event), {
-            preserveScroll: true,
-            preserveState: false
-        })
-    }
-    if (deleteType.value === 'sub') {
-        router.delete(route('subEvent.delete', props.event), {
-            preserveScroll: true,
-            preserveState: false
-        })
-    }
-    deleteComponentVisible.value = false;
-}
+
 
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});

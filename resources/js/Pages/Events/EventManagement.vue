@@ -31,7 +31,6 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
-                    @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="first_project_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 >

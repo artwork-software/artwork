@@ -50,7 +50,7 @@
                                 class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
                     <IconZoomOut @click="decrementZoomFactor" :disabled="zoom_factor >= 1.4"
                                  v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
-                    <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
+                    <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="$emit('openFullscreenMode')" v-if="!atAGlance && !isFullscreen"/>
                     <IndividualCalendarFilterComponent
                         class=""
                         :filter-options="filterOptions"
@@ -205,7 +205,6 @@ const user_filters = inject('user_filters');
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
-const isFullscreen = ref(false);
 const dateValueCopy = ref(dateValue ?? []);
 const showPDFConfigModal = ref(false);
 const createEventComponentIsVisible = ref(false);
@@ -223,7 +222,7 @@ const userCalendarSettings = useForm({
 
 const { hasAdminRole, canAny } = usePermissions(usePage().props);
 
-const emits = defineEmits(['updateMultiEdit'])
+const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode'])
 
 const props = defineProps({
     project: {
@@ -241,6 +240,11 @@ const props = defineProps({
     rooms: {
         type: Object,
         required: true
+    },
+    isFullscreen: {
+        type: Boolean,
+        required: false,
+        default: false
     },
 })
 
@@ -397,9 +401,6 @@ const updateTimes = () => {
 
 const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
-}
-
-const enterFullscreenMode = () => {
 }
 
 

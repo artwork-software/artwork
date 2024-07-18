@@ -29,7 +29,6 @@
                     :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filter_options"
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personal_filters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                    @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 >
@@ -48,7 +47,6 @@
                     :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filter_options"
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personal_filters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                    @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
@@ -65,7 +63,7 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 
 export default {
     components: {
@@ -104,18 +102,11 @@ export default {
     ],
     data() {
         return {
-            atAGlance: this.eventsAtAGlance?.length > 0 ?? this.loadedProjectInformation['CalendarTab']?.eventsAtAGlance?.length > 0,
+            atAGlance: usePage().props.user.at_a_glance ?? false
         }
     },
     methods: {
-        changeAtAGlance() {
-            this.atAGlance = !this.atAGlance;
-            router.reload({
-                data: {
-                    atAGlance: this.atAGlance,
-                }
-            })
-        }
+
     }
 }
 </script>

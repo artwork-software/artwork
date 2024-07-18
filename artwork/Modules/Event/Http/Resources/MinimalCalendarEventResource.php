@@ -4,7 +4,6 @@ namespace Artwork\Modules\Event\Http\Resources;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
 use Artwork\Modules\User\Models\User;
@@ -24,40 +23,49 @@ class MinimalCalendarEventResource extends JsonResource
     public function toArray($request): array
     {
         /** @var string|null $projectName */
-        /** @var ProjectState|null $projectState */
+        /** @var string|null $projectStateColor */
         /** @var array<string, string>|null $projectLeaders */
-        $projectName = $projectState = $projectLeaders = null;
+        $projectName = $projectStateColor = $projectLeaders = null;
         if ($eventProjectId = $this->getAttribute('project_id')) {
             [
                 $projectName,
-                $projectState,
+                $projectStateColor,
                 $projectLeaders
             ] = $this->aggregateProjectRelevantData();
         }
+
+        $creator = $this->getAttribute('creator');
+        $eventType = $this->getAttribute('event_type');
+        $eventName = $this->getAttribute('eventName');
+        $startTime = $this->getAttribute('start_time');
 
         return [
             'id' => $this->getAttribute('id'),
             'projectId' => $eventProjectId,
             'roomId' => $this->getAttribute('room_id'),
-            'start' => $this->getAttribute('start_time')->utc()->toIso8601String(),
-            'startTime' => $this->getAttribute('start_time'),
+            'created_by' => [
+                'id' => $creator->getAttribute('id'),
+                'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
+                'first_name' => $creator->getAttribute('first_name'),
+                'last_name' => $creator->getAttribute('last_name')
+            ],
+            'start' => $startTime->utc()->toIso8601String(),
+            'startTime' => $startTime,
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
             'allDay' => $this->getAttribute('allDay'),
-            'alwaysEventName' => $this->getAttribute('eventName'),
-            'eventName' => $this->getAttribute('eventName'),
-            'title' => $projectName ?:
-                $this->getAttribute('eventName') ?:
-                    $this->getAttribute('event_type')->getAttribute('name'),
-            'event_type_color' => $this->getAttribute('event_type')->getAttribute('hex_code'),
-            'eventTypeColorBackground' => $this->getAttribute('event_type')->getAttribute('hex_code') . '33',
-            'eventTypeName' => $this->getAttribute('event_type')->getAttribute('name'),
-            'eventTypeAbbreviation' => $this->getAttribute('event_type')->getAttribute('abbreviation'),
+            'alwaysEventName' => $eventName,
+            'eventName' => $eventName,
+            'title' => $projectName ?: $eventName ?: $eventType->getAttribute('name'),
+            'event_type_color' => $eventType->getAttribute('hex_code'),
+            'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
+            'eventTypeName' => $eventType->getAttribute('name'),
+            'eventTypeAbbreviation' => $eventType->getAttribute('abbreviation'),
             'audience' => $this->getAttribute('audience'),
             'isLoud' => $this->getAttribute('is_loud'),
             'projectName' => $projectName,
-            'projectStateColor' => $projectState?->getAttribute('color'),
+            'projectStateColor' => $projectStateColor,
             'projectLeaders' => $projectLeaders,
-            'subEvents' => SubEventResource::collection($this->getAttribute('subEvents')),
+            'subEvents' => SubEventResource::collection($this->getAttribute('subEvents'))->resolve(),
             'shifts' => $this->aggregateEventShifts($this->getAttribute('shifts')->all())
         ];
     }
@@ -77,9 +85,13 @@ class MinimalCalendarEventResource extends JsonResource
             ];
         }
 
+        if (($projectStateColor = $projectState = $project->getRelation('state'))) {
+            $projectStateColor = $projectState->getAttribute('color');
+        }
+
         return [
             $project->getAttribute('name'),
-            $project->getRelation('state'),
+            $projectStateColor,
             $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
         ];
     }

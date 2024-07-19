@@ -454,27 +454,27 @@ const removeFilter = (filter) => {
         updateFilterValue('show_adjoining_rooms', false)
     }
 
-    if (filter === 'rooms') {
+    if (filter.value === 'rooms') {
         user_filters.rooms.splice(user_filters.rooms.indexOf(filter.id), 1);
         updateFilterValue('rooms', user_filters.rooms.length > 0 ? user_filters.rooms : null)
     }
 
-    if (filter === 'room_categories') {
+    if (filter.value === 'room_categories') {
         user_filters.room_categories.splice(user_filters.room_categories.indexOf(filter.id), 1);
         updateFilterValue('room_categories', user_filters.room_categories.length > 0 ? user_filters.room_categories : null)
     }
 
-    if (filter === 'areas') {
+    if (filter.value === 'areas') {
         user_filters.areas.splice(user_filters.areas.indexOf(filter.id), 1);
         updateFilterValue('areas', user_filters.areas.length > 0 ? user_filters.areas : null)
     }
 
-    if (filter === 'event_types') {
+    if (filter.value === 'event_types') {
         user_filters.event_types.splice(user_filters.event_types.indexOf(filter.id), 1);
         updateFilterValue('event_types', user_filters.event_types.length > 0 ? user_filters.event_types : null)
     }
 
-    if (filter === 'room_attributes') {
+    if (filter.value === 'room_attributes') {
         user_filters.room_attributes.splice(user_filters.room_attributes.indexOf(filter.id), 1);
         updateFilterValue('room_attributes', user_filters.room_attributes.length > 0 ? user_filters.room_attributes : null)
     }

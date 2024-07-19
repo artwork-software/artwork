@@ -231,24 +231,37 @@ export default {
         openModal() {
 
         },
-        closeModal(bool) {
-            this.$emit('closed', bool);
+        closeModal(bool, desiredRoomIds = null, desiredDays = null) {
+            this.$emit('closed', bool, desiredRoomIds, desiredDays);
         },
-        saveMultiEdit(){
+        saveMultiEdit() {
             this.editEvents.type = this.selectedTimeType.id;
             this.editEvents.calculationType = this.selectedCalculationType.id;
             this.editEvents.newRoomId = this.selectedRoom?.id;
 
-            this.editEvents.patch(route('multi-edit.save'), {
-                onSuccess: () => {
-                    this.editEvents.newRoomId = null;
-                    this.editEvents.calculationType = null;
-                    this.editEvents.value = 0;
-                    this.editEvents.type = null;
-                    this.editEvents.date = null;
-                    this.closeModal(true)
-                },
-                preserveScroll: true
+            let desiredRoomIds = null,
+                desiredDays;
+
+            axios.patch(
+                route('multi-edit.save'),
+                {
+                    events: this.editEvents.events,
+                    newRoomId: this.editEvents.newRoomId,
+                    calculationType: this.editEvents.calculationType,
+                    value: this.editEvents.value,
+                    type: this.editEvents.type,
+                    date: this.editEvents.date
+                }
+            ).then((response) => {
+                desiredRoomIds = response.data.desiredRoomIds;
+                desiredDays = response.data.desiredDays;
+            }).finally(() => {
+                this.editEvents.newRoomId = null;
+                this.editEvents.calculationType = null;
+                this.editEvents.value = 0;
+                this.editEvents.type = null;
+                this.editEvents.date = null;
+                this.closeModal(true, desiredRoomIds, desiredDays);
             });
         }
     },

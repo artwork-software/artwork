@@ -357,9 +357,13 @@ const $t = useTranslation(),
             zoom_factor.value = 1;
         }
     },
-    closeMultiEditModal = (closedOnPurpose) => {
+    closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
         showMultiEditModal.value = false;
         if (closedOnPurpose) {
+            if (desiredRoomIds && desiredDays) {
+                handleReload(desiredRoomIds, desiredDays);
+            }
+
             removeCheckedState();
             multiEdit.value = false;
         }

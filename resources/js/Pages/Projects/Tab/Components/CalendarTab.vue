@@ -34,8 +34,16 @@
                 >
                 </IndividualCalendarAtGlanceComponent>
 
-                <IndividualCalendarComponent
+
+                <BaseCalendar
                     v-else
+                    :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
+                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
+                    :days="days ?? loadedProjectInformation['CalendarTab'].days"
+                    :project="project ?? headerObject.project"
+                />
+                <!--<IndividualCalendarComponent
+
                     :events-without-room="eventsWithoutRoom ?? headerObject.eventsWithoutRoom"
                     :project="project ?? headerObject.project"
                     :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].date_value"
@@ -49,7 +57,7 @@
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                     :first_project_tab_id="this.first_project_tab_id"
                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                />
+                />-->
             </div>
         </div>
     </div>
@@ -64,9 +72,11 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import {router, usePage} from "@inertiajs/vue3";
+import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 
 export default {
     components: {
+        BaseCalendar,
         IndividualCalendarComponent,
         CalendarComponent,
         IndividualCalendarAtGlanceComponent,
@@ -103,6 +113,18 @@ export default {
     data() {
         return {
             atAGlance: usePage().props.user.at_a_glance ?? false
+        }
+    },
+    provide() {
+        // use function syntax so that we can access `this`
+        return {
+            eventTypes: this.eventTypes ?? headerObject.eventTypes,
+            dateValue: this.dateValue ?? this.loadedProjectInformation['CalendarTab'].date_value,
+            first_project_tab_id: this.first_project_tab_id,
+            first_project_calendar_tab_id: this.first_project_calendar_tab_id,
+            user_filters: this.user_filters ?? this.loadedProjectInformation['CalendarTab'].user_filters,
+            personalFilters: this.personalFilters ?? this.loadedProjectInformation['CalendarTab'].personal_filters,
+            filterOptions: this.filterOptions ?? this.loadedProjectInformation['CalendarTab'].filter_options
         }
     },
     methods: {

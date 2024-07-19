@@ -57,6 +57,7 @@ class MinimalCalendarEventResource extends JsonResource
             'alwaysEventName' => $eventName,
             'eventName' => $eventName,
             'title' => $projectName ?: $eventName ?: $eventType->getAttribute('name'),
+            'eventTypeId' => $eventType->getAttribute('id'),
             'event_type_color' => $eventType->getAttribute('hex_code'),
             'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
             'eventTypeName' => $eventType->getAttribute('name'),

@@ -224,9 +224,10 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -234,6 +235,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -327,6 +329,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -784,9 +787,10 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -794,6 +798,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -887,6 +892,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Meeting Rock & Wrestling',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -1272,9 +1278,10 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -1282,6 +1289,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -1375,6 +1383,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -1830,10 +1839,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                5,
+                6,
                 //expected eventTypeMock getAttribute keys
                 [
                     'name',
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -1842,6 +1852,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 //expected eventTypeMock getAttribute returns
                 [
                     'Blocker',
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -1935,6 +1946,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'alwaysEventName' => null,
                     'eventName' => null,
                     'title' => 'Blocker',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -2304,9 +2316,10 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -2314,6 +2327,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -2407,6 +2421,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',

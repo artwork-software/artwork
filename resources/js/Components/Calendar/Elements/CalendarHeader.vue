@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center sticky top-0 gap-0.5 h-16 bg-userBg z-30 rounded-t-xl divide-x divide-secondaryHover divide-dashed first-line:divide-none">
+    <div class="flex items-center sticky  gap-0.5 h-16 bg-userBg z-30 rounded-t-xl divide-x divide-secondaryHover divide-dashed first-line:divide-none" :class="filteredEventsLength > 0 ? 'top-[116px]' : 'top-[76px]'">
         <div :style="{minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px'}"></div>
         <div v-for="room in rooms" :key="room.id" :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px' }" class="flex items-center bg-userBg h-full truncate">
             <AsyncSingleRoomInHeader :room="room" />
@@ -18,6 +18,11 @@ const props = defineProps({
     rooms: {
         type: Object,
         required: true
+    },
+    filteredEventsLength: {
+        type: Number,
+        required: false,
+        default: 0
     }
 })
 

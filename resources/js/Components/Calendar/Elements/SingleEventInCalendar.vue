@@ -1,6 +1,7 @@
 <template>
-    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
-         class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
+    <div
+        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoom_factor > 0.4"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -121,7 +122,9 @@
                             </div>
                             <div v-else>
                                 <div v-if="atAGlance">
-                                    {{ new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm") }}
+                                    {{
+                                        new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm")
+                                    }}
                                 </div>
                                 <div v-else>
                                     {{
@@ -133,7 +136,8 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="event.option_string && usePage().props.user.calendar_settings.options" class="flex items-center">
+                <div v-if="event.option_string && usePage().props.user.calendar_settings.options"
+                     class="flex items-center">
                     <div
                         v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                         class="flex eventTime font-medium subpixel-antialiased"
@@ -154,7 +158,8 @@
                 {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5 w-full" v-if="usePage().props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
+            <div class="-ml-3 mb-0.5 w-full"
+                 v-if="usePage().props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
                 <div v-if="event.projectLeaders && !project && zoom_factor >= 0.8"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
@@ -318,14 +323,15 @@
 <script setup>
 
 
-import {computed, ref, watch} from "vue";
-import {Link, router, usePage} from "@inertiajs/vue3";
-import {IconCirclePlus, IconEdit, IconLink, IconTrash, IconX, IconUsersGroup, IconRepeat} from "@tabler/icons-vue";
+import {computed, ref} from "vue";
+import {Link, usePage} from "@inertiajs/vue3";
+import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
-import {MenuButton, MenuItem, MenuItems, Menu} from "@headlessui/vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
-import { useI18n } from "vue-i18n";
-const { t } = useI18n(), $t = t;
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n(), $t = t;
 
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false)
@@ -501,7 +507,3 @@ const getEditHref = (projectId) => {
 }
 
 </script>
-
-<style scoped>
-
-</style>

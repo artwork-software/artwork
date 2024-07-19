@@ -58,6 +58,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -67,6 +68,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Throwable;
 
 class EventController extends Controller
 {
@@ -82,11 +84,32 @@ class EventController extends Controller
         private readonly SchedulingService $schedulingService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly AuthManager $authManager,
+        private readonly RoomService $roomService,
     ) {
     }
 
-    public function viewEventIndex(
+    public function getEventsForRoomsByDaysAndProject(
         Request $request,
+        UserService $userService,
+        ProjectService $projectService,
+    ): JsonResponse {
+        return new JsonResponse(
+            $this->roomService->collectEventsForRoomsOnSpecificDays(
+                $userService,
+                $request->collect('rooms')->all(),
+                $request->collect('days')->all(),
+                $request->user()->calendar_filter,
+                ($projectId = $request->get('projectId', 0)) > 0 ?
+                    $projectService->findById($projectId) :
+                    null
+            )
+        );
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function viewEventIndex(
         EventService $eventService,
         CalendarService $calendarService,
         RoomService $roomService,
@@ -111,9 +134,7 @@ class EventController extends Controller
                 $eventTypeService,
                 $roomCategoryService,
                 $roomAttributeService,
-                $areaService,
-                $userService->getAuthUser(),
-                $this->authManager->user()->at_a_glance
+                $areaService
             )
         );
     }
@@ -1804,7 +1825,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): RedirectResponse {
+    ): bool {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -1826,10 +1847,8 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
 
-        return Redirect::back();
+        return true;
     }
-
-
 
     /**
      * @throws AuthorizationException

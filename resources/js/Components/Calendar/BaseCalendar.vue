@@ -162,7 +162,7 @@ import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {useEvents} from "@/Composeables/Event.js";
+import {useEvent} from "@/Composeables/Event.js";
 
 onMounted(() => {
     const observer = new IntersectionObserver(
@@ -185,7 +185,7 @@ onMounted(() => {
 });
 
 const $t = useTranslation(),
-    {getDaysOfEvent, reloadRoomsAndDays, formatEventDateByDayJs} = useEvents(),
+    {getDaysOfEvent, reloadRoomsAndDays, formatEventDateByDayJs} = useEvent(),
     {hasAdminRole} = usePermission(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(() =>
         import('@/Components/FunctionBars/FunctionBarCalendar.vue')

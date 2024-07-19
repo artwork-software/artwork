@@ -678,9 +678,9 @@ import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {useEvents} from "@/Composeables/Event.js";
+import {useEvent} from "@/Composeables/Event.js";
 
-const {getDaysOfEvent} = useEvents();
+const {getDaysOfEvent} = useEvent();
 
 const options = [
     {

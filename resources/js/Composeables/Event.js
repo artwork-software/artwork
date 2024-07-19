@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import axios from "axios";
 
-export function useEvents() {
+export function useEvent() {
     const getDaysOfEvent = (startDate, endDate) => {
             let days = [];
             let start = new Date(startDate);

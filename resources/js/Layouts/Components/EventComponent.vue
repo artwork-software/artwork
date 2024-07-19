@@ -940,16 +940,17 @@ export default {
             this.checkCollisions();
         },
         closeModal(closedOnPurpose) {
-            let eventData = this.eventData();
-
             if (closedOnPurpose) {
                 this.$emit(
                     'closed',
                     closedOnPurpose,
-                    //get room ids to update
-                    new Set(
-                        [this.initialRoomId, this.selectedRoom?.id].filter(
-                            (value) => value !== null && typeof value !== 'undefined'
+                    //get room ids array to update
+                    Array.from(
+                        //make ids unique by new Set
+                        new Set(
+                            [this.initialRoomId, this.selectedRoom?.id].filter(
+                                (value) => value !== null && typeof value !== 'undefined'
+                            )
                         )
                     ),
                     getDaysOfEvent(

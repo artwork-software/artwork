@@ -138,8 +138,11 @@
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
-    <div class="w-full h-full sticky z-50 justify-center text-center">
-        Daten werden geladen...
+    <div v-if="showReceivesNewDataOverlay"
+         class="bg-opacity-50 bg-black text-white w-full h-full absolute inset-0 z-50 justify-center text-center">
+        <div class="flex flex-col w-full h-full justify-center">
+            {{ $t('Your view is being processed, please wait a moment.') }}
+        </div>
     </div>
 </template>
 <script setup>
@@ -157,7 +160,6 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvents} from "@/Composeables/Event.js";
-import dayjs from "dayjs";
 
 onMounted(() => {
     const observer = new IntersectionObserver(
@@ -180,7 +182,7 @@ onMounted(() => {
 });
 
 const $t = useTranslation(),
-    {getDaysOfEvent, reloadRoomsAndDays} = useEvents(),
+    {getDaysOfEvent, reloadRoomsAndDays, formatEventDateByDayJs} = useEvents(),
     {hasAdminRole} = usePermissions(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(() =>
         import('@/Components/FunctionBars/FunctionBarCalendar.vue')
@@ -215,32 +217,24 @@ const $t = useTranslation(),
         },
     }),
     computedCalendarData = computed(() => {
-        if (!receivedNewData.value) {
+        if (!hasReceivedNewData.value) {
             return calendarDataRef;
         }
 
-        receivedRoomMap.value.forEach(
-            (dayMap, roomId) => {
-                dayMap.forEach(
-                    (events, day) => {
-                        let desiredRoomName = props.rooms.find((room) => {
-                            return room.id === roomId;
-                        }).name;
-
-                        calendarDataRef.value.forEach(
-                            (roomWithEvents) => {
-                                if (roomWithEvents[day].roomName === desiredRoomName) {
-                                    roomWithEvents[day].events.data = JSON.parse(JSON.stringify(events));
-                                }
-                            }
-                        );
+        for (const [day, rooms] of Object.entries(receivedRoomData.value)) {
+            for (const [roomId, events] of Object.entries(rooms)) {
+                calendarDataRef.value.forEach(
+                    (roomWithEvents) => {
+                        if (roomWithEvents[day]?.roomId === Number(roomId)) {
+                            roomWithEvents[day].events.data = JSON.parse(JSON.stringify(events));
+                        }
                     }
-                )
+                );
             }
-        );
+        }
 
-        receivedNewData.value = false;
-        receivedRoomMap.value = new Map();
+        hasReceivedNewData.value = false;
+        receivedRoomData.value = [];
 
         if (showReceivesNewDataOverlay.value) {
             showReceivesNewDataOverlay.value = false;
@@ -272,8 +266,8 @@ const $t = useTranslation(),
             return false;
         });
     }),
-    receivedNewData = ref(false),
-    receivedRoomMap = ref(new Map()),
+    hasReceivedNewData = ref(false),
+    receivedRoomData = ref([]),
     calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
     first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
     eventTypes = inject('eventTypes'),
@@ -302,25 +296,15 @@ const $t = useTranslation(),
     showReceivesNewDataOverlay = ref(false),
     getProjectIdFromProps = () => props.project ? props.project.id : 0,
     handleReload = async (desiredRoomIdsToReload, desiredDaysToReload) => {
-        console.debug(desiredDaysToReload, desiredRoomIdsToReload);
         showReceivesNewDataOverlay.value = true;
-        // if ((desiredDaysToReload.length * desiredDaysToReload.length) > 14) {
-        //
-        // }
 
-        let roomMap = await reloadRoomsAndDays(
+        receivedRoomData.value = await reloadRoomsAndDays(
             desiredRoomIdsToReload,
             desiredDaysToReload,
             getProjectIdFromProps()
         );
 
-        if (roomMap.size > 0) {
-            receivedRoomMap.value = roomMap;
-            receivedNewData.value = true;
-        }
-    },
-    formatEventDateByDayJs = (date) => {
-        return dayjs(date).format('YYYY-MM-DD');
+        hasReceivedNewData.value = true;
     },
     updateMultiEdit = (value) => {
         multiEdit.value = value;

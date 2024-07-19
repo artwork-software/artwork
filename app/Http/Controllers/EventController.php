@@ -18,7 +18,6 @@ use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
-use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
@@ -89,26 +88,22 @@ class EventController extends Controller
     ) {
     }
 
-    public function viewEventsForDateAndRoom(
-        UserService $userService,
+    public function getEventsForRoomsByDaysAndProject(
         Request $request,
-        Room $room,
+        UserService $userService,
         ProjectService $projectService,
-        string $day,
-        int $projectId
     ): JsonResponse {
-        $roomsWithData = $this->roomService->collectEventsForRoomOnSpecificDay(
-            $userService,
-            $room,
-            Carbon::parse($day),
-            $request->user()->calendar_filter,
-            $projectId > 0 ? $projectService->findById($projectId) : null
+        return new JsonResponse(
+            $this->roomService->collectEventsForRoomsOnSpecificDays(
+                $userService,
+                $request->collect('rooms')->all(),
+                $request->collect('days')->all(),
+                $request->user()->calendar_filter,
+                ($projectId = $request->get('projectId', 0)) > 0 ?
+                    $projectService->findById($projectId) :
+                    null
+            )
         );
-        $return = [];
-        foreach ($roomsWithData as $event) {
-            $return[] = (new MinimalCalendarEventResource($event))->resolve();
-        }
-        return new JsonResponse($return);
     }
 
     /**

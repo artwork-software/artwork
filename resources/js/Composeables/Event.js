@@ -1,3 +1,6 @@
+import dayjs from "dayjs";
+import axios from "axios";
+
 export function useEvents() {
     const getDaysOfEvent = (startDate, endDate) => {
             let days = [];
@@ -10,35 +13,29 @@ export function useEvents() {
             return days;
         },
         reloadRoomsAndDays = async (desiredRoomIdsToReload, desiredDaysToReload, desiredProjectId) => {
-            let roomMap = new Map();
-
-            for (const desiredRoomId of desiredRoomIdsToReload) {
-                for (const desiredDay of desiredDaysToReload) {
-                    await axios.get(
-                        route(
-                            'events.events-for-date-and-room',
-                            {
-                                room: desiredRoomId,
-                                date: desiredDay,
-                                projectId: desiredProjectId
-                            }
-                        )
-                    ).then((response) => {
-                        if (!roomMap.has(desiredRoomId)) {
-                            roomMap.set(desiredRoomId, ((new Map()).set(desiredDay, response.data)));
-                        }
-
-                        roomMap.get(desiredRoomId).set(desiredDay, response.data);
-                    });
+            let receivedRoomData = null;
+            await axios.get(
+                route('events.for-rooms-by-days-and-project'),
+                {
+                    params: {
+                        rooms: desiredRoomIdsToReload,
+                        days: desiredDaysToReload,
+                        projectId: desiredProjectId
+                    }
                 }
-            }
+            ).then((response) => {
+                receivedRoomData = response.data;
+            });
 
-            return roomMap;
-        }
-    ;
+            return receivedRoomData;
+        },
+        formatEventDateByDayJs = (date) => {
+            return dayjs(date).format('YYYY-MM-DD');
+        };
 
     return {
         getDaysOfEvent,
-        reloadRoomsAndDays
+        reloadRoomsAndDays,
+        formatEventDateByDayJs
     };
 }

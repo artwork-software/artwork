@@ -153,7 +153,7 @@ import {computed, defineAsyncComponent, inject, onMounted, ref, watch} from "vue
 import {usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
-import {usePermissions} from "@/Composeables/usePermissions.js";
+import {usePermission} from "@/Composeables/Permission.js";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {IconAlertTriangle} from "@tabler/icons-vue";
@@ -186,7 +186,7 @@ onMounted(() => {
 
 const $t = useTranslation(),
     {getDaysOfEvent, reloadRoomsAndDays, formatEventDateByDayJs} = useEvents(),
-    {hasAdminRole} = usePermissions(usePage().props),
+    {hasAdminRole} = usePermission(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(() =>
         import('@/Components/FunctionBars/FunctionBarCalendar.vue')
     ),

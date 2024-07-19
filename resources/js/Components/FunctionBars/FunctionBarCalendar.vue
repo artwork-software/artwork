@@ -200,7 +200,7 @@ import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
-import {usePermissions} from "@/Composeables/usePermissions.js";
+import {usePermission} from "@/Composeables/Permission.js";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
@@ -229,7 +229,7 @@ const userCalendarSettings = useForm({
     work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false
 })
 
-const {hasAdminRole, canAny} = usePermissions(usePage().props);
+const {hasAdminRole, canAny} = usePermission(usePage().props);
 
 const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode', 'wantsToAddNewEvent'])
 

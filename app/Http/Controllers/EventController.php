@@ -1518,7 +1518,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function declineEvent(Request $request, Event $event): void
+    public function declineEvent(Request $request, Event $event): bool
     {
         $this->authorize('update', $event);
 
@@ -1764,6 +1764,8 @@ class EventController extends Controller
         $this->notificationService->setNotificationKey(Str::random(15));
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
+
+        return true;
     }
 
     public function getCollisionCount(Request $request): int
@@ -2099,13 +2101,39 @@ class EventController extends Controller
         }
     }
 
-    public function deleteMultiEdit(Request $request): void
-    {
-        $eventIds = $request->events;
-        foreach ($eventIds as $eventId) {
-            $event = Event::find($eventId);
-            $event->delete();
+    public function deleteMultiEdit(
+        Request $request,
+        EventService $eventService,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): bool {
+        foreach ($request->collect('events') as $eventId) {
+            $eventService->delete(
+                $eventService->findEventById($eventId),
+                $shiftsQualificationsService,
+                $shiftUserService,
+                $shiftFreelancerService,
+                $shiftServiceProviderService,
+                $changeService,
+                $eventCommentService,
+                $timelineService,
+                $shiftService,
+                $subEventService,
+                $notificationService,
+                $projectTabService
+            );
         }
+
+        return true;
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising

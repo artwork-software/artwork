@@ -231,11 +231,9 @@ export default {
         openModal() {
 
         },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-
         saveMultiEdit(){
             this.editEvents.type = this.selectedTimeType.id;
             this.editEvents.calculationType = this.selectedCalculationType.id;

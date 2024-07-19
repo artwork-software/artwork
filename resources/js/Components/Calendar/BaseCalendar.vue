@@ -69,7 +69,7 @@
             </div>
         </div>
     </div>
-    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-100 pointer-events-none"
+    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-40 pointer-events-none"
          v-if="multiEdit">
         <div class="flex items-center justify-center h-full gap-4">
             <div>
@@ -100,12 +100,6 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         @closed="eventComponentClosed"
     />
-    <AddSubEventModal
-        v-if="showAddSubEventModal"
-        :event="eventToEdit"
-        :event-types="eventTypes"
-        :sub-event-to-edit="subEventToEdit"
-        @close="showAddSubEventModal = false"/>
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
@@ -118,6 +112,14 @@
         :event-types="eventTypes"
         @declined="eventDeclined"
         @closed="showDeclineEventModal = false"/>
+
+
+    <AddSubEventModal
+        v-if="showAddSubEventModal"
+        :event="eventToEdit"
+        :event-types="eventTypes"
+        :sub-event-to-edit="subEventToEdit"
+        @close="showAddSubEventModal = false"/>
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
         :title="$t('Delete assignments')"
@@ -147,7 +149,7 @@
 </template>
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, ref, watch} from "vue";
-import {router, usePage} from "@inertiajs/vue3";
+import {usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermissions} from "@/Composeables/usePermissions.js";
@@ -277,6 +279,8 @@ const $t = useTranslation(),
     checkedEventsForMultiEditCount = ref(0),
     showMultiEditModal = ref(false),
     editEvents = ref([]),
+    editEventsRooms = ref([]),
+    editEventsRoomsDesiredDays = ref([]),
     openDeleteSelectedEventsModal = ref(false),
     showEventsWithoutRoomComponent = ref(false),
     showAddSubEventModal = ref(false),
@@ -353,10 +357,12 @@ const $t = useTranslation(),
             zoom_factor.value = 1;
         }
     },
-    closeMultiEditModal = () => {
-        removeCheckedState();
-        multiEdit.value = false;
+    closeMultiEditModal = (closedOnPurpose) => {
         showMultiEditModal.value = false;
+        if (closedOnPurpose) {
+            removeCheckedState();
+            multiEdit.value = false;
+        }
     },
     eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload) => {
         if (closedOnPurpose) {
@@ -400,49 +406,72 @@ const $t = useTranslation(),
         }
         deleteComponentVisible.value = false;
     },
-    closeDeleteSelectedEventsModal = () => {
+    closeDeleteSelectedEventsModal = (closedOnPurpose) => {
         openDeleteSelectedEventsModal.value = false;
-        removeCheckedState()
-        multiEdit.value = false;
+
+        if (closedOnPurpose) {
+            removeCheckedState()
+            multiEdit.value = false;
+        }
     },
     removeCheckedState = () => {
-        props.calendarData.forEach((room) => {
+        calendarDataRef.value.forEach((room) => {
             props.days.forEach((day) => {
                 room[day.full_day].events.data?.forEach((event) => {
                     event.clicked = false;
                 });
             });
         });
+        editEventsRooms.value = [];
+        editEventsRoomsDesiredDays.value = [];
     },
-    deleteSelectedEvents = () => {
-        router.post(route('multi-edit.delete'), {
-            events: editEvents.value
-        }, {
-            onSuccess: () => {
+    deleteSelectedEvents = (closedOnPurpose) => {
+        axios.post(
+            route('multi-edit.delete'),
+            {
+                events: editEvents.value
+            }
+        ).finally(
+            () => {
+                handleReload(
+                    editEventsRooms.value,
+                    editEventsRoomsDesiredDays.value
+                );
+
                 openDeleteSelectedEventsModal.value = false
                 multiEdit.value = false;
             }
-        })
+        );
     };
 
 watch(
-    () => props.calendarData,
-    (value) => {
+    () => calendarDataRef,
+    (calendarData) => {
         let count = 0;
-        value.forEach((room) => {
+        calendarData.value.forEach((room) => {
             props.days.forEach((day) => {
                 room[day.full_day].events.data?.forEach((event) => {
                     if (event.clicked) {
-                        count++;
                         if (!editEvents.value.includes(event.id)) {
+                            if (!editEventsRooms.value.includes(event.roomId)) {
+                                editEventsRooms.value.push(event.roomId);
+                            }
                             editEvents.value.push(event.id);
+                            editEventsRoomsDesiredDays.value = getDaysOfEvent(
+                                formatEventDateByDayJs(event.start),
+                                formatEventDateByDayJs(event.end)
+                            ).concat(editEventsRoomsDesiredDays.value);
                         }
+                        count++;
                     } else {
                         editEvents.value = editEvents.value.filter((id) => id !== event.id);
                     }
                 });
             });
         });
+
+        editEventsRooms.value = Array.from(new Set(editEventsRooms.value));
+        editEventsRoomsDesiredDays.value = Array.from(new Set(editEventsRoomsDesiredDays.value));
         checkedEventsForMultiEditCount.value = count;
     },
     {deep: true}

@@ -139,9 +139,8 @@ export default {
             this.$emit('closed', bool)
         },
         declineRequest() {
-            this.declineEvent.put(route('events.decline', this.requestToDecline.id), {
-                preserveScroll: true,
-                onSuccess: () => {
+            axios.put(route('events.decline', this.requestToDecline.id))
+                .finally(() => {
                     this.closeDeclineRequestModal();
                     this.$emit(
                         'declined',
@@ -150,7 +149,7 @@ export default {
                         this.requestToDecline.end
                     );
                 }
-            })
+            );
         }
     }
 }

@@ -138,6 +138,9 @@
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
+    <div class="w-full h-full sticky z-50 justify-center text-center">
+        Daten werden geladen...
+    </div>
 </template>
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, ref, watch} from "vue";
@@ -239,6 +242,10 @@ const $t = useTranslation(),
         receivedNewData.value = false;
         receivedRoomMap.value = new Map();
 
+        if (showReceivesNewDataOverlay.value) {
+            showReceivesNewDataOverlay.value = false;
+        }
+
         return calendarDataRef;
     }),
     textStyle = computed(() => {
@@ -292,8 +299,15 @@ const $t = useTranslation(),
     wantedRoom = ref(null),
     roomCollisions = ref([]),
     currentDaysInView = ref(new Set()),
+    showReceivesNewDataOverlay = ref(false),
     getProjectIdFromProps = () => props.project ? props.project.id : 0,
     handleReload = async (desiredRoomIdsToReload, desiredDaysToReload) => {
+        console.debug(desiredDaysToReload, desiredRoomIdsToReload);
+        showReceivesNewDataOverlay.value = true;
+        // if ((desiredDaysToReload.length * desiredDaysToReload.length) > 14) {
+        //
+        // }
+
         let roomMap = await reloadRoomsAndDays(
             desiredRoomIdsToReload,
             desiredDaysToReload,

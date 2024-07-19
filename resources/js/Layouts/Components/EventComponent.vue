@@ -954,7 +954,7 @@ export default {
                     ),
                     getDaysOfEvent(
                         this.startDate,
-                        this.series ? this.seriesEndDate : this.endDate
+                        this.series === true ? this.seriesEndDate : this.endDate
                     )
                 );
             } else {
@@ -1226,7 +1226,7 @@ export default {
                 projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,
                 creatingProject: this.showProjectInfo ? this.creatingProject : false,
                 declinedRoomId: this.declinedRoomId,
-                is_series: this.series,
+                is_series: this.series ? this.series : false,
                 seriesFrequency: this.selectedFrequency.id,
                 seriesEndDate: this.seriesEndDate,
                 allSeriesEvents: this.allSeriesEvents,

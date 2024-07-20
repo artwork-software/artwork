@@ -915,4 +915,9 @@ readonly class EventService
     ): Event {
         return $this->eventRepository->findById($eventId);
     }
+
+    public function getEventsWithoutRoom(int|Project $project = null, ?array $with = null): Collection
+    {
+        return $this->eventRepository->getEventsWithoutRoom($project, $with);
+    }
 }

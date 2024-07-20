@@ -12,17 +12,14 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 :project="project"
             />
-            <div class="flex justify-center w-full bg-white"
-                 :class="filteredEvents?.length ? '' : ''"
-                 v-if="filteredEvents?.length > 0">
+            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center w-full bg-white">
                 <div class="flex errorText items-center cursor-pointer my-2"
-                     @click="showEventsWithoutRoomComponent = true"
-                     v-if="filteredEvents?.length > 0">
+                     @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
                     {{
-                        filteredEvents?.length === 1 ?
-                            $t('{0} Event without room!', [filteredEvents?.length]) :
-                            $t('{0} Events without room!', [filteredEvents?.length])
+                        computedFilteredEvents.length === 1 ?
+                            $t('{0} Event without room!', [computedFilteredEvents.length]) :
+                            $t('{0} Events without room!', [computedFilteredEvents.length])
                     }}
                 </div>
             </div>
@@ -30,7 +27,7 @@
 
         <div class="pl-14 -mx-5 my-5">
             <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white px-5'">
-                <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="filteredEvents?.length"/>
+                <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
                 <div class="divide-y divide-gray-200 divide-dashed" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
@@ -136,7 +133,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="filteredEvents"
+        :eventsWithoutRoom="computedFilteredEvents"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
     />
@@ -218,8 +215,16 @@ const $t = useTranslation(),
             required: false,
         },
     }),
+    textStyle = computed(() => {
+        const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
+        const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
+        return {
+            fontSize,
+            lineHeight,
+        };
+    }),
     computedCalendarData = computed(() => {
-        if (!hasReceivedNewData.value) {
+        if (!hasReceivedNewCalendarData.value) {
             return calendarDataRef;
         }
 
@@ -235,7 +240,7 @@ const $t = useTranslation(),
             }
         }
 
-        hasReceivedNewData.value = false;
+        hasReceivedNewCalendarData.value = false;
         receivedRoomData.value = [];
 
         if (showReceivesNewDataOverlay.value) {
@@ -244,33 +249,41 @@ const $t = useTranslation(),
 
         return calendarDataRef;
     }),
-    textStyle = computed(() => {
-        const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
-        const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
-        return {
-            fontSize,
-            lineHeight,
-        };
-    }),
-    filteredEvents = computed(() => {
-        return props.eventsWithoutRoom?.filter((event) => {
-            let createdBy = event.created_by;
-            let projectLeaders = event.projectLeaders;
+    computedFilteredEvents = computed(() => {
+        let getComputedEventsWithoutRoom = () => {
+            return eventsWithoutRoomRef.value.filter((event) => {
+                let createdBy = event.created_by;
+                let projectLeaders = event.projectLeaders;
 
-            if (projectLeaders && projectLeaders.length > 0) {
-                if (createdBy.id === usePage().props.user.id || projectLeaders.some((leader) => leader.id === usePage().props.user.id)) {
+                if (projectLeaders && projectLeaders.length > 0) {
+                    if (createdBy.id === usePage().props.user.id || projectLeaders.some((leader) => leader.id === usePage().props.user.id)) {
+                        return true;
+                    }
+                } else if (createdBy.id === usePage().props.user.id) {
                     return true;
                 }
-            } else if (createdBy.id === usePage().props.user.id) {
-                return true;
-            }
 
-            return false;
-        });
+                return false;
+            });
+        }
+
+        if (!hasReceivedNewEventsWithoutRoomData.value) {
+            return getComputedEventsWithoutRoom();
+        }
+
+        eventsWithoutRoomRef.value = receivedEventsWithoutRoom.value;
+
+        receivedEventsWithoutRoom.value = [];
+        hasReceivedNewEventsWithoutRoomData.value = false;
+
+        return getComputedEventsWithoutRoom();
     }),
-    hasReceivedNewData = ref(false),
+    hasReceivedNewCalendarData = ref(false),
+    hasReceivedNewEventsWithoutRoomData = ref(false),
     receivedRoomData = ref([]),
+    receivedEventsWithoutRoom = ref([]),
     calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
+    eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom))),
     first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
     eventTypes = inject('eventTypes'),
     multiEdit = ref(false),
@@ -299,16 +312,22 @@ const $t = useTranslation(),
     currentDaysInView = ref(new Set()),
     showReceivesNewDataOverlay = ref(false),
     getProjectIdFromProps = () => props.project ? props.project.id : 0,
-    handleReload = async (desiredRoomIdsToReload, desiredDaysToReload) => {
+    handleReload = async (desiredRoomIdsToReload, desiredDaysToReload, reloadEventsWithoutRoom = false) => {
         showReceivesNewDataOverlay.value = true;
-
-        receivedRoomData.value = await reloadRoomsAndDays(
+        const {roomData, eventsWithoutRoom} = await reloadRoomsAndDays(
             desiredRoomIdsToReload,
             desiredDaysToReload,
-            getProjectIdFromProps()
+            getProjectIdFromProps(),
+            reloadEventsWithoutRoom
         );
 
-        hasReceivedNewData.value = true;
+        receivedRoomData.value = roomData;
+        hasReceivedNewCalendarData.value = true;
+
+        if (reloadEventsWithoutRoom) {
+            receivedEventsWithoutRoom.value = eventsWithoutRoom;
+            hasReceivedNewEventsWithoutRoomData.value = true;
+        }
     },
     updateMultiEdit = (value) => {
         multiEdit.value = value;
@@ -407,7 +426,8 @@ const $t = useTranslation(),
             getDaysOfEvent(
                 formatEventDateByDayJs(startDate),
                 formatEventDateByDayJs(endDate)
-            )
+            ),
+            true
         );
     },
     deleteEvent = () => {

@@ -12,22 +12,31 @@ export function useEvent() {
             }
             return days;
         },
-        reloadRoomsAndDays = async (desiredRoomIdsToReload, desiredDaysToReload, desiredProjectId) => {
-            let receivedRoomData = null;
+        reloadRoomsAndDays = async (
+            desiredRoomIdsToReload,
+            desiredDaysToReload,
+            desiredProjectId,
+            reloadEventsWithoutRoom
+        ) => {
+            let roomData = null;
+            let eventsWithoutRoom = null;
+
             await axios.get(
                 route('events.for-rooms-by-days-and-project'),
                 {
                     params: {
                         rooms: desiredRoomIdsToReload,
                         days: desiredDaysToReload,
-                        projectId: desiredProjectId
+                        projectId: desiredProjectId,
+                        reloadEventsWithoutRoom: reloadEventsWithoutRoom
                     }
                 }
             ).then((response) => {
-                receivedRoomData = response.data;
+                roomData = response.data.roomData;
+                eventsWithoutRoom = response.data.eventsWithoutRoom;
             });
 
-            return receivedRoomData;
+            return {roomData, eventsWithoutRoom};
         },
         formatEventDateByDayJs = (date) => {
             return dayjs(date).format('YYYY-MM-DD');

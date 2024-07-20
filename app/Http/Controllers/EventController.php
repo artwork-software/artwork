@@ -92,17 +92,42 @@ class EventController extends Controller
         Request $request,
         UserService $userService,
         ProjectService $projectService,
+        EventService $eventService
     ): JsonResponse {
         return new JsonResponse(
-            $this->roomService->collectEventsForRoomsOnSpecificDays(
-                $userService,
-                $request->collect('rooms')->all(),
-                $request->collect('days')->all(),
-                $request->user()->calendar_filter,
-                ($projectId = $request->get('projectId', 0)) > 0 ?
-                    $projectService->findById($projectId) :
-                    null
-            )
+            [
+                'roomData' => $this->roomService->collectEventsForRoomsOnSpecificDays(
+                    $userService,
+                    $request->collect('rooms')->all(),
+                    $request->collect('days')->all(),
+                    $request->user()->calendar_filter,
+                    ($projectId = $request->get('projectId', 0)) > 0 ?
+                        $projectService->findById($projectId) :
+                        null
+                ),
+                'eventsWithoutRoom' => !$request->boolean('reloadEventsWithoutRoom') ?
+                    [] :
+                    CalendarEventResource::collection(
+                        $eventService->getEventsWithoutRoom(
+                            $projectId,
+                            [
+                                'room',
+                                'creator',
+                                'project',
+                                'project.managerUsers',
+                                'project.state',
+                                'shifts',
+                                'shifts.craft',
+                                'shifts.users',
+                                'shifts.freelancer',
+                                'shifts.serviceProvider',
+                                'shifts.shiftsQualifications',
+                                'subEvents.event',
+                                'subEvents.event.room'
+                            ]
+                        )
+                    )->resolve()
+            ]
         );
     }
 

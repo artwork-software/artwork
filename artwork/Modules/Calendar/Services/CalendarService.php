@@ -8,6 +8,7 @@ use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
@@ -28,6 +29,10 @@ use Throwable;
 
 class CalendarService
 {
+    public function __construct(private readonly EventService $eventService)
+    {
+    }
+
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
@@ -211,7 +216,26 @@ class CalendarService
                     project: $project
                 ),
             'eventsWithoutRoom' => empty($room) ?
-                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
+                CalendarEventResource::collection(
+                    $this->eventService->getEventsWithoutRoom(
+                        $project,
+                        [
+                            'room',
+                            'creator',
+                            'project',
+                            'project.managerUsers',
+                            'project.state',
+                            'shifts',
+                            'shifts.craft',
+                            'shifts.users',
+                            'shifts.freelancer',
+                            'shifts.serviceProvider',
+                            'shifts.shiftsQualifications',
+                            'subEvents.event',
+                            'subEvents.event.room'
+                        ]
+                    )
+                )->resolve() :
                 [],
             'filterOptions' => $filterService->getCalendarFilterDefinitions(
                 $roomCategoryService,

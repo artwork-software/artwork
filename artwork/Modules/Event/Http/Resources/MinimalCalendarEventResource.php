@@ -15,7 +15,6 @@ use Throwable;
  */
 class MinimalCalendarEventResource extends JsonResource
 {
-    public static $wrap = null;
     /**
      * @throws Throwable
      * @return array<string, mixed>
@@ -44,6 +43,7 @@ class MinimalCalendarEventResource extends JsonResource
             'id' => $this->getAttribute('id'),
             'projectId' => $eventProjectId,
             'roomId' => $this->getAttribute('room_id'),
+            'roomName' => $this->getAttribute('room')->getAttribute('name'),
             'created_by' => [
                 'id' => $creator->getAttribute('id'),
                 'profile_photo_url' => $creator->getAttribute('profile_photo_url'),
@@ -54,6 +54,8 @@ class MinimalCalendarEventResource extends JsonResource
             'startTime' => $startTime,
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
             'allDay' => $this->getAttribute('allDay'),
+            'option_string' => $this->getAttribute('option_string'),
+            'occupancy_option' => $this->getAttribute('occupancy_option'),
             'alwaysEventName' => $eventName,
             'eventName' => $eventName,
             'title' => $projectName ?: $eventName ?: $eventType->getAttribute('name'),

@@ -94,8 +94,22 @@
 <script>
 
 import Button from "@/Jetstream/Button.vue";
-import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
-import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
+import {CalendarIcon, PlusCircleIcon} from '@heroicons/vue/outline'
+import {
+    Combobox,
+    ComboboxButton,
+    ComboboxInput,
+    ComboboxLabel,
+    ComboboxOption,
+    ComboboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
+} from "@headlessui/vue";
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
@@ -107,18 +121,9 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
-
-import {
-    Combobox,
-    ComboboxButton,
-    ComboboxInput,
-    ComboboxLabel,
-    ComboboxOption,
-    ComboboxOptions,
-} from '@headlessui/vue'
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions, IconLib],
@@ -242,9 +247,9 @@ export default {
                 // Loop through each day in the room object
                 Object.values(room).forEach(day => {
                     // Check if day has an 'events' property, and it has a 'data' property
-                    if(day.events && day.events.data) {
+                    if(day.events) {
                         // Add the events to the allEvents array
-                        filteredEvents = filteredEvents.concat(day.events.data);
+                        filteredEvents = filteredEvents.concat(day.events);
                     }
                 });
             });

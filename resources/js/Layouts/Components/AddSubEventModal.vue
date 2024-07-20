@@ -1,230 +1,234 @@
 <template>
     <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2" v-if="!this.subEventToEdit">
-                    {{$t('New sub-event')}}
-                </div>
-                <div class="headline1 my-2" v-else>
-                    {{ $t('Edit sub-event')}}
-                </div>
-                <p class="mb-3 text-gray-400 text-sm">
-                    {{ $t('Belongs to Blocker in {0}', [event.roomName]) }}
-                </p>
-                <p>
-                    {{ $t('Please note that the appointment must take place within the appointment group period.')}}
-                </p>
+        <div class="mx-4">
+            <div class="headline1 my-2" v-if="!this.subEventToEdit">
+                {{ $t('New sub-event') }}
+            </div>
+            <div class="headline1 my-2" v-else>
+                {{ $t('Edit sub-event') }}
+            </div>
+            <p class="mb-3 text-gray-400 text-sm">
+                {{ $t('Belongs to Blocker in {0}', [event.roomName]) }}
+            </p>
+            <p>
+                {{ $t('Please note that the appointment must take place within the appointment group period.') }}
+            </p>
 
-                <div class="mt-6">
-                    <div class="flex w-full py-2 gap-1">
-                        <div class="w-1/2">
-                            <Listbox as="div" class="flex h-12" v-model="subEvent.selectedEventType"
-                                     id="eventType">
-                                <ListboxButton
-                                    class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                    <div class="flex items-center my-auto">
-                                        <div>
-                                            <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }" />
-                                        </div>
-                                        <span class="block truncate items-center ml-3 flex">
+            <div class="mt-6">
+                <div class="flex w-full py-2 gap-1">
+                    <div class="w-1/2">
+                        <Listbox as="div" class="flex h-12" v-model="subEvent.selectedEventType"
+                                 id="eventType">
+                            <ListboxButton
+                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                <div class="flex items-center my-auto">
+                                    <div>
+                                        <div class="block w-5 h-5 rounded-full"
+                                             :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }"/>
+                                    </div>
+                                    <span class="block truncate items-center ml-3 flex">
                                             <span>{{ subEvent.selectedEventType?.name }}</span>
                                         </span>
-                                        <span
-                                            class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <span
+                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
+                                                             aria-hidden="true"/>
                                         </span>
-                                    </div>
-                                </ListboxButton>
+                                </div>
+                            </ListboxButton>
 
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="eventType in filteredEventTypes"
-                                                       :key="eventType.name"
-                                                       :value="eventType"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <div class="flex">
-                                                    <div>
-                                                        <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
-                                                    </div>
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">{{
-                                                            eventType.name
-                                                        }}
-                                                    </span>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   v-for="eventType in filteredEventTypes"
+                                                   :key="eventType.name"
+                                                   :value="eventType"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <div class="flex">
+                                                <div>
+                                                    <div class="block w-3 h-3 rounded-full"
+                                                         :style="{'backgroundColor' : eventType?.hex_code }"/>
                                                 </div>
                                                 <span
-                                                    :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
+                                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">{{
+                                                        eventType.name
+                                                    }}
+                                                    </span>
+                                            </div>
+                                            <span
+                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <IconCheck stroke-width="1.5" v-if="selected"
+                                                                 class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                        </div>
-
-                        <div class="w-1/2">
-                            <input type="text"
-                                   v-model="subEvent.eventName"
-                                   @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
-                                   id="eventTitle"
-                                   :placeholder="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                        </div>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </Listbox>
                     </div>
-                    <!-- Attribute Menu -->
-                    <Menu as="div" class="inline-block text-left w-full">
-                        <div>
-                            <MenuButton
-                                class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
-                            >
+
+                    <div class="w-1/2">
+                        <input type="text"
+                               v-model="subEvent.eventName"
+                               @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
+                               id="eventTitle"
+                               :placeholder="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
+                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
+                    </div>
+                </div>
+                <!-- Attribute Menu -->
+                <Menu as="div" class="inline-block text-left w-full">
+                    <div>
+                        <MenuButton
+                            class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                        >
 
                             <span class="float-left flex xsLight subpixel-antialiased"><img
                                 src="/Svgs/IconSvgs/icon_adjustments.svg"
                                 class="mr-2"
-                                alt="attributeIcon"/>{{ $t('Select appointment properties')}}</span>
-                                <IconChevronDown stroke-width="1.5"
-                                    class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                    aria-hidden="true"
-                                />
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
-                            <MenuItems
-                                class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                    <div class="flex w-full mb-4">
-                                        <input v-model="subEvent.audience"
-                                               type="checkbox"
-                                               class="checkBoxOnDark"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                             alt="audienceIcon"/>
+                                alt="attributeIcon"/>{{ $t('Select appointment properties') }}</span>
+                            <IconChevronDown stroke-width="1.5"
+                                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                             aria-hidden="true"
+                            />
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition duration-50 ease-out"
+                        enter-from-class="transform scale-100 opacity-100"
+                        enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0"
+                    >
+                        <MenuItems
+                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                <div class="flex w-full mb-4">
+                                    <input v-model="subEvent.audience"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                         alt="audienceIcon"/>
 
-                                        <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                            {{ $t('With audience')}}
-                                        </div>
-                                    </div>
-                                    <div class="flex w-full mb-2">
-                                        <input v-model="subEvent.is_loud"
-                                               type="checkbox"
-                                               class="checkBoxOnDark"/>
-                                        <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
-                                            {{$t('It gets loud')}}
-                                        </div>
+                                    <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                        {{ $t('With audience') }}
                                     </div>
                                 </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                                <div class="flex w-full mb-2">
+                                    <input v-model="subEvent.is_loud"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
+                                        {{ $t('It gets loud') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
 
-                    <!--    Properties    -->
-                    <div class="flex py-2">
-                        <div v-if="subEvent.audience">
-                            <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"/>
-                        </div>
-                        <div v-if="subEvent.is_loud">
-                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"/>
-                        </div>
+                <!--    Properties    -->
+                <div class="flex py-2">
+                    <div v-if="subEvent.audience">
+                        <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"/>
                     </div>
-                    <div class="w-full">
-                        <SwitchGroup as="div" class="flex items-center">
-                            <Switch v-model="this.allDayEvent"
-                                    :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                    <div v-if="subEvent.is_loud">
+                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true"/>
+                    </div>
+                </div>
+                <div class="w-full">
+                    <SwitchGroup as="div" class="flex items-center">
+                        <Switch v-model="this.allDayEvent"
+                                :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                            </Switch>
-                            <SwitchLabel as="span" class="ml-3 text-sm">
+                        </Switch>
+                        <SwitchLabel as="span" class="ml-3 text-sm">
                             <span :class="[this.allDayEvent ? 'xsDark' : 'xsLight', 'text-sm']">
-                                {{$t('Full day')}}
+                                {{ $t('Full day') }}
                             </span>
-                            </SwitchLabel>
-                        </SwitchGroup>
-                    </div>
-                    <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
-                        <div class="sm:w-1/2">
-                            <label for="startDate" class="xxsLight">
-                                {{ $t('Start*')}}
-                            </label>
-                            <div class="w-full flex">
-                                <input v-model="startDate"
-                                       id="startDate"
-                                       @change="checkTimes()"
-                                       type="date"
-                                       required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-                                <input v-model="startTime"
-                                       id="changeStartTime"
-                                       v-if="!allDayEvent"
-                                       @change="checkTimes()"
-                                       type="time"
-                                       required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
-                            </div>
-                        </div>
-                        <div class="sm:w-1/2">
-                            <label for="endDate" class="xxsLight">{{ $t('End*')}}</label>
-                            <div class="w-full flex">
-                                <input v-model="endDate"
-                                       id="endDate"
-                                       @change="checkTimes()"
-                                       type="date"
-                                       required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
-                                <input v-model="endTime"
-                                       id="changeEndTime"
-                                       v-if="!allDayEvent"
-                                       @change="checkTimes()"
-                                       type="time"
-                                       required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
-                            </div>
+                        </SwitchLabel>
+                    </SwitchGroup>
+                </div>
+                <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
+                    <div class="sm:w-1/2">
+                        <label for="startDate" class="xxsLight">
+                            {{ $t('Start*') }}
+                        </label>
+                        <div class="w-full flex">
+                            <input v-model="startDate"
+                                   id="startDate"
+                                   @change="checkTimes()"
+                                   type="date"
+                                   required
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                            <input v-model="startTime"
+                                   id="changeStartTime"
+                                   v-if="!allDayEvent"
+                                   @change="checkTimes()"
+                                   type="time"
+                                   required
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
                     </div>
-                        <div>
-                            <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
-                            <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{
-                                    helpTextStart
-                                }}
-                            </div>
-                            <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{
-                                    helpTextEnd
-                                }}
-                            </div>
-                            <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{
-                                    helpTextLength
-                                }}
-                            </div>
+                    <div class="sm:w-1/2">
+                        <label for="endDate" class="xxsLight">{{ $t('End*') }}</label>
+                        <div class="w-full flex">
+                            <input v-model="endDate"
+                                   id="endDate"
+                                   @change="checkTimes()"
+                                   type="date"
+                                   required
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                            <input v-model="endTime"
+                                   id="changeEndTime"
+                                   v-if="!allDayEvent"
+                                   @change="checkTimes()"
+                                   type="time"
+                                   required
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
+                    <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{
+                            helpTextStart
+                        }}
+                    </div>
+                    <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{
+                            helpTextEnd
+                        }}
+                    </div>
+                    <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{
+                            helpTextLength
+                        }}
+                    </div>
+                </div>
 
 
-                        <div class="py-2">
+                <div class="py-2">
                     <textarea :placeholder="$t('What do I need to bear in mind for the event?')"
                               id="description"
                               v-model="subEvent.description"
                               rows="4"
                               class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
-                        </div>
-                    </div>
                 </div>
-                <div class="flex justify-center w-full py-4">
-                    <FormButton
-                        :disabled="!submit"
-                        @click="updateOrCreateEvent()"
-                        :text="$t('Vouchers')"
-                        />
-                </div>
+            </div>
+        </div>
+        <div class="flex justify-center w-full py-4">
+            <FormButton
+                :disabled="!submit"
+                @click="updateOrCreateEvent()"
+                :text="$t('Vouchers')"
+            />
+        </div>
     </BaseModal>
 </template>
 
@@ -240,7 +244,11 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import {useForm} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
@@ -256,7 +264,7 @@ export default {
     mixins: [Permissions, IconLib],
     computed: {
         dayjs() {
-            var utc = require('dayjs/plugin/utc')
+            const utc = require('dayjs/plugin/utc');
             dayjs.extend(utc)
             return dayjs
         },
@@ -321,7 +329,7 @@ export default {
         checkTimes() {
             this.submit = true;
             this.subEvent.allDay = this.allDayEvent;
-            if(this.allDayEvent){
+            if (this.allDayEvent) {
                 this.handleAllDayEventChange()
             }
             this.subEvent.start_time = dayjs(this.formatDate(this.startDate, this.startTime)).format('YYYY-MM-DD HH:mm');
@@ -416,8 +424,8 @@ export default {
             },
             deep: true,
         },
-        allDayEvent:{
-            handler(){
+        allDayEvent: {
+            handler() {
                 this.checkTimes()
             }
         }

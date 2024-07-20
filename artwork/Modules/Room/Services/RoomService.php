@@ -10,7 +10,6 @@ use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -407,6 +406,7 @@ readonly class RoomService
         $roomEventsQuery = Room::query()->getRelation('events')
             ->with(
                 [
+                    'room',
                     'creator',
                     'project',
                     'project.managerUsers',
@@ -538,7 +538,7 @@ readonly class RoomService
             $eventsForRoom[$key] = [
                 'roomId' => $room->getAttribute('id'),
                 //immediately resolve resource to free used memory
-                'events' => MinimalCalendarEventResource::collection($value)
+                'events' => MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
 
@@ -604,7 +604,7 @@ readonly class RoomService
         $actualEvents = [];
 
 
-        $room->events()->with('shifts')
+        $room->events()->with(['shifts', 'shifts.shiftsQualifications'])
             ->without(['created_by', 'shift_relevant_event_types'])
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
@@ -651,12 +651,14 @@ readonly class RoomService
             });
 
         foreach ($actualEvents as $key => $value) {
-            if (isset($eventsForRoom[$key])) {
-                $eventsForRoom[$key]['events'] = CalendarShowEventInShiftPlan::collection(
-                    collect($eventsForRoom[$key]['events'])->merge($value)->unique()
-                );
-            }
+            $eventsForRoom[$key] = [
+                'roomName' => $room->getAttribute('name'),
+                'roomId' => $room->getAttribute('id'),
+                //immediately resolve resource to free used memory
+                'events' => CalendarShowEventInShiftPlan::collection($value)->resolve()
+            ];
         }
+
         return collect($eventsForRoom);
     }
 
@@ -711,8 +713,9 @@ readonly class RoomService
         /** @var Collection $eventsForRoom */
         foreach ($calendarPeriod as $date) {
             $eventsForRoom[$date->format('d.m.Y')] = [
+                'roomName' => $room->getAttribute('name'),
                 'roomId' => $room->getAttribute('id'),
-                'events' => CalendarShowEventResource::collection([])
+                'events' => []
             ];
         }
         return $eventsForRoom;

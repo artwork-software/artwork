@@ -14,8 +14,9 @@
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || hasAdminRole" @click="$emit('openAddSubEventModal', event)"
-                        v-show="event.eventTypeId === 1" type="button"
+                <button v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1"
+                        @click="$emit('openAddSubEventModal', event, 'create')"
+                        type="button"
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
@@ -221,7 +222,7 @@
                 <div
                     class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
-                        <button @click="$emit('editSubEvent', subEvent)" type="button"
+                        <button @click="$emit('editSubEvent', subEvent, 'edit')" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                             <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                         </button>
@@ -321,8 +322,6 @@
 </template>
 
 <script setup>
-
-
 import {computed, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
@@ -332,17 +331,20 @@ import VueMathjax from "vue-mathjax-next";
 import {useI18n} from "vue-i18n";
 
 const {t} = useI18n(), $t = t;
-
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
-const atAGlance = ref(usePage().props.user.at_a_glance ?? false)
+const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
+const deleteComponentVisible = ref(false);
+const deleteTitle = ref('');
+const deleteDescription = ref('');
+const deleteType = ref('');
 
-
-const deleteComponentVisible = ref(false)
-const deleteTitle = ref('')
-const deleteDescription = ref('')
-const deleteType = ref('')
-
-const emits = defineEmits(['editEvent', 'editSubEvent', 'openAddSubEventModal', 'openConfirmModal', 'showDeclineEventModal'])
+const emits = defineEmits([
+    'editEvent',
+    'editSubEvent',
+    'openAddSubEventModal',
+    'openConfirmModal',
+    'showDeclineEventModal'
+]);
 
 const props = defineProps({
     event: {
@@ -387,33 +389,33 @@ const props = defineProps({
         type: Number,
         required: true
     },
-})
+});
 
 const isRoomAdmin = computed(() => {
     return props.rooms?.find(room => room.id === props.event.roomId)?.admins.some(admin => admin.id === usePage().props.user.id) || false;
-})
+});
 
 const isCreator = computed(() => {
-    return props.event?.created_by.id === usePage().props.user.id
-})
+    return props.event.created_by.id === usePage().props.user.id
+});
 
 const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find(room => room.id === props.event.roomId).everyone_can_book
-})
+});
 
 const backgroundColorWithOpacity = computed(() => {
     const percent = 15;
     const color = props.event.event_type_color;
     if (!color) return `rgb(255, 255, 255, ${percent}%)`;
     return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent}%)`;
-})
+});
 
 const textColorWithDarken = computed(() => {
     const percent = 75;
     const color = props.event.event_type_color;
     if (!color) return 'rgb(180, 180, 180)';
     return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
-})
+});
 
 const totalHeight = computed(() => {
     let height = 42;
@@ -425,7 +427,7 @@ const totalHeight = computed(() => {
     if (usePage().props.user.calendar_settings.repeating_events) height += 20;
     if (usePage().props.user.calendar_settings.work_shifts) height += 18;
     return height;
-})
+});
 
 const heightSubtraction = (event) => {
     let heightSubtraction = 0;
@@ -439,7 +441,7 @@ const heightSubtraction = (event) => {
         heightSubtraction += 18;
     }
     return heightSubtraction;
-}
+};
 
 const convertToMathJax = (fraction) => {
     const parts = fraction.split(' ');
@@ -455,7 +457,7 @@ const convertToMathJax = (fraction) => {
         const denominator = fractionParts[1];
         return `${wholePart}$\\frac{${numerator}}{${denominator}}$`;
     }
-}
+};
 
 const decimalToFraction = (decimal) => {
     let wholePart = Math.floor(decimal);
@@ -474,7 +476,7 @@ const decimalToFraction = (decimal) => {
         let x = gcd(top, bottom);
         return `${wholePart} ${top / x}/${bottom / x}`;
     }
-}
+};
 
 const getFirstDigitAfterDecimal = (number) => {
     const decimalPart = number.toString().split('.')[1];
@@ -482,11 +484,11 @@ const getFirstDigitAfterDecimal = (number) => {
         return parseInt(decimalPart[0]);
     }
     return null; // Return null if there is no decimal part
-}
+};
 
 const gcd = (a, b) => {
     return (b) ? gcd(b, a % b) : a;
-}
+};
 
 const openConfirmModal = (type) => {
     if (type === 'main') {
@@ -499,11 +501,9 @@ const openConfirmModal = (type) => {
         deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
     }
     deleteComponentVisible.value = true;
-}
-
+};
 
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});
-}
-
+};
 </script>

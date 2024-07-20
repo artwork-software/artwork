@@ -45,7 +45,7 @@
                              :class="[day.is_weekend ? '' : '', zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                              class="group/container">
                             <template v-if="currentDaysInView.has(day.full_day)">
-                                <div v-for="event in room[day.full_day].events.data">
+                                <div v-for="event in room[day.full_day].events">
                                     <div class="py-0.5" :key="event.id">
                                         <AsyncSingleEventInCalendar
                                             :event="event"
@@ -113,24 +113,23 @@
         :event-types="eventTypes"
         @declined="eventDeclined"
         @closed="showDeclineEventModal = false"/>
-
-
-    <AddSubEventModal
-        v-if="showAddSubEventModal"
-        :event="eventToEdit"
-        :event-types="eventTypes"
-        :sub-event-to-edit="subEventToEdit"
-        @close="showAddSubEventModal = false"/>
+    <MultiEditModal v-if="showMultiEditModal"
+                    :checked-events="editEvents"
+                    :rooms="rooms"
+                    @closed="closeMultiEditModal"/>
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
         :title="$t('Delete assignments')"
         :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"
         @closed="closeDeleteSelectedEventsModal"
         @delete="deleteSelectedEvents"/>
-    <MultiEditModal v-if="showMultiEditModal"
-                    :checked-events="editEvents"
-                    :rooms="rooms"
-                    @closed="closeMultiEditModal"/>
+
+    <AddSubEventModal
+        v-if="showAddSubEventModal"
+        :event="eventToEdit"
+        :event-types="eventTypes"
+        :sub-event-to-edit="subEventToEdit"
+        @close="closeAddSubEventModal"/>
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
         @closed="showEventsWithoutRoomComponent = false"
@@ -229,7 +228,7 @@ const $t = useTranslation(),
                 calendarDataRef.value.forEach(
                     (roomWithEvents) => {
                         if (roomWithEvents[day]?.roomId === Number(roomId)) {
-                            roomWithEvents[day].events.data = JSON.parse(JSON.stringify(events));
+                            roomWithEvents[day].events = JSON.parse(JSON.stringify(events));
                         }
                     }
                 );
@@ -331,9 +330,18 @@ const $t = useTranslation(),
         eventToDelete.value = event;
         deleteComponentVisible.value = true;
     },
-    openAddSubEventModal = (event) => {
-        subEventToEdit.value = event;
+    openAddSubEventModal = (event, mode) => {
+        if (mode === 'create') {
+            eventToEdit.value = event;
+        } else if (mode === 'edit') {
+            subEventToEdit.value = event;
+        }
+
         showAddSubEventModal.value = true;
+    },
+    closeAddSubEventModal = () => {
+        eventToEdit.value = null;
+        subEventToEdit.value = null;
     },
     showEditEventModel = (event) => {
         eventToEdit.value = event;
@@ -422,7 +430,7 @@ const $t = useTranslation(),
     removeCheckedState = () => {
         calendarDataRef.value.forEach((room) => {
             props.days.forEach((day) => {
-                room[day.full_day].events.data?.forEach((event) => {
+                room[day.full_day].events.forEach((event) => {
                     event.clicked = false;
                 });
             });
@@ -455,7 +463,7 @@ watch(
         let count = 0;
         calendarData.value.forEach((room) => {
             props.days.forEach((day) => {
-                room[day.full_day].events.data?.forEach((event) => {
+                room[day.full_day].events.forEach((event) => {
                     if (event.clicked) {
                         if (!editEvents.value.includes(event.id)) {
                             if (!editEventsRooms.value.includes(event.roomId)) {

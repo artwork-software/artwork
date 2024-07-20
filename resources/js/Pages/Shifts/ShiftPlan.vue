@@ -40,11 +40,10 @@
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4" >
                                             {{ room[days[0].full_day].roomName }}
-
                                         </div>
                                     </th>
                                     <td v-for="day in days" :style="{width: day.week_separator ? '40px' : '200px'}" class="max-h-28 overflow-y-auto cell border-r-2 border-dotted" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
-                                        <div v-for="event in room[day.full_day]?.events.data" class="mb-1">
+                                        <div v-for="event in room[day.full_day].events" class="mb-1">
                                             <SingleShiftPlanEvent
                                                 v-if="checkIfEventHasShiftsToDisplay(event)"
                                                 :multiEditMode="multiEditMode"
@@ -361,10 +360,9 @@ import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/Singl
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
-import {router} from "@inertiajs/vue3";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
@@ -1024,10 +1022,9 @@ export default {
             }
         },
         setShiftsCheckState(shiftId, state) {
-            // Durchläuft den shiftPlan und aktualisiert den isCheckedForMultiEdit Status
             this.shiftPlan.forEach(room => {
                 this.days.forEach(day => {
-                    room[day.full_day]?.events.data.forEach(event => {
+                    room[day.full_day].events.forEach(event => {
                         event.shifts.forEach(shift => {
                             if (shift.id === shiftId) {
                                 shift.isCheckedForMultiEdit = state;
@@ -1065,23 +1062,19 @@ export default {
         },
         shiftPlan: {
             handler(newShiftPlan) {
-                // Erstelle eine Kopie von shiftsAreChecked, um zu bestimmen, welche entfernt wurden
                 let currentCheckedIds = [...this.shiftsAreChecked];
 
-                // Durchlaufe den neuen shiftPlan, um Änderungen zu identifizieren
                 newShiftPlan.forEach(room => {
                     this.days.forEach(day => {
-                        room[day.full_day]?.events.data.forEach(event => {
+                        room[day.full_day].events.forEach(event => {
                             event.shifts.forEach(shift => {
                                 const index = currentCheckedIds.indexOf(shift.id);
                                 if (shift.isCheckedForMultiEdit) {
-                                    // Füge hinzu, wenn nicht vorhanden
                                     if (index === -1) {
                                         this.shiftsAreChecked.push(shift.id);
                                         this.setShiftsCheckState(shift.id, true);
                                     }
                                 } else if (index !== -1) {
-                                    // Entferne die ID und setze alle Schichten mit dieser ID auf false
                                     this.shiftsAreChecked.splice(index, 1);
                                     this.setShiftsCheckState(shift.id, false);
                                 }

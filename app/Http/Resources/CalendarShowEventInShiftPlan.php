@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use Artwork\Modules\SubEvent\Http\Resources\SubEventResource;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class CalendarShowEventInShiftPlan extends JsonResource
@@ -19,7 +18,6 @@ class CalendarShowEventInShiftPlan extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $shifts =  $this->shifts()->with(['shiftsQualifications'])->get();
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
@@ -42,11 +40,11 @@ class CalendarShowEventInShiftPlan extends JsonResource
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'allDay' => $this->allDay,
-            'shifts' => $shifts,
+            'shifts' => $this->shifts,
             'subEvents' => SubEventResource::collection($this->subEvents),
             'event_type' => $this->event_type,
             'days_of_event' => $this->days_of_event,
-            'days_of_shifts' => $this->resource->getDaysOfShifts($shifts),
+            'days_of_shifts' => $this->resource->getDaysOfShifts($this->shifts),
             'project' => $this->project,
             'option_string' => $this->option_string,
             'formatted_dates' => $this->formatted_dates,

@@ -15,7 +15,7 @@
                     <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
                 <button v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1"
-                        @click="$emit('openAddSubEventModal', event, 'create')"
+                        @click="$emit('openAddSubEventModal', event, 'create', null)"
                         type="button"
                         class="rounded-full bg-artwork-buttons-create text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
@@ -222,7 +222,7 @@
                 <div
                     class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
-                        <button @click="$emit('editSubEvent', subEvent, 'edit')" type="button"
+                        <button @click="$emit('editSubEvent', subEvent, 'edit', event)" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                             <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                         </button>
@@ -488,19 +488,6 @@ const getFirstDigitAfterDecimal = (number) => {
 
 const gcd = (a, b) => {
     return (b) ? gcd(b, a % b) : a;
-};
-
-const openConfirmModal = (type) => {
-    if (type === 'main') {
-        deleteType.value = type;
-        deleteTitle.value = $t('Delete event?');
-        deleteDescription.value = $t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
-    } else {
-        deleteType.value = type;
-        deleteTitle.value = $t('Delete sub-event?');
-        deleteDescription.value = $t('Are you sure you want to delete the selected assignments?');
-    }
-    deleteComponentVisible.value = true;
 };
 
 const getEditHref = (projectId) => {

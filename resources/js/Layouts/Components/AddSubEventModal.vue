@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
+    <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
         <div class="mx-4">
             <div class="headline1 my-2" v-if="!this.subEventToEdit">
                 {{ $t('New sub-event') }}
@@ -163,36 +163,38 @@
                         </label>
                         <div class="w-full flex">
                             <input v-model="startDate"
+                                   disabled
                                    id="startDate"
                                    @change="checkTimes()"
                                    type="date"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary flex-grow disabled:bg-gray-100"/>
                             <input v-model="startTime"
                                    id="changeStartTime"
                                    v-if="!allDayEvent"
                                    @change="checkTimes()"
                                    type="time"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary"/>
                         </div>
                     </div>
                     <div class="sm:w-1/2">
                         <label for="endDate" class="xxsLight">{{ $t('End*') }}</label>
                         <div class="w-full flex">
                             <input v-model="endDate"
+                                   disabled
                                    id="endDate"
                                    @change="checkTimes()"
                                    type="date"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary flex-grow disabled:bg-gray-100"/>
                             <input v-model="endTime"
                                    id="changeEndTime"
                                    v-if="!allDayEvent"
                                    @change="checkTimes()"
                                    type="time"
                                    required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary"/>
                         </div>
                     </div>
                 </div>
@@ -258,7 +260,9 @@ import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {useEvent} from "@/Composeables/Event.js";
 
+const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
     name: "AddSubEventModal",
     mixins: [Permissions, IconLib],
@@ -319,8 +323,8 @@ export default {
     props: ['event', 'eventTypes', 'subEventToEdit'],
     emits: ['close'],
     methods: {
-        closeModal(bool) {
-            this.$emit('close', bool)
+        closeModal(bool, desiredRoomIds, desiredDays) {
+            this.$emit('close', bool, desiredRoomIds, desiredDays);
         },
         formatDate(date, time) {
             if (date === null || time === null) return null;
@@ -339,29 +343,6 @@ export default {
                 this.submit = false;
             } else {
                 this.helpText = '';
-            }
-
-            const timezoneOffset = new Date(this.event.start).getTimezoneOffset() * 60000
-            const start = dayjs(this.event.start);
-            const end = dayjs(this.event.end);
-
-            if (this.subEvent.start_time) {
-                const subEventStart = dayjs(this.subEvent.start_time);
-                if (start > subEventStart || end < subEventStart) {
-                    this.helpTextStart = this.$t('Start time must be within the event group period');
-                    this.submit = false;
-                } else {
-                    this.helpTextStart = '';
-                }
-            }
-            if (this.subEvent.end_time) {
-                const subEventEnd = Date.parse(this.subEvent.end_time);
-                if (end < subEventEnd || start > subEventEnd) {
-                    this.helpTextEnd = this.$t('End time must be within the event group period');
-                    this.submit = false;
-                } else {
-                    this.helpTextEnd = '';
-                }
             }
 
             // check if event min 30min
@@ -398,21 +379,38 @@ export default {
             }
         },
         updateOrCreateEvent() {
+            const onSuccess = () => {
+                this.closeModal(
+                    true,
+                    [this.event.roomId],
+                    getDaysOfEvent(
+                        //use main event date for reload, sub event can only be on same day
+                        formatEventDateByDayJs(this.event.start),
+                        formatEventDateByDayJs(this.event.end)
+                    )
+                );
+            };
+
             this.subEvent.event_type_id = this.subEvent?.selectedEventType?.id;
+
+            const payload = {
+                event_id: this.subEvent.event_id,
+                eventName: this.subEvent.eventName,
+                selectedEventType: this.subEvent.selectedEventType,
+                start_time: this.subEvent.start_time,
+                end_time: this.subEvent.end_time,
+                is_loud: this.subEvent.is_loud,
+                audience: this.subEvent.audience,
+                description:  this.subEvent.description,
+                user_id: this.subEvent.user_id,
+                event_type_id: this.subEvent.event_type_id,
+                allDay: this.subEvent.allDay
+            };
+
             if (this.edit) {
-                this.subEvent.patch(route('subEvent.update', this.subEventToEdit.id), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal(true);
-                    }
-                })
+                axios.patch(route('subEvent.update', this.subEventToEdit.id), payload).finally(() => onSuccess());
             } else {
-                this.subEvent.post(route('subEvent.add'), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal(true);
-                    }
-                })
+                axios.post(route('subEvent.add'), payload).finally(() => onSuccess());
             }
 
         }

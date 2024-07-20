@@ -330,16 +330,27 @@ const $t = useTranslation(),
         eventToDelete.value = event;
         deleteComponentVisible.value = true;
     },
-    openAddSubEventModal = (event, mode) => {
+    openAddSubEventModal = (desiredEvent, mode, mainEvent) => {
         if (mode === 'create') {
-            eventToEdit.value = event;
+            //only set eventToEdit as base for new sub event
+            eventToEdit.value = desiredEvent;
         } else if (mode === 'edit') {
-            subEventToEdit.value = event;
+            //only set eventToEdit as base for new sub event
+            eventToEdit.value = mainEvent;
+            subEventToEdit.value = desiredEvent;
         }
 
         showAddSubEventModal.value = true;
     },
-    closeAddSubEventModal = () => {
+    closeAddSubEventModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
+        if (closedOnPurpose) {
+            handleReload(
+                desiredRoomIds,
+                desiredDays
+            );
+        }
+
+        showAddSubEventModal.value = false;
         eventToEdit.value = null;
         subEventToEdit.value = null;
     },

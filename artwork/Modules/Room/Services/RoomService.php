@@ -417,6 +417,8 @@ readonly class RoomService
                     'shifts.freelancer',
                     'shifts.serviceProvider',
                     'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room'
                 ]
             )
             ->where(

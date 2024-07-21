@@ -25,7 +25,6 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  librsvg2-bin \
  fswatch
 
-
 #Collect all the custom repositories
 ## Meilisearch
 sudo echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/sources.list.d/fury.list
@@ -92,8 +91,6 @@ sudo php /var/www/html/artisan db:seed:production
 
 ## Setup js
 sudo npm --prefix /var/www/html install
-#First dev, then prod to bake the keys into soketi(pusher)
-sudo npm --prefix /var/www/html run dev
 sudo npm --prefix /var/www/html run prod
 
 sudo chown -R www-data:www-data /var/www/html

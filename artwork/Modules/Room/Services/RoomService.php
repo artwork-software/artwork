@@ -445,6 +445,15 @@ readonly class RoomService
                     });
                 }
             )
+            ->where(function ($builder) use ($calendarPeriod): void {
+                $builder->where(function ($builder) use ($calendarPeriod): void {
+                    $builder->where('start_time', '<', $calendarPeriod->start)
+                        ->where('end_time', '>', $calendarPeriod->end);
+                })->orWhere(function ($builder) use ($calendarPeriod): void {
+                    $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                });
+            })
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -513,15 +522,7 @@ readonly class RoomService
             $project,
             $calendarPeriod,
             null
-        )->where(function ($builder) use ($calendarPeriod): void {
-            $builder->where(function ($builder) use ($calendarPeriod): void {
-                $builder->where('start_time', '<', $calendarPeriod->start)
-                    ->where('end_time', '>', $calendarPeriod->end);
-            })->orWhere(function ($builder) use ($calendarPeriod): void {
-                $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-            });
-        });
+        );
 
         foreach ($roomEventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?

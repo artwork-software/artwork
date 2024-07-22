@@ -1915,5 +1915,6 @@
     "Inventory-relevant Event Types": "Bestandsrelevante Terminarten",
     "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Gib an, welche Terminarten standardmäßig als bestandsrelevant angezeigt werden. Bestand kann nur für diese Terminarten gebucht werden.",
     "Define global settings for inventory planning.": "Definiere globale Einstellungen für die Bestandsplanung.",
-    "Your view is being processed, please wait a moment.": "Deine Ansicht wird aufbereitet, bitte warte kurz."
+    "Your view is being processed, please wait a moment.": "Deine Ansicht wird aufbereitet, bitte warte kurz.",
+    "The project id field is required when project id mandatory is true.": "Das Event muss wegen seines Event-Typens einem Projekt zugeordnet werden."
 }

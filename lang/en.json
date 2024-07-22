@@ -1915,5 +1915,6 @@
     "Inventory-relevant Event Types": "Inventory-relevant Event Types",
     "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.",
     "Define global settings for inventory planning.": "Define global settings for inventory planning.",
-    "Your view is being processed, please wait a moment.": "Your view is being processed, please wait a moment."
+    "Your view is being processed, please wait a moment.": "Your view is being processed, please wait a moment.",
+    "The project id field is required when project id mandatory is true.": "The project id field is required when project id mandatory is true."
 }

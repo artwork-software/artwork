@@ -23,7 +23,8 @@
                         :isAdmin="isAdmin"
                         :remove-notification-on-action="removeNotificationOnAction"
                         :show-hints="showHints"
-                        />
+                        @desires-reload="requestReload"
+                    />
                 </div>
             </div>
     </BaseModal>
@@ -36,13 +37,7 @@
 <script>
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    PencilAltIcon,
-    XCircleIcon,
-    XIcon
-} from '@heroicons/vue/outline';
+import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
     Listbox,
     ListboxButton,
@@ -51,13 +46,12 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
-import {
-    CheckIcon,
-    ChevronUpIcon,
-    TrashIcon
-} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -154,7 +148,7 @@ export default {
         'removeNotificationOnAction',
         'first_project_calendar_tab_id'
     ],
-    emits: ['closed'],
+    emits: ['closed', 'desiresReload'],
     watch: {
         projectName: {
             deep: true,
@@ -191,6 +185,9 @@ export default {
         },
     },
     methods: {
+        requestReload(desiredRoomIds, desiredDays, reloadEventsWithoutRoom) {
+            this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
+        },
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
             return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);

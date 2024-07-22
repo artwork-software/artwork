@@ -136,6 +136,7 @@
         :eventsWithoutRoom="computedFilteredEvents"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
+        @desires-reload="handleReload"
     />
     <div v-if="showReceivesNewDataOverlay"
          class="bg-opacity-50 bg-black text-white w-full h-full absolute inset-0 z-50 justify-center text-center">

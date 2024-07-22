@@ -94,17 +94,23 @@ class EventController extends Controller
         ProjectService $projectService,
         EventService $eventService
     ): JsonResponse {
+        $desiredRoomIds = $request->collect('rooms')->all();
+        $desiredDays = $request->collect('days')->all();
+        $projectId = $request->get('projectId', 0);
+
         return new JsonResponse(
             [
-                'roomData' => $this->roomService->collectEventsForRoomsOnSpecificDays(
-                    $userService,
-                    $request->collect('rooms')->all(),
-                    $request->collect('days')->all(),
-                    $request->user()->calendar_filter,
-                    ($projectId = $request->get('projectId', 0)) > 0 ?
-                        $projectService->findById($projectId) :
-                        null
-                ),
+                'roomData' => empty($desiredRoomIds) || empty($desiredDays) ?
+                    [] :
+                    $this->roomService->collectEventsForRoomsOnSpecificDays(
+                        $userService,
+                        $desiredRoomIds,
+                        $desiredDays,
+                        $request->user()->calendar_filter,
+                        $projectId > 0 ?
+                            $projectService->findById($projectId) :
+                            null
+                    ),
                 'eventsWithoutRoom' => !$request->boolean('reloadEventsWithoutRoom') ?
                     [] :
                     CalendarEventResource::collection(
@@ -199,7 +205,7 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $dayServicesService,
-                $this->authManager->user()
+                $userService->getAuthUser()
             )
         );
     }

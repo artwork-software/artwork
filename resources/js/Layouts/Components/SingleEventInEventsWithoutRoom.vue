@@ -233,6 +233,7 @@
             </div>
             <div class="bg-lightBackgroundGray pt-1 pb-4 px-3">
                 <div class="my-3">
+                    <p v-if="event.error?.projectId" class="errorText pb-4">{{ $t(event.error.projectId[0]) }}</p>
                     <input type="checkbox"
                            v-model="event.showProjectInfo"
                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
@@ -310,8 +311,6 @@
                                 {{ project.name }}
                             </div>
                         </div>
-
-                        <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
                         <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
                     </div>
                 </div>
@@ -383,7 +382,7 @@
                     :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
                     :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"
                     class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white"
-                    @click="updateOrCreateEvent(event)"
+                    @click="updateEvent(event)"
                 >
                     {{
                         (isAdmin || selectedRoom?.everyone_can_book) ? $t('Save') : $t('Request occupancy')
@@ -488,7 +487,9 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {useEvent} from "@/Composeables/Event.js";
+
+const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 
 export default {
 name: "SingleEventInEventsWithoutRoom",
@@ -576,7 +577,7 @@ name: "SingleEventInEventsWithoutRoom",
         'computedEventsWithoutRoom',
         'showHints'
     ],
-    emits: ['closed'],
+    emits: ['desiresReload'],
     watch: {
         projectName: {
             deep: true,
@@ -623,8 +624,8 @@ name: "SingleEventInEventsWithoutRoom",
             this.event.showProjectSearchResults = false;
             this.projectSearchResults = [];
         },
-        closeModal(bool) {
-            this.$emit('closed', bool);
+        requestReload(desiredRoomId, desiredDays) {
+            this.$emit('desiresReload', [desiredRoomId], desiredDays, true);
         },
         /**
          * Format date and time to ISO 8601 with timezone UTC
@@ -768,28 +769,43 @@ name: "SingleEventInEventsWithoutRoom",
          *
          * @returns {Promise<*>}
          */
-        async updateOrCreateEvent(event) {
+        updateEvent(event) {
             if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
                 this.isOption = true;
             }
-            return await axios
-                .put('/events/' + event?.id, this.eventData(event))
-                .then(() => this.closeModal(this.removeNotificationOnAction === true))
+
+            axios.put('/events/' + event?.id, this.eventData(event))
+                .then(() => {
+                    this.requestReload(
+                        this.event.roomId,
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(event.start),
+                            formatEventDateByDayJs(event.end)
+                        )
+                    )
+                })
                 .catch(error => event.error = error.response.data.errors);
         },
         openDeleteEventModal() {
             this.deleteComponentVisible = true;
         },
         afterConfirm(bool) {
-            if (!bool) return this.deleteComponentVisible = false;
+            if (!bool) {
+                return this.deleteComponentVisible = false;
+            }
 
-            router.delete(`/events/${this.event.id}`, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    //this.closeModal();
-                }
-            })
+            axios.delete(route('events.delete', {event: this.event.id}))
+                .then(() => {
+                    this.requestReload(
+                        null,
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(event.start),
+                            formatEventDateByDayJs(event.end)
+                        )
+                    );
+                    this.deleteComponentVisible = false;
+                })
+                .catch(error => this.event.error = error.response.data.errors);
         },
         eventData(event) {
             return {

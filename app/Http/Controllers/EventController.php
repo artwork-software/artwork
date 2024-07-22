@@ -56,7 +56,6 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -83,7 +82,6 @@ class EventController extends Controller
         private readonly ChangeService $changeService,
         private readonly SchedulingService $schedulingService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
-        private readonly AuthManager $authManager,
         private readonly RoomService $roomService,
     ) {
     }
@@ -2185,7 +2183,7 @@ class EventController extends Controller
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
-            if ($request->string('date') === null) {
+            if ($request->string('date')->toString() === '') {
                 if ($request->integer('value') !== 0) {
                     $endDate = Carbon::parse($event->getAttribute('end_time'));
                     $startDate = Carbon::parse($event->getAttribute('start_time'));
@@ -2309,7 +2307,6 @@ class EventController extends Controller
                         }
                     }
                 }
-
                 $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
                 $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
             } else {
@@ -2318,12 +2315,10 @@ class EventController extends Controller
 
                 $newDate = Carbon::parse($request->string('date'));
                 $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
-
                 $date = $newDate->format('Y-m-d');
                 $event->setAttribute('start_time', $date . ' ' . $startTime);
                 $event->setAttribute('end_time', $date . ' ' . $endTime);
             }
-
             $event->save();
         }
 

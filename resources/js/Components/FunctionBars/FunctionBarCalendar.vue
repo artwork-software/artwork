@@ -337,7 +337,6 @@ const UpdateMultiEditEmits = (value) => {
 }
 
 const changeAtAGlance = () => {
-    console.log(!atAGlance.value)
     router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
         at_a_glance: !atAGlance.value
     }, {

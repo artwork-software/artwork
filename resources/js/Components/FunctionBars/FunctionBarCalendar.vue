@@ -414,8 +414,8 @@ const updateTimes = () => {
         start_date: dateValueCopy.value[0],
         end_date: dateValueCopy.value[1],
     }, {
-        preserveScroll: true,
-        preserveState: true
+        preserveScroll: false,
+        preserveState: false
     });
 }
 

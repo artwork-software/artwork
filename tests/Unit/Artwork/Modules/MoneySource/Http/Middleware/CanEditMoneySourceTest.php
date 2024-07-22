@@ -3,9 +3,6 @@
 namespace Tests\Unit\Artwork\Modules\MoneySource\Http\Middleware;
 
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
-use Artwork\Modules\Permission\Enums\PermissionEnum;
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
@@ -37,6 +34,7 @@ class CanEditMoneySourceTest extends TestCase
 
         Auth::shouldReceive('user')->andReturn($user);
 
+        //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
         $response = $this->middleware->handle($request, fn($request) => response('Passed'));
 
         $this->assertEquals('Passed', $response->getContent());
@@ -56,6 +54,7 @@ class CanEditMoneySourceTest extends TestCase
 
         Auth::shouldReceive('user')->andReturn($user);
 
+        //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
         $response = $this->middleware->handle($request, fn($request) => response('Passed'));
 
         $this->assertEquals('Passed', $response->getContent());

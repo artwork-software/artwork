@@ -35,6 +35,5 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 
-Broadcast::channel('room.{roomId}.day.{dayString}', function ($user, $roomId, $dayString) {
-
+Broadcast::channel('room.{roomId}.day.{dayString}', function ($user, $roomId, $dayString): void {
 });

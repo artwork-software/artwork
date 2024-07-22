@@ -7,6 +7,7 @@ use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -200,7 +201,7 @@ class CalendarService
                 null,
             'roomsWithEvents' => empty($room) ?
                 $roomService->collectEventsForRooms(
-                    roomsWithEvents:  $roomService->getFilteredRooms(
+                    roomsWithEvents: $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
                         $calendarFilter
@@ -251,17 +252,40 @@ class CalendarService
         return $result;
     }
 
-    public function getEventsAtAGlance($startDate, $endDate): Collection
+    /**
+     * @return array<int, MinimalCalendarEventResource>
+     */
+    public function getEventsAtAGlance($startDate, $endDate): array
     {
-        $initialEventQuery = Event::query();
-
-        $filteredEventsQuery = $this->filterEvents($initialEventQuery, $startDate, $endDate, null, null);
-
-        $eventsByRoom = $filteredEventsQuery
-            ->with(['room', 'project', 'creator'])
-            ->orderBy('start_time', 'ASC')->get();
-
-        return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
+        return array_map(
+            function (Collection $roomEvents): array {
+                return MinimalCalendarEventResource::collection($roomEvents)->resolve();
+            },
+            $this
+                ->filterEvents(Event::query(), $startDate, $endDate, null, null)
+                ->with(
+                    [
+                        'room',
+                        'creator',
+                        'project',
+                        'project.managerUsers',
+                        'project.state',
+                        'shifts',
+                        'shifts.craft',
+                        'shifts.users',
+                        'shifts.freelancer',
+                        'shifts.serviceProvider',
+                        'shifts.shiftsQualifications',
+                        'subEvents.event',
+                        'subEvents.event.room'
+                    ]
+                )
+                ->orderBy('start_time', 'ASC')
+                ->get()
+                ->groupBy('room.id')
+                ->values()
+                ->all()
+        );
     }
 
     public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection

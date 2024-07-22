@@ -10,7 +10,6 @@
             @change-multi-edit="changeMultiEdit"
             :user_filters="user_filters"
         />
-
         <!-- Calendar -->
         <div class="flex">
             <div v-if="eventsAtAGlance" class="first:pl-14" v-for="roomEvents in eventsAtAGlance">
@@ -18,21 +17,23 @@
                     <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                         {{roomEvents[0].roomName}}
                     </div>
-
                 </div>
-                <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleCalendarEvent
-                        :atAGlance="true"
-                        :multiEdit="multiEdit"
-                        :project="project ? project : false"
-                        :zoom-factor="1"
-                        :width="204"
-                        :event="event"
-                        :event-types="eventTypes"
-                        @open-edit-event-modal="openEditEventModal"
-                        :first_project_tab_id="this.first_project_tab_id"
-                    />
-                </div>
+                <template v-for="event in roomEvents">
+                    <div class="at-a-glance-event-container py-0.5 pr-1" :data-event-id="event.id">
+                        <SingleCalendarEvent
+                            v-if="this.currentEventsInView.has(String(event.id))"
+                            :atAGlance="true"
+                            :multiEdit="multiEdit"
+                            :project="project ? project : false"
+                            :zoom-factor="1"
+                            :width="204"
+                            :event="event"
+                            :event-types="eventTypes"
+                            @open-edit-event-modal="openEditEventModal"
+                            :first_project_tab_id="this.first_project_tab_id"
+                        />
+                    </div>
+                </template>
             </div>
             <div v-else>
                 <div class="pl-6 pb-12 mt-10 xsDark">
@@ -100,7 +101,6 @@ import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
-
 export default {
     name: "IndividualCalendarAtGlanceComponent",
     mixins: [Permissions],
@@ -129,6 +129,7 @@ export default {
           showMultiEditModal: false,
           openDeleteSelectedEventsModal: false,
           allEvents: this.eventsAtAGlance,
+          currentEventsInView: new Set()
       }
     },
     props: [
@@ -144,6 +145,27 @@ export default {
         'first_project_tab_id',
         'first_project_calendar_tab_id'
     ],
+    mounted() {
+        const observer = new IntersectionObserver(
+                (observables) => {
+                    observables.forEach((atAGlanceEventContainerObserver) => {
+                        let eventId = atAGlanceEventContainerObserver.target.getAttribute('data-event-id');
+
+                        if (atAGlanceEventContainerObserver.isIntersecting) {
+                            this.currentEventsInView.add(eventId);
+                        } else {
+                            this.currentEventsInView.delete(eventId);
+                        }
+                    });
+
+                }
+            ),
+            eventContainers = document.querySelectorAll('.at-a-glance-event-container');
+
+        eventContainers.forEach((container) => {
+            observer.observe(container);
+        });
+    },
     methods: {
         changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;

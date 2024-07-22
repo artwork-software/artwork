@@ -13,6 +13,7 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -48,7 +49,6 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
 readonly class EventService
@@ -751,6 +751,85 @@ readonly class EventService
         })->all();
     }
 
+    public function createEventManagementDtoForAtAGlance(
+        CalendarService $calendarService,
+        RoomService $roomService,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        ProjectTabService $projectTabService,
+        EventTypeService $eventTypeService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        AreaService $areaService
+    ): EventManagementDto {
+        $user = $userService->getAuthUser();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+
+        return EventManagementDto::newInstance()
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setDateValue([$startDate, $endDate])
+            ->setCalendarType(
+                $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                    'daily' :
+                    'individual'
+            )
+            ->setSelectedDate(
+                $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
+                    $startDate->format('Y-m-d') :
+                    null
+            )
+            ->setEventsWithoutRoom(
+                empty($room) ?
+                    CalendarEventResource::collection(
+                        $this->getEventsWithoutRoom(
+                            null,
+                            [
+                                'room',
+                                'creator',
+                                'project',
+                                'project.managerUsers',
+                                'project.state',
+                                'shifts',
+                                'shifts.craft',
+                                'shifts.users',
+                                'shifts.freelancer',
+                                'shifts.serviceProvider',
+                                'shifts.shiftsQualifications',
+                                'subEvents.event',
+                                'subEvents.event.room'
+                            ]
+                        )
+                    )->resolve() :
+                    []
+            )
+            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate))
+            ->setRooms(
+                $roomService->getFilteredRooms(
+                    $startDate,
+                    $endDate,
+                    $userCalendarFilter
+                )
+            )
+            ->setFilterOptions(
+                $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $roomService
+                )
+            )
+            ->setPersonalFilters($filterController->index())
+            ->setUserFilters($user->getAttribute('calendar_filter'))
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectCalendarTabId(
+                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+            );
+    }
+
     /**
      * @throws Throwable
      */
@@ -794,11 +873,6 @@ readonly class EventService
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-            ->setEventsAtAGlance(
-                $user->getAttribute('at_a_glance') ?
-                    $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                    SupportCollection::make()
-            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
@@ -916,7 +990,7 @@ readonly class EventService
         return $this->eventRepository->findById($eventId);
     }
 
-    public function getEventsWithoutRoom(int|Project $project = null, ?array $with = null): Collection
+    public function getEventsWithoutRoom(int|Project|null $project = null, array|null $with = null): Collection
     {
         return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }

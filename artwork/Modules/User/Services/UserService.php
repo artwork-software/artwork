@@ -276,4 +276,15 @@ readonly class UserService
     {
         return $this->userRepository->getAdminUser();
     }
+
+    public function atAGlanceEnabled(User|int|null $user = null): bool
+    {
+        return $this->userRepository->atAGlanceEnabled(
+            is_int($user) ?
+                $this->findUser($user) :
+                ($user instanceof User ?
+                    $user :
+                        $this->getAuthUser())
+        );
+    }
 }

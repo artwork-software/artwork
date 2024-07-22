@@ -153,18 +153,31 @@ class EventController extends Controller
     ): Response {
         return Inertia::render(
             'Events/EventManagement',
-            $eventService->createEventManagementDto(
-                $calendarService,
-                $roomService,
-                $userService,
-                $filterService,
-                $filterController,
-                $projectTabService,
-                $eventTypeService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService
-            )
+            $userService->atAGlanceEnabled() ?
+                $eventService->createEventManagementDtoForAtAGlance(
+                    $calendarService,
+                    $roomService,
+                    $userService,
+                    $filterService,
+                    $filterController,
+                    $projectTabService,
+                    $eventTypeService,
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $areaService
+                ) :
+                $eventService->createEventManagementDto(
+                    $calendarService,
+                    $roomService,
+                    $userService,
+                    $filterService,
+                    $filterController,
+                    $projectTabService,
+                    $eventTypeService,
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $areaService
+                )
         );
     }
 

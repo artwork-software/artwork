@@ -19,7 +19,7 @@
                     </div>
                 </div>
                 <template v-for="event in roomEvents">
-                    <div class="at-a-glance-event-container py-0.5 pr-1" :data-event-id="event.id">
+                    <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]" :data-event-id="event.id">
                         <SingleCalendarEvent
                             v-if="this.currentEventsInView.has(String(event.id))"
                             :atAGlance="true"

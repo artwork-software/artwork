@@ -6,6 +6,7 @@ services:
         - sail
       volumes:
         - '.:/var/www/html'
+        - .coverage:/opt/phpstorm-coverage
       extra_hosts:
         - "host.docker.internal:host-gateway"
 #    php-queue-worker:

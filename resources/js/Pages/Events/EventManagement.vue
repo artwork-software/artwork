@@ -43,9 +43,9 @@
 import {provide, ref} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
-import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
+import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 
 const props = defineProps(
     {
@@ -57,7 +57,7 @@ const props = defineProps(
         rooms: Object,
         events: Object,
         days: Array,
-        eventsAtAGlance: Array,
+        eventsAtAGlance: Object,
         eventsWithoutRoom: Array,
         filterOptions: Object,
         personalFilters: Object,

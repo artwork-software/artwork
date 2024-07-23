@@ -143,6 +143,7 @@
         </div>
     </div>
 </template>
+
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
@@ -183,25 +184,7 @@ onMounted(() => {
     });
 });
 
-const $t = useTranslation(),
-    {getDaysOfEvent, reloadRoomsAndDays, formatEventDateByDayJs} = useEvent(),
-    {hasAdminRole} = usePermission(usePage().props),
-    AsyncFunctionBarCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/FunctionBars/FunctionBarCalendar.vue')
-        }
-    ),
-    AsyncCalendarHeader = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/CalendarHeader.vue')
-        }
-    ),
-    AsyncSingleEventInCalendar = defineAsyncComponent(
-        {
-            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
-        }
-    ),
-    props = defineProps({
+const props = defineProps({
         rooms: {
             type: Object,
             required: true,
@@ -224,6 +207,32 @@ const $t = useTranslation(),
             required: false,
         },
     }),
+    $t = useTranslation(),
+    {getDaysOfEvent, formatEventDateByDayJs, useReload} = useEvent(),
+    {
+        showReceivesNewDataOverlay,
+        hasReceivedNewCalendarData,
+        hasReceivedNewEventsWithoutRoomData,
+        receivedRoomData,
+        receivedEventsWithoutRoom,
+        handleReload
+    } = useReload(props.project ? props.project.id : 0),
+    {hasAdminRole} = usePermission(usePage().props),
+    AsyncFunctionBarCalendar = defineAsyncComponent(
+        {
+            loader: () => import('@/Components/FunctionBars/FunctionBarCalendar.vue')
+        }
+    ),
+    AsyncCalendarHeader = defineAsyncComponent(
+        {
+            loader: () => import('@/Components/Calendar/Elements/CalendarHeader.vue')
+        }
+    ),
+    AsyncSingleEventInCalendar = defineAsyncComponent(
+        {
+            loader: () => import('@/Components/Calendar/Elements/SingleEventInCalendar.vue')
+        }
+    ),
     textStyle = computed(() => {
         const fontSize = `max(calc(${zoom_factor.value} * 0.875rem), 10px)`;
         const lineHeight = `max(calc(${zoom_factor.value} * 1.25rem), 1.3)`;
@@ -290,10 +299,6 @@ const $t = useTranslation(),
     computedCheckedEventsForMultiEditCount = computed(() => {
         return editEvents.value.length;
     }),
-    hasReceivedNewCalendarData = ref(false),
-    hasReceivedNewEventsWithoutRoomData = ref(false),
-    receivedRoomData = ref([]),
-    receivedEventsWithoutRoom = ref([]),
     calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
     eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? []))),
     first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
@@ -321,25 +326,6 @@ const $t = useTranslation(),
     wantedRoom = ref(null),
     roomCollisions = ref([]),
     currentDaysInView = ref(new Set()),
-    showReceivesNewDataOverlay = ref(false),
-    getProjectIdFromProps = () => props.project ? props.project.id : 0,
-    handleReload = async (desiredRoomIdsToReload, desiredDaysToReload, reloadEventsWithoutRoom = false) => {
-        showReceivesNewDataOverlay.value = true;
-        const {roomData, eventsWithoutRoom} = await reloadRoomsAndDays(
-            desiredRoomIdsToReload,
-            desiredDaysToReload,
-            getProjectIdFromProps(),
-            reloadEventsWithoutRoom
-        );
-
-        receivedRoomData.value = roomData;
-        hasReceivedNewCalendarData.value = true;
-
-        if (reloadEventsWithoutRoom) {
-            receivedEventsWithoutRoom.value = eventsWithoutRoom;
-            hasReceivedNewEventsWithoutRoomData.value = true;
-        }
-    },
     handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
         if (considerOnMultiEdit) {
             editEvents.value.push(eventId);

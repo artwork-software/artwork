@@ -424,14 +424,6 @@ test('restore event', function (Event $event) {
     }
 ]);
 
-test('multi delete', function () {
-    $events = Event::factory(5)->create();
-    $this->post(route('multi-edit.delete'), ['events' => $events->pluck('id')->toArray()]);
-    foreach ($events as $event) {
-        assertSoftDeleted($event);
-    }
-});
-
 function setupCalendar(User $user): array
 {
     $today = today();

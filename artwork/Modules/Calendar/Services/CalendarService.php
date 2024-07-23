@@ -257,35 +257,49 @@ class CalendarService
      */
     public function getEventsAtAGlance($startDate, $endDate): array
     {
-        return array_map(
-            function (Collection $roomEvents): array {
-                return MinimalCalendarEventResource::collection($roomEvents)->resolve();
-            },
-            $this
-                ->filterEvents(Event::query(), $startDate, $endDate, null, null)
-                ->with(
-                    [
-                        'room',
-                        'creator',
-                        'project',
-                        'project.managerUsers',
-                        'project.state',
-                        'shifts',
-                        'shifts.craft',
-                        'shifts.users',
-                        'shifts.freelancer',
-                        'shifts.serviceProvider',
-                        'shifts.shiftsQualifications',
-                        'subEvents.event',
-                        'subEvents.event.room'
-                    ]
-                )
-                ->orderBy('start_time', 'ASC')
-                ->get()
-                ->groupBy('room.id')
-                ->values()
-                ->all()
-        );
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $actualEvents = $eventsForRoom = [];
+
+        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, null)
+            ->with(
+                [
+                    'room',
+                    'creator',
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room'
+                ]
+            )->orderBy('start_time');
+
+        foreach ($eventsQuery->get()->all() as $event) {
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $event->start_time;
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $event;
+            }
+        }
+
+        foreach ($actualEvents as $key => $value) {
+            $eventsForRoom[$key] = [
+                //immediately resolve resource to free used memory
+                'events' => MinimalCalendarEventResource::collection($value)->resolve()
+            ];
+        }
+
+        return $eventsForRoom;
     }
 
     public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection

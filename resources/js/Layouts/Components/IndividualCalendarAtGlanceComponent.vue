@@ -11,36 +11,41 @@
             :user_filters="user_filters"
         />
         <!-- Calendar -->
-        <div class="flex">
-            <div v-if="eventsAtAGlance" class="first:pl-14" v-for="roomEvents in eventsAtAGlance">
-                <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
-                    <div class="flex calendarRoomHeader font-semibold items-center ml-4">
-                        {{roomEvents[0].roomName}}
+        <div class="flex pl-14">
+            <template v-if="eventsAtAGlance">
+                <div v-for="room in computedRooms">
+                    <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
+                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                            {{ room.name }}
+                        </div>
+                    </div>
+                    <div v-for="day in eventsAtAGlanceRef">
+                        <template v-for="event in day.events">
+                            <div v-if="event.roomId === room.id">
+                                <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]" :data-event-id="event.id">
+                                    <SingleCalendarEvent
+                                        v-if="this.currentEventsInView.has(String(event.id))"
+                                        :atAGlance="true"
+                                        :multiEdit="multiEdit"
+                                        :project="project ? project : false"
+                                        :zoom-factor="1"
+                                        :width="204"
+                                        :event="event"
+                                        :event-types="eventTypes"
+                                        @open-edit-event-modal="openEditEventModal"
+                                        :first_project_tab_id="this.first_project_tab_id"
+                                    />
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
-                <template v-for="event in roomEvents">
-                    <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]" :data-event-id="event.id">
-                        <SingleCalendarEvent
-                            v-if="this.currentEventsInView.has(String(event.id))"
-                            :atAGlance="true"
-                            :multiEdit="multiEdit"
-                            :project="project ? project : false"
-                            :zoom-factor="1"
-                            :width="204"
-                            :event="event"
-                            :event-types="eventTypes"
-                            @open-edit-event-modal="openEditEventModal"
-                            :first_project_tab_id="this.first_project_tab_id"
-                        />
-                    </div>
-                </template>
-            </div>
+            </template>
             <div v-else>
                 <div class="pl-6 pb-12 mt-10 xsDark">
                     {{$t('No events for this project')}}
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -100,6 +105,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {ref} from "vue";
 
 export default {
     name: "IndividualCalendarAtGlanceComponent",
@@ -129,7 +135,8 @@ export default {
           showMultiEditModal: false,
           openDeleteSelectedEventsModal: false,
           allEvents: this.eventsAtAGlance,
-          currentEventsInView: new Set()
+          currentEventsInView: new Set(),
+          eventsAtAGlanceRef: ref(JSON.parse(JSON.stringify(this.eventsAtAGlance))),
       }
     },
     props: [
@@ -165,6 +172,27 @@ export default {
         eventContainers.forEach((container) => {
             observer.observe(container);
         });
+    },
+    computed: {
+        computedRooms() {
+            let computedRooms = [];
+
+            console.debug('computed rooms');
+
+            this.rooms.forEach((room) => {
+                let hasEvents = Object.values(this.eventsAtAGlanceRef).some((day) => {
+                    return day.events.some((event) => {
+                        return event.roomId === room.id;
+                    });
+                });
+
+                if (hasEvents) {
+                    computedRooms.push(room);
+                }
+            });
+
+            return computedRooms;
+        }
     },
     methods: {
         changeMultiEdit(multiEdit) {

@@ -7,47 +7,44 @@
             @wants-to-add-new-event="openEditEventModal"
             @update-multi-edit="changeMultiEdit"/>
     </div>
-    <div class="w-full flex">
-        <!-- Calendar -->
-        <div class="flex pl-14">
-            <template v-if="eventsAtAGlance">
-                <div v-for="room in computedRooms">
-                    <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
-                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
-                            {{ room.name }}
-                        </div>
+    <!-- Calendar -->
+    <div class="flex pl-14">
+        <template v-if="eventsAtAGlance">
+            <div v-for="room in computedRooms">
+                <div class="w-52 py-3 mb-0.5 border-r-4 border-secondaryHover bg-userBg">
+                    <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                        {{ room.name }}
                     </div>
-                    <div v-for="day in eventsAtAGlanceRef">
-                        <template v-for="event in day.events">
-                            <div v-if="event.roomId === room.id">
-                                <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]"
-                                     :data-event-id="event.id">
-                                    <SingleCalendarEvent
-                                        v-if="this.currentEventsInView.has(String(event.id))"
-                                        :atAGlance="true"
-                                        :multiEdit="multiEdit"
-                                        :project="project ? project : false"
-                                        :zoom-factor="1"
-                                        :width="204"
-                                        :event="event"
-                                        :event-types="eventTypes"
-                                        @open-edit-event-modal="openEditEventModal"
-                                        :first_project_tab_id="this.first_project_tab_id"
-                                    />
-                                </div>
+                </div>
+                <div v-for="day in eventsAtAGlanceRef">
+                    <template v-for="event in day.events">
+                        <div v-if="event.roomId === room.id" class="h-[45px]">
+                            <div class="at-a-glance-event-container py-0.5 pr-1"
+                                 :data-event-id="event.id">
+                                <SingleCalendarEvent
+                                    v-if="this.currentEventsInView.has(String(event.id))"
+                                    :atAGlance="true"
+                                    :multiEdit="multiEdit"
+                                    :project="project ? project : false"
+                                    :zoom-factor="1"
+                                    :width="204"
+                                    :event="event"
+                                    :event-types="eventTypes"
+                                    @open-edit-event-modal="openEditEventModal"
+                                    :first_project_tab_id="this.first_project_tab_id"
+                                />
                             </div>
-                        </template>
-                    </div>
+                        </div>
+                    </template>
                 </div>
-            </template>
-            <div v-else>
-                <div class="pl-6 pb-12 mt-10 xsDark">
-                    {{$t('No events for this project')}}
-                </div>
+            </div>
+        </template>
+        <div v-else>
+            <div class="pl-6 pb-12 mt-10 xsDark">
+                {{$t('No events for this project')}}
             </div>
         </div>
     </div>
-
     <event-component
         v-if="createEventComponentIsVisible"
         @closed="onEventComponentClose"
@@ -153,20 +150,19 @@ export default {
     ],
     mounted() {
         const observer = new IntersectionObserver(
-                (observables) => {
-                    observables.forEach((atAGlanceEventContainerObserver) => {
-                        let eventId = atAGlanceEventContainerObserver.target.getAttribute('data-event-id');
+            (observables) => {
+                observables.forEach((atAGlanceEventContainerObserver) => {
+                    let eventId = atAGlanceEventContainerObserver.target.getAttribute('data-event-id');
 
-                        if (atAGlanceEventContainerObserver.isIntersecting) {
-                            this.currentEventsInView.add(eventId);
-                        } else {
-                            this.currentEventsInView.delete(eventId);
-                        }
-                    });
-
-                }
-            ),
-            eventContainers = document.querySelectorAll('.at-a-glance-event-container');
+                    if (atAGlanceEventContainerObserver.isIntersecting) {
+                        this.currentEventsInView.add(eventId);
+                    } else {
+                        this.currentEventsInView.delete(eventId);
+                    }
+                });
+            }
+        ),
+        eventContainers = document.querySelectorAll('.at-a-glance-event-container');
 
         eventContainers.forEach((container) => {
             observer.observe(container);
@@ -277,7 +273,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -3,7 +3,6 @@
          ref="calendarRef"
          class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="sticky top-0 z-40 -ml-1 -my-4">
-            {{ isFullscreen }}
             <AsyncFunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"

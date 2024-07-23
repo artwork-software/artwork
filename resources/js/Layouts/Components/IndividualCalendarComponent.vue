@@ -56,7 +56,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5" v-for="event in room[day.full_day].events.data ?? room[day.full_day].events">
+                                <div class="py-0.5" v-for="event in room[day.full_day].events ?? room[day.full_day].events">
                                     <SingleCalendarEvent
                                         :project="project ? project : false"
                                         :multiEdit="multiEdit"
@@ -312,7 +312,7 @@ export default {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
-                    room[day.full_day].events.data.forEach((event) => {
+                    room[day.full_day].events.forEach((event) => {
                         if (event.clicked) {
                             if (!eventArray.includes(event.id)) {
                                 eventArray.push(event.id)

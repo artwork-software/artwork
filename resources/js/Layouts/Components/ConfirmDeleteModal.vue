@@ -10,7 +10,7 @@
                         <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl rounded-lg transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal(false)">
                                     <span class="sr-only">Close</span>
                                     <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -25,7 +25,7 @@
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">
                                     {{ $t('No, not really') }}
                                 </p>
                             </div>
@@ -33,12 +33,12 @@
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete">
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete(true)">
                                     {{ $t('Delete series entry completely') }}
                                 </p>
                             </div>
                             <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">{{ $t('Continue without saving') }}</p>
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal(false)">{{ $t('Continue without saving') }}</p>
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
@@ -85,8 +85,8 @@ export default {
         deleteElement(bool){
             this.$emit('delete', bool)
         },
-        complete_delete(){
-            this.$emit('complete_delete', true)
+        complete_delete(bool){
+            this.$emit('complete_delete', bool)
         }
     }
 }

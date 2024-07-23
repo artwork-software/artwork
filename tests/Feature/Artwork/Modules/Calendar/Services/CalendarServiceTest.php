@@ -3,6 +3,8 @@
 namespace Tests\Feature\Artwork\Modules\Calendar\Services;
 
 use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Event\Services\EventService;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
@@ -13,11 +15,14 @@ class CalendarServiceTest extends TestCase
      */
     protected CalendarService $calendarService;
 
+    /**
+     * @throws BindingResolutionException
+     */
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->calendarService = new CalendarService();
+        $this->calendarService = new CalendarService(app()->make(EventService::class));
     }
 
     public function testCreateVacationAndAvailabilityPeriodCalendar(): void

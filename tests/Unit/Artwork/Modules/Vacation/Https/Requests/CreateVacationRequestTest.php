@@ -8,6 +8,7 @@ use Tests\TestCase;
 
 class CreateVacationRequestTest extends TestCase
 {
+    //phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingTraversableTypeHintSpecification
     public static function validationDataProvider(): array
     {
         return [

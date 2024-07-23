@@ -1,6 +1,4 @@
-import { inject } from 'vue';
-
-export function usePermissions(pageProps) {
+export function usePermission(pageProps) {
 
     const permissions = pageProps.permissionsArray;
     const rolesArray = pageProps.rolesArray;

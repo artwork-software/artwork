@@ -1,351 +1,3 @@
-<script>
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import Input from "@/Jetstream/Input.vue";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu, MenuButton, MenuItem, MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
-} from "@headlessui/vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {router} from "@inertiajs/vue3";
-
-export default {
-name: "SingleEventInEventsWithoutRoom",
-    mixins: [Permissions, IconLib],
-    components: {
-        BaseModal,
-        Switch,
-        SwitchGroup,
-        SwitchLabel,
-        Input,
-        JetDialogModal,
-        XIcon,
-        XCircleIcon,
-        Listbox,
-        ListboxButton,
-        ListboxOption,
-        ListboxOptions,
-        ChevronDownIcon,
-        ChevronUpIcon,
-        SvgCollection,
-        CheckIcon,
-        Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,
-        PencilAltIcon,
-        TrashIcon,
-        DotsVerticalIcon,
-        ConfirmationComponent,
-        TagComponent
-    },
-    data() {
-        return {
-            startDate: null,
-            startTime: null,
-            endDate: null,
-            endTime: null,
-            isLoud: false,
-            audience: false,
-            projectName: null,
-            title: null,
-            eventName: null,
-            eventTypeName: null,
-            selectedEventType: this.eventTypes[0],
-            selectedProject: null,
-            selectedRoom: null,
-            error: null,
-            creatingProject: false,
-            projectSearchResults: [],
-            description: null,
-            canEdit: false,
-            deleteComponentVisible: false,
-            eventToDelete: null,
-            allDayEvent: false,
-            showProjectInfo: false,
-            firstCall: true,
-            isOption: false,
-            frequencies: [
-                {
-                    id: 1,
-                    name: this.$t('Daily')
-                },
-                {
-                    id: 2,
-                    name: this.$t('Weekly')
-                },
-                {
-                    id: 3,
-                    name: this.$t('Every 2 weeks')
-                },
-                {
-                    id: 4,
-                    name: this.$t('Monthly')
-                }
-            ]
-        }
-    },
-    props: [
-        'eventTypes',
-        'rooms',
-        'isAdmin',
-        'removeNotificationOnAction',
-        'first_project_calendar_tab_id',
-        'event',
-        'computedEventsWithoutRoom',
-        'showHints'
-    ],
-    emits: ['closed'],
-    watch: {
-        projectName: {
-            deep: true,
-            handler() {
-                if (this.creatingProject || !this.projectName) {
-                    this.projectSearchResults = [];
-                    return;
-                }
-                axios.get('/projects/search', {params: {query: this.projectName}})
-                    .then(response => this.projectSearchResults = response.data)
-            },
-        }
-    },
-    methods: {
-        getTimeOfDate(date) {
-            //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
-            return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);
-        },
-        getDateOfDate(date) {
-            //returns date in format "YYYY-MM-DD" from given date object, with leading zeros
-            //make sure to add 1 to the returned month because javascript starts counting from 0, January = 0
-            return date.getFullYear() + "-" +
-                (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
-                date.getDate().toString().padStart(2, '0');
-        },
-        convertDateFormat(dateString) {
-            const parts = dateString.split('-');
-            return parts[2] + "." + parts[1] + "." +parts[0];
-        },
-        getFrequencyName(frequencyId) {
-            const matchedFrequency = this.frequencies.find(frequency => frequency.id === frequencyId);
-
-            if (matchedFrequency) {
-                return matchedFrequency.name;
-            } else {
-                return this.$t('No cycle selected');
-            }
-        },
-        onLinkingProject(project) {
-            this.event.projectId = project.id;
-            this.event.project = project;
-            this.event.projectName = '';
-            this.projectName = '';
-            this.event.showProjectSearchResults = false;
-            this.projectSearchResults = [];
-        },
-        closeModal(bool) {
-            this.$emit('closed', bool);
-        },
-        /**
-         * Format date and time to ISO 8601 with timezone UTC
-         *
-         * @param date
-         * @param time
-         * @returns {string|null}
-         */
-        formatDate(date, time) {
-            if (date === null || time === null) return null;
-            return (new Date(date + ' ' + time)).toISOString()
-        },
-        checkChanges(event) {
-            this.updateTimes(event);
-        },
-        /**
-         * If the user selects a start, end, and room
-         * call the server to get information if there are any collision
-         *
-         * @returns {Promise<void>}
-         */
-        async checkCollisions() {
-            if (
-                this.event.startTime && this.event.startDate && this.event.endTime && this.event.endDate ||
-                this.event.allDay && this.event.startDate && this.event.endDate
-            ) {
-                let startFull = this.formatDate(this.event.startDate, !this.event.allDay ? this.event.startTime : '00:00');
-                let endFull = this.formatDate(this.event.endDate, !this.event.allDay ? this.event.endTime : '23:59');
-
-                await axios.post('/collision/room', {
-                    params: {
-                        start: startFull,
-                        end: endFull
-                    }
-                }).then(response => this.event.roomCollisionArray = response.data);
-            }
-        },
-        updateTimes() {
-            if (this.event.startDate) {
-                if (!this.event.endDate && this.checkYear(this.event.startDate)) {
-                    this.event.endDate = this.event.startDate;
-                }
-                if (this.event.startTime) {
-                    if (!this.event.endTime) {
-                        if (this.event.startTime === '23:00') {
-                            this.event.endTime = '23:59';
-                        } else {
-                            let startHours = this.event.startTime.slice(0, 2);
-                            if (startHours === '23') {
-                                this.event.endTime = '00:' + this.event.startTime.slice(3, 5);
-                                let date = new Date();
-                                this.event.endDate = new Date(
-                                    date.setDate(new Date(this.event.endDate).getDate() + 1)
-                                ).toISOString().slice(0, 10);
-                            } else {
-                                this.event.endTime = this.getNextHourString(this.event.startTime)
-                            }
-                        }
-                    }
-                }
-            }
-
-            this.validateStartBeforeEndTime(this.event);
-            this.checkCollisions(this.event);
-            this.checkEventTimeLength(this.event);
-        },
-        async validateStartBeforeEndTime(event) {
-            event.error = null;
-            if (event.startDate && event.endDate && event.startTime && event.endTime) {
-                let startFull = this.setCombinedTimeString(event.startDate, event.startTime, 'start');
-                let endFull = this.setCombinedTimeString(event.endDate, event.endTime, 'end');
-                return await axios
-                    .post('/events', {start: startFull, end: endFull}, {headers: {'X-Dry-Run': true}})
-                    .catch(error => event.error = error.response.data.errors);
-            }
-
-        },
-        checkEventTimeLength(event) {
-            if (event.allDay) {
-                event.helpTextLength = '';
-                return;
-            }
-            // check if event min 30min
-            let startFull = new Date(event.startDate + ' ' + event.startTime);
-            let endFull = new Date(event.endDate + ' ' + event.endTime);
-
-            const minimumEnd = this.addMinutes(startFull, 30);
-            if (minimumEnd <= endFull) {
-                event.helpTextLength = '';
-            } else {
-                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
-            }
-        },
-        addMinutes(date, minutes) {
-            date.setMinutes(date.getMinutes() + minutes);
-            return date;
-        },
-        setCombinedTimeString(date, time, target) {
-            let combinedDateString = (date.toString() + ' ' + time);
-            const offset = new Date(combinedDateString).getTimezoneOffset()
-
-            if (target === 'start') {
-                if (offset === -60) {
-                    return new Date(
-                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
-                    ).toISOString().slice(0, 16);
-                } else {
-                    return new Date(
-                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
-                    ).toISOString().slice(0, 16);
-                }
-            } else if (target === 'end') {
-                if (offset === -60) {
-                    return new Date(
-                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
-                    ).toISOString().slice(0, 16);
-                } else {
-                    return new Date(
-                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
-                    ).toISOString().slice(0, 16);
-                }
-            }
-        },
-        getNextHourString(timeString) {
-            let hours = timeString.slice(0, 2);
-            let minutes = timeString.slice(3, 5);
-            if ((Number(hours) + 1) < 10) {
-                return '0' + (Number(hours) + 1) + ':' + minutes;
-            } else {
-                return (Number(hours) + 1) + ':' + minutes;
-            }
-
-        },
-        deleteProject(event) {
-            event.project = null;
-            event.projectId = null;
-            event.projectName = '';
-        },
-        /**
-         * Creates an event and reloads all events
-         *
-         * @returns {Promise<*>}
-         */
-        async updateOrCreateEvent(event) {
-            if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
-                this.isOption = true;
-            }
-            return await axios
-                .put('/events/' + event?.id, this.eventData(event))
-                .then(() => this.closeModal(this.removeNotificationOnAction === true))
-                .catch(error => event.error = error.response.data.errors);
-        },
-        openDeleteEventModal() {
-            this.deleteComponentVisible = true;
-        },
-        afterConfirm(bool) {
-            if (!bool) return this.deleteComponentVisible = false;
-
-            router.delete(`/events/${this.event.id}`, {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    //this.closeModal();
-                }
-            })
-        },
-        eventData(event) {
-            return {
-                title: event.title,
-                eventName: event.eventName,
-                start: this.formatDate(event.startDate, event.startTime),
-                end: this.formatDate(event.endDate, event.endTime),
-                roomId: event.roomId,
-                description: event.description,
-                audience: event.audience,
-                isLoud: event.isLoud,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: event.showProjectInfo ? event.projectId : null,
-                projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.eventTypeId,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: event.creatingProject,
-                isOption: this.isOption,
-                allDay: event.allDay,
-                is_series: event.series ? event.series : false
-            };
-        },
-    },
-}
-</script>
 
 <template>
     <div class="flex w-full border-2 border-gray-300">
@@ -581,6 +233,7 @@ name: "SingleEventInEventsWithoutRoom",
             </div>
             <div class="bg-lightBackgroundGray pt-1 pb-4 px-3">
                 <div class="my-3">
+                    <p v-if="event.error?.projectId" class="errorText pb-4">{{ $t(event.error.projectId[0]) }}</p>
                     <input type="checkbox"
                            v-model="event.showProjectInfo"
                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
@@ -658,8 +311,6 @@ name: "SingleEventInEventsWithoutRoom",
                                 {{ project.name }}
                             </div>
                         </div>
-
-                        <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
                         <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
                     </div>
                 </div>
@@ -731,7 +382,7 @@ name: "SingleEventInEventsWithoutRoom",
                     :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
                     :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"
                     class="bg-artwork-buttons-create hover:bg-artwork-buttons-hover py-2 px-8 rounded-full text-white"
-                    @click="updateOrCreateEvent(event)"
+                    @click="updateEvent(event)"
                 >
                     {{
                         (isAdmin || selectedRoom?.everyone_can_book) ? $t('Save') : $t('Request occupancy')
@@ -812,6 +463,371 @@ name: "SingleEventInEventsWithoutRoom",
         @closed="afterConfirm"/>
 </template>
 
-<style scoped>
+<script>
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Input from "@/Jetstream/Input.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
+} from "@headlessui/vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import {useEvent} from "@/Composeables/Event.js";
 
-</style>
+const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
+
+export default {
+name: "SingleEventInEventsWithoutRoom",
+    mixins: [Permissions, IconLib],
+    components: {
+        BaseModal,
+        Switch,
+        SwitchGroup,
+        SwitchLabel,
+        Input,
+        JetDialogModal,
+        XIcon,
+        XCircleIcon,
+        Listbox,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        ChevronDownIcon,
+        ChevronUpIcon,
+        SvgCollection,
+        CheckIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems,
+        PencilAltIcon,
+        TrashIcon,
+        DotsVerticalIcon,
+        ConfirmationComponent,
+        TagComponent
+    },
+    data() {
+        return {
+            startDate: null,
+            startTime: null,
+            endDate: null,
+            endTime: null,
+            isLoud: false,
+            audience: false,
+            projectName: null,
+            title: null,
+            eventName: null,
+            eventTypeName: null,
+            selectedEventType: this.eventTypes[0],
+            selectedProject: null,
+            selectedRoom: null,
+            error: null,
+            creatingProject: false,
+            projectSearchResults: [],
+            description: null,
+            canEdit: false,
+            deleteComponentVisible: false,
+            eventToDelete: null,
+            allDayEvent: false,
+            showProjectInfo: false,
+            firstCall: true,
+            isOption: false,
+            frequencies: [
+                {
+                    id: 1,
+                    name: this.$t('Daily')
+                },
+                {
+                    id: 2,
+                    name: this.$t('Weekly')
+                },
+                {
+                    id: 3,
+                    name: this.$t('Every 2 weeks')
+                },
+                {
+                    id: 4,
+                    name: this.$t('Monthly')
+                }
+            ]
+        }
+    },
+    props: [
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'removeNotificationOnAction',
+        'first_project_calendar_tab_id',
+        'event',
+        'computedEventsWithoutRoom',
+        'showHints'
+    ],
+    emits: ['desiresReload'],
+    watch: {
+        projectName: {
+            deep: true,
+            handler() {
+                if (this.creatingProject || !this.projectName) {
+                    this.projectSearchResults = [];
+                    return;
+                }
+                axios.get('/projects/search', {params: {query: this.projectName}})
+                    .then(response => this.projectSearchResults = response.data)
+            },
+        }
+    },
+    methods: {
+        getTimeOfDate(date) {
+            //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
+            return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);
+        },
+        getDateOfDate(date) {
+            //returns date in format "YYYY-MM-DD" from given date object, with leading zeros
+            //make sure to add 1 to the returned month because javascript starts counting from 0, January = 0
+            return date.getFullYear() + "-" +
+                (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                date.getDate().toString().padStart(2, '0');
+        },
+        convertDateFormat(dateString) {
+            const parts = dateString.split('-');
+            return parts[2] + "." + parts[1] + "." +parts[0];
+        },
+        getFrequencyName(frequencyId) {
+            const matchedFrequency = this.frequencies.find(frequency => frequency.id === frequencyId);
+
+            if (matchedFrequency) {
+                return matchedFrequency.name;
+            } else {
+                return this.$t('No cycle selected');
+            }
+        },
+        onLinkingProject(project) {
+            this.event.projectId = project.id;
+            this.event.project = project;
+            this.event.projectName = '';
+            this.projectName = '';
+            this.event.showProjectSearchResults = false;
+            this.projectSearchResults = [];
+        },
+        requestReload(desiredRoomId, desiredDays) {
+            this.$emit('desiresReload', [desiredRoomId], desiredDays, true);
+        },
+        /**
+         * Format date and time to ISO 8601 with timezone UTC
+         *
+         * @param date
+         * @param time
+         * @returns {string|null}
+         */
+        formatDate(date, time) {
+            if (date === null || time === null) return null;
+            return (new Date(date + ' ' + time)).toISOString()
+        },
+        checkChanges(event) {
+            this.updateTimes(event);
+        },
+        /**
+         * If the user selects a start, end, and room
+         * call the server to get information if there are any collision
+         *
+         * @returns {Promise<void>}
+         */
+        async checkCollisions() {
+            if (
+                this.event.startTime && this.event.startDate && this.event.endTime && this.event.endDate ||
+                this.event.allDay && this.event.startDate && this.event.endDate
+            ) {
+                let startFull = this.formatDate(this.event.startDate, !this.event.allDay ? this.event.startTime : '00:00');
+                let endFull = this.formatDate(this.event.endDate, !this.event.allDay ? this.event.endTime : '23:59');
+
+                await axios.post('/collision/room', {
+                    params: {
+                        start: startFull,
+                        end: endFull
+                    }
+                }).then(response => this.event.roomCollisionArray = response.data);
+            }
+        },
+        updateTimes() {
+            if (this.event.startDate) {
+                if (!this.event.endDate && this.checkYear(this.event.startDate)) {
+                    this.event.endDate = this.event.startDate;
+                }
+                if (this.event.startTime) {
+                    if (!this.event.endTime) {
+                        if (this.event.startTime === '23:00') {
+                            this.event.endTime = '23:59';
+                        } else {
+                            let startHours = this.event.startTime.slice(0, 2);
+                            if (startHours === '23') {
+                                this.event.endTime = '00:' + this.event.startTime.slice(3, 5);
+                                let date = new Date();
+                                this.event.endDate = new Date(
+                                    date.setDate(new Date(this.event.endDate).getDate() + 1)
+                                ).toISOString().slice(0, 10);
+                            } else {
+                                this.event.endTime = this.getNextHourString(this.event.startTime)
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.validateStartBeforeEndTime(this.event);
+            this.checkCollisions(this.event);
+            this.checkEventTimeLength(this.event);
+        },
+        async validateStartBeforeEndTime(event) {
+            event.error = null;
+            if (event.startDate && event.endDate && event.startTime && event.endTime) {
+                let startFull = this.setCombinedTimeString(event.startDate, event.startTime, 'start');
+                let endFull = this.setCombinedTimeString(event.endDate, event.endTime, 'end');
+                return await axios
+                    .post('/events', {start: startFull, end: endFull}, {headers: {'X-Dry-Run': true}})
+                    .catch(error => event.error = error.response.data.errors);
+            }
+
+        },
+        checkEventTimeLength(event) {
+            if (event.allDay) {
+                event.helpTextLength = '';
+                return;
+            }
+            // check if event min 30min
+            let startFull = new Date(event.startDate + ' ' + event.startTime);
+            let endFull = new Date(event.endDate + ' ' + event.endTime);
+
+            const minimumEnd = this.addMinutes(startFull, 30);
+            if (minimumEnd <= endFull) {
+                event.helpTextLength = '';
+            } else {
+                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+            }
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
+        },
+        setCombinedTimeString(date, time, target) {
+            let combinedDateString = (date.toString() + ' ' + time);
+            const offset = new Date(combinedDateString).getTimezoneOffset()
+
+            if (target === 'start') {
+                if (offset === -60) {
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
+                } else {
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
+                }
+            } else if (target === 'end') {
+                if (offset === -60) {
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
+                } else {
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
+                }
+            }
+        },
+        getNextHourString(timeString) {
+            let hours = timeString.slice(0, 2);
+            let minutes = timeString.slice(3, 5);
+            if ((Number(hours) + 1) < 10) {
+                return '0' + (Number(hours) + 1) + ':' + minutes;
+            } else {
+                return (Number(hours) + 1) + ':' + minutes;
+            }
+
+        },
+        deleteProject(event) {
+            event.project = null;
+            event.projectId = null;
+            event.projectName = '';
+        },
+        /**
+         * Creates an event and reloads all events
+         *
+         * @returns {Promise<*>}
+         */
+        updateEvent(event) {
+            if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
+                this.isOption = true;
+            }
+
+            axios.put('/events/' + event?.id, this.eventData(event))
+                .then(() => {
+                    this.requestReload(
+                        this.event.roomId,
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(event.start),
+                            formatEventDateByDayJs(event.end)
+                        )
+                    )
+                })
+                .catch(error => event.error = error.response.data.errors);
+        },
+        openDeleteEventModal() {
+            this.deleteComponentVisible = true;
+        },
+        afterConfirm(bool) {
+            if (!bool) {
+                return this.deleteComponentVisible = false;
+            }
+
+            axios.delete(route('events.delete', {event: this.event.id}))
+                .then(() => {
+                    this.requestReload(
+                        null,
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(event.start),
+                            formatEventDateByDayJs(event.end)
+                        )
+                    );
+                    this.deleteComponentVisible = false;
+                })
+                .catch(error => this.event.error = error.response.data.errors);
+        },
+        eventData(event) {
+            return {
+                title: event.title,
+                eventName: event.eventName,
+                start: this.formatDate(event.startDate, event.startTime),
+                end: this.formatDate(event.endDate, event.endTime),
+                roomId: event.roomId,
+                description: event.description,
+                audience: event.audience,
+                isLoud: event.isLoud,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
+                projectId: event.showProjectInfo ? event.projectId : null,
+                projectName: event.creatingProject ? event.projectName : '',
+                eventTypeId: event.eventTypeId,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                creatingProject: event.creatingProject,
+                isOption: this.isOption,
+                allDay: event.allDay,
+                is_series: event.series ? event.series : false
+            };
+        },
+    },
+}
+</script>

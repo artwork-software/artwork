@@ -1,46 +1,50 @@
 <template>
-    <div class="w-full flex flex-wrap mt-3">
-        <CalendarFunctionBar
+    <div class="-mt-4">
+        <FunctionBarCalendar
+            :multi-edit="multiEdit"
+            :rooms="rooms"
             :project="project"
-            @open-event-component="openEditEventModal"
-            :dateValue="dateValue"
-            @change-at-a-glance="changeAtAGlance"
-            :at-a-glance="atAGlance"
-            :filter-options="filterOptions"
-            :personal-filters="personalFilters"
-            @change-multi-edit="changeMultiEdit"
-            :user_filters="user_filters"
-        />
-
+            @wants-to-add-new-event="openEditEventModal"
+            @update-multi-edit="changeMultiEdit"/>
+    </div>
+    <div class="w-full flex">
         <!-- Calendar -->
-        <div class="flex">
-            <div v-if="eventsAtAGlance" class="first:pl-14" v-for="roomEvents in eventsAtAGlance">
-                <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
-                    <div class="flex calendarRoomHeader font-semibold items-center ml-4">
-                        {{roomEvents[0].roomName}}
+        <div class="flex pl-14">
+            <template v-if="eventsAtAGlance">
+                <div v-for="room in computedRooms">
+                    <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
+                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                            {{ room.name }}
+                        </div>
                     </div>
-
+                    <div v-for="day in eventsAtAGlanceRef">
+                        <template v-for="event in day.events">
+                            <div v-if="event.roomId === room.id">
+                                <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]"
+                                     :data-event-id="event.id">
+                                    <SingleCalendarEvent
+                                        v-if="this.currentEventsInView.has(String(event.id))"
+                                        :atAGlance="true"
+                                        :multiEdit="multiEdit"
+                                        :project="project ? project : false"
+                                        :zoom-factor="1"
+                                        :width="204"
+                                        :event="event"
+                                        :event-types="eventTypes"
+                                        @open-edit-event-modal="openEditEventModal"
+                                        :first_project_tab_id="this.first_project_tab_id"
+                                    />
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleCalendarEvent
-                        :atAGlance="true"
-                        :multiEdit="multiEdit"
-                        :project="project ? project : false"
-                        :zoom-factor="1"
-                        :width="204"
-                        :event="event"
-                        :event-types="eventTypes"
-                        @open-edit-event-modal="openEditEventModal"
-                        :first_project_tab_id="this.first_project_tab_id"
-                    />
-                </div>
-            </div>
+            </template>
             <div v-else>
                 <div class="pl-6 pb-12 mt-10 xsDark">
                     {{$t('No events for this project')}}
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -70,7 +74,7 @@
     />
 
     <div v-show="multiEdit"
-         class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
         <FormButton :text="$t('Move events')"
                    @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"
@@ -91,7 +95,6 @@
 
 <script>
 
-import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
@@ -100,17 +103,18 @@ import Permissions from "@/Mixins/Permissions.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-
+import {ref} from "vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 export default {
     name: "IndividualCalendarAtGlanceComponent",
     mixins: [Permissions],
     components: {
+        FunctionBarCalendar,
         FormButton,
         ConfirmDeleteModal,
         MultiEditModal,
         SingleCalendarEvent,
-        CalendarFunctionBar,
         EventComponent,
         EventsWithoutRoomComponent,
     },
@@ -130,6 +134,8 @@ export default {
           showMultiEditModal: false,
           openDeleteSelectedEventsModal: false,
           allEvents: this.eventsAtAGlance,
+          currentEventsInView: new Set(),
+          eventsAtAGlanceRef: ref(JSON.parse(JSON.stringify(this.eventsAtAGlance))),
       }
     },
     props: [
@@ -145,13 +151,51 @@ export default {
         'first_project_tab_id',
         'first_project_calendar_tab_id'
     ],
-    emits:['changeAtAGlance'],
+    mounted() {
+        const observer = new IntersectionObserver(
+                (observables) => {
+                    observables.forEach((atAGlanceEventContainerObserver) => {
+                        let eventId = atAGlanceEventContainerObserver.target.getAttribute('data-event-id');
+
+                        if (atAGlanceEventContainerObserver.isIntersecting) {
+                            this.currentEventsInView.add(eventId);
+                        } else {
+                            this.currentEventsInView.delete(eventId);
+                        }
+                    });
+
+                }
+            ),
+            eventContainers = document.querySelectorAll('.at-a-glance-event-container');
+
+        eventContainers.forEach((container) => {
+            observer.observe(container);
+        });
+    },
+    computed: {
+        computedRooms() {
+            let computedRooms = [];
+
+            console.debug('computed rooms');
+
+            this.rooms.forEach((room) => {
+                let hasEvents = Object.values(this.eventsAtAGlanceRef).some((day) => {
+                    return day.events.some((event) => {
+                        return event.roomId === room.id;
+                    });
+                });
+
+                if (hasEvents) {
+                    computedRooms.push(room);
+                }
+            });
+
+            return computedRooms;
+        }
+    },
     methods: {
         changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;
-        },
-        changeAtAGlance(){
-            this.$emit('changeAtAGlance')
         },
         openEditEventModal(event = null) {
 

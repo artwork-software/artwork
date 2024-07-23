@@ -8,6 +8,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use AssertionError;
@@ -44,6 +45,8 @@ class MinimalCalendarEventResourceTest extends TestCase
     private Collection $shiftRelationCollectionMock;
 
     private Collection $shiftsQualificationsCollectionMock;
+
+    private Room $roomMock;
 
     protected function setUp(): void
     {
@@ -123,6 +126,12 @@ class MinimalCalendarEventResourceTest extends TestCase
             ->disableAutoReturnValueGeneration()
             ->disableOriginalConstructor()
             ->getMock();
+
+        $this->roomMock = $this->getMockBuilder(Room::class)
+            ->onlyMethods(['getAttribute'])
+            ->disableAutoReturnValueGeneration()
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     private function getResource(): MinimalCalendarEventResource
@@ -143,7 +152,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array with project' => [
                 //expected event getAttribute invocation count
-                14,
+                17,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -154,8 +163,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'start_time',
                     'id',
                     'room_id',
+                    'room',
                     'end_time',
                     'allDay',
+                    'option_string',
+                    'occupancy_option',
                     'audience',
                     'is_loud',
                     'subEvents',
@@ -171,8 +183,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'carbonMock',
                     2,
                     3,
+                    'roomMock',
                     'carbonMock',
                     true,
+                    'abc',
+                    false,
                     false,
                     false,
                     [],
@@ -224,9 +239,14 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                //expected roomMock getAttribute key
+                'name',
+                //expected roomMock getAttribute return
+                'Hauptraum',
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -234,6 +254,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -314,6 +335,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'id' => 2,
                     'projectId' => 1,
                     'roomId' => 3,
+                    'roomName' => 'Hauptraum',
                     'created_by' => [
                         'id' => 1,
                         'profile_photo_url' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -324,9 +346,12 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'startTime' => 'carbonMock',
                     'end' => '2024-07-02T21:59:59+00:00',
                     'allDay' => true,
+                    'option_string' => 'abc',
+                    'occupancy_option' => false,
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -412,6 +437,8 @@ class MinimalCalendarEventResourceTest extends TestCase
         int $expectedCarbonMockUtcInvocationCount,
         int $expectedCarbonMockToIso8601StringInvocationCount,
         array $expectedCarbonMockToIso8601StringReturnValues,
+        string $expectedRoomMockGetAttributeKey,
+        string $expectedRoomMockGetAttributeReturn,
         int $expectedEventTypeMockGetAttributeInvocations,
         array $expectedEventTypeMockGetAttributeKeys,
         array $expectedEventTypeMockGetAttributeReturnValues,
@@ -541,6 +568,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     }
                 }
             );
+
+        $this->roomMock->expects($this->once())
+            ->method('getAttribute')
+            ->with($expectedRoomMockGetAttributeKey)
+            ->willReturn($expectedRoomMockGetAttributeReturn);
 
         $this->eventTypeMock->expects($matcher = $this->exactly($expectedEventTypeMockGetAttributeInvocations))
             ->method('getAttribute')
@@ -740,7 +772,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without project' => [
                 //expected event getAttribute invocation count
-                14,
+                17,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -751,8 +783,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'start_time',
                     'id',
                     'room_id',
+                    'room',
                     'end_time',
                     'allDay',
+                    'option_string',
+                    'occupancy_option',
                     'audience',
                     'is_loud',
                     'subEvents',
@@ -768,8 +803,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'carbonMock',
                     2,
                     3,
+                    'roomMock',
                     'carbonMock',
                     true,
+                    'abc',
+                    false,
                     false,
                     false,
                     [],
@@ -784,9 +822,14 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                //expected roomMock getAttribute key
+                'name',
+                //expected roomMock getAttribute return
+                'Hauptraum',
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -794,6 +837,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -874,6 +918,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'id' => 2,
                     'projectId' => 1,
                     'roomId' => 3,
+                    'roomName' => 'Hauptraum',
                     'created_by' => [
                         'id' => 1,
                         'profile_photo_url' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -884,9 +929,12 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'startTime' => 'carbonMock',
                     'end' => '2024-07-02T21:59:59+00:00',
                     'allDay' => true,
+                    'option_string' => 'abc',
+                    'occupancy_option' => false,
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Meeting Rock & Wrestling',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -946,6 +994,8 @@ class MinimalCalendarEventResourceTest extends TestCase
         int $expectedCarbonMockUtcInvocationCount,
         int $expectedCarbonMockToIso8601StringInvocationCount,
         array $expectedCarbonMockToIso8601StringReturnValues,
+        string $expectedRoomMockGetAttributeKey,
+        string $expectedRoomMockGetAttributeReturn,
         int $expectedEventTypeMockGetAttributeInvocations,
         array $expectedEventTypeMockGetAttributeKeys,
         array $expectedEventTypeMockGetAttributeReturnValues,
@@ -994,6 +1044,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     }
                 }
             );
+
+        $this->roomMock->expects($this->once())
+            ->method('getAttribute')
+            ->with($expectedRoomMockGetAttributeKey)
+            ->willReturn($expectedRoomMockGetAttributeReturn);
 
         $this->eventTypeMock->expects($matcher = $this->exactly($expectedEventTypeMockGetAttributeInvocations))
             ->method('getAttribute')
@@ -1195,7 +1250,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without project state' => [
                 //expected event getAttribute invocation count
-                14,
+                17,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -1206,8 +1261,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'start_time',
                     'id',
                     'room_id',
+                    'room',
                     'end_time',
                     'allDay',
+                    'option_string',
+                    'occupancy_option',
                     'audience',
                     'is_loud',
                     'subEvents',
@@ -1223,8 +1281,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'carbonMock',
                     2,
                     3,
+                    'roomMock',
                     'carbonMock',
                     true,
+                    'abc',
+                    false,
                     false,
                     false,
                     [],
@@ -1272,9 +1333,14 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                //expected roomMock getAttribute key
+                'name',
+                //expected roomMock getAttribute return
+                'Hauptraum',
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -1282,6 +1348,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -1362,6 +1429,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'id' => 2,
                     'projectId' => 1,
                     'roomId' => 3,
+                    'roomName' => 'Hauptraum',
                     'created_by' => [
                         'id' => 1,
                         'profile_photo_url' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -1372,9 +1440,12 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'startTime' => 'carbonMock',
                     'end' => '2024-07-02T21:59:59+00:00',
                     'allDay' => true,
+                    'option_string' => 'abc',
+                    'occupancy_option' => false,
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -1458,6 +1529,8 @@ class MinimalCalendarEventResourceTest extends TestCase
         int $expectedCarbonMockUtcInvocationCount,
         int $expectedCarbonMockToIso8601StringInvocationCount,
         array $expectedCarbonMockToIso8601StringReturnValues,
+        string $expectedRoomMockGetAttributeKey,
+        string $expectedRoomMockGetAttributeReturn,
         int $expectedEventTypeMockGetAttributeInvocations,
         array $expectedEventTypeMockGetAttributeKeys,
         array $expectedEventTypeMockGetAttributeReturnValues,
@@ -1585,6 +1658,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     }
                 }
             );
+
+        $this->roomMock->expects($this->once())
+            ->method('getAttribute')
+            ->with($expectedRoomMockGetAttributeKey)
+            ->willReturn($expectedRoomMockGetAttributeReturn);
 
         $this->eventTypeMock->expects($matcher = $this->exactly($expectedEventTypeMockGetAttributeInvocations))
             ->method('getAttribute')
@@ -1786,7 +1864,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array get title from event type' => [
                 //expected event getAttribute invocation count
-                14,
+                17,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -1797,8 +1875,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'start_time',
                     'id',
                     'room_id',
+                    'room',
                     'end_time',
                     'allDay',
+                    'option_string',
+                    'occupancy_option',
                     'audience',
                     'is_loud',
                     'subEvents',
@@ -1814,8 +1895,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'carbonMock',
                     2,
                     3,
+                    'roomMock',
                     'carbonMock',
                     true,
+                    'abc',
+                    false,
                     false,
                     false,
                     [],
@@ -1830,10 +1914,15 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                5,
+                //expected roomMock getAttribute key
+                'name',
+                //expected roomMock getAttribute return
+                'Hauptraum',
+                6,
                 //expected eventTypeMock getAttribute keys
                 [
                     'name',
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -1842,6 +1931,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 //expected eventTypeMock getAttribute returns
                 [
                     'Blocker',
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -1922,6 +2012,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'id' => 2,
                     'projectId' => 1,
                     'roomId' => 3,
+                    'roomName' => 'Hauptraum',
                     'created_by' => [
                         'id' => 1,
                         'profile_photo_url' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -1932,9 +2023,12 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'startTime' => 'carbonMock',
                     'end' => '2024-07-02T21:59:59+00:00',
                     'allDay' => true,
+                    'option_string' => 'abc',
+                    'occupancy_option' => false,
                     'alwaysEventName' => null,
                     'eventName' => null,
                     'title' => 'Blocker',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -1994,6 +2088,8 @@ class MinimalCalendarEventResourceTest extends TestCase
         int $expectedCarbonMockUtcInvocationCount,
         int $expectedCarbonMockToIso8601StringInvocationCount,
         array $expectedCarbonMockToIso8601StringReturnValues,
+        string $expectedRoomMockGetAttributeKey,
+        string $expectedRoomMockGetAttributeReturn,
         int $expectedEventTypeMockGetAttributeInvocations,
         array $expectedEventTypeMockGetAttributeKeys,
         array $expectedEventTypeMockGetAttributeReturnValues,
@@ -2042,6 +2138,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     }
                 }
             );
+
+        $this->roomMock->expects($this->once())
+            ->method('getAttribute')
+            ->with($expectedRoomMockGetAttributeKey)
+            ->willReturn($expectedRoomMockGetAttributeReturn);
 
         $this->eventTypeMock->expects($matcher = $this->exactly($expectedEventTypeMockGetAttributeInvocations))
             ->method('getAttribute')
@@ -2241,7 +2342,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without manager users' => [
                 //expected event getAttribute invocation count
-                14,
+                17,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -2252,8 +2353,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'start_time',
                     'id',
                     'room_id',
+                    'room',
                     'end_time',
                     'allDay',
+                    'option_string',
+                    'occupancy_option',
                     'audience',
                     'is_loud',
                     'subEvents',
@@ -2269,8 +2373,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'carbonMock',
                     2,
                     3,
+                    'roomMock',
                     'carbonMock',
                     true,
+                    'abc',
+                    false,
                     false,
                     false,
                     [],
@@ -2304,9 +2411,14 @@ class MinimalCalendarEventResourceTest extends TestCase
                     '2024-07-01T21:59:59+00:00',
                     '2024-07-02T21:59:59+00:00'
                 ],
-                4,
+                //expected roomMock getAttribute key
+                'name',
+                //expected roomMock getAttribute return
+                'Hauptraum',
+                5,
                 //expected eventTypeMock getAttribute keys
                 [
+                    'id',
                     'hex_code',
                     'hex_code',
                     'name',
@@ -2314,6 +2426,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 ],
                 //expected eventTypeMock getAttribute returns
                 [
+                    1,
                     '#A7A6B1',
                     '#A7A6B1',
                     'Blocker',
@@ -2394,6 +2507,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'id' => 2,
                     'projectId' => 1,
                     'roomId' => 3,
+                    'roomName' => 'Hauptraum',
                     'created_by' => [
                         'id' => 1,
                         'profile_photo_url' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -2404,9 +2518,12 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'startTime' => 'carbonMock',
                     'end' => '2024-07-02T21:59:59+00:00',
                     'allDay' => true,
+                    'option_string' => 'abc',
+                    'occupancy_option' => false,
                     'alwaysEventName' => 'Meeting Rock & Wrestling',
                     'eventName' => 'Meeting Rock & Wrestling',
                     'title' => 'Walid Raad',
+                    'eventTypeId' => 1,
                     'event_type_color' => '#A7A6B1',
                     'eventTypeColorBackground' => '#A7A6B133',
                     'eventTypeName' => 'Blocker',
@@ -2473,6 +2590,8 @@ class MinimalCalendarEventResourceTest extends TestCase
         int $expectedCarbonMockUtcInvocationCount,
         int $expectedCarbonMockToIso8601StringInvocationCount,
         array $expectedCarbonMockToIso8601StringReturnValues,
+        string $expectedRoomMockGetAttributeKey,
+        string $expectedRoomMockGetAttributeReturn,
         int $expectedEventTypeMockGetAttributeInvocations,
         array $expectedEventTypeMockGetAttributeKeys,
         array $expectedEventTypeMockGetAttributeReturnValues,
@@ -2562,6 +2681,11 @@ class MinimalCalendarEventResourceTest extends TestCase
                     }
                 }
             );
+
+        $this->roomMock->expects($this->once())
+            ->method('getAttribute')
+            ->with($expectedRoomMockGetAttributeKey)
+            ->willReturn($expectedRoomMockGetAttributeReturn);
 
         $this->eventTypeMock->expects($matcher = $this->exactly($expectedEventTypeMockGetAttributeInvocations))
             ->method('getAttribute')

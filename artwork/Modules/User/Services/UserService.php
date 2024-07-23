@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\User\Services;
 
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -234,17 +233,21 @@ readonly class UserService
     /**
      * @return array<int, Carbon>
      */
-    public function getUserCalendarFilterDatesOrDefault(User $user): array
+    public function getUserCalendarFilterDatesOrDefault(?User $user = null): array
     {
-        $userCalendarFilter = $user->calendar_filter;
+        if (!$user instanceof User) {
+            $user = $this->getAuthUser();
+        }
 
-        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->start_date) &&
-            !is_null($userCalendarFilter?->end_date);
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $hasUserCalendarFilterDates = !is_null($userCalendarFilter?->getAttribute('start_date')) &&
+            !is_null($userCalendarFilter?->getAttribute('end_date'));
+
         $startDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->start_date)->startOfDay() :
+            Carbon::create($userCalendarFilter->getAttribute('start_date'))->startOfDay() :
             Carbon::now()->startOfDay();
         $endDate = $hasUserCalendarFilterDates ?
-            Carbon::create($userCalendarFilter->end_date)->endOfDay() :
+            Carbon::create($userCalendarFilter->getAttribute('end_date'))->endOfDay() :
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
@@ -272,5 +275,16 @@ readonly class UserService
     public function getAdminUser(): User
     {
         return $this->userRepository->getAdminUser();
+    }
+
+    public function atAGlanceEnabled(User|int|null $user = null): bool
+    {
+        return $this->userRepository->atAGlanceEnabled(
+            is_int($user) ?
+                $this->findUser($user) :
+                ($user instanceof User ?
+                    $user :
+                        $this->getAuthUser())
+        );
     }
 }

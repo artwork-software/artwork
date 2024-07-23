@@ -19,7 +19,6 @@
                 </div>
             </div>
             <div v-else>
-
                 <IndividualCalendarAtGlanceComponent
                     v-if="atAGlance"
                     :dateValue="dateValue"
@@ -31,12 +30,10 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
-                    @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="first_project_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 >
                 </IndividualCalendarAtGlanceComponent>
-
                 <BaseCalendar
                     v-else
                     :rooms="rooms"
@@ -52,13 +49,11 @@
 </template>
 <script setup>
 
-import {defineComponent, ref, provide} from 'vue'
+import {provide, ref} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import {usePage, router} from "@inertiajs/vue3";
-import Permissions from "@/Mixins/Permissions.vue";
+import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 
 

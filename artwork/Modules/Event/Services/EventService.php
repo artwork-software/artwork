@@ -770,7 +770,7 @@ readonly class EventService
 
         return EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setDateValue([$startDate, $endDate])
+            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setCalendarType(
                 $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
                     'daily' :

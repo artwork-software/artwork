@@ -1,15 +1,13 @@
 <template>
-    <div class="w-full flex flex-wrap mt-3">
-        <CalendarFunctionBar
+    <div class="-mt-4">
+        <FunctionBarCalendar
+            :multi-edit="multiEdit"
+            :rooms="rooms"
             :project="project"
-            @open-event-component="openEditEventModal"
-            :dateValue="dateValue"
-            :at-a-glance="atAGlance"
-            :filter-options="filterOptions"
-            :personal-filters="personalFilters"
-            @change-multi-edit="changeMultiEdit"
-            :user_filters="user_filters"
-        />
+            @wants-to-add-new-event="openEditEventModal"
+            @update-multi-edit="changeMultiEdit"/>
+    </div>
+    <div class="w-full flex">
         <!-- Calendar -->
         <div class="flex pl-14">
             <template v-if="eventsAtAGlance">
@@ -22,7 +20,8 @@
                     <div v-for="day in eventsAtAGlanceRef">
                         <template v-for="event in day.events">
                             <div v-if="event.roomId === room.id">
-                                <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]" :data-event-id="event.id">
+                                <div class="at-a-glance-event-container py-0.5 pr-1 min-h-[45px]"
+                                     :data-event-id="event.id">
                                     <SingleCalendarEvent
                                         v-if="this.currentEventsInView.has(String(event.id))"
                                         :atAGlance="true"
@@ -75,7 +74,7 @@
     />
 
     <div v-show="multiEdit"
-         class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+         class="-ml-7 -mb-2 absolute z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
         <FormButton :text="$t('Move events')"
                    @click="openMultiEditModal"/>
         <FormButton @click="openDeleteSelectedEventsModal = true"
@@ -96,7 +95,6 @@
 
 <script>
 
-import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
@@ -106,16 +104,17 @@ import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {ref} from "vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 export default {
     name: "IndividualCalendarAtGlanceComponent",
     mixins: [Permissions],
     components: {
+        FunctionBarCalendar,
         FormButton,
         ConfirmDeleteModal,
         MultiEditModal,
         SingleCalendarEvent,
-        CalendarFunctionBar,
         EventComponent,
         EventsWithoutRoomComponent,
     },

@@ -371,6 +371,19 @@ const $t = useTranslation(),
     },
     toggleMultiEdit = (value) => {
         multiEdit.value = value;
+
+        if (!value) {
+            calendarDataRef.value.forEach(
+                (calendarData) => {
+                    Object.values(calendarData)
+                        .forEach(
+                            (roomEvents) => {
+                                roomEvents.events.forEach((roomEvent) => roomEvent.considerOnMultiEdit = false);
+                            }
+                        );
+                }
+            );
+        }
     },
     openDeclineEventModal = (event) => {
         declineEvent.value = event;

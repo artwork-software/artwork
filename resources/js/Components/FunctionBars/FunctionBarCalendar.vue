@@ -1,5 +1,5 @@
 <template>
-    <div class="pl-20 pr-5 bg-gray-50 py-4 sticky top-0">
+    <div class="pl-5 bg-gray-50 py-4 sticky z-50 top-0 pr-16">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>

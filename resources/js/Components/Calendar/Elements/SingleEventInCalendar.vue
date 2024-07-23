@@ -4,8 +4,8 @@
         class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
         <div v-if="zoom_factor > 0.4"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
-             :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
-            <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit && !event.clicked">
+             :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
+            <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit && !event.considerOnMultiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <IconLink stroke-width="1.5" class="h-4 w-4"/>
@@ -36,11 +36,18 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked"
+                        <input v-model="event.considerOnMultiEdit"
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                :id="event.id"
-                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
+                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"
+                               @change="changeMultiEditCheckbox(
+                                   event.id,
+                                   event.considerOnMultiEdit,
+                                   event.roomId,
+                                   event.start,
+                                   event.end
+                               )"/>
                     </div>
                 </div>
             </div>
@@ -343,7 +350,8 @@ const emits = defineEmits([
     'editSubEvent',
     'openAddSubEventModal',
     'openConfirmModal',
-    'showDeclineEventModal'
+    'showDeclineEventModal',
+    'changedMultiEditCheckbox'
 ]);
 
 const props = defineProps({
@@ -390,6 +398,10 @@ const props = defineProps({
         required: true
     },
 });
+
+const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
+    emits.call(this, 'changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd);
+};
 
 const isRoomAdmin = computed(() => {
     return props.rooms?.find(room => room.id === props.event.roomId)?.admins.some(admin => admin.id === usePage().props.user.id) || false;

@@ -1,47 +1,49 @@
 <template>
-    <div class="-mt-4">
-        <FunctionBarCalendar
-            :multi-edit="multiEdit"
-            :rooms="rooms"
-            :project="project"
-            @wants-to-add-new-event="openEditEventModal"
-            @update-multi-edit="changeMultiEdit"/>
-    </div>
-    <!-- Calendar -->
-    <div class="flex pl-14">
-        <template v-if="eventsAtAGlance">
-            <div v-for="room in computedRooms">
-                <div class="w-52 py-3 mb-0.5 border-r-4 border-secondaryHover bg-userBg">
-                    <div class="flex calendarRoomHeader font-semibold items-center ml-4">
-                        {{ room.name }}
+    <div class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
+        <div class="sticky top-0 z-40 -my-4">
+            <FunctionBarCalendar
+                :multi-edit="multiEdit"
+                :rooms="rooms"
+                :project="project"
+                @wants-to-add-new-event="openEditEventModal"
+                @update-multi-edit="changeMultiEdit"/>
+        </div>
+        <!-- Calendar -->
+        <div class="flex mt-4 relative events-at-a-glance-container">
+            <template v-if="eventsAtAGlance">
+                <div v-for="room in computedRooms">
+                    <div class="w-52 py-3 mb-0.5 border-r-4 border-secondaryHover bg-userBg sticky top-[4.75rem] z-40">
+                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                            {{ room.name }}
+                        </div>
+                    </div>
+                    <div v-for="day in eventsAtAGlanceRef">
+                        <template v-for="event in day.events">
+                            <div v-if="event.roomId === room.id" class="min-h-[46px]">
+                                <div class="at-a-glance-event-container py-0.5 pr-1"
+                                     :data-event-id="event.id">
+                                    <SingleCalendarEvent
+                                        v-if="this.currentEventsInView.has(String(event.id))"
+                                        :atAGlance="true"
+                                        :multiEdit="multiEdit"
+                                        :project="project ? project : false"
+                                        :zoom-factor="1"
+                                        :width="204"
+                                        :event="event"
+                                        :event-types="eventTypes"
+                                        @open-edit-event-modal="openEditEventModal"
+                                        :first_project_tab_id="this.first_project_tab_id"
+                                    />
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
-                <div v-for="day in eventsAtAGlanceRef">
-                    <template v-for="event in day.events">
-                        <div v-if="event.roomId === room.id" class="h-[45px]">
-                            <div class="at-a-glance-event-container py-0.5 pr-1"
-                                 :data-event-id="event.id">
-                                <SingleCalendarEvent
-                                    v-if="this.currentEventsInView.has(String(event.id))"
-                                    :atAGlance="true"
-                                    :multiEdit="multiEdit"
-                                    :project="project ? project : false"
-                                    :zoom-factor="1"
-                                    :width="204"
-                                    :event="event"
-                                    :event-types="eventTypes"
-                                    @open-edit-event-modal="openEditEventModal"
-                                    :first_project_tab_id="this.first_project_tab_id"
-                                />
-                            </div>
-                        </div>
-                    </template>
+            </template>
+            <div v-else>
+                <div class="pl-6 pb-12 mt-10 xsDark">
+                    {{$t('No events for this project')}}
                 </div>
-            </div>
-        </template>
-        <div v-else>
-            <div class="pl-6 pb-12 mt-10 xsDark">
-                {{$t('No events for this project')}}
             </div>
         </div>
     </div>
@@ -160,6 +162,10 @@ export default {
                         this.currentEventsInView.delete(eventId);
                     }
                 });
+            },
+            {
+                root: document.getElementsByClassName('.events-at-a-glance-container')[0],
+                rootMargin: '10000px'
             }
         ),
         eventContainers = document.querySelectorAll('.at-a-glance-event-container');

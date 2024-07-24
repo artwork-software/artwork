@@ -2794,8 +2794,20 @@ class ProjectController extends Controller
         NotificationService $notificationService,
         TaskService $taskService
     ): RedirectResponse {
+
+        $events = Event::onlyTrashed()->where('project_id', $id)->get();
+
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
+
+        $eventService->forceDeleteAll(
+            $events,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
 
         if ($project) {
             $this->projectService->forceDelete(

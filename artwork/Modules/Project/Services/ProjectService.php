@@ -3,11 +3,13 @@
 namespace Artwork\Modules\Project\Services;
 
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -233,8 +235,10 @@ readonly class ProjectService
         // detach the money sources from the pivot table
         $this->deleteMoneySources($project);
 
+        $checkLists = Checklist::onlyTrashed()->where('project_id', $project->id)->get();
+
         // force delete the checklists and their tasks
-        $checklistService->forceDeleteAll($project->checklists, $taskService);
+        $checklistService->forceDeleteAll($checkLists, $taskService);
 
         // force delete the events and their shifts
         $eventService->forceDeleteAll(
@@ -250,7 +254,8 @@ readonly class ProjectService
         $projectFileService->forceDeleteAll($project->project_files);
 
         // force delete the comments
-        $commentService->forceDeleteAll($project->comments);
+        $comments = Comment::onlyTrashed()->where('project_id', $project->id)->get();
+        $commentService->forceDeleteAll($comments);
 
         // Soft delete the budget with all its relations
         $table = $project->table;

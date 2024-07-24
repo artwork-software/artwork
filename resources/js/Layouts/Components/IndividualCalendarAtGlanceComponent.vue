@@ -119,7 +119,6 @@ const {hasAdminRole} = usePermission(usePage().props),
     ]),
     showEventsWithoutRoomComponent = ref(false),
     eventsWithoutRoom = ref([]),
-    project = ref(null),
     selectedEvent = ref(null),
     createEventComponentIsVisible = ref(false),
     wantedRoom = ref(null),
@@ -133,7 +132,7 @@ const {hasAdminRole} = usePermission(usePage().props),
     eventsAtAGlanceRef = ref(JSON.parse(JSON.stringify(props.eventsAtAGlance))),
     computedRooms = computed(() => {
         let computedRooms = [];
-        console.debug('computed rooms');
+
         props.rooms.forEach((room) => {
             let hasEvents = Object.values(eventsAtAGlanceRef.value).some((day) => {
                 return day.events.some((event) => {
@@ -164,8 +163,8 @@ const {hasAdminRole} = usePermission(usePage().props),
             event = {
                 start: event?.start,
                 end: event?.end,
-                projectId: project.value?.id,
-                projectName: project.value?.name,
+                projectId: props.project.value?.id,
+                projectName: props.project.value?.name,
                 roomId: event.roomId,
             }
         }

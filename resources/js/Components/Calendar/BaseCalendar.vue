@@ -12,7 +12,7 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
             />
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center w-full bg-white">
+            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center w-full bg-gray-50">
                 <div class="flex errorText items-center cursor-pointer my-2"
                      @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
@@ -24,7 +24,7 @@
                 </div>
             </div>
         </div>
-        <div class="-mx-5 mt-2">
+        <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
                 <div class="divide-y divide-gray-200 divide-dashed eventByDaysContainer" ref="calendarToCalculate">
@@ -161,6 +161,14 @@ import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvent} from "@/Composeables/Event.js";
 
 onMounted(() => {
+    window.addEventListener(
+        "fullscreenchange",
+        () => {
+            if (!document.fullscreenElement) {
+                isFullscreen.value = false;
+            }
+        }
+    );
     const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {

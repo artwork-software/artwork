@@ -11,7 +11,7 @@
                                                      :dateValue="dateValue"
                                                      :project="null"
                                                      :atAGlance="atAGlance"
-                                                     :eventTypes=eventTypes
+                                                     :eventTypes="eventTypes"
                                                      :rooms="rooms"
                                                      :eventsAtAGlance="eventsAtAGlance"
                                                      :filter-options="filterOptions"

@@ -149,7 +149,8 @@ class EventController extends Controller
         EventTypeService $eventTypeService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService
+        AreaService $areaService,
+        ProjectService $projectService
     ): Response {
         return Inertia::render(
             'Events/EventManagement',
@@ -164,7 +165,8 @@ class EventController extends Controller
                     $eventTypeService,
                     $roomCategoryService,
                     $roomAttributeService,
-                    $areaService
+                    $areaService,
+                    $projectService
                 ) :
                 $eventService->createEventManagementDto(
                     $calendarService,
@@ -176,7 +178,8 @@ class EventController extends Controller
                     $eventTypeService,
                     $roomCategoryService,
                     $roomAttributeService,
-                    $areaService
+                    $areaService,
+                    $projectService
                 )
         );
     }

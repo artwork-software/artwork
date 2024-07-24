@@ -2,8 +2,8 @@
     <div class="pl-5 bg-gray-50 py-4 sticky z-50 top-0 pr-16">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
-                <div v-if="!project">
+                <div v-if="!project" class="flex flex-row">
+                    <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
                     <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
                         <button class="ml-2 text-black previousDay" @click="previousDay">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
@@ -21,7 +21,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="flex items-center">
+                <div :class="[project ? 'ml-10' : '','flex items-center']">
                     <div @click="showCalendarAboSettingModal = true"
                          class="flex items-center gap-x-1 text-sm group cursor-pointer">
                         <IconCalendarStar

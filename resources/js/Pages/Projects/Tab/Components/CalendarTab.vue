@@ -4,131 +4,82 @@
             <div v-if="calendarType && calendarType === 'daily'">
                 Daily
                 <CalendarComponent
-                    :selected-date="selectedDate ?? loadedProjectInformation['CalendarTab'].selected_date"
-                    :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].date_value"
-                    :eventTypes="this.eventTypes ?? headerObject.eventTypes " initial-view="day"
-                    :events="this.events.events ?? loadedProjectInformation['CalendarTab'].events.events"
-                    :rooms="this.rooms ?? loadedProjectInformation['CalendarTab'].rooms"
+                    initial-view="day"
                     :project="project ?? headerObject.project"
+                    :selected-date="selectedDate ?? loadedProjectInformation['CalendarTab'].selectedDate"
+                    :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].dateValue"
+                    :eventTypes="eventTypes ?? loadedProjectInformation['CalendarTab'].eventTypes"
+                    :events="events.events ?? loadedProjectInformation['CalendarTab'].events.events"
+                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
                     :events-without-room="eventsWithoutRoom ?? headerObject.eventsWithoutRoom"
-                    :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filter_options"
-                    :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personal_filters"
+                    :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filterOptions"
+                    :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 />
             </div>
-            <div v-else>
-                <IndividualCalendarAtGlanceComponent
-                    v-if="atAGlance"
-                    :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].date_value"
-                    :project="project ?? headerObject.project"
-                    :atAGlance="this.atAGlance ?? loadedProjectInformation['CalendarTab'].events_at_a_glance.length > 0"
-                    :eventTypes="this.eventTypes ?? headerObject.eventTypes"
-                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
-                    :eventsAtAGlance="eventsAtAGlance ?? loadedProjectInformation['CalendarTab'].events_at_a_glance"
-                    :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filter_options"
-                    :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personal_filters"
-                    :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                >
-                </IndividualCalendarAtGlanceComponent>
 
-
-                <BaseCalendar
-                    v-else
-                    :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
-                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
-                    :days="days ?? loadedProjectInformation['CalendarTab'].days"
-                    :project="project ?? headerObject.project"
-                />
-                <!--<IndividualCalendarComponent
-
-                    :events-without-room="eventsWithoutRoom ?? headerObject.eventsWithoutRoom"
-                    :project="project ?? headerObject.project"
-                    :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].date_value"
-                    :atAGlance="this.atAGlance"
-                    :eventTypes="this.eventTypes ?? headerObject.eventTypes"
-                    :calendarData="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
-                    :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
-                    :days="days ?? loadedProjectInformation['CalendarTab'].days"
-                    :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filter_options"
-                    :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personal_filters"
-                    :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                />-->
+            <div v-else class="ml-16">
+                <BaseCalendar v-if="!atAGlance"
+                              :project="project ?? headerObject.project"
+                              :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
+                              :days="days ?? loadedProjectInformation['CalendarTab'].days"
+                              :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
+                              :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"/>
+                <IndividualCalendarAtGlanceComponent v-else
+                                                     :atAGlance="atAGlance"
+                                                     :project="project ?? headerObject.project"
+                                                     :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
+                                                     :dateValue="dateValue ?? loadedProjectInformation['CalendarTab'].dateValue"
+                                                     :eventTypes="eventTypes ?? loadedProjectInformation['CalendarTab'].eventTypes"
+                                                     :eventsAtAGlance="eventsAtAGlance ?? loadedProjectInformation['CalendarTab'].eventsAtAGlance"
+                                                     :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab'].filterOptions"
+                                                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
+                                                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
+                                                     :first_project_tab_id="first_project_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_tab_id"
+                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id ?? loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id"/>
             </div>
         </div>
     </div>
 </template>
 
-<script>
-import JetInputError from "@/Jetstream/InputError.vue";
-import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
+<script setup>
+import {usePage} from "@inertiajs/vue3";
+import {provide, ref} from "vue";
+import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import {router, usePage} from "@inertiajs/vue3";
-import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 
-export default {
-    components: {
-        BaseCalendar,
-        IndividualCalendarComponent,
-        CalendarComponent,
-        IndividualCalendarAtGlanceComponent,
-        PencilAltIcon,
-        XCircleIcon,
-        DocumentTextIcon,
-        SvgCollection,
-        XIcon,
-        JetInputError
-    },
-    props: [
-        'project',
-        'calendarType',
-        'selectedDate',
-        'dateValue',
-        'events',
-        'rooms',
-        'eventsWithoutRoom',
-        'filterOptions',
-        'personalFilters',
-        'atAGlance',
-        'eventsAtAGlance',
-        'calendar',
-        'days',
-        'eventTypes',
-        'projectWriteIds',
-        'projectManagerIds',
-        'user_filters',
-        'loadedProjectInformation',
-        'headerObject',
-        'first_project_tab_id',
-        'first_project_calendar_tab_id'
-    ],
-    data() {
-        return {
-            atAGlance: usePage().props.user.at_a_glance ?? false
-        }
-    },
-    provide() {
-        // use function syntax so that we can access `this`
-        return {
-            eventTypes: this.eventTypes ?? headerObject.eventTypes,
-            dateValue: this.dateValue ?? this.loadedProjectInformation['CalendarTab'].date_value,
-            first_project_tab_id: this.first_project_tab_id,
-            first_project_calendar_tab_id: this.first_project_calendar_tab_id,
-            user_filters: this.user_filters ?? this.loadedProjectInformation['CalendarTab'].user_filters,
-            personalFilters: this.personalFilters ?? this.loadedProjectInformation['CalendarTab'].personal_filters,
-            filterOptions: this.filterOptions ?? this.loadedProjectInformation['CalendarTab'].filter_options
-        }
-    },
-    methods: {
+const props = defineProps([
+    'project',
+    'calendarType',
+    'selectedDate',
+    'dateValue',
+    'events',
+    'rooms',
+    'eventsWithoutRoom',
+    'filterOptions',
+    'personalFilters',
+    'atAGlance',
+    'eventsAtAGlance',
+    'calendar',
+    'days',
+    'eventTypes',
+    'projectWriteIds',
+    'projectManagerIds',
+    'user_filters',
+    'loadedProjectInformation',
+    'headerObject',
+    'first_project_tab_id',
+    'first_project_calendar_tab_id'
+]),
+atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
-    }
-}
+provide('eventTypes', props.eventTypes ?? props.loadedProjectInformation['CalendarTab'].eventTypes);
+provide('dateValue', props.dateValue ?? props.loadedProjectInformation['CalendarTab'].dateValue);
+provide('first_project_tab_id', props.first_project_tab_id ?? props.loadedProjectInformation['CalendarTab'].first_project_tab_id);
+provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id ?? props.loadedProjectInformation['CalendarTab'].first_project_calendar_tab_id);
+provide('user_filters', props.user_filters ?? props.loadedProjectInformation['CalendarTab'].user_filters);
+provide('personalFilters', props.personalFilters ?? props.loadedProjectInformation['CalendarTab'].personalFilters);
+provide('filterOptions', props.filterOptions ?? props.loadedProjectInformation['CalendarTab'].filterOptions);
 </script>

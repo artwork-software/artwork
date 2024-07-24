@@ -16,6 +16,7 @@ use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
+use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -26,6 +27,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -34,6 +36,7 @@ use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -41,7 +44,9 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Artwork\Modules\SubEvent\Services\SubEventService;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
@@ -261,10 +266,15 @@ readonly class EventService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
-            $eventCommentService->deleteEventComments($event->comments);
-            $timelineService->forceDeleteTimelines($event->timelines);
-            $shiftService->forceDeleteShifts($event->shifts);
-            $subEventService->forceDeleteSubEvents($event->subEvents);
+            $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
+            $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
+            $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
+            $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
+
+            $eventCommentService->deleteEventComments($comments);
+            $timelineService->forceDeleteTimelines($timelines);
+            $shiftService->forceDeleteShifts($shifts);
+            $subEventService->forceDeleteSubEvents($subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 

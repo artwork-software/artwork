@@ -122,41 +122,40 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->getMock();
 
         $requestMock->expects(self::once())
-            ->method('string')
-            ->with($expectedNameKey)
-            ->willReturn($expectedName);
-
-        $requestMock->expects(self::once())
             ->method('enum')
             ->with($expectedTypeIdKey, $expectedColumnTypeEnumClass)
             ->willReturn($expectedColumnTypeEnum);
 
-        $requestMock->expects($matcher = self::exactly(2))
+        $requestMock->expects(self::once())
             ->method('get')
+            ->with($expectedTypeOptionsKey, $expectedTypeOptionsDefault)
+            ->willReturn($expectedTypeOptions);
+
+        $requestMock->expects($matcher = self::exactly(2))
+            ->method('string')
             ->willReturnCallback(
                 function (
                     string $key,
-                    string|array $default
+                    string|array|null $default
                 ) use (
                     $matcher,
-                    $expectedTypeOptionsKey,
-                    $expectedTypeOptionsDefault,
-                    $expectedTypeOptions,
+                    $expectedNameKey,
+                    $expectedName,
                     $expectedDefaultOptionKey,
                     $expectedDefaultOptionDefault,
                     $expectedDefaultOption
                 ): string|array {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
+                            self::assertSame($expectedNameKey, $key);
+                            self::assertNull($default);
+
+                            return $expectedName;
+                        case 2:
                             self::assertSame($expectedDefaultOptionKey, $key);
                             self::assertSame($expectedDefaultOptionDefault, $default);
 
                             return $expectedDefaultOption;
-                        case 2:
-                            self::assertSame($expectedTypeOptionsKey, $key);
-                            self::assertSame($expectedTypeOptionsDefault, $default);
-
-                            return $expectedTypeOptions;
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -232,9 +231,9 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->getMock();
 
         $requestMock->expects(self::once())
-            ->method('string')
-            ->with($expectedNameKey)
-            ->willReturn($expectedName);
+            ->method('get')
+            ->with($expectedTypeOptionsKey, $expectedTypeOptionsDefault)
+            ->willReturn($expectedTypeOptions);
 
         $requestMock->expects(self::once())
             ->method('enum')
@@ -242,31 +241,30 @@ class CraftsInventoryColumnControllerTest extends TestCase
             ->willReturn($expectedColumnTypeEnum);
 
         $requestMock->expects($matcher = self::exactly(2))
-            ->method('get')
+            ->method('string')
             ->willReturnCallback(
                 function (
                     string $key,
-                    string|array $default
+                    string|array|null $default
                 ) use (
                     $matcher,
-                    $expectedTypeOptionsKey,
-                    $expectedTypeOptionsDefault,
-                    $expectedTypeOptions,
+                    $expectedNameKey,
+                    $expectedName,
                     $expectedDefaultOptionKey,
                     $expectedDefaultOptionDefault,
                     $expectedDefaultOption
                 ): string|array {
                     switch ($matcher->numberOfInvocations()) {
                         case 1:
+                            self::assertSame($expectedNameKey, $key);
+                            self::assertNull($default);
+
+                            return $expectedName;
+                        case 2:
                             self::assertSame($expectedDefaultOptionKey, $key);
                             self::assertSame($expectedDefaultOptionDefault, $default);
 
                             return $expectedDefaultOption;
-                        case 2:
-                            self::assertSame($expectedTypeOptionsKey, $key);
-                            self::assertSame($expectedTypeOptionsDefault, $default);
-
-                            return $expectedTypeOptions;
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }

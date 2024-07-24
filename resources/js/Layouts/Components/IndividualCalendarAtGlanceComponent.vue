@@ -101,7 +101,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 import {usePermission} from "@/Composeables/Permission.js";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 
 const {hasAdminRole} = usePermission(usePage().props),
     props = defineProps([
@@ -183,25 +183,25 @@ const {hasAdminRole} = usePermission(usePage().props),
     onEventComponentClose = (bool) => {
         createEventComponentIsVisible.value = false;
 
-        // if (bool) {
-        //     router.reload();
-        // }
+        if (bool) {
+            router.reload();
+        }
     },
     onEventsWithoutRoomComponentClose = () => {
         showEventsWithoutRoomComponent.value = false;
-        // router.reload();
+        router.reload();
     },
     openMultiEditModal = () => {
         showMultiEditModal.value = true;
     },
     deleteSelectedEvents = () => {
-        // router.post(route('multi-edit.delete'), {
-        //     events: this.editEvents
-        // }, {
-        //     onSuccess: () => {
-        //         this.openDeleteSelectedEventsModal = false
-        //     }
-        // });
+        router.post(route('multi-edit.delete'), {
+            events: this.editEvents
+        }, {
+            onSuccess: () => {
+                this.openDeleteSelectedEventsModal = false
+            }
+        });
     },
     closeMultiEditModal = () => {
         showMultiEditModal.value = false;

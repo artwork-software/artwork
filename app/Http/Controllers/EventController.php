@@ -194,14 +194,12 @@ class EventController extends Controller
         ShiftFilterController $shiftFilterController,
         CraftService $craftService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
         EventService $eventService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         DayServicesService $dayServicesService
     ): Response {
-
         return Inertia::render(
             'Shifts/ShiftPlan',
             $eventService->getShiftPlanDto(
@@ -211,7 +209,6 @@ class EventController extends Controller
                 $roomService,
                 $craftService,
                 $eventTypeService,
-                $projectService,
                 $filterService,
                 $shiftFilterController,
                 $shiftQualificationService,

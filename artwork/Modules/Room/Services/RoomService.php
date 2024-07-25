@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Room\Services;
 
 use App\Http\Controllers\FilterController;
-use App\Http\Resources\CalendarShowEventInShiftPlan;
+use App\Http\Resources\MinimalShiftPlanEventResource;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
@@ -40,7 +40,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 readonly class RoomService
@@ -578,21 +577,18 @@ readonly class RoomService
         return $collectedEvents;
     }
 
+    /**
+     * @param Room $room
+     * @param CarbonPeriod $calendarPeriod
+     * @return array<int, mixed>
+     */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        ?Project $project = null,
-        $shiftPlan = false
-    ): Collection {
-        $user = Auth::user();
-        if (!$shiftPlan) {
-            $calendarFilter = $user->calendar_filter()->first();
-        } else {
-            $calendarFilter = $user->shift_calendar_filter()->first();
-        }
-
+        ?UserShiftCalendarFilter $calendarFilter
+    ): array {
         $isLoud = $calendarFilter->is_loud ?? false;
         $isNotLoud = $calendarFilter->is_not_loud ?? false;
         $hasAudience = $calendarFilter->has_audience ?? false;
@@ -606,12 +602,26 @@ readonly class RoomService
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
 
-
-        $room->events()->with(['shifts', 'shifts.shiftsQualifications'])
+        $roomEvents = $room->events()
+            ->with(
+                [
+                    'room',
+                    'creator',
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'project.shiftRelevantEventTypes',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room',
+                ]
+            )
             ->without(['created_by', 'shift_relevant_event_types'])
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
@@ -638,31 +648,36 @@ readonly class RoomService
             ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
-            ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                    $calendarPeriod->start :
-                    $event->start_time;
+            ->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
+            ->get();
 
-                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+        foreach ($roomEvents as $roomEvent) {
+            $eventStart = $roomEvent->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $roomEvent->start_time;
 
-                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+            $eventEnd = $roomEvent->end_time->isAfter($calendarPeriod->end) ?
+                $calendarPeriod->end :
+                $roomEvent->end_time;
 
-                foreach ($eventPeriod as $date) {
-                    $dateKey = $date->format('d.m.Y');
-                    $actualEvents[$dateKey][] = $event;
-                }
-            });
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $roomEvent;
+            }
+        }
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomName' => $room->getAttribute('name'),
                 'roomId' => $room->getAttribute('id'),
                 //immediately resolve resource to free used memory
-                'events' => CalendarShowEventInShiftPlan::collection($value)->resolve()
+                'events' => MinimalShiftPlanEventResource::collection($value)->resolve()
             ];
         }
 
-        return collect($eventsForRoom);
+        return $eventsForRoom;
     }
 
 
@@ -694,14 +709,20 @@ readonly class RoomService
     public function collectEventsForRoomsShift(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
-        ?Project $project = null,
-        $shiftPlan = false
+        ?UserShiftCalendarFilter $calendarFilter
     ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
-            $roomEvents->add($this->collectEventsForRoomShift($room, $calendarPeriod, $project, $shiftPlan));
+            $roomEvents->add(
+                $this->collectEventsForRoomShift(
+                    $room,
+                    $calendarPeriod,
+                    $calendarFilter
+                )
+            );
         }
+
         return $roomEvents;
     }
 

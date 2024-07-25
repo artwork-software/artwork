@@ -463,19 +463,26 @@ class User extends Model implements
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
-
-        $shiftsInDateRange = $this->shifts()
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate]);
-            })
-            ->orWhere(function ($query) use ($startDate, $endDate): void {
-                $query->where('start_date', '<', $startDate)
-                    ->where('end_date', '>', $endDate);
-            })
-            ->get();
-
+        $shiftsInDateRange = array_filter(
+            $this->getAttribute('shifts')->all(),
+            function (Shift $shift) use ($startDate, $endDate): bool {
+                return
+                    //start date between
+                    (
+                        $shift->getAttribute('start_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate
+                    ) ||
+                    //end date between
+                    (
+                        $shift->getAttribute('end_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate
+                    //overlapping
+                    ) || (
+                        $shift->getAttribute('start_date') < $startDate &&
+                        $shift->getAttribute('end_date') > $endDate
+                    );
+            }
+        );
         $plannedWorkingHours = 0;
 
         foreach ($shiftsInDateRange as $shift) {

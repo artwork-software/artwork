@@ -84,10 +84,9 @@ readonly class UserService
             }
 
             $userData = [
-                'user' => $desiredUserResource,
+                'user' => $desiredUserResource->resolve(),
                 'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
-                // dayServices group by pivot_date
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
             ];
 

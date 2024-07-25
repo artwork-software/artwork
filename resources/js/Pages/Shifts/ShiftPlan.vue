@@ -14,7 +14,7 @@
                                       :user_filters="user_filters"
                                       :crafts="crafts"
                                       @select-go-to-next-mode="selectGoToNextMode"
-                                        @select-go-to-previous-mode="selectGoToPreviousMode"
+                                      @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
 
@@ -51,12 +51,10 @@
                                                 :highlightMode="highlightMode"
                                                 :highlighted-id="idToHighlight"
                                                 :highlighted-type="typeToHighlight"
-                                                :eventType="this.findEventTypeById(event.eventTypeId)"
-                                                :project="this.findProjectById(event.projectId)"
                                                 :event="event"
                                                 :shift-qualifications="shiftQualifications"
-                                                @dropFeedback="showDropFeedback"
                                                 :day-string="day"
+                                                @dropFeedback="showDropFeedback"
                                             />
                                             <SingleEventInShiftPlan v-else :event="event" :day="day" />
                                         </div>
@@ -202,7 +200,7 @@
                                                  @click="handleCellClick(user, day)">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
                                                 </span>
                                             </span>
                                                 <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
@@ -273,7 +271,7 @@
                                                  :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
                                                 </span>
                                             </span>
                                                 <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
@@ -431,7 +429,6 @@ export default {
         'dateValue',
         'personalFilters',
         'selectedDate',
-        'eventTypes',
         'history',
         'usersForShifts',
         'freelancersForShifts',
@@ -608,12 +605,6 @@ export default {
             setTimeout(() => {
                 this.dropFeedback = null
             }, 2000)
-        },
-        findProjectById(projectId) {
-            return this.projects.find(project => project.id === projectId);
-        },
-        findEventTypeById(eventTypeId) {
-            return this.eventTypes.find(eventType => eventType.id === eventTypeId);
         },
         openFullscreen() {
             let elem = document.getElementById('shiftPlan');
@@ -1030,7 +1021,7 @@ export default {
                         event.shifts.forEach(shift => {
                             if (shift.id === shiftId) {
                                 shift.isCheckedForMultiEdit = state;
-                                if(!state){
+                                if (!state) {
                                    // remove shift form checkedShiftsForMultiEdit
                                     const index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
                                     if (index !== -1) {

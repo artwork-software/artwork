@@ -11,7 +11,7 @@ class FreelancerRepository extends BaseRepository
 {
     public function getWorkers(): Collection
     {
-        return Freelancer::query()->canWorkShifts()->get();
+        return Freelancer::query()->canWorkShifts()->with('dayServices')->get();
     }
 
     public function findOrFail($freelancerId): Freelancer

@@ -2,9 +2,9 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: event.event_type?.hex_code ?? event.event_type_color}">
+                 :style="{backgroundColor: event.eventTypeColor}">
                 <div class="w-40 truncate">
-                    {{ eventType.abbreviation }}: {{ project?.name }}
+                    {{ event.eventTypeAbbreviation }}: {{ event.projectName }}
                 </div>
                 <div v-if="areAllShiftsCommitted(event)">
                     <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
@@ -14,8 +14,7 @@
         <div class="bg-backgroundGray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.is_weekend ? 'bg-white' : 'bg-backgroundGray']">
             <div v-for="shift in event.shifts" class="flex justify-between px-1">
                 <!-- Drop Element -->
-                <ShiftDropElement
-                    :multiEditMode="multiEditMode"
+                <ShiftDropElement :multiEditMode="multiEditMode"
                                   :craft-id="shift.craft.id"
                                   :userForMultiEdit="userForMultiEdit"
                                   :highlight-mode="highlightMode"
@@ -51,8 +50,6 @@ export default defineComponent({
     },
     props: [
         'event',
-        'project',
-        'eventType',
         'showRoom',
         'room',
         'highlightMode',
@@ -71,7 +68,7 @@ export default defineComponent({
             return event.shifts.every(shift => shift.is_committed);
         },
         checkIfShiftInDayString(shift) {
-            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
+            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
                 return shift.formatted_dates.start === this.dayString['full_day'];
             } else {
                 return shift.formatted_dates.start === this.dayString['full_day'] && this.$page.props.user?.show_crafts?.includes(shift.craft.id);

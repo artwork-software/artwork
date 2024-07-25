@@ -18,7 +18,7 @@
                        aria-describedby="comments-description"
                        name="comments"
                        type="checkbox"
-                       class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1"
+                       class="input-checklist mr-1"
                 />
             </div>
             <div class="flex items-center justify-between"

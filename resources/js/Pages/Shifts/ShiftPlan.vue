@@ -267,10 +267,10 @@
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                            <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                                  @click="handleCellClick(user, day)"
                                                  :style="{width: day.is_sunday ? '158px' : '198px'}"
-                                                 :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
+                                            >
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
@@ -460,7 +460,7 @@ export default {
             multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
-            userOverviewHeight: 515,
+            userOverviewHeight: 570,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,

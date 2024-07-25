@@ -76,12 +76,12 @@
 
                                 </div>
 
-                                <div class="flex mt-10" v-if="this.user.type === 0 || this.user.type === 1">
+                                <div class="flex items-center mt-10" v-if="this.user.type === 0 || this.user.type === 1">
                                     <input v-model="checked"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="input-checklist"/>
                                     <p :class="[checked ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Available')}}</p>
+                                       class="ml-2 text-sm">{{ $t('Available')}}</p>
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">

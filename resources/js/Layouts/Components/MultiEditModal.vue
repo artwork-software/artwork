@@ -2,22 +2,16 @@
     <BaseModal @closed="closeModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
         <div class="mx-4">
             <!--   Heading   -->
-            <div>
-                <h1 class="my-1 flex">
-                    <div class="flex-grow headline1">
-                        {{$t('Move events')}}
-                    </div>
-                </h1>
-                <h2  class="xsLight mb-2">
-                    {{$t('Would you like to move all selected appointments to another room or by a certain period of time?')}}
-                </h2>
-            </div>
+            <ModalHeader
+                :title="$t('Move events')"
+                :description="$t('Would you like to move all selected appointments to another room or by a certain period of time?')"
+            />
             <div class="w-full">
                 <div class="mb-2">
                     <Listbox as="div" class="sm:col-span-3" v-model="selectedRoom">
                         <div class="relative">
-                            <ListboxButton class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex justify-between items-center">
-                                <div v-if="selectedRoom === null">{{ $t('No room displacement')}}</div>
+                            <ListboxButton class="menu-button">
+                                <span v-if="selectedRoom === null">{{ $t('No room displacement')}}</span>
                                 <div v-else> {{ selectedRoom?.name }}</div>
                                 <div class="mr-3">
                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -54,11 +48,11 @@
                         </div>
                     </Listbox>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-8 mb-2">
+                <div class="grid grid-cols-1 sm:grid-cols-8 mb-2 gap-x-2">
                     <div class="mb-2 col-span-1">
                         <Listbox as="div" class="" v-model="selectedCalculationType">
                             <div class="relative">
-                                <ListboxButton class="w-full pl-3 h-12 inputMain bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex justify-between items-center">
+                                <ListboxButton class="menu-button">
                                     <div> {{ selectedCalculationType.type }}</div>
                                     <div class="mr-3">
                                         <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -88,12 +82,12 @@
                                v-model="editEvents.value"
                                id="eventTitle"
                                min="0" max="999"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="input h-12"/>
                     </div>
                     <div class="mb-2 col-span-4">
                         <Listbox as="div" v-model="selectedTimeType">
                             <div class="relative">
-                                <ListboxButton class="w-full pl-3 h-12 inputMain bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex justify-between items-center">
+                                <ListboxButton class="menu-button">
                                     <div> {{ selectedTimeType.value }}</div>
                                     <div class="mr-3">
                                         <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -119,13 +113,12 @@
                         </Listbox>
                     </div>
                 </div>
-                <div class="mb-2">
-                    <input type="text"
-                           v-model="editEvents.date"
-                           :placeholder="editEvents.date === null ? $t('No postponement to date') : '' "
-                           onfocus="(this.type='date')"
-                           id="eventTitle"
-                           class="h-12 sDark inputMain placeholder:text-black placeholder:font-semibold text-sm placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                <div class="pt-2 pb-4">
+                    <DateInputComponent
+                        v-model="editEvents.date"
+                        :label="editEvents.date === null ? $t('No postponement to date') : '' "
+                        id="eventTitle"
+                    />
                 </div>
                 <div class="w-full flex justify-center">
                     <FormButton :text="$t('Save')"  @click="saveMultiEdit"/>
@@ -158,11 +151,15 @@ import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     name: 'MultiEditModal',
     mixins: [Permissions],
     components: {
+        ModalHeader,
+        DateInputComponent,
         BaseModal,
         FormButton,
         Input,

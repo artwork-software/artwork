@@ -55,6 +55,7 @@
     }
 
     .modal-header {
+        @apply mb-6;
 
         .full-modal {
             @apply px-6 pt-4 pb-2;

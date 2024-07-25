@@ -10,7 +10,12 @@ class ServiceProviderRepository extends BaseRepository
 {
     public function getWorkers(): Collection
     {
-        return ServiceProvider::query()->canWorkShifts()->with('dayServices')->get();
+        return ServiceProvider::query()->canWorkShifts()->with(
+            'dayServices',
+            'shifts',
+            'shifts.event',
+            'shifts.event.room'
+        )->get();
     }
 
     public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection

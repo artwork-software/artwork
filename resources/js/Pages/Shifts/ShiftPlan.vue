@@ -206,7 +206,7 @@
                                                 <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
                                                 {{ $t('not available')}}
                                             </span>
-                                                <span v-if="user.availabilities">
+                                            <span v-if="user.availabilities">
                                                 <span v-for="availability in user.availabilities[day.full_day]">
                                                     <span class="text-green-500">
                                                         <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
@@ -308,7 +308,6 @@
                                     @closed="showUserShifts = false"
                                     :user="userToShow"
                                     :day="dayToShow"
-                                    :projects="projects"
             />
             <ShiftHistoryModal v-if="showHistoryModal"
                                :history="history"
@@ -361,7 +360,6 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Link, router} from "@inertiajs/vue3";
-import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
@@ -407,7 +405,6 @@ export default {
         ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
-        ShiftPlanUserOverview,
         Link,
         CalendarFunctionBar,
         SingleCalendarEvent,
@@ -744,7 +741,6 @@ export default {
             if (this.$refs.shiftPlan) {
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
-
             }
         },
         openShowUserShiftModal(user, day) {
@@ -812,13 +808,9 @@ export default {
                 }
             });
 
-            //check if user has any shift qualifications
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
-                //iterate checked shifts
                 this.checkedShiftsForMultiEdit.forEach((checkedShift) => {
-                    //if user is not already assigned to shift
                     if (!this.userForMultiEdit.shift_ids.includes(checkedShift.id)) {
-                        //if user only has one shift qualification
                         if (this.userForMultiEdit.shift_qualifications.length === 1) {
                             if (
                                 !this.hasShiftsQualificationFreeSlots(
@@ -826,7 +818,6 @@ export default {
                                     this.userForMultiEdit.shift_qualifications[0].id
                                 )
                             ) {
-                                //no free slots available for given shift qualification
                                 return;
                             }
                             this.shiftsToHandleOnMultiEdit.assignToShift.push({
@@ -835,7 +826,7 @@ export default {
                             });
                             return;
                         }
-                        //if user has multiple shift qualifications
+
                         let availableShiftQualificationSlots = [];
                         this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
                             checkedShift.shifts_qualifications.forEach((shiftsQualification) => {
@@ -848,12 +839,10 @@ export default {
                             });
                         });
 
-                        //when no slots available return
                         if (availableShiftQualificationSlots.length === 0) {
                             return;
                         }
 
-                        //if only one slot is available it will be assigned
                         if (availableShiftQualificationSlots.length === 1) {
                             this.shiftsToHandleOnMultiEdit.assignToShift.push({
                                 shiftId: checkedShift.id,
@@ -862,7 +851,6 @@ export default {
                             return;
                         }
 
-                        //multiple slots are available, prepare shift qualification assignment modal
                         this.showShiftsQualificationsAssignmentModalShifts.push({
                             shift: checkedShift,
                             availableSlots: availableShiftQualificationSlots
@@ -871,7 +859,6 @@ export default {
                 });
             }
 
-            //open shifts qualifications assignment modal
             if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
                 this.showShiftsQualificationsAssignmentModal = true;
                 return;

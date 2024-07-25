@@ -25,31 +25,30 @@
                                         <img :src="user.element.profile_photo_url" class="object-cover h-10 w-10 rounded-full" alt="">
                                     </div>
                                     <div class="ml-3 text-sm font-bold">
-                                        <span v-if="user.element.resource !== 'ServiceProviderShiftPlanResource'">
+                                        <span v-if="user.element.type === 'service_provider'">
+                                            {{ user.element.provider_name }} ({{$t('Service provider')}})
+                                        </span>
+                                        <span v-else>
                                             {{ user.element.first_name }} {{ user.element.last_name }}
-                                            <span v-if="user.element.resource === 'FreelancerShiftPlanResource'">
-                                            ({{ $t('external')}})
+                                            <span v-if="user.element.type === 'freelancer'">
+                                                ({{ $t('external')}})
                                             </span>
                                             <span v-else>
                                                 ({{ $t('internal') }})
                                             </span>
                                         </span>
-                                        <span v-else>
-                                            {{ user.element.provider_name }} ({{$t('Service provider')}})
-                                        </span>
-
                                     </div>
                                 </div>
                                 <div v-for="shift in user.element.shifts">
                                     <div v-if="shift.days_of_shift?.includes(day.full_day)" class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
                                         <div>
                                             <div class="flex text-sm">
-                                                {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
+                                                {{ shift.craftAbbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.roomName }} | {{ shift.eventTypeAbbreviation }}: {{ shift.eventName }}
                                             </div>
                                             <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
-                                            <button type="button" @click="removeUserFromShift(shift.id, shift.pivot.id)">
+                                            <button type="button" @click="removeUserFromShift(shift.id, shift.pivotId)">
                                                 <SvgCollection svg-name="xMarkIcon" />
                                             </button>
                                         </div>
@@ -126,14 +125,11 @@ export default defineComponent({
             checked: !this.user.vacations?.includes(this.day.without_format)
         }
     },
-    props: ['user', 'day', 'projects'],
+    props: ['user', 'day'],
     emits: ['closed', 'delete'],
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool)
-        },
-        findProjectById(projectId) {
-            return this.projects.find(project => project.id === projectId);
         },
         removeUserFromShift(shiftId, usersPivotId) {
             router.delete(

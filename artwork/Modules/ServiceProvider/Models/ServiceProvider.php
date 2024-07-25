@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ServiceProvider\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
@@ -12,9 +13,7 @@ use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -113,15 +112,6 @@ class ServiceProvider extends Model implements DayServiceable
     public function getNameAttribute(): string
     {
         return $this->provider_name;
-    }
-
-    public function loadShifts(): Collection
-    {
-        return $this->shifts()
-            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
-            ->with(['event.room'])
-            ->get()
-            ->makeHidden(['allUsers']);
     }
 
     public function getTypeAttribute(): string

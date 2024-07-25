@@ -236,15 +236,6 @@ class User extends Model implements
             ->withPivot('id', 'shift_qualification_id');
     }
 
-    public function loadShifts(): Collection
-    {
-        return $this->shifts()
-            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
-            ->with(['event.room'])
-            ->get()
-            ->makeHidden(['allUsers']);
-    }
-
     public function getFullNameAttribute(): string
     {
         return $this->first_name . ' ' . $this->last_name;

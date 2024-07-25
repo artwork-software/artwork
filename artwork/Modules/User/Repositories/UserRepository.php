@@ -34,7 +34,12 @@ class UserRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return User::query()->canWorkShifts()->with('dayServices', 'shifts')->get();
+        return User::query()->canWorkShifts()->with(
+            'dayServices',
+            'shifts',
+            'shifts.event',
+            'shifts.event.room'
+        )->get();
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

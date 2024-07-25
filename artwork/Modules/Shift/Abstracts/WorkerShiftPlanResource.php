@@ -11,7 +11,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
-/** @mixin User|Freelancer|ServiceProvider */
+/**
+ * @mixin User|Freelancer|ServiceProvider
+ */
 class WorkerShiftPlanResource extends JsonResource
 {
     private Carbon $startDate;

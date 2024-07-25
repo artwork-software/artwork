@@ -136,6 +136,7 @@ use Intervention\Image\Facades\Image;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class ProjectController extends Controller
 {
@@ -1805,6 +1806,9 @@ class ProjectController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    /**
+     * @throws Throwable
+     */
     public function projectTab(
         Request $request,
         Project $project,
@@ -1828,7 +1832,8 @@ class ProjectController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
-        AreaService $areaService
+        AreaService $areaService,
+        EventService $eventService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1878,24 +1883,38 @@ class ProjectController extends Controller
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
-                    $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
-                        $request->get('startDate') ? Carbon::create($request->get('startDate'))
-                            ->startOfDay() : Carbon::now()->startOfDay(),
-                        $request->get('endDate') ? Carbon::create($request->get('endDate'))
-                            ->endOfDay() : Carbon::now()->addWeeks()->endOfDay(),
-                        $project,
-                        $roomService,
-                        $calendarService,
-                        $projectService,
-                        $userService,
-                        $filterService,
-                        $filterController,
-                        $roomCategoryService,
-                        $roomAttributeService,
-                        $eventTypeService,
-                        $areaService,
-                        $request->get('atAGlance') ?? false
-                    );
+                    $atAGlance = $request->boolean('atAGlance');
+                    $loadedProjectInformation['CalendarTab'] =
+                        $userService->getAuthUser()->getAttribute('at_a_glance') ?
+                            $eventService->createEventManagementDtoForAtAGlance(
+                                $calendarService,
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $filterController,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $roomCategoryService,
+                                $roomAttributeService,
+                                $areaService,
+                                $projectService,
+                                $project
+                            ) :
+                            $eventService->createEventManagementDto(
+                                $calendarService,
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $filterController,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $roomCategoryService,
+                                $roomAttributeService,
+                                $areaService,
+                                $projectService,
+                                $project
+                            );
+
                     break;
                 case ProjectTabComponentEnum::BUDGET->value:
                     $loadedProjectInformation = $this->budgetService
@@ -2794,8 +2813,20 @@ class ProjectController extends Controller
         NotificationService $notificationService,
         TaskService $taskService
     ): RedirectResponse {
+
+        $events = Event::onlyTrashed()->where('project_id', $id)->get();
+
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
+
+        $eventService->forceDeleteAll(
+            $events,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
 
         if ($project) {
             $this->projectService->forceDelete(

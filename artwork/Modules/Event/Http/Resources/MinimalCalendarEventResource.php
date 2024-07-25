@@ -43,7 +43,7 @@ class MinimalCalendarEventResource extends JsonResource
             'id' => $this->getAttribute('id'),
             'projectId' => $eventProjectId,
             'roomId' => $this->getAttribute('room_id'),
-            'roomName' => $this->getAttribute('room')->getAttribute('name'),
+            'roomName' => $this->getAttribute('room')?->getAttribute('name'),
             'created_by' => [
                 'id' => $creator->getAttribute('id'),
                 'profile_photo_url' => $creator->getAttribute('profile_photo_url'),

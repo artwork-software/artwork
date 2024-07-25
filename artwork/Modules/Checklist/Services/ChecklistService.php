@@ -100,7 +100,8 @@ readonly class ChecklistService
     {
         /** @var Checklist $checklist */
         foreach ($checklists as $checklist) {
-            $taskService->forceDeleteAll($checklist->tasks);
+            $tasks = Task::onlyTrashed()->where('checklist_id', $checklist->id)->get();
+            $taskService->forceDeleteAll($tasks);
             $this->checklistRepository->forceDelete($checklist);
         }
     }

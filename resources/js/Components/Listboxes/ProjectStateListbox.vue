@@ -59,7 +59,7 @@ const emit = defineEmits(['update:selectedProjectState'])
                                v-for="state in projectStates"
                                :key="state.id"
                                :value="state.id" v-slot="{ active, selected }">
-                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
+                    <li :class="[active ? ' text-secondary' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 pl-3 text-sm subpixel-antialiased']">
                         <div class="flex">
                             <span class=" items-center font-medium px-2 py-1.5 inline-flex border rounded-full" :style="{backgroundColor: backgroundColorWithOpacity(state.color), color: textColorWithDarken(state.color), borderColor: textColorWithDarken(state.color)}">
                                 {{ state.name }}

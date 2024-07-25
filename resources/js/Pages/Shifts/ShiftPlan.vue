@@ -25,7 +25,7 @@
                             <div class="stickyHeader">
                             <TableHead id="stickyTableHead" ref="stickyTableHead">
                                 <th class="z-0" style="width:192px;"></th>
-                                <th  v-for="day in days" :style="{width:  '200px'}" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                <th v-for="day in days"  :style="{width:  '200px'}" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                                     <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                         {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                     </div>
@@ -42,8 +42,8 @@
                                             {{ room[days[0].full_day].roomName }}
                                         </div>
                                     </th>
-                                    <td v-for="day in days" style="width: 200px" class="max-h-28 overflow-y-auto cell border-r-2 border-dotted" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
-                                        <div v-for="event in room[day.full_day].events" class="mb-1">
+                                    <td v-for="day in days" :data-day="day.full_day" style="width: 200px" class="max-h-28 overflow-y-auto cell border-r-2 border-dotted day-container" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
+                                        <div v-if="this.currentDaysInView.has(day.full_day)" v-for="event in room[day.full_day].events" class="mb-1">
                                             <SingleShiftPlanEvent
                                                 v-if="checkIfEventHasShiftsToDisplay(event)"
                                                 :multiEditMode="multiEditMode"
@@ -156,7 +156,7 @@
                         <div class="pt-16">
                             <table class="w-full text-white overflow-y-scroll">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                                <div>
+                                <div class="eventByDaysContainer">
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
                                     <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
                                         {{craft.name}}
@@ -198,22 +198,21 @@
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden" :style="{width: day.is_sunday ? '158px' : '198px'}"
                                                  @click="handleCellClick(user, day)">
-                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
-                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
-                                                </span>
-                                            </span>
-                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                {{ $t('not available')}}
-                                            </span>
-                                            <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                                    <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
                                                     </span>
                                                 </span>
-                                            </span>
-
+                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
+                                                    {{ $t('not available')}}
+                                                </span>
+                                                <span v-if="user.availabilities">
+                                                    <span v-for="availability in user.availabilities[day.full_day]">
+                                                        <span class="text-green-500">
+                                                            <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                        </span>
+                                                    </span>
+                                                </span>
                                             </div>
                                             <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
                                                 <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
@@ -221,9 +220,9 @@
                                                 </div>
                                             </div>
                                             <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                            <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                            </span>
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
@@ -269,21 +268,21 @@
                                                  @click="handleCellClick(user, day)"
                                                  :style="{width: day.is_sunday ? '158px' : '198px'}"
                                                  :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
-                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
-                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
-                                                </span>
-                                            </span>
-                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                {{ $t('not available')}}
-                                            </span>
-                                                <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                                    <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
                                                     </span>
                                                 </span>
-                                            </span>
+                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
+                                                    {{ $t('not available')}}
+                                                </span>
+                                                <span v-if="user.availabilities">
+                                                    <span v-for="availability in user.availabilities[day.full_day]">
+                                                        <span class="text-green-500">
+                                                            <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                        </span>
+                                                    </span>
+                                                </span>
                                             </div>
                                             <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
                                                 <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
@@ -291,9 +290,9 @@
                                                 </div>
                                             </div>
                                             <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                            <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                            </span>
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
@@ -467,7 +466,8 @@ export default {
             shiftsAreChecked: [],
             shiftsToRemoveCheckState: [],
             firstDayPosition: this.days ? this.days[0].full_day : null,
-            currentDayOnView: this.days ? this.days[0] : null
+            currentDayOnView: this.days ? this.days[0] : null,
+            currentDaysInView: new Set([])
         }
     },
     mounted() {
@@ -476,6 +476,30 @@ export default {
         this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
         window.addEventListener('resize', this.updateHeight);
         this.updateHeight();
+
+        const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const day = entry.target.dataset.day;
+                        console.debug('observer day', day);
+                        if (entry.isIntersecting) {
+                            this.currentDaysInView.add(day);
+                        } else {
+                            this.currentDaysInView.delete(day);
+                        }
+                    });
+                },
+                {
+                    root: document.getElementsByClassName('.eventByDaysContainer')[0],
+                    rootMargin: '5000px'
+                }
+            ),
+            dayContainers = document.querySelectorAll('.day-container');
+
+        dayContainers.forEach((container) => {
+            observer.observe(container);
+        });
+
     },
     computed: {
         dropUsers() {

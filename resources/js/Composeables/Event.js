@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import axios from "axios";
+import {ref} from "vue";
 
 export function useEvent() {
     const getDaysOfEvent = (startDate, endDate) => {
@@ -40,11 +41,49 @@ export function useEvent() {
         },
         formatEventDateByDayJs = (date) => {
             return dayjs(date).format('YYYY-MM-DD');
+        },
+        useReload = (projectId) => {
+            const showReceivesNewDataOverlay = ref(false),
+                hasReceivedNewCalendarData = ref(false),
+                hasReceivedNewEventsWithoutRoomData = ref(false),
+                receivedRoomData = ref([]),
+                receivedEventsWithoutRoom = ref([]),
+
+                handleReload = async (
+                    desiredRoomIdsToReload,
+                    desiredDaysToReload,
+                    reloadEventsWithoutRoom = false
+                ) => {
+                    showReceivesNewDataOverlay.value = true;
+                    const {roomData, eventsWithoutRoom} = await reloadRoomsAndDays(
+                        desiredRoomIdsToReload,
+                        desiredDaysToReload,
+                        projectId,
+                        reloadEventsWithoutRoom
+                    );
+
+                    receivedRoomData.value = roomData;
+                    hasReceivedNewCalendarData.value = true;
+
+                    if (reloadEventsWithoutRoom) {
+                        receivedEventsWithoutRoom.value = eventsWithoutRoom;
+                        hasReceivedNewEventsWithoutRoomData.value = true;
+                    }
+                };
+
+            return {
+                showReceivesNewDataOverlay,
+                hasReceivedNewCalendarData,
+                hasReceivedNewEventsWithoutRoomData,
+                receivedRoomData,
+                receivedEventsWithoutRoom,
+                handleReload
+            };
         };
 
     return {
         getDaysOfEvent,
-        reloadRoomsAndDays,
-        formatEventDateByDayJs
+        formatEventDateByDayJs,
+        useReload
     };
 }

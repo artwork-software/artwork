@@ -255,12 +255,12 @@ class CalendarService
     /**
      * @return array<int, MinimalCalendarEventResource>
      */
-    public function getEventsAtAGlance($startDate, $endDate): array
+    public function getEventsAtAGlance($startDate, $endDate, ?Project $project = null): array
     {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $actualEvents = $eventsForRoom = [];
 
-        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, null)
+        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
             ->with(
                 [
                     'room',

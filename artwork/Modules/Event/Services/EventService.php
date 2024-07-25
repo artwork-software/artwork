@@ -27,7 +27,6 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
-use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -771,12 +770,26 @@ readonly class EventService
         EventTypeService $eventTypeService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?Project $project = null
     ): EventManagementDto {
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
 
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+        //today is used if project calendar is opened and no events are given as project calendar
+        //do not rely on user calendar filter dates
+        $today = Carbon::now();
+        [$startDate, $endDate] = !$project ?
+            $userService->getUserCalendarFilterDatesOrDefault() :
+            [
+                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                    $today->startOfDay(),
+                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $today->endOfDay()
+            ];
 
         return EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
@@ -795,7 +808,7 @@ readonly class EventService
                 empty($room) ?
                     CalendarEventResource::collection(
                         $this->getEventsWithoutRoom(
-                            null,
+                            $project,
                             [
                                 'room',
                                 'creator',
@@ -815,7 +828,7 @@ readonly class EventService
                     )->resolve() :
                     []
             )
-            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate))
+            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate, $project))
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
@@ -853,12 +866,26 @@ readonly class EventService
         EventTypeService $eventTypeService,
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
-        AreaService $areaService
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?Project $project = null
     ): EventManagementDto {
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
 
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+        //today is used if project calendar is opened and no events are given as project calendar
+        //do not rely on user calendar filter dates
+        $today = Carbon::now();
+        [$startDate, $endDate] = !$project ?
+            $userService->getUserCalendarFilterDatesOrDefault() :
+            [
+                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                    $today->startOfDay(),
+                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $today->endOfDay()
+            ];
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
@@ -871,7 +898,7 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            null,
+            $project,
             $userCalendarFilter
         );
 

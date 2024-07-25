@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
+    <BaseModal @closed="closeModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
         <div class="mx-4">
             <!--   Heading   -->
             <div>

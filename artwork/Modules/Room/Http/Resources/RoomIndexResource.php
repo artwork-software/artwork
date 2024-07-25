@@ -24,13 +24,13 @@ class RoomIndexResource extends JsonResource
         $startTime = Carbon::parse($request->get('start_time'));
         $endTime = Carbon::parse($request->get('start_time'));
 
-        $startTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($startTime));
-        $endTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($endTime));
+        //$startTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($startTime));
+        //$endTimeEvents = $this->events->filter(fn (Event $event) => $event->occursAtTime($endTime));
 
         return [
             'resource' => class_basename($this),
-            'conflicts_start_time' => EventShowResource::collection($startTimeEvents)->resolve(),
-            'conflicts_end_time' => EventShowResource::collection($endTimeEvents)->resolve(),
+            //'conflicts_start_time' => EventShowResource::collection($startTimeEvents)->resolve(),
+            //'conflicts_end_time' => EventShowResource::collection($endTimeEvents)->resolve(),
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,

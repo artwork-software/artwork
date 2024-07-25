@@ -11,7 +11,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
@@ -257,14 +257,14 @@ class WalidRaadSeeder extends Seeder
          * Create Project States
          */
         $faker = \Faker\Factory::create();
-        ProjectStates::create(['name' => 'Optional', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'Läuft aktuell', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'In Planung', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'Abgeschlossen', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'Abgebrochen', 'color' => $faker->hexColor()]);
-        ProjectStates::create(['name' => 'In Bearbeitung', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Optional', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Läuft aktuell', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'In Planung', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Abgeschlossen', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Abgebrochen', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'In Bearbeitung', 'color' => $faker->hexColor()]);
 
 
 

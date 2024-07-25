@@ -90,6 +90,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $is_sidebar_opened
  * @property boolean $compact_mode
  * @property array $show_crafts
+ * @property bool $at_a_glance
  * @property Collection<Department> $departments
  * @property Collection<Project> $projects
  * @property Collection<Comment> $comments
@@ -114,7 +115,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Craft> $assignedCrafts
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<string> $allPermissions
- *
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -166,7 +166,8 @@ class User extends Model implements
         'compact_mode',
         'show_crafts',
         'goto_mode',
-        'checklist_style'
+        'checklist_style',
+        'at_a_glance'
     ];
 
     protected $casts = [
@@ -179,7 +180,8 @@ class User extends Model implements
         'zoom_factor' => 'float',
         'is_sidebar_opened' => 'boolean',
         'compact_mode' => 'boolean',
-        'show_crafts' => 'array'
+        'show_crafts' => 'array',
+        'at_a_glance' => 'boolean'
     ];
 
     protected $hidden = [

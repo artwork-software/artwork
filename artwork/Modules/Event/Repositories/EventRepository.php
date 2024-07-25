@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -76,5 +77,21 @@ class EventRepository extends BaseRepository
     public function findById(int $id): Event
     {
         return Event::find($id);
+    }
+
+    public function getEventsWithoutRoom(int|Project $project = null, ?array $with = null): Collection
+    {
+        /** @var Builder $builder */
+        $builder = Event::query()->hasNoRoom();
+
+        if ($project) {
+            $builder->byProjectId(($project instanceof Project) ? $project->getAttribute('id') : $project);
+        }
+
+        if ($with) {
+            $builder->with($with);
+        }
+
+        return $builder->get();
     }
 }

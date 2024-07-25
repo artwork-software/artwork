@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, provide } from 'vue';
-import { Link, usePage } from "@inertiajs/vue3";
+import {provide, ref} from 'vue';
+import {usePage} from "@inertiajs/vue3";
 import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
 import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
 import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
@@ -17,7 +17,8 @@ import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorCompone
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
-import RelevantDatesForShiftPlanningComponent from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+import RelevantDatesForShiftPlanningComponent
+    from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
 import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
@@ -28,12 +29,12 @@ import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAll
 import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
 import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
 import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
-import { usePermissions } from "@/Composeables/usePermissions.js";
+import {usePermission} from "@/Composeables/Permission.js";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
 
-const { canSeeComponent, canEditComponent } = usePermissions(usePage().props);
+const { canSeeComponent, canEditComponent } = usePermission(usePage().props);
 
 const componentMapping = {
     TextField,

@@ -1,22 +1,31 @@
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+                             leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"/>
             </TransitionChild>
             <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full rounded-lg" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']">
-                            <img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg" :class="fullModal ? '' : '-ml-6 -mt-6'"/>
+                    <TransitionChild as="template" enter="ease-out duration-300"
+                                     enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                     enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
+                                     leave-from="opacity-100 translate-y-0 sm:scale-100"
+                                     leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                        <DialogPanel
+                            class="relative transform bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full rounded-lg"
+                            :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']">
+                            <img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
+                                 :class="fullModal ? '' : '-ml-6 -mt-6'"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                                        @click="closeModal(false)">
                                     <span class="sr-only">Close</span>
-                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
+                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true"/>
                                 </button>
                             </div>
                             <div>
-                                <slot />
+                                <slot/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -45,7 +54,7 @@ export default {
         TransitionRoot,
         XIcon, DialogPanel
     },
-    data(){
+    data() {
         return {
             open: true,
         }
@@ -70,7 +79,7 @@ export default {
     },
     emits: ['closed'],
     methods: {
-        closeModal(bool){
+        closeModal(bool) {
             this.$emit('closed', bool)
         },
     }

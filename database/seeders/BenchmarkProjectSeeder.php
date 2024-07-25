@@ -19,7 +19,6 @@ class BenchmarkProjectSeeder extends Seeder
         $faker = Factory::create('de_DE');
         $project = Project::create([
             'name' => 'Benchmark',
-            'description' => $faker->text,
             'shift_description' => '',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4
@@ -67,7 +66,6 @@ class BenchmarkProjectSeeder extends Seeder
                         'end' => '13:00:00',
                         'break_minutes' => '11',
                         'craft_id' => 1,
-                        'number_employees' => 3,
                         'shift_uuid' => Str::uuid(),
                         'event_start_day' => $eventWithShift->start_time->format('Y-m-d'),
                         'event_end_day' => $eventWithShift->end_time->format('Y-m-d'),

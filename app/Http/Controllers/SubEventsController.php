@@ -14,7 +14,7 @@ class SubEventsController extends Controller
     {
     }
 
-    public function store(Request $request): void
+    public function store(Request $request): bool
     {
         SubEvent::create($request->only([
             'event_id',
@@ -54,9 +54,11 @@ class SubEventsController extends Controller
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->createNotification();
         }
+
+        return true;
     }
 
-    public function update(Request $request, SubEvent $subEvents): void
+    public function update(Request $request, SubEvent $subEvents): bool
     {
         $subEvents->update($request->only([
             'eventName',
@@ -69,6 +71,8 @@ class SubEventsController extends Controller
             'is_loud',
             'allDay'
         ]));
+
+        return true;
     }
 
     public function destroy(SubEvent $subEvents): void

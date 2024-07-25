@@ -71,14 +71,12 @@
                     <div>
                         <div class="flex w-full mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNotLoud.checked"
-                                   @change="reloadFilterBackend"
                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                             <p :class="[filterArray.adjoining.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without a loud side event')}}</p>
                         </div>
                         <div class="flex w-full mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNoAudience.checked"
-                                   @change="reloadFilterBackend"
                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                             <p :class="[filterArray.adjoining.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without side event with audience')}}</p>
@@ -251,6 +249,12 @@
                 </DisclosurePanel>
             </Disclosure>
 
+
+            <div class="flex items-center justify-end py-1">
+                <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out" @click="reloadChanges">
+                    {{ $t('Apply') }}
+                </div>
+            </div>
         </div>
     </BaseFilter>
 </template>
@@ -342,17 +346,12 @@ export default {
         }
     },
     methods: {
-        reloadFilterBackend() {
-            this.reloadChanges()
-        },
         addRoomCategoryToFilter(category) {
             if (this.roomCategoryIds.includes(Number(category.id))) {
                 this.roomCategoryIds.splice(this.roomCategoryIds.indexOf(category.id), 1)
             } else {
                 this.roomCategoryIds.push(category.id)
             }
-
-            this.reloadChanges()
         },
         addRoomAttributeToFilter(attribute) {
             if (this.roomAttributeIds.includes(attribute.id)) {
@@ -360,7 +359,6 @@ export default {
             } else {
                 this.roomAttributeIds.push(attribute.id)
             }
-            this.reloadChanges()
         },
         addEventTypesToFilter(eventType) {
             if (this.eventTypeIds.includes(eventType.id)) {
@@ -368,7 +366,6 @@ export default {
             } else {
                 this.eventTypeIds.push(eventType.id)
             }
-            this.reloadChanges()
         },
         addAreasToFilter(area) {
             if (this.areaIds.includes(area.id)) {
@@ -376,7 +373,6 @@ export default {
             } else {
                 this.areaIds.push(area.id)
             }
-            this.reloadChanges()
         },
 
         addRoomsToFilter(room) {
@@ -385,13 +381,13 @@ export default {
             } else {
                 this.roomIds.push(room.id)
             }
-            this.reloadChanges()
         },
         setCheckedFalse(array) {
             array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
             this.$inertia.delete(route('reset.user.calendar.filter', this.$page.props.user.id), {
+                preserveState: false,
                 onSuccess: () => {
                     this.filterArray.rooms.forEach(room => room.checked = false)
                     this.filterArray.areas.forEach(area => area.checked = false)
@@ -604,7 +600,7 @@ export default {
                 room_categories: this.arrayToIds(this.filterArray.roomCategories)
             }, {
                 preserveScroll: true,
-                preserveState: true,
+                preserveState: false,
 
             })
         }
@@ -616,14 +612,7 @@ export default {
             return pathName !== "rooms";
         },
     },
-    watch: {
-        atAGlance: {
-            handler() {
-                this.reloadChanges()
-            }
-        },
 
-    }
 }
 </script>
 

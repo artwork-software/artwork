@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Event\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -23,7 +24,7 @@ class EventManagementDto extends BaseDto
 
     public ?array $eventsWithoutRoom = null;
 
-    public ?SupportCollection $eventsAtAGlance = null;
+    public ?array $eventsAtAGlance = null;
 
     public ?Collection $rooms = null;
 
@@ -88,7 +89,7 @@ class EventManagementDto extends BaseDto
         return $this;
     }
 
-    public function setEventsAtAGlance(?SupportCollection $eventsAtAGlance): self
+    public function setEventsAtAGlance(?array $eventsAtAGlance): self
     {
         $this->eventsAtAGlance = $eventsAtAGlance;
 
@@ -191,7 +192,10 @@ class EventManagementDto extends BaseDto
         return $this->eventsWithoutRoom;
     }
 
-    public function getEventsAtAGlance(): ?SupportCollection
+    /**
+     * @return array<int, MinimalCalendarEventResource>|null
+     */
+    public function getEventsAtAGlance(): ?array
     {
         return $this->eventsAtAGlance;
     }

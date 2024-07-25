@@ -7,17 +7,16 @@ use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -27,9 +26,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 class CalendarService
 {
+    public function __construct(private readonly EventService $eventService)
+    {
+    }
+
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
@@ -151,6 +155,7 @@ class CalendarService
 
     /**
      * @return array<string, mixed>
+     * @throws Throwable
      */
     public function createCalendarData(
         Carbon $startDate,
@@ -163,7 +168,6 @@ class CalendarService
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        ProjectService $projectService,
         ?Project $project,
         ?CalendarFilter $calendarFilter,
         ?Room $room = null,
@@ -183,7 +187,7 @@ class CalendarService
             ];
         }
 
-        return [
+        $result = [
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')],
             // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
@@ -197,7 +201,7 @@ class CalendarService
                 null,
             'roomsWithEvents' => empty($room) ?
                 $roomService->collectEventsForRooms(
-                    roomsWithEvents:  $roomService->getFilteredRooms(
+                    roomsWithEvents: $roomService->getFilteredRooms(
                         $startDate,
                         $endDate,
                         $calendarFilter
@@ -210,35 +214,92 @@ class CalendarService
                     room: $room,
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
-                    project: $project,
+                    project: $project
                 ),
             'eventsWithoutRoom' => empty($room) ?
-                CalendarEventResource::collection(Event::hasNoRoom()->get())->resolve() :
+                CalendarEventResource::collection(
+                    $this->eventService->getEventsWithoutRoom(
+                        $project,
+                        [
+                            'room',
+                            'creator',
+                            'project',
+                            'project.managerUsers',
+                            'project.state',
+                            'shifts',
+                            'shifts.craft',
+                            'shifts.users',
+                            'shifts.freelancer',
+                            'shifts.serviceProvider',
+                            'shifts.shiftsQualifications',
+                            'subEvents.event',
+                            'subEvents.event.room'
+                        ]
+                    )
+                )->resolve() :
                 [],
             'filterOptions' => $filterService->getCalendarFilterDefinitions(
                 $roomCategoryService,
                 $roomAttributeService,
                 $eventTypeService,
                 $areaService,
-                $projectService,
                 $roomService
             ),
             'personalFilters' => $filterController->index(),
             'user_filters' => $userService->getAuthUser()->calendar_filter,
         ];
+
+        return $result;
     }
 
-    public function getEventsAtAGlance($startDate, $endDate): Collection
+    /**
+     * @return array<int, MinimalCalendarEventResource>
+     */
+    public function getEventsAtAGlance($startDate, $endDate, ?Project $project = null): array
     {
-        $initialEventQuery = Event::query();
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $actualEvents = $eventsForRoom = [];
 
-        $filteredEventsQuery = $this->filterEvents($initialEventQuery, $startDate, $endDate, null, null);
+        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
+            ->with(
+                [
+                    'room',
+                    'creator',
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room'
+                ]
+            )->orderBy('start_time');
 
-        $eventsByRoom = $filteredEventsQuery
-            ->with(['room', 'project', 'creator'])
-            ->orderBy('start_time', 'ASC')->get();
+        foreach ($eventsQuery->get()->all() as $event) {
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $event->start_time;
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
-        return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $event;
+            }
+        }
+
+        foreach ($actualEvents as $key => $value) {
+            $eventsForRoom[$key] = [
+                //immediately resolve resource to free used memory
+                'events' => MinimalCalendarEventResource::collection($value)->resolve()
+            ];
+        }
+
+        return $eventsForRoom;
     }
 
     public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection

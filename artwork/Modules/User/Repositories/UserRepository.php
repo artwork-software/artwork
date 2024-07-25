@@ -103,4 +103,9 @@ class UserRepository extends BaseRepository
             'profile_photo_url' => $user->profile_photo_url,
         ]);
     }
+
+    public function atAGlanceEnabled(User $user): bool
+    {
+        return $user->getAttribute('at_a_glance');
+    }
 }

@@ -2,8 +2,12 @@
 
 namespace Artwork\Modules\SubEvent\Http\Resources;
 
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin SubEvent
+ */
 class SubEventResource extends JsonResource
 {
     public static $wrap = null;
@@ -28,6 +32,7 @@ class SubEventResource extends JsonResource
             'eventTypeAbbreviation' => $this->type->abbreviation,
             'eventTypeColor' => $this->type->hex_code,
             'allDay' => $this->allDay,
+            'roomId' => $this->getAttribute('event')->getAttribute('room')->getAttribute('id'),
         ];
     }
 }

@@ -180,7 +180,7 @@
 
 <script>
 import Button from "@/Jetstream/Button.vue";
-import {PlusCircleIcon, CalendarIcon, ZoomInIcon, ZoomOutIcon} from '@heroicons/vue/outline'
+import {CalendarIcon, PlusCircleIcon, ZoomInIcon, ZoomOutIcon} from '@heroicons/vue/outline'
 import {Menu, MenuButton, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
@@ -188,9 +188,8 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {useForm, usePage} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {router} from "@inertiajs/vue3";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -239,13 +238,13 @@ export default {
         'personalFilters',
         'user_filters'
     ],
-    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
+    emits: ['changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {
         return {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
-            activeFilters: [],
+
             userCalendarSettings: useForm({
                 project_status: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_status : false,
                 options: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.options : false,
@@ -269,7 +268,12 @@ export default {
             }
         },
         changeAtAGlance() {
-            this.$emit('changeAtAGlance')
+            router.patch(route('user.update.at_a_glance', usePage().props.user.id), {
+                at_a_glance: !this.atAGlance
+            }, {
+                preserveState: false,
+                preserveScroll: true
+            })
         },
         changeMultiEdit(multiEdit) {
             this.$emit('changeMultiEdit', !multiEdit)
@@ -456,6 +460,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-</style>

@@ -7,7 +7,6 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -23,10 +22,14 @@ readonly class ShiftService
 {
     public function __construct(
         private ShiftRepository $shiftRepository,
-        private EventService $eventService,
         private CraftService $craftService,
         private NotificationService $notificationService
     ) {
+    }
+
+    public function getAll(array $with = []): Collection
+    {
+        return $this->shiftRepository->getAll($with);
     }
 
     public function getById(int $shiftId): Shift|null

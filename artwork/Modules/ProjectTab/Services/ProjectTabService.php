@@ -2,34 +2,23 @@
 
 namespace Artwork\Modules\ProjectTab\Services;
 
-use App\Http\Controllers\FilterController;
 use Artwork\Core\Cache\ServiceWithArrayCache;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\CollectingSociety\Services\CollectingSocietyService;
 use Artwork\Modules\CompanyType\Services\CompanyTypeService;
 use Artwork\Modules\ContractType\Services\ContractTypeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Services\CurrencyService;
-use Artwork\Modules\Event\DTOs\CalendarEventDto;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerDropResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
-use Artwork\Modules\Project\Http\Resources\ProjectCalendarShowEventResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Cache\ProjectTabArrayCache;
 use Artwork\Modules\ProjectTab\DTOs\BudgetInformationDto;
-use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Artwork\Modules\ProjectTab\DTOs\ShiftsDto;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderDropResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
@@ -37,16 +26,12 @@ use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
-use Illuminate\Auth\AuthManager;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 
-readonly class ProjectTabService implements ServiceWithArrayCache
+class ProjectTabService implements ServiceWithArrayCache
 {
     public function __construct(
-        private ProjectTabRepository $projectTabRepository,
-        private readonly ShiftTimePresetService $shiftTimePresetService,
-        private readonly AuthManager $authManager,
+        private readonly ProjectTabRepository $projectTabRepository,
+        private readonly ShiftTimePresetService $shiftTimePresetService
     ) {
     }
 
@@ -84,85 +69,6 @@ readonly class ProjectTabService implements ServiceWithArrayCache
             ProjectTabArrayCache::setItem($projectTab);
         }
         return $projectTab;
-    }
-
-    public function getCalendarTab(
-        Carbon $startDate,
-        Carbon $endDate,
-        Project $project,
-        RoomService $roomService,
-        CalendarService $calendarService,
-        ProjectService $projectService,
-        UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
-        bool $atAGlance
-    ): CalendarDto {
-        if (
-            ($firstEventInProject = $projectService->getFirstEventInProject($project)) &&
-            ($lastEventInProject = $projectService->getLastEventInProject($project))
-        ) {
-            $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-            $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-        }
-
-        $calendarData = $calendarService->createCalendarData(
-            startDate: $startDate,
-            endDate: $endDate,
-            userService: $userService,
-            filterService: $filterService,
-            filterController: $filterController,
-            roomService: $roomService,
-            roomCategoryService: $roomCategoryService,
-            roomAttributeService: $roomAttributeService,
-            eventTypeService: $eventTypeService,
-            areaService: $areaService,
-            projectService: $projectService,
-            project: $project,
-            calendarFilter: $userService->getAuthUser()->calendar_filter,
-        );
-
-        $eventsAtAGlance = Collection::make();
-        if ($atAGlance) {
-            $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
-                $calendarService
-                    ->filterEvents($project->events(), null, null, null, $project)
-                    ->with(['room', 'project', 'creator'])
-                    ->orderBy('start_time', 'ASC')
-                    ->get()
-            )->collection->groupBy('room.id');
-        }
-
-        return CalendarDto::newInstance()
-            ->setCalendar($calendarData['roomsWithEvents'])
-            ->setDateValue($calendarData['dateValue'])
-            ->setDays($calendarData['days'])
-            ->setSelectedDate($calendarData['selectedDate'])
-            ->setFilterOptions($calendarData["filterOptions"])
-            ->setPersonalFilters($calendarData['personalFilters'])
-            ->setEventsWithoutRoom($calendarData['eventsWithoutRoom'])
-            ->setUserFilters($calendarData['user_filters'])
-            ->setEventsAtAGlance($eventsAtAGlance)
-            ->setRooms(
-                $roomService->getFilteredRooms(
-                    $startDate,
-                    $endDate,
-                    $userService->getAuthUser()->calendar_filter
-                )
-            )
-            ->setEvents(
-                CalendarEventDto::newInstance()
-                    ->setAreas($calendarData['filterOptions']['areas'])
-                    ->setProjects($calendarData['filterOptions']['projects'])
-                    ->setEventTypes($calendarData['filterOptions']['eventTypes'])
-                    ->setRoomCategories($calendarData['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($calendarData['filterOptions']['roomAttributes'])
-                    ->setEvents($calendarService->getEventsOfInterval($startDate, $endDate, $project))
-            );
     }
 
     public function getShiftTab(

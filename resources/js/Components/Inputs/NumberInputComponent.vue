@@ -4,7 +4,7 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                type="number"
-               class="p-1.5 w-full text-sm peer border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0"
+               class="input peer"
                :class="isSmall ? '' : 'h-12'"
                placeholder="placeholder"
                min="0"

@@ -20,10 +20,10 @@
             leave-from-class="transform scale-100 opacity-100"
             leave-to-class="transform scale-95 opacity-0"
         >
-            <MenuItems v-if="left" class="w-80 absolute left-0 top-12 origin-top-left divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50 max-h-[calc(100vh-10rem)] overflow-auto">
+            <MenuItems v-if="left" class="w-80 absolute left-0 top-12 origin-top-left divide-y divide-gray-200 rounded-lg shadow-lg bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50 max-h-[calc(100vh-10rem)] overflow-auto">
                 <slot></slot>
             </MenuItems>
-            <MenuItems v-else class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50 max-h-[calc(100vh-10rem)] overflow-auto">
+            <MenuItems v-else class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-lg shadow-lg bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50 max-h-[calc(100vh-10rem)] overflow-auto">
                 <slot></slot>
             </MenuItems>
         </transition>

@@ -97,42 +97,42 @@
                             leave-to-class="transform scale-95 opacity-0"
                         >
                             <MenuItems
-                                class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div class="w-76 p-6">
-                                    <div class="flex py-1" v-if="!project">
+                                    <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_status"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <div
                                             :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                             class=" ml-4 my-auto text-secondary">{{ $t('Project Status') }}
                                         </div>
                                     </div>
-                                    <div class="flex py-1">
+                                    <div class="flex items-center py-1">
                                         <input v-model="userCalendarSettings.options"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Option prioritization') }}</p>
                                     </div>
-                                    <div class="flex py-1" v-if="!project">
+                                    <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_management"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Project managers') }}</p>
                                     </div>
-                                    <div class="flex py-1">
+                                    <div class="flex items-center py-1">
                                         <input v-model="userCalendarSettings.repeating_events"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Repeat event') }}</p>
                                     </div>
-                                    <div class="flex py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
+                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
                                         <input v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Shifts') }}</p>
                                     </div>

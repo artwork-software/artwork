@@ -26,7 +26,8 @@ export default {
         },
         teamMember: {
             type: Object,
-            default: false
+            required: false,
+            default: []
         }
     },
     computed: {
@@ -96,7 +97,7 @@ export default {
     </div>
     <AlertComponent
         v-if="onlyManager"
-        class="mt-1"
+        class="mt-1.5"
         show-icon
         type="info"
         icon-size="h-4 w-4"
@@ -104,7 +105,7 @@ export default {
     />
     <AlertComponent
         v-if="onlyTeam"
-        class="mt-1"
+        class="mt-1.5"
         show-icon
         type="info"
         icon-size="h-4 w-4"

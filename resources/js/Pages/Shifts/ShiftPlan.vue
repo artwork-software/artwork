@@ -69,8 +69,8 @@
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
                     <div class="flex justify-center overflow-y-scroll">
-                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
                                      viewBox="0 0 14.123 6.519">
@@ -87,7 +87,7 @@
                             </div>
                         </div>
                         <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
+                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
                             :title="$t('Hold and drag to change the size')">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <SelectorIcon class="h-3 w-6 text-gray-400" />

@@ -1,22 +1,15 @@
 <template>
-    <BaseModal @closed="closeModal" v-if="true"
-               :modal-image="!this.event?.id ? '/Svgs/Overlays/illu_appointment_new.svg' : '/Svgs/Overlays/illu_appointment_edit.svg'">
+    <BaseModal @closed="closeModal" v-if="true">
         <div class="mx-4">
             <!--   Heading   -->
             <div v-if="this.isRoomAdmin || this.hasAdminRole()">
-                <h1 class="my-1 flex">
-                    <div class="flex-grow headline1">
-                        {{
-                            this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : $t('New room allocation')
-                        }}
-                    </div>
-                </h1>
-                <h2 v-if="!this.event?.id" class="xsLight my-3">
-                    {{ $t('Please make sure that you allow for preparation and follow-up time.') }}
-                </h2>
-                <div v-else class="flex items-center">
+                <ModalHeader
+                    :title="this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : $t('New room allocation')"
+                    :description="$t('Please make sure that you allow for preparation and follow-up time.')"
+                />
+                <div v-if="event?.id" class="flex items-center">
                     {{ $t('Created by') }}
-                    <div v-if="this.event.created_by">
+                    <div v-if="this.event?.created_by">
                         <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"
                                             width="7" class="ml-2"/>
                     </div>
@@ -26,48 +19,38 @@
                 </div>
             </div>
 
-            <div v-else class="flex-grow headline1">
-                {{ $t('Event') }}
-            </div>
+            <ModalHeader v-else
+                :title="$t('Event')"
+            />
             <!--    Form    -->
             <!--    Type and Title    -->
-            <div class="flex py-2 my-3">
-                <div class="w-1/2">
-                    <div class=" w-full flex cursor-pointer truncate"
-                         v-if="!canEdit || this.disableEventTypeSelector">
+            <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
+                <div class="h-full">
+                    <div class="w-full flex items-center truncate h-full" v-if="!canEdit || this.disableEventTypeSelector">
                         <div>
-                            <div class="block w-10 h-10 rounded-full"
-                                 :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
+                            <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
                         </div>
                         <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
                             {{ selectedEventType?.name }}
                         </p>
                     </div>
-                    <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType"
-                             v-if="canEdit && !this.disableEventTypeSelector"
-                             id="eventType">
-                        <ListboxButton
-                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                            <div class="flex items-center my-auto">
-                                <div>
-                                    <div class="block w-5 h-5 rounded-full"
-                                         :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
+                    <Listbox as="div" class="" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector" id="eventType">
+                        <ListboxButton class="menu-button mt-5">
+                            <div class="flex w-full justify-between">
+                                <div class="flex items-center gap-x-2">
+                                    <div>
+                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
+                                    </div>
+                                    <div>
+                                        {{ selectedEventType?.name }}
+                                    </div>
                                 </div>
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedEventType?.name }}</span>
-                                </span>
-                                <span
-                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
-                                                      aria-hidden="true"/>
-                                </span>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </div>
                         </ListboxButton>
 
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
-                            <ListboxOptions
-                                class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
                                                v-for="eventType in eventTypes"
                                                :key="eventType.name"
@@ -97,22 +80,26 @@
                     </Listbox>
                     <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
                 </div>
+                <div>
+                    <div v-if="canEdit">
+                        <TextInputComponent
+                            v-model="this.eventName"
+                            id="eventTitle"
+                            :label="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
+                            :disabled="!canEdit"
+                        />
 
-                <div class="w-1/2" v-if="canEdit">
-                    <input type="text"
-                           v-model="this.eventName"
-                           id="eventTitle"
-                           :placeholder="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
-                           :disabled="!canEdit"
-                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                    <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">
-                        {{ error?.eventName?.join('. ') }}</p>
-                </div>
-                <div v-else class="flex w-1/2 ml-12 items-center">
-                    {{ this.eventName }}
+                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">
+                            {{ error?.eventName?.join('. ') }}</p>
+                    </div>
+                    <div v-else class="flex w-1/2 ml-12 items-center">
+                        {{ this.eventName }}
+                    </div>
                 </div>
             </div>
+
+
+
 
             <div v-if="!canEdit" class="flex w-full">
                 <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
@@ -167,63 +154,67 @@
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
-            <div v-if="canEdit" class="flex pb-1 flex-col sm:flex-row align-baseline">
-                <div class="sm:w-1/2 mr-1">
-                    <label for="startDate" class="xxsLight">{{ $t('Start*') }}</label>
+            <div v-if="canEdit" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 pt-3">
+                <div>
                     <div class="w-full flex">
-                        <input v-model="startDate"
-                               id="startDate"
-                               @change="checkChanges()"
-                               type="date"
-                               :disabled="!canEdit"
-                               required
-                               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-                        <input v-model="startTime"
-                               id="changeStartTime"
-                               v-if="!allDayEvent"
-                               @change="checkChanges()"
-                               type="time"
-                               :disabled="!canEdit"
-                               required
-                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                        <DateInputComponent
+                            id="startDate"
+                            @change="checkChanges()"
+                            v-model="startDate"
+                            label="Start"
+                            :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none' : '!rounded-lg'"
+                        />
+
+                        <TimeInputComponent
+                            v-model="startTime"
+                            id="changeStartTime"
+                            v-if="!allDayEvent"
+                            @change="checkChanges()"
+                            label="Startzeit"
+                            :disabled="!canEdit"
+                            classes="!rounded-r-lg !rounded-l-none border-l-0"
+                            required
+                        />
                     </div>
                     <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                 </div>
-                <div class="sm:w-1/2 ml-1">
-                    <label for="endDate" class="xxsLight">{{ $t('End*') }}</label>
+                <div>
                     <div class="w-full flex">
-                        <input v-model="endDate"
-                               id="endDate"
-                               @change="checkChanges()"
-                               type="date"
-                               required
-                               :disabled="!canEdit"
-                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
-                        <input v-model="endTime"
-                               v-if="!allDayEvent"
-                               id="changeEndTime"
-                               @change="checkChanges()"
-                               type="time"
-                               required
-                               :disabled="!canEdit"
-                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                        <DateInputComponent
+                            v-model="endDate"
+                            id="endDate"
+                            @change="checkChanges()"
+                            label="End"
+                            :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none' : '!rounded-lg'"
+                        />
+                        <TimeInputComponent
+                            v-model="endTime"
+                            v-if="!allDayEvent"
+                            id="changeEndTime"
+                            @change="checkChanges()"
+                            label="Endzeit"
+                            :disabled="!canEdit"
+                            classes="!rounded-r-lg !rounded-l-none border-l-0"
+                            required
+                        />
                     </div>
                     <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                 </div>
 
             </div>
             <div>
-                <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
+                <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">
+                    {{ helpTextLength }}
+                </div>
             </div>
             <div>
-                <div class="text-red-500 text-xs" v-show="helpTextLengthRoom.length > 0">{{
-                        helpTextLengthRoom
-                    }}
+                <div class="text-red-500 text-xs" v-show="helpTextLengthRoom.length > 0">
+                    {{helpTextLengthRoom }}
                 </div>
             </div>
             <!-- Serien Termin -->
             <div v-if="!event">
-                <SwitchGroup as="div" class="flex items-center my-3">
+                <SwitchGroup as="div" class="flex items-center mt-3 mb-1">
                     <Switch v-model="series"
                             :class="[series ? 'bg-indigo-600 cursor-pointer' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
@@ -236,12 +227,12 @@
                     </SwitchLabel>
                 </SwitchGroup>
                 <div v-show="series">
-                    <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div class="grid grid-cols-2 gap-2">
                         <Listbox :disabled="event?.is_series" as="div" v-model="selectedFrequency">
-                            <div class="relative mt-2">
+                            <div class="relative mt-5">
                                 <ListboxButton
-                                    class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                    <span class="block truncate">{{ selectedFrequency.name }}</span>
+                                    class="menu-button">
+                                    <div class="block truncate">{{ selectedFrequency.name }}</div>
                                     <span
                                         class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                              <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
@@ -273,17 +264,14 @@
                                 </transition>
                             </div>
                         </Listbox>
-                        <div class="mt-2">
+                        <div>
                             <div class="w-full flex">
-                                <input
+                                <DateInputComponent
                                     :disabled="event?.is_series"
                                     v-model="seriesEndDate"
                                     id="endDate"
-                                    :type="seriesEndDate ? 'date' : 'text'"
-                                    :placeholder="$t('End date Repeat event')"
-                                    required
-                                    @focus="input => input.target.type = 'date'"
-                                    class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                    :label="$t('End date Repeat event')"
+                                />
                             </div>
                         </div>
                     </div>
@@ -294,15 +282,18 @@
                 {{ $t('Cycle: {0} to {1}', {0: selectedFrequency.name, 1: convertDateFormat(seriesEndDate)}) }}
             </div>
             <!--    Room    -->
-            <div class="pt-1 mb-4" v-if="canEdit">
-                <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
-                    <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                        <div class="flex-grow flex text-left xsDark">
+            <div class="pt-3 mb-4" v-if="canEdit">
+                <Listbox as="div" class="relative" v-model="selectedRoom" id="room" v-if="canEdit">
+                    <ListboxButton class="menu-button">
+                        <span v-if="!selectedRoom">
+                            {{ $t('Select room') }}*
+                        </span>
+                        <div class="flex-grow flex text-left xsDark" v-else>
                             {{ selectedRoom?.name }}
                         </div>
                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </ListboxButton>
-                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                    <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                         <ListboxOption v-for="room in this.rooms"
                                        class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                        :key="room.name"
@@ -318,44 +309,18 @@
                         </ListboxOption>
                     </ListboxOptions>
                 </Listbox>
-                <Listbox as="div" v-model="selectedRoom" id="room" v-else>
-                    <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                        <div class="flex-grow xsLight text-left subpixel-antialiased">
-                            {{ $t('Select room') }}*
-                        </div>
-                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                    </ListboxButton>
-                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                        <ListboxOption v-for="room in rooms"
-                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                       :key="room.name"
-                                       :value="room"
-                                       v-slot="{ active, selected }">
-                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                {{ room.name }}
-                                <img
-                                    v-if="this.roomCollisionArray[room.id] > 0"
-                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                    class="h-4 w-4 mx-2" alt="conflictIcon"
-                                />
-                            </div>
-                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                       aria-hidden="true"/>
-                        </ListboxOption>
-                    </ListboxOptions>
-                </Listbox>
                 <p class="text-xs text-red-800">{{ error?.roomId?.join('. ') }}</p>
             </div>
 
             <!--Gray Background Area -->
-            <div class="bg-lightBackgroundGray -mx-10 pt-1 pb-4">
+            <div class="bg-lightBackgroundGray my-4 -mx-10 pt-1 pb-4">
                 <div class="px-10">
                     <!--    Project    -->
                     <div v-if="canEdit">
                         <!-- Checkbox to decide if i show this block or not -->
                         <div class="my-3">
                             <input type="checkbox" v-model="showProjectInfo"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
+                                   class="input-checklist">
                             <span
                                 :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{
                                     $t('Assign event to a project')
@@ -387,49 +352,32 @@
 
                             <div class="my-2" v-if="this.canEdit">
                                 <div class="flex pb-2">
-                            <span class="mr-4 "
-                                  :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
-                                {{ $t('Existing project') }}
-                            </span>
-                                    <div class="flex">
-                                        <label for="project-toggle"
-                                               class="inline-flex relative items-center cursor-pointer">
-                                            <input type="checkbox"
-                                                   v-model="creatingProject"
-                                                   :disabled="!canEdit"
-                                                   id="project-toggle"
-                                                   class="sr-only peer">
-                                            <div class="w-9 h-5 bg-gray-200 rounded-full
-                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
-                                            </div>
-                                        </label>
-                                        <span class="ml-4 text-sm"
-                                              :class="[creatingProject ? 'xsDark' : 'xsLight']">
-                                {{ $t('New project') }}
-                            </span>
-                                        <div v-if="showHints" class="ml-3 flex">
-                                            <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                            <div class=" ml-1 my-auto hind">
-                                                {{ $t('Create a new project at the same time') }}
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                    <SwitchGroup as="div" class="flex items-center">
+                                        <SwitchLabel as="span" class="mr-3 text-sm" :class="creatingProject ? 'font-bold' : 'text-gray-400'">
+                                            {{ $t('New project') }}
+                                        </SwitchLabel>
+                                        <Switch v-model="creatingProject" :class="[creatingProject ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                                            <span aria-hidden="true" :class="[!creatingProject  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                        </Switch>
+                                        <SwitchLabel as="span" class="ml-3 text-sm" :class="!creatingProject? 'font-bold' : 'text-gray-400'">
+                                            {{ $t('Existing project') }}
+                                        </SwitchLabel>
+                                    </SwitchGroup>
                                 </div>
-                                <input type="text"
-                                       :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
-                                       v-model="projectName"
-                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                                <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                                     class="absolute bg-primary truncate sm:text-sm w-10/12">
-                                    <div v-for="(project, index) in projectSearchResults"
-                                         :key="index"
-                                         @click="chooseProject(project)"
-                                         class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                                        {{ project.name }}
+                                <div class="relative w-full">
+                                    <TextInputComponent
+                                        id="projectName"
+                                        :label="creatingProject ? $t('New project name') : $t('Search project')"
+                                        v-model="projectName"
+                                    />
+                                    <div v-if="projectSearchResults.length > 0 && !creatingProject"
+                                         class="absolute bg-primary truncate sm:text-sm w-full">
+                                        <div v-for="(project, index) in projectSearchResults"
+                                             :key="index"
+                                             @click="chooseProject(project)"
+                                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                            {{ project.name }}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -438,33 +386,58 @@
                     </div>
                     <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
                     <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
-                    <!--    Description    -->
-                    <div class="py-2">
-                    <textarea v-if="canEdit" :placeholder="$t('What do I need to bear in mind for the event?')"
-                              id="description"
-                              :disabled="!canEdit"
-                              v-model="description"
-                              rows="4"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
-                        <div v-else-if="this.description" class="mt-4 xsDark">
-                            {{ this.description }}
-                        </div>
-                        <div v-if="this.event?.occupancy_option && canEdit">
-                        <textarea v-if="canEdit" :placeholder="$t('Comment on the booking (inquirer will be notified)')"
-                                  id="adminComment"
-                                  :disabled="!canEdit"
-                                  v-model="adminComment"
-                                  rows="4"
-                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
-                        </div>
-                        <div v-if="this.event?.occupancy_option && (isRoomAdmin || this.hasAdminRole()) "
-                             class="flex py-2 items-center">
-                            <label for="accept-toggle" class="inline-flex relative items-center cursor-pointer">
+                </div>
+            </div>
+
+            <div>
+                <!--    Description    -->
+                <div class="py-2">
+                    <TextareaComponent
+                        v-if="canEdit"
+                        :label="$t('What do I need to bear in mind for the event?')"
+                        id="description"
+                        :disabled="!canEdit"
+                        v-model="description"
+                        rows="4"
+                    />
+                    <div v-else-if="this.description" class="mt-4 xsDark">
+                        {{ this.description }}
+                    </div>
+                    <div v-if="this.event?.occupancy_option && canEdit">
+                        <TextareaComponent
+                            :label="$t('Comment on the booking (inquirer will be notified)')"
+                            id="adminComment"
+                            :disabled="!canEdit"
+                            v-model="adminComment"
+                            rows="4"
+                        />
+                    </div>
+                    <div v-if="this.event?.occupancy_option && (isRoomAdmin || this.hasAdminRole())" class="flex py-2 items-center">
+                        <label for="accept-toggle" class="inline-flex relative items-center cursor-pointer">
+                            <input type="checkbox"
+                                   v-model="accept"
+                                   :disabled="!canEdit"
+                                   @change="toggleAccept('accept')"
+                                   id="accept-toggle"
+                                   class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 rounded-full
+                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
+                            </div>
+                        </label>
+                        <span class="ml-2 text-sm"
+                              :class="[accept ? 'xsDark' : 'xsLight']">
+                                {{ $t('Commitments') }}
+                        </span>
+                        <div class="ml-12 flex items-center">
+                            <label for="optionAccept-toggle"
+                                   class="inline-flex relative items-center cursor-pointer">
                                 <input type="checkbox"
-                                       v-model="accept"
+                                       v-model="optionAccept"
                                        :disabled="!canEdit"
-                                       @change="toggleAccept('accept')"
-                                       id="accept-toggle"
+                                       @change="toggleAccept('option')"
+                                       id="optionAccept-toggle"
                                        class="sr-only peer">
                                 <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
@@ -473,138 +446,108 @@
                                 </div>
                             </label>
                             <span class="ml-2 text-sm"
-                                  :class="[accept ? 'xsDark' : 'xsLight']">
-                                {{ $t('Commitments') }}
-                        </span>
-                            <div class="ml-12 flex items-center">
-                                <label for="optionAccept-toggle"
-                                       class="inline-flex relative items-center cursor-pointer">
-                                    <input type="checkbox"
-                                           v-model="optionAccept"
-                                           :disabled="!canEdit"
-                                           @change="toggleAccept('option')"
-                                           id="optionAccept-toggle"
-                                           class="sr-only peer">
-                                    <div class="w-9 h-5 bg-gray-200 rounded-full
-                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-artwork-buttons-create">
-                                    </div>
-                                </label>
-                                <span class="ml-2 text-sm"
-                                      :class="[optionAccept ? 'xsDark' : 'xsLight']">
+                                  :class="[optionAccept ? 'xsDark' : 'xsLight']">
                                 {{ $t('Optional commitment') }}
                         </span>
+                        </div>
+                    </div>
+                    <div class="py-2 w-full relative" v-if="optionAccept">
+                        <Listbox as="div" v-model="optionString" id="room">
+                            <ListboxButton class="menu-button">
+                                <div class="flex-grow flex text-left xsDark">
+                                    {{ optionString }}
+                                </div>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
+                                                 aria-hidden="true"/>
+                            </ListboxButton>
+                            <ListboxOptions class="w-full bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                <ListboxOption v-for="option in options"
+                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                               :key="option.name"
+                                               :value="option.name"
+                                               v-slot="{ active, selected }">
+                                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                        {{ option.name }}
+                                    </div>
+                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                               aria-hidden="true"/>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </Listbox>
+                    </div>
+                </div>
+                <div v-if="!this.$can('request room occupancy')">
+                    <div class="errorText">
+                        {{ $t('You do not have the permission to request a room reservation.') }}
+                    </div>
+                </div>
+                <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
+                    <div class="flex justify-between">
+                        <div class="flex items-center">
+                            <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
+                                            :width="8"></NewUserToolTip>
+                            <div class="ml-2 text-secondary">
+                                {{ comment.created_at }}
                             </div>
                         </div>
-                        <div class="py-2 w-full" v-if="optionAccept">
-                            <Listbox as="div" v-model="optionString" id="room">
-                                <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                    <div class="flex-grow flex text-left xsDark">
-                                        {{ optionString }}
+                    </div>
+                    <div class="mt-2 mr-14 subpixel-antialiased text-primary">
+                        {{ comment.comment }}
+                    </div>
+                </div>
+                <!-- Attribute Menu -->
+                <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
+                    <div>
+                        <MenuButton class="menu-button">
+                            <span class="flex items-center gap-x-2">
+                                <IconAdjustmentsAlt stroke-width="1.5" class="h-6 w-6" alt="attributeIcon"/>
+                                {{ $t('Select appointment properties') }}
+                            </span>
+                            <IconChevronDown stroke-width="1.5" class="ml-2 -mr-1 h-5 w-5 float-right" aria-hidden="true"/>
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition duration-50 ease-out"
+                        enter-from-class="transform scale-100 opacity-100"
+                        enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0">
+                        <MenuItems class="absolute overflow-y-auto h-24 w-[88%] origin-top-left divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                <div class="flex w-full mb-4">
+                                    <input v-model="audience"
+                                           :disabled="!canEdit"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                         alt="audienceIcon"/>
+
+                                    <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
+                                        {{ $t('With audience') }}
                                     </div>
-                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
-                                                     aria-hidden="true"/>
-                                </ListboxButton>
-                                <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                    <ListboxOption v-for="option in options"
-                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                   :key="option.name"
-                                                   :value="option.name"
-                                                   v-slot="{ active, selected }">
-                                        <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                            {{ option.name }}
-                                        </div>
-                                        <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
-                                                   aria-hidden="true"/>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </Listbox>
-                        </div>
-                    </div>
-                    <div v-if="!this.$can('request room occupancy')">
-                        <div class="errorText">
-                            {{ $t('You do not have the permission to request a room reservation.') }}
-                        </div>
-                    </div>
-                    <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
-                        <div class="flex justify-between">
-                            <div class="flex items-center">
-                                <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                                :width="8"></NewUserToolTip>
-                                <div class="ml-2 text-secondary">
-                                    {{ comment.created_at }}
+                                </div>
+                                <div class="flex w-full mb-2">
+                                    <input v-model="isLoud"
+                                           :disabled="!canEdit"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
+                                        {{ $t('It gets loud') }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="mt-2 mr-14 subpixel-antialiased text-primary">
-                            {{ comment.comment }}
-                        </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+                <!--    Properties    -->
+                <div class="flex py-2">
+                    <div v-if="audience">
+                        <TagComponent icon="audience" :displayed-text="$t('With audience')"
+                                      hideX="true" property="" />
                     </div>
-                    <!-- Attribute Menu -->
-                    <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
-                        <div>
-                            <MenuButton
-                                class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
-                            >
-
-                            <span class="float-left flex xsLight subpixel-antialiased">
-                                <IconAdjustmentsAlt stroke-width="1.5"
-                                                    class="mr-2 h-6 w-6"
-                                                    alt="attributeIcon"/>{{
-                                    $t('Select appointment properties')
-                                }}</span>
-                                <IconChevronDown stroke-width="1.5"
-                                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                                 aria-hidden="true"
-                                />
-                            </MenuButton>
-                        </div>
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
-                            <MenuItems
-                                class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                    <div class="flex w-full mb-4">
-                                        <input v-model="audience"
-                                               :disabled="!canEdit"
-                                               type="checkbox"
-                                               class="checkBoxOnDark"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                             alt="audienceIcon"/>
-
-                                        <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                            {{ $t('With audience') }}
-                                        </div>
-                                    </div>
-                                    <div class="flex w-full mb-2">
-                                        <input v-model="isLoud"
-                                               :disabled="!canEdit"
-                                               type="checkbox"
-                                               class="checkBoxOnDark"/>
-                                        <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
-                                            {{ $t('It gets loud') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
-                    <!--    Properties    -->
-                    <div class="flex py-2">
-                        <div v-if="audience">
-                            <TagComponent icon="audience" :displayed-text="$t('With audience')"
-                                          hideX="true"></TagComponent>
-                        </div>
-                        <div v-if="isLoud">
-                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
-                        </div>
+                    <div v-if="isLoud">
+                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property="" />
                     </div>
                 </div>
             </div>
@@ -679,6 +622,11 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useEvent} from "@/Composeables/Event.js";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 const {getDaysOfEvent} = useEvent();
 
@@ -703,6 +651,11 @@ export default {
         Permissions, IconLib
     ],
     components: {
+        TextareaComponent,
+        TimeInputComponent,
+        DateInputComponent,
+        TextInputComponent,
+        ModalHeader,
         BaseModal,
         FormButton,
         UserPopoverTooltip,
@@ -838,10 +791,10 @@ export default {
             handler() {
                 if (this.creatingProject || !this.projectName) {
                     this.projectSearchResults = [];
-                    return;
+                } else {
+                    axios.get('/projects/search', {params: {query: this.projectName}})
+                        .then(response => this.projectSearchResults = response.data)
                 }
-                axios.get('/projects/search', {params: {query: this.projectName}})
-                    .then(response => this.projectSearchResults = response.data)
             },
         },
         event: {

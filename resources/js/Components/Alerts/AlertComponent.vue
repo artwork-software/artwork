@@ -60,6 +60,8 @@ const textColor = computed(() => {
             return 'text-artwork-messages-error';
         case 'success':
             return 'text-artwork-messages-success';
+        case 'dashboard':
+            return 'text-gray-500';
         default:
             return 'text-artwork-buttons-create';
     }

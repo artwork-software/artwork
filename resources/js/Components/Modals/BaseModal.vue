@@ -12,11 +12,9 @@
                                      enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel
-                            class="relative transform bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full rounded-lg"
-                            :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']">
-                            <img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
-                                 :class="fullModal ? '' : '-ml-6 -mt-6'"/>
+                        <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']">
+                            <!--<img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
+                                 :class="fullModal ? '' : '-ml-6 -mt-6'"/>-->
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
                                         @click="closeModal(false)">

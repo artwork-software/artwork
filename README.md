@@ -9,15 +9,15 @@ Consult the [official documentation](https://laravel.com/docs/10.x/sail) for mor
 
 Artwork supports to be installed as a standalone application for dedicated servers or as a multi container app powered by docker
 
-# Standalone
+## Standalone
 
-## Prerequisites
+### Prerequisites
 
 **Currently only Ubuntu is supported!**
 
 Either `root` account or a user with `sudo` rights. The installation is fully automated and without prompts.
 
-## Installation
+### Installation
 
 Login to your server and run ``sudo curl -fsSL https://raw.githubusercontent.com/artwork-software/artwork/dev/ubuntu-install.sh | sh``
 
@@ -40,7 +40,7 @@ What it will do:
 
 **It is highly discouraged to run the installer multiple times as some steps are intended to be executed once.**
 
-## After installation
+### After installation
 
 Edit the ``.env`` file located in `/var/www/html/.env`
 
@@ -57,21 +57,22 @@ MAIL_ENCRYPTION=
 ````
 
 ### SSL
+
 We do not ship dummy or selfsigned certificates with the installation.
 
 SSL should be configured like you would your regular nginx instance https://nginx.org/en/docs/http/configuring_https_servers.html
 
 Soketi, the websocket service, also needs to be configured. See the official documentation https://docs.soketi.app/getting-started/ssl-configuration on how to achieve this.
 
-# Docker installation Standalone
+## Docker installation Standalone
 
 Artwork offers a stand alone containerized version of the application. This is useful if you want to run the application on a dedicated server or in a cloud environment.
 
-## Prerequisites
+### Prerequisites
 
 [Docker](https://www.docker.com/) and the .env of the repository. It is advised to use the `.env.prod.example` file and rename it to `.env`
 
-## Installation
+### Installation
 
 To boot the container you can simply run the following command:
 
@@ -82,19 +83,21 @@ This will output a key. Copy this key and paste it into the .env file under the 
 
 Feel free to modify the .env file to your needs, e.g. with E-Mail credentials.
 
-## Updates
+### Updates
 
 You can modify the `$ARTWORK_VERSION` variable in the .env file. By default it is set to `main` which is the latest stable version of Artwork.
 The always pull policy ensures, that it will automatically update to the latest version on the next restart. It will also automatically migrate the database if necessary.
 
-# Docker installation (Laravel Sail)
+## Docker installation (Laravel Sail)
 
-## Prerequisites
+### Prerequisites
+
 Laravel Sail is supported on macOS, Linux, and Windows (via [WSL2](https://learn.microsoft.com/en-us/windows/wsl/about)).
 
 [Docker](https://www.docker.com/) and [composer](https://getcomposer.org/) have to be installed to run the project.
 
-## Introduction
+### Introduction
+
 Laravel Sail will create 4 Docker images. 
 - The PHP project, 
 - a [MySQL](https://www.mysql.com/de/) instance (database), 
@@ -103,7 +106,7 @@ Laravel Sail will create 4 Docker images.
 
 It is recommended to not have any services running on the ports 80 and 3306.
 
-## Installation
+### Installation
 
 1. Clone the repository to your local machine:
 
@@ -220,7 +223,7 @@ Feel free to use these commands to interact with the project and execute the nec
 
 ----------------
 
-## Branch Structure
+# Branch Structure
 
 - **`dev` Branch**: This is where developers test their building blocks. It serves as the primary development branch for integrating new features and experiments.
 
@@ -231,6 +234,7 @@ Feel free to use these commands to interact with the project and execute the nec
 ----------------
 
 # Test Instance
+
 If you use the docker installation and filled the database with dummy data you can use the following credentials to login to the test instance:
 
 For the admin account (with all permissions):

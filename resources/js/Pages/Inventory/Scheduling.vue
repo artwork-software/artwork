@@ -59,8 +59,7 @@
                                         class="overflow-y-auto cell border-r-2 border-dotted"
                                         :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']"
                                     >
-                                        <div
-                                            v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)"
+                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)"
                                             class="mb-1"
                                         >
                                             <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
@@ -277,11 +276,8 @@ const toggleSearch = (close = false) => {
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
     updateHeight();
-    calculateAllRoomHeights();
-});
-
-onMounted(() => {
     setSearchData();
+    calculateAllRoomHeights();
 });
 
 onUpdated(() => {

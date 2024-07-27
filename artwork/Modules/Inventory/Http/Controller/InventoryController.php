@@ -78,7 +78,9 @@ class InventoryController extends Controller
             $eventTypeService,
             $areaService,
             null,
-            $userService->getAuthUser()->getAttribute('calendar_filter')
+            $userService->getAuthUser()->getAttribute('calendar_filter'),
+            null,
+            true
         );
 
         $crafts = $this->craftService->getCraftsWithInventory();

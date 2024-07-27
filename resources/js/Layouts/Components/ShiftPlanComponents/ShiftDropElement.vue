@@ -72,9 +72,10 @@ import {CheckIcon} from "@heroicons/vue/outline";
 import VueMathjax from "vue-mathjax-next";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
-import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
-import {router} from "@inertiajs/vue3";
+import MultipleShiftQualificationSlotsAvailable
+    from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import axios from "axios";
 
 export default defineComponent({
     components: {
@@ -101,7 +102,7 @@ export default defineComponent({
         'userForMultiEdit',
         'shiftQualifications'
     ],
-    emits: ['dropFeedback'],
+    emits: ['dropFeedback', 'desiresReload'],
     mixins: [IconLib],
     data() {
         return {
@@ -237,22 +238,13 @@ export default defineComponent({
             this.saveUser();
         },
         isIdHighlighted(highlightedId, highlightedType) {
-            // Map the highlightedType to the correct property in shiftUserIds
             const typeMap = {
                 0: 'userIds',
                 1: 'freelancerIds',
                 2: 'providerIds'
             };
 
-            if (highlightedId) {
-                // Get the correct array from shiftUserIds based on the highlightedType
-                const arrayToCheck = this.shiftUserIds[typeMap[highlightedType]];
-
-                // Check if the array contains the highlightedId
-                return arrayToCheck.includes(highlightedId);
-            } else {
-                return false;
-            }
+            return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
             if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
@@ -441,18 +433,17 @@ export default defineComponent({
             }
         },
         assignUser(droppedUser, shiftQualificationId) {
-            router.post(
+            axios.post(
                 route('shift.assignUserByType', {shift: this.shift.id}),
                 {
                     userId: droppedUser.id,
                     userType: droppedUser.type,
                     shiftQualificationId: shiftQualificationId,
                     seriesShiftData: this.seriesShiftData
-                },
-                {
-                    preserveScroll: true
                 }
-            )
+            ).then(() => {
+                this.$emit('desiresReload', droppedUser.id, droppedUser.type);
+            });
         }
     }
 })

@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -132,7 +133,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     public function getShiftIdsBetweenStartDateAndEndDate(
         Carbon $startDate,
         Carbon $endDate
-    ): \Illuminate\Support\Collection {
+    ): Collection {
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 

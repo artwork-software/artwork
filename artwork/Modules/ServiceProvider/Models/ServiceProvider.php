@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -105,7 +106,7 @@ class ServiceProvider extends Model implements DayServiceable
     public function getShiftIdsBetweenStartDateAndEndDate(
         Carbon $startDate,
         Carbon $endDate
-    ): \Illuminate\Support\Collection {
+    ): Collection {
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 

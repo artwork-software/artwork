@@ -47,6 +47,7 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Http\Resources\TaskDashboardResource;
@@ -219,6 +220,29 @@ class EventController extends Controller
                 $userService->getAuthUser()
             )
         );
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     * @throws Throwable
+     */
+    public function getEventsForRoomsByDaysWithUser(
+        Request $request,
+        ShiftWorkerService $shiftWorkerService,
+        UserService $userService
+    ): array {
+        return [
+            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
+                $this->roomService,
+                $userService,
+                $request->collect('rooms')->all(),
+                $request->collect('days')->all(),
+                $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+            ),
+            'workerData' => $shiftWorkerService->getResolvedWorkerShiftPlanResourcesByIdsAndTypes(
+                $request->collect('workers')->all()
+            )
+        ];
     }
 
     //@todo: fix phpcs error - fix complexity too high

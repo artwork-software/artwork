@@ -750,7 +750,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
-    ): RedirectResponse {
+    ): bool {
         $serviceToUse = match ($request->get('userType')) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -759,7 +759,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return Redirect::back();
+            return true;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -772,7 +772,7 @@ class ShiftController extends Controller
                 $request->get('seriesShiftData')
             );
 
-            return Redirect::back();
+            return true;
         }
 
         $serviceToUse->assignToShift(
@@ -787,7 +787,7 @@ class ShiftController extends Controller
             $request->get('seriesShiftData')
         );
 
-        return Redirect::back();
+        return true;
     }
 
     public function removeFromShift(

@@ -412,7 +412,6 @@ class User extends Model implements
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-
     /**
      * @return string[]
      */

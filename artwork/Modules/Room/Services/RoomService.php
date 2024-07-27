@@ -578,8 +578,6 @@ readonly class RoomService
     }
 
     /**
-     * @param Room $room
-     * @param CarbonPeriod $calendarPeriod
      * @return array<int, mixed>
      */
     //@todo: fix phpcs error - complexity too high
@@ -587,7 +585,8 @@ readonly class RoomService
     private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        ?UserShiftCalendarFilter $calendarFilter
+        ?UserShiftCalendarFilter $calendarFilter,
+        ?Carbon $desiredDay = null
     ): array {
         $isLoud = $calendarFilter->is_loud ?? false;
         $isNotLoud = $calendarFilter->is_not_loud ?? false;
@@ -602,7 +601,9 @@ readonly class RoomService
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
 
-        $roomEvents = $room->events()
+        /** @var Builder $roomEvents */
+        $roomEvents = $room
+            ->events()
             ->with(
                 [
                     'room',
@@ -648,8 +649,14 @@ readonly class RoomService
             ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
-            ->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
-            ->get();
+            ->when(
+                $desiredDay,
+                fn(Builder $builder)  => $builder->startAndEndTimeOverlap(
+                    $desiredDay->startOfDay(),
+                    $desiredDay->clone()->endOfDay()
+                ),
+                fn(Builder $builder) => $builder->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
+            )->get();
 
         foreach ($roomEvents as $roomEvent) {
             $eventStart = $roomEvent->start_time->isBefore($calendarPeriod->start) ?
@@ -704,6 +711,38 @@ readonly class RoomService
         }
 
         return $roomEvents;
+    }
+
+    /**
+     * @return array<string, array<int, array<int, Event>>>
+     */
+    public function collectEventsForRoomsShiftOnSpecificDays(
+        RoomService $roomService,
+        UserService $userService,
+        array $desiredRooms,
+        array $desiredDays,
+        ?UserShiftCalendarFilter $userShiftCalendarFilter,
+    ): array {
+        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $collectedEvents = [];
+
+        foreach ($desiredDays as $desiredDay) {
+            foreach ($desiredRooms as $roomId) {
+                foreach (
+                    $roomService->collectEventsForRoomShift(
+                        $this->roomRepository->findOrFail($roomId),
+                        $calendarPeriod,
+                        $userShiftCalendarFilter,
+                        Carbon::parse($desiredDay)
+                    ) as $collectedEventForRoom
+                ) {
+                    $collectedEvents[$desiredDay][$roomId] = $collectedEventForRoom['events'];
+                }
+            }
+        }
+
+        return $collectedEvents;
     }
 
     public function collectEventsForRoomsShift(

@@ -14,7 +14,8 @@
         <div class="bg-backgroundGray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.is_weekend ? 'bg-white' : 'bg-backgroundGray']">
             <div v-for="shift in event.shifts" class="flex justify-between px-1">
                 <!-- Drop Element -->
-                <ShiftDropElement :multiEditMode="multiEditMode"
+                <ShiftDropElement v-if="checkIfShiftInDayString(shift)"
+                                  :multiEditMode="multiEditMode"
                                   :craft-id="shift.craft.id"
                                   :userForMultiEdit="userForMultiEdit"
                                   :highlight-mode="highlightMode"
@@ -26,7 +27,7 @@
                                   :event="event"
                                   :shift-qualifications="shiftQualifications"
                                   @drop-feedback="getDropFeedback"
-                                  v-if="checkIfShiftInDayString(shift)"
+                                  @desires-reload="dropElementDesiresReload"
                 />
             </div>
         </div>
@@ -73,10 +74,12 @@ export default defineComponent({
             } else {
                 return shift.formatted_dates.start === this.dayString['full_day'] && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
             }
-
+        },
+        dropElementDesiresReload(userId, userType) {
+            this.$emit('eventDesiresReload', userId, userType, this.event);
         }
     },
-    emits: ['dropFeedback'],
+    emits: ['dropFeedback', 'eventDesiresReload'],
 })
 </script>
 <style scoped>

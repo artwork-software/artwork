@@ -75,8 +75,8 @@ export default defineComponent({
                 return shift.formatted_dates.start === this.dayString['full_day'] && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
             }
         },
-        dropElementDesiresReload(userId, userType) {
-            this.$emit('eventDesiresReload', userId, userType, this.event);
+        dropElementDesiresReload(userId, userType, seriesShiftData) {
+            this.$emit('eventDesiresReload', userId, userType, this.event, seriesShiftData);
         }
     },
     emits: ['dropFeedback', 'eventDesiresReload'],

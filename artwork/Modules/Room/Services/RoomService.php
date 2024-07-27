@@ -729,15 +729,21 @@ readonly class RoomService
 
         foreach ($desiredDays as $desiredDay) {
             foreach ($desiredRooms as $roomId) {
+                $room = $this->roomRepository->findOrFail($roomId);
                 foreach (
-                    $roomService->collectEventsForRoomShift(
-                        $this->roomRepository->findOrFail($roomId),
-                        $calendarPeriod,
-                        $userShiftCalendarFilter,
-                        Carbon::parse($desiredDay)
-                    ) as $collectedEventForRoom
+                    array_filter(
+                        $roomService->collectEventsForRoomShift(
+                            $room,
+                            $calendarPeriod,
+                            $userShiftCalendarFilter,
+                            Carbon::parse($desiredDay)
+                        ),
+                        function ($collectedEventsForRoom): bool {
+                            return !empty($collectedEventsForRoom['events']);
+                        }
+                    ) as $collectedEventsForRoom
                 ) {
-                    $collectedEvents[$desiredDay][$roomId] = $collectedEventForRoom['events'];
+                    $collectedEvents[$desiredDay][$roomId] = $collectedEventsForRoom['events'];
                 }
             }
         }

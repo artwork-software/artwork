@@ -45,7 +45,8 @@ class MinimalShiftPlanEventResource extends JsonResource
             'days_of_shifts' => $this->getDaysOfShifts($this->getAttribute('shifts')),
             'option_string' => $this->getAttribute('option_string'),
             'formatted_dates' => $this->getAttribute('formatted_dates'),
-            'timesWithoutDates' => $this->getAttribute('timesWithoutDates')
+            'timesWithoutDates' => $this->getAttribute('timesWithoutDates'),
+            'is_series' => $this->getAttribute('is_series'),
         ];
     }
 }

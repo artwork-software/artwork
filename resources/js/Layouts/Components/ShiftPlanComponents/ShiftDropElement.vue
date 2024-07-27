@@ -442,7 +442,12 @@ export default defineComponent({
                     seriesShiftData: this.seriesShiftData
                 }
             ).then(() => {
-                this.$emit('desiresReload', droppedUser.id, droppedUser.type);
+                this.$emit(
+                    'desiresReload',
+                    droppedUser.id,
+                    droppedUser.type,
+                    this.seriesShiftData
+                );
             });
         }
     }

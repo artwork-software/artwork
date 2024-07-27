@@ -464,9 +464,8 @@ import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import {useEvent} from "@/Composeables/Event.js";
 import {ref} from "vue";
 
-const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
+const {getDaysOfEvent, useShiftPlanReload} = useEvent(),
     {
-        showReceivesNewDataOverlay,
         hasReceivedNewShiftPlanData,
         hasReceivedNewShiftPlanWorkerData,
         receivedRoomData,
@@ -669,13 +668,14 @@ export default {
         },
     },
     methods: {
-        eventDesiresReload(userId, userType, event) {
+        eventDesiresReload(userId, userType, event, seriesShiftData) {
+            let desiredDates = seriesShiftData ?
+                getDaysOfEvent(seriesShiftData.start, seriesShiftData.end) :
+                getDaysOfEvent(event.start, event.end);
+
             handleReload(
                 [event.roomId],
-                getDaysOfEvent(
-                    event.start,
-                    event.end
-                ),
+                desiredDates,
                 [
                     {
                         id: userId,

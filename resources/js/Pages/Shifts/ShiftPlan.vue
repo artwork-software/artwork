@@ -34,7 +34,7 @@
                             </div>
                         </template>
                         <template #body>
-                            <TableBody>
+                            <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room,index) in shiftPlan" class="w-full flex">
                                     <th class="xsDark flex items-center h-28 w-48"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
@@ -156,7 +156,7 @@
                         <div class="pt-16">
                             <table class="w-full text-white overflow-y-scroll">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                                <div class="eventByDaysContainer">
+                                <div>
                                     <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
                                     <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
                                         {{craft.name}}
@@ -467,7 +467,7 @@ export default {
             shiftsToRemoveCheckState: [],
             firstDayPosition: this.days ? this.days[0].full_day : null,
             currentDayOnView: this.days ? this.days[0] : null,
-            currentDaysInView: new Set([])
+            currentDaysInView: new Set()
         }
     },
     mounted() {
@@ -481,8 +481,8 @@ export default {
                 (entries) => {
                     entries.forEach((entry) => {
                         const day = entry.target.dataset.day;
-                        console.debug('observer day', day);
-                        if (entry.isIntersecting) {
+
+                        if (entry.intersectionRatio > 0) {
                             this.currentDaysInView.add(day);
                         } else {
                             this.currentDaysInView.delete(day);

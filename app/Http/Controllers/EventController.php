@@ -239,9 +239,10 @@ class EventController extends Controller
                 $request->collect('days')->all(),
                 $userService->getAuthUser()->getAttribute('shift_calendar_filter')
             ),
-            'workerData' => $shiftWorkerService->getResolvedWorkerShiftPlanResourcesByIdsAndTypes(
-                $request->collect('workers')->all()
-            )
+            'workerData' => $shiftWorkerService
+                ->getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
+                    $request->collect('workers')->all()
+                )
         ];
     }
 

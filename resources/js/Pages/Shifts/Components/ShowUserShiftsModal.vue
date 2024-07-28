@@ -171,25 +171,25 @@ export default defineComponent({
                         this.day.full_day
                     );
                 }
-
+                this.closeModal(true);
             };
 
             if (this.user.type === 0) {
                 axios.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
-                }).then((response) => {
-                    this.closeModal(true);
+                }).then(() => {
+                    callback(true);
                 });
             } else if (this.user.type === 1) {
                 axios.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
-                }).then((response) => {
-                    this.closeModal(true);
+                }).then(() => {
+                    callback(true);
                 });
             } else {
-                this.closeModal(true);
+                callback(false);
             }
         }
     }

@@ -194,9 +194,7 @@ class User extends Model implements
     protected $appends = [
         'profile_photo_url',
         'full_name',
-        'type',
-        //'formatted_vacation_days',
-        //'assigned_craft_ids',
+        'type'
     ];
 
     protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];

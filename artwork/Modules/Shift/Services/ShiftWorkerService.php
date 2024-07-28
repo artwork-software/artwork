@@ -30,13 +30,13 @@ class ShiftWorkerService
      * @return array<int, MinimalShiftPlanEventResource>
      * @throws Throwable
      */
-    public function getResolvedWorkerShiftPlanResourcesByIdsAndTypes(
+    public function getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
         array $workerIdsAndTypes
     ): array {
         $workerData = [];
 
         foreach ($workerIdsAndTypes as $desiredWorker) {
-            $workerData[] = $this->getResolvedWorkerShiftPlanResourceByIdAndType(
+            $workerData[] = $this->getResolvedWorkerShiftPlanResourceByIdAndTypeWithPlannedWorkingHours(
                 $desiredWorker['id'],
                 $desiredWorker['type']
             );
@@ -49,7 +49,7 @@ class ShiftWorkerService
      * @return array<string, mixed>
      * @throws Exception
      */
-    public function getResolvedWorkerShiftPlanResourceByIdAndType(
+    public function getResolvedWorkerShiftPlanResourceByIdAndTypeWithPlannedWorkingHours(
         int $workerId,
         int $workerType
     ): array {
@@ -57,21 +57,69 @@ class ShiftWorkerService
             $this->userService->getAuthUser()
         );
 
+        /** @var User|Freelancer|ServiceProvider $worker */
         $worker = $this->getWorkerByIdAndType($workerId, $workerType);
 
-        $resource = match (true) {
-            $workerType === 0 => (UserShiftPlanResource::make($worker)),
-            $workerType === 1 => (FreelancerShiftPlanResource::make($worker)),
-            $workerType === 2 => (ServiceProviderShiftPlanResource::make($worker)),
+        $workerData = [
+            'type' => $worker->getAttribute('type'),
+            'plannedWorkingHours' => $worker->plannedWorkingHours($startDate, $endDate),
+            'dayServices' => $worker->getAttribute('dayServices')->groupBy('pivot.date')
+        ];
+
+        if ($workerType === 0 || $workerType === 1) {
+            $workerData = array_merge(
+                [
+                    'vacations' => $worker->getVacationDays(),
+                    'availabilities' => $this->userRepository->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
+                        $worker,
+                        $startDate,
+                        $endDate
+                    ),
+                ],
+                $workerData
+            );
+        }
+
+        return match (true) {
+            $workerType === 0 => array_merge(
+                [
+                    'user' => (UserShiftPlanResource::make($worker))
+                        ->setStartDate($startDate)
+                        ->setEndDate($endDate)
+                        ->resolve(),
+                    'expectedWorkingHours' => (
+                        $worker->getAttribute('weekly_working_hours') / 7) * ($startDate->diffInDays($endDate) + 1
+                    ),
+                    'weeklyWorkingHours' => $this->userService->calculateWeeklyWorkingHours(
+                        $worker,
+                        $startDate,
+                        $endDate
+                    )
+                ],
+                $workerData
+            ),
+            $workerType === 1 => array_merge(
+                [
+                    'freelancer' => (FreelancerShiftPlanResource::make($worker))
+                        ->setStartDate($startDate)
+                        ->setEndDate($endDate)
+                        ->resolve(),
+                ],
+                $workerData
+            ),
+            $workerType === 2 => array_merge(
+                [
+                    'service_provider' => (ServiceProviderShiftPlanResource::make($worker))
+                        ->setStartDate($startDate)
+                        ->setEndDate($endDate)
+                        ->resolve(),
+                ],
+                $workerData
+            ),
             default => throw new Exception(
                 'Invalid worker type (should be user, freelancer or service_provider)'
             ),
         };
-
-        return $resource
-            ->setStartDate($startDate)
-            ->setEndDate($endDate)
-            ->resolve();
     }
 
     /**

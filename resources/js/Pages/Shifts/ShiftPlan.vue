@@ -601,22 +601,24 @@ export default {
             receivedWorkerData.value.forEach((workerData) => {
                 if (workerData.type === 'user') {
                     this.usersForShifts[this.usersForShifts.findIndex(
-                        (userWithPlannedWorkingHours) => userWithPlannedWorkingHours.user.id === workerData.id
-                    )].user = workerData;
+                        (userWithPlannedWorkingHours) =>
+                            userWithPlannedWorkingHours.user.id === workerData.user.id
+                    )] = workerData;
                 }
 
                 if (workerData.type === 'freelancer') {
                     this.freelancersForShifts[this.freelancersForShifts.findIndex(
-                        (freelancerWithPlannedWorkingHours) => freelancerWithPlannedWorkingHours.user.id === workerData.id
-                    )].user = workerData;
+                        (freelancerWithPlannedWorkingHours) =>
+                            freelancerWithPlannedWorkingHours.user.id === workerData.freelancer.id
+                    )] = workerData;
                 }
 
                 if (workerData.type === 'service_provider') {
                     this.serviceProvidersForShifts[this.serviceProvidersForShifts.findIndex(
-                        (serviceProviderWithPlannedWorkingHours) => serviceProviderWithPlannedWorkingHours.user.id === workerData.id
-                    )].user = workerData;
+                        (serviceProviderWithPlannedWorkingHours) =>
+                            serviceProviderWithPlannedWorkingHours.user.id === workerData.service_provider.id
+                    )] = workerData;
                 }
-
             });
 
             return this.craftsToDisplay;

@@ -23,6 +23,7 @@ class WorkerShiftPlanResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray(Request $request): array
     {
         return [

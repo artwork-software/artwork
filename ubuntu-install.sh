@@ -20,7 +20,6 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  supervisor \
  libcap2-bin \
  libpng-dev \
- python2 \
  dnsutils \
  librsvg2-bin \
  fswatch

@@ -88,7 +88,7 @@ sudo sed -i "s/# master_key = \"YOUR_MASTER_KEY_VALUE\"/master_key = \"$MEILI_KE
 sudo sed -i "s/db_path = \".\/data.ms\"/db_path =\"\/var\/lib\/meilisearch\/data\"/g" /etc/meilisearch.toml
 sudo sed -i "s/dump_dir = \"dumps\/\"/dump_dir = \"\/var\/lib\/meilisearch\/dumps\"/g" /etc/meilisearch.toml
 sudo sed -i "s/snapshot_dir = \"snapshots\/\"/snapshot_dir  = \"\/var\/lib\/meilisearch\/snapshots\"/g" /etc/meilisearch.toml
-sudo cp .install/meilisearch.service /etc/systemd/system/meilisearch.service
+sudo cp /var/www/html/.install/meilisearch.service /etc/systemd/system/meilisearch.service
 sudo systemctl enable meilisearch
 sudo systemctl start meilisearch
 

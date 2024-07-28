@@ -14,7 +14,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class MinimalInventorySchedulingEventResource extends JsonResource
 {
-    public function toArray(Request $request)
+    /**
+     * @return array<string, mixed>
+     */
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray(Request $request): array
     {
         /** @var EventType $eventType */
         $eventType = $this->getAttribute('event_type');

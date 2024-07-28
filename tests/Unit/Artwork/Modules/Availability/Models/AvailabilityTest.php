@@ -4,6 +4,7 @@ namespace Tests\Unit\Artwork\Modules\Availability\Models;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
@@ -38,7 +39,7 @@ class AvailabilityTest extends TestCase
     public function testDateCastedReturnsCorrectFormat(): void
     {
         $date = '2023-03-01';
-        $expected = 'Mi, 01.03.2023';
+        $expected = 'Mi., 01.03.2023';
 
         $this->availability->method('getAttribute')
             ->with('date')
@@ -52,7 +53,14 @@ class AvailabilityTest extends TestCase
     public function testHasConflictsReturnsTrueWhenConflictsExist(): void
     {
         $this->availability->method('conflicts')
-            ->willReturn(new AvailabilitiesConflict());
+            ->willReturn(
+                new class extends HasMany {
+                    public function exists(): bool
+                    {
+                        return true;
+                    }
+                }
+            );
 
         $result = $this->availability->getHasConflictsAttribute();
 
@@ -62,7 +70,14 @@ class AvailabilityTest extends TestCase
     public function testHasConflictsReturnsFalseWhenNoConflictsExist(): void
     {
         $this->availability->method('conflicts')
-            ->willReturn(null);
+            ->willReturn(
+                new class extends HasMany {
+                    public function exists(): bool
+                    {
+                        return false;
+                    }
+                }
+            );
 
         $result = $this->availability->getHasConflictsAttribute();
 

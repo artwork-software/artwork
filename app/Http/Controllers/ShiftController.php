@@ -664,11 +664,11 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): void {
+    ): bool {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
 
         if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
-            return;
+            return false;
         }
 
         $serviceToUse = match ($request->get('userType')) {
@@ -679,7 +679,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return;
+            return false;
         }
 
         foreach ($shiftsToHandle['removeFromShift'] as $shiftIdToRemove) {
@@ -735,6 +735,8 @@ class ShiftController extends Controller
                 $changeService
             );
         }
+
+        return true;
     }
 
     public function assignToShift(

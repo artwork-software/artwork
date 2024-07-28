@@ -464,7 +464,7 @@ import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import {useEvent} from "@/Composeables/Event.js";
 import {ref} from "vue";
 
-const {getDaysOfEvent, useShiftPlanReload} = useEvent(),
+const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
     {
         hasReceivedNewShiftPlanData,
         hasReceivedNewShiftPlanWorkerData,
@@ -669,9 +669,15 @@ export default {
     },
     methods: {
         eventDesiresReload(userId, userType, event, seriesShiftData) {
-            let desiredDates = seriesShiftData ?
-                getDaysOfEvent(seriesShiftData.start, seriesShiftData.end) :
-                getDaysOfEvent(event.start, event.end);
+            let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
+                getDaysOfEvent(
+                    formatEventDateByDayJs(seriesShiftData.start),
+                    formatEventDateByDayJs(seriesShiftData.end)
+                ) :
+                getDaysOfEvent(
+                    formatEventDateByDayJs(event.start),
+                    formatEventDateByDayJs(event.end)
+                );
 
             handleReload(
                 [event.roomId],
@@ -1073,15 +1079,54 @@ export default {
                 return;
             }
 
+            let desiredRoomIds = new Set(),
+                desiredDays = new Set(),
+                desiredUser = {
+                    id: this.userForMultiEdit.id,
+                    type: this.userForMultiEdit.type
+                };
 
-            router.post(route('shift.multi.edit.save'), {
+            this.shiftPlanRef.forEach(room => {
+                this.days.forEach(day => {
+                    room[day.full_day].events.forEach(event => {
+                        event.shifts.forEach(shift => {
+                            this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
+                                if (shift.id === shiftToAssign.shiftId) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+                                    getDaysOfEvent(
+                                        formatEventDateByDayJs(event.start),
+                                        formatEventDateByDayJs(event.end)
+                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                                }
+                            });
+
+                            this.shiftsToHandleOnMultiEdit.removeFromShift.forEach((shiftIdToRemove) => {
+                                if (shift.id === shiftIdToRemove) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+
+                                    getDaysOfEvent(
+                                        formatEventDateByDayJs(event.start),
+                                        formatEventDateByDayJs(event.end)
+                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                                }
+                            });
+                        });
+                    });
+                });
+            });
+
+            //reload user by this.userForMultiEdit (only one user at a time)
+            axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,
                 shiftsToHandle: this.shiftsToHandleOnMultiEdit
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: this.resetMultiEditMode
+            }).then(() => {
+                handleReload(
+                    Array.from(desiredRoomIds),
+                    Array.from(desiredDays),
+                    [desiredUser]
+                );
+                this.resetMultiEditMode();
             });
         },
         resetMultiEditMode() {
@@ -1183,7 +1228,7 @@ export default {
             }
         },
         setShiftsCheckState(shiftId, state) {
-            this.shiftPlan.forEach(room => {
+            this.shiftPlanRef.forEach(room => {
                 this.days.forEach(day => {
                     room[day.full_day].events.forEach(event => {
                         event.shifts.forEach(shift => {
@@ -1221,11 +1266,11 @@ export default {
             },
             deep: true
         },
-        shiftPlan: {
-            handler(newShiftPlan) {
+        shiftPlanRef: {
+            handler(shiftPlanRef) {
                 let currentCheckedIds = [...this.shiftsAreChecked];
 
-                newShiftPlan.forEach(room => {
+                shiftPlanRef.forEach(room => {
                     this.days.forEach(day => {
                         room[day.full_day].events.forEach(event => {
                             event.shifts.forEach(shift => {

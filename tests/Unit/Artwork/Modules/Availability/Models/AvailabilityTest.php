@@ -4,6 +4,8 @@ namespace Tests\Unit\Artwork\Modules\Availability\Models;
 
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
@@ -55,6 +57,10 @@ class AvailabilityTest extends TestCase
         $this->availability->method('conflicts')
             ->willReturn(
                 new class extends HasMany {
+                    public function __construct()
+                    {
+                    }
+
                     public function exists(): bool
                     {
                         return true;
@@ -72,6 +78,9 @@ class AvailabilityTest extends TestCase
         $this->availability->method('conflicts')
             ->willReturn(
                 new class extends HasMany {
+                    public function __construct()
+                    {
+                    }
                     public function exists(): bool
                     {
                         return false;

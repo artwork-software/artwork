@@ -26,8 +26,6 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  fswatch
 
 #Collect all the custom repositories
-## Meilisearch
-sudo echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc/apt/sources.list.d/fury.list
 ##Node
 sudo mkdir -p /etc/apt/keyrings
 sudo curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
@@ -73,10 +71,28 @@ sudo wget -O /var/www/html/composer.phar https://getcomposer.org/download/2.6.5/
 sudo COMPOSER_ALLOW_SUPERUSER=1 php /var/www/html/composer.phar -d /var/www/html --no-interaction install
 
 ## Setup db
-PASSWORD=$(openssl rand -hex 24)
-sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
-sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$PASSWORD/g" /var/www/html/.env
+MYSQL_PASSWORD=$(openssl rand -hex 24)
+sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$MYSQL_PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
+sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$MYSQL_PASSWORD/g" /var/www/html/.env
 
+#Setup Meilisearch
+sudo useradd -d /var/lib/meilisearch -s /bin/false -m -r meilisearch
+sudo mkdir /var/lib/meilisearch/data /var/lib/meilisearch/dumps /var/lib/meilisearch/snapshots
+sudo chown -R meilisearch:meilisearch /var/lib/meilisearch
+sudo chmod 750 /var/lib/meilisearch
+sudo wget https://raw.githubusercontent.com/meilisearch/meilisearch/latest/config.toml -O /etc/meilisearch.toml
+MEILI_KEY=$(openssl rand -hex 16)
+sudo echo "MEILISEARCH_KEY=$MEILI_KEY" >> /var/www/html/.env
+sudo sed -i "s/env = \"development\"/env = \"production\"/g" /etc/meilisearch.toml
+sudo sed -i "s/# master_key = \"YOUR_MASTER_KEY_VALUE\"/master_key = \"$MEILI_KEY\"/g" /etc/meilisearch.toml
+sudo sed -i "s/db_path = \".\/data.ms\"/db_path =\"\/var\/lib\/meilisearch\/data\"/g" /etc/meilisearch.toml
+sudo sed -i "s/dump_dir = \"dumps\/\"/dump_dir = \"\/var\/lib\/meilisearch\/dumps\"/g" /etc/meilisearch.toml
+sudo sed -i "s/snapshot_dir = \"snapshots\/\"/snapshot_dir  = \"\/var\/lib\/meilisearch\/snapshots\"/g" /etc/meilisearch.toml
+sudo cp .install/meilisearch.service /etc/systemd/system/meilisearch.service
+sudo systemctl enable meilisearch
+sudo systemctl start meilisearch
+
+#Set Permissions
 sudo chown -R www-data:www-data /var/www/html
 
 #Setup Soketi (pusher)
@@ -86,6 +102,7 @@ sudo pm2 start soketi -- start
 ## Setup laravel
 sudo php /var/www/html/artisan key:generate --force
 sudo php /var/www/html/artisan storage:link
+sudo php /var/www/html/artisan optimize
 sudo php /var/www/html/artisan migrate:fresh --force
 sudo php /var/www/html/artisan db:seed:production
 

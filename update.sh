@@ -25,3 +25,4 @@ sudo npm --prefix /var/www/html run prod
 sudo chown -R www-data:www-data /var/www/html
 
 sudo systemctl restart artwork-worker
+sudo systemctl restart meilisearch

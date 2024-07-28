@@ -387,11 +387,10 @@
                                     @closed="showUserShifts = false"
                                     :user="userToShow"
                                     :day="dayToShow"
-            />
+                                    @desires-reload="userShiftModalDesiresReload"/>
             <ShiftHistoryModal v-if="showHistoryModal"
                                :history="history"
-                               @closed="showHistoryModal = false"
-            />
+                               @closed="showHistoryModal = false"/>
         </ShiftHeader>
         <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
             <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
@@ -668,6 +667,54 @@ export default {
         },
     },
     methods: {
+        userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
+            let desiredRoomIds = new Set();
+
+            if (shiftId) {
+                //find shift room ids
+                this.shiftPlanRef.forEach(room => {
+                    this.days.forEach(day => {
+                        if (day.full_day !== desiredDay) {
+                            return;
+                        }
+                        room[day.full_day].events.forEach(event => {
+                            event.shifts.forEach(shift => {
+                                if (shift.id === shiftId) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+                                    console.debug(desiredRoomIds);
+                                }
+                            });
+                        });
+                    });
+                });
+
+                handleReload(
+                    Array.from(desiredRoomIds),
+                    [desiredDay],
+                    [
+                        {
+                            id: userId,
+                            type: userType
+                        }
+                    ]
+                );
+
+                return;
+            }
+
+            desiredRoomIds = this.rooms.map((room) => room.id);
+
+            handleReload(
+                Array.from(desiredRoomIds),
+                [desiredDay],
+                [
+                    {
+                        id: userId,
+                        type: userType
+                    }
+                ]
+            );
+        },
         eventDesiresReload(userId, userType, event, seriesShiftData) {
             let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
                 getDaysOfEvent(
@@ -878,7 +925,6 @@ export default {
             const gotoMode = this.$page.props.user.goto_mode;
             this.scrollToPeriod(gotoMode, direction);
         },
-
         scrollToPeriod(period, direction) {
             let indexModifier = direction === 'next' ? 1 : -1;
             let periodKey, periodValue, scrollOffset;
@@ -907,7 +953,6 @@ export default {
                 scrollableContainer.scrollLeft = firstDay.offsetWidth * scrollOffset;
             }
         },
-
         getIndexForWeekOrMonth(period, key, value, indexModifier, filterFn) {
             const targetValue = value + indexModifier;
             const targetDay = this.days.find(day => filterFn(day) && day[key] === targetValue);
@@ -916,11 +961,9 @@ export default {
             }
             return undefined;
         },
-
         selectGoToNextMode() {
             this.selectGoToMode('next');
         },
-
         selectGoToPreviousMode() {
             this.selectGoToMode('previous');
         },
@@ -1115,7 +1158,6 @@ export default {
                 });
             });
 
-            //reload user by this.userForMultiEdit (only one user at a time)
             axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,

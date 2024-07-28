@@ -802,7 +802,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): RedirectResponse {
+    ): bool {
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -811,7 +811,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return Redirect::back();
+            return false;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -822,7 +822,7 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            return Redirect::back();
+            return true;
         }
 
         $serviceToUse->removeFromShift(
@@ -835,7 +835,7 @@ class ShiftController extends Controller
             $changeService
         );
 
-        return Redirect::back();
+        return true;
     }
 
     public function removeAllShiftUsers(

@@ -185,8 +185,7 @@ const props = defineProps({
         },
     }),
     $t = useTranslation(),
-    {getDaysOfEvent, formatEventDateByDayJs, useReload} = useEvent(),
-
+    {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),
     {
         showReceivesNewDataOverlay,
         hasReceivedNewCalendarData,
@@ -194,11 +193,8 @@ const props = defineProps({
         receivedRoomData,
         receivedEventsWithoutRoom,
         handleReload
-    } = useReload(props.project ? props.project.id : 0),
-    {
-        composedCurrentDaysInViewRef,
-        composedStartDaysAndEventsIntersectionObserving
-    } = useDaysAndEventsIntersectionObserver('150px'),
+    } = useCalendarReload(props.project ? props.project.id : 0),
+
     {hasAdminRole} = usePermission(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(
         {

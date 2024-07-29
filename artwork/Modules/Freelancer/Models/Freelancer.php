@@ -2,9 +2,10 @@
 
 namespace Artwork\Modules\Freelancer\Models;
 
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Shift\Models\Shift;
@@ -15,10 +16,9 @@ use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -110,16 +110,6 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->last_name . ', ' . $this->first_name;
     }
 
-
-    public function loadShifts(): Collection
-    {
-        return $this->shifts()
-            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
-            ->with(['event.room'])
-            ->get()
-            ->makeHidden(['allUsers']);
-    }
-
     public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
@@ -143,7 +133,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     public function getShiftIdsBetweenStartDateAndEndDate(
         Carbon $startDate,
         Carbon $endDate
-    ): \Illuminate\Support\Collection {
+    ): Collection {
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 

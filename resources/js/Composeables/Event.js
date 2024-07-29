@@ -13,7 +13,10 @@ export function useEvent() {
             }
             return days;
         },
-        reloadRoomsAndDays = async (
+        formatEventDateByDayJs = (date) => {
+            return dayjs(date).format('YYYY-MM-DD');
+        },
+        reloadRoomsAndDaysForCalendar = async (
             desiredRoomIdsToReload,
             desiredDaysToReload,
             desiredProjectId,
@@ -39,23 +42,19 @@ export function useEvent() {
 
             return {roomData, eventsWithoutRoom};
         },
-        formatEventDateByDayJs = (date) => {
-            return dayjs(date).format('YYYY-MM-DD');
-        },
-        useReload = (projectId) => {
+        useCalendarReload = (projectId) => {
             const showReceivesNewDataOverlay = ref(false),
                 hasReceivedNewCalendarData = ref(false),
                 hasReceivedNewEventsWithoutRoomData = ref(false),
                 receivedRoomData = ref([]),
                 receivedEventsWithoutRoom = ref([]),
-
                 handleReload = async (
                     desiredRoomIdsToReload,
                     desiredDaysToReload,
                     reloadEventsWithoutRoom = false
                 ) => {
                     showReceivesNewDataOverlay.value = true;
-                    const {roomData, eventsWithoutRoom} = await reloadRoomsAndDays(
+                    const {roomData, eventsWithoutRoom} = await reloadRoomsAndDaysForCalendar(
                         desiredRoomIdsToReload,
                         desiredDaysToReload,
                         projectId,
@@ -79,11 +78,69 @@ export function useEvent() {
                 receivedEventsWithoutRoom,
                 handleReload
             };
+        },
+        reloadRoomsAndDaysAndWorkersForShiftPlan = async (
+            desiredRoomIdsToReload,
+            desiredDaysToReload,
+            desiredWorkersToReload,
+        ) => {
+            let roomData = null;
+            let workerData = null;
+
+            await axios.get(
+                route('shifts.events.for-rooms-by-days-and-project'),
+                {
+                    params: {
+                        rooms: desiredRoomIdsToReload,
+                        days: desiredDaysToReload,
+                        workers: desiredWorkersToReload
+                    }
+                }
+            ).then((response) => {
+                roomData = response.data.roomData;
+                workerData = response.data.workerData;
+            });
+
+            return {roomData, workerData};
+        },
+        useShiftPlanReload = () => {
+            const showReceivesNewDataOverlay = ref(false),
+                hasReceivedNewShiftPlanData = ref(false),
+                hasReceivedNewShiftPlanWorkerData = ref(false),
+                receivedRoomData = ref([]),
+                receivedWorkerData = ref([]),
+                handleReload = async (
+                    desiredRoomIdsToReload,
+                    desiredDaysToReload,
+                    desiredWorkersToReload
+                ) => {
+                    showReceivesNewDataOverlay.value = true;
+                    const {roomData, workerData} = await reloadRoomsAndDaysAndWorkersForShiftPlan(
+                        desiredRoomIdsToReload,
+                        desiredDaysToReload,
+                        desiredWorkersToReload
+                    );
+
+                    receivedRoomData.value = roomData;
+                    receivedWorkerData.value = workerData;
+                    hasReceivedNewShiftPlanData.value = true;
+                    hasReceivedNewShiftPlanWorkerData.value = true;
+                };
+
+            return {
+                showReceivesNewDataOverlay,
+                hasReceivedNewShiftPlanData,
+                hasReceivedNewShiftPlanWorkerData,
+                receivedRoomData,
+                receivedWorkerData,
+                handleReload
+            };
         };
 
     return {
         getDaysOfEvent,
         formatEventDateByDayJs,
-        useReload
+        useCalendarReload,
+        useShiftPlanReload
     };
 }

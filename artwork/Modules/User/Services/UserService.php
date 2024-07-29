@@ -84,10 +84,9 @@ readonly class UserService
             }
 
             $userData = [
-                'user' => $desiredUserResource,
+                'user' => $desiredUserResource->resolve(),
                 'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
-                // dayServices group by pivot_date
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
             ];
 
@@ -111,14 +110,9 @@ readonly class UserService
     }
 
     /**
-     * Berechnet die Arbeitsstunden für jede Kalenderwoche innerhalb eines bestimmten Datumsbereichs.
-     *
-     * @param User $user
-     * @param Carbon $startDate
-     * @param Carbon $endDate
-     * @return string []
+     * @return array<string, float|int>
      */
-    private function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
+    public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
     {
         // first create a carbon period for the given date range
         $period = Carbon::parse($startDate)->toPeriod($endDate);

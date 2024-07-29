@@ -1,15 +1,13 @@
 <template>
     <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Manage source categories')}}
-                </div>
-            </div>
-            <div class="mx-4">
+                <ModalHeader
+                    :title="$t('Manage source categories')"
+                />
                 <Menu class="relative">
                     <div>
                         <MenuButton class="w-full">
-                            <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4">
+                            <div class="menu-button">
                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
                                     {{ $t('Select source categories')}}
                                 </div>
@@ -25,7 +23,7 @@
                             leave-from-class="transform scale-100 opacity-100"
                             leave-to-class="transform scale-95 opacity-0"
                         >
-                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 rounded-lg bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div v-if="moneySourceCategories.length > 0" class="grid grid-cols-1 gap-2">
                                     <div v-for="category in moneySourceCategories"
                                          :key="category.id"
@@ -53,7 +51,7 @@
                               v-for="category in moneySourceSelectedCategories"
                               :key="category.id"
                               :displayed-text="category.name"
-                              hide-x="true"/>
+                              hide-x="true" property=""/>
             </div>
             <div class="justify-center flex w-full my-6">
                 <FormButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" @click="attachCategories"/>
@@ -72,11 +70,13 @@ import {router} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceCategoriesModal",
     components: {
+        ModalHeader,
         BaseModal,
         FormButton,
         TagComponent,

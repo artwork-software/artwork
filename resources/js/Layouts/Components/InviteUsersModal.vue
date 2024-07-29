@@ -8,7 +8,7 @@
                     {{ $t('You can invite several users with the same user permissions and team memberships at once.') }}
                 </div>
                 <div class="mt-6">
-                    <div class="flex mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-5">
                         <div class="relative w-72 mr-4">
                             <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput"
                                    type="text"

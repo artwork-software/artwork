@@ -3,7 +3,7 @@
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
-               type="text"
+               :type="type"
                :required="required"
                class="input peer"
                :class="isSmall ? '' : 'h-12'"
@@ -39,6 +39,10 @@ export default defineComponent({
         required: {
             type: Boolean,
             default: false
+        },
+        type: {
+            type: String,
+            default: 'text'
         }
     },
     emits: [

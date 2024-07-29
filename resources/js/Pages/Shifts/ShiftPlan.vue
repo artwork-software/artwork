@@ -569,7 +569,7 @@ export default {
         this.updateHeight();
 
         /**
-         * this code needs to be built in, when the observer is fixed
+         * this code needs to be built in, when the observer is fixed and the observer is used
          *  const observer = new IntersectionObserver(
          *                 (entries) => {
          *                     entries.forEach((entry) => {

@@ -11,6 +11,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalInventorySchedulingEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -511,6 +512,7 @@ readonly class RoomService
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
+        ?bool $desiresInventorySchedulingResource = false
     ): array {
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
@@ -540,7 +542,9 @@ readonly class RoomService
             $eventsForRoom[$key] = [
                 'roomId' => $room->getAttribute('id'),
                 //immediately resolve resource to free used memory
-                'events' => MinimalCalendarEventResource::collection($value)->resolve()
+                'events' => $desiresInventorySchedulingResource ?
+                    MinimalInventorySchedulingEventResource::collection($value)->resolve() :
+                    MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
 
@@ -696,6 +700,7 @@ readonly class RoomService
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
+        ?bool $desiresInventorySchedulingResource = false
     ): Collection {
         $roomEvents = collect();
 
@@ -705,7 +710,8 @@ readonly class RoomService
                     room: $room,
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
-                    project: $project
+                    project: $project,
+                    desiresInventorySchedulingResource: $desiresInventorySchedulingResource
                 )
             );
         }

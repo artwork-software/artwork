@@ -70,14 +70,14 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
             )()
         );
 
-        self::assertArrayHasKey('selectOptions', $rules);
-        self::assertInstanceOf(RequiredIf::class, $rules['selectOptions'][0]);
-        self::assertSame('array', $rules['selectOptions'][1]);
-        self::assertSame('min:1', $rules['selectOptions'][2]);
-        self::assertTrue($rules['selectOptions'][0]->condition);
+        self::assertArrayHasKey('typeOptions', $rules);
+        self::assertInstanceOf(RequiredIf::class, $rules['typeOptions'][0]);
+        self::assertSame('array', $rules['typeOptions'][1]);
+        self::assertSame('min:1', $rules['typeOptions'][2]);
+        self::assertTrue($rules['typeOptions'][0]->condition);
 
-        self::assertArrayHasKey('selectOptions.*', $rules);
-        self::assertSame('required|string', $rules['selectOptions.*']);
+        self::assertArrayHasKey('typeOptions.*', $rules);
+        self::assertSame('required|string', $rules['typeOptions.*']);
 
         self::assertArrayHasKey('defaultOption', $rules);
         self::assertSame('nullable|string', $rules['defaultOption']);
@@ -97,6 +97,6 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
 
         $rules = $secondRequest->rules();
 
-        self::assertFalse($rules['selectOptions'][0]->condition);
+        self::assertFalse($rules['typeOptions'][0]->condition);
     }
 }

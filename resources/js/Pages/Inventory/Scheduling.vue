@@ -59,8 +59,7 @@
                                         class="overflow-y-auto cell border-r-2 border-dotted"
                                         :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']"
                                     >
-                                        <div
-                                            v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events.data)"
+                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)"
                                             class="mb-1"
                                         >
                                             <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
@@ -223,6 +222,7 @@ import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInven
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
+
 const $t = useTranslation(),
     props = defineProps({
         dateValue: {
@@ -276,11 +276,8 @@ const toggleSearch = (close = false) => {
 onMounted(() => {
     window.addEventListener('resize', updateHeight);
     updateHeight();
-    calculateAllRoomHeights();
-});
-
-onMounted(() => {
     setSearchData();
+    calculateAllRoomHeights();
 });
 
 onUpdated(() => {
@@ -308,7 +305,7 @@ const toggleMultiEditMode = () => {
 
         props.days.forEach((day) => {
             props.calendar.forEach((room) => {
-                room[day.full_day].events.data.forEach((event) => {
+                room[day.full_day].events.forEach((event) => {
                     event.checked = false;
                 });
             });
@@ -332,11 +329,9 @@ const openMultiEditModal = () => {
         return;
     }
 
-
-
     props.days.forEach((day) => {
         props.calendar.forEach((room) => {
-            room[day.full_day].events.data.forEach((event) => {
+            room[day.full_day].events.forEach((event) => {
                 if (event.checked && selectedEvents.value.includes(event.id)) {
                     if (!selectedEventsForMultiEdit.value.find((selectedEvent) => selectedEvent.id === event.id)) {
                         selectedEventsForMultiEdit.value.push(event);
@@ -345,6 +340,7 @@ const openMultiEditModal = () => {
             });
         });
     });
+
     errorMessagesMultiEdit.value = '';
     showMultiEditModal.value = true;
 };

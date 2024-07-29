@@ -31,7 +31,7 @@
                                         :event="event"
                                         :event-types="props.eventTypes"
                                         @open-edit-event-modal="openEditEventModal"
-                                        :first_project_tab_id="first_project_tab_id"
+                                        :first_project_tab_id="props.first_project_tab_id"
                                     />
                                 </div>
                             </div>
@@ -57,7 +57,7 @@
         :wantedRoomId="wantedRoom"
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
-        :first_project_calendar_tab_id="first_project_calendar_tab_id.value"
+        :first_project_calendar_tab_id="props.first_project_calendar_tab_id"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -68,7 +68,7 @@
         :rooms="rooms"
         :eventsWithoutRoom="eventsWithoutRoom.value"
         :isAdmin="hasAdminRole()"
-        :first_project_calendar_tab_id="first_project_calendar_tab_id.value"
+        :first_project_calendar_tab_id="props.first_project_calendar_tab_id"
     />
 
     <div v-show="multiEdit"

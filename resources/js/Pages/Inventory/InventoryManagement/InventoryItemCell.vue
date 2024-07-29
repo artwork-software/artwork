@@ -25,43 +25,43 @@
             {{ $t('No') }}
         </div>
         <div v-else class="empty-cell-container" @click="toggleCellEdit()"/>
-        <div v-if="isTextColumn() && cellClicked"
-             :class="getInputCls()">
-            <input ref="cellValueInputRef"
-                   type="text"
-                   class="text-input"
-                   v-model="cellValue"
-                   @focusout="applyCellValueChange()"/>
-        </div>
-        <div v-else-if="isDateColumn() && cellClicked"
-             :class="getInputCls()">
-            <input ref="cellValueInputRef"
-                   type="date"
-                   class="date-input"
-                   v-model="cellValue"
-                   @change="applyCellValueChange()"
-                   @focusout="applyCellValueChange()"/>
-        </div>
-        <div v-else-if="isCheckboxColumn() && cellClicked"
-             :class="getInputCls()">
-            <input ref="cellValueInputRef"
-                   type="checkbox"
-                   class="checkbox-input"
-                   v-model="cellValue"
-                   @focusout="applyCellValueChange()"/>
-        </div>
-        <div v-else-if="isSelectColumn() && cellClicked"
-             :class="getInputCls()">
-            <select ref="cellValueInputRef"
-                    class="select-input"
-                    v-model="cellValue"
-                    @change="applyCellValueChange()"
-                    @focusout="applyCellValueChange()">
-                <option v-for="(option) in cell.column.type_options">
-                    {{ option }}
-                </option>
-            </select>
-        </div>
+        <template v-if="cellClicked">
+            <div v-if="isTextColumn()"
+                 :class="getInputCls()">
+                <input ref="cellValueInputRef"
+                       type="text"
+                       class="text-input"
+                       v-model="cellValue"
+                       @focusout="applyCellValueChange()"/>
+            </div>
+            <div v-else-if="isDateColumn()"
+                 :class="getInputCls()">
+                <input ref="cellValueInputRef"
+                       type="date"
+                       class="date-input"
+                       v-model="cellValue"
+                       />
+            </div>
+            <div v-else-if="isCheckboxColumn()"
+                 :class="getInputCls()">
+                <input ref="cellValueInputRef"
+                       type="checkbox"
+                       class="checkbox-input"
+                       v-model="cellValue"
+                       @focusout="applyCellValueChange()"/>
+            </div>
+            <div v-else-if="isSelectColumn()"
+                 :class="getInputCls()">
+                <select ref="cellValueInputRef"
+                        class="select-input"
+                        v-model="cellValue"
+                        @focusout="applyCellValueChange()">
+                    <option v-for="(option) in cell.column.type_options">
+                        {{ option }}
+                    </option>
+                </select>
+            </div>
+        </template>
     </td>
 </template>
 

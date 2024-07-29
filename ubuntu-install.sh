@@ -45,7 +45,8 @@ sudo NEEDRESTART_MODE=a apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
        php8.2-ldap \
        php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
        php8.2-memcached php8.2-pcov \
-       meilisearch
+       meilisearch \
+       nodejs
 
 #Cleanup apt
 
@@ -99,6 +100,7 @@ sudo chown -R www-data:www-data /var/www/html
 sudo npm install -g @soketi/soketi
 sudo npm install -g pm2
 sudo pm2 start soketi -- start
+
 ## Setup laravel
 sudo php /var/www/html/artisan key:generate --force
 sudo php /var/www/html/artisan storage:link
@@ -108,7 +110,7 @@ sudo php /var/www/html/artisan db:seed:production
 
 ## Setup js
 sudo npm --prefix /var/www/html install
-sudo npm --prefix /var/www/html run prod
+sudo npm --prefix /var/www/html run build
 
 sudo chown -R www-data:www-data /var/www/html
 

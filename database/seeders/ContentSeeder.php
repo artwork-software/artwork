@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\ProjectController;
-use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Category\Services\CategoryService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\CollectingSociety\Models\CollectingSociety;
@@ -12,14 +11,11 @@ use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\CostCenter\Models\CostCenter;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Department\Models\Department;
-use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Genre\Services\GenreService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\Component;
-use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Sector\Services\SectorService;
 use Carbon\Carbon;
-use Database\Factories\Artwork\Modules\Category\Models\CategoryFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -544,7 +540,9 @@ class ContentSeeder extends Seeder
             'project_id' => null,
             'user_id' => 1,
             'earliest_start_datetime' => Carbon::now()->addDay()->addHours(2),
-            'latest_end_datetime' => Carbon::now()->addDay()->addHours(3)
+            'latest_end_datetime' => Carbon::now()->addDay()->addHours(3),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
         ]);
 
         DB::table('events')->insert([
@@ -558,7 +556,9 @@ class ContentSeeder extends Seeder
             'project_id' => 1,
             'user_id' => 1,
             'earliest_start_datetime' => Carbon::now()->addDay()->subHour(),
-            'latest_end_datetime' => Carbon::now()->addDay()->addHour()
+            'latest_end_datetime' => Carbon::now()->addDay()->addHour(),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
         ]);
 
         DB::table('events')->insert([
@@ -571,7 +571,9 @@ class ContentSeeder extends Seeder
             'project_id' => 1,
             'user_id' => 1,
             'earliest_start_datetime' => Carbon::now()->addDays(2)->subHours(2),
-            'latest_end_datetime' => Carbon::now()->addDays(2)->subHour()
+            'latest_end_datetime' => Carbon::now()->addDays(2)->subHour(),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
         ]);
     }
 

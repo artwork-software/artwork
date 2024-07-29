@@ -27,7 +27,7 @@
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="divide-y divide-gray-200 divide-dashed eventByDaysContainer" ref="calendarToCalculate">
+                <div class="divide-y divide-gray-200 divide-dashed events-by-days-container" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"
@@ -40,7 +40,7 @@
                              :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
                              :class="[day.is_weekend ? '' : '', zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                              class="group/container">
-                            <div v-if="currentDaysInView.has(day.full_day)" v-for="event in room[day.full_day].events">
+                            <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="event in room[day.full_day].events">
                                 <div class="py-0.5" :key="event.id">
                                     <AsyncSingleEventInCalendar
                                         :event="event"
@@ -159,38 +159,7 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvent} from "@/Composeables/Event.js";
-
-onMounted(() => {
-    window.addEventListener(
-        "fullscreenchange",
-        () => {
-            if (!document.fullscreenElement) {
-                isFullscreen.value = false;
-            }
-        }
-    );
-    const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    const day = entry.target.dataset.day;
-                    if (entry.isIntersecting) {
-                        currentDaysInView.value.add(day);
-                    } else {
-                        currentDaysInView.value.delete(day);
-                    }
-                });
-            },
-            {
-                root: document.getElementsByClassName('.eventByDaysContainer')[0],
-                rootMargin: '150px'
-            }
-        ),
-        dayContainers = document.querySelectorAll('.day-container');
-
-    dayContainers.forEach((container) => {
-        observer.observe(container);
-    });
-});
+import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 
 const props = defineProps({
         rooms: {
@@ -216,7 +185,7 @@ const props = defineProps({
         },
     }),
     $t = useTranslation(),
-    {getDaysOfEvent, formatEventDateByDayJs, useReload} = useEvent(),
+    {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),
     {
         showReceivesNewDataOverlay,
         hasReceivedNewCalendarData,
@@ -224,7 +193,11 @@ const props = defineProps({
         receivedRoomData,
         receivedEventsWithoutRoom,
         handleReload
-    } = useReload(props.project ? props.project.id : 0),
+    } = useCalendarReload(props.project ? props.project.id : 0),
+    {
+        composedCurrentDaysInViewRef,
+        composedStartDaysAndEventsIntersectionObserving
+    } = useDaysAndEventsIntersectionObserver(),
     {hasAdminRole} = usePermission(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(
         {
@@ -333,7 +306,6 @@ const props = defineProps({
     eventToDelete = ref(null),
     wantedRoom = ref(null),
     roomCollisions = ref([]),
-    currentDaysInView = ref(new Set()),
     handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
         if (considerOnMultiEdit) {
             editEvents.value.push(eventId);
@@ -515,6 +487,19 @@ const props = defineProps({
             }
         );
     };
+
+onMounted(() => {
+    window.addEventListener(
+        "fullscreenchange",
+        () => {
+            if (!document.fullscreenElement) {
+                isFullscreen.value = false;
+            }
+        }
+    );
+
+    composedStartDaysAndEventsIntersectionObserving();
+});
 </script>
 
 <style scoped>

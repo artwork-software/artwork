@@ -79,8 +79,6 @@
     <div class="mb-1 ml-4 flex items-center w-full">
         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter" />
     </div>
-
-
     <ConfirmDeleteModal
         v-if="showConfirmCommitModal"
         @closed="showConfirmCommitModal = false"

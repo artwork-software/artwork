@@ -148,22 +148,8 @@
 
 <script setup>
 import InventoryHeader from "@/Pages/Inventory/InventoryHeader.vue";
-import {
-    IconCopy,
-    IconDotsVertical,
-    IconTrash,
-    IconX,
-    IconEdit
-} from "@tabler/icons-vue";
-import {
-    Listbox,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
+import {IconCopy, IconDotsVertical, IconEdit, IconTrash, IconX} from "@tabler/icons-vue";
+import {Listbox, ListboxOption, ListboxOptions, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {onMounted, onUpdated, ref} from "vue";
@@ -231,7 +217,7 @@ const props = defineProps({
         return getColumnWidthCls(index, column);
     },
     getColumnWidthCls = (index, column) => {
-        return index === 0 ? 'w-[0.75%] min-w-[0.75%]' :
+        return index === 0 ? 'w-[3%] min-w-[3%]' :
             index === 1 ? 'w-[5%] min-w-[5%]' :
             index === 2 ? 'w-auto' :
             isTextColumn(column) ? 'w-[15%] min-w-[15%]' :

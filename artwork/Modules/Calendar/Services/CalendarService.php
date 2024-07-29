@@ -171,6 +171,7 @@ class CalendarService
         ?Project $project,
         ?CalendarFilter $calendarFilter,
         ?Room $room = null,
+        ?bool $desiresInventorySchedulingResource = false
     ): array {
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
@@ -209,6 +210,7 @@ class CalendarService
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
                     project: $project,
+                    desiresInventorySchedulingResource: $desiresInventorySchedulingResource
                 ) :
                 $roomService->collectEventsForRoom(
                     room: $room,

@@ -641,7 +641,6 @@ readonly class EventService
         RoomService $roomService,
         CraftService $craftService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
         FilterService $filterService,
         ShiftFilterController $shiftFilterController,
         ShiftQualificationService $shiftQualificationService,
@@ -675,6 +674,7 @@ readonly class EventService
             $startDate,
             $endDate
         );
+
         $filteredRooms = $roomService->getFilteredRooms(
             $startDate,
             $endDate,
@@ -682,17 +682,13 @@ readonly class EventService
         );
 
         return ShiftPlanDto::newInstance()
-            ->setEvents($events)
             ->setHistory($this->getEventShiftsHistoryChanges($events))
             ->setCrafts($craftService->getAll())
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setProjects($projectService->getAll())
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
-                    null,
-                    true
+                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
                 )
             )
             ->setRooms($filteredRooms)
@@ -709,7 +705,6 @@ readonly class EventService
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
-            ->setSelectedDate(null)
             ->setUsersForShifts(
                 $userService->getUsersWithPlannedWorkingHours(
                     $startDate,

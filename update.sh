@@ -20,7 +20,7 @@ sudo php /var/www/html/artisan migrate --force
 ## Setup js
 sudo npm --prefix /var/www/html install
 #First dev, then prod to bake the keys into soketi(pusher)
-sudo npm --prefix /var/www/html run prod
+sudo npm --prefix /var/www/html run build
 
 sudo chown -R www-data:www-data /var/www/html
 

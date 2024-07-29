@@ -194,7 +194,10 @@ const props = defineProps({
         receivedEventsWithoutRoom,
         handleReload
     } = useCalendarReload(props.project ? props.project.id : 0),
-
+    {
+        composedCurrentDaysInViewRef,
+        composedStartDaysAndEventsIntersectionObserving
+    } = useDaysAndEventsIntersectionObserver(),
     {hasAdminRole} = usePermission(usePage().props),
     AsyncFunctionBarCalendar = defineAsyncComponent(
         {

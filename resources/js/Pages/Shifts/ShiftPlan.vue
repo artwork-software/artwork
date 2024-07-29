@@ -50,8 +50,8 @@
                                     <td v-for="day in days" :data-day="day.full_day" style="width: 200px"
                                         class="max-h-28 overflow-y-auto cell border-r-2 border-dotted day-container"
                                         :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
-                                        <div v-if="this.currentDaysInView.has(day.full_day)"
-                                             v-for="event in room[day.full_day].events" class="mb-1">
+                                        <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
+                                        <div v-for="event in room[day.full_day].events" class="mb-1">
                                             <SingleShiftPlanEvent
                                                 v-if="checkIfEventHasShiftsToDisplay(event)"
                                                 :multiEditMode="multiEditMode"
@@ -568,28 +568,32 @@ export default {
         window.addEventListener('resize', this.updateHeight);
         this.updateHeight();
 
-        const observer = new IntersectionObserver(
-                (entries) => {
-                    entries.forEach((entry) => {
-                        const day = entry.target.dataset.day;
+        /**
+         * this code needs to be built in, when the observer is fixed
+         *  const observer = new IntersectionObserver(
+         *                 (entries) => {
+         *                     entries.forEach((entry) => {
+         *                         const day = entry.target.dataset.day;
+         *
+         *                         if (entry.intersectionRatio > 0) {
+         *                             this.currentDaysInView.add(day);
+         *                         } else {
+         *                             this.currentDaysInView.delete(day);
+         *                         }
+         *                     });
+         *                 },
+         *                 {
+         *                     root: document.getElementsByClassName('.eventByDaysContainer')[0],
+         *                     rootMargin: '5000px'
+         *                 }
+         *             ),
+         *             dayContainers = document.querySelectorAll('.day-container');
+         *
+         *         dayContainers.forEach((container) => {
+         *             observer.observe(container);
+         *         });
+         */
 
-                        if (entry.intersectionRatio > 0) {
-                            this.currentDaysInView.add(day);
-                        } else {
-                            this.currentDaysInView.delete(day);
-                        }
-                    });
-                },
-                {
-                    root: document.getElementsByClassName('.eventByDaysContainer')[0],
-                    rootMargin: '5000px'
-                }
-            ),
-            dayContainers = document.querySelectorAll('.day-container');
-
-        dayContainers.forEach((container) => {
-            observer.observe(container);
-        });
 
     },
     computed: {

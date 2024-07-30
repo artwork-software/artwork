@@ -1,42 +1,25 @@
 <template>
-    <BaseModal @closed="close(false)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
+    <BaseModal @closed="close(false)" v-if="show">
             <div class="mx-4">
-                <div class="mt-8 headline1">
-                    {{this.mode === 'create' ? $t('Create qualification') : $t('Edit qualification')}}
-                </div>
-                <div class="xsLight my-6">
-                    {{
-                        this.mode === 'create' ?
-                            $t('You can create a qualification here.') : $t('Here you can edit the qualification "{0}".', [this.shiftQualification.name])
-                    }}
-                </div>
-                <div class="flex">
-                    <Menu as="div" class="relative">
+                <ModalHeader
+                    :title="mode === 'create' ? $t('Create qualification') : $t('Edit qualification')"
+                    :description="descriptionText"
+
+                    />
+                <div class="grid gird-cols-1 md:grid-cols-5 gap-4">
+                    <Menu as="div" class="relative col-span-1">
                         <div>
-                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']"
-                                        class="items-center rounded-full focus:outline-none h-12 w-12">
-                                <label v-if="this.shiftQualificationForm.icon === null"
-                                       class="cursor-pointer text-gray-400 text-xs">
+                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']" class="menu-button mt-5">
+                                <label v-if="this.shiftQualificationForm.icon === null" class="cursor-pointer text-gray-400 text-xs">
                                     {{$t('Icon')}}*
                                 </label>
-                                <ChevronDownIcon v-if="this.shiftQualificationForm.icon === null"
-                                                 class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
-                                <ShiftQualificationIconCollection
-                                    v-if="this.shiftQualificationForm.icon !== null"
-                                    class="h-12 w-12"
-                                    :iconName=this.shiftQualificationForm.icon
-                                    alt="Qualifikation-Icon"
-                                />
+
+                                <ShiftQualificationIconCollection v-if="this.shiftQualificationForm.icon !== null" class="h-12 w-12 p-2" :iconName=this.shiftQualificationForm.icon alt="Qualifikation-Icon"/>
+                                <ChevronDownIcon class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
                             </MenuButton>
                         </div>
-                        <transition enter-active-class="transition-enter-active"
-                                    enter-from-class="transition-enter-from"
-                                    enter-to-class="transition-enter-to"
-                                    leave-active-class="transition-leave-active"
-                                    leave-from-class="transition-leave-from"
-                                    leave-to-class="transition-leave-to">
-                            <MenuItems
-                                class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
+                            <MenuItems class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <MenuItem v-for="shiftQualificationIcon in this.shiftQualificationIcons"
                                           v-slot="{ active }">
                                     <div @click="this.shiftQualificationForm.icon = shiftQualificationIcon.iconName"
@@ -56,28 +39,25 @@
                             </MenuItems>
                         </transition>
                     </Menu>
-                    <div class="relative my-auto w-full ml-8 mr-12">
-                        <input id="name"
-                               v-model="this.shiftQualificationForm.name"
-                               type="text"
-                               class="border-gray-300 focus:border-primary mb-3 peer pl-0 h-12 w-full focus:border-t-transparent focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"
+                    <div class="col-span-4">
+                        <TextInputComponent
+                            id="name"
+                            v-model="this.shiftQualificationForm.name"
+                            :label="$t('Name of the qualification')"
                         />
-                        <label for="name"
-                               class="text-secondary absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-base peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
-                            {{$t('Name of the qualification')}}
-                        </label>
                     </div>
                 </div>
-                <div class="w-full flex mx-20 mt-5">
-                    <input type="checkbox"
-                           v-model="this.shiftQualificationForm.available"
-                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
-                    />
-                    <p :class="[this.shiftQualificationForm.available ? 'xsDark' : 'xsLight']"
-                       class="ml-3 my-auto text-sm">
-                        {{ $t('Is taken into account for new shifts')}}
-                    </p>
+                <div class="mt-5 -mx-10 px-10 py-6 bg-lightBackgroundGray">
+                    <div class="flex gap-2 items-center">
+                        <input type="checkbox"
+                               v-model="this.shiftQualificationForm.available"
+                               class="input-checklist"
+                        />
+                        <p :class="[this.shiftQualificationForm.available ? 'xsDark' : 'xsLight']"
+                           class="my-auto text-sm">
+                            {{ $t('Is taken into account for new shifts')}}
+                        </p>
+                    </div>
                 </div>
                 <div class="w-full text-center mb-6">
                     <FormButton
@@ -101,6 +81,8 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import Label from "@/Jetstream/Label.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -117,6 +99,8 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
+        ModalHeader,
+        TextInputComponent,
         BaseModal,
         FormButton,
         Label,
@@ -139,6 +123,7 @@ export default defineComponent({
     ],
     data () {
         return {
+            descriptionText: this.mode === 'create' ? this.$t('You can create a qualification here.') : this.$t('Here you can edit the qualification "{0}".', [this.shiftQualification.name]),
             shiftQualificationForm: useForm({
                 icon: this.mode === 'edit' ? this.shiftQualification.icon : null,
                 name: this.mode === 'edit' ? this.shiftQualification.name : null,

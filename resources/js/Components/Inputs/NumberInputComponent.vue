@@ -7,7 +7,9 @@
                class="input peer"
                :class="isSmall ? '' : 'h-12'"
                placeholder="placeholder"
-               min="0"
+               :min="min"
+                :max="max"
+                :maxlength="maxlength"
         :required="required"/>
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
@@ -40,6 +42,18 @@ export default defineComponent({
         required: {
             type: Boolean,
             default: false
+        },
+        min: {
+            type: Number,
+            default: 0
+        },
+        max: {
+            type: Number,
+            default: 100
+        },
+        maxlength: {
+            type: Number,
+            default: 100
         }
     },
     emits: [

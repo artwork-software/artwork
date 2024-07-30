@@ -20,21 +20,21 @@
                 />
             </div>
         </div>
-        <div class="w-1/2 mt-4 grid grid-cols-1 gap-3">
-            <input-component v-model="this.sageForm.host" :placeholder="$t('Host')"/>
+        <div class="w-1/2 mt-4 grid grid-cols-1 gap-4">
+            <TextInputComponent v-model="this.sageForm.host" :label="$t('Host')" id="host" />
             <div class="errorText" v-if="showHostErrorText">{{ $t('The host must be specified.') }}</div>
-            <input-component v-model="this.sageForm.endpoint" :placeholder="$t('Endpoint')"/>
+            <TextInputComponent v-model="this.sageForm.endpoint" id="endpoint" :label="$t('Endpoint')"/>
             <div class="errorText" v-if="showEndpointErrorText">{{ $t('The end point must be specified.') }}</div>
-            <input-component v-model="this.sageForm.user" :placeholder="$t('User')"/>
+            <TextInputComponent v-model="this.sageForm.user" id="user" :label="$t('User')"/>
             <div class="errorText" v-if="showUserErrorText">{{ $t('The user must be specified.') }}</div>
-            <input type="password"
+            <TextInputComponent type="password"
                    v-model="this.sageForm.password"
-                   :placeholder="$t('Password')"
-                   class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                   :label="$t('Password')"
+                   id="password"
             />
             <div class="errorText" v-if="showPasswordErrorText">{{ $t('The password must be entered.') }}</div>
-            <div class="flex flex-col xsLight gap-3">
-                <div class="flex items-center justify-end w-full">
+            <div class="grid grid-cols-1 gap-4 xsLight">
+                <div class="flex items-center justify-end w-full h-full">
                     <div class="group relative">
                         <InformationCircleIcon class="w-5 h-5 mr-1"/>
                         <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-gray-600 text-white p-2">
@@ -42,24 +42,28 @@
                         </div>
                     </div>
                     <span>{{ $t('Query data from this booking date') }}&nbsp;</span>
-                    <input v-model="this.sageForm.bookingDate"
-                           type="date"
-                           class="text-center border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"
-                    />
+                    <div class="w-72 ml-2">
+                        <DateInputComponent
+                            v-model="this.sageForm.bookingDate"
+                            label="tt.mm.yyyy"
+                            id="bookingDate"
+                        />
+                    </div>
                 </div>
                 <div class="flex items-center justify-end">
                     <span>{{ $t('Query daily at') }}&nbsp;</span>
-                    <input v-model="this.sageForm.fetchTime"
-                           type="time"
-                           style="width:82px;"
-                           class="text-center border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"
+                    <TimeInputComponent
+                        v-model="this.sageForm.fetchTime"
+                        style="width:82px;"
+                        label="hh:mm"
+                        id=""
                     />
                 </div>
                 <div class="flex items-center justify-end">
                     <label for="sageEnabled">{{ $t('Interface enabled') }}&nbsp;</label>
                     <input type="checkbox"
                            id="sageEnabled"
-                           class="checkBoxOnDark"
+                           class="input-checklist"
                            v-model="this.sageForm.enabled"
                     />
                 </div>
@@ -69,21 +73,20 @@
         <div class="flex flex-col space-y-4">
             <hr class="mt-5"/>
             <h2 class="headline2">{{ $t('Import a specific booking date') }}</h2>
-            <div class="xsLight mt-4 col-span-9">
+            <div class="xsLight col-span-9">
                 {{ $t('Import individual booking days again. Existing data is overwritten with new data.') }}
             </div>
             <div v-if="!this.sageInterfaceIsConfigured()" class="errorText">{{ $t('Please configure the Sage interface first.') }}</div>
             <div class="flex flex-row items-center space-x-4">
-                <input type="date"
-                       v-model="this.specificDayImportDate"
-                       :disabled="!this.sageInterfaceIsConfigured()"
-                       :class="[
-                                !this.sageInterfaceIsConfigured() ?
-                                    'cursor-not-allowed' :
-                                    'cursor-pointer',
-                                ''
-                             ]"
-                />
+                <div class="w-96">
+                    <DateInputComponent
+                        label="tt.mm.yyyy"
+                        id="specificDayImportDate"
+                        v-model="this.specificDayImportDate"
+                        :disabled="!this.sageInterfaceIsConfigured()"
+                        :class="[!this.sageInterfaceIsConfigured() ? 'cursor-not-allowed' : 'cursor-pointer', '']"
+                    />
+                </div>
                 <RefreshIcon :class="[
                                 !this.sageInterfaceIsConfigured() ||
                                 this.importProcessing ||
@@ -131,9 +134,15 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 
 export default defineComponent({
     components: {
+        TimeInputComponent,
+        DateInputComponent,
+        TextInputComponent,
         FormButton,
         ErrorComponent,
         SuccessModal,

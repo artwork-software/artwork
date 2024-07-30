@@ -68,7 +68,7 @@
             <!-- Persönliche Daten -->
             <div v-if="currentTab === 2">
                 <!-- Profilbild, Name, Nachname -->
-                <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-8 gap-4">
                     <div class="col-span-1">
                         <input
                             ref="photoInput"
@@ -90,43 +90,37 @@
 
                     </div>
                     <div class="col-span-3">
-                        <label for="first_name" class="xxsLight">{{$t('First name')}}</label>
-                        <div>
-                            <input  type="text" v-model="freelancerData.first_name" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
-                        </div>
+                        <TextInputComponent id="first_name" v-model="freelancerData.first_name" :label="$t('First name')" />
                     </div>
                     <div class="col-span-4">
-                        <label for="last_name" class="xxsLight">{{$t('Last name')}}</label>
-                        <div>
-                            <input type="text" v-model="freelancerData.last_name" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="last_name" id="last_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Nachname" />
-                        </div>
+                        <TextInputComponent id="last_name" v-model="freelancerData.last_name" :label="$t('Last name')" />
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1">
-                        <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8 bg-gray-200" placeholder="Freelancer" disabled value="Freelancer (extern)" />
+                        <TextInputComponent readonly label="" id="textFreelancer" disabled v-model="freelancerData.placeholder" />
                     </div>
                     <div class="col-span-1">
-                        <input type="text" v-model="freelancerData.position" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="position" id="position" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Position')" />
+                        <TextInputComponent v-model="freelancerData.position" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="position" id="position" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Position')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.email" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
+                        <TextInputComponent type="email" v-model="freelancerData.email" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Email')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.phone_number" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
+                        <TextInputComponent type="text" v-model="freelancerData.phone_number" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Phone number')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.street" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
+                        <TextInputComponent type="text" v-model="freelancerData.street" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Street')" />
                     </div>
                     <div class="col-span-1"></div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.zip_code" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
+                        <TextInputComponent type="text" v-model="freelancerData.zip_code" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Zip code')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="freelancerData.location" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
+                        <TextInputComponent type="text" v-model="freelancerData.location" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Location')" />
                     </div>
                     <div class="col-span-full">
-                        <textarea rows="4" v-model="freelancerData.note" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Note')" />
+                        <TextareaComponent rows="4" v-model="freelancerData.note" @focusout="saveFreelancer" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Note')" />
                     </div>
                 </div>
             </div>
@@ -156,11 +150,15 @@ import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        TextareaComponent,
+        TextInputComponent,
         BaseMenu,
         FormButton,
         SuccessModal,
@@ -212,6 +210,7 @@ export default {
             showSuccessModal: false,
             currentTab: 2,
             freelancerData: useForm({
+                placeholder: 'Freelancer (extern)',
                 first_name: this.freelancer.first_name,
                 last_name: this.freelancer.last_name,
                 position: this.freelancer.position,

@@ -8,52 +8,52 @@
         <div class="xsLight mt-4">
             {{ $t("Define the footer text for all system emails here, and provide the links to your company's legal notice and privacy policy pages. Additionally, you can specify an email address to be used for sending emails.") }}
         </div>
-        <div class="mt-4">
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+        <div class="grid grid-cols-1 gap-4 mt-10 max-w-lg">
+            <div class="">
                 <div class="sm:col-span-3">
-                    <inputComponent @focusout="changeEmailData" v-model="mailForm.page_title" :placeholder="$t('Page Title')"/>
+                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.page_title" id="page_title" :label="$t('Page Title')"/>
                 </div>
             </div>
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+            <div class="">
                 <div class="sm:col-span-3">
-                    <inputComponent @focusout="changeEmailData" v-model="mailForm.businessName" :placeholder="$t('Our Organization')"/>
+                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.businessName" id="businessName" :label="$t('Our Organization')"/>
                 </div>
             </div>
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+            <div class="">
                 <div class="sm:col-span-3">
-                    <inputComponent @focusout="changeEmailData" v-model="mailForm.impressumLink" :placeholder="$t('Link to Legal Notice')"/>
+                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+            <div class="">
                 <div class="sm:col-span-3">
-                    <inputComponent @focusout="changeEmailData" v-model="mailForm.privacyLink" :placeholder="$t('Link to Privacy Policy')"/>
+                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+            <div class="">
                 <div class="sm:col-span-3">
-                    <inputComponent @focusout="changeEmailData" v-model="mailForm.businessEmail" :placeholder="$t('Business Email')"/>
+                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
                           class="errorText">
                         {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
             </div>
-            <div class="mt-4 col-span-9 grid grid-cols-9">
+            <div class="">
                 <div class="sm:col-span-8">
-                    <textarea
-                        :placeholder="$t('Email-Footer')"
+                    <TextareaComponent
+                        :label="$t('Email-Footer')"
                         v-model="mailForm.emailFooter"
                         @focusout="changeEmailData"
                         rows="4"
-                        class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-2 w-full placeholder:xsLight border-2 border-gray-300 "/>
+                        id="emailFooter"/>
                 </div>
             </div>
         </div>
@@ -66,9 +66,13 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {useForm} from "@inertiajs/vue3";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default defineComponent({
     components: {
+        TextareaComponent,
+        TextInputComponent,
         FormButton,
         ToolSettingsHeader,
         InputComponent

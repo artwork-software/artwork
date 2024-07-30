@@ -4,6 +4,10 @@ import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 
 const emit = defineEmits(['closed'])
 
@@ -41,51 +45,46 @@ const saveTimePreset = () => {
     <BaseModal v-if="true" @closed="$emit('closed')">
         <form @submit.prevent="saveTimePreset">
 
-            <h3 class="headline2">
-                <span v-if="newTimePreset.id">{{ $t('Edit Time Preset')}}</span>
-                <span v-else>{{ $t('Create Time Preset')}}</span>
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-10">
+            <ModalHeader
+                :title="newTimePreset.id ? $t('Edit Time Preset') : $t('Create Time Preset')"
+            />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="col-span-2">
-                    <label for="name" class="text-base">{{ $t('Name') }}</label>
-                    <input type="text"
-                           :placeholder="$t('Name')"
+                    <TextInputComponent
+                           :label="$t('Name')"
                            v-model="newTimePreset.name"
-                           class="w-full h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+                           id="name"
                            required
                     />
                 </div>
                 <div>
-                    <label for="name" class="text-base">{{ $t('Start-Time')}}</label>
-                    <input type="time"
-                           :placeholder="$t('Start-Time')"
+                    <TimeInputComponent
+                           :label="$t('Start-Time')"
                            v-model="newTimePreset.start_time"
-                           class="w-full h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+                           id="start_time"
                            required
                     />
                 </div>
                 <div>
-                    <label for="name" class="text-base">{{ $t('End-Time') }}</label>
-                    <input type="time"
-                           :placeholder="$t('Start-Time')"
-                           v-model="newTimePreset.end_time"
-                           class="w-full h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
-                           required
+                    <TimeInputComponent
+                        :label="$t('End-Time')"
+                        v-model="newTimePreset.end_time"
+                        id="end_time"
+                        required
                     />
                 </div>
                 <div class="col-span-2">
-                    <label for="name" class="text-base">{{ $t('Break time') }}</label>
-                    <input type="number"
-                           :placeholder="$t('Length of break in minutes*')"
-                           v-model="newTimePreset.break_time"
-                           class="w-full h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
-                           required
-                           min="0"
-                           max="1000"
+                    <NumberInputComponent
+                        :label="$t('Length of break in minutes*')"
+                        v-model="newTimePreset.break_time"
+                        required
+                        :min="0"
+                        :max="1000"
+                        id="break_time"
                     />
                 </div>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mt-10">
                 <div>
                     <button type="button" @click="$emit('closed')" class="text-secondary underline cursor-pointer text-xs">{{ $t('No, not really') }}</button>
                 </div>

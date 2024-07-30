@@ -7,7 +7,11 @@
                :required="required"
                class="input peer"
                :class="isSmall ? '' : 'h-12'"
-               placeholder="placeholder"/>
+               placeholder="placeholder"
+               :disabled="disabled"
+                :readonly="readonly"
+               :maxlength="maxlength"
+        />
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
@@ -43,7 +47,19 @@ export default defineComponent({
         type: {
             type: String,
             default: 'text'
-        }
+        },
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+        readonly: {
+            type: Boolean,
+            default: false
+        },
+        maxlength: {
+            type: Number,
+            default: 255
+        },
     },
     emits: [
         'update:modelValue'

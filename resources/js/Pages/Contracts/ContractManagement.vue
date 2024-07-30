@@ -21,7 +21,7 @@
                                                     <div v-for="(filter, index) in filter.costsFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
-                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="input-checklist-dark" />
                                                             </div>
                                                             <div class="text-sm leading-6">
                                                                 <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>
@@ -36,7 +36,7 @@
                                                     <div v-for="(filter, index) in filter.companyTypesFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
-                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="input-checklist-dark" />
                                                             </div>
                                                             <div class="text-sm leading-6">
                                                                 <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>
@@ -50,7 +50,7 @@
                                                     <div v-for="(filter, index) in filter.contractTypesFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
-                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="input-checklist-dark" />
                                                             </div>
                                                             <div class="text-sm leading-6">
                                                                 <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>

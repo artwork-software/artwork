@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build --no-hmr"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.7",

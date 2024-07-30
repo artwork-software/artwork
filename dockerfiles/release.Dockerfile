@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 MAINTAINER "Caldero Systems GmbH"
 
@@ -35,7 +35,6 @@ RUN apt-get update && apt-get install -y ca-certificates  \
     libmagickwand-dev \
     wget \
     htop \
-    python2 \
     supervisor \
     dnsutils \
     librsvg2-bin \
@@ -44,18 +43,16 @@ RUN apt-get update && apt-get install -y ca-certificates  \
 
 RUN mkdir -p /etc/apt/keyrings \
     && echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | tee /etc/apt/sources.list.d/fury.list \
-    && echo "deb [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " | tee /etc/apt/sources.list.d/ppa_ondrej_php.list \
-    && echo "deb-src [trusted=yes] https://ppa.launchpadcontent.net/ondrej/php/ubuntu/ jammy main " >> /etc/apt/sources.list.d/ppa_ondrej_php.list \
     && apt-get update \
-    && apt-get install -y php8.2-cli php8.2-dev \
-           php8.2-pgsql php8.2-sqlite3 php8.2-gd php8.2-imagick \
-           php8.2-curl \
-           php8.2-imap php8.2-mysql php8.2-mbstring \
-           php8.2-xml php8.2-zip php8.2-bcmath php8.2-soap \
-           php8.2-intl php8.2-readline \
-           php8.2-ldap \
-           php8.2-msgpack php8.2-igbinary php8.2-redis php8.2-swoole \
-           php8.2-memcached php8.2-pcov \
+    && apt-get install -y php-cli php-dev \
+           php-pgsql php-sqlite3 php-gd php-imagick \
+           php-curl \
+           php-imap php-mysql php-mbstring \
+           php-xml php-zip php-bcmath php-soap \
+           php-intl php-readline \
+           php-ldap \
+           php-msgpack php-igbinary php-redis \
+           php-memcached php-pcov \
            meilisearch \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
                && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
@@ -79,14 +76,14 @@ RUN if [ -n "$TAG" ]; then \
      git checkout $BRANCH; \
     fi
 
-RUN npm -g install cross-env webpack @soketi/soketi
+RUN npm -g install cross-env @soketi/soketi
 
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer --no-interaction install
 
 RUN php /var/www/html/artisan storage:link
 
 COPY dockerfiles/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY dockerfiles/php/php.ini /etc/php/8.2/cli/conf.d/99-artwork.ini
+COPY dockerfiles/php/php.ini /etc/php//cli/conf.d/99-artwork.ini
 COPY dockerfiles/php/fpm.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 COPY dockerfiles/redis.conf /etc/redis/redis.conf
 
@@ -95,5 +92,6 @@ RUN (crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:
 RUN npm install
 
 RUN chown -R www-data:www-data /var/www/html
+RUN chown -R mysql:mysql /var/lib/mysql
 
 ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

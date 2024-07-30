@@ -68,13 +68,14 @@ RUN git init  \
     && git checkout main \
     && git fetch --all
 
-RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
-
 RUN if [ -n "$TAG" ]; then \
       git checkout tags/$TAG; \
     elif [ -n "$BRANCH" ]; then  \
      git checkout $BRANCH; \
-    fi
+    fi \
+    && git pull
+
+RUN curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
 RUN npm -g install cross-env @soketi/soketi
 

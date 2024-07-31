@@ -174,7 +174,15 @@
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project"
                     :pdf-title="project ? project.name : 'Raumbelegung'"/>
 
-    <GeneralCalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="showCalendarAboSettingModal = false"/>
+    <GeneralCalendarAboSettingModal
+        :event-types="eventTypes"
+        :rooms="rooms"
+        :areas="areas"
+        v-if="showCalendarAboSettingModal"
+        @close="closeCalendarAboSettingModal"
+    />
+
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 
 </template>
 
@@ -204,8 +212,11 @@ import {usePermission} from "@/Composeables/Permission.js";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 
 const eventTypes = inject('eventTypes');
+const rooms = inject('rooms');
+const areas = inject('areas');
 const dateValue = inject('dateValue');
 const first_project_tab_id = inject('first_project_tab_id');
 const filterOptions = inject('filterOptions');
@@ -220,7 +231,7 @@ const showPDFConfigModal = ref(false);
 const wantedRoom = ref(null)
 const roomCollisions = ref([])
 const externUpdate = ref(false)
-
+const showCalendarAboInfoModal = ref(false)
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
@@ -331,6 +342,13 @@ const activeFilters = computed(() => {
 
     return activeFiltersArray
 })
+
+const closeCalendarAboSettingModal = (bool) => {
+    showCalendarAboSettingModal.value = false;
+    if(bool){
+        showCalendarAboInfoModal.value = true;
+    }
+}
 
 const UpdateMultiEditEmits = (value) => {
     emits('updateMultiEdit', value)

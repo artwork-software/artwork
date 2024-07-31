@@ -840,6 +840,7 @@ readonly class EventService
                     $roomService
                 )
             )
+            ->setAreas($areaService->getAll())
             ->setPersonalFilters($filterController->index())
             ->setUserFilters($user->getAttribute('calendar_filter'))
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
@@ -912,6 +913,7 @@ readonly class EventService
                     $userCalendarFilter
                 )
             )
+            ->setAreas($areaService->getAll())
             ->setFilterOptions($showCalendar["filterOptions"],)
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])

@@ -341,6 +341,7 @@
                                                         <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
                                                     </span>
                                                 </span>
+                                                </span>
                                             </div>
                                             <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
                                                  v-if="user.dayServices"

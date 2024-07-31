@@ -9,13 +9,11 @@
                     {{$t('You can create and edit your checklist template here - it can then be used in any project.')}}
                 </div>
                 <div class="flex mt-8">
-                    <div class="relative w-full max-w-2xl">
-                        <input id="teamName" v-model="templateForm.name" type="text"
-                               class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="teamName"
-                               class="absolute left-0 -top-7 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
-                            {{ $t('Name of the checklist template')}}*</label>
+                    <div class="max-w-2xl w-full">
+                        <TextInputComponent
+                            id="teamName"
+                            v-model="templateForm.name"
+                            :label="$t('Name of the checklist template')"/>
                         <span v-if="showEmptyTaskNameError" class="errorText">{{ $t('You must enter a name.')}}</span>
                     </div>
                 </div>
@@ -61,7 +59,7 @@
                                 <div class="flex w-full group">
                                     <input v-model="element.done"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="input-checklist"/>
                                     <p class="ml-4 my-auto font-black"
                                        :class="element.done ? 'text-secondary' : 'sDark'">
                                         {{ element.name }}</p>
@@ -99,82 +97,47 @@
         <!-- Add Task Modal-->
         <BaseModal @closed="closeAddTaskModal" v-if="addingTask" :show-image="false">
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        {{ $t('New task')}}
-                    </div>
-                    <div class="mt-12">
-                        <div class="flex">
-                            <div class="relative flex w-full mr-4">
-                                <input id="task_name" v-model="newTaskName" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="task_name"
-                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{  $t('Task') }}</label>
-                            </div>
+                    <ModalHeader
+                        :title="$t('New task')"
+                    />
+                    <form @submit.prevent="addTaskToTemplate" class="grid grid-cols-1 gap-4">
+                        <TextInputComponent
+                            id="task_name"
+                            v-model="newTaskName"
+                            :label="$t('Task')"
+                            required
+                        />
+                        <TextareaComponent
+                            :label="$t('Comment')"
+                            v-model="newTaskDescription"
+                            id="newTaskDescription"
+                            rows="3"
+                        />
+                        <div class="flex items-center justify-center">
+                            <FormButton
+                                type="submit"
+                                :disabled="this.newTaskName === ''"
+                                :text="$t('Add')"/>
                         </div>
-                        <div class="mt-8 mr-4">
-                                            <textarea
-                                                :placeholder="$t('Comment')"
-                                                v-model="newTaskDescription" rows="3"
-                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
-                        </div>
-                        <FormButton
-                                   @click="addTaskToTemplate"
-                                   :disabled="this.newTaskName === ''"
-                                   :text="$t('Add')"/>
-                    </div>
+                    </form>
 
                 </div>
         </BaseModal>
         <!-- Change Teams Modal -->
         <BaseModal @closed="closeChangeUsersModal" v-if="showChangeUsersModal" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg">
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        {{ $t('Assign checklist template')}}
-                    </div>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        {{ $t('Type the name of the user to whom you want to assign the checklist template.')}}
-                    </div>
-                    <div class="mt-6 relative">
-                        <div class="my-auto w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Name') }}</label>
-                        </div>
-
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUser(user)"
-                                               class="flex items-center font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
-                                                     :src="user.profile_photo_url"
-                                                     alt=""/>
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
+                    <ModalHeader
+                        :title="$t('Assign checklist template')"
+                        :description="$t('Type the name of the user to whom you want to assign the checklist template.')"
+                    />
+                    <div>
+                        <UserSearch v-model="user_query" @userSelected="addUser"/>
                     </div>
                     <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(user,index) in templateForm.users"
+                        <div v-for="(user,index) in templateForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                              <div class="flex items-center">
-                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                                <img class="h-12 w-12 mr-2 object-cover rounded-full"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 {{ user.first_name }} {{ user.last_name }}
@@ -183,11 +146,14 @@
                                 <span class="sr-only">{{ $t('Remove user from checklist template')}}</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
-                        </span>
+                        </div>
                     </div>
-                    <FormButton
-                        @click="closeChangeUsersModal"
-                        :text="$t('Assign')" />
+                    <div class="flex items-center justify-center mt-5">
+                        <FormButton
+                            class=""
+                            @click="closeChangeUsersModal"
+                            :text="$t('Assign')" />
+                    </div>
                 </div>
         </BaseModal>
     </app-layout>
@@ -210,12 +176,20 @@ import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {
+        TextareaComponent,
+        ModalHeader,
+        UserSearch,
+        TextInputComponent,
         BaseModal,
         FormButton,
         Button,

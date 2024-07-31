@@ -7,8 +7,8 @@
                     {{ $t('Set global event settings.')}}
                 </div>
             </div>
-            <div class="mt-4 max-w-2xl">
-                <div class="flex">
+            <div class="mt-4 max-w-7xl">
+                <div class="flex items-center justify-between">
                     <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
                     <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -77,101 +77,96 @@
         <!-- Termintyp erstellen Modal-->
         <BaseModal @closed="closeAddEventTypeModal" v-if="addingEventType" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
                 <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{$t('New event type')}}
-                    </div>
-                    <div class="mt-4">
+                    <ModalHeader
+                        :title="$t('New event type')"
+                    />
+                    <form @submit.prevent="addEventType" class="grid grid-cols-1 gap-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
                                 <ColorPickerComponent @updateColor="addColor" />
                             </div>
 
-                            <div class="relative my-auto w-full ml-8 mr-12">
-                                <input id="name" v-model="eventTypeForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Event type name*')}}</label>
+                            <div class="relative my-auto w-full ml-8">
+                                <TextInputComponent id="name" v-model="eventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
                             </div>
                         </div>
-                        <div class="mt-4">
-                            <input :placeholder="$t('Abbreviation of the event type')"
-                                   v-model="eventTypeForm.abbreviation"
-                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <div class="">
+                            <TextInputComponent
+                                :label="$t('Abbreviation of the event type')"
+                                v-model="eventTypeForm.abbreviation"
+                                required
+                                id="abbreviation"
+                            />
                         </div>
-                        <div>
-                            <div class="flex items-center mt-8">
-                                <input v-model="eventTypeForm.project_mandatory"
-                                       type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto ">{{$t('project assignment mandatory')}}</p>
-                            </div>
-                            <div class="flex items-center mt-4">
-                                <input v-model="eventTypeForm.individual_name"
-                                       type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto ">{{$t('individual event name mandatory')}}</p>
-                            </div>
+                        <div class="flex items-center">
+                            <input v-model="eventTypeForm.project_mandatory"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto ">{{$t('project assignment mandatory')}}</p>
                         </div>
-                        <div class="mt-2 w-full items-center text-center">
+                        <div class="flex items-center">
+                            <input v-model="eventTypeForm.individual_name"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto ">{{$t('individual event name mandatory')}}</p>
+                        </div>
+                        <div class="mt-5 w-full flex justify-center items-center text-center">
                             <FormButton
-                                @click="addEventType"
+                                type="submit"
                                 :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''"
                                 :text="$t('Create event type')" />
                         </div>
-                    </div>
+                    </form>
                 </div>
         </BaseModal>
         <!-- Termintyp bearbeiten Modal-->
         <BaseModal @closed="closeEditEventTypeModal" v-if="editingEventType" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
                 <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{$t('Edit event type')}}
-                    </div>
-                    <div class="mt-12">
-                        <div class="flex">
-                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
-                                <ColorPickerComponent @updateColor="updateColor" :color="editEventTypeForm.hex_code" />
+                    <ModalHeader
+                        :title="$t('Edit event type')"
+                    />
+                    <form @submit.prevent="editEventType" class="grid grid-cols-1 gap-4">
+                        <div class="flex items-center">
+                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
+                                <ColorPickerComponent @updateColor="addColor" :color="editEventTypeForm.hex_code" />
                             </div>
-                            <div class="relative my-auto w-full ml-8 mr-12">
-                                <input id="editCategoryName" v-model="editEventTypeForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="editCategoryName"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Name')}}</label>
+
+                            <div class="relative my-auto w-full ml-8">
+                                <TextInputComponent id="name" v-model="editEventTypeForm.name" type="text" :label="$t('Event type name*')" required/>
                             </div>
                         </div>
-                        <div class="mt-4">
-                            <input :placeholder="editEventTypeForm.abbreviation !== '' ? editEventTypeForm.abbreviation : $t('Abbreviation of the event type')"
-                                   v-model="editEventTypeForm.abbreviation"
-                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <div class="">
+                            <TextInputComponent
+                                :label="$t('Abbreviation of the event type')"
+                                v-model="eventTypeForm.abbreviation"
+                                required
+                                id="abbreviation"
+                            />
                         </div>
-                        <div>
-                            <div class="flex items-center mt-8">
-                                <input v-model="editEventTypeForm.project_mandatory"
-                                       type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto">{{$t('project assignment mandatory')}}</p>
-                            </div>
-                            <div class="flex items-center mt-4">
-                                <input v-model="editEventTypeForm.individual_name"
-                                       type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto">{{$t('individual event name mandatory')}}</p>
-                            </div>
+                        <div class="flex items-center ">
+                            <input v-model="editEventTypeForm.project_mandatory"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto">{{$t('project assignment mandatory')}}</p>
+                        </div>
+                        <div class="flex items-center">
+                            <input v-model="editEventTypeForm.individual_name"
+                                   type="checkbox"
+                                   class="input-checklist"/>
+                            <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto">{{$t('individual event name mandatory')}}</p>
                         </div>
                         <div class="mt-8 w-full justify-center flex">
                             <FormButton
-                                @click="editEventType"
+                                type="submit"
                                 :disabled="this.editEventTypeForm.name === ''"
                                 :text="$t('Save')"
                             />
                         </div>
-                    </div>
+                    </form>
                 </div>
         </BaseModal>
         <!-- Termintyp löschen Modal -->
@@ -228,6 +223,8 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     mixins: [Permissions],
@@ -268,6 +265,8 @@ export default {
         }
     },
     components: {
+        TextInputComponent,
+        ModalHeader,
         BaseModal,
         BaseMenu,
         ColorPickerComponent,

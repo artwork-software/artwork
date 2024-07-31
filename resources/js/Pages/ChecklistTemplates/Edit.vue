@@ -80,7 +80,7 @@
                                             </div>
                                             <input v-model="element.done"
                                                    type="checkbox"
-                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                   class="input-checklist"/>
                                             <p class="ml-4 my-auto font-black"
                                                :class="element.done ? 'text-secondary' : 'text-primary'">
                                                 {{ element.name }}</p>
@@ -113,27 +113,27 @@
         <!-- Add Task Modal-->
         <BaseModal @closed="closeAddTaskModal" v-if="addingTask" modal-image="/Svgs/Overlays/illu_task_new.svg" :show-image="true">
                 <form @submit.prevent="addTaskToTemplate" class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        {{$t('New task')}}
-                    </div>
-                    <div class="">
-                        <div class="flex">
-                            <TextInputComponent
-                                id="task_name"
-                                v-model="newTaskName"
-                                :label="$t('Task')"
-                            />
-                        </div>
-                        <div class="mt-8">
-                                            <textarea
-                                                :placeholder="$t('Comment')"
-                                                v-model="newTaskDescription" rows="3"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
-                        </div>
+                    <ModalHeader
+                        :title="$t('New task')"
+                    />
+                    <div class="grid grid-cols-1 gap-4">
+                        <TextInputComponent
+                            id="task_name"
+                            v-model="newTaskName"
+                            :label="$t('Task')"
+                        />
+                        <TextareaComponent
+                            :label="$t('Comment')"
+                            v-model="newTaskDescription"
+                            rows="4"
+                            id="newTaskDescription"
+                        />
                         <div class="flex items-center justify-center mt-4">
-                            <FormButton type="submit"
-                                        :disabled="this.newTaskName === ''"
-                                        :text="$t('Add')"/>
+                            <FormButton
+                                type="submit"
+                                :disabled="this.newTaskName === ''"
+                                :text="$t('Add')"
+                            />
                         </div>
                     </div>
 
@@ -141,18 +141,14 @@
         </BaseModal>
         <!-- Change Teams Modal -->
         <BaseModal @closed="closeChangeUsersModal" full-modal v-if="showChangeUsersModal" modal-image="/Svgs/Overlays/illu_checklist_team_assign.svg" >
-                <div class="">
-                    <div class="px-6">
-                        <div class="font-bold font-lexend text-primary text-2xl my-2">
-                            {{$t('Assign checklist template')}}
-                        </div>
-                        <div class="text-secondary tracking-tight leading-6 sub">
-                            {{$t('Type the name of the user to whom you want to assign the checklist template.')}}
-                        </div>
-                        <div class="mt-6 relative">
-                            <UserSearch @user-selected="addUser" />
-                        </div>
-                    </div>
+                <div class="mx-4">
+                    <ModalHeader
+                        :title="$t('Assign checklist template')"
+                        :description="$t('Type the name of the user to whom you want to assign the checklist template.')"
+                    />
+                    <div class="mt-6 relative">
+                    <UserSearch @user-selected="addUser" />
+                </div>
                     <div class="py-4 bg-gray-100 px-6 mt-10" v-if="templateForm.users.length > 0">
                         <div v-for="(user,index) in templateForm.users"
                               class="flex mr-1 my-3 rounded-full items-center font-bold text-primary">
@@ -210,12 +206,16 @@ import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "Template Edit",
     props: ['checklist_template'],
     components: {
+        TextareaComponent,
+        ModalHeader,
         ConfirmDeleteModal,
         ConfirmationModal,
         UserPopoverTooltip,

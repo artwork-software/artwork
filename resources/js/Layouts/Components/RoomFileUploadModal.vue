@@ -1,12 +1,10 @@
 <template>
     <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Upload document') }}
-                </div>
-                <div class="text-secondary text-sm my-6">
-                    {{$t('Upload documents to this room.')}}
-                </div>
+                <ModalHeader
+                    :title="$t('Upload document')"
+                    :description="$t('Upload documents to this room.')"
+                />
                 <div>
                     <input
                         @change="upload"
@@ -17,7 +15,7 @@
                         multiple
                     />
                     <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
+                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
                         border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
                         <p class="text-artwork-buttons-create font-bold text-center">
                             {{ $t('Drag document here to upload or click in the field')}}
@@ -47,6 +45,7 @@ import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 const props = defineProps({
     show: Boolean,

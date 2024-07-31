@@ -7,10 +7,12 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     name: "ProjectRoles",
-    components: {FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
+    components: {TextInputComponent, ModalHeader, FormButton, Input, BaseModal, PlusButton, AppLayout, ProjectTabs},
     mixins: [IconLib],
     props: {
         projectRoles: {
@@ -102,9 +104,11 @@ export default {
         </div>
 
         <BaseModal  modal-image="/Svgs/Overlays/illu_project_edit.svg" v-if="showAddProjectRoleModal" @closed="closeAddProjectRoleModal">
-            <input placeholder="Name" id="title" v-model="projectRoleForm.name" class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
-
-
+            <ModalHeader
+                :title="$t('Add Project Role')"
+                :description="$t('Add a new project role.')"
+            />
+            <TextInputComponent label="Name" id="title" v-model="projectRoleForm.name" />
             <div class="justify-center flex w-full my-6">
                 <FormButton :text="$t('Save')" :disabled="projectRoleForm.name.length < 1" @click="addProjectRole"/>
             </div>

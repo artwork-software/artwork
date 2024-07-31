@@ -15,7 +15,7 @@
                         <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']">
                             <!--<img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
                                  :class="fullModal ? '' : '-ml-6 -mt-6'"/>-->
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
+                            <div class="absolute top-0 right-0 pt-4 pr-4 hidden sm:block z-50">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
                                         @click="closeModal(false)">
                                     <span class="sr-only">Close</span>

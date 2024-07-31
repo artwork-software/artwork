@@ -25,8 +25,7 @@
                     {{ $t('A name must be entered.') }}
                 </span>
                 <div class="button-container">
-                    <FormButton :text="$t('Save')"
-                                @click="saveNewCategoryOrGroup()"/>
+                    <FormButton :text="$t('Save')" @click="saveNewCategoryOrGroup()"/>
                 </div>
             </div>
         </div>

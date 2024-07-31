@@ -1,122 +1,105 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-40" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-            </TransitionChild>
+<BaseModal v-if="open" @closed="closeModal">
+    <ModalHeader
+        :title="$t('Craft')"
+        :description="$t('Define the specifications of your trade.')"
+        />
+    <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mb-10">
+        <div class="col-span-1 mt-5">
+            <ColorPickerComponent :color="craft.color"  @updateColor="addColor" />
+        </div>
 
-            <div class="fixed inset-0 z-40 overflow-y-auto">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    {{ $t('Craft')}}
-                                </div>
-                                <p class="subpixel-antialiased">{{ $t('Define the specifications of your trade.')}}</p>
+        <div class="col-span-3">
+            <TextInputComponent
+                :label="$t('Name of the craft') + '*'"
+                v-model="craft.name"
+                id="name"
+                required
+            />
+        </div>
+        <div class="col-span-3">
+            <TextInputComponent
+                :label="$t('Abbreviation') + '*'"
+                v-model="craft.abbreviation"
+                :maxlength="3"
+                id="abbreviation"
+                required
+            />
+        </div>
+    </div>
 
+    <div class="">
+        <NumberInputComponent
+               v-model="craft.notify_days"
+               :maxlength="3"
+               required
+                id="notify_days"
+               :label="$t('Days until notification if shift not fully staffed')"
+               :min="0" :max="100"
+        />
+    </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mt-5">
-                                    <ColorPickerComponent :color="craft.color" class="col-span-1" @updateColor="addColor" />
-                                    <input type="text"
-                                           :placeholder="$t('Name of the craft') + '*'"
-                                           v-model="craft.name"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"
-                                           required
-                                    />
-                                    <input type="text"
-                                           :placeholder="$t('Abbreviation') + '*'"
-                                           v-model="craft.abbreviation"
-                                           maxlength="3"
-                                           required
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"/>
-                                </div>
+    <div class="mt-3">
+        <SwitchGroup as="div" class="flex items-center gap-2">
+            <SwitchLabel as="span" class="mr-3 text-sm">
+                <span class="font-medium text-gray-900" :class="enabled ? '!text-gray-400' : ''">{{ $t('Allocable to a limited extent')}}</span>
+            </SwitchLabel>
+            <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+            </Switch>
+            <SwitchLabel as="span" class="ml-3 text-sm">
+                <span class="font-medium text-gray-900" :class="!enabled ? '!text-gray-400' : ''">{{ $t('Can be scheduled by all shift planners')}}</span>
+            </SwitchLabel>
+        </SwitchGroup>
+    </div>
+    <div v-if="!enabled" class="">
+        <Listbox as="div">
+            <div class="relative mt-2">
+                <ListboxButton class="menu-button">
+                    <span class="block truncate text-left pl-3">
+                        {{ $t('Select users')}}
+                    </span>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                    </span>
+                </ListboxButton>
 
-                                <div class="my-3">
-                                    <span class="xsLight text-xs mb-1">{{$t('Days until notification if shift not fully staffed')}}</span>
-                                    <input type="number"
-                                           v-model="craft.notify_days"
-                                           maxlength="3"
-                                           required
-                                           min="0" max="100"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300 col-span-3"/>
-                                </div>
-
-                                <div class="mt-3">
-                                    <SwitchGroup as="div" class="flex items-center gap-2">
-                                        <SwitchLabel as="span" class="mr-3 text-sm">
-                                            <span class="font-medium text-gray-900" :class="enabled ? '!text-gray-400' : ''">{{ $t('Allocable to a limited extent')}}</span>
-                                        </SwitchLabel>
-                                        <Switch v-model="enabled" :class="[enabled ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                            <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
-                                        </Switch>
-                                        <SwitchLabel as="span" class="ml-3 text-sm">
-                                            <span class="font-medium text-gray-900" :class="!enabled ? '!text-gray-400' : ''">{{ $t('Can be scheduled by all shift planners')}}</span>
-                                        </SwitchLabel>
-                                    </SwitchGroup>
-                                </div>
-                                <div v-if="!enabled" class="">
-                                    <Listbox as="div">
-                                        <div class="relative mt-2">
-                                            <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                                <span class="block truncate text-left pl-3">
-                                                    {{ $t('Select users')}}
-                                                </span>
-                                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                                </span>
-                                            </ListboxButton>
-
-                                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                    <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
-                                                        <li @click="addOrRemoveFormUserList(user)" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
-                                                            <span>{{ user.full_name }}</span>
-                                                        </li>
-                                                    </ListboxOption>
-                                                </ListboxOptions>
-                                            </transition>
-                                        </div>
-                                    </Listbox>
-                                    <div class="mt-3">
-                                        <div v-for="user in users" class="my-2">
-                                            <div class="flex col-span-2">
-                                                <div class="flex items-center">
-                                                    <img class="flex h-11 w-11 rounded-full"
-                                                         :src="user.profile_photo_url"
-                                                         alt=""/>
-                                                    <span class="flex ml-4">
-                                                        {{ user.first_name }} {{ user.last_name }}
-                                                    </span>
-                                                </div>
-                                                <button type="button" @click="addOrRemoveFormUserList(user)">
-                                                    <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                                    <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center mt-5">
-                                <FormButton
-                                    text="Speichern"
-                                    @click="saveCraft"
-                                />
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
+                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                        <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
+                            <li @click="addOrRemoveFormUserList(user)" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
+                                <span>{{ user.full_name }}</span>
+                            </li>
+                        </ListboxOption>
+                    </ListboxOptions>
+                </transition>
+            </div>
+        </Listbox>
+        <div class="mt-3">
+            <div v-for="user in users" class="my-2">
+                <div class="flex col-span-2">
+                    <div class="flex items-center">
+                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
+                        <span class="flex ml-4">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                    </div>
+                    <button type="button" @click="addOrRemoveFormUserList(user)">
+                        <span class="sr-only">{{ $t('Remove user from team')}}</span>
+                        <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
+                    </button>
                 </div>
             </div>
-        </Dialog>
-    </TransitionRoot>
+        </div>
+    </div>
+    <div class="flex items-center justify-center mt-5">
+        <FormButton
+            text="Speichern"
+            @click="saveCraft"
+        />
+    </div>
+
+</BaseModal>
 </template>
 
 <script>
@@ -138,11 +121,19 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ColorPickerComponent from "@/Components/Globale/ColorPickerComponent.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        NumberInputComponent,
+        TextInputComponent,
+        ModalHeader,
+        BaseModal,
         ColorPickerComponent,
         FormButton,
         XCircleIcon,

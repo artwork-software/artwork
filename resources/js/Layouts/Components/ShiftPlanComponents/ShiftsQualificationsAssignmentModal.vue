@@ -1,15 +1,11 @@
 <template>
     <BaseModal @closed="close(false)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
-                <div class="mt-8 flex flex-col">
-                    <span class="xsLight">
-                        {{ $t('Shift')}} {{ this.getCurrentShiftCount() }}/{{ this.getMaxShiftCount() }}
-                    </span>
-                    <span class="headline1 -mt-2">
-                        {{ $t('Qualification assignment')}}
-                    </span>
-                </div>
-                <div class="mt-3 xsLight">
+                <ModalHeader
+                    :title="$t('Qualification assignment')"
+                    :sub-title="$t('Shift') + ' ' + this.getCurrentShiftCount() + '/' + this.getMaxShiftCount()"
+                />
+                <div class="-mt-8 mb-4 xsLight">
                     {{ $t('In which qualification should')}}
                     <img class="inline h-5 w-5 object-cover rounded-full"
                          :src="this.user.profile_photo_url"
@@ -30,18 +26,18 @@
                 </div>
                 <div class="flex flex-col">
                     <div class="grid grid-cols-2 w-full gap-4">
-                        <input v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
-                               type="button"
-                               :value="$t('Insert as {0}',[ availableShiftQualificationSlot.name])"
-                               class="cursor-pointer bg-artwork-buttons-create text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-artwork-buttons-hover"
+                        <AddButtonSmall v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
+                               :text="$t('Insert as {0}',[ availableShiftQualificationSlot.name])"
+                                        no-icon
                                @click="this.handleShift(this.currentShiftToAssign.shift.id, availableShiftQualificationSlot.id)"
                         />
                     </div>
                     <div class="w-full mt-4">
-                        <input type="button"
-                               :value="$t('Skip assignment')"
-                               class="w-full cursor-pointer bg-gray-600 text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-gray-500"
-                               @click="this.skipShift"
+                        <AddButtonSmall
+                            :text="$t('Skip assignment')"
+                            no-icon
+                            @click="this.skipShift"
+                            class="w-full bg-gray-600"
                         />
                     </div>
                 </div>
@@ -56,11 +52,17 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsAssignmentModal',
     mixins: [IconLib],
     components: {
+        AddButtonSmall,
+        ModalHeader,
+        FormButton,
         BaseModal,
         UserPopoverTooltip,
         XIcon,

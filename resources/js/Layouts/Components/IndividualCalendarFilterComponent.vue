@@ -11,7 +11,6 @@
             </button>
         </div>
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-
             <!-- Save Filter Section -->
             <Disclosure v-slot="{ open }" default-open>
                 <DisclosureButton
@@ -26,12 +25,16 @@
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div v-if="saving">
-                        <div class="flex">
-                            <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
-                                   class="w-48 shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                   placeholder="Name des Filters"/>
+                        <div class="flex items-center">
+                            <TextInputComponent
+                                id="saveFilter"
+                                autocomplete="off"
+                                v-model="filterName"
+                                label="Name des Filters"
+                                is-small
+                            />
                             <button
-                                class="rounded-full bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                class="rounded-full mt-5 bg-artwork-buttons-create cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label @click="saveFilter"
                                        class="cursor-pointer text-white text-xs">{{$t('Save')}}</label>
                             </button>
@@ -69,15 +72,15 @@
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div>
-                        <div class="flex w-full mb-2">
+                        <div class="flex w-full items-center mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNotLoud.checked"
-                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                   class="input-checklist-dark"/>
                             <p :class="[filterArray.adjoining.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without a loud side event')}}</p>
                         </div>
-                        <div class="flex w-full mb-2">
+                        <div class="flex w-full items-center mb-2">
                             <input type="checkbox" v-model="filterArray.adjoining.adjoiningNoAudience.checked"
-                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                   class="input-checklist-dark"/>
                             <p :class="[filterArray.adjoining.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without side event with audience')}}</p>
                         </div>
@@ -97,10 +100,10 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.roomCategories.length > 0"
                                  v-for="category in filterArray.roomCategories"
-                                 class="flex w-full mb-2">
+                                 class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="category.checked"
                                        @change="addRoomCategoryToFilter(category)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ category.name }}</p>
@@ -122,10 +125,10 @@
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.areas.length > 0" v-for="area in filterArray.areas"
-                                 class="flex w-full mb-2">
+                                 class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="area.checked"
                                        @change="addAreasToFilter(area)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ area.label || area.name }}</p>
@@ -147,10 +150,10 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.roomAttributes.length > 0"
                                  v-for="attribute in filterArray.roomAttributes"
-                                 class="flex w-full mb-2">
+                                 class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="attribute.checked"
                                        @change="addRoomAttributeToFilter(attribute)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ attribute.name }}</p>
@@ -173,10 +176,10 @@
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
-                                 class="flex w-full mb-2">
+                                 class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="room.checked"
                                        @change="addRoomsToFilter(room)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ room.label }}</p>
@@ -214,10 +217,10 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-for="eventType in filterArray.eventTypes" class="flex w-full mb-2">
+                            <div v-for="eventType in filterArray.eventTypes" class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="eventType.checked"
                                        @change="addEventTypesToFilter(eventType)"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ eventType.name }}</p>
@@ -236,10 +239,10 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-for="eventAttribute in filterArray.eventAttributes" class="flex w-full mb-2">
+                            <div v-for="eventAttribute in filterArray.eventAttributes" class="flex w-full items-center mb-2">
                                 <input type="checkbox" v-model="eventAttribute.checked"
                                        @change="reloadFilterBackend"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                       class="input-checklist-dark"/>
                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ eventAttribute.name }}</p>
@@ -278,11 +281,13 @@ import {XIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     name: "IndividualCalendarFilterComponent",
     mixins: [Permissions, IconLib],
     components: {
+        TextInputComponent,
         SwitchLabel,
         Switch,
         SwitchGroup,

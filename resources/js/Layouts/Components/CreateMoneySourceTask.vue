@@ -1,50 +1,51 @@
 <template>
     <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
+                <ModalHeader
+                    :title="$t('New task')"
+                    :description="$t('Create a new task. You can also add a deadline and a comment.')"
+                />
                 <!--   Heading   -->
-                <div class="my-1">
-                    <div class="flex-grow headline1 mb-6">
-                        {{ $t('New task')}}
-                    </div>
-                    <p class="xsLight">
-                        {{ $t('Create a new task. You can also add a deadline and a comment.')}}
-                    </p>
-                    <div class="pb-2 pt-2">
-                        <div class="mb-2">
-                            <input type="text"
+                <form @submit.prevent="createTask" class="my-1">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="mb-2 col-span-full">
+                            <TextInputComponent
                                    v-model="this.task.name"
                                    id="sourceName"
-                                   :placeholder="$t('Title*')"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                   :label="$t('Title*')"
+                                   required
+                            />
                         </div>
-                        <div class="flex mb-2 space-x-2">
-                            <div class="w-1/2">
-                                <input type="text" onfocus="(this.type='date')"
-                                       v-model="this.task.end_date"
-                                       id="sourceStartDate"
-                                       :placeholder="$t('To be completed by?*')"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
-                            <div class="w-1/2">
-                                <input type="text" onfocus="(this.type='time')"
-                                       v-model="this.task.end_time"
-                                       id="sourceEndDate"
-                                       placeholder="hh:mm*"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
+                        <div class="mb-2">
+                            <DateInputComponent
+                                   v-model="this.task.end_date"
+                                   id="sourceStartDate"
+                                   :label="$t('To be completed by?*')"
+                                   required
+                            />
                         </div>
-                        <div class="flex">
-                                    <textarea :placeholder="$t('Comment')"
-                                              id="description"
-                                              v-model="this.task.description"
-                                              rows="4"
-                                              class="border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <div class="mb-2">
+                            <TimeInputComponent
+                                   v-model="this.task.end_time"
+                                   id="sourceEndDate"
+                                   label="hh:mm*"
+                                   required
+                            />
                         </div>
-                        <div class="flex justify-center mt-2">
-                            <FormButton @click="createTask()" :text="$t('Save')"/>
+                        <div class="col-span-full">
+                            <TextareaComponent
+                                :label="$t('Comment')"
+                                id="description"
+                                v-model="this.task.description"
+                                rows="4"
+                            />
                         </div>
+
                     </div>
-                </div>
+                    <div class="flex justify-center mt-5">
+                        <FormButton type="submit" :text="$t('Save')"/>
+                    </div>
+                </form>
             </div>
     </BaseModal>
 
@@ -75,11 +76,21 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        TimeInputComponent,
+        TextareaComponent,
+        DateInputComponent,
+        TextInputComponent,
+        ModalHeader,
         BaseModal,
         FormButton,
         Input,

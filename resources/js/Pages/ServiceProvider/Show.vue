@@ -87,34 +87,33 @@
 
                     </div>
                     <div class="col-span-7">
-                        <label for="first_name" class="xxsLight">{{$t('Company name')}}</label>
                         <div>
-                            <input type="text" v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('First name')" />
+                            <TextInputComponent v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Company name')" />
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1">
-                        <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8 bg-gray-200" placeholder="Dienstleister" disabled value="Dienstleister (extern)" />
+                        <TextInputComponent readonly  label="Dienstleister" disabled v-model="providerData.input" id="serverProvider_name" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
+                        <TextInputComponent type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Street')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
+                        <TextInputComponent type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Zip code')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
+                        <TextInputComponent type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Location')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
+                        <TextInputComponent type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Email')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
+                        <TextInputComponent type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Phone number')" />
                     </div>
                     <div class="col-span-full">
-                        <textarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" :placeholder="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
+                        <TextareaComponent rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" :label="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
                     </div>
                 </div>
 
@@ -179,11 +178,15 @@ import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        TextareaComponent,
+        TextInputComponent,
         BaseMenu,
         FormButton,
         SuccessModal,
@@ -230,6 +233,7 @@ export default defineComponent({
             ],
             currentTab: 3,
             providerData: useForm({
+                input: 'Dienstleister (extern)',
                 provider_name: this.serviceProvider.provider_name,
                 email: this.serviceProvider.email,
                 phone_number: this.serviceProvider.phone_number,

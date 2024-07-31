@@ -28,12 +28,20 @@
         <div class="mb-5 space-y-1">
             <div class="headline3 mb-5">{{ $t('Selectable accounts') }}</div>
             <div class="flex flex-row space-x-5 items-center">
-                <input-component :placeholder="$t('Account number')"
-                                 v-model="this.accountForm.account_number"
-                />
-                <input-component :placeholder="$t('Description')"
-                                 v-model="this.accountForm.title"
-                />
+                <div class="w-96">
+                    <TextInputComponent
+                        :label="$t('Account number')"
+                        v-model="this.accountForm.account_number"
+                        id="account_number"
+                    />
+                </div>
+                <div class="w-96">
+                    <TextInputComponent
+                        :label="$t('Description')"
+                        v-model="this.accountForm.title"
+                        id="title"
+                    />
+                </div>
                 <SwitchGroup as="div" class="flex items-center">
                     <SwitchLabel as="span" class="mr-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
                         {{ $t('Expense account') }}
@@ -55,12 +63,20 @@
         <div class="mb-5 space-y-1">
             <div class="headline3 mb-5">{{ $t('Selectable cost units') }}</div>
             <div class="flex flex-row space-x-5 items-center">
-                <input-component :placeholder="$t('Cost unit number')"
-                                 v-model="this.costUnitForm.cost_unit_number"
-                />
-                <input-component :placeholder="$t('Description')"
-                                 v-model="this.costUnitForm.title"
-                />
+                <div class="w-96">
+                    <TextInputComponent
+                        :label="$t('Cost unit number')"
+                        v-model="this.costUnitForm.cost_unit_number"
+                        id="cost_unit_number"
+                    />
+                </div>
+                <div class="w-96">
+                    <TextInputComponent
+                        :label="$t('Description')"
+                        v-model="this.costUnitForm.title"
+                        id="costUnitFormTitle"
+                    />
+                </div>
                 <AddButton :text="$t('Add')"
                            class="!mt-0"
                            @click="this.saveCostUnit()"
@@ -82,8 +98,10 @@
                             />
                         </div>
                         <div v-else class="flex items-center w-64">
-                            <inputComponent v-model="this.accountSearchQuery"
-                                            :placeholder="$t('Search account')"
+                            <TextInputComponent
+                                v-model="this.accountSearchQuery"
+                                :label="$t('Search account')"
+                                id="accountSearchQuery"
                             />
                             <IconX class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showAccountSearch = false"
@@ -108,15 +126,19 @@
                             </span>
                         </div>
                         <!-- if account is edited -->
-                        <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center">
+                        <div v-if="this.accountIdToEdit === account.id" class="flex flex-row items-center mt-5">
                             <span class="w-56 mr-2">
-                                <input-component v-model="this.editAccountForm.account_number"
-                                                 :placeholder="this.editAccountForm.account_number"
+                                <TextInputComponent
+                                    v-model="this.editAccountForm.account_number"
+                                    :label="this.editAccountForm.account_number"
+                                    id="account_number"
                                 />
                             </span>
                             <span class="w-96 mr-2">
-                                <input-component v-model="this.editAccountForm.title"
-                                                 :placeholder="this.editAccountForm.title"
+                                <TextInputComponent
+                                    v-model="this.editAccountForm.title"
+                                    :label="this.editAccountForm.title"
+                                    id="title"
                                 />
                             </span>
                             <span class="w-72 flex justify-center">
@@ -170,8 +192,10 @@
                             />
                         </div>
                         <div v-else class="flex items-center w-64">
-                            <inputComponent v-model="this.costUnitSearchQuery"
-                                            :placeholder="$t('Search cost center')"
+                            <TextInputComponent
+                                v-model="this.costUnitSearchQuery"
+                                :label="$t('Search cost center')"
+                                id="costUnitSearchQuery"
                             />
                             <IconX class="ml-2 cursor-pointer h-5 w-5"
                                    @click="this.showCostUnitSearch = false"
@@ -192,15 +216,19 @@
                             <span class="w-96 text-wrap break-words">{{ cost_unit.title }}</span>
                         </div>
                         <!-- if cost_unit is edited -->
-                        <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center">
+                        <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center mt-5">
                             <span class="w-56 mr-2">
-                                <input-component v-model="this.editCostUnitForm.cost_unit_number"
-                                                 :placeholder="this.editCostUnitForm.cost_unit_number"
+                                <TextInputComponent
+                                    v-model="this.editCostUnitForm.cost_unit_number"
+                                    :label="this.editCostUnitForm.cost_unit_number"
+                                    id="cost_unit_number"
                                 />
                             </span>
                             <span class="w-96">
-                                <input-component v-model="this.editCostUnitForm.title"
-                                                 :placeholder="this.editCostUnitForm.title"
+                                <TextInputComponent
+                                    v-model="this.editCostUnitForm.title"
+                                    :label="this.editCostUnitForm.title"
+                                    id="editCostUnitFormTitle"
                                 />
                             </span>
                         </div>
@@ -261,10 +289,12 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default defineComponent({
     mixins: [IconLib],
     components: {
+        TextInputComponent,
         SuccessModal,
         ErrorComponent,
         ConfirmationComponent,

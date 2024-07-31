@@ -93,13 +93,13 @@
         </div>
         <RoomAccessModal
             :show="showRoomAccessModal"
-            :room="props.room"
+            :room="room"
             @close="closeRoomAccessModal"
         />
 
         <RoomAttributeEditModal
             :show="showRoomAttributeEditModal"
-            :room="props.room"
+            :room="room"
             :categories="categories"
             :available-categories="availableCategories"
             :adjoining-rooms="adjoiningRooms"
@@ -130,12 +130,12 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 const props = defineProps({
     room: Object,
-    categories: Array,
-    availableCategories: Array,
-    attributes: Array,
-    availableAttributes: Array,
-    adjoiningRooms: Array,
-    availableAdjoiningRooms: Array
+    categories: Object,
+    availableCategories: Object,
+    attributes: Object,
+    availableAttributes: Object,
+    adjoiningRooms: Object,
+    availableAdjoiningRooms: Object
 })
 
 const showRoomAccessModal = ref(false);

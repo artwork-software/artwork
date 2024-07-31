@@ -574,7 +574,7 @@
     "Files larger than 2MB cannot be uploaded.": "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden.",
     "Key Visual": "Key Visual",
     "Documents": "Dokumente",
-    "Drag document here to upload or click in the field": "Dokument zum Upload hierher ziehen <br> oder ins Feld klicken",
+    "Drag document here to upload or click in the field": "Dokument zum Upload hierher ziehen oder ins Feld klicken",
     "To download the file, click on the file name": "Um die Datei herunterzuladen, klicke auf den Dateinamen",
     "No files available": "Keine Dateien vorhanden",
     "Delete file": "Datei löschen",
@@ -1916,5 +1916,8 @@
     "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Gib an, welche Terminarten standardmäßig als bestandsrelevant angezeigt werden. Bestand kann nur für diese Terminarten gebucht werden.",
     "Define global settings for inventory planning.": "Definiere globale Einstellungen für die Bestandsplanung.",
     "Your view is being processed, please wait a moment.": "Deine Ansicht wird aufbereitet, bitte warte kurz.",
-    "The project id field is required when project id mandatory is true.": "Das Event muss wegen seines Event-Typens einem Projekt zugeordnet werden."
+    "The project id field is required when project id mandatory is true.": "Das Event muss wegen seines Event-Typens einem Projekt zugeordnet werden.",
+    "New project group": "Neue Projektgruppe",
+    "Please fill in the following fields to create a new project.": "Bitte fülle die folgenden Felder aus, um ein neues Projekt zu erstellen.",
+    "Export your calendar as a PDF.": "Exportiere deinen Kalender als PDF."
 }

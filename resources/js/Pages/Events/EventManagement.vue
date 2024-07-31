@@ -63,7 +63,8 @@ const props = defineProps(
         personalFilters: Object,
         user_filters: Object,
         first_project_tab_id: Number,
-        first_project_calendar_tab_id: Number
+        first_project_calendar_tab_id: Number,
+        areas: Object
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
@@ -74,4 +75,6 @@ provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id);
 provide('user_filters', props.user_filters);
 provide('personalFilters', props.personalFilters);
 provide('filterOptions', props.filterOptions);
+provide('rooms', props.rooms);
+provide('areas', props.areas);
 </script>

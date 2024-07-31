@@ -37,7 +37,7 @@ class MinimalShiftPlanEventResource extends JsonResource
             'eventTypeName' => $eventType->getAttribute('name'),
             'eventTypeAbbreviation' => $eventType->getAttribute('abbreviation'),
             'eventTypeColor' => $eventType->getAttribute('hex_code'),
-            'created_at' => $this->getAttribute('created_at')->format('d.m.Y, H:i'),
+            'created_at' => $this->getAttribute('created_at')?->format('d.m.Y, H:i'),
             'occupancy_option' => $this->getAttribute('occupancy_option'),
             'allDay' => $this->getAttribute('allDay'),
             'shifts' => MinimalShiftPlanShiftResource::collection($this->getAttribute('shifts'))->resolve(),

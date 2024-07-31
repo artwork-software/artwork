@@ -1,80 +1,54 @@
 <template>
     <BaseModal @closed="$emit('close')" v-if="show" modal-image="/Svgs/Overlays/illu_room_admin_edit.svg">
             <div class="mx-3">
-                <div class="headline1 mt-2 mb-6">
-                    {{$t('Access to room')}}
+                <ModalHeader
+                    :title="$t('Access to room')"
+                    :description="$t('Define who can edit the room and release bookings (room admin), and who can request the room.')"
+                />
+                <div class="">
+                    <UserSearch
+                        v-model="user_query"
+                        @user-selected="addUserToRoom"
+                        :label="$t('Type in the names of users')"
+                        />
                 </div>
-                <div class="xsLight">
-                    {{ $t('Define who can edit the room and release bookings (room admin), and who can request the room.')}}
-                </div>
-                <div class="mt-6 relative">
-                    <div class="my-auto w-full">
-                        <input :placeholder="$t('Type in the names of users')"
-                               id="userSearch"
-                               v-model="user_query"
-                               autocomplete="off"
-                               class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                    </div>
-
-                    <transition leave-active-class="transition ease-in duration-100"
-                                leave-from-class="opacity-100"
-                                leave-to-class="opacity-0">
-                        <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                             class="absolute z-10 mt-1 w-full max-h-60 bg-artwork-navigation-background shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                            <div class="border-gray-200">
-                                <div v-for="(user, index) in user_search_results" :key="index"
-                                     class="flex items-center cursor-pointer">
-                                    <div class="flex-1 text-sm py-4">
-                                        <p @click="addUserToRoom(user)"
-                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </transition>
-                </div>
-                <div class="mt-4">
-                    <div class="flex">
-                    </div>
-                    <div v-for="(user,index) in roomUsers"
-                         class="mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                        <div class="flex items-center">
-                            <img class="flex h-11 w-11 rounded-full"
-                                 :src="user.profile_photo_url"
-                                 alt=""/>
-                            <span class="flex ml-4">
+                <div class="divide-dashed divide-y divide-gray-200 w-full">
+                    <div v-for="(user,index) in roomUsers" class="grid grid-cols-1 md:grid-cols-4 py-3">
+                        <div class="flex items-center col-span-2">
+                           <div class="flex items-center">
+                               <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
+                               <span class="flex ml-4">
                                 {{ user.first_name }} {{ user.last_name }}
-                                    </span>
+                            </span>
+                           </div>
                             <button type="button" @click="deleteUserFromRoom(user)">
                                 <span class="sr-only">{{$t('Remove user as room admin')}}</span>
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
-
+                        </div>
+                        <div class="flex items-center">
                             <input type="checkbox"
                                    v-model="user.is_room_admin"
                                    :value="user.id"
                                    @change="updateUserAccess(user)"
-                                   class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                                   class="input-checklist"/>
                             <p :class="[user.is_room_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
+                               class="ml-1.5 text-sm">
                                 {{ $t('Room admin')}}
                             </p>
+                        </div>
 
+                        <div class="flex items-center">
                             <input type="checkbox"
                                    v-model="user.can_request_room"
                                    :value="user.id"
                                    @change="updateUserAccess(user)"
-                                   class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                                   class="input-checklist"/>
                             <p :class="[user.can_request_room ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
+                               class="ml-1.5 text-sm">
                                 {{$t('Authorized to request')}}
                             </p>
                         </div>
-                        <hr class="my-4 border-silverGray">
                     </div>
                 </div>
                 <div class="flex justify-center">
@@ -95,6 +69,8 @@ import {useForm} from "@inertiajs/vue3";
 import {onMounted, ref, watch} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 const props = defineProps({
     show: Boolean,

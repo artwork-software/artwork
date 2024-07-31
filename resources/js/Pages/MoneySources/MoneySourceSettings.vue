@@ -16,23 +16,18 @@
                                 </div>
                                 <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Finanzierungsquellenkategorien -->
-                                    <div class="mt-8 mr-10 flex">
+                                    <div class="mt-8 mr-10 flex items-center gap-4">
                                         <div class="relative w-72">
-                                            <input v-on:keyup.enter=addMoneySourceCategory id="moneySourceCategory"
+                                            <TextInputComponent
+                                                v-on:keyup.enter=addMoneySourceCategory
+                                                id="moneySourceCategory"
                                                    v-model="moneySourceCategoryInput"
                                                    type="text"
-                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                                   placeholder="placeholder"/>
-                                            <label for="roomCategory"
-                                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all
-                                                subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
-                                                 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
-                                                  peer-focus:text-sm ">
-                                                {{$t('Enter Category')}}
-                                            </label>
+                                                   :label="$t('Enter Category')"
+                                            />
                                         </div>
 
-                                        <div class="m-2">
+                                        <div class="">
                                             <button
                                                 :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                 @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
@@ -81,10 +76,12 @@ import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        TextInputComponent,
         ConfirmationComponent,
         JetDialogModal,
         Button,

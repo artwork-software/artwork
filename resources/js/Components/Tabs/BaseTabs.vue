@@ -27,9 +27,9 @@ const props = defineProps({
 })
 
 const makeCurrent = (tabName) => {
-       props.tabs.forEach(tab => {
-            tab.current = tab.name === tabName;
-        });
+    props.tabs.forEach(tab => {
+        tab.current = tab.name === tabName;
+    });
 }
 
 </script>

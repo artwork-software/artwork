@@ -1,96 +1,70 @@
 <template>
     <BaseModal @closed="closeModal" v-if="show" modal-image="/Svgs/Overlays/illu_project_edit.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Upload document')}}
-                </div>
-                <div class="text-secondary text-sm my-6">
-                    {{$t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')}}
-                </div>
-                <div>
-                    <input
-                        @change="upload"
-                        class="hidden"
-                        ref="module_files"
-                        id="file"
-                        type="file"
-                        multiple
-                    />
-                    <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-artwork-buttons-create font-bold text-center">
-                            {{$t('Drag document here to upload or click in the field')}}
-                        </p>
-                    </div>
-                    <jet-input-error :message="uploadDocumentFeedback"/>
-                </div>
-                <div class="mb-6">
-                    <div v-for="file of files">{{ file.name }}</div>
-                </div>
-                <div>
-                <textarea :placeholder="$t('Comment / Note')"
-                          id="description"
-                          v-model="comment"
-                          rows="4"
-                          class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                </div>
-                <div class="my-1">
-                    <div class="relative w-full">
-                        <div class="w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   :placeholder="$t('Document access for') + '*'"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                <ModalHeader
+                    :title="$t('Upload document')"
+                    :description="$t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')"
+                />
+                <form @submit.prevent="storeFiles" class="grid grid-cols-1 gap-4">
+                    <div>
+                        <input
+                            @change="upload"
+                            class="hidden"
+                            ref="module_files"
+                            id="file"
+                            type="file"
+                            multiple
+                        />
+                        <div @click="selectNewFiles" @dragover.prevent @drop.stop.prevent="uploadDraggedDocuments($event)" class="w-full flex rounded-lg justify-center items-center border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                            <p class="text-artwork-buttons-create font-bold text-center">
+                                {{$t('Drag document here to upload or click in the field')}}
+                            </p>
                         </div>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToFileUserArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
+                        <jet-input-error :message="uploadDocumentFeedback"/>
+                    </div>
+                    <div class="">
+                        <div v-for="file of files">{{ file.name }}</div>
+                    </div>
+                    <div class="">
+                        <TextareaComponent
+                            :label="$t('Comment / Note')"
+                            id="description"
+                            v-model="comment"
+                            rows="4"
+                        />
+                    </div>
+                    <div>
+                        <div>
+                            <UserSearch
+                                v-model="user_query"
+                                @userSelected="addUserToFileUserArray"
+                                :label="$t('Document access for') + '*'"
+                            />
+                        </div>
+                        <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
+                                    <span class="flex ml-4 sDark">
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    </span>
+                                    <button type="button" @click="deleteUserFromFileUserArray(index)">
+                                        <span class="sr-only">{{ $t('Remove user from contract')}}</span>
+                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                    </button>
                                     </div>
                                 </div>
-                            </div>
-                        </transition>
+                        </div>
                     </div>
-                    <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(user,index) in usersWithAccess"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 sDark">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromFileUserArray(index)">
-                                                <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                                <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
-                                            </button>
-                                        </div>
 
-                                        </span>
-                    </div>
-                </div>
-
-                <div class="justify-center flex w-full my-6">
-                    <FormButton
-                        :text="$t('Upload document')"
-                        :disabled="files.length < 1"
-                        @click="storeFiles"
+                    <div class="justify-center flex w-full my-6">
+                        <FormButton
+                            :text="$t('Upload document')"
+                            :disabled="files.length < 1"
+                            type="submit"
                         />
-                </div>
+                    </div>
+                </form>
             </div>
     </BaseModal>
 </template>
@@ -103,6 +77,9 @@ import {useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     name: "ProjectFileUploadModal",
@@ -114,6 +91,9 @@ export default {
         budgetAccess: Array
     },
     components: {
+        ModalHeader,
+        UserSearch,
+        TextareaComponent,
         BaseModal,
         FormButton,
         JetDialogModal,

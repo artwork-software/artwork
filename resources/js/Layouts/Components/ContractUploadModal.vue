@@ -16,7 +16,7 @@
                         type="file"
                     />
                     <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
+                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
                         border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
                         <p class="text-artwork-buttons-create font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
@@ -30,193 +30,160 @@
                             aria-hidden="true"/>
                     </div>
                 </div>
-                <div>
-                    <div class="flex xsDark my-2 items-center" v-if="selectedProject">
-                    {{ $t('Currently assigned to:')}}
-                    <a v-if="this.selectedProject?.id"
-                       :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
-                       class="ml-3 flex xsDark">
-                        {{ this.selectedProject?.name }}
-                    </a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex xsDark items-center col-span-full" v-if="selectedProject">
+                        {{ $t('Currently assigned to:')}}
+                        <a v-if="this.selectedProject?.id"
+                           :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
+                           class="ml-3 flex xsDark">
+                            {{ this.selectedProject?.name }}
+                        </a>
                     </div>
-                    <div class="w-full" v-if="!this.projectId">
-                        <input type="text"
-                               :placeholder="$t('Save in which project?*')"
-                               v-model="project_query"
-                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        <div
-                            v-if="project_search_results.length > 0"
-                            class="bg-primary truncate sm:text-sm absolute z-20 w-[88%]">
-                            <div v-for="(project, index) in project_search_results"
-                                 :key="index"
+                    <div class="col-span-full relative" v-if="!this.projectId">
+                        <TextInputComponent
+                            :label="$t('Save in which project?*')"
+                            v-model="project_query"
+                            id="project_query"
+                        />
+                        <div v-if="project_search_results.length > 0" class="absolute bg-primary rounded-lg truncate sm:text-sm z-20 w-full top-16">
+                            <div v-for="(project, index) in project_search_results" :key="index"
                                  @click="selectProject(project)"
                                  class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer w-[88%]">
                                 {{ project.name }}
                             </div>
                         </div>
                     </div>
-                    <div class="py-1">
-                        <input type="text"
-                               v-model="contractForm.contract_partner"
-                               id="eventTitle"
-                               :placeholder="$t('Contract partner*')"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
+                    <div class="">
+                        <TextInputComponent
+                            v-model="contractForm.contract_partner"
+                            id="eventTitle"
+                            :label="$t('Contract partner*')"
+                        />
                     </div>
-                    <div class="py-1">
-                        <Listbox as="div" class="flex h-12" v-model="selectedLegalForm"
-                                 id="eventType">
-                            <ListboxButton v-if="selectedLegalForm !== null"
-                                           class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex items-center my-auto">
-                                <span class="truncate items-center flex">
-                                            <span>{{ selectedLegalForm.name }}</span>
-                                </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
+                    <div class="">
+                        <Listbox as="div" class="flex relative" v-model="selectedLegalForm" id="eventType">
+                            <ListboxButton v-if="selectedLegalForm !== null" class="menu-button mt-5">
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="truncate items-center flex">
+                                        <div>{{ selectedLegalForm.name }}</div>
+                                    </div>
+                                    <span class="pointer-events-none">
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </span>
                                 </div>
                             </ListboxButton>
-                            <ListboxButton v-else
-                                           class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
+                            <ListboxButton v-else class="menu-button mt-5">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     {{ $t('Legal form')}}
                                 </div>
-                                <span
-                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                <span class="pointer-events-none">
                                      <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="legalForm in companyTypes"
-                                                   :key="legalForm"
-                                                   :value="legalForm"
-                                                   v-slot="{ active, selected }">
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8" v-for="legalForm in companyTypes" :key="legalForm" :value="legalForm" v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
-                                            <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ legalForm.name }}
-                                                    </span>
-                                            </div>
-                                            <span
-                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
+                                                <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                    {{ legalForm.name }}
                                                 </span>
+                                            </div>
+                                            <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                            </span>
                                         </li>
                                     </ListboxOption>
                                 </ListboxOptions>
                             </transition>
                         </Listbox>
                     </div>
-                    <div class="py-1">
-                        <Listbox as="div" class="flex h-12" v-model="selectedContractType"
-                                 id="eventType">
-                            <ListboxButton v-if="selectedContractType !== null"
-                                           class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex items-center my-auto">
-                                <span class="truncate items-center flex">
-                                            <span>{{ selectedContractType.name }}</span>
-                                </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
+                    <div class="col-span-full">
+                        <Listbox as="div" class="flex relative" v-model="selectedContractType" id="eventType">
+                            <ListboxButton v-if="selectedContractType !== null" class="menu-button mt-5">
+                                <div class="flex items-center justify-between w-full">
+                                    <span class="truncate items-center flex">
+                                        <span>{{ selectedContractType.name }}</span>
+                                    </span>
+                                    <span class="pointer-events-none">
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </span>
                                 </div>
                             </ListboxButton>
-                            <ListboxButton v-else
-                                           class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
+                            <ListboxButton v-else class="menu-button mt-5">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     {{ $t('Contract type')}}
                                 </div>
-                                <span
-                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                <span class="pointer-events-none">
                                      <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="contractType in contractTypes"
-                                                   :key="contractType"
-                                                   :value="contractType"
-                                                   v-slot="{ active, selected }">
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8" v-for="contractType in contractTypes" :key="contractType" :value="contractType" v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
-                                            <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ contractType.name }}
-                                                    </span>
-                                            </div>
-                                            <span
-                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
+                                                <span :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                    {{ contractType.name }}
                                                 </span>
+                                            </div>
+                                            <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                            </span>
                                         </li>
                                     </ListboxOption>
                                 </ListboxOptions>
                             </transition>
                         </Listbox>
                     </div>
-                    <div class="py-1 w-full flex">
-                        <input type="number"
-                               v-model="contractForm.amount"
-                               :placeholder="$t('Amount* (fee, co-production contribution, etc.)')"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
-                                 id="eventType">
-                            <ListboxButton
-                                class="pl-1 truncate h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex items-center my-auto">
-                                <span class="w-12 truncate items-center ml-3 flex">
-                                    <span>{{ selectedCurrency.name }}</span>
-                                </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                    <div class="col-span-full">
+                        <div class="flex">
+                            <NumberInputComponent
+                                id="amount"
+                                v-model="contractForm.amount"
+                                :label="$t('Amount* (fee, co-production contribution, etc.)')"
+                            />
+                            <Listbox as="div" class="flex h-12 w-24 relative" v-model="selectedCurrency" id="eventType">
+                                <ListboxButton class="menu-button mt-5">
+                                    <div class="flex items-center">
+                                    <span class="w-12 truncate items-center ml-3 flex">
+                                        <span>{{ selectedCurrency.name }}</span>
+                                    </span>
+                                        <span class="pointer-events-none">
                                      <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
-                                </div>
-                            </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-[12%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="currency in currencies"
-                                                   :key="currency"
-                                                   :value="currency"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
-                                            <div class="flex">
+                                    </span>
+                                    </div>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions class="absolute w-full z-10 mt-16 rounded-lg bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="currency in currencies"
+                                                       :key="currency"
+                                                       :value="currency"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
+                                                <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-1 block truncate']">
                                                         {{ currency.name }}
                                                     </span>
-                                            </div>
-                                            <span
-                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                </div>
+                                                <span
+                                                    :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                       <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                        </div>
                     </div>
-                    <div class="my-2 mb-4">
+                    <div class="col-span-full">
                         <div class="flex items-center mb-2">
                             <input id="hasGroup" type="checkbox" v-model="contractForm.ksk_liable"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                   class="input-checklist"/>
                             <label for="hasGroup" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('KSK-liable')}}
@@ -226,7 +193,7 @@
                         <div class="flex items-center mb-2">
                             <input id="hasGroup" type="checkbox" v-model="contractForm.resident_abroad"
                                    @click="contractForm.has_power_of_attorney = false; contractForm.is_freed = false"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                   class="input-checklist"/>
                             <label for="hasGroup" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 {{ $t('Resident abroad')}}
@@ -235,7 +202,7 @@
                         <div class="ml-4" v-if="contractForm.resident_abroad">
                             <div class="flex items-center mb-2">
                                 <input id="hasGroup" type="checkbox" v-model="contractForm.has_power_of_attorney"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="input-checklist"/>
                                 <label for="hasGroup"
                                        :class="contractForm.has_power_of_attorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
@@ -244,7 +211,7 @@
                             </div>
                             <div class="flex items-center mb-2">
                                 <input id="hasGroup" type="checkbox" v-model="contractForm.is_freed"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="input-checklist"/>
                                 <label for="hasGroup" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     {{ $t('Liberated at home')}}
@@ -252,72 +219,45 @@
                             </div>
                         </div>
                     </div>
-                    <textarea :placeholder="$t('Comment / Note')"
-                              id="description"
-                              v-model="description"
-                              rows="5"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                    <div class="col-span-full">
+                        <TextareaComponent
+                            :label="$t('Comment / Note')"
+                            id="description"
+                            v-model="description"
+                            rows="5"
+                        />
+                    </div>
 
-                    <div class="my-1">
+                    <div class="-mx-10 bg-lightBackgroundGray px-10 py-5 col-span-full border-b border-dashed border-gray-300">
                         <div class="relative w-full">
-                            <div class="w-full">
-                                <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       :placeholder="$t('Document access for')"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100"
-                                        leave-to-class="opacity-0">
-                                <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-gray-200">
-                                        <div v-for="(user, index) in user_search_results" :key="index"
-                                             class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4">
-                                                <p @click="addUserToContractUserArray(user)"
-                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                    {{ user.first_name }} {{ user.last_name }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
+                            <UserSearch v-model="user_query" @userSelected="addUserToContractUserArray"/>
                         </div>
                         <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(user,index) in usersWithAccess"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 sDark">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromContractUserArray(index)">
-                                                <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                                <IconX stroke-width="1.5"
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-artwork-buttons-create text-white border-0 "/>
-                                            </button>
-                                        </div>
-
-                                        </span>
+                            <div v-for="(user,index) in usersWithAccess" class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <img class="flex h-11 w-11 rounded-full object-cover" :src="user.profile_photo_url" alt=""/>
+                                    <span class="flex ml-4 sDark">
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    </span>
+                                    <button type="button" @click="deleteUserFromContractUserArray(index)">
+                                        <span class="sr-only">{{ $t('Remove user from contract')}}</span>
+                                        <IconX stroke-width="1.5" class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full text-primary border-0 "/>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-backgroundGray -mx-10 pt-6 pb-12 mt-6">
+                <div class="bg-backgroundGray -mx-10 pt-6 pb-12">
                     <div class="px-12 w-full">
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             {{ $t('Add further details or task')}}
-                            <IconChevronUp stroke-width="1.5" v-if="showExtraSettings"
-                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
-                            <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
+                            <IconChevronUp stroke-width="1.5" v-if="showExtraSettings" class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"></IconChevronUp>
+                            <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0h-4 w-4"></IconChevronDown>
                         </div>
                         <div v-if="showExtraSettings">
-                            <div class="items-center mb-2 mt-4">
+                            <div class="items-center mb-2">
                                 <div v-for="task in tasks" class="mt-2">
                                     <input id="hasGroup" type="checkbox" v-model="task.checked"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -376,6 +316,10 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Input from "@/Jetstream/Input.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -391,6 +335,10 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        UserSearch,
+        TextareaComponent,
+        NumberInputComponent,
+        TextInputComponent,
         BaseModal,
         Input,
         InputComponent,

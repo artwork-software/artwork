@@ -75,41 +75,35 @@
                 </div>
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
-                <div class="flex justify-center overflow-y-scroll">
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview"
-                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                 viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                   transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                          stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                          stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
+                    <div class="flex justify-center overflow-y-scroll">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
+                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
+                                     viewBox="0 0 14.123 6.519">
+                                    <g id="Gruppe_1608" data-name="Gruppe 1608"
+                                       transform="translate(-275.125 870.166) rotate(-90)">
+                                        <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
+                                              transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
+                                              stroke-width="1"/>
+                                        <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
+                                              transform="translate(864.081 286.591) rotate(-90)" fill="none"
+                                              stroke="#a7a6b1" stroke-width="1"/>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
+                        <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
+                            :title="$t('Hold and drag to change the size')">
+                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                                <SelectorIcon class="h-3 w-6 text-gray-400" />
+                            </div>
                         </div>
                     </div>
-                    <div v-if="showUserOverview" @mousedown="startResize"
-                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
-                         :title="$t('Hold and drag to change the size')">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <SelectorIcon class="h-3 w-6 text-gray-400"/>
-                        </div>
-                    </div>
-                </div>
-                <div v-show="showUserOverview" ref="userOverview"
-                     class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
-                     :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                    <div class="w-[97%]">
-                        <div
-                            class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3"
-                            :style="{top: calculateTopPositionOfUserOverView}">
+                <div class=" bg-artwork-navigation-background">
+                    <div v-show="showUserOverview" ref="userOverview" class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
+                        <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
                                         :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -329,29 +323,24 @@
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
-                                                @click="handleCellClick(user, day)"
-                                                :style="{width: day.is_sunday ? '158px' : '198px'}"
-                                                :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
-                                                <span v-for="shift in user.element?.shifts"
-                                                      v-if="!user.vacations?.includes(day.without_format)">
-                                                    <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
-                                                    </span>
+                                            <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                                 @click="handleCellClick(user, day)"
+                                                 :style="{width: day.is_sunday ? '158px' : '198px'}"
+                                            >
+                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
-                                                <span v-else
-                                                      class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                    {{ $t('not available') }}
-                                                </span>
+                                            </span>
+                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
+                                                {{ $t('not available')}}
+                                            </span>
                                                 <span v-if="user.availabilities">
-                                                    <span v-for="availability in user.availabilities[day.full_day]">
-                                                        <span class="text-green-500">
-                                                            <span v-if="availability.comment">&bdquo;{{
-                                                                    availability.comment
-                                                                }}&rdquo; </span>
-                                                        </span>
+                                                <span v-for="availability in user.availabilities[day.full_day]">
+                                                    <span class="text-green-500">
+                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
                                                     </span>
+                                                </span>
                                                 </span>
                                             </div>
                                             <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
@@ -542,8 +531,8 @@ export default {
             userForMultiEdit: null,
             multiEditFeedback: '',
             dropFeedback: null,
-            closedCrafts: [],
-            userOverviewHeight: 515,
+            closedCrafts:[],
+            userOverviewHeight: 570,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,

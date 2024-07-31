@@ -85,8 +85,23 @@ export default class {
         document.body.removeChild(overlayDiv);
     }
 
+    getSortedTimelinesAndShifts() {
+        return this.timelinesAndShifts.sort(
+            (a, b) => {
+                let dateA = Object.keys(a).includes('shift_uuid') ?
+                        this.parseShiftDateFromDateAndTime(a.start_date, a.start) :
+                        this.parseTimelineDateFromDateAndTime(a.start_date, a.start),
+                    dateB = Object.keys(b).includes('shift_uuid') ?
+                        this.parseShiftDateFromDateAndTime(b.start_date, b.start) :
+                        this.parseTimelineDateFromDateAndTime(b.start_date, b.start);
+
+                return dateA - dateB;
+            }
+        );
+    }
+
     calculateHeights() {
-        this.timelinesAndShifts.forEach((element) => {
+        this.getSortedTimelinesAndShifts().forEach((element) => {
             let isShiftObject = this.isShiftObject(element),
                 domElement = this.getEventContainer().querySelector(
                     isShiftObject ?
@@ -107,7 +122,7 @@ export default class {
     }
 
     calculateMargins() {
-        this.timelinesAndShifts.forEach((currentTimelineOrShift, index) => {
+        this.getSortedTimelinesAndShifts().forEach((currentTimelineOrShift, index) => {
             const currentIsShiftObject = this.isShiftObject(currentTimelineOrShift),
                 element = this.getTimelineOrShiftElement(currentTimelineOrShift);
 

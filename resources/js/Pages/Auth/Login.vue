@@ -16,21 +16,8 @@
                     </div>
                 </div>
                 <form class="space-y-10" @submit.prevent="submit">
-                    <div class="relative w-full mr-4">
-                        <input id="email" v-model="form.email" type="text"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="email"
-                               class="absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Email') }}*</label>
-                    </div>
-
-                    <div class="relative w-full mr-4">
-                        <input id="password" v-model="form.password" type="password"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="password"
-                               class="absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Password') }}*</label>
-                    </div>
+                    <TextInputComponent id="email" v-model="form.email" :label="$t('Email') + '*'" required/>
+                    <TextInputComponent id="password" type="password" v-model="form.password" :label="$t('Password') + '*'" required/>
                     <jet-input-error :message="errors.email" class="mt-2"/>
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -146,11 +133,13 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        TextInputComponent,
         BaseButton,
         SvgCollection,
         Head,

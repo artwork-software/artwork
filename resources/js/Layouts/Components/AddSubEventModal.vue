@@ -1,46 +1,30 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="show" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
         <div class="mx-4">
-            <div class="headline1 my-2" v-if="!this.subEventToEdit">
-                {{ $t('New sub-event') }}
-            </div>
-            <div class="headline1 my-2" v-else>
-                {{ $t('Edit sub-event') }}
-            </div>
-            <p class="mb-3 text-gray-400 text-sm">
-                {{ $t('Belongs to Blocker in {0}', [event.roomName]) }}
-            </p>
-            <p>
-                {{ $t('Please note that the appointment must take place within the appointment group period.') }}
-            </p>
-
-            <div class="mt-6">
-                <div class="flex w-full py-2 gap-1">
-                    <div class="w-1/2">
-                        <Listbox as="div" class="flex h-12" v-model="subEvent.selectedEventType"
-                                 id="eventType">
-                            <ListboxButton
-                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                <div class="flex items-center my-auto">
-                                    <div>
-                                        <div class="block w-5 h-5 rounded-full"
-                                             :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }"/>
+            <ModalHeader
+                :title="subEventToEdit ? $t('Edit sub-event') : $t('New sub-event')"
+                :description="$t('Please note that the appointment must take place within the appointment group period.')"
+                :sub-title="$t('Belongs to Blocker in {0}', [event.roomName])"
+            />
+            <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 mb-4">
+                    <div>
+                        <Listbox as="div" class="flex mt-5 relative" v-model="subEvent.selectedEventType" id="eventType">
+                            <ListboxButton class="menu-button">
+                                <div class="flex items-center">
+                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }">
                                     </div>
-                                    <span class="block truncate items-center ml-3 flex">
+                                    <span class="flex truncate items-center ml-3">
                                             <span>{{ subEvent.selectedEventType?.name }}</span>
-                                        </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary"
-                                                             aria-hidden="true"/>
-                                        </span>
+                                    </span>
+                                    <span class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </span>
                                 </div>
                             </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute w-full z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    v-for="eventType in filteredEventTypes"
                                                    :key="eventType.name"
@@ -71,31 +55,25 @@
                         </Listbox>
                     </div>
 
-                    <div class="w-1/2">
-                        <input type="text"
-                               v-model="subEvent.eventName"
-                               @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
-                               id="eventTitle"
-                               :placeholder="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    <div class="">
+                        <TextInputComponent
+                            v-model="subEvent.eventName"
+                            @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
+                            id="eventTitle"
+                            :label="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
+                        />
 
                     </div>
                 </div>
                 <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full">
+                <Menu as="div" class="inline-block text-left w-full relative">
                     <div>
-                        <MenuButton
-                            class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
-                        >
-
-                            <span class="float-left flex xsLight subpixel-antialiased"><img
-                                src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                class="mr-2"
-                                alt="attributeIcon"/>{{ $t('Select appointment properties') }}</span>
-                            <IconChevronDown stroke-width="1.5"
-                                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                             aria-hidden="true"
-                            />
+                        <MenuButton class="menu-button">
+                            <span class="float-left flex xsLight subpixel-antialiased">
+                                <img src="/Svgs/IconSvgs/icon_adjustments.svg" class="mr-2" alt="attributeIcon"/>
+                                {{ $t('Select appointment properties') }}
+                            </span>
+                            <IconChevronDown stroke-width="1.5" class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                         </MenuButton>
                     </div>
                     <transition
@@ -107,7 +85,7 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute overflow-y-auto h-24 w-full rounded-lg origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                 <div class="flex w-full mb-4">
                                     <input v-model="subEvent.audience"
@@ -136,10 +114,10 @@
                 <!--    Properties    -->
                 <div class="flex py-2">
                     <div v-if="subEvent.audience">
-                        <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"/>
+                        <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true" property=""/>
                     </div>
                     <div v-if="subEvent.is_loud">
-                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true"/>
+                        <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property=""/>
                     </div>
                 </div>
                 <div class="w-full">
@@ -156,47 +134,53 @@
                         </SwitchLabel>
                     </SwitchGroup>
                 </div>
-                <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
-                    <div class="sm:w-1/2">
-                        <label for="startDate" class="xxsLight">
-                            {{ $t('Start*') }}
-                        </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 pt-3">
+                    <div>
                         <div class="w-full flex">
-                            <input v-model="startDate"
-                                   disabled
-                                   id="startDate"
-                                   @change="checkTimes()"
-                                   type="date"
-                                   required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary flex-grow disabled:bg-gray-100"/>
-                            <input v-model="startTime"
-                                   id="changeStartTime"
-                                   v-if="!allDayEvent"
-                                   @change="checkTimes()"
-                                   type="time"
-                                   required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary"/>
+                            <DateInputComponent
+                                id="startDate"
+                                @change="checkTimes()"
+                                v-model="startDate"
+                                label="Start"
+                                disabled
+                                :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none border-r-0' : '!rounded-lg'"
+                            />
+
+                            <TimeInputComponent
+                                v-model="startTime"
+                                id="changeStartTime"
+                                v-if="!allDayEvent"
+                                @change="checkTimes()"
+                                label="Startzeit"
+                                classes="!rounded-r-lg !rounded-l-none"
+                                required
+                            />
                         </div>
+                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
-                    <div class="sm:w-1/2">
-                        <label for="endDate" class="xxsLight">{{ $t('End*') }}</label>
+                    <div>
                         <div class="w-full flex">
-                            <input v-model="endDate"
-                                   disabled
-                                   id="endDate"
-                                   @change="checkTimes()"
-                                   type="date"
-                                   required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary flex-grow disabled:bg-gray-100"/>
-                            <input v-model="endTime"
-                                   id="changeEndTime"
-                                   v-if="!allDayEvent"
-                                   @change="checkTimes()"
-                                   type="time"
-                                   required
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary"/>
+                            <DateInputComponent
+                                v-model="endDate"
+                                id="endDate"
+                                @change="checkTimes()"
+                                label="End"
+                                disabled
+                                :classes="!allDayEvent ? '!rounded-l-lg !rounded-r-none border-r-0' : '!rounded-lg'"
+                            />
+                            <TimeInputComponent
+                                v-model="endTime"
+                                v-if="!allDayEvent"
+                                id="changeEndTime"
+                                @change="checkTimes()"
+                                label="Endzeit"
+                                classes="!rounded-r-lg !rounded-l-none"
+                                required
+                            />
                         </div>
+                        <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                     </div>
+
                 </div>
                 <div>
                     <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
@@ -215,12 +199,13 @@
                 </div>
 
 
-                <div class="py-2">
-                    <textarea :placeholder="$t('What do I need to bear in mind for the event?')"
-                              id="description"
-                              v-model="subEvent.description"
-                              rows="4"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                <div class="pt-4">
+                    <TextareaComponent
+                        :label="$t('What do I need to bear in mind for the event?')"
+                        id="description"
+                        v-model="subEvent.description"
+                        rows="4"
+                    />
                 </div>
             </div>
         </div>
@@ -261,6 +246,11 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {useEvent} from "@/Composeables/Event.js";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 const {getDaysOfEvent, formatEventDateByDayJs} = useEvent();
 export default {
@@ -278,6 +268,10 @@ export default {
 
     },
     components: {
+        TextareaComponent,
+        TimeInputComponent, DateInputComponent,
+        ModalHeader,
+        TextInputComponent,
         BaseModal,
         FormButton,
         SwitchLabel,

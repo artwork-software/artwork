@@ -1,6 +1,9 @@
 <script>
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+
 export default {
     name: "TextField",
+    components: {TextInputComponent},
     props: [
         'data',
         'projectId',
@@ -33,13 +36,12 @@ export default {
             {{ data.data.label }}
         </label>
         <div class="mt-2">
-            <input type="text"
+            <TextInputComponent type="text"
                    :disabled="!this.canEditComponent"
                    @focusout="updateTextData"
                    v-model="textData.text"
-                   :placeholder="textData.text"
+                   :label="textData.text"
                    name="email" id="email"
-                   class="h-10 placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                    :class="inSidebar ? 'bg-primary text-white' : 'inputMain'"
             />
         </div>

@@ -116,8 +116,6 @@ MAIL_PASSWORD=
 MAIL_ENCRYPTION=
 ````
 
-
-
 ### SSL
 We do not ship dummy or selfsigned certificates with the installation.
 
@@ -140,7 +138,9 @@ To boot the container you can simply run the following command:
 `docker compose -f docker-compose-production.yml up -d`
 
 The application needs an app key variable set. For this please run the command ``docker compose -f docker-compose-production.yml exec artwork php artisan key:generate --show``
-This will output a key. Copy this key and paste it into the .env file under the APP_KEY variable. Restart the container afterwards.
+This will output a key. Copy this key and paste it into the .env file under the APP_KEY variable.
+
+Afterwards reload the container to load the new ``.env`` by running `docker compose -f docker-compose-production.yml up -d` again.
 
 Feel free to modify the .env file to your needs, e.g. with E-Mail credentials.
 

@@ -30,10 +30,10 @@
         <div class="overflow-y-scroll px-6">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                    <div v-for="tab in addItemsToEvent" :key="tab.name" @click="makeCurrent(tab)" :class="[tab.id === currentTab.id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700', 'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">
-                        {{ tab.name }}
+                    <div v-for="event in addItemsToEvent" :key="event.name" @click="makeCurrent(event)" :class="[event.id === currentTab.id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700', 'whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium cursor-pointer']" :aria-current="event.current ? 'page' : undefined">
+                        {{ event.name }}
                         <p class="text-xs">
-                            {{ tab.project?.name }}
+                            {{ event.projectName }}
                         </p>
                     </div>
                 </nav>
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive } from 'vue';
+import {computed, reactive, ref} from 'vue';
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
@@ -140,7 +140,7 @@ const addItemsToEvent = computed(() => {
         return {
             id: event.id,
             name: event.eventName ?? event.title,
-            project: event.project,
+            projectName: event.projectName,
             groupedItems: itemsWithCount
         };
     });

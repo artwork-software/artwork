@@ -3,16 +3,16 @@
         <div class="col-span-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.first_name" @focusout="updateContact" name="first_name" id="first_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :placeholder="$t('First name')" />
+                    <TextInputComponent type="text" v-model="contactData.first_name" @focusout="updateContact" name="first_name" id="first_name" :label="$t('First name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.last_name" @focusout="updateContact" name="last_name" id="last_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :placeholder="$t('Last name')" />
+                    <TextInputComponent type="text" v-model="contactData.last_name" @focusout="updateContact" name="last_name" id="last_name" :label="$t('Last name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="email" v-model="contactData.email" @focusout="updateContact" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :placeholder="$t('Email')" />
+                    <TextInputComponent type="email" v-model="contactData.email" @focusout="updateContact" name="email" id="email" :label="$t('Email')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.phone_number" @focusout="updateContact" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-8" :placeholder="$t('Phone number')" />
+                    <TextInputComponent type="text" v-model="contactData.phone_number" @focusout="updateContact" name="phone_number" id="phone_number" :label="$t('Phone number')" />
                 </div>
             </div>
         </div>
@@ -35,11 +35,13 @@ import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import {router} from "@inertiajs/vue3";
 import {useForm} from "@inertiajs/vue3";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default defineComponent({
     name: "SingleContact",
     props: ['contact'],
     components: {
+        TextInputComponent,
         SuccessModal,
         XIcon, CheckIcon
     },

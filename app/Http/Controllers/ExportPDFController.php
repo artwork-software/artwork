@@ -19,14 +19,18 @@ use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
 use Illuminate\Routing\UrlGenerator;
-use Inertia\ResponseFactory as InertiaResponseFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Inertia\ResponseFactory as InertiaResponseFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class ExportPDFController extends Controller
 {
+    /**
+     * @throws Throwable
+     */
     public function createPDF(
         Request $request,
         ProjectService $projectService,
@@ -48,12 +52,11 @@ class ExportPDFController extends Controller
         $projectId = $request->get('project');
 
         $showCalendar = $calendarService->createCalendarData(
-            startDate: $projectId ?
-                $carbon->create(
-                    $projectService->getFirstEventInProject($projectId)->getAttribute('start_time')
-                )->startOfDay() :
+            startDate: $projectId && !$request->get('start') ?
+                $carbon->create($projectService->getFirstEventInProject($projectId)
+                    ->getAttribute('start_time'))->startOfDay() :
                 $carbon->parse($request->get('start')),
-            endDate: $projectId ?
+            endDate: $projectId && !$request->get('end') ?
                 $carbon->create(
                     $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
                 )->endOfDay() :
@@ -66,7 +69,6 @@ class ExportPDFController extends Controller
             roomAttributeService: $roomAttributeService,
             eventTypeService: $eventTypeService,
             areaService: $areaService,
-            projectService: $projectService,
             project: $projectId ? $projectService->findById($projectId) : null,
             calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter')
         );

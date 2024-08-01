@@ -1,5 +1,5 @@
 <template>
-    <label :for="this.for" class="cursor-text absolute left-0 -top-5 xsLight peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none" :class="isSmall ? ' peer-placeholder-shown:top-3' : ' peer-placeholder-shown:top-4'">
+    <label :for="this.for" class="input-label" :class="isSmall ? ' peer-placeholder-shown:top-3' : ' peer-placeholder-shown:top-4'">
         {{ this.label }}
     </label>
 </template>

@@ -3,14 +3,15 @@
 namespace Artwork\Modules\Room\Services;
 
 use App\Http\Controllers\FilterController;
-use App\Http\Resources\CalendarShowEventInShiftPlan;
+use App\Http\Resources\MinimalShiftPlanEventResource;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
 use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\Event\Http\Resources\CalendarShowEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
+use Artwork\Modules\Event\Http\Resources\MinimalInventorySchedulingEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -38,13 +39,15 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
+use Throwable;
 
 readonly class RoomService
 {
-    public function __construct(private RoomRepository $roomRepository)
-    {
+    public function __construct(
+        private RoomRepository $roomRepository,
+    ) {
     }
 
     public function save(Room $room): Room
@@ -380,38 +383,74 @@ readonly class RoomService
         return $this->roomRepository->allWithoutTrashed($with);
     }
 
-    //@todo: fix phpcs error - complexity too high
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function collectEventsForRoom(
+    //@todo: refactor
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    private function buildRoomCollectionBaseQuery(
         Room $room,
-        CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
-        ?Project $project = null,
-    ): Collection {
-        if (!$calendarFilter) {
-            $calendarFilter = new \stdClass();
-        }
+        ?Project $project,
+        ?CarbonPeriod $calendarPeriod,
+        ?Carbon $date
+    ): HasMany {
+        $isLoud = $calendarFilter?->is_loud ?? false;
+        $isNotLoud = $calendarFilter?->is_not_loud ?? false;
+        $hasAudience = $calendarFilter?->has_audience ?? false;
+        $hasNoAudience = $calendarFilter?->has_no_audience ?? false;
+        $showAdjoiningRooms = $calendarFilter?->show_adjoining_rooms ?? false;
+        $eventTypeIds = $calendarFilter?->event_types ?? null;
+        $roomIds = $calendarFilter?->rooms ?? null;
+        $areaIds = $calendarFilter?->areas ?? null;
+        $roomAttributeIds = $calendarFilter?->room_attributes ?? null;
+        $roomCategoryIds = $calendarFilter?->room_categories ?? null;
 
-        $isLoud = $calendarFilter->is_loud ?? false;
-        $isNotLoud = $calendarFilter->is_not_loud ?? false;
-        $hasAudience = $calendarFilter->has_audience ?? false;
-        $hasNoAudience = $calendarFilter->has_no_audience ?? false;
-        $showAdjoiningRooms = $calendarFilter->show_adjoining_rooms ?? false;
-        $eventTypeIds = $calendarFilter->event_types ?? null;
-        $roomIds = $calendarFilter->rooms ?? null;
-        $areaIds = $calendarFilter->areas ?? null;
-        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter->room_categories ?? null;
-        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
-        $actualEvents = [];
-
-        $roomEventsQuery = $room->events()
-            ->where(function ($query) use ($calendarPeriod): void {
-                $query->where(function ($q) use ($calendarPeriod): void {
-                    $q->where('start_time', '<', $calendarPeriod->start)
+        $roomEventsQuery = Room::query()->getRelation('events')
+            ->with(
+                [
+                    'room',
+                    'creator',
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room'
+                ]
+            )
+            ->where(
+                function (Builder $builder) use ($calendarPeriod, $date): void {
+                    $builder->where(function (Builder $builder) use ($calendarPeriod, $date): void {
+                        $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $date,
+                            function (Builder $builder) use ($date): void {
+                                $builder
+                                    ->whereDate('start_time', '<=', $date)
+                                    ->whereDate('end_time', '>=', $date);
+                            }
+                        );
+                    })->orWhere(function (Builder $builder) use ($calendarPeriod, $date): void {
+                        $builder->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $date,
+                            function (Builder $builder) use ($date): void {
+                                $builder->whereDate('start_time', '<=', $date)
+                                    ->whereDate('end_time', '>=', $date);
+                            }
+                        );
+                    });
+                }
+            )
+            ->where(function ($builder) use ($calendarPeriod): void {
+                $builder->where(function ($builder) use ($calendarPeriod): void {
+                    $builder->where('start_time', '<', $calendarPeriod->start)
                         ->where('end_time', '>', $calendarPeriod->end);
-                })->orWhere(function ($q) use ($calendarPeriod): void {
-                    $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                })->orWhere(function ($builder) use ($calendarPeriod): void {
+                    $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
                         ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
                 });
             })
@@ -431,11 +470,11 @@ readonly class RoomService
                             ->whereIn('room_categories.id', $roomCategoryIds)))
                     ->without(['admins']))
             )
-            ->unless(empty($eventTypeIds), function ($query) use ($eventTypeIds) {
-                return $query->where(function ($query) use ($eventTypeIds): void {
-                    $query->whereIn('event_type_id', $eventTypeIds)
-                        ->orWhereHas('subEvents', function ($query) use ($eventTypeIds): void {
-                            $query->whereIn('event_type_id', $eventTypeIds);
+            ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
+                return $builder->where(function ($builder) use ($eventTypeIds): void {
+                    $builder->whereIn('event_type_id', $eventTypeIds)
+                        ->orWhereHas('subEvents', function ($builder) use ($eventTypeIds): void {
+                            $builder->whereIn('event_type_id', $eventTypeIds);
                         });
                 });
             });
@@ -457,9 +496,36 @@ readonly class RoomService
         }
 
         // order $roomEventsQuery by start_time
-        $roomEventsQuery->orderBy('start_time', 'asc');
+        $roomEventsQuery->orderBy('start_time');
 
-        $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
+        return $roomEventsQuery;
+    }
+
+    /**
+     * @return array <string, mixed>
+     * @throws Throwable
+     */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    public function collectEventsForRoom(
+        Room $room,
+        CarbonPeriod $calendarPeriod,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project = null,
+        ?bool $desiresInventorySchedulingResource = false
+    ): array {
+        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
+        $actualEvents = [];
+
+        $roomEventsQuery = $this->buildRoomCollectionBaseQuery(
+            $room,
+            $calendarFilter,
+            $project,
+            $calendarPeriod,
+            null
+        );
+
+        foreach ($roomEventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                 $calendarPeriod->start :
                 $event->start_time;
@@ -470,32 +536,62 @@ readonly class RoomService
                 $dateKey = $date->format('d.m.Y');
                 $actualEvents[$dateKey][] = $event;
             }
-        });
+        }
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
-                'roomName' => $room->getAttribute('name'),
-                'events' => CalendarShowEventResource::collection($value)
+                'roomId' => $room->getAttribute('id'),
+                //immediately resolve resource to free used memory
+                'events' => $desiresInventorySchedulingResource ?
+                    MinimalInventorySchedulingEventResource::collection($value)->resolve() :
+                    MinimalCalendarEventResource::collection($value)->resolve()
             ];
         }
-        return collect($eventsForRoom);
+
+        return $eventsForRoom;
     }
 
+    /**
+     * @return array<string, array<int, array<int, Event>>>
+     */
+    public function collectEventsForRoomsOnSpecificDays(
+        UserService $userService,
+        array $desiredRooms,
+        array $desiredDays,
+        ?CalendarFilter $calendarFilter,
+        ?Project $project = null,
+    ): array {
+        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+
+        $collectedEvents = [];
+        foreach ($desiredDays as $desiredDay) {
+            foreach ($desiredRooms as $roomId) {
+                $collectedEvents[$desiredDay][$roomId] = MinimalCalendarEventResource::collection(
+                    $this->buildRoomCollectionBaseQuery(
+                        $this->roomRepository->findOrFail($roomId),
+                        $calendarFilter,
+                        $project,
+                        CarbonPeriod::create($startDate, $endDate),
+                        Carbon::parse($desiredDay)
+                    )->get()
+                )->resolve();
+            }
+        }
+
+        return $collectedEvents;
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        ?Project $project = null,
-        $shiftPlan = false
-    ): Collection {
-        $user = Auth::user();
-        if (!$shiftPlan) {
-            $calendarFilter = $user->calendar_filter()->first();
-        } else {
-            $calendarFilter = $user->shift_calendar_filter()->first();
-        }
-
+        ?UserShiftCalendarFilter $calendarFilter,
+        ?Carbon $desiredDay = null
+    ): array {
         $isLoud = $calendarFilter->is_loud ?? false;
         $isNotLoud = $calendarFilter->is_not_loud ?? false;
         $hasAudience = $calendarFilter->has_audience ?? false;
@@ -509,12 +605,28 @@ readonly class RoomService
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
 
-
-        $room->events()->with('shifts')
+        /** @var Builder $roomEvents */
+        $roomEvents = $room
+            ->events()
+            ->with(
+                [
+                    'room',
+                    'creator',
+                    'project',
+                    'project.managerUsers',
+                    'project.state',
+                    'project.shiftRelevantEventTypes',
+                    'shifts',
+                    'shifts.craft',
+                    'shifts.users',
+                    'shifts.freelancer',
+                    'shifts.serviceProvider',
+                    'shifts.shiftsQualifications',
+                    'subEvents.event',
+                    'subEvents.event.room',
+                ]
+            )
             ->without(['created_by', 'shift_relevant_event_types'])
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
@@ -529,11 +641,11 @@ readonly class RoomService
                             ->whereIn('room_categories.id', $roomCategoryIds)))
                     ->without(['admins']))
             )
-            ->unless(empty($eventTypeIds), function ($query) use ($eventTypeIds) {
-                return $query->where(function ($query) use ($eventTypeIds): void {
-                    $query->whereIn('event_type_id', $eventTypeIds)
-                        ->orWhereHas('subEvents', function ($query) use ($eventTypeIds): void {
-                            $query->whereIn('event_type_id', $eventTypeIds);
+            ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
+                return $builder->where(function ($builder) use ($eventTypeIds): void {
+                    $builder->whereIn('event_type_id', $eventTypeIds)
+                        ->orWhereHas('subEvents', function ($builder) use ($eventTypeIds): void {
+                            $builder->whereIn('event_type_id', $eventTypeIds);
                         });
                 });
             })
@@ -541,37 +653,54 @@ readonly class RoomService
             ->unless(!$hasNoAudience, fn(Builder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(Builder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
-            ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                    $calendarPeriod->start :
-                    $event->start_time;
+            ->when(
+                $desiredDay,
+                fn(Builder $builder)  => $builder->startAndEndTimeOverlap(
+                    $desiredDay->startOfDay(),
+                    $desiredDay->clone()->endOfDay()
+                ),
+                fn(Builder $builder) => $builder->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
+            )->get();
 
-                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+        foreach ($roomEvents as $roomEvent) {
+            $eventStart = $roomEvent->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $roomEvent->start_time;
 
-                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+            $eventEnd = $roomEvent->end_time->isAfter($calendarPeriod->end) ?
+                $calendarPeriod->end :
+                $roomEvent->end_time;
 
-                foreach ($eventPeriod as $date) {
-                    $dateKey = $date->format('d.m.Y');
-                    $actualEvents[$dateKey][] = $event;
-                }
-            });
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
-        foreach ($actualEvents as $key => $value) {
-            if (isset($eventsForRoom[$key])) {
-                $eventsForRoom[$key]['events'] = CalendarShowEventInShiftPlan::collection(
-                    collect($eventsForRoom[$key]['events'])->merge($value)->unique()
-                );
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $roomEvent;
             }
         }
-        return collect($eventsForRoom);
+
+        foreach ($actualEvents as $key => $value) {
+            $eventsForRoom[$key] = [
+                'roomName' => $room->getAttribute('name'),
+                'roomId' => $room->getAttribute('id'),
+                //immediately resolve resource to free used memory
+                'events' => MinimalShiftPlanEventResource::collection($value)->resolve()
+            ];
+        }
+
+        return $eventsForRoom;
     }
 
 
+    /**
+     * @throws Throwable
+     */
     public function collectEventsForRooms(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
+        ?bool $desiresInventorySchedulingResource = false
     ): Collection {
         $roomEvents = collect();
 
@@ -581,24 +710,70 @@ readonly class RoomService
                     room: $room,
                     calendarPeriod: $calendarPeriod,
                     calendarFilter: $calendarFilter,
-                    project: $project
+                    project: $project,
+                    desiresInventorySchedulingResource: $desiresInventorySchedulingResource
                 )
             );
         }
+
         return $roomEvents;
+    }
+
+    /**
+     * @return array<string, array<int, array<int, Event>>>
+     */
+    public function collectEventsForRoomsShiftOnSpecificDays(
+        RoomService $roomService,
+        UserService $userService,
+        array $desiredRooms,
+        array $desiredDays,
+        ?UserShiftCalendarFilter $userShiftCalendarFilter,
+    ): array {
+        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $collectedEvents = [];
+
+        foreach ($desiredDays as $desiredDay) {
+            foreach ($desiredRooms as $roomId) {
+                $room = $this->roomRepository->findOrFail($roomId);
+                foreach (
+                    array_filter(
+                        $roomService->collectEventsForRoomShift(
+                            $room,
+                            $calendarPeriod,
+                            $userShiftCalendarFilter,
+                            Carbon::parse($desiredDay)
+                        ),
+                        function ($collectedEventsForRoom): bool {
+                            return !empty($collectedEventsForRoom['events']);
+                        }
+                    ) as $collectedEventsForRoom
+                ) {
+                    $collectedEvents[$desiredDay][$roomId] = $collectedEventsForRoom['events'];
+                }
+            }
+        }
+
+        return $collectedEvents;
     }
 
     public function collectEventsForRoomsShift(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
-        ?Project $project = null,
-        $shiftPlan = false
+        ?UserShiftCalendarFilter $calendarFilter
     ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
-            $roomEvents->add($this->collectEventsForRoomShift($room, $calendarPeriod, $project, $shiftPlan));
+            $roomEvents->add(
+                $this->collectEventsForRoomShift(
+                    $room,
+                    $calendarPeriod,
+                    $calendarFilter
+                )
+            );
         }
+
         return $roomEvents;
     }
 
@@ -613,8 +788,9 @@ readonly class RoomService
         /** @var Collection $eventsForRoom */
         foreach ($calendarPeriod as $date) {
             $eventsForRoom[$date->format('d.m.Y')] = [
-                'roomName' => $room->name,
-                'events' => CalendarShowEventResource::collection([])
+                'roomName' => $room->getAttribute('name'),
+                'roomId' => $room->getAttribute('id'),
+                'events' => []
             ];
         }
         return $eventsForRoom;
@@ -646,6 +822,9 @@ readonly class RoomService
         return $this->roomRepository->getUserWhereIsAdmin($room, $user->id)->count() > 0;
     }
 
+    /**
+     * @throws Throwable
+     */
     public function createShowDto(
         UserService $userService,
         Room $room,
@@ -673,7 +852,6 @@ readonly class RoomService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
             null,
             $user->calendar_filter,
             $room

@@ -1914,5 +1914,11 @@
     "Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone.": "Only you can see this checklist. If you want to share the checklist with others, you can edit it later and make it visible to everyone.",
     "Inventory-relevant Event Types": "Inventory-relevant Event Types",
     "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.": "Specify which appointment types are displayed as relevant to stock by default. Stock can only be posted to these appointment types.",
-    "Define global settings for inventory planning.": "Define global settings for inventory planning."
+    "Define global settings for inventory planning.": "Define global settings for inventory planning.",
+    "Your view is being processed, please wait a moment.": "Your view is being processed, please wait a moment.",
+    "The project id field is required when project id mandatory is true.": "The project id field is required when project id mandatory is true.",
+    "New project group": "New project group",
+    "Please fill in the following fields to create a new project.": "Please fill in the following fields to create a new project.",
+    "Export your calendar as a PDF.": "Export your calendar as a PDF.",
+    "This event type is not relevant for inventory.": "This event type is not relevant for inventory."
 }

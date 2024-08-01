@@ -1,17 +1,10 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
             <div class="mx-4">
-                <!--    Heading    -->
-                <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
-                            {{$t('Events without room')}}
-                        </div>
-                    </h1>
-                    <h2 class="xsLight">
-                        {{$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')}}
-                    </h2>
-                </div>
+                <ModalHeader
+                    :title="$t('Events without room')"
+                    :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
+                />
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                     <SingleEventInEventsWithoutRoom
@@ -22,7 +15,9 @@
                         :rooms="rooms"
                         :isAdmin="isAdmin"
                         :remove-notification-on-action="removeNotificationOnAction"
-                        />
+                        :show-hints="showHints"
+                        @desires-reload="requestReload"
+                    />
                 </div>
             </div>
     </BaseModal>
@@ -35,13 +30,7 @@
 <script>
 
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    PencilAltIcon,
-    XCircleIcon,
-    XIcon
-} from '@heroicons/vue/outline';
+import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
     Listbox,
     ListboxButton,
@@ -50,13 +39,12 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
-import {
-    CheckIcon,
-    ChevronUpIcon,
-    TrashIcon
-} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -66,11 +54,13 @@ import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ModalHeader,
         SingleEventInEventsWithoutRoom,
         BaseModal,
         Switch,
@@ -153,7 +143,7 @@ export default {
         'removeNotificationOnAction',
         'first_project_calendar_tab_id'
     ],
-    emits: ['closed'],
+    emits: ['closed', 'desiresReload'],
     watch: {
         projectName: {
             deep: true,
@@ -190,6 +180,9 @@ export default {
         },
     },
     methods: {
+        requestReload(desiredRoomIds, desiredDays, reloadEventsWithoutRoom) {
+            this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
+        },
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
             return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);

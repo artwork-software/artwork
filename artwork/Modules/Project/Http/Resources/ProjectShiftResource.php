@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Project\Http\Resources;
 
 use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -41,7 +41,7 @@ class ProjectShiftResource extends JsonResource
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
-            'state' => ProjectStates::find($this->state),
+            'state' => ProjectState::find($this->state),
             'write_auth' => $this->writeUsers,
             'users' => UserWithoutShiftsResource::collection($this->users)->resolve(),
 

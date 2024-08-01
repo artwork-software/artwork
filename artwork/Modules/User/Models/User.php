@@ -90,6 +90,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $is_sidebar_opened
  * @property boolean $compact_mode
  * @property array $show_crafts
+ * @property bool $at_a_glance
  * @property Collection<Department> $departments
  * @property Collection<Project> $projects
  * @property Collection<Comment> $comments
@@ -114,7 +115,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Craft> $assignedCrafts
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<string> $allPermissions
- *
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -166,7 +166,8 @@ class User extends Model implements
         'compact_mode',
         'show_crafts',
         'goto_mode',
-        'checklist_style'
+        'checklist_style',
+        'at_a_glance'
     ];
 
     protected $casts = [
@@ -179,7 +180,8 @@ class User extends Model implements
         'zoom_factor' => 'float',
         'is_sidebar_opened' => 'boolean',
         'compact_mode' => 'boolean',
-        'show_crafts' => 'array'
+        'show_crafts' => 'array',
+        'at_a_glance' => 'boolean'
     ];
 
     protected $hidden = [
@@ -192,9 +194,7 @@ class User extends Model implements
     protected $appends = [
         'profile_photo_url',
         'full_name',
-        'type',
-        //'formatted_vacation_days',
-        //'assigned_craft_ids',
+        'type'
     ];
 
     protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
@@ -232,15 +232,6 @@ class User extends Model implements
         return $this->belongsToMany(Shift::class, 'shift_user')
             ->using(ShiftUser::class)
             ->withPivot('id', 'shift_qualification_id');
-    }
-
-    public function loadShifts(): Collection
-    {
-        return $this->shifts()
-            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
-            ->with(['event.room'])
-            ->get()
-            ->makeHidden(['allUsers']);
     }
 
     public function getFullNameAttribute(): string
@@ -419,7 +410,6 @@ class User extends Model implements
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-
     /**
      * @return string[]
      */
@@ -461,19 +451,26 @@ class User extends Model implements
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
-
-        $shiftsInDateRange = $this->shifts()
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate]);
-            })
-            ->orWhere(function ($query) use ($startDate, $endDate): void {
-                $query->where('start_date', '<', $startDate)
-                    ->where('end_date', '>', $endDate);
-            })
-            ->get();
-
+        $shiftsInDateRange = array_filter(
+            $this->getAttribute('shifts')->all(),
+            function (Shift $shift) use ($startDate, $endDate): bool {
+                return
+                    //start date between
+                    (
+                        $shift->getAttribute('start_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate
+                    ) ||
+                    //end date between
+                    (
+                        $shift->getAttribute('end_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate
+                    //overlapping
+                    ) || (
+                        $shift->getAttribute('start_date') < $startDate &&
+                        $shift->getAttribute('end_date') > $endDate
+                    );
+            }
+        );
         $plannedWorkingHours = 0;
 
         foreach ($shiftsInDateRange as $shift) {

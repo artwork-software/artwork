@@ -7,4 +7,72 @@
             @apply mr-3 h-5 w-5;
         }
     }
+
+
+    .btn {
+        @apply rounded-lg
+
+        &:hover {
+            @apply bg-gray-200
+        }
+    }
+
+    .input {
+        @apply rounded-lg px-2.5 w-full text-sm border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0;
+
+        &:disabled {
+            @apply bg-gray-100 text-gray-600;
+        }
+
+    }
+
+    .input-label {
+        @apply cursor-text px-1 absolute left-0 -top-6 xsLight peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none
+    }
+
+    .input-checklist {
+        @apply border-2 border-gray-300 rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0
+    }
+
+    .input-checklist-dark {
+        @apply border-darkGray bg-darkGrayBg rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0
+    }
+
+    .menu-button {
+
+
+        @apply w-full h-12 rounded-lg flex justify-between items-center text-left border-2 border-gray-300 bg-white px-2.5 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white text-sm;
+
+        span {
+            @apply text-xs text-secondary font-bold;
+        }
+    }
+
+
+
+    .modal {
+        @apply relative transform bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full rounded-lg;
+    }
+
+    .modal-header {
+        @apply mb-6;
+
+        .full-modal {
+            @apply px-6 pt-4 pb-2;
+        }
+
+        .not-full-modal {
+            @apply pt-4 pb-2;
+        }
+
+        .model-title {
+            @apply font-black font-lexend text-primary text-3xl my-2;
+        }
+
+        .modal-description {
+            @apply xsLight subpixel-antialiased;
+        }
+    }
 }
+
+

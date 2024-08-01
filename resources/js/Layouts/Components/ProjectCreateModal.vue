@@ -1,10 +1,13 @@
 <template>
-    <BaseModal @closed="this.$emit('closeCreateProjectModal')" v-if="show" :modal-image="project ? '/Svgs/Overlays/illu_project_edit.svg' : '/Svgs/Overlays/illu_project_new.svg'">
-            <div class="mx-4">
-                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    {{ project ? $t('Edit basic data') : $t('New project') }}
-                </div>
-                <div class="mb-4" v-if="!project">
+    <BaseModal @closed="this.$emit('closeCreateProjectModal')" full-modal>
+            <div class="">
+                <ModalHeader
+                    :title="project ? $t('Edit basic data') : isCreateProjectTab ? $t('New project') : $t('New project group')"
+                    :description="$t('Please fill in the following fields to create a new project.')"
+                    full-modal
+                />
+
+                <div class="px-6" v-if="!project">
                     <div class="hidden sm:block">
                         <div class="border-gray-200">
                             <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
@@ -20,9 +23,11 @@
                 </div>
                 <div v-if="isCreateProjectTab">
                     <form @submit.prevent="addProject">
-                        <KeyVisual :project="project" v-if="project" />
-                        <div class="mt-2 divide-y divide-gray-300 divide-dashed">
-                            <div class="py-3">
+                       <div v-if="project" class="px-6 py-2">
+                           <KeyVisual :project="project"  />
+                       </div>
+                        <div>
+                            <div class="px-6 py-2">
                                 <div class="relative flex w-full">
                                     <TextInputComponent
                                         id="projectName"
@@ -31,16 +36,12 @@
                                         />
                                 </div>
                             </div>
-                            <div class="py-3" v-if="createSettings.attributes">
+                            <div class="px-6 py-2" v-if="createSettings.attributes">
                                 <Menu as="div" class="inline-block text-left w-full">
                                     <div>
-                                        <MenuButton
-                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                        >
-                                            <span class="float-left xsLight">{{ $t('Select properties') }}</span>
-                                            <ChevronDownIcon
-                                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                                aria-hidden="true"
+                                        <MenuButton class="menu-button">
+                                            <span>{{ $t('Select properties') }}</span>
+                                            <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"
                                             />
                                         </MenuButton>
                                     </div>
@@ -50,12 +51,9 @@
                                         enter-to-class="transform scale-100 opacity-100"
                                         leave-active-class="transition duration-75 ease-in"
                                         leave-from-class="transform scale-100 opacity-100"
-                                        leave-to-class="transform scale-95 opacity-0"
-                                    >
-                                        <MenuItems
-                                            class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div
-                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                        leave-to-class="transform scale-95 opacity-0">
+                                        <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
                                                 <Disclosure v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -183,23 +181,23 @@
                                 </div>
                             </div>
 
-                            <div class="flex py-2 w-full" v-if="createSettings.state">
+                            <div class="flex px-6 pb-5 pt-2 w-full" v-if="createSettings.state">
                                 <ProjectStateListbox :projectStates="states"
                                                      :selectedProjectState="selectedState"
                                                      @update:selectedProjectState="selectedState = $event"/>
                             </div>
 
-                            <div class="py-2" v-if="createSettings.managers">
-                                <div class="font-semibold text-sm -mb-1">{{ $t('Project management')}}</div>
-                                <UserSearch @user-selected="addUserToProject" only-manager class="mb-2" />
+                            <div class="px-6 py-6 bg-lightBackgroundGray" v-if="createSettings.managers">
+                                <div class="font-semibold text-sm pb-2">{{ $t('Project management')}}</div>
+                                <UserSearch @user-selected="addUserToProject" only-manager />
 
                                 <div v-if="assignedUsers.length > 0">
                                     <div v-for="(user, index) in assignedUsers">
-                                        <div class="flex items-center justify-between mb-3 group">
+                                        <div class="flex items-center justify-between mt-3 group">
                                             <div class="flex items-center gap-x-2">
-                                                <img :src="user.profile_photo_url" alt="" class="h-12 w-12 object-cover rounded-full">
-                                                <div>
-                                                    {{ user.full_name}}
+                                                <img :src="user.profile_photo_url" alt="" class="h-8 w-8 object-cover rounded-full">
+                                                <div class="text-sm xsLight">
+                                                    {{ user.name}}
                                                 </div>
                                             </div>
                                             <div class="hidden group-hover:block">
@@ -210,7 +208,7 @@
                                 </div>
                             </div>
 
-                            <div class="py-3" v-if="createSettings.cost_center">
+                            <div class="px-6 pb-2 pt-4" v-if="createSettings.cost_center">
                                 <TextInputComponent
                                     id="costCenter"
                                     v-model="createProjectForm.cost_center"
@@ -218,36 +216,33 @@
                                 />
                             </div>
 
-                            <div class="flex items-center py-3">
-                                <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="addToProjectGroup"
-                                       :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                       class="ml-2">
-                                    {{ $t('Belongs to project group') }}
-                                </label>
-                            </div>
-                            <div v-if="this.addToProjectGroup" class="py-3">
-                                <ProjectGroupListbox
-                                    :selected-project-group="createProjectForm.selectedGroup"
-                                    :project-groups="projectGroups"
-                                    @update:selected-project-group="createProjectForm.selectedGroup = $event"
-                                />
-                            </div>
-                            <div class="py-3" v-if="createSettings.budget_deadline">
-                                <div class="xsLight">
-                                    <span>{{ $t('Budget deadline') }}</span>
+                            <div class="px-6 py-2">
+                                <div class="flex items-center ">
+                                    <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
+                                           class="input-checklist"/>
+                                    <label for="addToProjectGroup"
+                                           :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           class="ml-2">
+                                        {{ $t('Belongs to project group') }}
+                                    </label>
                                 </div>
-                                <div class="flex mt-1">
-                                    <input v-model="this.createProjectForm.budget_deadline"
-                                           id="budgetDeadline"
-                                           type="date"
-                                           class="border-gray-300 inputMain xsDark placeholder-secondary placeholder:text-secondary disabled:border-none flex-grow"/>
+                                <div v-if="this.addToProjectGroup" class="mt-3">
+                                    <ProjectGroupListbox
+                                        :selected-project-group="createProjectForm.selectedGroup"
+                                        :project-groups="projectGroups"
+                                        @update:selected-project-group="createProjectForm.selectedGroup = $event"
+                                    />
                                 </div>
+                            </div>
+                            <div v-if="createSettings.budget_deadline" class="px-6 py-2">
+                                <DateInputComponent
+                                    id="budgetDeadline"
+                                    v-model="createProjectForm.budget_deadline"
+                                    :label="$t('Budget deadline')" />
                             </div>
 
                         </div>
-                        <div class="w-full items-center text-center">
+                        <div class="w-full items-center text-center pb-6">
                             <FormButton
                                 type="submit"
                                 :text="project ? $t('Save') : $t('Create')"
@@ -257,28 +252,22 @@
                     </form>
                 </div>
                 <div v-if="isCreateProjectGroupTab && !project">
-                    <form @submit.prevent="addProject" class="">
-                        <div class="mb-2 w-full">
-                            <input type="text"
-                                   v-model="createProjectForm.name"
-                                   id="sourceName"
-                                   :placeholder="$t('Title*')"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    <form @submit.prevent="addProject" class="px-6 pb-6">
+                        <div class="py-4 w-full">
+                            <TextInputComponent
+                                id="sourceName"
+                                v-model="createProjectForm.name"
+                                :label="$t('Title*')"
+                            />
                         </div>
-                        <div class="mb-2" v-if="createSettings.attributes">
+                        <div class="mb-2 mt-5" v-if="createSettings.attributes">
                             <Menu as="div" class="inline-block text-left w-full">
                                 <div>
-                                    <MenuButton
-                                        class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                    >
-                                            <span
-                                                class="float-left subpixel-antialiased xsLight">
+                                    <MenuButton class="menu-button">
+                                            <span class="float-left subpixel-antialiased xsLight">
                                                 {{ $t('Select properties') }}
                                             </span>
-                                        <ChevronDownIcon
-                                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                            aria-hidden="true"
-                                        />
+                                        <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                                     </MenuButton>
                                 </div>
                                 <transition
@@ -287,22 +276,13 @@
                                     enter-to-class="transform scale-100 opacity-100"
                                     leave-active-class="transition duration-75 ease-in"
                                     leave-from-class="transform scale-100 opacity-100"
-                                    leave-to-class="transform scale-95 opacity-0"
-                                >
-                                    <MenuItems
-                                        class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div
-                                            class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                    leave-to-class="transform scale-95 opacity-0">
+                                    <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
                                             <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Category') }}</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
+                                                <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Category') }}</span>
+                                                    <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                                     <div v-if="categories.length > 0"
@@ -413,17 +393,16 @@
                         <div class="mb-2">
                             <div class="relative w-full">
                                 <div class="w-full">
-                                    <input id="projectGroupQuery" v-model="projectGroupQuery" type="text"
-                                           autocomplete="off"
-                                           :placeholder="$t('Which projects belong to this group?')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    <TextInputComponent
+                                        id="projectGroupQuery"
+                                        v-model="projectGroupQuery"
+                                        :label="$t('Which projects belong to this group?')"
+                                    />
                                 </div>
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100"
                                             leave-to-class="opacity-0">
-                                    <div
-                                        v-if="projectGroupSearchResults.length > 0 && projectGroupQuery.length > 0"
-                                        class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                    <div v-if="projectGroupSearchResults.length > 0 && projectGroupQuery.length > 0" class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                         <div class="border-gray-200">
@@ -455,7 +434,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="w-full items-center text-center">
+                        <div class="w-full items-center text-center mt-5 justify-center flex">
                             <FormButton
                                 type="submit"
                                 :disabled="this.createProjectForm.name === ''" :text="$t('Create')"/>
@@ -496,11 +475,17 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import ProjectStateListbox from "@/Components/Listboxes/ProjectStateListbox.vue";
 import ProjectGroupListbox from "@/Components/Listboxes/ProjectGroupListbox.vue";
 import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper],
     components: {
+        BaseTabs,
+        ModalHeader,
+        DateInputComponent,
         KeyVisual,
         ProjectGroupListbox,
         ProjectStateListbox,

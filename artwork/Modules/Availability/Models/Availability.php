@@ -77,7 +77,7 @@ class Availability extends Model
         'series', 'conflicts'
     ];
 
-    public function getHasConflictsAttribute()
+    public function getHasConflictsAttribute(): bool
     {
         return $this->conflicts()->exists();
     }

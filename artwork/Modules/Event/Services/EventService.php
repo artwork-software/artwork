@@ -6,18 +6,17 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
-use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
+use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -36,6 +35,7 @@ use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -43,16 +43,17 @@ use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\SubEvent\Models\SubEvent;
 use Artwork\Modules\SubEvent\Services\SubEventService;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Collection as SupportCollection;
+use Throwable;
 
 readonly class EventService
 {
@@ -264,10 +265,15 @@ readonly class EventService
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
-            $eventCommentService->deleteEventComments($event->comments);
-            $timelineService->forceDeleteTimelines($event->timelines);
-            $shiftService->forceDeleteShifts($event->shifts);
-            $subEventService->forceDeleteSubEvents($event->subEvents);
+            $shifts = Shift::onlyTrashed()->where('event_id', $event->id)->get();
+            $timelines = Timeline::onlyTrashed()->where('event_id', $event->id)->get();
+            $comments = EventComment::onlyTrashed()->where('event_id', $event->id)->get();
+            $subEvents = SubEvent::onlyTrashed()->where('event_id', $event->id)->get();
+
+            $eventCommentService->deleteEventComments($comments);
+            $timelineService->forceDeleteTimelines($timelines);
+            $shiftService->forceDeleteShifts($shifts);
+            $subEventService->forceDeleteSubEvents($subEvents);
 
             $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
@@ -635,7 +641,6 @@ readonly class EventService
         RoomService $roomService,
         CraftService $craftService,
         EventTypeService $eventTypeService,
-        ProjectService $projectService,
         FilterService $filterService,
         ShiftFilterController $shiftFilterController,
         ShiftQualificationService $shiftQualificationService,
@@ -669,6 +674,7 @@ readonly class EventService
             $startDate,
             $endDate
         );
+
         $filteredRooms = $roomService->getFilteredRooms(
             $startDate,
             $endDate,
@@ -676,17 +682,13 @@ readonly class EventService
         );
 
         return ShiftPlanDto::newInstance()
-            ->setEvents($events)
             ->setHistory($this->getEventShiftsHistoryChanges($events))
             ->setCrafts($craftService->getAll())
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setProjects($projectService->getAll())
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
-                    null,
-                    true
+                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
                 )
             )
             ->setRooms($filteredRooms)
@@ -697,14 +699,12 @@ readonly class EventService
                     $roomAttributeService,
                     $eventTypeService,
                     $areaService,
-                    $projectService,
                     $roomService
                 )
             )
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
-            ->setSelectedDate(null)
             ->setUsersForShifts(
                 $userService->getUsersWithPlannedWorkingHours(
                     $startDate,
@@ -755,6 +755,103 @@ readonly class EventService
         })->all();
     }
 
+    public function createEventManagementDtoForAtAGlance(
+        CalendarService $calendarService,
+        RoomService $roomService,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        ProjectTabService $projectTabService,
+        EventTypeService $eventTypeService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?Project $project = null
+    ): EventManagementDto {
+        $user = $userService->getAuthUser();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+
+        //today is used if project calendar is opened and no events are given as project calendar
+        //do not rely on user calendar filter dates
+        $today = Carbon::now();
+        [$startDate, $endDate] = !$project ?
+            $userService->getUserCalendarFilterDatesOrDefault() :
+            [
+                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                    $today->startOfDay(),
+                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $today->endOfDay()
+            ];
+
+        return EventManagementDto::newInstance()
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->setCalendarType(
+                $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                    'daily' :
+                    'individual'
+            )
+            ->setSelectedDate(
+                $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
+                    $startDate->format('Y-m-d') :
+                    null
+            )
+            ->setEventsWithoutRoom(
+                empty($room) ?
+                    CalendarEventResource::collection(
+                        $this->getEventsWithoutRoom(
+                            $project,
+                            [
+                                'room',
+                                'creator',
+                                'project',
+                                'project.managerUsers',
+                                'project.state',
+                                'shifts',
+                                'shifts.craft',
+                                'shifts.users',
+                                'shifts.freelancer',
+                                'shifts.serviceProvider',
+                                'shifts.shiftsQualifications',
+                                'subEvents.event',
+                                'subEvents.event.room'
+                            ]
+                        )
+                    )->resolve() :
+                    []
+            )
+            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate, $project))
+            ->setRooms(
+                $roomService->getFilteredRooms(
+                    $startDate,
+                    $endDate,
+                    $userCalendarFilter
+                )
+            )
+            ->setFilterOptions(
+                $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $roomService
+                )
+            )
+            ->setAreas($areaService->getAll())
+            ->setPersonalFilters($filterController->index())
+            ->setUserFilters($user->getAttribute('calendar_filter'))
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectCalendarTabId(
+                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+            );
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function createEventManagementDto(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -767,10 +864,24 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
-        User $user,
-        bool $atAGlance
+        ?Project $project = null
     ): EventManagementDto {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($user);
+        $user = $userService->getAuthUser();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+
+        //today is used if project calendar is opened and no events are given as project calendar
+        //do not rely on user calendar filter dates
+        $today = Carbon::now();
+        [$startDate, $endDate] = !$project ?
+            $userService->getUserCalendarFilterDatesOrDefault() :
+            [
+                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                    $today->startOfDay(),
+                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $today->endOfDay()
+            ];
 
         $showCalendar = $calendarService->createCalendarData(
             $startDate,
@@ -783,9 +894,8 @@ readonly class EventService
             $roomAttributeService,
             $eventTypeService,
             $areaService,
-            $projectService,
-            null,
-            $user->calendar_filter
+            $project,
+            $userCalendarFilter
         );
 
         return EventManagementDto::newInstance()
@@ -796,43 +906,21 @@ readonly class EventService
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
-            ->setEventsAtAGlance(
-                $atAGlance ?
-                    $calendarService->getEventsAtAGlance($startDate, $endDate) :
-                    SupportCollection::make()
-            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
                     $endDate,
-                    $userService->getAuthUser()->calendar_filter
-                ),
+                    $userCalendarFilter
+                )
             )
-            ->setEvents(
-                CalendarEventDto::newInstance()
-                    ->setAreas($showCalendar['filterOptions']['areas'])
-                    ->setProjects($showCalendar['filterOptions']['projects'])
-                    ->setEventTypes($showCalendar['filterOptions']['eventTypes'])
-                    ->setRoomCategories($showCalendar['filterOptions']['roomCategories'])
-                    ->setRoomAttributes($showCalendar['filterOptions']['roomAttributes'])
-                    ->setEvents(
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            SupportCollection::make(
-                                CalendarEventResource::collection(
-                                    $calendarService->getEventsOfInterval(
-                                        $startDate,
-                                        $endDate
-                                    )
-                                )->resolve()
-                            ) :
-                            SupportCollection::make()
-                    )
-            )
+            ->setAreas($areaService->getAll())
             ->setFilterOptions($showCalendar["filterOptions"],)
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id);
+            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectCalendarTabId(
+                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+            );
     }
 
     /** @return Event[]|Collection */
@@ -934,5 +1022,10 @@ readonly class EventService
         int $eventId
     ): Event {
         return $this->eventRepository->findById($eventId);
+    }
+
+    public function getEventsWithoutRoom(int|Project|null $project = null, array|null $with = null): Collection
+    {
+        return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }
 }

@@ -2,7 +2,7 @@
     <div class="flex justify-between items-center my-1.5 h-5">
         <div class="flex items-center justify-start">
             <input :key="item.name" v-model="item.checked" type="checkbox"
-                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                   class="input-checklist"/>
                             <p :class="[item.checked ? 'xsDark' : 'xsLight']"
                class="ml-4 my-auto text-sm" v-if="!item.translation_key">{{ item.name }}</p>
             <p :class="[item.checked ? 'xsDark' : 'xsLight']"

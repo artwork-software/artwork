@@ -3,11 +3,15 @@
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
-               type="text"
+               :type="type"
                :required="required"
-               class="p-1.5 w-full text-sm peer border-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent focus:border-primary focus:ring-0"
+               class="input peer"
                :class="isSmall ? '' : 'h-12'"
-               placeholder="placeholder"/>
+               placeholder="placeholder"
+               :disabled="disabled"
+                :readonly="readonly"
+               :maxlength="maxlength"
+        />
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
@@ -39,7 +43,23 @@ export default defineComponent({
         required: {
             type: Boolean,
             default: false
-        }
+        },
+        type: {
+            type: String,
+            default: 'text'
+        },
+        disabled: {
+            type: Boolean,
+            default: false
+        },
+        readonly: {
+            type: Boolean,
+            default: false
+        },
+        maxlength: {
+            type: Number,
+            default: 255
+        },
     },
     emits: [
         'update:modelValue'

@@ -107,15 +107,17 @@ class ChecklistController extends Controller
             'tab_id' => $request->tab_id ?? null
         ]);
 
-        foreach ($request->tasks as $task) {
-            Task::create([
-                'name' => $task['name'],
-                'description' => $task['description'],
-                'done' => false,
-                'deadline' => $task['deadline_dt_local'],
-                'checklist_id' => $checklist->id,
-                'order' => Task::max('order') + 1,
-            ]);
+        if (is_object($request->tasks)) {
+            foreach ($request->tasks as $task) {
+                Task::create([
+                    'name' => $task['name'],
+                    'description' => $task['description'],
+                    'done' => false,
+                    'deadline' => $task['deadline_dt_local'],
+                    'checklist_id' => $checklist->id,
+                    'order' => Task::max('order') + 1,
+                ]);
+            }
         }
     }
 

@@ -3,13 +3,13 @@
 namespace Artwork\Modules\Project\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Illuminate\Support\Collection;
 
 class ProjectStateRepository extends BaseRepository
 {
     public function getAll(): Collection
     {
-        return ProjectStates::all();
+        return ProjectState::all();
     }
 }

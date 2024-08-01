@@ -40,7 +40,7 @@
 
     <event-component
         v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
+        @closed="onEventComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -224,9 +224,11 @@ export default {
             this.createEventComponentIsVisible = true;
 
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            router.reload();
+            if (bool) {
+                router.reload();
+            }
         },
 
 

@@ -49,12 +49,8 @@
                                 </div>
                             </div>
                             <div v-else class="mt-3">
-                                <div class="flex justify-start">
-                                    <div class="bg-gray-50 p-2">
-                                        <p class="text-sm text-gray-500">
-                                            {{ $t("You have no appointments today.")}}
-                                        </p>
-                                    </div>
+                                <div class="bg-gray-50 p-2 rounded-lg">
+                                    <AlertComponent :text="$t('You have no appointments today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
                                 </div>
                             </div>
                         </DashboardCard>
@@ -98,12 +94,8 @@
                                 </div>
                             </div>
                             <div v-else class="mt-3">
-                                <div class="flex justify-start">
-                                    <div class="bg-gray-50 p-2 text-center">
-                                        <p class="text-sm text-gray-500">
-                                            {{ $t("You don't have any shifts today.")}}
-                                        </p>
-                                    </div>
+                                <div class="bg-gray-50 p-2 rounded-lg">
+                                    <AlertComponent :text="$t('You don\'t have any shifts today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
                                 </div>
                             </div>
                         </DashboardCard>
@@ -159,9 +151,7 @@
                                                     </g>
                                                 </g>
                                             </svg>
-                                            <div class="xsLight">
-                                                {{ $t("There are no new announcements for today.")}}
-                                            </div>
+                                            <AlertComponent :text="$t('There are no new announcements for today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
                                         </div>
                                 </div>
                             </DashboardCard>
@@ -215,11 +205,10 @@
                                 </div>
                             </div>
                             <div v-else class="relative">
+
                                 <div class="p-6 flex justify-start">
-                                    <div class="bg-gray-50 p-2 text-center">
-                                        <p class="text-sm text-gray-500">
-                                            {{ $t('You have no open tasks.')}}
-                                        </p>
+                                    <div class="bg-gray-50 p-2 rounded-lg">
+                                        <AlertComponent :text="$t('You have no open tasks.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
                                     </div>
                                 </div>
                                 <div class="absolute bottom-0 right-0 rounded-br-lg">
@@ -260,6 +249,7 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import DashboardCard from "@/Components/DashboardCard.vue";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 export default defineComponent({
     mixins: [Permissions],
@@ -281,6 +271,7 @@ export default defineComponent({
         'first_project_calendar_tab_id'
     ],
     components: {
+        AlertComponent,
         DashboardCard,
         NotificationBlock,
         NotificationButtons,

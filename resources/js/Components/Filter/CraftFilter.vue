@@ -53,11 +53,11 @@ export default {
 
             <div v-if="showCraftFilter">
                 <div v-for="craft in crafts" :key="craft.id">
-                    <div class="relative flex items-start">
+                    <div class="relative flex items-start mb-2">
                         <div class="flex h-6 items-center">
-                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts?.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-artwork-buttons-create" />
+                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts?.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
                         </div>
-                        <div class="ml-3 text-sm leading-6">
+                        <div class="ml-2 text-sm leading-6">
                             <label :for="'craft-' + craft.id" class="font-medium text-white">{{ craft.name }}</label>
                         </div>
                     </div>

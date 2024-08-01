@@ -80,7 +80,7 @@ use Artwork\Modules\Project\Http\Resources\ProjectIndexResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Models\ProjectRole;
-use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectState;
 use Artwork\Modules\Project\Services\CommentService;
 use Artwork\Modules\Project\Services\ProjectFileService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -136,6 +136,7 @@ use Intervention\Image\Facades\Image;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class ProjectController extends Controller
 {
@@ -1803,8 +1804,11 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
+    /**
+     * @throws Throwable
+     */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectTab(
         Request $request,
         Project $project,
@@ -1828,7 +1832,8 @@ class ProjectController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
-        AreaService $areaService
+        AreaService $areaService,
+        EventService $eventService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -1872,30 +1877,44 @@ class ProjectController extends Controller
                     $headerObject->project->project_files_all = $project->project_files;
                     break;
                 case ProjectTabComponentEnum::PROJECT_STATUS->value:
-                    $headerObject->project->state = ProjectStates::find($project->state);
+                    $headerObject->project->state = ProjectState::find($project->state);
                     break;
                 case ProjectTabComponentEnum::PROJECT_TEAM->value:
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
-                    $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab(
-                        $request->get('startDate') ? Carbon::create($request->get('startDate'))
-                            ->startOfDay() : Carbon::now()->startOfDay(),
-                        $request->get('endDate') ? Carbon::create($request->get('endDate'))
-                            ->endOfDay() : Carbon::now()->addWeeks()->endOfDay(),
-                        $project,
-                        $roomService,
-                        $calendarService,
-                        $projectService,
-                        $userService,
-                        $filterService,
-                        $filterController,
-                        $roomCategoryService,
-                        $roomAttributeService,
-                        $eventTypeService,
-                        $areaService,
-                        $request->get('atAGlance') ?? false
-                    );
+                    $atAGlance = $request->boolean('atAGlance');
+                    $loadedProjectInformation['CalendarTab'] =
+                        $userService->getAuthUser()->getAttribute('at_a_glance') ?
+                            $eventService->createEventManagementDtoForAtAGlance(
+                                $calendarService,
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $filterController,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $roomCategoryService,
+                                $roomAttributeService,
+                                $areaService,
+                                $projectService,
+                                $project
+                            ) :
+                            $eventService->createEventManagementDto(
+                                $calendarService,
+                                $roomService,
+                                $userService,
+                                $filterService,
+                                $filterController,
+                                $this->projectTabService,
+                                $eventTypeService,
+                                $roomCategoryService,
+                                $roomAttributeService,
+                                $areaService,
+                                $projectService,
+                                $project
+                            );
+
                     break;
                 case ProjectTabComponentEnum::BUDGET->value:
                     $loadedProjectInformation = $this->budgetService
@@ -2794,8 +2813,20 @@ class ProjectController extends Controller
         NotificationService $notificationService,
         TaskService $taskService
     ): RedirectResponse {
+
+        $events = Event::onlyTrashed()->where('project_id', $id)->get();
+
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
+
+        $eventService->forceDeleteAll(
+            $events,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService
+        );
 
         if ($project) {
             $this->projectService->forceDelete(
@@ -2864,7 +2895,7 @@ class ProjectController extends Controller
             'trashed_genres' => Genre::onlyTrashed()->get(),
             'trashed_categories' => Category::onlyTrashed()->get(),
             'trashed_sectors' => Sector::onlyTrashed()->get(),
-            'trashed_project_states' => ProjectStates::onlyTrashed()->get(),
+            'trashed_project_states' => ProjectState::onlyTrashed()->get(),
             'trashed_contract_types' => ContractType::onlyTrashed()->get(),
             'trashed_company_types' => CompanyType::onlyTrashed()->get(),
             'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),

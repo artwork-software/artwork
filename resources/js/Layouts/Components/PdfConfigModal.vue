@@ -8,8 +8,7 @@
             <div class="fixed inset-0 z-50">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-6 mb-4"/>
+                        <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 rounded-lg">
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
@@ -17,33 +16,40 @@
                                 </button>
                             </div>
                             <div class="relative z-40 pl-4">
-                                <div class="mb-4">
-                                    <label for="title" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Heading')}}</label>
-                                    <div class="mt-2">
-                                        <input v-model="pdf.title" type="text" :placeholder="pdf.title" name="title" id="title" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
-                                    </div>
+                                <ModalHeader
+                                    :title="$t('Export PDF')"
+                                    :description="$t('Export your calendar as a PDF.')"
+                                />
+                                <div class="pt-4">
+                                    <TextInputComponent
+                                        id="title"
+                                        v-model="pdf.title"
+                                        :label="$t('Heading')"
+                                    />
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mb-4">
                                     <div>
-                                        <label for="start" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Start-Time')}}</label>
-                                        <div class="mt-2">
-                                            <input v-model="pdf.start" type="date" name="start" id="start" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
-                                        </div>
+                                        <DateInputComponent
+                                            v-model="pdf.start"
+                                            :label="$t('Start-Time')"
+                                            id="start"
+                                        />
                                     </div>
                                     <div>
-                                        <label for="end" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('End-Time')}}</label>
-                                        <div class="mt-2">
-                                            <input v-model="pdf.end" type="date" name="end" id="end" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-artwork-buttons-create sm:text-sm sm:leading-6" />
-                                        </div>
+                                        <DateInputComponent
+                                            v-model="pdf.end"
+                                            :label="$t('Start-Time')"
+                                            id="end"
+                                        />
                                     </div>
                                 </div>
                                 <!-- defaultPaperSize -->
                                 <div>
                                     <Listbox as="div" v-model="selectedPaperSize">
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{$t('Paper size')}}</ListboxLabel>
+                                        <ListboxLabel class="xsLight">{{$t('Paper size')}}</ListboxLabel>
                                         <div class="relative mt-2">
-                                            <ListboxButton class="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                                                <span class="block truncate">{{ selectedPaperSize.name }}</span>
+                                            <ListboxButton class="menu-button">
+                                                <div class="block truncate">{{ selectedPaperSize.name }}</div>
                                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
@@ -71,13 +77,13 @@
                                 </div>
                                 <!-- defaultPaperOrientation -->
                                 <div class="mt-4 mb-4">
-                                    <label class="block text-sm font-medium leading-6 text-gray-900">{{$t('Paper orientation')}}</label>
+                                    <label class="xsLight">{{$t('Paper orientation')}}</label>
                                     <fieldset class="">
                                         <legend class="sr-only">Notification method</legend>
                                         <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
                                             <div v-for="paperOrientation in paperOrientations" :key="paperOrientation.id" class="flex items-center">
                                                 <input :id="paperOrientation.id" name="notification-method" type="radio" @change="changePaperOrientation(paperOrientation)" :checked="paperOrientation.id === checkedOrientation" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" :disabled="orientationDisabled"/>
-                                                <label :for="paperOrientation.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">{{ paperOrientation.title }}</label>
+                                                <label :for="paperOrientation.id" class="ml-2 block text-sm font-medium leading-6 text-gray-900">{{ paperOrientation.title }}</label>
                                             </div>
 
                                         </div>
@@ -85,11 +91,12 @@
                                     </fieldset>
                                 </div>
 
-                                <div class="mb-4">
-                                    <label for="dpi" class="block text-sm font-medium leading-6 text-gray-900">{{$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')}}</label>
-                                    <div class="mt-2">
-                                        <input v-model="pdf.dpi" type="number" :placeholder="pdf.dpi" name="dpi" id="dpi" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                    </div>
+                                <div class="pt-2 pb-4">
+                                    <NumberInputComponent
+                                        id="dpi"
+                                        v-model="pdf.dpi"
+                                        :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+                                    />
                                 </div>
 
                               <div class="flex justify-center">
@@ -110,10 +117,18 @@ import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 export default {
     name: "PdfConfigModal",
     mixins: [Permissions],
     components: {
+        NumberInputComponent,
+        DateInputComponent,
+        ModalHeader,
+        TextInputComponent,
         FormButton,
         Dialog,
         DialogTitle,

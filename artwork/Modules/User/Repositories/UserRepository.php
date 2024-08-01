@@ -27,6 +27,11 @@ class UserRepository extends BaseRepository
         return User::find($userId);
     }
 
+    public function findWorker(int $workerId): User|null
+    {
+        return User::query()->canWorkShifts()->where('id', $workerId)->first();
+    }
+
     public function findUserOrFail(int $userId): User
     {
         return User::findOrFail($userId);
@@ -34,7 +39,12 @@ class UserRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return User::query()->canWorkShifts()->get();
+        return User::query()->canWorkShifts()->with(
+            'dayServices',
+            'shifts',
+            'shifts.event',
+            'shifts.event.room'
+        )->get();
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(
@@ -102,5 +112,10 @@ class UserRepository extends BaseRepository
             'project_manager_permission' => $user->getHasProjectManagerPermission(),
             'profile_photo_url' => $user->profile_photo_url,
         ]);
+    }
+
+    public function atAGlanceEnabled(User $user): bool
+    {
+        return $user->getAttribute('at_a_glance');
     }
 }

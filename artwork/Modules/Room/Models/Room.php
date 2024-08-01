@@ -90,6 +90,15 @@ class Room extends Model
         'temporary' => 'boolean'
     ];
 
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(
+            Area::class,
+            'area_id',
+            'id',
+            'areas'
+        );
+    }
 
     public function creator(): BelongsTo
     {

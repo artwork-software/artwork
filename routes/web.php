@@ -478,6 +478,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/calendar/room/events', [EventController::class, 'getEventsForRoomsByDaysAndProject'])
+        ->name('events.for-rooms-by-days-and-project');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
     Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
 
@@ -501,6 +503,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])
         ->name('shifts.plan')
         ->can('can view shift plan');
+    Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
+        ->name('shifts.events.for-rooms-by-days-and-project');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
@@ -612,6 +616,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
         ->name('user.update.zoom_factor');
+
+    // user.update.at_a_glance
+    Route::patch('/user/{user}/update/at_a_glance', [UserController::class, 'updateAtAGlance'])
+        ->name('user.update.at_a_glance');
 
     Route::resource(
         'user.commentedBudgetItemsSettings',

@@ -4,28 +4,26 @@
             <div class="headline3 py-4">
                 {{ $t('Hours & remuneration')}}
             </div>
-            <div v-if="user_type !== 'service_provider' && user_type !== 'freelancer'" class="flex">
-                <input type="number" v-model="userForm.weekly_working_hours" placeholder="h" @focusout="updateUserTerms"
-                       class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
-                <div class="ml-4 h-10 flex items-center">
-                    {{ $t('h/week as per contract') }}
-                </div>
-            </div>
-            <div class="flex">
-                <input type="number" v-model="userForm.salary_per_hour" placeholder="€" @focusout="updateUserTerms"
-                       class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
-                <div class="ml-4 h-10 flex items-center">
-                    €/h
-                </div>
-            </div>
-            <div class="py-1">
-                            <textarea :placeholder="$t('Further information (variable remuneration, bonuses, etc.)')"
-                                      id="salary_description"
-                                      v-model="userForm.salary_description" @focusout="updateUserTerms"
-                                      rows="4"
-                                      class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1"/>
-
-            </div>
+           <div class="grid grid-cols-1 gap-4 max-w-md">
+               <div v-if="user_type !== 'service_provider' && user_type !== 'freelancer'" class="flex">
+                   <NumberInputComponent v-model="userForm.weekly_working_hours" :label="$t('h/week as per contract')" @focusout="updateUserTerms" id="weekly_working_hours"/>
+               </div>
+               <div class="flex col-span-full items-center">
+                   <NumberInputComponent v-model="userForm.salary_per_hour" label="€" @focusout="updateUserTerms" id="salary_per_hour"/>
+                   <div class="ml-4 h-10 flex items-center">
+                       €/h
+                   </div>
+               </div>
+               <div class="mb-3">
+                   <TextareaComponent
+                       :label="$t('Further information (variable remuneration, bonuses, etc.)')"
+                       id="salary_description"
+                       v-model="userForm.salary_description"
+                       @focusout="updateUserTerms"
+                       rows="4"
+                   />
+               </div>
+           </div>
         </div>
     </div>
 </template>
@@ -37,9 +35,13 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 
 export default {
     components: {
+        NumberInputComponent,
+        TextareaComponent,
         CheckIcon,
         XIcon,
         PencilAltIcon,

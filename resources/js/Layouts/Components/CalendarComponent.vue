@@ -81,16 +81,16 @@
                         </Link>
                     </template>
                     <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: backgroundColorWithOpacity(event.event_type?.hex_code), color: TextColorWithDarken(event.event_type?.hex_code)}">
+                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: backgroundColorWithOpacity(event.event_type_color), color: TextColorWithDarken(event.event_type_color)}">
                             <div class="flex w-full justify-between items-center">
                                 <div v-if="!project" class="flex eventHeader truncate mx-1">
-                                    <div v-if="event.event_type.abbreviation" class="mr-1">
-                                        {{ event.event_type.abbreviation }}:
+                                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                                        {{ event.eventTypeAbbreviation }}:
                                     </div>
-                                    {{ event.name }}
+                                    {{ event.eventName }}
                                 </div>
                                 <div v-else class="truncate mx-1">
-                                    {{ this.eventTypes.find(eventType => eventType.id === event.event_type.id)?.name }}
+                                    {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
                                 </div>
                                 <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
                                      class="flex">
@@ -105,7 +105,7 @@
                                     {{$t('Sub-events')}}:
                                 </div>
                                 <div v-for="subEvent in event.subEvents">
-                                    {{ subEvent.event_type.abbreviation }}:
+                                    {{ subEvent.eventTypeAbbreviation }}:
                                     {{ subEvent.name }}
                                 </div>
 
@@ -218,6 +218,7 @@
         </div>
 
     </div>
+
     <div class="ml-12">
         <CalendarFilterTagComponent
             class="flex"
@@ -232,7 +233,7 @@
     <!-- Termin erstellen Modal-->
     <event-component
         v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
+        @closed="onEventComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -294,7 +295,7 @@ import {
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent.vue";
 import Button from "@/Jetstream/Button.vue";
@@ -304,7 +305,6 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 
@@ -500,13 +500,26 @@ export default {
     methods: {
         backgroundColorWithOpacity(eventColor) {
             const color = eventColor;
-            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
+            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 20%)`;
         },
         TextColorWithDarken(eventColor) {
             const color = eventColor;
             return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
         },
         initializeCalendar({view = null, startDate = null, endDate = null}) {
+
+            const eventCalendar = this.$page.props.calendar;
+            const newEventObject = [];
+
+            eventCalendar.forEach((event) => {
+                const date = Object.keys(event)[0];
+                const room = event[date];
+                room.events.forEach((event) => {
+                    newEventObject.push(event);
+                });
+            });
+
+
             this.currentView = 'day';
 
             this.scrollToNine();
@@ -514,16 +527,15 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
-            this.events?.map(event => event.start = this.convertDateFormat(new Date(event.start)))
-            this.events?.map(event => event.end = this.convertDateFormat(new Date(event.end)))
-
-            //split is needed for the vue-cal component to connect the events with the rooms
-            //class is needed for design purposes
-            this.events?.forEach((event) => {
+            newEventObject?.forEach((event) => {
+                event.start = this.convertDateFormat(new Date(event.startTime))
+                event.end = this.convertDateFormat(new Date(event.end))
                 event.split = event.roomId;
-                event.class = event.event_type.hex_code;
+                event.allDay = false;
+                //event.class = event.event_type_color;
             })
-            this.displayedEvents = this.events
+            console.log(newEventObject)
+            this.displayedEvents = newEventObject
             this.displayedRooms = this.rooms
         },
         convertDateFormat(dateString) {
@@ -607,9 +619,13 @@ export default {
             this.showEventsWithoutRoomComponent = true;
         },
 
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            router.reload();
+
+            //only reload if closed on purpose
+            if (bool) {
+                router.reload();
+            }
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
@@ -668,7 +684,8 @@ export default {
                 start_date:  this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             },{
-                preserveScroll: true
+                preserveScroll: true,
+                preserveState: false
             })
         },
         previousDay() {
@@ -679,7 +696,8 @@ export default {
                 start_date:  this.dateValueArray[0],
                 end_date: this.dateValueArray[1],
             },{
-                preserveScroll: true
+                preserveScroll: true,
+                preserveState: false
             })
         },
         formatDate(date) {

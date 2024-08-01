@@ -117,30 +117,29 @@
         <!-- Raum Bearbeiten-->
         <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
                 <div class="mx-3">
-                    <div class="headline1 my-2">
-                        {{$t('Edit room')}}
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex mt-10 relative">
-                            <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="roomNameEdit"
-                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
-                                {{$t('Room name')}}
-                            </label>
+                    <ModalHeader
+                        :title="$t('Edit room')"
+                    />
+                    <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
+                        <div>
+                            <TextInputComponent
+                                id="roomNameEdit"
+                                v-model="editRoomForm.name"
+                                :label="$t('Room name')"/>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
-                        <div class="mt-8 mr-4">
-                                            <textarea
-                                                :placeholder="$t('Short description')"
-                                                v-model="editRoomForm.description" rows="4"
-                                                class="shadow-sm placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                        <div>
+                            <TextareaComponent
+                                :label="$t('Short description')"
+                                v-model="editRoomForm.description"
+                                :rows="4"
+                                id="descriptionEdit"
+                            />
                         </div>
-                        <div class="flex items-center my-6">
+                        <div class="flex items-center">
                             <input v-model="editRoomForm.temporary"
                                    type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                   class="input-checklist"/>
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -149,21 +148,24 @@
                                     class="ml-1 my-auto hind">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
-                            <input
-                                v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
-                                :placeholder="$t('To be completed by?')" type="date"
-                                class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
-                            <input
-                                v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
-                                :placeholder="$t('To be completed by?')" type="date"
-                                class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
+                        <div v-if="editRoomForm.temporary">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <DateInputComponent
+                                    v-model="editRoomForm.start_date_dt_local"
+                                    id="startDate"
+                                    :label="$t('Start date')"/>
+                                <DateInputComponent
+                                    v-model="editRoomForm.end_date_dt_local"
+                                    id="endDate"
+                                    :label="$t('End date')"
+                                />
+                            </div>
                         </div>
 
-                        <div class="flex items-center my-6">
+                        <div class="flex items-center">
                             <input v-model="editRoomForm.everyone_can_book"
                                    type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                   class="input-checklist"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -176,12 +178,12 @@
                         <div class="flex justify-center pt-8">
                             <FormButton
                                 :disabled="editRoomForm.name.length === 0"
-                                @click="editRoom"
+                                type="submit"
                                 :text="$t('Save')"
                             />
                         </div>
 
-                    </div>
+                    </form>
                 </div>
         </BaseModal>
         <!-- Success Modal -->
@@ -192,14 +194,12 @@
             @closed="closeSuccessModal"
         />
         <!-- Approve Request Modal -->
-        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal" modal-image="/Svgs/Overlays/illu_appointment_edit.svg">
+        <BaseModal @closed="closeApproveRequestModal" v-if="showApproveRequestModal">
                 <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{ $t('Confirm room occupancy')}}
-                    </div>
-                    <div class="successText">
-                        {{$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')}}
-                    </div>
+                    <ModalHeader
+                        :title="$t('Confirm room occupancy')"
+                        :description="$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')"
+                    />
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -285,14 +285,12 @@
                 </div>
         </BaseModal>
         <!-- Decline Request Modal -->
-        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
+        <BaseModal @closed="closeDeclineRequestModal" v-if="showDeclineRequestModal" >
                 <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{ $t('Cancel room reservation')}}
-                    </div>
-                    <div class="errorText">
-                        {{$t('Are you sure you want to cancel the room reservation?')}}
-                    </div>
+                    <ModalHeader
+                        :title="$t('Cancel room reservation')"
+                        :description="$t('Are you sure you want to cancel the room reservation?')"
+                    />
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
@@ -391,6 +389,10 @@
         />
     </BaseSidenav>
 
+
+    <pre>
+        {{ available_categories }}
+    </pre>
     <!-- Room History Modal-->
     <room-history-component
         v-if="showRoomHistory"
@@ -461,6 +463,10 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 
 
 export default {
@@ -494,6 +500,10 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        DateInputComponent,
+        TextareaComponent,
+        TextInputComponent,
+        ModalHeader,
         BaseModal,
         BaseMenu,
         FormButton,

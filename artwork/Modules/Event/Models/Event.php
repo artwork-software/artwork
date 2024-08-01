@@ -46,7 +46,7 @@ use Illuminate\Support\Collection;
  * @property int $series_id
  * @property Carbon $earliest_start_datetime
  * @property Carbon $latest_end_datetime
- * @property string $created_at
+ * @property Carbon $created_at
  * @property string $updated_at
  * @property string $deleted_at
  * @property bool $accepted

@@ -9,11 +9,14 @@
                          class="mt-2 subpixel-antialiased text-secondary"
                          @click="handleDescriptionClick()" v-html="project.description ? project.description : $t('Click here to add text')">
                     </div>
-                    <textarea v-else v-model="project.description_without_html" type="text"
-                              @focusout="updateDescription()"
-                              :ref="`description-${this.project.id}`"
-                              class="w-full border-gray-300 text-primary h-40"
-                              :placeholder="project.description_without_html || $t('Click here to add text')"/>
+                    <TextareaComponent
+                        v-else
+                        v-model="project.description_without_html"
+                        @focusout="updateDescription()"
+                        :ref="`description-${this.project.id}`"
+                        :label="project.description_without_html || $t('Click here to add text')"
+                        id="description_without_html"
+                    />
                 </div>
                 <!-- Individual Projectinformation -->
                 <div v-for="headline in project.project_headlines" class="mt-7">
@@ -23,10 +26,12 @@
                         <p v-if="headline.text" v-html="headline.text"></p>
                         <p v-else>{{ $t('Click here to add text') }}</p>
                     </div>
-                    <textarea v-else v-model="headline.text_without_html" type="text" :ref="`text-${headline.id}`"
-                              @focusout="changeHeadlineText(headline)"
-                              class="w-full border-gray-300 text-primary h-40"
-                              :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                    <TextareaComponent
+                        v-else
+                        id="text_without_html"
+                        v-model="headline.text_without_html" :ref="`text-${headline.id}`"
+                        @focusout="changeHeadlineText(headline)"
+                        :label="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
                 </div>
                 <ProjectDocumentsComponent :project="this.project"
                                            :project-write-ids="this.projectWriteIds"
@@ -47,9 +52,11 @@ import {nextTick} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default{
     components: {
+        TextareaComponent,
         ProjectDocumentsComponent,
         ConfirmDeleteModal,
         PencilAltIcon,

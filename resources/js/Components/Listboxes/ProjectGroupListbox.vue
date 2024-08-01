@@ -25,11 +25,12 @@ const emit = defineEmits(['update:selectedProjectGroup'])
 
 <template>
     <Listbox as="div" v-model="currentGroup" :on-update:model-value="$emit('update:selectedProjectGroup', currentGroup)" id="room">
-        <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-            <div class="flex-grow flex text-left xsDark">
-                {{
-                    currentGroup ? currentGroup.name : $t('Search project group')
-                }}
+        <ListboxButton class="menu-button">
+            <div>
+                <span v-if="!currentGroup">{{ $t('Search project group') }}</span>
+                <div v-else>
+                    {{ currentGroup.name }}
+                </div>
             </div>
             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
         </ListboxButton>

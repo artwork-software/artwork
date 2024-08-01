@@ -6,8 +6,8 @@
                 </div>
                 <Menu class="relative">
                     <div>
-                        <MenuButton @click="attributesOpened = true" class="w-full">
-                            <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4">
+                        <MenuButton @click="attributesOpened = true" class="menu-button">
+                            <div class="flex items-center justify-between w-full">
                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
                                     {{$t('Select room properties')}}
                                 </div>
@@ -21,23 +21,19 @@
                             enter-to-class="transform scale-100 opacity-100"
                             leave-active-class="transition duration-75 ease-in"
                             leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
-                            <MenuItems
-                                class="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="rounded-2xl max-h-56 overflow-y-auto bg-primary border-none mt-2">
-
+                            leave-to-class="transform scale-95 opacity-0">
+                            <MenuItems class="absolute right-0 w-full origin-top-right rounded-lg divide-y divide-gray-200 bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                <div class="p-4">
                                     <!-- Room Categories Section -->
                                     <BaseFilterDisclosure :title="$t('Room categories')">
-
-                                        <div v-if="availableCategories?.length > 0"
+                                        <div v-if="availableCategories"
                                              v-for="category in availableCategories"
                                              :key="category.id"
                                              class="flex w-full mb-2">
                                             <input type="checkbox"
                                                    v-model="currentCategories"
                                                    :value="category"
-                                                   class="checkBoxOnDark"/>
+                                                   class="input-checklist-dark"/>
                                             <p :class="[toIdsArray(currentCategories).includes(category.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -52,14 +48,14 @@
                                     <!-- Adjoining rooms Section -->
                                     <BaseFilterDisclosure :title="$t('Adjoining rooms')">
 
-                                        <div v-if="availableAdjoiningRooms?.length > 0"
+                                        <div v-if="availableAdjoiningRooms"
                                              v-for="room in availableAdjoiningRooms"
                                              :key="room.id"
                                              class="flex w-full mb-2">
                                             <input type="checkbox"
                                                    v-model="currentAdjoiningRooms"
                                                    :value="room"
-                                                   class="checkBoxOnDark"/>
+                                                   class="input-checklist-dark"/>
                                             <p :class="[toIdsArray(currentAdjoiningRooms).includes(room.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -81,7 +77,7 @@
                                             <input type="checkbox"
                                                    v-model="currentAttributes"
                                                    :value="attribute"
-                                                   class="checkBoxOnDark"/>
+                                                   class="input-checklist-dark"/>
                                             <p :class="[toIdsArray(currentAttributes).includes(attribute.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -95,7 +91,7 @@
                         </transition>
                     </div>
                 </Menu>
-                <div class="mt-2 flex flex-wrap">
+                <div class="flex flex-wrap">
                     <div v-for="(category, index) in currentCategories">
                         <BaseFilterTag v-if="currentCategories.includes(category)"  :filter="category" @remove-filter="removeCategoryFromRoom(index)" class="w-fit" />
                     </div>
@@ -107,7 +103,7 @@
                     </div>
                 </div>
             </div>
-            <div class="justify-center flex w-full my-6 mt-44">
+            <div class="justify-center flex w-full mt-10">
                 <FormButton
                     :text="$t('Save')"
                     @click="saveRoomData"
@@ -130,12 +126,12 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 const props = defineProps({
     show: Boolean,
     room: Object,
-    categories: Array,
-    availableCategories: Array,
-    adjoiningRooms: Array,
-    availableAdjoiningRooms: Array,
-    attributes: Array,
-    availableAttributes: Array
+    categories: Object,
+    availableCategories: Object,
+    adjoiningRooms: Object,
+    availableAdjoiningRooms: Object,
+    attributes: Object,
+    availableAttributes: Object
 })
 
 const emit = defineEmits(['close'])
@@ -181,7 +177,7 @@ const removeAttributeFromRoom = (index) => {
 
 const toIdsArray = (array) => {
     let ids = [];
-    array.forEach(item => {
+    array?.forEach(item => {
         ids.push(item.id)
     })
     return ids;

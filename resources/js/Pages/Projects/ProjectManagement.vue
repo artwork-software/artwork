@@ -259,6 +259,7 @@ import {Link, router, usePage} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import projects from "@/Pages/Trash/Projects.vue";
 
 export default defineComponent({
     components: {
@@ -495,7 +496,8 @@ export default defineComponent({
                     only: ['projects'],
                     data: {
                         search: this.project_search,
-                        page: 1
+                        page: 1,
+                        entitiesPerPage: this.projects.per_page
                     }
                 })
             }

@@ -1,8 +1,6 @@
 <template>
-    <div id="myCalendar"
-         ref="calendarRef"
-         class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="sticky top-0 z-40 -ml-1 -my-4">
+    <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
+        <div class="sticky top-0 z-40 w-full -mx-5 -my-4">
             <AsyncFunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -25,7 +23,7 @@
             </div>
         </div>
         <div class="-mx-5 mt-4">
-            <div :class="project ? 'bg-lightBackgroundGray' : 'bg-white px-5'">
+            <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
                 <div class="divide-y divide-gray-200 divide-dashed events-by-days-container" ref="calendarToCalculate">
                     <div v-for="day in days"

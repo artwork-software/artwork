@@ -23,12 +23,16 @@
        </div>
    </div>
     <AssignedItemToEventModal :day="day" :event="event" @closed="showAssignedItemToEventModal = false" v-if="showAssignedItemToEventModal" :item="ItemDragElement" />
+    <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 
 <script setup>
 
 import AssignedItemToEventModal from "@/Pages/Inventory/Components/AssignedItemToEventModal.vue";
 import {ref, watch} from "vue";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
+const $t = useTranslation()
 
 const props = defineProps({
     event: {
@@ -60,6 +64,7 @@ props.event.checked = props.selectedEventIds.includes(props.event.id);
 const showAssignedItemToEventModal = ref(false);
 const ItemDragElement = ref(null);
 const emits = defineEmits(['update:selectedEventIds']);
+const dropFeedback = ref(null);
 
 const backgroundColorWithOpacity = (color, percent = 15) => {
     if (!color) return `rgb(255, 255, 255, ${percent}%)`;
@@ -75,8 +80,16 @@ const onDragOver = (event) => {
 }
 const onDrop = (event) =>  {
     event.preventDefault();
+    dropFeedback.value = null;
 
-    if ( !props.event.eventTypeRelevantForInventory ) return;
+    if ( !props.event.eventTypeRelevantForInventory ) {
+        // popup message
+        dropFeedback.value = $t('This event type is not relevant for inventory');
+        setTimeout(() => {
+            dropFeedback.value = null;
+        }, 5000);
+        return;
+    }
 
     ItemDragElement.value = JSON.parse(event.dataTransfer.getData('application/json'));
     showAssignedItemToEventModal.value = true;

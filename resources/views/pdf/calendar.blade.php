@@ -174,21 +174,21 @@
                     <td class="{{ $day['is_weekend'] ? 'weekend' : '' }}">
                         @foreach($calendar as $calendarEvent)
                             @foreach($calendarEvent[$day['full_day']]['events'] as $event)
-                                @if(is_object($event) && isset($event->room_id))
-                                @if($room->id === $event->room_id)
-                                    <div style="font-size: 8px; border-bottom: 1px solid black; padding: 2px; background-color: {{ $event->event_type->hex_code . '33' }}">
-                                        <div>
-                                            {{ $event->event_type->abbreviation . ': ' . $event->eventName ?? $event->name }}
+                                @if(is_array($event) && isset($event['roomId']))
+                                    @if($room->id === $event['roomId'])
+                                        <div style="font-size: 8px; border-bottom: 1px solid black; padding: 2px; background-color: {{ $event['eventTypeColorBackground'] }}">
+                                            <div>
+                                                {{ $event['eventTypeAbbreviation'] . ': ' . $event['eventName'] }}
+                                            </div>
+                                            <div>
+                                                @if(!$event['allDay'])
+                                                    {{ \Illuminate\Support\Carbon::parse($event['startTime'])->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event['end'])->format('H:i') }}
+                                                @else
+                                                    <span style="font-weight: bold">Ganztägig</span>
+                                                @endif
+                                            </div>
                                         </div>
-                                        <div>
-                                            @if(!$event->allDay)
-                                                {{ \Illuminate\Support\Carbon::parse($event->start_time)->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event->end_time)->format('H:i') }}
-                                            @else
-                                                <span style="font-weight: bold">Ganztägig</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                @endif
+                                    @endif
                                 @endif
                             @endforeach
                         @endforeach

@@ -66,12 +66,13 @@
                         {{ $t('Event info') }} {{ requestToDecline.description }}
                     </div>
 
-                    <div>
-                            <textarea :placeholder="$t('Would you like to enter a reason?')"
-                                      id="adminComment"
-                                      v-model="declineEvent.comment"
-                                      rows="4"
-                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                    <div class="pt-2">
+                        <TextareaComponent
+                            :label="$t('Would you like to enter a reason?')"
+                            id="adminComment"
+                            v-model="declineEvent.comment"
+                            rows="4"
+                        />
                     </div>
                 </div>
             </div>
@@ -104,6 +105,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: "DeclineEventModal",
@@ -114,6 +116,7 @@ export default {
         }
     },
     components: {
+        TextareaComponent,
         BaseModal,
         FormButton,
         UserPopoverTooltip,

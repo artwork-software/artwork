@@ -4,11 +4,15 @@ import IconLib from "@/Mixins/IconLib.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/vue3";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     name: "AddEditTabModal",
     mixins: [IconLib],
     components: {
+        TextInputComponent,
+        ModalHeader,
         FormButton,
         Dialog,
         DialogTitle,
@@ -63,8 +67,7 @@ export default {
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+                        <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
@@ -72,19 +75,12 @@ export default {
                                 </button>
                             </div>
                             <div class="relative z-40 px-4">
-                                <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
-                                    <span v-if="tabToEdit">
-                                        Tab umbenennen
-                                    </span>
-                                    <span v-else>
-                                        Tab erstellen
-                                    </span>
-                                </div>
+                                <ModalHeader
+                                    :title="tabToEdit ? $t('Edit tab') : $t('Create tab')"
+                                    :description="tabToEdit ? $t('Edit tab name') : $t('Create a new tab')"
+                                />
                                 <div>
-                                    <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Name</label>
-                                    <div class="mt-2">
-                                        <input type="text" v-model="tabForm.name" name="email" id="email" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                    </div>
+                                    <TextInputComponent type="text" v-model="tabForm.name" label="Name" id="email" />
                                 </div>
                                 <div class="flex justify-between mt-5 items-center pr-4">
                                     <FormButton

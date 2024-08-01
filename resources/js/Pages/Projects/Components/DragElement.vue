@@ -7,9 +7,9 @@
         <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
             <div v-if="type === 0" class="text-ellipsis w-32">
                 <div class="flex">
-                <div class="truncate">
-                    {{ item.first_name }} {{ item.last_name }}
-                </div>
+                    <div class="truncate">
+                        {{ item.first_name }} {{ item.last_name }}
+                    </div>
                 <div class="ml-1">(i)</div>
                 </div>
                 <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>

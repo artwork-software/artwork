@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Event\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -15,8 +14,6 @@ class ShiftPlanDto extends BaseDto
     public ?array $history = null;
 
     public ?Collection $crafts = null;
-
-    public ?array $eventTypes = null;
 
     public ?Collection $projects = null;
 
@@ -71,13 +68,6 @@ class ShiftPlanDto extends BaseDto
     public function setCrafts(?Collection $crafts): self
     {
         $this->crafts = $crafts;
-
-        return $this;
-    }
-
-    public function setEventTypes(?array $eventTypes): self
-    {
-        $this->eventTypes = $eventTypes;
 
         return $this;
     }
@@ -191,14 +181,6 @@ class ShiftPlanDto extends BaseDto
         return $this->crafts;
     }
 
-    /**
-     * @return array<int, EventTypeResource>|null
-     */
-    public function getEventTypes(): ?array
-    {
-        return $this->eventTypes;
-    }
-
     public function getProjects(): ?Collection
     {
         return $this->projects;
@@ -296,7 +278,6 @@ class ShiftPlanDto extends BaseDto
             'events' => $this->getEvents(),
             'history' => $this->getHistory(),
             'crafts' => $this->getCrafts(),
-            'eventTypes' => $this->getEventTypes(),
             'projects' => $this->getProjects(),
             'shiftPlan' => $this->getShiftPlan(),
             'rooms' => $this->getRooms(),

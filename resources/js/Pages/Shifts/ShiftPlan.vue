@@ -14,35 +14,43 @@
                                       :user_filters="user_filters"
                                       :crafts="crafts"
                                       @select-go-to-next-mode="selectGoToNextMode"
-                                        @select-go-to-previous-mode="selectGoToPreviousMode"
+                                      @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
 
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
+                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
+                     :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
-                            <TableHead id="stickyTableHead" ref="stickyTableHead">
-                                <th class="z-0" style="width:192px;"></th>
-                                <th  v-for="day in days" :style="{width:  '200px'}" :id="day.full_day" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                    <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
-                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
-                                    </div>
-                                </th>
-                            </TableHead>
+                                <TableHead id="stickyTableHead" ref="stickyTableHead">
+                                    <th class="z-0" style="width:192px;"></th>
+                                    <th v-for="day in days" :style="{width:  '200px'}" :id="day.full_day"
+                                        class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                        <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday"
+                                                                                          class="text-[10px] font-normal ml-2">(KW{{
+                                                day.week_number
+                                            }})</span>
+                                        </div>
+                                    </th>
+                                </TableHead>
                             </div>
                         </template>
                         <template #body>
-                            <TableBody>
-                                <tr v-for="(room,index) in shiftPlan" class="w-full flex">
+                            <TableBody class="eventByDaysContainer">
+                                <tr v-for="(room,index) in computedShiftPlan" class="w-full flex">
                                     <th class="xsDark flex items-center h-28 w-48"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                        <div class="flex font-semibold items-center ml-4" >
+                                        <div class="flex font-semibold items-center ml-4">
                                             {{ room[days[0].full_day].roomName }}
                                         </div>
                                     </th>
-                                    <td v-for="day in days" style="width: 200px" class="max-h-28 overflow-y-auto cell border-r-2 border-dotted" :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
+                                    <td v-for="day in days" :data-day="day.full_day" style="width: 200px"
+                                        class="max-h-28 overflow-y-auto cell border-r-2 border-dotted day-container"
+                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
+                                        <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-for="event in room[day.full_day].events" class="mb-1">
                                             <SingleShiftPlanEvent
                                                 v-if="checkIfEventHasShiftsToDisplay(event)"
@@ -51,14 +59,13 @@
                                                 :highlightMode="highlightMode"
                                                 :highlighted-id="idToHighlight"
                                                 :highlighted-type="typeToHighlight"
-                                                :eventType="this.findEventTypeById(event.eventTypeId)"
-                                                :project="this.findProjectById(event.projectId)"
                                                 :event="event"
                                                 :shift-qualifications="shiftQualifications"
-                                                @dropFeedback="showDropFeedback"
                                                 :day-string="day"
+                                                @dropFeedback="showDropFeedback"
+                                                @event-desires-reload="this.eventDesiresReload"
                                             />
-                                            <SingleEventInShiftPlan v-else :event="event" :day="day" />
+                                            <SingleEventInShiftPlan v-else :event="event" :day="day"/>
                                         </div>
                                     </td>
                                 </tr>
@@ -69,8 +76,8 @@
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
                     <div class="flex justify-center overflow-y-scroll">
-                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
                                      viewBox="0 0 14.123 6.519">
@@ -87,64 +94,92 @@
                             </div>
                         </div>
                         <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
+                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
                             :title="$t('Hold and drag to change the size')">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <SelectorIcon class="h-3 w-6 text-gray-400" />
                             </div>
                         </div>
                     </div>
-                <div v-show="showUserOverview" ref="userOverview" class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                    <div class="w-[97%]">
+                <div class=" bg-artwork-navigation-background">
+                    <div v-show="showUserOverview" ref="userOverview" class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                         <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
-                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
+                                        :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
-                                    <span :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                         <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                    <span
+                                        :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                      <span
+                                          :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                         <IconPencil stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
-                                      <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                          <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                                      <span
+                                          :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                          <IconPencil stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
                                 </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
-                                    <Switch @click="toggleDayServiceMode" v-model="dayServiceMode" :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                    <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
+                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
-                                        <span :class="[dayServiceMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-5 h-5" :style="{color: selectedDayService?.hex_color}" />
+                                        <span
+                                            :class="[dayServiceMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        <span
+                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            aria-hidden="true">
+                                            <component :is="selectedDayService?.icon" class="w-5 h-5"
+                                                       :style="{color: selectedDayService?.hex_color}"/>
                                         </span>
-                                        <span :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-5 h-5" :style="{color: selectedDayService?.hex_color}" />
+                                        <span
+                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            aria-hidden="true">
+                                            <component :is="selectedDayService?.icon" class="w-5 h-5"
+                                                       :style="{color: selectedDayService?.hex_color}"/>
                                         </span>
                                     </span>
                                     </Switch>
-                                    <DayServiceFilter :current-selected-day-service="selectedDayService" :day-services="dayServices" @update:current-selected-day-service="updateSelectedDayService" />
+                                    <DayServiceFilter :current-selected-day-service="selectedDayService"
+                                                      :day-services="dayServices"
+                                                      @update:current-selected-day-service="updateSelectedDayService"/>
                                 </div>
                             </div>
                             <div class="flex items-center justify-end gap-x-3 pr-20">
-                                <Switch @click="toggleHighlightMode" v-model="highlightMode" :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                <Switch @click="toggleHighlightMode" v-model="highlightMode"
+                                        :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
-                                    <span :class="[highlightMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                         <IconBulb stroke-width="1.5" class="w-5 h-5" />
+                                    <span
+                                        :class="[highlightMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                      <span
+                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                         <IconBulb stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
-                                      <span :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                          <IconBulb stroke-width="1.5" class="w-5 h-5" />
+                                      <span
+                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                          <IconBulb stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
                                 </span>
                                 </Switch>
 
-                                <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode" :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode"
+                                        :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
-                                    <span :class="[$page.props.user.compact_mode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                         <IconList stroke-width="1.5" class="w-5 h-5" />
+                                    <span
+                                        :class="[$page.props.user.compact_mode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                      <span
+                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                         <IconList stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
-                                      <span :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                          <IconList stroke-width="1.5" class="w-5 h-5" />
+                                      <span
+                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          aria-hidden="true">
+                                          <IconList stroke-width="1.5" class="w-5 h-5"/>
                                       </span>
                                 </span>
                                 </Switch>
@@ -159,15 +194,17 @@
                             <table class="w-full text-white overflow-y-scroll">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                                 <div>
-                                    <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
-                                    <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
-                                        {{craft.name}}
+                                    <tbody class="w-full pt-3" v-for="craft in reComputedCraftsToDisplay">
+                                    <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
+                                        @click="changeCraftVisibility(craft.id)">
+                                        {{ craft.name }}
                                         <ChevronDownIcon
                                             :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
                                             class="h-4 w-4 mt-0.5"
                                         />
                                     </tr>
-                                    <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
+                                    <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
+                                        class="w-full flex">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -198,48 +235,67 @@
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']" class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden" :style="{width: day.is_sunday ? '158px' : '198px'}"
-                                                 @click="handleCellClick(user, day)">
-                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
-                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
-                                                </span>
-                                            </span>
-                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                {{ $t('not available')}}
-                                            </span>
-                                                <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                            <div
+                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden"
+                                                :style="{width: day.is_sunday ? '158px' : '198px'}"
+                                                @click="handleCellClick(user, day)">
+                                                <span v-for="shift in user.element?.shifts"
+                                                      v-if="!user.vacations?.includes(day.without_format)">
+                                                    <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
                                                     </span>
                                                 </span>
-                                            </span>
-
+                                                <span v-else
+                                                      class="h-full flex justify-center items-center text-artwork-messages-error">
+                                                    {{ $t('not available') }}
+                                                </span>
+                                                <span v-if="user.availabilities">
+                                                    <span v-for="availability in user.availabilities[day.full_day]">
+                                                        <span class="text-green-500">
+                                                            <span v-if="availability.comment">&bdquo;{{
+                                                                    availability.comment
+                                                                }}&rdquo; </span>
+                                                        </span>
+                                                    </span>
+                                                </span>
                                             </div>
-                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
-                                                <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
-                                                    <component :is="userDayService.icon" class="h-4 w-4" :style="{color: userDayService.hex_color}"/>
+                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
+                                                 v-if="user.dayServices"
+                                                 v-for="(userDayServices, index) in user.dayServices"
+                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
+                                                <div v-if="index === day.without_format"
+                                                     v-for="(userDayService, position) in userDayServices"
+                                                     class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
+                                                     :class="position > 0 ? '-ml-3' : ''">
+                                                    <component :is="userDayService.icon" class="h-4 w-4"
+                                                               :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
-                                            <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                            <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                            </span>
+                                            <div v-if="day.is_sunday"
+                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 style="width: 37px"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
                                     </tbody>
                                     <tbody>
-                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 pl-2 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
-                                        {{ $t('Without craft assignment')}}
+                                    <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 pl-2 xsLight flex justify-between pb-1"
+                                        @click="changeCraftVisibility('noCraft')">
+                                        {{ $t('Without craft assignment') }}
                                         <ChevronDownIcon
                                             :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
                                             class="h-4 w-4 mt-0.5"
                                         />
                                     </tr>
-                                    <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
-                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <tr v-if="!closedCrafts.includes('noCraft')"
+                                        v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                        <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
+                                            :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
                                                          :item="user.element"
                                                          :expected-hours="user.expectedWorkingHours"
@@ -267,10 +323,10 @@
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                            <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                                  @click="handleCellClick(user, day)"
                                                  :style="{width: day.is_sunday ? '158px' : '198px'}"
-                                                 :class="$page.props.user.compact_mode ? 'h-8' : 'h-12'">
+                                            >
                                             <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
@@ -285,17 +341,27 @@
                                                         <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
                                                     </span>
                                                 </span>
-                                            </span>
+                                                </span>
                                             </div>
-                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}" v-if="user.dayServices" v-for="(userDayServices, index) in user.dayServices" class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
-                                                <div v-if="index === day.without_format" v-for="(userDayService, position) in userDayServices" class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center" :class="position > 0 ? '-ml-3' : ''">
-                                                    <component :is="userDayService.icon" class="h-4 w-4" :style="{color: userDayService.hex_color}"/>
+                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
+                                                 v-if="user.dayServices"
+                                                 v-for="(userDayServices, index) in user.dayServices"
+                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
+                                                <div v-if="index === day.without_format"
+                                                     v-for="(userDayService, position) in userDayServices"
+                                                     class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
+                                                     :class="position > 0 ? '-ml-3' : ''">
+                                                    <component :is="userDayService.icon" class="h-4 w-4"
+                                                               :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
-                                            <div v-if="day.is_sunday" class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden" style="width: 37px" :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                            <span v-if="user.type === 0">
-                                                {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                            </span>
+                                            <div v-if="day.is_sunday"
+                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 style="width: 37px"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
@@ -310,12 +376,10 @@
                                     @closed="showUserShifts = false"
                                     :user="userToShow"
                                     :day="dayToShow"
-                                    :projects="projects"
-            />
+                                    @desires-reload="userShiftModalDesiresReload"/>
             <ShiftHistoryModal v-if="showHistoryModal"
                                :history="history"
-                               @closed="showHistoryModal = false"
-            />
+                               @closed="showHistoryModal = false"/>
         </ShiftHeader>
         <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
             <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
@@ -326,7 +390,7 @@
                     <button type="button"
                             @click="multiEditMode = false"
                             class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                        {{ $t('Cancel')}}
+                        {{ $t('Cancel') }}
                     </button>
                 </div>
                 <div>
@@ -363,7 +427,6 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Link, router} from "@inertiajs/vue3";
-import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
@@ -386,6 +449,17 @@ import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
+import {useEvent} from "@/Composeables/Event.js";
+import {ref} from "vue";
+
+const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
+    {
+        hasReceivedNewShiftPlanData,
+        hasReceivedNewShiftPlanWorkerData,
+        receivedRoomData,
+        receivedWorkerData,
+        handleReload
+    } = useShiftPlanReload();
 
 export default {
     name: "ShiftPlan",
@@ -409,7 +483,6 @@ export default {
         ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
-        ShiftPlanUserOverview,
         Link,
         CalendarFunctionBar,
         SingleCalendarEvent,
@@ -431,7 +504,6 @@ export default {
         'dateValue',
         'personalFilters',
         'selectedDate',
-        'eventTypes',
         'history',
         'usersForShifts',
         'freelancersForShifts',
@@ -460,7 +532,7 @@ export default {
             multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
-            userOverviewHeight: 515,
+            userOverviewHeight: 570,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,
@@ -473,7 +545,9 @@ export default {
             shiftsAreChecked: [],
             shiftsToRemoveCheckState: [],
             firstDayPosition: this.days ? this.days[0].full_day : null,
-            currentDayOnView: this.days ? this.days[0] : null
+            currentDayOnView: this.days ? this.days[0] : null,
+            currentDaysInView: new Set(),
+            shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
         }
     },
     mounted() {
@@ -482,9 +556,183 @@ export default {
         this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
         window.addEventListener('resize', this.updateHeight);
         this.updateHeight();
+
+        /**
+         * this code needs to be built in, when the observer is fixed and the observer is used
+         *  const observer = new IntersectionObserver(
+         *                 (entries) => {
+         *                     entries.forEach((entry) => {
+         *                         const day = entry.target.dataset.day;
+         *
+         *                         if (entry.intersectionRatio > 0) {
+         *                             this.currentDaysInView.add(day);
+         *                         } else {
+         *                             this.currentDaysInView.delete(day);
+         *                         }
+         *                     });
+         *                 },
+         *                 {
+         *                     root: document.getElementsByClassName('.eventByDaysContainer')[0],
+         *                     rootMargin: '5000px'
+         *                 }
+         *             ),
+         *             dayContainers = document.querySelectorAll('.day-container');
+         *
+         *         dayContainers.forEach((container) => {
+         *             observer.observe(container);
+         *         });
+         */
+
+
     },
     computed: {
-        dropUsers() {
+        reComputedCraftsToDisplay() {
+            if (!hasReceivedNewShiftPlanWorkerData.value) {
+                return this.craftsToDisplay;
+            }
+
+            receivedWorkerData.value.forEach((workerData) => {
+                if (workerData.type === 'user') {
+                    this.usersForShifts[this.usersForShifts.findIndex(
+                        (userWithPlannedWorkingHours) =>
+                            userWithPlannedWorkingHours.user.id === workerData.user.id
+                    )] = workerData;
+                }
+
+                if (workerData.type === 'freelancer') {
+                    this.freelancersForShifts[this.freelancersForShifts.findIndex(
+                        (freelancerWithPlannedWorkingHours) =>
+                            freelancerWithPlannedWorkingHours.user.id === workerData.freelancer.id
+                    )] = workerData;
+                }
+
+                if (workerData.type === 'service_provider') {
+                    this.serviceProvidersForShifts[this.serviceProvidersForShifts.findIndex(
+                        (serviceProviderWithPlannedWorkingHours) =>
+                            serviceProviderWithPlannedWorkingHours.user.id === workerData.service_provider.id
+                    )] = workerData;
+                }
+            });
+
+            return this.craftsToDisplay;
+        },
+        computedShiftPlan() {
+            if (!hasReceivedNewShiftPlanData.value) {
+                return this.shiftPlanRef;
+            }
+
+            for (const [day, rooms] of Object.entries(receivedRoomData.value)) {
+                for (const [roomId, events] of Object.entries(rooms)) {
+                    this.shiftPlanRef.forEach(
+                        (roomWithEvents) => {
+                            if (roomWithEvents[day]?.roomId === Number(roomId)) {
+                                roomWithEvents[day].events = JSON.parse(JSON.stringify(events));
+                            }
+                        }
+                    );
+                }
+            }
+
+            return this.shiftPlanRef;
+        },
+        craftsToDisplay() {
+            const users = this.getDropUsers(),
+                crafts = this.crafts
+                    .map(
+                        (craft) => {
+                            return {
+                                id: craft.id,
+                                name: craft.name,
+                                users: users.filter(user => user.assigned_craft_ids.includes(craft.id)),
+                                color: craft?.color
+                            };
+                        }
+                    );
+
+            if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
+                return crafts;
+            } else {
+                return crafts.filter((craft) => this.$page.props.user.show_crafts.includes(craft.id));
+            }
+        },
+        usersWithNoCrafts() {
+            return this.getDropUsers().filter(user =>
+                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+            );
+        },
+    },
+    methods: {
+        userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
+            let desiredRoomIds = new Set();
+
+            if (shiftId) {
+                //find shift room ids
+                this.shiftPlanRef.forEach(room => {
+                    this.days.forEach(day => {
+                        if (day.full_day !== desiredDay) {
+                            return;
+                        }
+                        room[day.full_day].events.forEach(event => {
+                            event.shifts.forEach(shift => {
+                                if (shift.id === shiftId) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+                                    console.debug(desiredRoomIds);
+                                }
+                            });
+                        });
+                    });
+                });
+
+                handleReload(
+                    Array.from(desiredRoomIds),
+                    [desiredDay],
+                    [
+                        {
+                            id: userId,
+                            type: userType
+                        }
+                    ]
+                );
+
+                return;
+            }
+
+            desiredRoomIds = this.rooms.map((room) => room.id);
+
+            handleReload(
+                Array.from(desiredRoomIds),
+                [desiredDay],
+                [
+                    {
+                        id: userId,
+                        type: userType
+                    }
+                ]
+            );
+        },
+        eventDesiresReload(userId, userType, event, seriesShiftData) {
+            let desiredDates = seriesShiftData && seriesShiftData.onlyThisDay === false ?
+                getDaysOfEvent(
+                    formatEventDateByDayJs(seriesShiftData.start),
+                    formatEventDateByDayJs(seriesShiftData.end)
+                ) :
+                getDaysOfEvent(
+                    formatEventDateByDayJs(event.start),
+                    formatEventDateByDayJs(event.end)
+                );
+
+            handleReload(
+                [event.roomId],
+                desiredDates,
+                [
+                    {
+                        id: userId,
+                        type: userType,
+                    }
+                ]
+            );
+        },
+        getDropUsers() {
             const users = [];
             this.usersForShifts.forEach((user) => {
                 users.push({
@@ -521,33 +769,8 @@ export default {
             })
             return users;
         },
-        craftsToDisplay() {
-            const users = this.dropUsers;
-            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
-                return this.crafts.map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                }));
-            } else {
-                return this.crafts.filter(craft => this.$page.props.user?.show_crafts?.includes(craft.id)).map(craft => ({
-                    name: craft.name,
-                    id: craft.id,
-                    users: users.filter(user => user.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
-                }));
-            }
-        },
-        usersWithNoCrafts() {
-            return this.dropUsers.filter(user =>
-                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
-            );
-        },
-    },
-    methods: {
-        handleCellClick(user, day){
-            if(this.dayServiceMode ){
+        handleCellClick(user, day) {
+            if (this.dayServiceMode) {
                 let type = null;
                 switch (user.type) {
                     case 0:
@@ -562,7 +785,7 @@ export default {
                 }
                 const hasDayService = user.dayServices?.[day.without_format]?.some(dayService => dayService.id === this.selectedDayService.id)
                 // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
-                if (hasDayService){
+                if (hasDayService) {
                     router.patch(route('remove.day.service.from.user', {
                         dayServiceable: user.element.id,
                     }), {
@@ -597,7 +820,7 @@ export default {
             return this.showUserOverview ? this.userOverviewHeight + 'px' : '0';
         },
         checkIfEventHasShiftsToDisplay(event) {
-            if(this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined){
+            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null || this.$page.props.user?.show_crafts === undefined) {
                 return event.shifts.length > 0;
             } else {
                 return event.shifts.length > 0 && event.shifts.some(shift => this.$page.props.user.show_crafts?.includes(shift.craft.id));
@@ -608,12 +831,6 @@ export default {
             setTimeout(() => {
                 this.dropFeedback = null
             }, 2000)
-        },
-        findProjectById(projectId) {
-            return this.projects.find(project => project.id === projectId);
-        },
-        findEventTypeById(eventTypeId) {
-            return this.eventTypes.find(eventType => eventType.id === eventTypeId);
         },
         openFullscreen() {
             let elem = document.getElementById('shiftPlan');
@@ -703,7 +920,6 @@ export default {
             const gotoMode = this.$page.props.user.goto_mode;
             this.scrollToPeriod(gotoMode, direction);
         },
-
         scrollToPeriod(period, direction) {
             let indexModifier = direction === 'next' ? 1 : -1;
             let periodKey, periodValue, scrollOffset;
@@ -732,7 +948,6 @@ export default {
                 scrollableContainer.scrollLeft = firstDay.offsetWidth * scrollOffset;
             }
         },
-
         getIndexForWeekOrMonth(period, key, value, indexModifier, filterFn) {
             const targetValue = value + indexModifier;
             const targetDay = this.days.find(day => filterFn(day) && day[key] === targetValue);
@@ -741,11 +956,9 @@ export default {
             }
             return undefined;
         },
-
         selectGoToNextMode() {
             this.selectGoToMode('next');
         },
-
         selectGoToPreviousMode() {
             this.selectGoToMode('previous');
         },
@@ -753,7 +966,6 @@ export default {
             if (this.$refs.shiftPlan) {
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
-
             }
         },
         openShowUserShiftModal(user, day) {
@@ -790,7 +1002,7 @@ export default {
         },
         addUserToMultiEdit(item) {
             if (item === null) {
-               this.userForMultiEdit = [];
+                this.userForMultiEdit = [];
             }
             this.userForMultiEdit = item;
         },
@@ -821,13 +1033,9 @@ export default {
                 }
             });
 
-            //check if user has any shift qualifications
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
-                //iterate checked shifts
                 this.checkedShiftsForMultiEdit.forEach((checkedShift) => {
-                    //if user is not already assigned to shift
                     if (!this.userForMultiEdit.shift_ids.includes(checkedShift.id)) {
-                        //if user only has one shift qualification
                         if (this.userForMultiEdit.shift_qualifications.length === 1) {
                             if (
                                 !this.hasShiftsQualificationFreeSlots(
@@ -835,7 +1043,6 @@ export default {
                                     this.userForMultiEdit.shift_qualifications[0].id
                                 )
                             ) {
-                                //no free slots available for given shift qualification
                                 return;
                             }
                             this.shiftsToHandleOnMultiEdit.assignToShift.push({
@@ -844,7 +1051,7 @@ export default {
                             });
                             return;
                         }
-                        //if user has multiple shift qualifications
+
                         let availableShiftQualificationSlots = [];
                         this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
                             checkedShift.shifts_qualifications.forEach((shiftsQualification) => {
@@ -857,12 +1064,10 @@ export default {
                             });
                         });
 
-                        //when no slots available return
                         if (availableShiftQualificationSlots.length === 0) {
                             return;
                         }
 
-                        //if only one slot is available it will be assigned
                         if (availableShiftQualificationSlots.length === 1) {
                             this.shiftsToHandleOnMultiEdit.assignToShift.push({
                                 shiftId: checkedShift.id,
@@ -871,7 +1076,6 @@ export default {
                             return;
                         }
 
-                        //multiple slots are available, prepare shift qualification assignment modal
                         this.showShiftsQualificationsAssignmentModalShifts.push({
                             shift: checkedShift,
                             availableSlots: availableShiftQualificationSlots
@@ -880,7 +1084,6 @@ export default {
                 });
             }
 
-            //open shifts qualifications assignment modal
             if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
                 this.showShiftsQualificationsAssignmentModal = true;
                 return;
@@ -914,15 +1117,53 @@ export default {
                 return;
             }
 
+            let desiredRoomIds = new Set(),
+                desiredDays = new Set(),
+                desiredUser = {
+                    id: this.userForMultiEdit.id,
+                    type: this.userForMultiEdit.type
+                };
 
-            router.post(route('shift.multi.edit.save'), {
+            this.shiftPlanRef.forEach(room => {
+                this.days.forEach(day => {
+                    room[day.full_day].events.forEach(event => {
+                        event.shifts.forEach(shift => {
+                            this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
+                                if (shift.id === shiftToAssign.shiftId) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+                                    getDaysOfEvent(
+                                        formatEventDateByDayJs(event.start),
+                                        formatEventDateByDayJs(event.end)
+                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                                }
+                            });
+
+                            this.shiftsToHandleOnMultiEdit.removeFromShift.forEach((shiftIdToRemove) => {
+                                if (shift.id === shiftIdToRemove) {
+                                    desiredRoomIds.add(room[day.full_day].roomId);
+
+                                    getDaysOfEvent(
+                                        formatEventDateByDayJs(event.start),
+                                        formatEventDateByDayJs(event.end)
+                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                                }
+                            });
+                        });
+                    });
+                });
+            });
+
+            axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,
                 shiftsToHandle: this.shiftsToHandleOnMultiEdit
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: this.resetMultiEditMode
+            }).then(() => {
+                handleReload(
+                    Array.from(desiredRoomIds),
+                    Array.from(desiredDays),
+                    [desiredUser]
+                );
+                this.resetMultiEditMode();
             });
         },
         resetMultiEditMode() {
@@ -1008,7 +1249,7 @@ export default {
             document.removeEventListener('mouseup', this.stopResize);
         },
         updateHeight() {
-            if(!this.showUserOverview){
+            if (!this.showUserOverview) {
                 this.windowHeight = (window.innerHeight - 250);
             } else {
                 this.windowHeight = (window.innerHeight - 160) - this.userOverviewHeight;
@@ -1024,14 +1265,14 @@ export default {
             }
         },
         setShiftsCheckState(shiftId, state) {
-            this.shiftPlan.forEach(room => {
+            this.shiftPlanRef.forEach(room => {
                 this.days.forEach(day => {
                     room[day.full_day].events.forEach(event => {
                         event.shifts.forEach(shift => {
                             if (shift.id === shiftId) {
                                 shift.isCheckedForMultiEdit = state;
-                                if(!state){
-                                   // remove shift form checkedShiftsForMultiEdit
+                                if (!state) {
+                                    // remove shift form checkedShiftsForMultiEdit
                                     const index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
                                     if (index !== -1) {
                                         this.checkedShiftsForMultiEdit.splice(index, 1);
@@ -1062,11 +1303,11 @@ export default {
             },
             deep: true
         },
-        shiftPlan: {
-            handler(newShiftPlan) {
+        shiftPlanRef: {
+            handler(shiftPlanRef) {
                 let currentCheckedIds = [...this.shiftsAreChecked];
 
-                newShiftPlan.forEach(room => {
+                shiftPlanRef.forEach(room => {
                     this.days.forEach(day => {
                         room[day.full_day].events.forEach(event => {
                             event.shifts.forEach(shift => {

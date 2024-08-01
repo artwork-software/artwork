@@ -117,8 +117,8 @@
                     <div class="mr-2" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
                         <input @click="updateTask(task)"
                                type="checkbox"
-                                 :checked="task.done"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                               :checked="task.done"
+                               class="input-checklist-dark"/>
                     </div>
                     <div :class="task.done ? 'line-through' : ''">
                         <div class="xsWhiteBold flex items-center gap-2">{{ task.name }} <span

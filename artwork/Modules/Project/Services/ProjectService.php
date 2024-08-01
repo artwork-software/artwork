@@ -202,6 +202,8 @@ readonly class ProjectService
             $table->delete();
         }
 
+        $project->categories()->detach();
+
         $project->contracts()->delete();
 
         $this->updateShiftRelevanteEventTypesForSoftDelete($project, now());

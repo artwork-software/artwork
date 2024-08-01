@@ -2,9 +2,9 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 rounded-lg"
-                 :style="{backgroundColor: backgroundColorWithOpacity(event.event_type?.hex_code), color: textColorWithDarken(event.event_type?.hex_code)}">
+                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor), color: textColorWithDarken(event.eventTypeColor)}">
                 <div class="w-40 truncate">
-                    {{ event.event_type.abbreviation }}: {{ event?.eventName ?? event?.project?.name }}
+                    {{ event.eventTypeAbbreviation }}: {{ event.eventName ?? event.projectName }}
                 </div>
                 <div class="text-xs">
                     <div v-if="event.allDay">

@@ -1,17 +1,10 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
             <div class="mx-4">
-                <!--    Heading    -->
-                <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
-                            {{$t('Events without room')}}
-                        </div>
-                    </h1>
-                    <h2 class="xsLight">
-                        {{$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')}}
-                    </h2>
-                </div>
+                <ModalHeader
+                    :title="$t('Events without room')"
+                    :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
+                />
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                     <SingleEventInEventsWithoutRoom
@@ -61,11 +54,13 @@ import {router} from "@inertiajs/vue3";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import SingleEventInEventsWithoutRoom from "@/Layouts/Components/SingleEventInEventsWithoutRoom.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ModalHeader,
         SingleEventInEventsWithoutRoom,
         BaseModal,
         Switch,

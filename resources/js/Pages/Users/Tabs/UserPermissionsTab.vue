@@ -4,7 +4,7 @@
             <h2 class="mb-8 headline2">{{ $t('User rights')}}</h2>
         </div>
 
-        <div class="bg-userBg py-10">
+        <div class="bg-lightBackgroundGray py-10 px-10 -mx-10">
             <div>
                 <div
                     class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer"
@@ -25,7 +25,7 @@
                             :value="role.name"
                             name="roles"
                             type="checkbox"
-                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"
+                            class="input-checklist"
                             @change="this.editUser()"
                         />
 
@@ -70,7 +70,7 @@
                                 :value="permission.name"
                                 name="permissions"
                                 type="checkbox"
-                                class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"
+                                class="input-checklist"
                                 @change="this.editUser()"
                             />
 

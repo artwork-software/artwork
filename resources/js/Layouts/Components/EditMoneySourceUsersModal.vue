@@ -1,43 +1,17 @@
 <template>
     <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-3">
-                <div class="font-black font-lexend text-primary text-3xl my-6">
-                    {{ $t('Manage release')}}
-                </div>
-                <div class="xsLight">
-                    {{ $t('Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source.')}}
-                </div>
-                <div class="mb-2 mt-6">
+                <ModalHeader
+                    :title="$t('Manage release')"
+                    :description="$t('Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source.')"
+                />
+                <div class="mb-2">
                     <div class="relative w-full">
-                        <div class="w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   :placeholder="$t('Search for users')"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        </div>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-20 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToMoneySourceUserArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
+                        <UserSearch v-model="user_query" @userSelected="addUserToMoneySourceUserArray" />
                     </div>
                 </div>
-                <div class="mt-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full border-1 border-b pb-3 mt-4" v-for="user in assignedUsers">
+                <div class="mt-4 divide-y divide-gray-200 divide-dashed mb-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full py-3 " v-for="user in assignedUsers">
                         <div class="flex col-span-2">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full"
@@ -88,7 +62,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="w-full items-center text-center">
+                <div class="w-full items-center flex justify-center text-center">
                     <FormButton @click="editMoneySourceUsers" :text="$t('Save')"
                     />
                 </div>
@@ -111,11 +85,15 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
     mixins: [Permissions, IconLib],
     components: {
+        ModalHeader,
+        UserSearch,
         BaseModal,
         FormButton,
         Dropdown,

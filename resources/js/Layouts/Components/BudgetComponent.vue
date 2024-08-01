@@ -465,10 +465,11 @@
         </BaseModal>
     <BaseModal @closed="closeVerifiedModal" v-if="showVerifiedModal" modal-image="/Svgs/Overlays/illu_budget_edit.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ verifiedTexts.title }} <span class="xsDark">{{ verifiedTexts.positionTitle }}</span>
-                </div>
-                <div class="mb-3 xsLight" v-html="verifiedTexts.description"></div>
+                <ModalHeader
+                    :title="verifiedTexts.title"
+                    :sub-title="verifiedTexts.positionTitle"
+                    :description="verifiedTexts.description"
+                />
                 <div class="mb-2">
                     <div class="relative w-full">
                         <div class="w-full" v-if="showUserAdd">
@@ -531,12 +532,10 @@
         </BaseModal>
     <BaseModal @closed="closeBudgetAccessModal" v-if="showBudgetAccessModal" modal-image="/Svgs/Overlays/illu_budget_access.svg">
             <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{ $t('Grant budget access') }}
-                </div>
-                <p>
-                    {{ $t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?') }}
-                </p>
+                <ModalHeader
+                    :title="$t('Grant budget access')"
+                    :description="$t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?')"
+                />
                 <div class="mt-6">
                     <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
                             text-xs font-bold uppercase shadow-sm text-white rounded-full bg-artwork-buttons-create"
@@ -664,11 +663,15 @@ import CurrencyFloatToStringFormatter from "@/Mixins/CurrencyFloatToStringFormat
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+        UserSearch,
+        ModalHeader,
         BaseModal,
         BaseMenu,
         SageNotAssignedData,

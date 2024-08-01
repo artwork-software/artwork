@@ -40,7 +40,7 @@
                                aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                :id="event.id"
-                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"
+                               class="input-checklist"
                                @change="changeMultiEditCheckbox(
                                    event.id,
                                    event.considerOnMultiEdit,

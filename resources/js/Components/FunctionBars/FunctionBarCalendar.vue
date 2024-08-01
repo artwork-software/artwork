@@ -1,5 +1,5 @@
 <template>
-    <div class="pl-5 bg-gray-50 py-4 sticky z-50 top-0 pr-16">
+    <div class="pl-5 py-4 sticky z-50 top-0" :class="project ? 'bg-white -mx-16 pr-10' : 'bg-gray-50 pr-16'">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project" class="flex flex-row">
@@ -21,7 +21,7 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[project ? 'ml-10' : '','flex items-center']">
+                <div :class="[project ? 'ml-10' : '','flex items-center']"  v-if="!project">
                     <div @click="showCalendarAboSettingModal = true"
                          class="flex items-center gap-x-1 text-sm group cursor-pointer">
                         <IconCalendarStar
@@ -97,42 +97,42 @@
                             leave-to-class="transform scale-95 opacity-0"
                         >
                             <MenuItems
-                                class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div class="w-76 p-6">
-                                    <div class="flex py-1" v-if="!project">
+                                    <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_status"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <div
                                             :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                             class=" ml-4 my-auto text-secondary">{{ $t('Project Status') }}
                                         </div>
                                     </div>
-                                    <div class="flex py-1">
+                                    <div class="flex items-center py-1">
                                         <input v-model="userCalendarSettings.options"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Option prioritization') }}</p>
                                     </div>
-                                    <div class="flex py-1" v-if="!project">
+                                    <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_management"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Project managers') }}</p>
                                     </div>
-                                    <div class="flex py-1">
+                                    <div class="flex items-center py-1">
                                         <input v-model="userCalendarSettings.repeating_events"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Repeat event') }}</p>
                                     </div>
-                                    <div class="flex py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
+                                    <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
                                         <input v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist"/>
                                         <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Shifts') }}</p>
                                     </div>
@@ -174,7 +174,15 @@
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project"
                     :pdf-title="project ? project.name : 'Raumbelegung'"/>
 
-    <GeneralCalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="showCalendarAboSettingModal = false"/>
+    <GeneralCalendarAboSettingModal
+        :event-types="eventTypes"
+        :rooms="rooms"
+        :areas="areas"
+        v-if="showCalendarAboSettingModal"
+        @close="closeCalendarAboSettingModal"
+    />
+
+    <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 
 </template>
 
@@ -204,8 +212,11 @@ import {usePermission} from "@/Composeables/Permission.js";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 
 const eventTypes = inject('eventTypes');
+const rooms = inject('rooms');
+const areas = inject('areas');
 const dateValue = inject('dateValue');
 const first_project_tab_id = inject('first_project_tab_id');
 const filterOptions = inject('filterOptions');
@@ -220,7 +231,7 @@ const showPDFConfigModal = ref(false);
 const wantedRoom = ref(null)
 const roomCollisions = ref([])
 const externUpdate = ref(false)
-
+const showCalendarAboInfoModal = ref(false)
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
@@ -331,6 +342,13 @@ const activeFilters = computed(() => {
 
     return activeFiltersArray
 })
+
+const closeCalendarAboSettingModal = (bool) => {
+    showCalendarAboSettingModal.value = false;
+    if(bool){
+        showCalendarAboInfoModal.value = true;
+    }
+}
 
 const UpdateMultiEditEmits = (value) => {
     emits('updateMultiEdit', value)

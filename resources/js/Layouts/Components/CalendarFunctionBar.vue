@@ -20,7 +20,7 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center" v-if="!project">
                 <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
                     <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
                     {{ $t('Subscribe to calendar') }}

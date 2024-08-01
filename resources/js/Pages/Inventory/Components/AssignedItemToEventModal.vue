@@ -1,10 +1,10 @@
 <template>
 <BaseModal v-if="true" @closed="$emit('closed')">
     <h1 class="headline1" v-if="!booking">
-        {{ $t('Add {0} to {1}', [item.name, event.alwaysEventName ?? event.name])}}
+        {{ $t('Add {0} to {1}', [item.name, event.eventName])}}
     </h1>
     <h1 class="headline1" v-else>
-        {{ $t('Edit {0} in {1}', [item.name, event.alwaysEventName ?? event.name])}}
+        {{ $t('Edit {0} in {1}', [item.name, event.eventName])}}
     </h1>
 
 

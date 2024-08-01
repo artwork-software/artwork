@@ -6,7 +6,6 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -35,8 +34,7 @@ class ShiftController extends Controller
         private readonly ChangeService $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
-        private readonly ShiftService $shiftService,
-        private readonly EventService $eventService
+        private readonly ShiftService $shiftService
     ) {
     }
 
@@ -666,11 +664,11 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): void {
+    ): bool {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
 
         if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
-            return;
+            return false;
         }
 
         $serviceToUse = match ($request->get('userType')) {
@@ -681,7 +679,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return;
+            return false;
         }
 
         foreach ($shiftsToHandle['removeFromShift'] as $shiftIdToRemove) {
@@ -737,6 +735,8 @@ class ShiftController extends Controller
                 $changeService
             );
         }
+
+        return true;
     }
 
     public function assignToShift(
@@ -750,7 +750,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
-    ): RedirectResponse {
+    ): bool {
         $serviceToUse = match ($request->get('userType')) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -759,7 +759,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return Redirect::back();
+            return true;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -772,7 +772,7 @@ class ShiftController extends Controller
                 $request->get('seriesShiftData')
             );
 
-            return Redirect::back();
+            return true;
         }
 
         $serviceToUse->assignToShift(
@@ -787,7 +787,7 @@ class ShiftController extends Controller
             $request->get('seriesShiftData')
         );
 
-        return Redirect::back();
+        return true;
     }
 
     public function removeFromShift(
@@ -802,7 +802,7 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): RedirectResponse {
+    ): bool {
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -811,7 +811,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return Redirect::back();
+            return false;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -822,7 +822,7 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            return Redirect::back();
+            return true;
         }
 
         $serviceToUse->removeFromShift(
@@ -835,7 +835,7 @@ class ShiftController extends Controller
             $changeService
         );
 
-        return Redirect::back();
+        return true;
     }
 
     public function removeAllShiftUsers(

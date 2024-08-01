@@ -10,16 +10,17 @@ use Illuminate\Support\Facades\DB;
 class UpdateContainerCommand extends Command
 {
 
-    protected $signature = 'container-update';
+    protected $signature = 'artwork:container-update';
 
     protected $description = 'Updates the container';
 
     public function handle(): void
     {
+        echo 'Updating db';
         DB::raw(sprintf('CREATE DATABASE IF NOT EXISTS `%s`', env('DB_DATABASE')));
         Artisan::call('migrate --force');
-        exec('npm run dev');
-        exec('npm run prod');
+        echo 'Building npm';
+        exec('npm run build');
         if (!Permission::first()) {
             Artisan::call('db:seed:production');
         }

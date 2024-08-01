@@ -7,28 +7,18 @@
             {{ $t("Edit the user's work profile here.")}}
         </div>
         <hr class="mb-2">
-        <div class="w-2/3 mb-2">
-            <label for="jobTitle" class="text-sm subpixel-antialiased text-secondary">
-                {{ $t('Job title') }}
-            </label>
-            <input id="jobTitle"
-                   v-model="workProfileForm.workName"
-                   :placeholder="$t('No designation specified yet')"
-                   type="text"
-                   class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"
-                   @focusout="this.updateWorkProfile()"
-            />
-        </div>
-        <div class="w-2/3 mb-2">
-            <label for="jobDescription" class="text-sm subpixel-antialiased text-secondary">
-                {{ $t('Job description') }}
-            </label>
-            <textarea
-                id="jobDescription"
-                v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
-                :placeholder="$t('No description given yet')"
-                rows="4"
-                class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+            <div class="mb-2 col-span-full">
+                <TextInputComponent id="" v-model="workProfileForm.workName" :label="$t('Job title')"  @focusout="this.updateWorkProfile()"/>
+            </div>
+            <div class="col-span-full mb-2">
+                <TextareaComponent
+                    id="jobDescription"
+                    v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
+                    :label="$t('Job description')"
+                    rows="4"
+                />
+            </div>
         </div>
     </div>
     <div class="headline3 mb-2">
@@ -75,7 +65,7 @@
                           v-for="craft in this.user.accessibleCrafts"
                           :tag="craft"
                           :key="craft.id"
-                          :displayed-text="craft.name" hide-x="true"/>
+                          :displayed-text="craft.name" hide-x="true" property=""/>
             <span v-else class="text-xs text-gray-500">
                 {{ $t('Not assigned as shift planner.') }}
             </span>
@@ -91,7 +81,7 @@
         </label>
         <div class="w-full mb-2 flex items-center">
             <Listbox as="div" id="selectedCraftToAdd" class="w-2/3 relative" v-model="this.selectedCraftToAssign">
-                <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
+                <ListboxButton class="menu-button">
                     <div v-if="this.selectedCraftToAssign" class="flex-grow text-left">
                         {{
                             this.user.assignableCrafts.find(
@@ -148,9 +138,13 @@ import {router} from "@inertiajs/vue3";
 import {reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     components: {
+        TextInputComponent,
+        TextareaComponent,
         AddButtonSmall,
         FormButton,
         ListboxOption,

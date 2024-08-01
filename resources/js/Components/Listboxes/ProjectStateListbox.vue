@@ -36,8 +36,8 @@ const emit = defineEmits(['update:selectedProjectState'])
 <template>
     <Listbox as="div" class="flex w-full" v-model="currentState" :on-update:model-value="$emit('update:selectedProjectState', currentState)">
         <ListboxButton class="w-full text-left">
-            <button class="w-full h-12 flex justify-between xsDark items-center text-left border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
-                <span class="w-full" v-if="!selectedProjectState">
+            <button class="menu-button">
+                <span class="w-full text-secondary" v-if="!selectedProjectState">
                     {{ $t('Select project status') }}
                 </span>
                 <span v-else  class="items-center font-medium px-2 py-1.5 inline-flex border rounded-full"

@@ -82,7 +82,7 @@ class ImportEvent
 
     private function parseStartTime(): Carbon
     {
-        if ($this->config->emptyStartTimeIsWholeDay()) {
+        if ($this->config->emptyStartTimeIsWholeDay() && empty($this->event->start)) {
             return Carbon::parse($this->event->date)->startOfDay();
         }
 
@@ -91,7 +91,7 @@ class ImportEvent
 
     private function parseEndTime(): Carbon
     {
-        if ($this->config->emptyEndTimeIsEndOfDay()) {
+        if ($this->config->emptyEndTimeIsEndOfDay() && empty($this->event->end)) {
             return Carbon::parse($this->event->date)->endOfDay();
         }
 

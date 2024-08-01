@@ -4,6 +4,7 @@ namespace Artwork\Modules\Freelancer\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -11,12 +12,22 @@ class FreelancerRepository extends BaseRepository
 {
     public function getWorkers(): Collection
     {
-        return Freelancer::query()->canWorkShifts()->get();
+        return Freelancer::query()->canWorkShifts()->with(
+            'dayServices',
+            'shifts',
+            'shifts.event',
+            'shifts.event.room'
+        )->get();
     }
 
     public function findOrFail($freelancerId): Freelancer
     {
         return Freelancer::findOrFail($freelancerId);
+    }
+
+    public function findWorker(int $workerId): Freelancer|null
+    {
+        return User::query()->canWorkShifts()->where('id', $workerId)->first();
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

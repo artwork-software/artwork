@@ -1,9 +1,11 @@
 <script>
 import {nextTick} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: "TextArea",
+    components: {TextareaComponent},
     mixins: [Permissions],
     props: ['data', 'projectId', 'inSidebar', 'canEditComponent'],
     data() {
@@ -46,15 +48,16 @@ export default {
              @click="handleDescriptionClick()"
              v-html="data.project_value?.data.text ? data.project_value?.data.text : $t('Click here to add text')">
         </span>
-        <textarea v-else
-                  :disabled="!this.canEditComponent"
-                  :placeholder="data.data.placeholder"
-                  :ref="`description-${this.projectId}`"
-                  class="placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                  :class="inSidebar ? 'bg-primary text-white' : 'inputMain '"
-                  @focusout="updateTextData()"
-                  v-model="textData.text">
-        </textarea>
+        <TextareaComponent
+            v-else
+            :disabled="!this.canEditComponent"
+            :label="data.data.placeholder"
+            :ref="`description-${this.projectId}`"
+            :class="inSidebar ? 'bg-primary text-white' : ''"
+            id="placeholder"
+            @focusout="updateTextData()"
+            v-model="textData.text">
+        </TextareaComponent>
     </div>
 </template>
 

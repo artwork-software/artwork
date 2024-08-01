@@ -8,7 +8,7 @@
                     {{$t('Here you can see what was changed by whom and when.')}}
                 </div>
                 <div class="flex w-full flex-wrap mt-4 max-h-96">
-                    <div v-for="(historyItem , index) in history">
+                    <div v-for="(historyItem , index) in computedHistory">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null">
                             <div class="flex w-full ">
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
@@ -62,7 +62,7 @@ export default {
     emits: ['closed'],
     computed: {
         // order history by date
-        history() {
+        computedHistory() {
             return this.history.sort((a, b) => {
                 return dayjs(b.created_at).unix() - dayjs(a.created_at).unix()
             })

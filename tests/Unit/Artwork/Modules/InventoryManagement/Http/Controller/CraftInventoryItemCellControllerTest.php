@@ -67,7 +67,7 @@ class CraftInventoryItemCellControllerTest extends TestCase
             ->getMock();
 
         $requestMock = $this->getMockBuilder(UpdateCraftInventoryItemCellCellValueRequest::class)
-            ->onlyMethods(['get'])
+            ->onlyMethods(['string'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -76,7 +76,7 @@ class CraftInventoryItemCellControllerTest extends TestCase
             ->getMock();
 
         $requestMock->expects(self::once())
-            ->method('get')
+            ->method('string')
             ->with($expectedCellValueKey)
             ->willReturn($expectedCellValue);
 
@@ -105,7 +105,7 @@ class CraftInventoryItemCellControllerTest extends TestCase
             ->getMock();
 
         $requestMock = $this->getMockBuilder(UpdateCraftInventoryItemCellCellValueRequest::class)
-            ->onlyMethods(['get'])
+            ->onlyMethods(['string'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -114,7 +114,7 @@ class CraftInventoryItemCellControllerTest extends TestCase
             ->getMock();
 
         $requestMock->expects(self::once())
-            ->method('get')
+            ->method('string')
             ->with($expectedCellValueKey)
             ->willReturn($expectedCellValue);
 

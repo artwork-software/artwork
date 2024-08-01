@@ -27,6 +27,11 @@ class UserRepository extends BaseRepository
         return User::find($userId);
     }
 
+    public function findWorker(int $workerId): User|null
+    {
+        return User::query()->canWorkShifts()->where('id', $workerId)->first();
+    }
+
     public function findUserOrFail(int $userId): User
     {
         return User::findOrFail($userId);
@@ -34,7 +39,12 @@ class UserRepository extends BaseRepository
 
     public function getWorkers(): Collection
     {
-        return User::query()->canWorkShifts()->get();
+        return User::query()->canWorkShifts()->with(
+            'dayServices',
+            'shifts',
+            'shifts.event',
+            'shifts.event.room'
+        )->get();
     }
 
     public function getAvailabilitiesBetweenDatesGroupedByFormattedDate(

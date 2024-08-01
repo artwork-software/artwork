@@ -29,89 +29,63 @@
                     </div>
                     <!-- Form when Single Source -->
                     <div v-if="!moneySource.is_group">
-                        <div class=" pb-2">
-                            <div class="mb-2">
-                                <input type="text"
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+                            <div class="mb-2 col-span-full">
+                                <TextInputComponent
                                        v-model="this.editSingleSourceForm.name"
                                        id="sourceName"
-                                       :placeholder="$t('Title*')"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
-                            <div class="flex mb-2 space-x-2">
-                                <div class="w-1/2">
-                                    <input type="number"
-                                           v-model="this.editSingleSourceForm.amount"
-                                           id="sourceAmount"
-                                           :placeholder="$t('Sum*')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="text"
-                                           v-model="this.editSingleSourceForm.source_name"
-                                           id="nameOfSource"
-                                           :placeholder="$t('Source')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                            </div>
-                            <div class="flex mb-2 space-x-2">
-                                <div class="w-1/2">
-                                    <input type="date"
-                                           v-model="this.editSingleSourceForm.start_date"
-                                           id="sourceStartDate"
-                                           :placeholder="$t('Runtime Start')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="date"
-                                           v-model="this.editSingleSourceForm.end_date"
-                                           id="sourceEndDate"
-                                           :placeholder="$t('Runtime End')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                            </div>
-                            <div class="flex mb-2 space-x-2">
-                                <div class="w-1/2">
-                                    <input type="text" onfocus="(this.type='date')"
-                                           v-model="this.editSingleSourceForm.funding_start_date"
-                                           id="sourceStartDate"
-                                           :placeholder="$t('Funding period Start')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="text" onfocus="(this.type='date')"
-                                           v-model="this.editSingleSourceForm.funding_end_date"
-                                           id="sourceEndDate"
-                                           :placeholder="$t('Funding period End')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
+                                       :label="$t('Title*')"
+                                />
                             </div>
                             <div class="mb-2">
+                                <NumberInputComponent
+                                       v-model="this.editSingleSourceForm.amount"
+                                       id="sourceAmount"
+                                       :label="$t('Sum*')"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <NumberInputComponent
+                                       v-model="this.editSingleSourceForm.source_name"
+                                       id="nameOfSource"
+                                       :label="$t('Source')"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <DateInputComponent
+                                       v-model="this.editSingleSourceForm.start_date"
+                                       id="sourceStartDate"
+                                       :label="$t('Runtime Start')"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <DateInputComponent
+                                       v-model="this.editSingleSourceForm.end_date"
+                                       id="sourceEndDate"
+                                       :label="$t('Runtime End')"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <DateInputComponent
+                                       v-model="this.editSingleSourceForm.funding_start_date"
+                                       id="sourceStartDate"
+                                       :label="$t('Funding period Start')"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <DateInputComponent
+                                       v-model="this.editSingleSourceForm.funding_end_date"
+                                       id="sourceEndDate"
+                                       :label="$t('Funding period End')"
+                                />
+                            </div>
+                            <div class="mb-2 col-span-full -mx-10 px-10 py-4 bg-lightBackgroundGray">
                                 <div class="relative w-full">
-                                    <div class="w-full">
-                                        <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                               :placeholder="$t('Who is responsible?')"
-                                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    </div>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100"
-                                                leave-to-class="opacity-0">
-                                        <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                            <div class="border-gray-200">
-                                                <div v-for="(user, index) in user_search_results" :key="index"
-                                                     class="flex items-center cursor-pointer">
-                                                    <div class="flex-1 text-sm py-4">
-                                                        <p @click="addUserToMoneySourceUserArray(user)"
-                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                            {{ user.first_name }} {{ user.last_name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition>
+                                    <UserSearch
+                                           v-model="user_query"
+                                           :label="$t('Who is responsible?')"
+                                           @userSelected="addUserToMoneySourceUserArray"
+                                    />
                                 </div>
                                 <div v-if="usersToAdd !== null" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersToAdd"
@@ -132,87 +106,72 @@
                                         </span>
                                 </div>
                             </div>
-                            <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                       class="ml-2">
-                                    {{ $t('Belongs to funding Sources Group')}}
-                                </label>
-                            </div>
-                            <div v-if="this.hasGroup" class="mb-2">
-                                <Listbox as="div" v-model="this.selectedMoneySourceGroup" id="room">
-                                    <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                        <div class="flex-grow flex text-left xsDark">
-                                            {{
-                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
-                                            }}
-                                        </div>
-                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                        <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
-                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                       :key="moneySourceGroup.id"
-                                                       :value="moneySourceGroup"
-                                                       v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                                {{ moneySourceGroup.name }}
+                            <div class=" mb-2 col-span-full">
+                                <div class="flex items-cente mb-3">
+                                    <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
+                                           class="input-checklist"/>
+                                    <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           class="ml-2">
+                                        {{ $t('Belongs to funding Sources Group')}}
+                                    </label>
+                                </div>
+
+                                <div v-if="this.hasGroup" class="mb-2">
+                                    <Listbox as="div" v-model="this.selectedMoneySourceGroup" id="room">
+                                        <ListboxButton class="menu-button">
+                                            <div class="flex-grow flex text-left xsDark">
+                                                {{
+                                                    this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
+                                                }}
                                             </div>
-                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </Listbox>
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </ListboxButton>
+                                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                            <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
+                                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                           :key="moneySourceGroup.id"
+                                                           :value="moneySourceGroup"
+                                                           v-slot="{ active, selected }">
+                                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                                    {{ moneySourceGroup.name }}
+                                                </div>
+                                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </Listbox>
+                                </div>
                             </div>
-                            <div class="flex">
-                                    <textarea :placeholder="$t('Comment / Note')"
+
+                            <div class="flex col-span-full">
+                                    <TextareaComponent :label="$t('Comment / Note')"
                                               id="description"
                                               v-model="this.editSingleSourceForm.description"
                                               rows="4"
-                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                                    />
                             </div>
-                            <div class="flex justify-center mt-2">
-                                <FormButton
-                                           @click="editSingleSource()" :text="$t('Save')"/>
+                            <div class="col-span-full mt-2">
+                                <div class="flex items-center justify-center">
+                                    <FormButton @click="editSingleSource()" :text="$t('Save')"/>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <!-- Form when Source Group -->
-                    <div v-else>
-                        <div class="mb-2">
-                            <input type="text"
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="col-span-full">
+                            <TextInputComponent
                                    v-model="this.editSourceGroupForm.name"
                                    id="sourceName"
-                                   :placeholder="$t('Title*')"
-                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                   :label="$t('Title*')"
+                            />
                         </div>
-                        <div class="mb-2">
+                        <div class="col-span-full -mx-10 bg-lightBackgroundGray px-10 py-4 mt-5">
                             <div class="relative w-full">
-                                <div class="w-full">
-                                    <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                           :placeholder="$t('Who is responsible?')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100"
-                                            leave-to-class="opacity-0">
-                                    <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                         class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                        <div class="border-gray-200">
-                                            <div v-for="(user, index) in user_search_results" :key="index"
-                                                 class="flex items-center cursor-pointer">
-                                                <div class="flex-1 text-sm py-4">
-                                                    <p @click="addUserToMoneySourceUserArray(user)"
-                                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                        {{ user.first_name }} {{ user.last_name }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </transition>
+                                <UserSearch
+                                       v-model="user_query"
+                                       :label="$t('Who is responsible?')"
+                                       @userSelected="addUserToMoneySourceUserArray"
+                                />
                             </div>
                             <div v-if="usersToAdd !== null" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersToAdd"
@@ -233,12 +192,14 @@
                                         </span>
                             </div>
                         </div>
-                        <div class="mb-2">
+                        <div class="col-span-full">
                             <div class="relative w-full">
                                 <div class="w-full">
-                                    <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
-                                           :placeholder="$t('Which sources of funding belong to this group?')"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    <TextInputComponent
+                                        id="userSearch"
+                                        v-model="moneySource_query"
+                                        :label="$t('Which sources of funding belong to this group?')"
+                                    />
                                 </div>
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100"
@@ -246,7 +207,7 @@
                                     <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
                                          class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
+                                                        overflow-auto focus:outline-none sm:text-sm rounded-lg">
                                         <div class="border-gray-200">
                                             <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
                                                  class="flex items-center cursor-pointer">
@@ -261,7 +222,7 @@
                                     </div>
                                 </transition>
                             </div>
-                            <div v-if="subMoneySources" class="mt-2 mb-4 flex items-center">
+                            <div v-if="subMoneySources" class="mt-2 flex items-center">
                                         <span v-for="(subMoneySource,index) in subMoneySources"
                                               class="flex mr-5 rounded-full items-center font-bold text-primary">
                                             <span
@@ -275,16 +236,13 @@
                                         </span>
                             </div>
                         </div>
-                        <div class="flex">
-                                    <textarea :placeholder="$t('Comment / Note')"
-                                              id="description"
-                                              v-model="this.editSourceGroupForm.description"
-                                              rows="4"
-                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
+                        <div class="flex col-span-full">
+                            <TextareaComponent :label="$t('Comment / Note')" id="description" v-model="this.editSourceGroupForm.description" rows="4"/>
                         </div>
-                        <div class="flex justify-center mt-2">
-                            <FormButton
-                                       @click="editGroupSource()" :text="$t('Save')"/>
+                        <div class="col-span-full">
+                            <div class="flex items-center justify-center">
+                                <FormButton @click="editGroupSource()" :text="$t('Save')"/>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -320,11 +278,21 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions, IconLib],
     components: {
+        TextareaComponent,
+        UserSearch,
+        DateInputComponent,
+        NumberInputComponent,
+        TextInputComponent,
         BaseModal,
         FormButton,
         NewUserToolTip,

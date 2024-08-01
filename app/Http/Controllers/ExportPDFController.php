@@ -52,12 +52,11 @@ class ExportPDFController extends Controller
         $projectId = $request->get('project');
 
         $showCalendar = $calendarService->createCalendarData(
-            startDate: $projectId ?
-                $carbon->create(
-                    $projectService->getFirstEventInProject($projectId)->getAttribute('start_time')
-                )->startOfDay() :
+            startDate: $projectId && !$request->get('start') ?
+                $carbon->create($projectService->getFirstEventInProject($projectId)
+                    ->getAttribute('start_time'))->startOfDay() :
                 $carbon->parse($request->get('start')),
-            endDate: $projectId ?
+            endDate: $projectId && !$request->get('end') ?
                 $carbon->create(
                     $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
                 )->endOfDay() :

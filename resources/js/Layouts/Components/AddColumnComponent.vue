@@ -33,10 +33,9 @@
                             {{ $t('What difference do you want to get?') }}
                         </h2>
                         <div class="flex ml-12 w-full pr-24">
-                            <Listbox as="div" class="flex h-12 mr-2 w-1/2" v-model="selectedFirstColumn"
-                                     id="firstColumn">
+                            <Listbox as="div" class="flex h-12 mr-2 w-1/2 relative" v-model="selectedFirstColumn" id="firstColumn">
                                 <ListboxButton
-                                    class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                    class="menu-button">
                                     <div class="flex items-center my-auto">
                                         <span class="block truncate items-center ml-3 flex" v-if="selectedFirstColumn">
                                             <span>{{ selectedFirstColumn?.name }}</span>
@@ -53,7 +52,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        class="absolute w-full z-10 mt-12 bg-primary rounded-lg shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="column in table.columns.slice(3)"
                                                        :key="column.id"
@@ -79,11 +78,10 @@
                             </Listbox>
                             <div class="ml-2 mr-4 xsDark my-auto" v-if="selectedType === 'sum'">+</div>
                             <div class="ml-2 mr-4 xsDark my-auto" v-if="selectedType === 'difference'">-</div>
-                            <Listbox as="div" class="flex h-12 mr-2 w-1/2" v-model="selectedSecondColumn"
+                            <Listbox as="div" class="flex h-12 mr-2 w-1/2 relative" v-model="selectedSecondColumn"
                                      v-if="selectedType !== 'empty'"
                                      id="secondColumn">
-                                <ListboxButton
-                                    class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                <ListboxButton class="menu-button">
                                     <div class="flex items-center my-auto">
                                         <span class="block truncate items-center ml-3 flex" v-if="selectedSecondColumn">
                                             <span>{{ selectedSecondColumn?.name }}</span>
@@ -100,7 +98,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        class="absolute w-full rounded-lg z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="column in table.columns.slice(3)"
                                                        :key="column.id"

@@ -7,10 +7,10 @@
                  by="id">
             <div class="relative">
                 <ListboxButton
-                    class="w-full h-12 pl-1 pt-1 text-left text-xs subpixel-antialiased font-normal border-gray-300 inputMain xsDark disabled:border-none">
-                    <span v-if="this.modelValue" class="truncate">
+                    class="menu-button">
+                    <div v-if="this.modelValue" class="truncate">
                         {{ this.modelValue[this.selectedPropertyToDisplay] }}
-                    </span>
+                    </div>
                     <span v-else class="truncate text-secondary">
                         {{ this.default ?? $t('Please select...') + '*' }}
                     </span>

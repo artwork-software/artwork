@@ -7,30 +7,33 @@
                 <div class="text-secondary text-sm my-6">
                     {{ $t('Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design.')}}
                 </div>
-                <div>
-                    <input
-                        @change="upload"
-                        class="hidden"
-                        ref="module_files"
-                        id="file"
-                        type="file"
-                        multiple
-                    />
-                    <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <input
+                            @change="upload"
+                            class="hidden"
+                            ref="module_files"
+                            id="file"
+                            type="file"
+                            multiple
+                        />
+                        <div @click="selectNewFiles" @dragover.prevent
+                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
                         border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-artwork-buttons-create font-bold text-center">
-                           {{ $t('Drag document here to upload or click in the field') }}
-                        </p>
+                            <p class="text-artwork-buttons-create font-bold text-center">
+                                {{ $t('Drag document here to upload or click in the field') }}
+                            </p>
+                        </div>
+                        <jet-input-error :message="uploadDocumentFeedback"/>
                     </div>
-                    <jet-input-error :message="uploadDocumentFeedback"/>
-                </div>
-                <div>
-                <textarea :placeholder="$t('Comment / Note')"
-                          id="description"
-                          v-model="description"
-                          rows="4"
-                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    <div>
+                        <TextareaComponent
+                            :label="$t('Comment / Note')"
+                            id="description"
+                            v-model="description"
+                            rows="4"
+                        />
+                    </div>
                 </div>
                 <div class="mb-6">
                     <div v-for="file of files">{{ file.name }}</div>
@@ -54,6 +57,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: "ContractModuleUploadModal",
@@ -63,6 +67,7 @@ export default {
         closeModal: Function
     },
     components: {
+        TextareaComponent,
         BaseModal,
         FormButton,
         JetDialogModal,

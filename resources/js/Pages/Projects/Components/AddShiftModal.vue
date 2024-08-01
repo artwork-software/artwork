@@ -8,21 +8,18 @@
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel class="relative transform overflow-hidden bg-white pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl rounded-lg">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" alt="illustration"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
                                     <XIcon class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
-                            <div class="relative z-40">
+                            <form @submit.prevent="saveShift" class="relative z-40">
                                 <div class="px-6">
-                                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                                        {{ $t('Organize shift') }}
-                                    </div>
-                                    <p class="xsLight subpixel-antialiased">
-                                        {{ $t('Determine how long your shift lasts and how many people should work in your shift.') }}
-                                    </p>
+                                    <ModalHeader
+                                        :title="$t('Organize shift')"
+                                        :description="$t('Determine how long your shift lasts and how many people should work in your shift.')"
+                                    />
                                 </div>
                                 <div class="mt-10">
                                     <div class="bg-lightBackgroundGray px-6 py-2 mb-3">
@@ -115,28 +112,35 @@
                                             </div>
                                         </transition>
                                     </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 mb-3 px-6 gap-x-3.5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 mb-3 px-6 gap-4">
                                         <div class="flex flex-row">
-                                            <DateInputComponent v-if="!shiftForm.automaticMode"
-                                                                v-model="shiftForm.start_date"
-                                                                :label="$t('Shift start date')"
-                                                                @change="validateShiftDates()" id=""/>
+                                            <DateInputComponent
+                                                v-if="!shiftForm.automaticMode"
+                                                v-model="shiftForm.start_date"
+                                                :label="$t('Shift start date')"
+                                                @change="validateShiftDates()" id=""
+                                                :required="!shiftForm.automaticMode"
+                                            />
                                             <TimeInputComponent v-model="shiftForm.start"
                                                                 :label="$t('Start-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
-                                                                @change="validateShiftDates()" id=""/>
+                                                                @change="validateShiftDates()" id=""
+                                                                required
+                                            />
                                         </div>
                                         <div class="flex flex-row">
                                             <DateInputComponent v-if="!shiftForm.automaticMode"
                                                                 v-model="shiftForm.end_date"
                                                                 :label="$t('Shift end date')"
                                                                 @change="validateShiftDates()"
+                                                                :required="!shiftForm.automaticMode"
                                              id=""/>
                                             <TimeInputComponent v-model="shiftForm.end"
                                                                 :label="$t('End-Time')"
                                                                 :class="[!shiftForm.automaticMode ? '!w-1/4' : '']"
                                                                 @change="validateShiftDates()"
-                                             id=""/>
+                                                                required
+                                                                id=""/>
                                         </div>
                                         <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
                                                     this.validationMessages.errors.shift_start.length > 0 ||
@@ -177,17 +181,23 @@
                                             </div>
                                         </div>
                                         <div class="w-full">
-                                            <NumberComponent id="shift-break-minutes-input"
-                                                   :label="$t('Length of break in minutes*')"
-                                                   v-model="shiftForm.break_minutes"
-                                                   @change="validateShiftBreak()"/>
+                                            <NumberComponent
+                                                id="shift-break-minutes-input"
+                                                :label="$t('Length of break in minutes*')"
+                                                v-model="shiftForm.break_minutes"
+                                                @change="validateShiftBreak()"
+                                                :min="0"
+                                                :max="1000"
+                                                required
+                                            />
                                         </div>
-                                        <SelectComponent id="addShiftCraftSelectComponent"
-                                                         :label="$t('Craft') + '*'"
-                                                         v-model="this.selectedCraft"
-                                                         :options="this.selectableCrafts"
-                                                         selected-property-to-display="name"
-                                                         :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
+                                        <SelectComponent
+                                            id="addShiftCraftSelectComponent"
+                                            :label="$t('Craft') + '*'"
+                                            v-model="this.selectedCraft"
+                                            :options="this.selectableCrafts"
+                                            selected-property-to-display="name"
+                                            :getter-for-options-to-display="(option) => option.name + ' ' + option.abbreviation"
                                         />
                                         <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
                                                     this.validationMessages.errors.break_length.length > 0 ||
@@ -264,10 +274,11 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="flex justify-center px-6">
-                                <FormButton :text="$t('Save')" @click="saveShift"/>
-                            </div>
+                                <div class="flex justify-center px-6">
+                                    <FormButton :text="$t('Save')" type="submit"/>
+                                </div>
+                            </form>
+
 
                         </DialogPanel>
                     </TransitionChild>
@@ -312,11 +323,13 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 import SelectComponent from "@/Components/Inputs/SelectComponent.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions, IconLib],
     components: {
+        ModalHeader,
         SelectComponent,
         TimeInputComponent,
         DateInputComponent,

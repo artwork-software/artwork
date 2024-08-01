@@ -3,12 +3,12 @@
         <div
             class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
             <div v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment)" class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
-                        <textarea
-                            :placeholder="$t('What should the other project members know about the project?')"
+                        <TextareaComponent
+                            :label="$t('What should the other project members know about the project?')"
                             v-model="commentForm.text"
                             rows="4"
                             maxlength="5000"
-                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0 w-full"
+                            id="text"
                         />
                 <div class="absolute bottom-0 right-0 flex bg-white">
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -66,9 +66,11 @@ import Permissions from "@/Mixins/Permissions.vue";
 import {useForm} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     components: {
+        TextareaComponent,
         UserPopoverTooltip,
         CheckIcon,
         UserTooltip,

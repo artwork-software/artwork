@@ -40,6 +40,20 @@ class EventManagementDto extends BaseDto
 
     public ?int $firstProjectCalendarTabId = null;
 
+    public Collection $areas;
+
+    public function getAreas(): Collection
+    {
+        return $this->areas;
+    }
+
+    public function setAreas(Collection $areas): self
+    {
+        $this->areas = $areas;
+
+        return $this;
+    }
+
     public function setEventTypes(?array $eventTypes): self
     {
         $this->eventTypes = $eventTypes;
@@ -258,7 +272,8 @@ class EventManagementDto extends BaseDto
             'personalFilters' => $this->getPersonalFilters(),
             'user_filters' => $this->getUserFilters(),
             'first_project_tab_id' => $this->getFirstProjectTabId(),
-            'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId()
+            'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
+            'areas' => $this->getAreas(),
         ];
     }
 }

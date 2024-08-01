@@ -33,7 +33,7 @@ export default {
     props: {
         property: {
             type: Object,
-            required: true
+            required: false
         },
         displayedText: String,
         method: {type: Function},

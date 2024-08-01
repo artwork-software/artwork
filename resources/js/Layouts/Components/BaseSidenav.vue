@@ -14,12 +14,9 @@
     </TransitionRoot>
 
     <div class="fixed top-44 right-0 cursor-pointer z-50 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="updateShow">
-        <div class="bg-artwork-navigation-background px-2 py-1.5 flex items-center">
+        <div class="bg-artwork-navigation-background px-2 py-1.5 flex items-center rounded-l-lg">
             <IconChevronsLeft class="w-5 h-5 xsLight" v-if="!show"/>
             <IconChevronsRight class="w-5 h-5 xsLight" v-else/>
-            <div v-show="!show" class="xsLight ml-1  transition-all duration-700">
-                {{$t('Details')}}
-            </div>
         </div>
     </div>
 

@@ -8,32 +8,31 @@
                     {{ $t('You can invite several users with the same user permissions and team memberships at once.') }}
                 </div>
                 <div class="mt-6">
-                    <div class="flex mt-8">
-                        <div class="relative w-72 mr-4">
-                            <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput"
-                                   type="text"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="email"
-                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail*</label>
+                    <div class="grid grid-cols-1 md:grid-cols-5">
+                        <div class="col-span-4">
+                            <TextInputComponent id="email" v-model="emailInput" label="E-Mail*"
+                                                @keyup.enter="addEmailToInvitationArray" required/>
+                        </div>
+                        <div class="col-span-1">
+                            <div class="flex items-center h-full justify-center">
+                                <button
+                                    :class="[emailInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                    @click="addEmailToInvitationArray" :disabled="!emailInput">
+                                    <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
+                                </button>
+                            </div>
                         </div>
                         <jet-input-error :message="form.error" class="mt-2"/>
-                        <div class="flex m-2">
-                            <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addEmailToInvitationArray" :disabled="!emailInput">
-                                <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
-                            </button>
-                        </div>
+
                     </div>
-                    <ul v-if="showInvalidEmailErrorText" class="mt-4">
+                    <ul v-if="showInvalidEmailErrorText">
                         <li class="errorText">{{ $t('This is not a valid e-mail address.')}}</li>
                     </ul>
                     <span v-if="helpText.length > 0" class="text-red-500 text-xs mt-1">
                         {{ helpText }}
                     </span>
                     <span v-for="(email,index) in form.user_emails"
-                          class="flex mt-4 mr-1 rounded-full items-center sDark">
+                          class="flex mr-1 rounded-full items-center sDark">
                             {{ email }}
                     <button type="button" @click="deleteEmailFromInvitationArray(index)">
                     <span class="sr-only">{{ $t('Remove email from invitation')}}</span>
@@ -46,14 +45,11 @@
                             {{ error }}
                         </li>
                     </ul>
-                    <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3"></span>
-                    <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
-                        <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white object-cover"
-                                            :iconName="team.svg_name"
-                        />
-                    </span>
+                    <div class="flex my-3" v-if="form.departments.length > 0">
+                        <TeamIconCollection v-for="(team, index) in form.departments" class="h-14 w-14 rounded-full ring-2 ring-white object-cover" :class="index !== 0 ? '-ml-5' : ''" :iconName="team.svg_name"/>
+                    </div>
                     <Disclosure as="div">
-                        <div class="flex mt-4 mb-4">
+                        <div class="flex mb-4">
                             <DisclosureButton>
                                 <AddButtonSmall :text="$t('Assign to teams')"/>
                             </DisclosureButton>
@@ -69,7 +65,7 @@
                                     leave-from-class="transition-leave-from"
                                     leave-to-class="transition-leave-to">
                             <DisclosurePanel
-                                class="origin-top-right absolute z-30 overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                class="origin-top-right absolute z-30 overflow-y-auto max-h-48 w-72 rounded-lg shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div v-if="departments.length === 0">
                                     <span class="text-secondary p-1 ml-4 flex flex-nowrap">{{$t('No teams available for assignment')}}</span>
                                 </div>
@@ -78,7 +74,7 @@
                                               :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
                                                    @change="teamChecked(team)"
-                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
+                                                   class="input-checklist-dark mr-3"/>
                                             <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name"/>
                                             <span class="ml-2">
                                             {{ team.name }}
@@ -99,7 +95,7 @@
                                                :name="role.translation_key"
                                                :id="role.translation_key"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                               class="input-checklist"
                                         />
                                     </div>
                                     <div class="ml-3 w-full text-sm flex items-center justify-between">
@@ -132,7 +128,7 @@
                                                :id="preset.name"
                                                :name="preset.name"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                               class="input-checklist"
                                         />
                                     </div>
                                     <div class="ml-3 w-full text-sm flex items-center justify-between">
@@ -171,7 +167,7 @@
                                                    :id="permission.translation_key"
                                                    :name="permission.translation_key"
                                                    type="checkbox"
-                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                                   class="input-checklist"
                                             />
                                         </div>
                                         <div class="ml-3 w-full text-sm flex items-center justify-between">
@@ -216,11 +212,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default {
     name: "InviteUsersModal",
     mixins: [Permissions, IconLib],
     components: {
+        TextInputComponent,
         BaseModal,
         ToolTipDefault,
         FormButton,

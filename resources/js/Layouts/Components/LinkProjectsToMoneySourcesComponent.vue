@@ -1,52 +1,43 @@
 <template>
     <BaseModal @closed="closeModal" v-if="true" modal-image="/Svgs/Overlays/illu_money_source_create.svg">
             <div class="mx-4">
+                <ModalHeader
+                    :title="$t('Link projects')"
+                    :description="$t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')"
+                />
                 <!--   Heading   -->
                 <div>
-                    <h1 class="my-1 flex">
-                        <div class="flex-grow flex items-center headline1">
-                            {{$t('Link projects')}}
-                        </div>
-                    </h1>
-                    <div>
-                        <h2 class="xsLight mb-2 mt-4">
-                            {{ $t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')}}
-                        </h2>
-                        <div class="flex w-full mt-6">
-                            <div class="flex w-full">
-                                    <div class="w-full flex">
-                                        <input id="userSearch" v-model="project_query" type="text" autocomplete="off"
-                                               placeholder="Suche nach Projekten"
-                                               class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    </div>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100"
-                                                leave-to-class="opacity-0">
-                                        <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                             class="absolute w-[88%] z-10 mt-10 max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                            <div class="border-gray-200">
-                                                <div v-for="(project, index) in project_search_results" :key="index"
-                                                     class="flex items-center cursor-pointer">
-                                                    <div class="flex-1 text-sm py-4">
-                                                        <p @click="addProjectToArray(project)"
-                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                            {{ project.name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                    <div class="flex w-full mt-6">
+                        <div class="flex w-full relative">
+                            <div class="w-full">
+                                <TextInputComponent id="projectSearch" v-model="project_query" label="Suche nach Projekten"/>
+                            </div>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100"
+                                        leave-to-class="opacity-0">
+                                <div v-if="project_search_results.length > 0 && project_query.length > 0"
+                                     class="absolute w-full top-16 z-10 max-h-60 bg-primary shadow-lg rounded-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                    <div class="border-gray-200">
+                                        <div v-for="(project, index) in project_search_results" :key="index"
+                                             class="flex items-center cursor-pointer">
+                                            <div class="flex-1 text-sm py-4">
+                                                <p @click="addProjectToArray(project)"
+                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                    {{ project.name }}
+                                                </p>
                                             </div>
                                         </div>
-                                    </transition>
-                            </div>
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
-                        <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
-                            {{$t('Linked projects')}}:
-                        </div>
-                        <span v-for="project in linkedProjectsArray"
-                              class="flex justify-between mt-4 mr-1 items-center xsDark border-1 border-b pb-3">
-                            <div class="flex items-center">
+                    </div>
+                    <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
+                        {{$t('Linked projects')}}:
+                    </div>
+                    <div class="mb-4 divide-gray-200 divide-y divide-dashed mt-2">
+                        <div v-for="project in linkedProjectsArray" class="xsDark py-3">
+                            <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <span class="flex">
                                         {{ project.name }}
@@ -57,12 +48,12 @@
                                     <IconCircleX stroke-width="1.5" class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
-                            </span>
-                        <div class="flex justify-center">
-                            <FormButton @click="updateLinkedProjects()"
-                                        :text="$t('Save')"
-                                       ></FormButton>
                         </div>
+                    </div>
+                    <div class="flex justify-center mt-8">
+                        <FormButton @click="updateLinkedProjects()"
+                                    :text="$t('Save')"
+                        ></FormButton>
                     </div>
                 </div>
             </div>
@@ -77,12 +68,16 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
     mixins: [Permissions, IconLib],
     components: {
+        TextInputComponent,
+        ModalHeader,
         BaseModal,
         FormButton,
         JetDialogModal,

@@ -114,7 +114,7 @@
             <div class="grid gird-cols-1 md:grid-cols-3 gap-6 my-4">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.attributes" id="attributes" aria-describedby="attributes-description" name="attributes" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="attributes" class="font-medium text-gray-900">
@@ -127,7 +127,7 @@
                 </div>
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input @change="updateCreateSettings" v-model="createSettingsForm.state" id="state" aria-describedby="state-description" name="state" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.state" id="state" aria-describedby="state-description" name="state" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="state" class="font-medium text-gray-900">
@@ -140,7 +140,7 @@
                 </div>
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input @change="updateCreateSettings" v-model="createSettingsForm.managers" id="managers" aria-describedby="managers-description" name="managers" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.managers" id="managers" aria-describedby="managers-description" name="managers" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="managers" class="font-medium text-gray-900">
@@ -153,7 +153,7 @@
                 </div>
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input @change="updateCreateSettings" v-model="createSettingsForm.cost_center" id="cost_center" aria-describedby="cost_center-description" name="cost_center" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.cost_center" id="cost_center" aria-describedby="cost_center-description" name="cost_center" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="cost_center" class="font-medium text-gray-900">
@@ -166,7 +166,7 @@
                 </div>
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input @change="updateCreateSettings" v-model="createSettingsForm.budget_deadline" id="budget_deadline" aria-describedby="budget_deadline-description" name="budget_deadline" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-messages-success focus:ring-artwork-messages-success" />
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.budget_deadline" id="budget_deadline" aria-describedby="budget_deadline-description" name="budget_deadline" type="checkbox" class="input-checklist" />
                     </div>
                     <div class="ml-3 text-sm leading-6">
                         <label for="budget_deadline" class="font-medium text-gray-900">

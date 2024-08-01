@@ -74,7 +74,7 @@ export default {
                     <div class="flex flex-wrap -mb-1">
                         <template v-for="(link, key) in entities.links" :key="key">
                             <div v-if="link.url === null" class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400" v-html="link.label"></div>
-                            <Link v-else class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white" :class="{ 'text-artwork-buttons-create': link.active }" :href="link.url" v-html="link.label"></Link>
+                            <Link preserve-state preserve-scroll v-else class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white" :data="{ entitiesPerPage: entities.per_page }" :class="{ 'text-artwork-buttons-create': link.active }" :href="link.url" v-html="link.label"></Link>
                         </template>
                     </div>
                 </div>

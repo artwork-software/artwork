@@ -47,7 +47,7 @@ const textStyle = computed(() => {
     position: sticky;
     align-self: flex-start;
     position: -webkit-sticky;
-    left: 0px;
+    left: 4rem;
     z-index: 22;
     background-color: #EDEDEC;
 }

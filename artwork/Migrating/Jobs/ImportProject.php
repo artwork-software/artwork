@@ -73,7 +73,7 @@ class ImportProject
                 );
             }
             $budgetService->generateBasicBudgetValues(
-                $project,
+                $projectGroup,
                 $tableService,
                 $columnService,
                 $mainPositionService,

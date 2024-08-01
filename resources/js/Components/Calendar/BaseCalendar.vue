@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="sticky top-0 z-40 w-full -mx-5 -my-4">
+        <div class="sticky top-0 z-40 -mx-5 -my-4">
             <AsyncFunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -10,7 +10,7 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
             />
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center w-full bg-gray-50">
+            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center bg-gray-50">
                 <div class="flex errorText items-center cursor-pointer my-2"
                      @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
@@ -25,7 +25,7 @@
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="divide-y divide-gray-200 divide-dashed events-by-days-container" ref="calendarToCalculate">
+                <div class="divide-y w-fit divide-gray-200 divide-dashed events-by-days-container" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"

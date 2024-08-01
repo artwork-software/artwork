@@ -1,5 +1,5 @@
 <template>
-    <div class="pl-5 bg-gray-50 py-4 sticky z-50 top-0 pr-16">
+    <div class="pl-5 py-4 sticky z-50 top-0" :class="project ? 'bg-white -mx-16 pr-10' : 'bg-gray-50 pr-16'">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project" class="flex flex-row">
@@ -21,7 +21,7 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[project ? 'ml-10' : '','flex items-center']">
+                <div :class="[project ? 'ml-10' : '','flex items-center']"  v-if="!project">
                     <div @click="showCalendarAboSettingModal = true"
                          class="flex items-center gap-x-1 text-sm group cursor-pointer">
                         <IconCalendarStar

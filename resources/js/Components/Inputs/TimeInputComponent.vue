@@ -12,18 +12,6 @@
                placeholder="placeholder"/>
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
-
-
-    <!--<InputLabelContainer>
-        <Label :for="this.id" :label="this.label"/>
-        <input :id="this.id"
-               :value="this.modelValue"
-               @input="this.$emit('update:modelValue', $event.target.value)"
-               type="time"
-               class="p-1.5 text-sm  w-full focus:border-primary focus:ring-0 border-2 border-gray-300"
-                :class="isSmall ? '' : 'h-12'"
-        />
-    </InputLabelContainer>-->
 </template>
 
 <script>

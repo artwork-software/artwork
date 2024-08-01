@@ -1,6 +1,6 @@
 <template>
-    <div class="mt-6 bg-lightBackgroundGray">
-        <div class="mt-6 bg-lightBackgroundGray">
+    <div class="mt-6">
+        <div class="mt-6 ">
             <div v-if="calendarType && calendarType === 'daily'">
                 Daily
                 <CalendarComponent
@@ -19,7 +19,7 @@
                 />
             </div>
 
-            <div v-else class="ml-16">
+            <div v-else class="pl-16">
                 <BaseCalendar v-if="!atAGlance"
                               :project="project ?? headerObject.project"
                               :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"

@@ -1919,5 +1919,6 @@
     "The project id field is required when project id mandatory is true.": "Das Event muss wegen seines Event-Typens einem Projekt zugeordnet werden.",
     "New project group": "Neue Projektgruppe",
     "Please fill in the following fields to create a new project.": "Bitte fülle die folgenden Felder aus, um ein neues Projekt zu erstellen.",
-    "Export your calendar as a PDF.": "Exportiere deinen Kalender als PDF."
+    "Export your calendar as a PDF.": "Exportiere deinen Kalender als PDF.",
+    "This event type is not relevant for inventory.": "Diese Terminart ist nicht relevant für den Bestand."
 }

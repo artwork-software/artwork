@@ -72,7 +72,14 @@ class ImportProject
                     true
                 );
             }
-
+            $budgetService->generateBasicBudgetValues(
+                $project,
+                $tableService,
+                $columnService,
+                $mainPositionService,
+                $columnSettingService,
+                $sageApiSettingsService
+            );
             $projectService->associateProjectWithGroup($project, $projectGroup);
         }
 

@@ -35,28 +35,7 @@
                 </div>
             </div>
         </div>
-        <!-- Delete Project Modal -->
-        <BaseModal @closed="closeDeleteTemplateModal" v-if="showDeleteTemplateModal" modal-image="/Svgs/Overlays/illu_warning.svg">
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    {{$t('Delete checklist template')}}
-                </div>
-                <div class="errorText">
-                    {{ $t('Are you sure you want to delete the checklist template {0}?', [templateToDelete.name])}}
-                </div>
-                <div class="flex justify-between mt-6">
-                    <button class="bg-artwork-navigation-background focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="deleteTemplate">
-                        {{  $t('Delete') }}
-                    </button>
-                    <div class="flex my-auto">
-                            <span @click="closeDeleteTemplateModal()"
-                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
-                    </div>
-                </div>
-            </div>
-        </BaseModal>
+
         <!-- Success Modal -->
         <SuccessModal
             :show="showSuccessModal"

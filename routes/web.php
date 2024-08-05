@@ -353,7 +353,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('checklist_templates.edit');
     Route::patch('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'update'])
         ->name('checklist_templates.update');
-    Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy']);
+    Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy'])
+        ->name('checklist_templates.destroy');
     // checklist_templates.duplicate
     Route::post(
         '/checklist_templates/{checklistTemplate}/duplicate',

@@ -39,7 +39,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a href="#" @click="openDeleteTemplateModal"
+                                <a href="#" @click="showDeleteTemplateModal = true"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconTrash stroke-width="1.5"
                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -53,6 +53,30 @@
             </div>
         </div>
     </div>
+
+
+    <!-- Delete Project Modal -->
+    <BaseModal @closed="showDeleteTemplateModal = false" v-if="showDeleteTemplateModal" modal-image="/Svgs/Overlays/illu_warning.svg">
+        <div class="mx-4">
+            <div class="headline1 my-2">
+                {{$t('Delete checklist template')}}
+            </div>
+            <div class="errorText">
+                {{ $t('Are you sure you want to delete the checklist template {0}?', [checklist_template.name])}}
+            </div>
+            <div class="flex justify-between mt-6">
+                <FormButton
+                    @click="deleteTemplate"
+                    :text=" $t('Delete')"
+                >
+                </FormButton>
+                <div class="flex my-auto">
+                            <span @click="showDeleteTemplateModal = false"
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
+                </div>
+            </div>
+        </div>
+    </BaseModal>
 </template>
 
 <script setup>
@@ -62,6 +86,9 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import { IconEdit, IconCopy, IconTrash } from "@tabler/icons-vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import {ref} from "vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     checklist_template: {
@@ -74,6 +101,13 @@ const duplicateTemplate = () => {
     router.post(route('checklist_templates.duplicate', { checklistTemplate: props.checklist_template.id }))
 }
 
+const showDeleteTemplateModal = ref(false)
+
+
+const deleteTemplate = () => {
+    router.delete(route('checklist_templates.destroy', { checklist_template: props.checklist_template.id }))
+    showDeleteTemplateModal.value = false
+}
 </script>
 
 <style scoped>

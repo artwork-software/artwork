@@ -1,6 +1,6 @@
 <template>
 
-    <div class="ml-14 pt-4 pr-14">
+    <div class="" :class="$page.props.user.checklist_style !== 'list' ? '-mx-5 py-10 px-20 bg-lightBackgroundGray' : 'ml-14 pt-4 pr-14'">
         <ChecklistFunctionBar
             :project-manager-ids="projectManagerIds"
             :project-can-write-ids="projectCanWriteIds"

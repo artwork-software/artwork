@@ -11,13 +11,13 @@
                 </div>
             </div>
             <BaseMenu v-if="!isInOwnTaskManagement && canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))" no-relative>
-                <!--<MenuItem v-slot="{ active }" v-if="!checklist.private">
+                <MenuItem v-slot="{ active }" v-if="!checklist.private">
                     <a @click="openEditChecklistTeamsModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Assign users') }}
                     </a>
-                </MenuItem>-->
+                </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <a @click="showChecklistEditModal = true" v-if="isAdmin" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconEdit stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>

@@ -1,13 +1,13 @@
 <template>
-    <div class="checklist-card">
-        <div class="checklist-card-header">
+    <div class="">
+        <div class="flex items-center justify-between">
             <div class="flex items-center gap-x-1">
-                        <span v-if="checklist.private">
-                            <IconLock stroke-width="1.5" class="h-6 w-6 text-white" />
-                        </span>
+                <span v-if="checklist.private">
+                    <IconLock stroke-width="1.5" class="h-6 w-6 text-white" />
+                </span>
                 {{ checklist.name }}
             </div>
-            <BaseMenu v-if="!isInOwnTaskManagement && canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || checklist.private" no-relative>
+            <BaseMenu v-if="!isInOwnTaskManagement && canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || checklist.private">
                 <!--<MenuItem v-slot="{ active }" v-if="!checklist.private">
                 <a @click="openEditChecklistTeamsModal()"
                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">

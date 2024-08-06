@@ -134,9 +134,9 @@
                     </div>
 
                     <BasePaginator :entities="projects" property-name="projects" />
-
                 </div>
             </div>
+
         </div>
 
         <project-create-modal
@@ -384,12 +384,17 @@ export default defineComponent({
         filteredProjects() {
             return this.projects?.data?.filter(project => {
                 // Check if the project should be included based on user-related status
-                if (this.enabled && !project.curr_user_is_related) {
+                if (this.enabled && !project.users.some(user => user.id === this.$page.props.user.id)) {
                     return false;
                 }
 
                 // Check if the project should be included based on project type
-                if (this.showProjectGroups && !project.is_group) {
+                const showGroups = this.showProjectGroups;
+                const showProjects = this.showProjects;
+
+                if (!(showGroups && showProjects) &&
+                    ((showGroups && !project.is_group) ||
+                        (showProjects && project.is_group))) {
                     return false;
                 }
 
@@ -398,10 +403,11 @@ export default defineComponent({
                     return false;
                 }
 
-                // Check if the project name contains the search term
-                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                return true;
             });
-        },
+        }
+
+
         // sort Projects by pinned_by_users array. if user id in array, project is pinned and in sort function it will be first
 
     },

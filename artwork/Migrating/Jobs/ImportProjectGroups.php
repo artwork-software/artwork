@@ -4,6 +4,7 @@ namespace Artwork\Migrating\Jobs;
 
 use Artwork\Migrating\Contracts\DataAggregator;
 use Artwork\Migrating\ImportConfig;
+use Artwork\Migrating\Models\ProjectGroupImportModel;
 use Artwork\Migrating\Models\ProjectImportModel;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
@@ -18,7 +19,7 @@ use Illuminate\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 
-class ImportProject
+class ImportProjectGroups
 {
     use Queueable;
     use InteractsWithQueue;
@@ -26,12 +27,11 @@ class ImportProject
     public function __construct(
         private readonly ImportConfig $config,
         private readonly DataAggregator $dataAggregator,
-        private readonly ProjectImportModel $projectImportModel
+        private readonly ProjectGroupImportModel $projectGroupImportModel
     ) {
     }
 
     public function handle(
-        Dispatcher $dispatcher,
         ProjectService $projectService,
         BudgetService $budgetService,
         TableService $tableService,
@@ -40,47 +40,24 @@ class ImportProject
         BudgetColumnSettingService $columnSettingService,
         SageApiSettingsService $sageApiSettingsService
     ): void {
-        if (!$project = $projectService->getNonProjectGroupByName($this->projectImportModel->name)) {
-            logger()->debug('Project not found, creating new project');
-            $project = $this->createProject(
-                $projectService,
-                $this->projectImportModel->name,
-                $this->projectImportModel->description,
-                false
-            );
-            $budgetService->generateBasicBudgetValues(
-                $project,
-                $tableService,
-                $columnService,
-                $mainPositionService,
-                $columnSettingService,
-                $sageApiSettingsService
-            );
+        if ($projectService->getProjectGroupByName($this->projectGroupImportModel->name)) {
+            return;
         }
+        $projectGroup = $this->createProject(
+            $projectService,
+            $this->projectGroupImportModel->name,
+            $this->projectGroupImportModel->description,
+            true
+        );
 
-        if ($this->projectImportModel->projectGroupIdentifier && $project->wasRecentlyCreated) {
-            $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
-                $this->projectImportModel->projectGroupIdentifier
-            );
-            if ($projectGroupImportModel &&
-                $projectGroup = $projectService->getProjectGroupByName(
-                    $projectGroupImportModel->name
-                )
-            ) {
-                $projectService->associateProjectWithGroup($project, $projectGroup);
-            }
-        }
-
-        foreach ($this->dataAggregator->findEvents($this->projectImportModel->identifier) as $event) {
-            $dispatcher->dispatch(
-                new ImportEvent(
-                    $this->config,
-                    $this->dataAggregator,
-                    $event,
-                    $project
-                )
-            );
-        }
+        $budgetService->generateBasicBudgetValues(
+            $projectGroup,
+            $tableService,
+            $columnService,
+            $mainPositionService,
+            $columnSettingService,
+            $sageApiSettingsService
+        );
     }
 
     private function createProject(

@@ -217,6 +217,11 @@ class Project extends Model
         return $this->belongsToMany(__CLASS__, 'project_groups', 'project_id', 'group_id', 'id');
     }
 
+    public function projectsOfGroup(): BelongsToMany
+    {
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id', 'project_id', 'id');
+    }
+
     public function table(): HasOne
     {
         return $this->hasOne(Table::class);

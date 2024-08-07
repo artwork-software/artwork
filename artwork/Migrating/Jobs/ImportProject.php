@@ -17,6 +17,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\DB;
 
 class ImportProject
 {
@@ -58,7 +59,7 @@ class ImportProject
             );
         }
 
-        if ($this->projectImportModel->projectGroupIdentifier && $project->wasRecentlyCreated) {
+        if ($this->projectImportModel->projectGroupIdentifier) {
             $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
                 $this->projectImportModel->projectGroupIdentifier
             );
@@ -67,7 +68,9 @@ class ImportProject
                     $projectGroupImportModel->name
                 )
             ) {
-                $projectService->associateProjectWithGroup($project, $projectGroup);
+                if ($project->groups()->where('group_id', $projectGroup->id)->doesntExist()) {
+                    $projectService->associateProjectWithGroup($project, $projectGroup);
+                }
             }
         }
 

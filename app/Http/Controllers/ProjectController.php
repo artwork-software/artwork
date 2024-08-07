@@ -1969,6 +1969,7 @@ class ProjectController extends Controller
         $headerObject->states = $this->projectStateService->getAll();
         $headerObject->projectGroups = $project->groups;
         $headerObject->groupProjects = Project::where('is_group', 1)->get();
+        $headerObject->projectsOfGroup = $project->projectsOfGroup()->get();
         $headerObject->categories = $this->categoryService->getAll();
         $headerObject->projectCategories = $project->categories;
         $headerObject->genres = $this->genreService->getAll();

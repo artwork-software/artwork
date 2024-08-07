@@ -451,11 +451,14 @@ export default {
             this.reloadChanges();
         },
         async deleteFilter(id) {
-            await axios.delete(`/filters/${id}`)
-            await axios.get('/filters')
-                .then(response => {
-                    this.localPersonalFilters = response.data
-                })
+            router.delete(route('filter.destroy', id), {
+                preserveState: true,
+                onSuccess: () => {
+                    // remove filter from this.localPersonalFilters
+                    this.localPersonalFilters = this.localPersonalFilters.filter(filter => filter.id !== id)
+                }
+            })
+
         },
         returnNullIfFalse(variable) {
             if (!variable) {

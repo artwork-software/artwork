@@ -469,7 +469,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
     Route::post('/filters', [FilterController::class, 'store']);
-    Route::delete('/filters/{filter}', [FilterController::class, 'destroy']);
+    Route::delete('/filters/{filter}', [FilterController::class, 'destroy'])->name('filter.destroy');
 
     //Shift Filters
     Route::get('/shifts/filters', [ShiftFilterController::class, 'index']);

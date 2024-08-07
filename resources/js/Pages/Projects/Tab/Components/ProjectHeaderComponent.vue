@@ -188,8 +188,8 @@ export default {
                         </MenuItem>
                     </BaseMenu>
                 </div>
-                <div class="mt-3" v-if="headerObject.projectGroups.length > 0">
-                    <TagComponent v-for="projectGroup in headerObject.projectGroups" :method="deleteProjectFromGroup"
+                <div class="mt-3" v-if="headerObject.projectsOfGroup.length > 0">
+                    <TagComponent v-for="projectGroup in headerObject.projectsOfGroup" :method="deleteProjectFromGroup"
                                   :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
                 </div>
                 <div class="w-full mt-1 text-secondary subpixel-antialiased">

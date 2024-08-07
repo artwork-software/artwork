@@ -15,6 +15,9 @@ interface DataAggregator
 
     public function findProjectGroup(string $identifier): ?ProjectGroupImportModel;
 
+    /** @return ProjectGroupImportModel[] */
+    public function findProjectGroups(): array;
+
     public function findRoom(string $identifier): ?RoomImportModel;
 
     public function findEventType(string $identifier): ?EventTypeImportModel;

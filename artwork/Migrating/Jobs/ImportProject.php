@@ -5,12 +5,19 @@ namespace Artwork\Migrating\Jobs;
 use Artwork\Migrating\Contracts\DataAggregator;
 use Artwork\Migrating\ImportConfig;
 use Artwork\Migrating\Models\ProjectImportModel;
+use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\TableService;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\DB;
 
 class ImportProject
 {
@@ -26,9 +33,15 @@ class ImportProject
 
     public function handle(
         Dispatcher $dispatcher,
-        ProjectService $projectService
+        ProjectService $projectService,
+        BudgetService $budgetService,
+        TableService $tableService,
+        ColumnService $columnService,
+        MainPositionService $mainPositionService,
+        BudgetColumnSettingService $columnSettingService,
+        SageApiSettingsService $sageApiSettingsService
     ): void {
-        if (!$project = $projectService->getByName($this->projectImportModel->name)->first()) {
+        if (!$project = $projectService->getNonProjectGroupByName($this->projectImportModel->name)) {
             logger()->debug('Project not found, creating new project');
             $project = $this->createProject(
                 $projectService,
@@ -36,24 +49,29 @@ class ImportProject
                 $this->projectImportModel->description,
                 false
             );
+            $budgetService->generateBasicBudgetValues(
+                $project,
+                $tableService,
+                $columnService,
+                $mainPositionService,
+                $columnSettingService,
+                $sageApiSettingsService
+            );
         }
 
-        if (
-            $this->config->shouldImportProjectGroups() &&
+        if ($this->projectImportModel->projectGroupIdentifier) {
             $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
                 $this->projectImportModel->projectGroupIdentifier
-            )
-        ) {
-            if (!$projectGroup = $projectService->getProjectGroupByName($projectGroupImportModel->name)) {
-                $projectGroup = $this->createProject(
-                    $projectService,
-                    $projectGroupImportModel->name,
-                    $projectGroupImportModel->description,
-                    true
-                );
+            );
+            if ($projectGroupImportModel &&
+                $projectGroup = $projectService->getProjectGroupByName(
+                    $projectGroupImportModel->name
+                )
+            ) {
+                if ($project->groups()->where('group_id', $projectGroup->id)->doesntExist()) {
+                    $projectService->associateProjectWithGroup($project, $projectGroup);
+                }
             }
-
-            $projectService->associateProjectWithGroup($project, $projectGroup);
         }
 
         foreach ($this->dataAggregator->findEvents($this->projectImportModel->identifier) as $event) {

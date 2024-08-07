@@ -45,6 +45,11 @@ class ImportTest extends TestCase
                     return [new ProjectImportModel('lel', 'lard', 'a', 'b', now(), now())];
                 }
 
+                public function findProjectGroups(): array
+                {
+                    return [new ProjectGroupImportModel('lel', 'lard', 'a', 'b', now())];
+                }
+
                 //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
                 public function findProjectGroup(string $identifier): ?ProjectGroupImportModel
                 {
@@ -74,9 +79,8 @@ class ImportTest extends TestCase
             new ImportConfig()
         );
 
-        $this->dispatcher->expects($this->once())
-            ->method('dispatch')
-            ->with($this->isInstanceOf(ImportProject::class));
+        $this->dispatcher->expects($this->exactly(2))
+            ->method('dispatch');
 
         $this->import->handle($this->dispatcher);
     }

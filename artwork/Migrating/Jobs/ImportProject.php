@@ -17,6 +17,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\DB;
 
 class ImportProject
 {
@@ -40,7 +41,7 @@ class ImportProject
         BudgetColumnSettingService $columnSettingService,
         SageApiSettingsService $sageApiSettingsService
     ): void {
-        if (!$project = $projectService->getByName($this->projectImportModel->name)->first()) {
+        if (!$project = $projectService->getNonProjectGroupByName($this->projectImportModel->name)) {
             logger()->debug('Project not found, creating new project');
             $project = $this->createProject(
                 $projectService,
@@ -58,29 +59,19 @@ class ImportProject
             );
         }
 
-        if (
-            $this->config->shouldImportProjectGroups() &&
+        if ($this->projectImportModel->projectGroupIdentifier) {
             $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
                 $this->projectImportModel->projectGroupIdentifier
-            )
-        ) {
-            if (!$projectGroup = $projectService->getProjectGroupByName($projectGroupImportModel->name)) {
-                $projectGroup = $this->createProject(
-                    $projectService,
-                    $projectGroupImportModel->name,
-                    $projectGroupImportModel->description,
-                    true
-                );
-            }
-            $budgetService->generateBasicBudgetValues(
-                $projectGroup,
-                $tableService,
-                $columnService,
-                $mainPositionService,
-                $columnSettingService,
-                $sageApiSettingsService
             );
-            $projectService->associateProjectWithGroup($project, $projectGroup);
+            if ($projectGroupImportModel &&
+                $projectGroup = $projectService->getProjectGroupByName(
+                    $projectGroupImportModel->name
+                )
+            ) {
+                if ($project->groups()->where('group_id', $projectGroup->id)->doesntExist()) {
+                    $projectService->associateProjectWithGroup($project, $projectGroup);
+                }
+            }
         }
 
         foreach ($this->dataAggregator->findEvents($this->projectImportModel->identifier) as $event) {

@@ -417,6 +417,11 @@ readonly class ProjectService
         return $this->projectRepository->getByName($query);
     }
 
+    public function getNonProjectGroupByName(string $query): ?Project
+    {
+        return $this->projectRepository->getByName($query)->where('is_group', '=', false)->first();
+    }
+
     public function getProjectGroupByName(string $name): ?Project
     {
         return $this->projectRepository

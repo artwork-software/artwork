@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Laravel\Scout\Scout;
 
 class TaskController extends Controller
 {
@@ -86,19 +87,22 @@ class TaskController extends Controller
             $request->collect('users')->toArray()
         );
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($checklist->project_id)
-                ->setTranslationKey('Task added to')
-                ->setTranslationKeyPlaceholderValues([
-                    $request->name,
-                    $checklist->name
-                ])
-        );
+        if ($checklist->hasProject()) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($checklist->project_id)
+                    ->setTranslationKey('Task added to')
+                    ->setTranslationKeyPlaceholderValues([
+                        $request->name,
+                        $checklist->name
+                    ])
+            );
+        }
 
         $this->createNotificationForAllChecklistUser($checklist);
+        $checklist->syncWithSearchUsing();
 
         return Redirect::back();
     }

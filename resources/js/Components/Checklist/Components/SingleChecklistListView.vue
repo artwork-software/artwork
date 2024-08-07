@@ -83,10 +83,10 @@
 
 
     <div v-if="$page.props.user.opened_checklists.includes(checklist.id)">
-        <div class="xsLight mb-2 flex items-center gap-x-2" v-if="isInOwnTaskManagement">
+        <div class="xsLight mb-2 flex items-center gap-x-2" v-if="isInOwnTaskManagement && checklist?.project?.id">
             {{ $t('Project') }}:
-            <Link v-if="checklist.project.id" :href="route('projects.tab', {project: checklist.project.id, projectTab: checklist.checklist_tab_id})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
-                {{ checklist.project.name }}
+            <Link v-if="checklist?.project?.id" :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist.checklist_tab_id})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
+                {{ checklist?.project?.name }}
                 <IconChevronRight class="h-4 w-4 text-primary" />
                 {{ checklist.name }}
             </Link>
@@ -108,7 +108,7 @@
                     />
                 </template>
             </draggable>
-            <div v-if="!isInOwnTaskManagement" class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
+            <div class="px-5 py-2.5 cursor-pointer flex items-center text-center justify-center" @click="openAddTaskModal = true" :class="checklist.tasks.length > 0 ? ' border-t-2 border-dashed' : ''">
                 <AlertComponent :text="$t('Click here to create a task')" type="info" />
             </div>
         </div>

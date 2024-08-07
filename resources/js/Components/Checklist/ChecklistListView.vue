@@ -8,7 +8,7 @@
     </div>
 
     <div class="checklist-listview-container">
-        <div v-for="checklist in checklists" v-show="isInOwnTaskManagement ? checklist.tasks.length > 0 : true">
+        <div v-for="checklist in checklists" >
             <SingleChecklistListView
                 :checklist="checklist"
                 :can-edit-component="canEditComponent"

@@ -1,20 +1,25 @@
 <template>
-    <div class="">
-        <div class="flex items-center justify-between">
+    <div class="relative">
+        <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-x-1">
                 <span v-if="checklist.private">
                     <IconLock stroke-width="1.5" class="h-6 w-6 text-white" />
                 </span>
-                {{ checklist.name }}
+                <div class="flex items-center gap-x-4">
+                    {{ checklist.name }}
+                    <span class="bg-white text-xs px-2 py-0.5 rounded">
+                        {{ checklist.tasks.length }}
+                    </span>
+                </div>
             </div>
             <BaseMenu v-if="!isInOwnTaskManagement && canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || checklist.private">
-                <!--<MenuItem v-slot="{ active }" v-if="!checklist.private">
-                <a @click="openEditChecklistTeamsModal()"
-                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
-                    <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
-                    {{ $t('Assign users') }}
-                </a>
-            </MenuItem>-->
+                <MenuItem v-slot="{ active }" v-if="!checklist.private">
+                    <a @click="openEditChecklistTeamsModal()"
+                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                        <IconUserPlus stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
+                        {{ $t('Assign users') }}
+                    </a>
+                </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <a @click="showChecklistEditModal = true" v-if="isAdmin" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconEdit stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
@@ -71,7 +76,7 @@
                     {{ checklist.name }}
                 </Link>
             </div>
-            <draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="checklist.tasks" @start="dragging=true" @end="dragging=false" @change="updateTaskOrder(checklist.tasks)" class="divide-y-2 divide-dashed text-sm">
+            <draggable :disabled="!canEditComponent" ghost-class="opacity-50" key="draggableKey" item-key="draggableID" :list="checklist.tasks" @start="dragging=true" @end="dragging=false" @change="updateTaskOrder(checklist.tasks)" class="divide-y-2 divide-dashed text-sm py-2">
                 <template #item="{element}" :key="element.id">
                     <SingleTaskInKanbanView
                         :can-edit-component="canEditComponent"

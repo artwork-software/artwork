@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * @property int $id
@@ -35,6 +37,7 @@ class Checklist extends Model
     use BelongsToUser;
     use HasFactory;
     use SoftDeletes;
+    use Searchable;
 
     protected $fillable = [
         'name',
@@ -51,5 +54,47 @@ class Checklist extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function hasProject(): bool
+    {
+        return $this->project_id !== null;
+    }
+
+    public function searchableAs(): string
+    {
+        return 'checklists_index';
+    }
+
+    protected function makeAllSearchableUsing(Builder $query): Builder
+    {
+        return $query->with('tasks');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'project_id' => $this->project_id,
+            'user_id' => $this->user_id,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'tasks' => $this->tasks->map(function (Task $task) {
+                return [
+                    'id' => $task->id,
+                    'name' => $task->name,
+                    'description' => $task->description,
+                    'done' => $task->done,
+                    'deadline' => $task->deadline,
+                    'order' => $task->order,
+                    'created_at' => $task->created_at,
+                    'updated_at' => $task->updated_at,
+                ];
+            }),
+        ];
     }
 }

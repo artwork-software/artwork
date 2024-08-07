@@ -133,6 +133,11 @@ const props = defineProps({
     checklistToEdit: {
         type: Object,
         required: false
+    },
+    createOwnChecklist: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
@@ -147,7 +152,7 @@ const selectedTemplate = ref({
 
 const checklistForm = useForm({
     name: props.checklistToEdit ? props.checklistToEdit.name : '',
-    project_id: props.project.id,
+    project_id: props.project ? props.project.id : null,
     private: props.checklistToEdit ? props.checklistToEdit.private : false,
     template_id: null,
     user_id: null,
@@ -159,7 +164,11 @@ const submit = () => {
         if (checklistForm.private) {
             checklistForm.user_id = usePage().props.user.id;
         } else {
-            checklistForm.user_id = null;
+            if (props.project) {
+                checklistForm.user_id = null;
+            } else {
+                checklistForm.user_id = usePage().props.user.id;
+            }
         }
         checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), {
             preserveState: true,
@@ -173,8 +182,14 @@ const submit = () => {
             checklistForm.template_id = selectedTemplate.value.id;
         }
 
-        if (checklistForm.private === true) {
+        if (checklistForm.private) {
             checklistForm.user_id = usePage().props.user.id;
+        } else {
+            if (props.project) {
+                checklistForm.user_id = null;
+            } else {
+                checklistForm.user_id = usePage().props.user.id;
+            }
         }
 
         checklistForm.post(route('checklists.store'), {

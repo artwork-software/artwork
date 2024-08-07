@@ -51,15 +51,16 @@ class ChecklistController extends Controller
             $this->createWithoutTemplate($request);
         }
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($request->project_id)
-                ->setTranslationKey('Checklist added')
-                ->setTranslationKeyPlaceholderValues([$request->name])
-        );
-
+        if ($request->integer('project_id')) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($request->project_id)
+                    ->setTranslationKey('Checklist added')
+                    ->setTranslationKeyPlaceholderValues([$request->name])
+            );
+        }
         return Redirect::back();
     }
 

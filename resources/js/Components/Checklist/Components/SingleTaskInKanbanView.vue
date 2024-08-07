@@ -1,5 +1,5 @@
 <template>
-    <div class="px-4 py-3 group" :class="task.done ? 'bg-green-50/50' : ''">
+    <div class="px-4 py-3 group rounded-lg shadow bg-white">
         <div class="flex items-start justify-between">
             <div class="flex items-start">
                 <div class="mr-3">

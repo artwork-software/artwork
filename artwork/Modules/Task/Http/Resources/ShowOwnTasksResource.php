@@ -25,8 +25,8 @@ class ShowOwnTasksResource extends JsonResource
             'private' => $this->user_id !== null,
             'showContent' => true,
             'project' => [
-                'id' => $this->project->id,
-                'name' => $this->project->name,
+                'id' => $this?->project?->id,
+                'name' => $this?->project?->name,
             ],
             'checklist_tab_id' => $this->tab_id,
             'tasks' => $this->tasks->map(function (Task $task) {

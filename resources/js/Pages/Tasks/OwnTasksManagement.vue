@@ -1,11 +1,13 @@
 <template>
     <app-layout :title="$t('My tasks')">
         <div class="ml-14 mr-10">
-            <ChecklistFunctionBar
-                title="My tasks"
-                :filters="filters"
-                is-in-own-task-management
-            />
+            <div class="">
+                <ChecklistFunctionBar
+                    title="My tasks"
+                    :filters="filters"
+                    is-in-own-task-management
+                />
+            </div>
 
             <div class="" v-if="$page.props.user.checklist_style === 'list'">
                 <ChecklistListView
@@ -43,7 +45,12 @@
                     </div>
                 </div>
             </div>
+
+            <pre>
+                {{ allChecklists }}
+            </pre>
         </div>
+
     </app-layout>
 </template>
 

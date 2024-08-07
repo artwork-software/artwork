@@ -17,7 +17,7 @@
 
         </slot>
         <div class="flex items-center"
-             v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))">
+             v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || isInOwnTaskManagement">
             <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
         </div>
     </div>
@@ -58,6 +58,7 @@
         @closed="openAddChecklistModal = false"
         :tab_id="tab_id"
         :checklist_templates="checklist_templates"
+        :create-own-checklist="isInOwnTaskManagement"
     />
 
 </template>

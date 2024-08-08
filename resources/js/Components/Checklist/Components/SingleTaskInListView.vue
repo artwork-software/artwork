@@ -34,7 +34,7 @@
             <div class="col-span-3 col-start-10 flex justify-between">
                 <div class="mx-3 flex">
                     <span class="flex -mr-2" v-for="(user, index) in task.users">
-                        <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
+                        <UserPopoverTooltip :id="task.id + 'user' + user.id" v-if="checkIfMustShow(user)" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
                     </span>
                 </div>
                 <BaseMenu class="ml-3 hidden group-hover:block" v-if="canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)">
@@ -87,8 +87,8 @@ import {IconEdit, IconTrash} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
-import {ref} from "vue";
-import {router} from "@inertiajs/vue3";
+import {computed, ref} from "vue";
+import {router, usePage} from "@inertiajs/vue3";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const props = defineProps({
@@ -135,6 +135,16 @@ const props = defineProps({
         default: false
     }
 })
+
+const checkIfMustShow = (user) => {
+    if ( props.isInOwnTaskManagement ) {
+        if (user.id === usePage().props.user.id) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 const openEditTaskModal = ref(false)
 const openDeleteTaskModal = ref(false)

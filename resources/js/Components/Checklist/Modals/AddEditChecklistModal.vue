@@ -77,6 +77,17 @@
                     />
                 </div>
             </div>
+
+            <div class="bg-artwork-project-background px-8 py-4 mb-5">
+                <div>
+                    <ProjectSearch @project-selected="addProjectToChecklist" />
+                </div>
+
+                <div>
+                    {{ selectedProject }}
+                </div>
+            </div>
+
             <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="selectedTemplate.name === ''">
                 <div class="flex items-center my-2" >
                     <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
@@ -116,6 +127,7 @@ import {ref} from "vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch} from "@headlessui/vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 
 const props = defineProps({
     project: {
@@ -141,6 +153,8 @@ const props = defineProps({
     }
 })
 
+const selectedProject = ref(null);
+
 const emits = defineEmits([
     'closed'
 ]);
@@ -158,6 +172,11 @@ const checklistForm = useForm({
     user_id: null,
     tab_id: props.tab_id ? props.tab_id : null
 });
+
+const addProjectToChecklist = (project) => {
+    checklistForm.project_id = project.id;
+    selectedProject.value = project;
+}
 
 const submit = () => {
     if (props.checklistToEdit) {

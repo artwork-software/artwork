@@ -83,9 +83,9 @@
 
 
     <div v-if="$page.props.user.opened_checklists.includes(checklist.id)">
-        <div class="xsLight mb-2 flex items-center gap-x-2" v-if="isInOwnTaskManagement && checklist?.project?.id">
+        <div class="xsLight mb-2 flex items-center gap-x-2" v-if="isInOwnTaskManagement && checklist?.project">
             {{ $t('Project') }}:
-            <Link v-if="checklist?.project?.id" :href="route('projects.tab', {project: checklist?.project?.id, projectTab: checklist.checklist_tab_id})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
+            <Link v-if="checklist?.project?.id" :href="route('projects.tab', {project: checklist?.project?.id, projectTab: 1})" class="text-artwork-buttons-create underline flex items-center gap-x-0.5">
                 {{ checklist?.project?.name }}
                 <IconChevronRight class="h-4 w-4 text-primary" />
                 {{ checklist.name }}

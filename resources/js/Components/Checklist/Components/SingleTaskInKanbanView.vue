@@ -1,5 +1,5 @@
 <template>
-    <div class="px-4 py-3 group rounded-lg shadow bg-white">
+    <div class="px-4 py-3 group rounded-lg shadow bg-white my-3">
         <div class="flex items-start justify-between">
             <div class="flex items-start">
                 <div class="mr-3">
@@ -40,20 +40,19 @@
         <div class="xxsLight mt-1">
             {{ task.description }}
         </div>
-        <div class="flex items-start justify-between mt-3">
-            <div class="" v-if="!checklist.private">
-                <div class="xxsLight mb-0.5">{{ $t('Assigned to') }}</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="">
                 <div class="flex">
                     <span class="flex -mr-3" v-for="(user, index) in task.users">
-                        <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
+                        <UserPopoverTooltip :id="task.id + 'user' + user.id" v-if="checkIfMustShow(user)" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
                     </span>
                 </div>
             </div>
-            <div>
-                <div class="text-xs">
-                    <div v-if="!task.done" >
-                        <div class="xxsLight mb-0.5">{{ $t('To be done until?')}}</div>
-                        <div :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">{{ task.formatted_dates.deadline }}</div>
+            <div class="text-right">
+                <div class="text-xs flex justify-end">
+                    <div v-if="!task.done" class="flex items-center justify-end">
+                        <IconCalendar class="h-4 w-4 mr-1 text-gray-400"  :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-red-500' : ''"/>
+                        <div class="text-[9px]" :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'bg-red-500 px-1 py-0.5 rounded-lg text-white subpixel-antialiased' : ''">{{ task.formatted_dates.deadline }}</div>
                     </div>
                     <div v-if="task.done && task.done_by_user">
                         <div class="xxsLight mb-0.5">{{ $t('Completed by') }}:</div>
@@ -89,11 +88,11 @@
 <script setup>
 
 import {ref} from "vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconEdit, IconTrash, IconCalendar} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
@@ -151,6 +150,15 @@ const updateTaskStatus = () => {
     });
 }
 
+const checkIfMustShow = (user) => {
+    if ( props.isInOwnTaskManagement ) {
+        if (user.id === usePage().props.user.id) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 const deleteTask = () => {
     router.delete(route('tasks.destroy', {task: props.task.id}), {

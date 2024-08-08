@@ -3303,4 +3303,24 @@ class ProjectController extends Controller
             );
         }
     }
+
+    public function scoutSearch(Request $request): Collection
+    {
+        $projects = collect();
+        if (
+            request()->has('project_search') &&
+            request()->get('project_search') !== null &&
+            request()->get('project_search') !== ''
+        ) {
+            $projects = Project::search($request->string('project_search'))->get()->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'key_visual_path' => $project->key_visual_path,
+                ];
+            });
+        }
+
+        return $projects;
+    }
 }

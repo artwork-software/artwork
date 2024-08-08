@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Task\Http\Resources;
 
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ShowOwnTasksResource extends JsonResource
 {
     public static $wrap = null;
+
     /**
      * Transform the resource into an array.
      *
@@ -18,6 +20,7 @@ class ShowOwnTasksResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray(Request $request): array
     {
+
         return [
             'resource' => class_basename($this),
             'id' => $this->id,

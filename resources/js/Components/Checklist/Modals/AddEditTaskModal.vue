@@ -22,9 +22,10 @@
                     <DateInputComponent id="deadlineDate" v-model="taskForm.deadlineDate" required :label="$t('To be done until?')" />
                 </div>
                 <div class="mb-2 mr-4" v-if="!isPrivate">
-                    <UserSearch only-team :team-member="project.users.map((user) => user.id)"
+                    <UserSearch :only-team="!isInOwnTaskManagement" :team-member="project.users.map((user) => user.id)"
                                 @user-selected="addUserToTask"
                     />
+
                     <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                             <span v-for="(user,index) in usersToAdd"
                                   class="flex mr-5 rounded-full items-center font-bold text-primary">
@@ -93,6 +94,11 @@ const props = defineProps({
         required: false
     },
     isPrivate: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    isInOwnTaskManagement: {
         type: Boolean,
         required: false,
         default: false

@@ -16,9 +16,17 @@
         <slot name="buttons">
 
         </slot>
-        <div class="flex items-center"
-             v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || isInOwnTaskManagement">
-            <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
+        <div class="flex items-center justify-center gap-x-3">
+            <slot name="search">
+
+            </slot>
+            <slot name="filter">
+
+            </slot>
+            <div class="flex items-center"
+                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || isInOwnTaskManagement">
+                <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
+            </div>
         </div>
     </div>
 

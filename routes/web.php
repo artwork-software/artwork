@@ -1519,6 +1519,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'searching'], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
+        Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
     });
 });
 

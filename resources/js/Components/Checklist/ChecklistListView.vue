@@ -1,12 +1,4 @@
 <template>
-    <div class="checklist-listview-head-bar">
-        <div class="head-bar-grid">
-            <div class="col-span-6">{{ $t('Task')}}</div>
-            <div class="col-span-3 col-start-7">{{ $t('To be done until?')}}</div>
-            <div class="col-span-3 col-start-10">{{ $t('Who is responsible for the task?')}}</div>
-        </div>
-    </div>
-
     <div class="checklist-listview-container">
         <div v-for="checklist in checklists" >
             <SingleChecklistListView

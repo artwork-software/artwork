@@ -8,12 +8,11 @@
         }
     }
 
-
     .btn {
-        @apply rounded-lg
+        @apply rounded-lg;
 
         &:hover {
-            @apply bg-gray-200
+            @apply bg-gray-200;
         }
     }
 
@@ -27,15 +26,15 @@
     }
 
     .input-label {
-        @apply cursor-text px-1 absolute left-0 -top-6 xsLight peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none
+        @apply cursor-text px-1 absolute left-0 -top-6 xsLight peer-placeholder-shown:text-xs transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-secondary peer-placeholder-shown:left-2 pointer-events-none;
     }
 
     .input-checklist {
-        @apply border-2 border-gray-300 rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0
+        @apply border-2 border-gray-300 rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
     }
 
     .input-checklist-dark {
-        @apply border-darkGray bg-darkGrayBg rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0
+        @apply border-darkGray bg-darkGrayBg rounded-lg p-2 text-sm text-left text-artwork-messages-success focus:ring-0 focus:outline-none focus-visible:ring-0;
     }
 
     .menu-button {

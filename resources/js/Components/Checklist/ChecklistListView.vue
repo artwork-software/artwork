@@ -1,14 +1,6 @@
 <template>
-    <div class="checklist-listview-head-bar">
-        <div class="head-bar-grid">
-            <div class="col-span-6">{{ $t('Task')}}</div>
-            <div class="col-span-3 col-start-7">{{ $t('To be done until?')}}</div>
-            <div class="col-span-3 col-start-10">{{ $t('Who is responsible for the task?')}}</div>
-        </div>
-    </div>
-
-    <div class="checklist-listview-container">
-        <div v-for="checklist in checklists" v-show="isInOwnTaskManagement ? checklist.tasks.length > 0 : true">
+    <div class="checklist-listview-container ">
+        <div v-for="checklist in checklists" >
             <SingleChecklistListView
                 :checklist="checklist"
                 :can-edit-component="canEditComponent"
@@ -16,7 +8,7 @@
                 :project-manager-ids="projectManagerIds"
                 :is-admin="isAdmin"
                 :checklist_templates="checklist_templates"
-                :project="project"
+                :project="project ?? checklist?.project"
                 :tab_id="tab_id"
                 :is-in-own-task-management="isInOwnTaskManagement"
             />

@@ -1,5 +1,5 @@
 <script setup>
-import { IconInfoCircle } from '@tabler/icons-vue';
+import { IconInfoCircle, IconCirclePlus } from '@tabler/icons-vue';
 import {computed} from 'vue';
 
 const props = defineProps({
@@ -45,6 +45,8 @@ const icon = computed(() => {
             return IconInfoCircle;
         case 'success':
             return IconInfoCircle;
+        case 'plus':
+            return IconCirclePlus;
         default:
             return IconInfoCircle;
     }
@@ -62,6 +64,8 @@ const textColor = computed(() => {
             return 'text-artwork-messages-success';
         case 'dashboard':
             return 'text-gray-500';
+        case 'plus':
+            return 'text-artwork-messages-info cursor-pointer';
         default:
             return 'text-artwork-buttons-create';
     }

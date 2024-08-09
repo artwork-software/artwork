@@ -77,6 +77,22 @@
                     />
                 </div>
             </div>
+
+            <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="!project">
+                <div >
+                    <ProjectSearch @project-selected="addProjectToChecklist" />
+                </div>
+
+
+                <TagComponent
+                    class="mt-4"
+                    v-if="selectedProject"
+                    :property="selectedProject"
+                    :displayed-text="selectedProject.name"
+                    :method="deleteSelectedProject"
+                />
+            </div>
+
             <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="selectedTemplate.name === ''">
                 <div class="flex items-center my-2" >
                     <Switch @click="checklistForm.private = !checklistForm.private" :class="[checklistForm.private ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
@@ -116,6 +132,8 @@ import {ref} from "vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch} from "@headlessui/vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 const props = defineProps({
     project: {
@@ -133,8 +151,15 @@ const props = defineProps({
     checklistToEdit: {
         type: Object,
         required: false
+    },
+    createOwnChecklist: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
+
+const selectedProject = ref(null);
 
 const emits = defineEmits([
     'closed'
@@ -147,20 +172,23 @@ const selectedTemplate = ref({
 
 const checklistForm = useForm({
     name: props.checklistToEdit ? props.checklistToEdit.name : '',
-    project_id: props.project.id,
+    project_id: props.project ? props.project.id : null,
     private: props.checklistToEdit ? props.checklistToEdit.private : false,
     template_id: null,
     user_id: null,
+    creator_id: usePage().props.user.id,
     tab_id: props.tab_id ? props.tab_id : null
 });
 
+const addProjectToChecklist = (project) => {
+    checklistForm.project_id = project.id;
+    selectedProject.value = project;
+}
+
 const submit = () => {
+
     if (props.checklistToEdit) {
-        if (checklistForm.private) {
-            checklistForm.user_id = usePage().props.user.id;
-        } else {
-            checklistForm.user_id = null;
-        }
+
         checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), {
             preserveState: true,
             preserveScroll: true,
@@ -169,14 +197,6 @@ const submit = () => {
             }
         });
     } else {
-        if (selectedTemplate.value.id !== null) {
-            checklistForm.template_id = selectedTemplate.value.id;
-        }
-
-        if (checklistForm.private === true) {
-            checklistForm.user_id = usePage().props.user.id;
-        }
-
         checklistForm.post(route('checklists.store'), {
             preserveState: true,
             preserveScroll: true,
@@ -185,6 +205,12 @@ const submit = () => {
             }
         });
     }
+
+}
+
+const deleteSelectedProject = () => {
+    selectedProject.value = null
+    checklistForm.project_id = null
 }
 
 </script>

@@ -186,9 +186,12 @@ const addProjectToChecklist = (project) => {
 }
 
 const submit = () => {
+    if ( selectedTemplate.value.id ) {
+        checklistForm.template_id = selectedTemplate.value.id;
+        checklistForm.name = selectedTemplate.value.name;
+    }
 
     if (props.checklistToEdit) {
-
         checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), {
             preserveState: true,
             preserveScroll: true,

@@ -94,6 +94,16 @@ class ChecklistController extends Controller
             );
         }
 
+        if ($checklist->hasProject()) {
+            $project = $checklist->project;
+            $userIds = $checklist->users->pluck('id');
+            foreach ($userIds as $id) {
+                if (!$project->users->contains($id)) {
+                    $project->users()->attach($id);
+                }
+            }
+        }
+
         $checklist->users()->sync(
             collect($template->users)
                 ->map(function ($user) {
@@ -122,6 +132,13 @@ class ChecklistController extends Controller
                     'checklist_id' => $checklist->id,
                     'order' => Task::max('order') + 1,
                 ]);
+            }
+        }
+
+        if ($checklist->hasProject()) {
+            $project = $checklist->project;
+            if (!$project->users->contains($this->authManager->id())) {
+                $project->users()->attach($this->authManager->id());
             }
         }
 
@@ -176,16 +193,19 @@ class ChecklistController extends Controller
         $checklist->tasks->each(function (Task $task): void {
             $task->forceDelete();
         });
+        $checklist->users()->detach();
         $checklist->forceDelete();
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($checklist->project_id)
-                ->setTranslationKey('Checklist removed')
-                ->setTranslationKeyPlaceholderValues([$checklist->name])
-        );
+        if ($checklist->hasProject()) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($checklist->project_id)
+                    ->setTranslationKey('Checklist removed')
+                    ->setTranslationKeyPlaceholderValues([$checklist->name])
+            );
+        }
 
         return Redirect::back();
     }
@@ -201,14 +221,22 @@ class ChecklistController extends Controller
             $newChecklist
         );
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($newChecklist->project_id)
-                ->setTranslationKey('Checklist duplicated')
-                ->setTranslationKeyPlaceholderValues([$newChecklist->name])
-        );
+        $newChecklist->users()->sync($checklist->users->pluck('id'));
+
+        if ($newChecklist->hasProject()) {
+            $project = $checklist->project;
+            if (!$project->users->contains($this->authManager->id())) {
+                $project->users()->attach($this->authManager->id());
+            }
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($newChecklist->project_id)
+                    ->setTranslationKey('Checklist duplicated')
+                    ->setTranslationKeyPlaceholderValues([$newChecklist->name])
+            );
+        }
 
         return Redirect::back();
     }

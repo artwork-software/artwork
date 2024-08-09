@@ -243,20 +243,14 @@ const countDoneTasks = computed(() => {
 });
 
 const orderTasksByDeadline = computed(() => {
-    // Partitioniere die Aufgaben in nicht erledigte und erledigte Aufgaben
-    const [notDoneTasks, doneTasks] = props.checklist.tasks.reduce(
-        ([notDone, done], task) => {
-            if (task.done) {
-                done.push(task);
-            } else {
-                notDone.push(task);
-            }
-            return [notDone, done];
-        },
-        [[], []]
-    );
+    // Erstelle eine tiefe Kopie der Aufgaben, um sicherzustellen, dass keine Reaktivität verloren geht
+    const tasksCopy = JSON.parse(JSON.stringify(props.checklist.tasks));
 
-    // Sortiere die nicht erledigten Aufgaben nach ihrer Deadline
+    // Partitioniere die Aufgaben in nicht erledigte und erledigte Aufgaben
+    const notDoneTasks = tasksCopy.filter(task => !task.done);
+    const doneTasks = tasksCopy.filter(task => task.done);
+
+    // Sortiere die nicht erledigten Aufgaben nach Deadline
     notDoneTasks.sort((a, b) => {
         if (a.deadlineDate && b.deadlineDate) {
             return new Date(a.deadlineDate) - new Date(b.deadlineDate);
@@ -270,10 +264,9 @@ const orderTasksByDeadline = computed(() => {
         return 0; // Keine Deadline bei beiden
     });
 
-    // Kombiniere die sortierten nicht erledigten Aufgaben mit den erledigten Aufgaben
-    return [...notDoneTasks, ...doneTasks];
+    // Gib eine neue Liste zurück, die nicht erledigte und dann erledigte Aufgaben enthält
+    return notDoneTasks.concat(doneTasks);
 });
-
 
 const checkIfUserIsInTaskIfInOwnTaskManagement = (task) => {
     // if isInOwnTaskManagement is true, check if the current user ist in the task

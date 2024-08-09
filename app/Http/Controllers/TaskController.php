@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -36,7 +37,6 @@ class TaskController extends Controller
         private readonly ChecklistService $checklistService,
         private readonly AuthManager $authManager,
         private readonly MoneySourceTaskService $moneySourceTaskService,
-        private readonly ProjectTabService $projectTabService
     ) {
     }
 
@@ -70,7 +70,8 @@ class TaskController extends Controller
         return inertia('Tasks/OwnTasksManagement', [
             'checklists' => $checklists,
             'money_source_task' => $moneySourceTasks,
-            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id
+            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+            'checklist_templates' => ChecklistTemplate::all()
         ]);
     }
 
@@ -92,6 +93,7 @@ class TaskController extends Controller
         );
 
         if ($checklist->hasProject()) {
+            // add users to project if they are not already there
             $this->changeService->saveFromBuilder(
                 $this->changeService
                     ->createBuilder()

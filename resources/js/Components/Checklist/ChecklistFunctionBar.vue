@@ -81,8 +81,6 @@ import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
-import {CheckIcon, ChevronDownIcon} from "@heroicons/vue/solid";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
 const props = defineProps({
     title: {

@@ -8,7 +8,7 @@
                            type="checkbox"
                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded-full"/>
                 </div>
-                <div :class="task.done  ? 'text-secondary line-through' : ''">
+                <div :class="task.done ? 'text-secondary line-through' : ''">
                     <div class="font-bold mb-1">
                         {{ task.name }}
                     </div>
@@ -148,6 +148,7 @@ const updateTaskStatus = () => {
     router.patch(route('tasks.done', {task: props.task.id}), {
     }, {
         preserveScroll: true,
+        preserveState: false
     });
 }
 

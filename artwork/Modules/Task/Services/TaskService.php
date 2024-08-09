@@ -42,6 +42,16 @@ class TaskService
             ])
         );
 
+
+        // add all users to $checklist->project when they not in project
+        if ($checklist->hasProject()) {
+            foreach ($userIds as $userId) {
+                if(!$checklist->project->users->contains($userId)) {
+                    $checklist->project->users()->attach($userId);
+                }
+            }
+        }
+
         // remove $userId from $userIds
         $userIds = array_diff($userIds, [$userId]);
 
@@ -169,6 +179,16 @@ class TaskService
             $task,
             $data->get('users')
         );
+
+        $checklist = $task->checklist;
+        $userIds = $data->get('users');
+        if ($checklist->hasProject()) {
+            foreach ($userIds as $userId) {
+                if (!$checklist->project->users->contains($userId)) {
+                    $checklist->project->users()->attach($userId);
+                }
+            }
+        }
 
         $this->taskRepository->save($task);
         return $task;

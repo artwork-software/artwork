@@ -5,6 +5,7 @@
                 <ChecklistFunctionBar
                     title="My tasks"
                     :filters="filters"
+                    :checklist_templates="checklist_templates"
                     is-in-own-task-management
                 >
                     <template #search>
@@ -183,7 +184,8 @@ const props = defineProps({
     private_checklists: Array,
     money_source_task: Array,
     first_project_tasks_tab_id: Number,
-    checklists: Object
+    checklists: Object,
+    checklist_templates: Array,
 });
 
 const search = ref('');

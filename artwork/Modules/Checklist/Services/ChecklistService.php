@@ -66,6 +66,14 @@ readonly class ChecklistService
     public function assignUsersById(Checklist $checklist, array $ids): void
     {
         $checklist->users()->sync($ids);
+        if ($checklist->hasProject()) {
+            $project = $checklist->project;
+            foreach ($ids as $id) {
+                if (!$project->users->contains($id)) {
+                    $project->users()->attach($id);
+                }
+            }
+        }
     }
 
     public function delete(Checklist $checklist, TaskService $taskService): void

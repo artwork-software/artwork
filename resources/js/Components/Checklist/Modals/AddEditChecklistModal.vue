@@ -79,13 +79,18 @@
             </div>
 
             <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="!project">
-                <div>
+                <div >
                     <ProjectSearch @project-selected="addProjectToChecklist" />
                 </div>
 
-                <div>
-                    {{ selectedProject }}
-                </div>
+
+                <TagComponent
+                    class="mt-4"
+                    v-if="selectedProject"
+                    :property="selectedProject"
+                    :displayed-text="selectedProject.name"
+                    :method="deleteSelectedProject"
+                />
             </div>
 
             <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="selectedTemplate.name === ''">
@@ -128,6 +133,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch} from "@he
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 const props = defineProps({
     project: {
@@ -199,6 +205,12 @@ const submit = () => {
             }
         });
     }
+
+}
+
+const deleteSelectedProject = () => {
+    selectedProject.value = null
+    checklistForm.project_id = null
 }
 
 </script>

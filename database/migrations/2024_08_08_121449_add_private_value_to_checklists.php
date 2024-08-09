@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('checklists', function (Blueprint $table) {
             $table->boolean('private')->default(false);
-            $table->foreignId('creator_id')->nullable()->constrained('users')->cascadeOnDelete();
         });
     }
 
@@ -24,8 +23,6 @@ return new class extends Migration
     {
         Schema::table('checklists', function (Blueprint $table) {
             $table->dropColumn('private');
-            $table->dropForeign(['creator_id']);
-            $table->dropColumn('creator_id');
         });
     }
 };

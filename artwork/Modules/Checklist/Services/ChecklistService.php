@@ -133,12 +133,57 @@ readonly class ChecklistService
                     });
 
                     // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
-                    $isCreator = $checklist->creator_id === $userId;
+                    $isCreator = $checklist->user_id === $userId;
 
                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                 })
         );
         $headerObject->project->private_checklists = ChecklistIndexResource::collection(
+            $project->checklists
+                ->whereIn('tab_id', $componentInTab->scope)
+                ->where('private', true)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
+        return $headerObject;
+    }
+
+    public function getProjectChecklistsAll(Project $project, stdClass $headerObject): stdClass
+    {
+        $headerObject->project->opened_checklists = User::where('id', Auth::id())
+            ->first()->opened_checklists;
+        $userId = Auth::id();
+        $headerObject->project->public_all_checklists = ChecklistIndexResource::collection(
+            $project->checklists
+                ->where('private', false)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
+        $headerObject->project->private_all_checklists = ChecklistIndexResource::collection(
             $project->checklists
                 ->where('private', true)
                 ->filter(function ($checklist) use ($userId) {
@@ -151,28 +196,11 @@ readonly class ChecklistService
                     });
 
                     // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
-                    $isCreator = $checklist->creator_id === $userId;
+                    $isCreator = $checklist->user_id === $userId;
 
                     return $isInChecklistUsers || $isInTaskUsers || $isCreator;
                 })
         );
-        return $headerObject;
-    }
-
-    public function getProjectChecklistsAll(Project $project, stdClass $headerObject): stdClass
-    {
-        $headerObject->project->opened_checklists = User::where('id', Auth::id())
-            ->first()->opened_checklists;
-        $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
-            ChecklistTemplate::all()
-        )->resolve();
-        $headerObject->project->public_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists->whereNull('user_id')
-        )
-            ->resolve();
-        $headerObject->project->private_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists->where('user_id', Auth::id())
-        )->resolve();
         return $headerObject;
     }
 

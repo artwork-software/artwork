@@ -72,7 +72,7 @@ class ChecklistController extends Controller
         $checklist = Checklist::create([
             'name' => $template->name,
             'project_id' => $request->project_id,
-            'creator_id' => $request->creator_id,
+            'user_id' => $this->authManager->id(),
             'tab_id' => $request->tab_id ?? null,
             'private' => $request->private,
 
@@ -107,7 +107,7 @@ class ChecklistController extends Controller
         $checklist = Checklist::create([
             'name' => $request->name,
             'project_id' => $request->project_id,
-            'creator_id' => $request->creator_id,
+            'user_id' => $this->authManager->id(),
             'tab_id' => $request->tab_id ?? null,
             'private' => $request->private,
         ]);

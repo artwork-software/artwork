@@ -213,7 +213,7 @@ class ChecklistRepository extends BaseRepository
     public function getChecklistsForUserWithFilteredTasks(int $userId, bool $doneTask, int $filter): Collection
     {
         return Checklist::query()
-            ->where('creator_id', $userId)
+            ->where('user_id', $userId)
             ->with(['tasks' => function ($q) use ($doneTask, $filter): void {
                 $q->where('done', $doneTask)
                     ->when($filter === 1, function ($q): void {

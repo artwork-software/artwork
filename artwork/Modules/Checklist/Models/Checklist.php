@@ -43,7 +43,13 @@ class Checklist extends Model
         'name',
         'project_id',
         'user_id',
-        'tab_id'
+        'tab_id',
+        'private',
+        'creator_id',
+    ];
+
+    protected $casts = [
+        'private' => 'boolean',
     ];
 
     public function tasks(): HasMany
@@ -51,9 +57,26 @@ class Checklist extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
+    }
+
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(
+            User::class,
+            'checklist_user',
+            'checklist_id',
+            'user_id'
+        )->without([
+            'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
+        ]);
+    }
+
+    public function creator(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator_id', 'id', 'users');
     }
 
     public function hasProject(): bool

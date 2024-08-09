@@ -183,7 +183,7 @@ class ProjectController extends Controller
     {
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
-                $request->string('search'),
+                $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects(),

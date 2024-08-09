@@ -78,7 +78,7 @@
                 </div>
             </div>
 
-            <div class="bg-artwork-project-background px-8 py-4 mb-5">
+            <div class="bg-artwork-project-background px-8 py-4 mb-5" v-if="!project">
                 <div>
                     <ProjectSearch @project-selected="addProjectToChecklist" />
                 </div>
@@ -170,6 +170,7 @@ const checklistForm = useForm({
     private: props.checklistToEdit ? props.checklistToEdit.private : false,
     template_id: null,
     user_id: null,
+    creator_id: usePage().props.user.id,
     tab_id: props.tab_id ? props.tab_id : null
 });
 
@@ -179,16 +180,9 @@ const addProjectToChecklist = (project) => {
 }
 
 const submit = () => {
+
     if (props.checklistToEdit) {
-        if (checklistForm.private) {
-            checklistForm.user_id = usePage().props.user.id;
-        } else {
-            if (props.project) {
-                checklistForm.user_id = null;
-            } else {
-                checklistForm.user_id = usePage().props.user.id;
-            }
-        }
+
         checklistForm.patch(route('checklists.update', {checklist: props.checklistToEdit.id}), {
             preserveState: true,
             preserveScroll: true,
@@ -197,20 +191,6 @@ const submit = () => {
             }
         });
     } else {
-        if (selectedTemplate.value.id !== null) {
-            checklistForm.template_id = selectedTemplate.value.id;
-        }
-
-        if (checklistForm.private) {
-            checklistForm.user_id = usePage().props.user.id;
-        } else {
-            if (props.project) {
-                checklistForm.user_id = null;
-            } else {
-                checklistForm.user_id = usePage().props.user.id;
-            }
-        }
-
         checklistForm.post(route('checklists.store'), {
             preserveState: true,
             preserveScroll: true,

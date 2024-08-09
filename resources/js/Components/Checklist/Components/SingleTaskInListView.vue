@@ -4,8 +4,7 @@
             <div class="col-span-6">
                 <div class="flex items-start">
                     <div class="mr-3">
-                        <input :disabled="canEditComponent ? false : isInOwnTaskManagement ? false : true"
-                               @change="updateTaskStatus"
+                        <input @change="updateTaskStatus"
                                v-model="task.done"
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300 rounded-full"/>
@@ -21,23 +20,24 @@
                 </div>
             </div>
             <div class="col-span-3 col-start-7 flex items-start">
-                <span v-if="!task.done" class="ml-2 text-sm subpixel-antialiased" :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">
-                    {{ task.formatted_dates.deadline }}
-                </span>
+                <div v-if="!task.done" class="flex items-center justify-end">
+                    <IconCalendar class="h-4 w-4 mr-1 text-gray-400"  :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-red-500' : ''"/>
+                    <div class="text-[9px]" :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'bg-red-500 px-1 py-0.5 rounded-lg text-white subpixel-antialiased' : ''">{{ task.formatted_dates.deadline }}</div>
+                </div>
                 <span v-if="task.done && task.done_by_user" class="ml-2 flex text-sm text-secondary">
                     <span class="mr-2">
                         <UserPopoverTooltip v-if="task.done_by_user" height="7" width="7" :user="task.done_by_user" :id="task.id"/>
                     </span>
-                    {{ task.formatted_dates.done_at_with_day }}
+                    {{ task.formatted_dates?.done_at_with_day }}
                 </span>
             </div>
             <div class="col-span-3 col-start-10 flex justify-between">
                 <div class="mx-3 flex">
-                    <span class="flex -mr-2" v-for="(user, index) in task.users">
-                        <UserPopoverTooltip :id="task.id + 'user' + user.id" v-if="checkIfMustShow(user)" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
+                    <span class="flex -mr-2" v-for="(user, index) in filteredUsers">
+                        <UserPopoverTooltip :id="task.id + 'user' + user.id" :user="user" height="8" width="8" :classes="index > 0 ? '!ring-1 !ring-white' : ''"/>
                     </span>
                 </div>
-                <BaseMenu class="ml-3 hidden group-hover:block" v-if="canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)">
+                <BaseMenu class="ml-3" v-if="(canEditComponent && (projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds?.includes($page.props.user.id) || isAdmin)) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }">
                         <div @click="openEditTaskModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -83,7 +83,7 @@
 import draggable from "vuedraggable";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import {IconEdit, IconTrash} from "@tabler/icons-vue";
+import {IconCalendar, IconEdit, IconTrash} from "@tabler/icons-vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
@@ -136,15 +136,9 @@ const props = defineProps({
     }
 })
 
-const checkIfMustShow = (user) => {
-    if ( props.isInOwnTaskManagement ) {
-        if (user.id === usePage().props.user.id) {
-            return false;
-        }
-    }
-
-    return true;
-}
+const filteredUsers = computed(() => {
+    return props.task.task_users?.filter(user => user.id !== usePage().props.user.id);
+})
 
 const openEditTaskModal = ref(false)
 const openDeleteTaskModal = ref(false)

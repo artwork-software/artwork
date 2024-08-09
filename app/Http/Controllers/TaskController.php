@@ -17,6 +17,7 @@ use Artwork\Modules\Task\Http\Resources\ShowOwnTasksResource;
 use Artwork\Modules\Task\Http\Resources\TaskIndexResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
+use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +35,8 @@ class TaskController extends Controller
         private readonly TaskService $taskService,
         private readonly ChecklistService $checklistService,
         private readonly AuthManager $authManager,
-        private readonly MoneySourceTaskService $moneySourceTaskService
+        private readonly MoneySourceTaskService $moneySourceTaskService,
+        private readonly ProjectTabService $projectTabService
     ) {
     }
 
@@ -50,8 +52,10 @@ class TaskController extends Controller
 
         $checklists = $this->checklistService->getChecklistsWithMyTask(
             $this->authManager->id(),
-            $request->integer('filter')
+            $projectTabService,
+            $request->integer('filter'),
         );
+
 
         $privateChecklists = $this->checklistService->getPrivateChecklists(
             $this->authManager->id(),
@@ -63,11 +67,8 @@ class TaskController extends Controller
             $request->integer('filter')
         );
 
-
-
         return inertia('Tasks/OwnTasksManagement', [
-            'checklists' => ShowOwnTasksResource::collection($checklists)->resolve(),
-            'private_checklists' => ShowOwnTasksResource::collection($privateChecklists)->resolve(),
+            'checklists' => $checklists,
             'money_source_task' => $moneySourceTasks,
             'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id
         ]);
@@ -79,12 +80,15 @@ class TaskController extends Controller
         /** @var Checklist $checklist */
         $checklist = $this->checklistService->getById($request->integer('checklist_id'));
 
+        //dd($request);
+
         $this->taskService->createTaskByRequest(
             $checklist,
             $request->string('name'),
+            $this->authManager->id(),
             $request->string('description'),
-            $request->string('deadline'),
-            $request->collect('users')->toArray()
+            $request->string('deadlineDate'),
+            $request->collect('users')->toArray(),
         );
 
         if ($checklist->hasProject()) {
@@ -102,7 +106,6 @@ class TaskController extends Controller
         }
 
         $this->createNotificationForAllChecklistUser($checklist);
-        $checklist->syncWithSearchUsing();
 
         return Redirect::back();
     }
@@ -140,17 +143,19 @@ class TaskController extends Controller
         );
 
         if ($checklist = $task->checklist()->first()) {
-            $this->changeService->saveFromBuilder(
-                $this->changeService
-                    ->createBuilder()
-                    ->setModelClass(Project::class)
-                    ->setModelId($checklist->project_id)
-                    ->setTranslationKey('Task changed from')
-                    ->setTranslationKeyPlaceholderValues([
-                        $task->name,
-                        $checklist->name
-                    ])
-            );
+            if ($checklist->hasProject()) {
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($checklist->project_id)
+                        ->setTranslationKey('Task modified in')
+                        ->setTranslationKeyPlaceholderValues([
+                            $task->name,
+                            $checklist->name
+                        ])
+                );
+            }
 
             $this->createNotificationUpdateTask($task);
         }

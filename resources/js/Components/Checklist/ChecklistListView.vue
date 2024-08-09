@@ -1,5 +1,5 @@
 <template>
-    <div class="checklist-listview-container">
+    <div class="checklist-listview-container ">
         <div v-for="checklist in checklists" >
             <SingleChecklistListView
                 :checklist="checklist"
@@ -8,7 +8,7 @@
                 :project-manager-ids="projectManagerIds"
                 :is-admin="isAdmin"
                 :checklist_templates="checklist_templates"
-                :project="project"
+                :project="project ?? checklist?.project"
                 :tab_id="tab_id"
                 :is-in-own-task-management="isInOwnTaskManagement"
             />

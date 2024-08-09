@@ -68,11 +68,14 @@ class ChecklistController extends Controller
     {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
 
+
         $checklist = Checklist::create([
             'name' => $template->name,
             'project_id' => $request->project_id,
-            'user_id' => $request->user_id,
-            'tab_id' => $request->tab_id ?? null
+            'creator_id' => $request->creator_id,
+            'tab_id' => $request->tab_id ?? null,
+            'private' => $request->private,
+
         ]);
 
         foreach ($template->task_templates as $task_template) {
@@ -104,8 +107,9 @@ class ChecklistController extends Controller
         $checklist = Checklist::create([
             'name' => $request->name,
             'project_id' => $request->project_id,
-            'user_id' => $request->user_id,
-            'tab_id' => $request->tab_id ?? null
+            'creator_id' => $request->creator_id,
+            'tab_id' => $request->tab_id ?? null,
+            'private' => $request->private,
         ]);
 
         if (is_object($request->tasks)) {
@@ -120,6 +124,8 @@ class ChecklistController extends Controller
                 ]);
             }
         }
+
+        $checklist->users()->attach($this->authManager->id());
     }
 
     public function show(Checklist $checklist): Response|ResponseFactory
@@ -141,23 +147,26 @@ class ChecklistController extends Controller
         Checklist $checklist,
         TaskService $taskService
     ): RedirectResponse {
+
+
         $this->checklistService->updateByRequest($checklist, $request, $taskService);
 
         if ($request->missing('assigned_user_ids')) {
             return Redirect::back();
         }
 
-        $this->checklistService->assignUsersById($checklist, $taskService, $request->assigned_user_ids ?? []);
+        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids ?? []);
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($checklist->project_id)
-                ->setTranslationKey('Checklist modified')
-                ->setTranslationKeyPlaceholderValues([$checklist->name])
-        );
-
+        if ($checklist->hasProject()) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($checklist->project_id)
+                    ->setTranslationKey('Checklist modified')
+                    ->setTranslationKeyPlaceholderValues([$checklist->name])
+            );
+        }
         return Redirect::back();
     }
 

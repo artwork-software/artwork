@@ -1,6 +1,6 @@
 <template>
-    <div class="flex items-start gap-4 overflow-y-scroll">
-        <div v-for="checklist in checklists" v-show="isInOwnTaskManagement ? checklist.tasks.length > 0 : true">
+    <div class="flex items-start gap-4 overflow-y-scroll min-h-screen">
+        <div v-for="checklist in checklists">
             <SingleChecklistInKanbanView
                 :checklist="checklist"
                 :can-edit-component="canEditComponent"

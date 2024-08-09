@@ -8,8 +8,7 @@
                     {{ $t('Enter the name of the user to whom you want to assign the checklist.') }}
                 </div>
                 <div class="mt-10">
-                    <UserSearch only-team :team-member="project.users.map((user) => user.id)" @user-selected="addUserToChecklist"/>
-
+                    <UserSearch :only-team="checklist?.private" :team-member="project?.users?.map((user) => user.id)" @user-selected="addUserToChecklist"/>
                 </div>
                 <div v-for="(user,index) in selectedUsers"
                      class="mt-4 font-bold text-primary flex"
@@ -57,13 +56,13 @@ export default {
     },
     emits: ['closed'],
     props: [
-        'checklistId',
+        'checklist',
         'users',
         'project'
     ],
     data() {
         return {
-            selectedUsers: [],
+            selectedUsers: this.users ?? [],
             searchedUsers: [],
             userQuery: null,
             error: null
@@ -82,7 +81,7 @@ export default {
         },
         async submitUsers() {
             await axios
-                .patch(`/checklists/${this.checklistId}`, {
+                .patch(`/checklists/${this.checklist.id}`, {
                     assigned_user_ids: this.selectedUsers.map((user) => user.id)
                 })
                 .then(response => this.emitClose())

@@ -23,6 +23,9 @@
             <slot name="filter">
 
             </slot>
+            <slot name="sort">
+
+            </slot>
             <div class="flex items-center"
                  v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || isInOwnTaskManagement">
                 <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
@@ -30,7 +33,7 @@
         </div>
     </div>
 
-    <div v-if="isInOwnTaskManagement">
+    <!--<div v-if="isInOwnTaskManagement">
         <Listbox as="div" class="sm:col-span-3 mb-8" v-model="selectedFilter">
             <div class="relative z-50">
                 <ListboxButton class="w-56 flex justify-between sDark py-2">
@@ -58,7 +61,7 @@
                 </ListboxOptions>
             </div>
         </Listbox>
-    </div>
+    </div>-->
 
     <AddEditChecklistModal
         :project="project"

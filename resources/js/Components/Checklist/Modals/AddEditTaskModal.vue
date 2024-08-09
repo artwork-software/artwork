@@ -19,13 +19,12 @@
                     </div>
                 </div>
                 <div class="flex mt-3 mr-4">
-                    <DateInputComponent id="deadlineDate" v-model="taskForm.deadlineDate" required :label="$t('To be done until?')" />
+                    <DateInputComponent id="deadlineDate" v-model="taskForm.deadlineDate" :label="$t('To be done until?')" />
                 </div>
-                <div class="mb-2 mr-4" v-if="!isPrivate">
-                    <UserSearch :only-team="!isInOwnTaskManagement" :team-member="project.users.map((user) => user.id)"
+                <div class="mb-2 mr-4" v-if="!checklist.private">
+                    <UserSearch :only-team="isInOwnTaskManagement" :team-member="project?.users?.map((user) => user.id) ?? checklist?.project?.users?.map((user) => user.id)"
                                 @user-selected="addUserToTask"
                     />
-
                     <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                             <span v-for="(user,index) in usersToAdd"
                                   class="flex mr-5 rounded-full items-center font-bold text-primary">

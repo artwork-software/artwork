@@ -24,8 +24,14 @@ class ChecklistPolicy
 
     public function update(User $user, Checklist $checklist): bool
     {
+        // todo: hier anpassen, wenn die Berechtigungen für die Checkliste festgelegt sind
         return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
-            $checklist->project->users->contains($user->id);
+            $checklist->project->users->contains($user->id) ||
+            $checklist->users->contains($user->id) ||
+            // if user is in any task in checklist
+            $checklist->tasks->each(function ($task) use ($user) {
+                return $task->task_users->contains($user->id);
+            });
     }
 
     public function delete(User $user): bool

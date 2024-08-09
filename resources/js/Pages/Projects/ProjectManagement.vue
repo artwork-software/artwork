@@ -11,13 +11,13 @@
                         </div>
                         <div class="flex relative items-center gap-x-3.5" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div class="flex items-center">
-                                <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                                <div v-if="!showSearchbar" @click="openSearchbar"
                                      class="cursor-pointer inset-y-0">
                                     <IconSearch class="h-7 w-7 text-artwork-buttons-context" aria-hidden="true"/>
                                 </div>
                                 <div v-else class="flex items-center w-60">
                                     <div>
-                                        <input type="text" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        <input type="text" ref="searchBarInput" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
@@ -331,7 +331,7 @@ export default defineComponent({
     mixins: [Permissions, IconLib],
     data() {
         return {
-            project_search: this.$page.props.urlParameters.search ?? '',
+            project_search: this.$page.props.urlParameters.query ?? '',
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectBudgetAccess: {},
@@ -339,7 +339,7 @@ export default defineComponent({
             projectFilter: {'name': this.$t('All projects')},
             isSingleTab: true,
             isGroupTab: false,
-            showSearchbar: this.$page.props.urlParameters.search !== undefined,
+            showSearchbar: this.$page.props.urlParameters.query !== undefined,
             project_query: '',
             project_search_results: [],
             addingProject: false,
@@ -487,6 +487,14 @@ export default defineComponent({
         },
         closeProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = false;
+        },
+        openSearchbar(){
+            this.showSearchbar = !this.showSearchbar;
+            this.$nextTick(() => {
+                if (this.showSearchbar) {
+                    this.$refs.searchBarInput.focus();
+                }
+            });
         }
     },
     watch: {
@@ -495,7 +503,7 @@ export default defineComponent({
                 router.reload({
                     only: ['projects'],
                     data: {
-                        search: this.project_search,
+                        query: this.project_search,
                         page: 1,
                         entitiesPerPage: this.projects.per_page
                     }

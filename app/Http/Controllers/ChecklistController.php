@@ -216,12 +216,15 @@ class ChecklistController extends Controller
             $checklist
         );
 
+        $newChecklist->save();
+
         $this->taskService->duplicateTasksByChecklist(
             $checklist,
             $newChecklist
         );
 
-        $newChecklist->users()->sync($checklist->users->pluck('id'));
+
+        //$newChecklist->users()->sync($checklist->users->pluck('id'));
 
         if ($newChecklist->hasProject()) {
             $project = $checklist->project;
@@ -237,6 +240,8 @@ class ChecklistController extends Controller
                     ->setTranslationKeyPlaceholderValues([$newChecklist->name])
             );
         }
+
+        $newChecklist->users()->sync($checklist->users->pluck('id'));
 
         return Redirect::back();
     }

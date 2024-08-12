@@ -17,16 +17,14 @@ class CreateCraftsInventoryColumnRequest extends FormRequest
         $createsSelectColumn = (
             ($this->request->all()['type']['id'] ?? null) === CraftsInventoryColumnTypeEnum::SELECT->value
         );
+
         return [
             'name' => 'required|string',
             'type' => ['required', 'array:id,value'],
             'type.*.id' => Rule::enum(CraftsInventoryColumnTypeEnum::class),
             'typeOptions' => [
                 'array',
-                Rule::requiredIf(
-                    //parenthesis is important here!
-                    $createsSelectColumn
-                ),
+                Rule::requiredIf($createsSelectColumn),
                 Rule::when($createsSelectColumn, ['min:1']),
                 Rule::when(!$createsSelectColumn, ['min:0'])
             ],

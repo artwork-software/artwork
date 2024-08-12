@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * @property int $id
@@ -40,7 +42,12 @@ class Checklist extends Model
         'name',
         'project_id',
         'user_id',
-        'tab_id'
+        'tab_id',
+        'private',
+    ];
+
+    protected $casts = [
+        'private' => 'boolean',
     ];
 
     public function tasks(): HasMany
@@ -48,8 +55,25 @@ class Checklist extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
+    }
+
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(
+            User::class,
+            'checklist_user',
+            'checklist_id',
+            'user_id'
+        )->without([
+            'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
+        ]);
+    }
+
+    public function hasProject(): bool
+    {
+        return $this->project_id !== null;
     }
 }

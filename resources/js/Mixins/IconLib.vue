@@ -111,7 +111,7 @@ import {
     IconSeparator,
     IconDeviceFloppy,
     IconNote,
-    IconCalendarStar,
+    IconCalendarStar
 
 } from "@tabler/icons-vue";
 export default {

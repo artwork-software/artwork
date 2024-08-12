@@ -392,7 +392,8 @@
                         </div>
                         <div class="mb-2">
                             <div class="relative w-full">
-                                <div class="w-full">
+                                <ProjectSearch @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
+                                <!--<div class="w-full">
                                     <TextInputComponent
                                         id="projectGroupQuery"
                                         v-model="projectGroupQuery"
@@ -418,7 +419,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </transition>
+                                </transition>-->
                             </div>
                             <div v-if="projectGroupProjects.length > 0" class="mt-2 mb-4 flex items-center">
                                 <span v-for="(projectGroupProject, index) in projectGroupProjects"
@@ -478,11 +479,13 @@ import KeyVisual from "@/Components/Uploads/KeyVisual.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper],
     components: {
+        ProjectSearch,
         BaseTabs,
         ModalHeader,
         DateInputComponent,
@@ -617,8 +620,9 @@ export default {
             }
         },
         addProjectToProjectGroup(project) {
-            this.projectGroupProjects.push(project);
-            this.projectGroupQuery = '';
+            if(!this.projectGroupProjects.includes(project)){
+                this.projectGroupProjects.push(project);
+            }
         },
         deleteProjectFromProjectGroup(index) {
             this.projectGroupProjects.splice(index, 1);
@@ -626,18 +630,7 @@ export default {
 
     },
     watch: {
-        projectGroupQuery: {
-            handler() {
-                if (this.projectGroupQuery.length > 0) {
-                    axios.get('/projects/search/single', {
-                        params: {query: this.projectGroupQuery, type: this.searchType}
-                    }).then(response => {
-                        this.projectGroupSearchResults = response.data
-                    })
-                }
-            },
-            deep: true
-        },
+
     }
 }
 </script>

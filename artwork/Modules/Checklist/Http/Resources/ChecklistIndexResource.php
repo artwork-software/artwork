@@ -20,8 +20,9 @@ class ChecklistIndexResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
-            'private' => $this->user_id !== null,
+            'private' => $this->private,
             'showContent' => true,
+            'users' => $this->users,
             'project' => [
                 'id' => $this->project->id,
                 'name' => $this->project->name,

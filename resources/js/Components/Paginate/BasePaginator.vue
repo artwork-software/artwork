@@ -1,6 +1,6 @@
 <script>
 import {IconChevronDown} from "@tabler/icons-vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, usePage} from "@inertiajs/vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {router} from "@inertiajs/vue3";
 
@@ -22,10 +22,11 @@ export default {
     },
     data() {
         return {
-            entitiesPerPage: [10, 25, 50, 100],
+            entitiesPerPage: [1, 10, 25, 50, 100],
         }
     },
     methods: {
+        usePage,
         updateEntitiesPerPage(entitiesToShow) {
             router.reload({
                 only: [this.propertyName],

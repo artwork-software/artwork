@@ -1920,5 +1920,17 @@
     "New project group": "Neue Projektgruppe",
     "Please fill in the following fields to create a new project.": "Bitte fülle die folgenden Felder aus, um ein neues Projekt zu erstellen.",
     "Export your calendar as a PDF.": "Exportiere deinen Kalender als PDF.",
-    "This event type is not relevant for inventory.": "Diese Terminart ist nicht relevant für den Bestand."
+    "This event type is not relevant for inventory.": "Diese Terminart ist nicht relevant für den Bestand.",
+    "Search for to-do lists and to-dos": "Suche nach ToDo-Listen und ToDos",
+    "To-do lists with project": "ToDo-Listen mit Projekt",
+    "To-do lists without project": "ToDo-Listen ohne Projekt",
+    "Only personal to-do lists": "Nur persönliche ToDo-Listen",
+    "Only shared to-do lists": "Nur geteilte ToDo-Listen",
+    "Show completed tasks": "Erledigte Aufgaben anzeigen",
+    "Show to-do lists without tasks": "ToDo-Listen ohne Aufgaben anzeigen",
+    "Project period ascending": "Projektzeitraum aufsteigend",
+    "Project period descending": "Projektzeitraum absteigend",
+    "ToDo-List name descending": "ToDo-Listen absteigend",
+    "ToDo-List name ascending": "ToDo-Listen aufsteigend",
+    "My ToDo-Lists": "Meine ToDo-Listen"
 }

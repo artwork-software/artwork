@@ -1920,5 +1920,17 @@
     "New project group": "New project group",
     "Please fill in the following fields to create a new project.": "Please fill in the following fields to create a new project.",
     "Export your calendar as a PDF.": "Export your calendar as a PDF.",
-    "This event type is not relevant for inventory.": "This event type is not relevant for inventory."
+    "This event type is not relevant for inventory.": "This event type is not relevant for inventory.",
+    "Search for to-do lists and to-dos": "Search for to-do lists and to-dos",
+    "To-do lists with project": "To-do lists with project",
+    "To-do lists without project": "To-do lists without project",
+    "Only personal to-do lists": "Only personal to-do lists",
+    "Only shared to-do lists": "Only shared to-do lists",
+    "Show completed tasks": "Show completed tasks",
+    "Show to-do lists without tasks": "Show to-do lists without tasks",
+    "Project period ascending": "Project period ascending",
+    "Project period descending": "Project period descending",
+    "ToDo-List name descending": "ToDo-List name descending",
+    "ToDo-List name ascending": "ToDo-List name ascending",
+    "My ToDo-Lists": "My ToDo-Lists"
 }

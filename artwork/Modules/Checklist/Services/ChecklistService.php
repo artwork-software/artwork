@@ -11,6 +11,7 @@ use Artwork\Modules\ChecklistTemplate\Http\Resources\ChecklistTemplateIndexResou
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\User\Models\User;
@@ -29,7 +30,7 @@ readonly class ChecklistService
         ChecklistUpdateRequest $request,
         TaskService $taskService
     ): Checklist|Model {
-        $checklist->fill($request->data());
+        $checklist->fill($request->all());
 
         if ($request->get('tasks')) {
             $taskService->deleteByChecklist($checklist);
@@ -40,17 +41,15 @@ readonly class ChecklistService
         return $this->checklistRepository->save($checklist);
     }
 
-    public function getChecklistsWithMyTask(int $userId, int $filter): Collection
-    {
-        $doneTask = false;
-        if ($filter === 3) {
-            $doneTask = true;
-        }
-
+    public function getChecklistsWithMyTask(
+        int $userId,
+        ProjectTabService $projectTabService,
+        int $sort
+    ): \Illuminate\Support\Collection {
         return $this->checklistRepository->getChecklistWhereHasTaskUsersWithFilteredTasks(
             $userId,
-            $filter,
-            $doneTask
+            $projectTabService,
+            $sort
         );
     }
 
@@ -64,12 +63,17 @@ readonly class ChecklistService
         return $this->checklistRepository->getChecklistsForUserWithFilteredTasks($userId, $doneTask, $filter);
     }
 
-    public function assignUsersById(Checklist $checklist, TaskService $taskService, array $ids): void
+    public function assignUsersById(Checklist $checklist, array $ids): void
     {
         $checklist->users()->sync($ids);
-        $taskService->getByChecklist($checklist)->each(function (Task $task) use ($ids, $taskService): void {
-            $taskService->syncTaskUsersWithDetach($task, $ids);
-        });
+        if ($checklist->hasProject()) {
+            $project = $checklist->project;
+            foreach ($ids as $id) {
+                if (!$project->users->contains($id)) {
+                    $project->users()->attach($id);
+                }
+            }
+        }
     }
 
     public function delete(Checklist $checklist, TaskService $taskService): void
@@ -122,13 +126,45 @@ readonly class ChecklistService
         $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
             ChecklistTemplate::all()
         )->resolve();
+        $userId = Auth::id();
         $headerObject->project->public_checklists = ChecklistIndexResource::collection(
-            $project->checklists->whereNull('user_id')->whereIn('tab_id', $componentInTab->scope)
-        )
-            ->resolve();
+            $project->checklists
+                ->whereIn('tab_id', $componentInTab->scope)
+                ->where('private', false)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
         $headerObject->project->private_checklists = ChecklistIndexResource::collection(
-            $project->checklists->where('user_id', Auth::id())->whereIn('tab_id', $componentInTab->scope)
-        )->resolve();
+            $project->checklists
+                ->whereIn('tab_id', $componentInTab->scope)
+                ->where('private', true)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
         return $headerObject;
     }
 
@@ -136,16 +172,43 @@ readonly class ChecklistService
     {
         $headerObject->project->opened_checklists = User::where('id', Auth::id())
             ->first()->opened_checklists;
-        $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
-            ChecklistTemplate::all()
-        )->resolve();
+        $userId = Auth::id();
         $headerObject->project->public_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists->whereNull('user_id')
-        )
-            ->resolve();
+            $project->checklists
+                ->where('private', false)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
         $headerObject->project->private_all_checklists = ChecklistIndexResource::collection(
-            $project->checklists->where('user_id', Auth::id())
-        )->resolve();
+            $project->checklists
+                ->where('private', true)
+                ->filter(function ($checklist) use ($userId) {
+                    // Prüfen, ob der Benutzer in den Checklistenbenutzern ist
+                    $isInChecklistUsers = $checklist->users->contains('id', $userId);
+
+                    // Prüfen, ob der Benutzer in den Aufgabenbenutzern ist
+                    $isInTaskUsers = $checklist->tasks->contains(function ($task) use ($userId) {
+                        return $task->task_users->contains('id', $userId);
+                    });
+
+                    // Prüfen, ob der Benutzer der Ersteller der Checkliste ist
+                    $isCreator = $checklist->user_id === $userId;
+
+                    return $isInChecklistUsers || $isInTaskUsers || $isCreator;
+                })
+        );
         return $headerObject;
     }
 

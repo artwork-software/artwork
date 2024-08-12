@@ -25,6 +25,7 @@ class TaskService
     public function createTaskByRequest(
         Checklist $checklist,
         string $name,
+        int $userId,
         ?string $description,
         ?string $deadline,
         ?array $userIds
@@ -41,9 +42,25 @@ class TaskService
             ])
         );
 
+
+        // add all users to $checklist->project when they not in project
+        if ($checklist->hasProject()) {
+            foreach ($userIds as $userId) {
+                if(!$checklist->project->users->contains($userId)) {
+                    $checklist->project->users()->attach($userId);
+                }
+            }
+        }
+
+        // remove $userId from $userIds
+        $userIds = array_diff($userIds, [$userId]);
+
         if ($userIds) {
             $this->taskRepository->syncWithDetach($task->task_users(), $userIds);
         }
+
+        // add $userId to Task
+        $task->task_users()->attach($userId);
 
         return $task;
     }
@@ -154,7 +171,7 @@ class TaskService
     ): Task {
         $task->name = $data->get('name');
         $task->description = $data->get('description');
-        $task->deadline = Carbon::parse($data->get('deadline'))->endOfDay();
+        $task->deadline = Carbon::parse($data->get('deadlineDate'))->endOfDay();
         $task->done = false;
         $task->done_at = null;
         $task->user_id = null;
@@ -162,6 +179,16 @@ class TaskService
             $task,
             $data->get('users')
         );
+
+        $checklist = $task->checklist;
+        $userIds = $data->get('users');
+        if ($checklist->hasProject()) {
+            foreach ($userIds as $userId) {
+                if (!$checklist->project->users->contains($userId)) {
+                    $checklist->project->users()->attach($userId);
+                }
+            }
+        }
 
         $this->taskRepository->save($task);
         return $task;

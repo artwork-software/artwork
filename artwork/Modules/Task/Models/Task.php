@@ -96,7 +96,7 @@ class Task extends Model
     public function getFormattedDates(): array
     {
         return [
-            'deadline' => $this->deadline ? $this->deadline->translatedFormat('l, d. F Y') : null,
+            'deadline' => $this->deadline ? $this->deadline->translatedFormat('d.m') : null,
             'done_at' => $this->done_at ? $this->done_at->translatedFormat('d. F Y') : null,
             'done_at_with_day' => $this->done_at ? $this->done_at->translatedFormat('l, d. F Y') : null,
         ];

@@ -9,6 +9,6 @@
     }
 
     .checklist-listview-container {
-        @apply space-y-5 mt-5;
+        @apply space-y-5 mt-5 min-h-screen;
     }
 }

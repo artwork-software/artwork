@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" ref="calendarRef" class="bg-white" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="sticky top-0 z-40 -mx-5 -my-4">
+        <div class=" w-full top-0 left-4 py-4  z-40 -mx-10 -my-4" :class="project ? [checkIfScrolledToCalendarRef] : 'fixed ml-10'">
             <AsyncFunctionBarCalendar
                 :multi-edit="multiEdit"
                 :project="project"
@@ -10,9 +10,11 @@
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
             />
-            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center bg-gray-50">
-                <div class="flex errorText items-center cursor-pointer my-2"
-                     @click="showEventsWithoutRoomComponent = true">
+        </div>
+
+        <div :class="computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'mt-16' : ''">
+            <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
+                <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
                     {{
                         computedFilteredEvents.length === 1 ?
@@ -21,7 +23,16 @@
                     }}
                 </div>
             </div>
+
+            <div class="w-full overflow-y-scroll" >
+                <div class="mb-1 ml-4 max-w-7xl">
+                    <div class="flex">
+                        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
@@ -63,8 +74,8 @@
             </div>
         </div>
     </div>
-    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-40 pointer-events-none"
-         v-if="multiEdit">
+
+    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
         <div class="flex items-center justify-center h-full gap-4">
             <div>
                 <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
@@ -81,6 +92,7 @@
             </div>
         </div>
     </div>
+
     <EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
@@ -94,22 +106,26 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         @closed="eventComponentClosed"
     />
+
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
         :description="deleteDescription"
         @closed="deleteComponentVisible = false"
         @delete="deleteEvent"/>
+
     <DeclineEventModal
         v-if="showDeclineEventModal"
         :request-to-decline="declineEvent"
         :event-types="eventTypes"
         @declined="eventDeclined"
         @closed="showDeclineEventModal = false"/>
+
     <MultiEditModal v-if="showMultiEditModal"
                     :checked-events="editEvents"
                     :rooms="rooms"
                     @closed="closeMultiEditModal"/>
+
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
         :title="$t('Delete assignments')"
@@ -123,6 +139,7 @@
         :event-types="eventTypes"
         :sub-event-to-edit="subEventToEdit"
         @close="closeAddSubEventModal"/>
+
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
         @closed="showEventsWithoutRoomComponent = false"
@@ -134,6 +151,7 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         @desires-reload="handleReload"
     />
+
     <div v-if="showReceivesNewDataOverlay"
          class="bg-opacity-50 bg-black text-white w-full h-full absolute inset-0 z-50 justify-center text-center">
         <div class="flex flex-col w-full h-full justify-center">
@@ -144,7 +162,7 @@
 
 <script setup>
 import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
-import {usePage} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import {usePermission} from "@/Composeables/Permission.js";
@@ -158,6 +176,11 @@ import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvent} from "@/Composeables/Event.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+
+const filterOptions = inject('filterOptions');
+const personalFilters = inject('personalFilters');
+const user_filters = inject('user_filters');
 
 const props = defineProps({
         rooms: {
@@ -304,6 +327,7 @@ const props = defineProps({
     eventToDelete = ref(null),
     wantedRoom = ref(null),
     roomCollisions = ref([]),
+    checkIfScrolledToCalendarRef = ref('!-ml-3'),
     handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
         if (considerOnMultiEdit) {
             editEvents.value.push(eventId);
@@ -486,6 +510,150 @@ const props = defineProps({
         );
     };
 
+
+
+
+
+const activeFilters = computed(() => {
+    let activeFiltersArray = []
+    filterOptions.rooms.forEach((room) => {
+        if (user_filters.rooms?.includes(room.id)) {
+            activeFiltersArray.push(room)
+        }
+    })
+
+    filterOptions.areas.forEach((area) => {
+        if (user_filters.areas?.includes(area.id)) {
+            activeFiltersArray.push(area)
+        }
+    })
+
+    filterOptions.eventTypes.forEach((eventType) => {
+        if (user_filters.event_types?.includes(eventType.id)) {
+            activeFiltersArray.push(eventType)
+        }
+    })
+
+    filterOptions.roomCategories.forEach((category) => {
+        if (user_filters.room_categories?.includes(category.id)) {
+            activeFiltersArray.push(category)
+        }
+    })
+
+    filterOptions.roomAttributes.forEach((attribute) => {
+        if (user_filters.room_attributes?.includes(attribute.id)) {
+            activeFiltersArray.push(attribute)
+        }
+    })
+
+    if (user_filters.is_loud) {
+        activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
+    }
+
+    if (user_filters.is_not_loud) {
+        activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
+    }
+
+    if (user_filters.adjoining_no_audience) {
+        activeFiltersArray.push({
+            name: "Ohne Nebenveranstaltung mit Publikum",
+            value: 'adjoiningNoAudience',
+            user_filter_key: 'adjoining_no_audience'
+        })
+    }
+
+    if (user_filters.adjoining_not_loud) {
+        activeFiltersArray.push({
+            name: "Ohne laute Nebenveranstaltung",
+            value: 'adjoiningNotLoud',
+            user_filter_key: 'adjoining_not_loud'
+        })
+    }
+
+    if (user_filters.has_audience) {
+        activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
+    }
+
+    if (user_filters.has_no_audience) {
+        activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
+    }
+
+    if (user_filters.show_adjoining_rooms) {
+        activeFiltersArray.push({
+            name: "Nebenräume anzeigen",
+            value: 'showAdjoiningRooms',
+            user_filter_key: 'show_adjoining_rooms'
+        })
+    }
+
+    return activeFiltersArray
+})
+
+const removeFilter = (filter) => {
+    if (filter.value === 'isLoud') {
+        updateFilterValue('is_loud', false);
+    }
+
+    if (filter.value === 'isNotLoud') {
+        updateFilterValue('is_not_loud', false)
+    }
+
+    if (filter.value === 'adjoiningNoAudience') {
+        updateFilterValue('adjoining_no_audience', false)
+    }
+
+    if (filter.value === 'adjoiningNotLoud') {
+        updateFilterValue('adjoining_not_loud', false)
+    }
+
+    if (filter.value === 'hasAudience') {
+        updateFilterValue('has_audience', false)
+    }
+
+    if (filter.value === 'hasNoAudience') {
+        updateFilterValue('has_no_audience', false)
+    }
+
+    if (filter.value === 'showAdjoiningRooms') {
+        updateFilterValue('show_adjoining_rooms', false)
+    }
+
+    if (filter.value === 'rooms') {
+        user_filters.rooms.splice(user_filters.rooms.indexOf(filter.id), 1);
+        updateFilterValue('rooms', user_filters.rooms.length > 0 ? user_filters.rooms : null)
+    }
+
+    if (filter.value === 'room_categories') {
+        user_filters.room_categories.splice(user_filters.room_categories.indexOf(filter.id), 1);
+        updateFilterValue('room_categories', user_filters.room_categories.length > 0 ? user_filters.room_categories : null)
+    }
+
+    if (filter.value === 'areas') {
+        user_filters.areas.splice(user_filters.areas.indexOf(filter.id), 1);
+        updateFilterValue('areas', user_filters.areas.length > 0 ? user_filters.areas : null)
+    }
+
+    if (filter.value === 'event_types') {
+        user_filters.event_types.splice(user_filters.event_types.indexOf(filter.id), 1);
+        updateFilterValue('event_types', user_filters.event_types.length > 0 ? user_filters.event_types : null)
+    }
+
+    if (filter.value === 'room_attributes') {
+        user_filters.room_attributes.splice(user_filters.room_attributes.indexOf(filter.id), 1);
+        updateFilterValue('room_attributes', user_filters.room_attributes.length > 0 ? user_filters.room_attributes : null)
+    }
+}
+
+const updateFilterValue = (key, value) => {
+    router.patch(route('user.calendar.filter.single.value.update', {user: usePage().props.user.id}), {
+        key: key,
+        value: value
+    }, {
+        preserveScroll: true,
+        preserveState: false
+    });
+}
+
 onMounted(() => {
     window.addEventListener(
         "fullscreenchange",
@@ -497,7 +665,19 @@ onMounted(() => {
     );
 
     composedStartDaysAndEventsIntersectionObserving();
+
+    // add a watch or something to check if the user is scrolled down to CalendarRef if yes add to checkIfScrolledToCalendarRef = fixed
+
+    window.addEventListener('scroll', () => {
+        if (document.getElementById('myCalendar').getBoundingClientRect().top < 0) {
+            checkIfScrolledToCalendarRef.value = 'fixed !-ml-2';
+        } else {
+            checkIfScrolledToCalendarRef.value = '';
+        }
+    });
 });
+
+
 </script>
 
 <style scoped>

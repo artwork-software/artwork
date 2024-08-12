@@ -183,7 +183,7 @@ class ProjectController extends Controller
     {
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
-                $request->string('search'),
+                $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects(),
@@ -3303,5 +3303,25 @@ class ProjectController extends Controller
                     ->setTranslationKey('Cost center changed')
             );
         }
+    }
+
+    public function scoutSearch(Request $request): Collection
+    {
+        $projects = collect();
+        if (
+            request()->has('project_search') &&
+            request()->get('project_search') !== null &&
+            request()->get('project_search') !== ''
+        ) {
+            $projects = Project::search($request->string('project_search'))->get()->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'key_visual_path' => $project->key_visual_path,
+                ];
+            });
+        }
+
+        return $projects;
     }
 }

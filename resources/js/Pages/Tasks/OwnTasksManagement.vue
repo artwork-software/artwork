@@ -3,7 +3,7 @@
         <div class="ml-14">
             <div>
                 <ChecklistFunctionBar
-                    title="My tasks"
+                    title="My ToDo-Lists"
                     :filters="filters"
                     :checklist_templates="checklist_templates"
                     is-in-own-task-management
@@ -17,7 +17,7 @@
                                 <TextInputComponent
                                     id="userSearch"
                                     v-model="search"
-                                    label="Search for tasks"
+                                    :label="$t('Search for to-do lists and to-dos')"
                                     class="w-full"
                                     @focus="search = ''"
                                     is-small
@@ -41,7 +41,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        ToDo-Listen mit Projekt
+                                        {{ $t('To-do lists with project') }}
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
@@ -49,7 +49,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        ToDo-Listen Ohne Projekt
+                                        {{ $t('To-do lists without project') }}
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
@@ -57,7 +57,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        Private ToDo-Listen
+                                        {{ $t('Only personal to-do lists') }}
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
@@ -65,7 +65,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        keine persönlichen ToDo-Listen
+                                        {{ $t('Only shared to-do lists') }}
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
@@ -73,7 +73,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        Abgeschlossene Aufgaben anzeigen
+                                        {{ $t('Show completed tasks') }}
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
@@ -81,7 +81,7 @@
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
-                                        ToDo-Listen ohne ToDo's anzeigen
+                                        {{ $t('Show to-do lists without tasks') }}
                                     </p>
                                 </div>
                             </div>
@@ -92,28 +92,28 @@
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(1)"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    Projektzeitraum aufsteigend
+                                    {{ $t('Project period ascending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(2)"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    Projektzeitraum absteigend
+                                    {{ $t('Project period descending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="currentSort = 3"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    Checkliste Name absteigend
+                                    {{ $t('ToDo-List name descending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 3" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="currentSort = 4"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    Checkliste Name aufsteigend
+                                    {{ $t('ToDo-List name ascending') }}
                                     <IconCheck class="w-5 h-5" v-if="currentSort === 4" />
                                 </div>
                             </MenuItem>

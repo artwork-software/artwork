@@ -18,7 +18,7 @@
                         <TextInputComponent
                             id="userSearch"
                             v-model="search"
-                            label="Search for tasks"
+                            :label="$t('Search for to-do lists and to-dos')"
                             class="w-full"
                             @focus="search = ''"
                             is-small
@@ -34,14 +34,14 @@
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            Checkliste Name absteigend
+                            {{ $t('ToDo-List name descending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                         </div>
                     </MenuItem>
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 2"
                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                            Checkliste Name aufsteigend
+                            {{ $t('ToDo-List name ascending') }}
                             <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                         </div>
                     </MenuItem>

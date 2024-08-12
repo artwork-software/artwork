@@ -108,15 +108,14 @@ export default defineComponent({
     },
     methods: {
         updateCommunicationAndLegal() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                urlRegex = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
 
             this.showInvalidBusinessEmailAddressErrorText =
                 this.mailForm.businessEmail !== '' && !emailRegex.test(this.mailForm.businessEmail);
-
             this.showInvalidInvitationEmailAdressErrorText =
                 this.mailForm.invitationEmail !== '' && !emailRegex.test(this.mailForm.invitationEmail);
 
-            const urlRegex = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
             this.showInvalidImpressumLinkErrorText =
                 this.mailForm.impressumLink !== '' && !urlRegex.test(this.mailForm.impressumLink);
             this.showInvalidPrivacyLinkErrorText =

@@ -11,17 +11,17 @@
         <div class="grid grid-cols-1 gap-4 mt-10 max-w-lg">
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.page_title" id="page_title" :label="$t('Page Title')"/>
+                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.page_title" id="page_title" :label="$t('Page Title')"/>
                 </div>
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.businessName" id="businessName" :label="$t('Our Organization')"/>
+                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.businessName" id="businessName" :label="$t('Our Organization')"/>
                 </div>
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
+                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.impressumLink" id="impressumLink" :label="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
@@ -30,28 +30,40 @@
             </div>
             <div class="">
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
+                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.privacyLink" id="privacyLink" :label="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
-            <div class="">
+            <div>
                 <div class="sm:col-span-3">
-                    <TextInputComponent @focusout="changeEmailData" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
+                    <TextInputComponent id="invitationEmail"
+                                        v-model="mailForm.invitationEmail"
+                                        :label="$t('Invitation Email')"
+                                        @focusout="updateCommunicationAndLegal"/>
+                    <span v-if="showInvalidInvitationEmailAdressErrorText"
+                          class="errorText">
+                        {{ $t('Invalid Email Address') }}
+                    </span>
+                </div>
+            </div>
+            <div>
+                <div class="sm:col-span-3">
+                    <TextInputComponent @focusout="updateCommunicationAndLegal" v-model="mailForm.businessEmail" id="businessEmail" :label="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
                           class="errorText">
                         {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
             </div>
-            <div class="">
+            <div>
                 <div class="sm:col-span-8">
                     <TextareaComponent
                         :label="$t('Email-Footer')"
                         v-model="mailForm.emailFooter"
-                        @focusout="changeEmailData"
+                        @focusout="updateCommunicationAndLegal"
                         rows="4"
                         id="emailFooter"/>
                 </div>
@@ -85,19 +97,24 @@ export default defineComponent({
                 impressumLink: this.$page.props.impressumLink,
                 privacyLink: this.$page.props.privacyLink,
                 emailFooter: this.$page.props.emailFooter,
+                invitationEmail: this.$page.props.invitationEmail,
                 businessEmail: this.$page.props.businessEmail
             }),
+            showInvalidInvitationEmailAdressErrorText: false,
             showInvalidBusinessEmailAddressErrorText: false,
             showInvalidImpressumLinkErrorText: false,
             showInvalidPrivacyLinkErrorText: false
         }
     },
     methods: {
-        changeEmailData() {
+        updateCommunicationAndLegal() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
             this.showInvalidBusinessEmailAddressErrorText =
                 this.mailForm.businessEmail !== '' && !emailRegex.test(this.mailForm.businessEmail);
+
+            this.showInvalidInvitationEmailAdressErrorText =
+                this.mailForm.invitationEmail !== '' && !emailRegex.test(this.mailForm.invitationEmail);
 
             const urlRegex = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
             this.showInvalidImpressumLinkErrorText =
@@ -106,6 +123,7 @@ export default defineComponent({
                 this.mailForm.privacyLink !== '' && !urlRegex.test(this.mailForm.privacyLink);
 
             if (
+                this.showInvalidInvitationEmailAdressErrorText ||
                 this.showInvalidBusinessEmailAddressErrorText ||
                 this.showInvalidImpressumLinkErrorText ||
                 this.showInvalidPrivacyLinkErrorText
@@ -113,8 +131,13 @@ export default defineComponent({
                 return;
             }
 
-            if(this.mailForm.isDirty){
-                this.mailForm.patch(route('tool.communication-and-legal.update'));
+            if (this.mailForm.isDirty) {
+                this.mailForm.patch(
+                    route('tool.communication-and-legal.update'),
+                    {
+                        preserveScroll: true
+                    }
+                );
             }
 
         }

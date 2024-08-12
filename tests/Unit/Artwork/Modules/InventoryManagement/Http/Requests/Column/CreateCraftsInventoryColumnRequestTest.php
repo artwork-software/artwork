@@ -6,6 +6,7 @@ use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Http\Requests\Column\CreateCraftsInventoryColumnRequest;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ConditionalRules;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\RequiredIf;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -19,7 +20,11 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
         return [
             [
                 new CreateCraftsInventoryColumnRequest(),
-                new CreateCraftsInventoryColumnRequest()
+                new CreateCraftsInventoryColumnRequest(),
+                //typeOptions validation rules when required
+                ['min:1'],
+                //typeOptions validation rules when not required
+                ['min:0']
             ]
         ];
     }
@@ -29,7 +34,9 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
      */
     public function testRules(
         CreateCraftsInventoryColumnRequest $firstRequest,
-        CreateCraftsInventoryColumnRequest $secondRequest
+        CreateCraftsInventoryColumnRequest $secondRequest,
+        array $requiredTypeOptionsRules,
+        array $notRequiredTypeOptionsRules
     ): void {
         //test with required select option types
         $firstRequest->request = $this->getMockBuilder(ParameterBag::class)
@@ -71,10 +78,19 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
         );
 
         self::assertArrayHasKey('typeOptions', $rules);
-        self::assertInstanceOf(RequiredIf::class, $rules['typeOptions'][0]);
-        self::assertSame('array', $rules['typeOptions'][1]);
-        self::assertSame('min:1', $rules['typeOptions'][2]);
-        self::assertTrue($rules['typeOptions'][0]->condition);
+        self::assertSame('array', $rules['typeOptions'][0]);
+        self::assertInstanceOf(RequiredIf::class, $rules['typeOptions'][1]);
+        self::assertInstanceOf(ConditionalRules::class, $rules['typeOptions'][2]);
+        self::assertInstanceOf(ConditionalRules::class, $rules['typeOptions'][3]);
+        self::assertSame(
+            $requiredTypeOptionsRules,
+            $rules['typeOptions'][2]->rules()
+        );
+        self::assertSame(
+            $notRequiredTypeOptionsRules,
+            $rules['typeOptions'][3]->rules()
+        );
+        self::assertTrue($rules['typeOptions'][1]->condition);
 
         self::assertArrayHasKey('typeOptions.*', $rules);
         self::assertSame('required|string', $rules['typeOptions.*']);
@@ -97,6 +113,6 @@ class CreateCraftsInventoryColumnRequestTest extends TestCase
 
         $rules = $secondRequest->rules();
 
-        self::assertFalse($rules['typeOptions'][0]->condition);
+        self::assertFalse($rules['typeOptions'][1]->condition);
     }
 }

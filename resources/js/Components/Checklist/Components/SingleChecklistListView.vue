@@ -7,7 +7,7 @@
                 </span>
                 {{ checklist?.name }}
                 <div>
-                    <IconChevronDown class="h-6 w-6 text-primary" :class="$page.props.user.opened_checklists.includes(checklist.id) ? 'rotate-180' : 'closed'" />
+                    <IconChevronDown class="h-6 w-6 text-primary" :class="$page.props.user.opened_checklists.includes(checklist?.id) ? 'rotate-180' : 'closed'" />
                 </div>
             </div>
             <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement" no-relative>
@@ -19,7 +19,7 @@
                     </a>
                 </MenuItem>
                 <MenuItem as="div" v-slot="{ active }">
-                    <a @click="showChecklistEditModal = true" v-if="isAdmin" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
+                    <a @click="showChecklistEditModal = true" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconEdit stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
                         {{ $t('Edit') }}
                     </a>
@@ -65,7 +65,7 @@
             </BaseMenu>
         </div>
 
-        <div class="flex items-center gap-x-1 text-xs" v-if="checklist.tasks.length > 0">
+        <div class="flex items-center gap-x-1 text-xs" v-if="checklist?.tasks.length > 0">
             <div v-for="task in checklist.tasks" class="w-2.5 h-2.5 flex flex-col justify-center overflow-hidden  text-xs text-white text-center whitespace-nowrap transition duration-500" v-show="!checkIfAllTasksAreDone" :class="task.done ? 'bg-teal-500' : 'bg-gray-500'" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
             <div class="ms-1" v-if="checkIfAllTasksAreDone">
                 <span class="flex-shrink-0 ms-auto size-4 flex justify-center items-center rounded-full bg-teal-500 text-white">
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <div v-if="$page.props.user.opened_checklists.includes(checklist.id)">
+    <div v-if="$page.props.user.opened_checklists.includes(checklist?.id)">
         <div class="mb-2 text-xs" v-if="checklist.hasProject">
            <div class=" flex gap-x-1">
                {{ $t('Project') }}:

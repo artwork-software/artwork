@@ -76,33 +76,45 @@
                                         Abgeschlossene Aufgaben anzeigen
                                     </p>
                                 </div>
+                                <div class="flex max-h-8 mb-3 mt-3">
+                                    <input v-model="showChecklistWithoutTasks"
+                                           type="checkbox"
+                                           class="input-checklist-dark"/>
+                                    <p class=" ml-4 my-auto text-sm text-secondary">
+                                        ToDo-Listen ohne ToDo's anzeigen
+                                    </p>
+                                </div>
                             </div>
                         </BaseFilter>
                     </template>
                     <template #sort>
-                        <BaseMenu show-sort-icon dots-size="h-7 w-7">
+                        <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(1)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     Projektzeitraum aufsteigend
+                                    <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
                                 <div @click="sortTo(2)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     Projektzeitraum absteigend
+                                    <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                                 </div>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <div @click="sortTo(3)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    Checkliste Name aufsteigend
-                                </div>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <div @click="sortTo(4)"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <div @click="currentSort = 3"
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                     Checkliste Name absteigend
+                                    <IconCheck class="w-5 h-5" v-if="currentSort === 3" />
+                                </div>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <div @click="currentSort = 4"
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                    Checkliste Name aufsteigend
+                                    <IconCheck class="w-5 h-5" v-if="currentSort === 4" />
                                 </div>
                             </MenuItem>
                             <!--<MenuItem v-slot="{ active }">
@@ -158,6 +170,8 @@
                 </div>
             </div>
         </div>
+
+
     </app-layout>
 </template>
 
@@ -170,12 +184,13 @@ import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vu
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
-import {IconFilter, IconSearch, IconX} from "@tabler/icons-vue";
+import {IconSearch, IconX} from "@tabler/icons-vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
+import { IconCheck } from "@tabler/icons-vue";
 
 const $t = useTranslation();
 
@@ -197,6 +212,9 @@ const noProjects = ref(false);
 const privateChecklists = ref(false);
 const noPrivateChecklists = ref(false);
 const showDoneTasks = ref(false);
+const showChecklistWithoutTasks = ref(false);
+
+const currentSort = ref(usePage().props.urlParameters?.filter > 0 ? parseInt(usePage().props.urlParameters?.filter) : 0);
 
 const filters = ref([
     { name: $t('According to checklists'), type: 1 },
@@ -215,27 +233,49 @@ const filteredChecklists = computed(() => {
         if (noProjects.value) include = include && checklist.hasProject === false;
         if (privateChecklists.value) include = include && checklist.private === true;
         if (noPrivateChecklists.value) include = include && checklist.private === false;
+
+        // entferne checklisten die nur erledigt aufgaben haben oder keine aufgaben
+        if (showChecklistWithoutTasks.value) {
+            include = include && checklist.tasks.length > 0;
+        } else {
+            include = include && checklist.tasks.length > 0 && checklist.tasks.some(task => !task.done);
+        }
+
         return include;
     });
+
+    // sort checklists by name if currentSort is 3, or 4
+
 });
 
 const checklistsComputed = computed(() => {
-    return filteredChecklists.value.map(checklist => {
+    const checklists = filteredChecklists.value.map(checklist => {
         let tasks = checklist.tasks;
         if (!showDoneTasks.value) {
             tasks = tasks.filter(task => !task.done);
         }
+
         return {
             ...checklist,
             tasks
         };
     });
+
+    if (currentSort.value === 3) {
+        return checklists.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (currentSort.value === 4) {
+        return checklists.sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+        return checklists;
+    }
 });
+
 
 
 const moneySourceTasks = ref(props.money_source_task)
 
 const sortTo = (type) => {
+    currentSort.value = type;
     router.reload({
         data: {
             filter: type

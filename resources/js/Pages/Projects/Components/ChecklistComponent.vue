@@ -29,6 +29,24 @@
                     </div>
                 </div>
             </template>
+            <template #sort>
+                <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+                    <MenuItem v-slot="{ active }">
+                        <div @click="currentSort = 1"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                            Checkliste Name absteigend
+                            <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
+                        </div>
+                    </MenuItem>
+                    <MenuItem v-slot="{ active }">
+                        <div @click="currentSort = 2"
+                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                            Checkliste Name aufsteigend
+                            <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
+                        </div>
+                    </MenuItem>
+                </BaseMenu>
+            </template>
         </ChecklistFunctionBar>
 
         <div v-if="usePage().props.user.checklist_style === 'list'">
@@ -64,10 +82,12 @@ import { usePage } from '@inertiajs/vue3';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
 import ChecklistFunctionBar from "@/Components/Checklist/ChecklistFunctionBar.vue";
-import { IconSearch, IconX } from "@tabler/icons-vue";
+import {IconCheck, IconSearch, IconX} from "@tabler/icons-vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 import {usePermission} from "@/Composeables/Permission.js";
+import {MenuItem} from "@headlessui/vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 
 const props = defineProps({
@@ -86,7 +106,7 @@ const showSearch = ref(false);
 const search = ref('');
 
 const isAdmin = computed(() => role('artwork admin'));
-
+const currentSort = ref(0)
 const projectCanWriteIds = computed(() => {
     let canWriteArray = [];
     props.project.write_auth?.forEach(write => {
@@ -101,41 +121,23 @@ const allChecklists = computed(() => {
 
 
 const filteredChecklists = computed(() => {
-    return allChecklists.value.filter(checklist => {
+    const checklists = allChecklists.value.filter(checklist => {
         let include = true;
         if (search.value) {
             include = checklist.name.toLowerCase().includes(search.value.toLowerCase()) || checklist.tasks.some(task => task.name.toLowerCase().includes(search.value.toLowerCase()));
         }
         return include;
     });
+
+    if (currentSort.value === 1) {
+        return checklists.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (currentSort.value === 2) {
+        return checklists.sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+        return checklists;
+    }
 });
 
-const checklistsComputed = computed(() => {
-    return filteredChecklists.value.map(checklist => {
-        let tasks = checklist.tasks;
-        return {
-            ...checklist,
-            tasks
-        };
-    });
-});
-
-
-/*const checklistsComputed = computed(() => {
-    // packe alle Task in den Checklisten die erledigt sind nach unten und sortiere die tasks nach deren Deadline. Die nächste Deadline soll oben stehen und füge die Suche für Checklist (name) und task name hinzu
-    return allChecklists.value.map(checklist => {
-        const tasks = checklist.tasks;
-
-        const completedTasks = tasks.filter(task => task.done);
-        const uncompletedTasks = tasks.filter(task => !task.done);
-
-        return {
-            ...checklist,
-            tasks: [...uncompletedTasks, ...completedTasks]
-        };
-    });
-
-});*/
 
 const removeSearch = () => {
     search.value = '';
@@ -143,22 +145,6 @@ const removeSearch = () => {
 };
 
 
-// add search for checklist name and task name
-/*const filteredChecklists = computed(() => {
-    return checklistsComputed.value.map(checklist => {
-        const tasks = checklist.tasks.filter(task => {
-            return task.name.toLowerCase().includes(search.value.toLowerCase());
-        });
-
-        const completedTasks = tasks.filter(task => task.done);
-        const uncompletedTasks = tasks.filter(task => !task.done);
-
-        return {
-            ...checklist,
-            tasks: [...uncompletedTasks, ...completedTasks]
-        };
-    });
-});*/
 
 </script>
 

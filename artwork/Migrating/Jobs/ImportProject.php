@@ -12,12 +12,10 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Bus\Dispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\DB;
 
 class ImportProject
 {
@@ -63,7 +61,8 @@ class ImportProject
             $projectGroupImportModel = $this->dataAggregator->findProjectGroup(
                 $this->projectImportModel->projectGroupIdentifier
             );
-            if ($projectGroupImportModel &&
+            if (
+                $projectGroupImportModel &&
                 $projectGroup = $projectService->getProjectGroupByName(
                     $projectGroupImportModel->name
                 )

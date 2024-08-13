@@ -1020,7 +1020,7 @@ readonly class EventService
 
     public function findEventById(
         int $eventId
-    ): Event {
+    ): ?Event {
         return $this->eventRepository->findById($eventId);
     }
 

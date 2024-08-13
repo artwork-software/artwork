@@ -2,10 +2,12 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Mail\NotificationSummary;
 use Artwork\Modules\User\Models\User;
+use Dotenv\Dotenv;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -15,9 +17,22 @@ class SendNotificationsEmailSummariesCommand extends Command
 
     protected $description = 'Sends summaries of notifications to all users.';
 
+    private readonly array $env;
+
+    public function __construct(private readonly GeneralSettings $generalSettings)
+    {
+        parent::__construct();
+
+        $this->env = Dotenv::parse(
+            file_get_contents(base_path('.env'))
+        );
+    }
+
     public function handle(): int
     {
-        $frequency = $this->argument('frequency');
+        $frequency = str_contains(($frequency = $this->argument('frequency')), '=') ?
+            explode('=', $frequency)[1] :
+            $frequency;
 
         if (is_null(NotificationFrequencyEnum::tryFrom($frequency))) {
             $this->error('Argument "frequency" must be type of ' . NotificationFrequencyEnum::class);
@@ -25,14 +40,15 @@ class SendNotificationsEmailSummariesCommand extends Command
             return 1;
         }
 
-        User::all()->each(fn (User $user) => $this->sendNotificationsSummary($user));
+        User::all()->each(fn (User $user) => $this->sendNotificationsSummary($user, $frequency));
+
         return 0;
     }
 
-    protected function sendNotificationsSummary(User $user): void
+    protected function sendNotificationsSummary(User $user, string $frequency): void
     {
         $typesOfUser = $user->notificationSettings()
-            ->where('frequency', $this->argument('frequency'))
+            ->where('frequency', $frequency)
             ->where('enabled_email', true)
             ->pluck("type");
 
@@ -49,13 +65,17 @@ class SendNotificationsEmailSummariesCommand extends Command
                 return $notification['data']['groupType'];
             });
 
-
         $notificationArray = [];
         foreach ($notifications as $notification) {
             $count = 1;
             foreach ($notification as $notificationBody) {
                 $notificationArray[$notificationBody->data['groupType']] = [
-                    'title' => NotificationGroupEnum::from($notificationBody->data['groupType'])->title(),
+                    'title' => __(
+                        'notification-group-enum.title.' .
+                        NotificationGroupEnum::from($notificationBody->data['groupType'])->title(),
+                        [],
+                        'de'
+                    ),
                     'count' => $count++,
                 ];
             }
@@ -65,8 +85,16 @@ class SendNotificationsEmailSummariesCommand extends Command
                 ];
             }
         }
+
         if (!empty($notificationArray)) {
-            Mail::to($user)->send(new NotificationSummary($notificationArray, $user->first_name));
+            Mail::to($user)->send(
+                new NotificationSummary(
+                    $notificationArray,
+                    $user->first_name,
+                    $this->generalSettings->page_title,
+                    $this->env['SYSTEM_MAIL']
+                )
+            );
         }
     }
 }

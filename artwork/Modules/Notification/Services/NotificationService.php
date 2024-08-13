@@ -4,8 +4,10 @@ namespace Artwork\Modules\Notification\Services;
 
 use Artwork\Modules\Budget\Notifications\BudgetVerified;
 use Artwork\Modules\Department\Notifications\TeamNotification;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
+use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
@@ -26,11 +28,11 @@ class NotificationService
 {
     public ?User $notificationTo = null;
 
+    public ?NotificationEnum $notificationConstEnum = null;
+
     public string $title;
 
     public array|null $description = [];
-
-    public ?NotificationEnum $notificationConstEnum = null;
 
     public string $icon = 'green';
 
@@ -61,6 +63,10 @@ class NotificationService
     protected string $notificationKey = '';
 
     public object|null $budgetData = null;
+
+    public function __construct(private readonly EventService $eventService)
+    {
+    }
 
     public function getPriority(): int
     {
@@ -206,6 +212,11 @@ class NotificationService
         return $this->eventId;
     }
 
+    public function getEventByEventId(): ?Event
+    {
+        return $this->eventId ? $this->eventService->findEventById($this->eventId) : null;
+    }
+
     public function setEventId(?int $eventId): void
     {
         $this->eventId = $eventId;
@@ -302,6 +313,7 @@ class NotificationService
         $body->modelId = $this->getModelId();
         $body->roomId = $this->getRoomId();
         $body->eventId = $this->getEventId();
+        $body->event = $this->getEventByEventId();
         $body->projectId = $this->getProjectId();
         $body->departmentId = $this->departmentId;
         $body->taskId = $this->getTaskId();

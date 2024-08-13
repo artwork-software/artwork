@@ -23,7 +23,8 @@ class InvitationCreated extends Mailable
     {
         /** @var GeneralSettings $settings */
         $settings = app(GeneralSettings::class);
-        $pageTitle = $settings->page_title !== '' ? $settings->page_title : '';
+        $pageTitle = $settings->page_title !== '' ? $settings->page_title : 'Artwork';
+        $email = $settings->invitation_email !== '' ? $settings->invitation_email : User::query()->find(1)?->email;
 
         return $this
             ->from(
@@ -37,8 +38,7 @@ class InvitationCreated extends Mailable
                 [
                     'token' => $this->token,
                     'page_title' => $pageTitle,
-                    'email' => $settings->invitation_email,
-                    'fallback_email' => User::query()->find(1)?->email
+                    'email' => $email
                 ]
             );
     }

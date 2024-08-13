@@ -23,6 +23,7 @@ class HandleInertiaRequests extends Middleware
         /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
         $calendarSettings = Auth::user()?->calendar_settings;
+
         return array_merge(
             parent::share($request),
             [

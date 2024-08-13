@@ -13,19 +13,20 @@ class CreateCraftsInventoryColumnRequest extends FormRequest
      */
     public function rules(): array
     {
-        // TODO: JONAS hier bitte die Regel für typeOptions überprüfen und anpassen
-        // TODO: (Regel wurde vorher für jeden Type angewant wenn array und min:1 gesetzt war)
+        //parenthesis is important here!
+        $createsSelectColumn = (
+            ($this->request->all()['type']['id'] ?? null) === CraftsInventoryColumnTypeEnum::SELECT->value
+        );
+
         return [
             'name' => 'required|string',
             'type' => ['required', 'array:id,value'],
             'type.*.id' => Rule::enum(CraftsInventoryColumnTypeEnum::class),
             'typeOptions' => [
-                Rule::requiredIf(function () {
-                    $typeId = $this->request->get('type.id');
-                    return $typeId === CraftsInventoryColumnTypeEnum::SELECT->value;
-                }),
-                //'array',
-                //'min:1'
+                'array',
+                Rule::requiredIf($createsSelectColumn),
+                Rule::when($createsSelectColumn, ['min:1']),
+                Rule::when(!$createsSelectColumn, ['min:0'])
             ],
             'typeOptions.*' => 'required|string',
             'defaultOption' => 'nullable|string'

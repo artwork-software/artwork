@@ -40,7 +40,7 @@
                        type="date"
                        class="date-input"
                        v-model="cellValue"
-                       />
+                       @focusout="applyCellValueChange()"/>
             </div>
             <div v-else-if="isCheckboxColumn()"
                  :class="getInputCls()">

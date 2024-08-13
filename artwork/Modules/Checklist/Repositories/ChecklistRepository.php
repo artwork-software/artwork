@@ -9,8 +9,6 @@ use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-use function Pest\Laravel\get;
-
 class ChecklistRepository extends BaseRepository
 {
     public function getById(int $id): mixed
@@ -93,9 +91,7 @@ class ChecklistRepository extends BaseRepository
             });
     }
 
-    /**
-     * Sortieren Sie die Checklisten nach dem Projektzeitraum.
-     */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function sortChecklistsByProjectTime($checklists, $direction = 'asc')
     {
         return $checklists->sort(function ($a, $b) use ($direction) {
@@ -137,7 +133,9 @@ class ChecklistRepository extends BaseRepository
     {
         return $checklists->sortBy(function ($checklist) use ($direction) {
             $earliestDeadline = $checklist->tasks->whereNotNull('deadline')->min('deadline');
-            return $earliestDeadline ? strtotime($earliestDeadline) : ($direction === 'asc' ? PHP_INT_MAX : PHP_INT_MIN);
+            return $earliestDeadline ?
+                strtotime($earliestDeadline) :
+                ($direction === 'asc' ? PHP_INT_MAX : PHP_INT_MIN);
         })->values();
     }
 
@@ -159,9 +157,7 @@ class ChecklistRepository extends BaseRepository
         return $notDoneTasks->merge($doneTasks);
     }
 
-    /**
-     * Formatieren Sie die Checkliste mit sortierten Aufgaben und zugehörigen Projektdetails.
-     */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function formatChecklist(Checklist $checklist, $sortedTasks, ProjectTabService $projectTabService)
     {
         return [
@@ -202,7 +198,9 @@ class ChecklistRepository extends BaseRepository
                     'done' => $task->done,
                     'done_by_user' => $task->user_who_done,
                     'done_at' => $task->done_at ? Carbon::parse($task->done_at)->format('d.m.Y, H:i') : null,
-                    'done_at_dt_local' => $task->done_at ? Carbon::parse($task->done_at)->toDateTimeLocalString() : null,
+                    'done_at_dt_local' => $task->done_at ?
+                        Carbon::parse($task->done_at)->toDateTimeLocalString() :
+                        null,
                     'users' => $task->task_users,
                     'formatted_dates' => $task->getFormattedDates(),
                 ];

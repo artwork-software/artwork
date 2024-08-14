@@ -277,7 +277,7 @@ class NotificationService
         $this->setTitle('');
         $this->setDescription([]);
         $this->setNotificationConstEnum(null);
-        $this->setIcon('green');
+        $this->setIcon('gray');
         $this->setButtons([]);
         $this->setShowHistory(false);
         $this->setHistoryType('');
@@ -301,7 +301,7 @@ class NotificationService
             return;
         }
         $body = new stdClass();
-        $body->icon = $this->getIcon();
+        $body->icon = 'gray';
         $body->priority = $this->getPriority();
         $body->groupType = $this->getNotificationConstEnum()->groupType();
         $body->type = $this->getNotificationConstEnum();

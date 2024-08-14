@@ -370,18 +370,6 @@ class NotificationController extends Controller
         }
     }
 
-    public function store(): void
-    {
-    }
-
-    public function show(): void
-    {
-    }
-
-    public function edit(): void
-    {
-    }
-
     public function updateSetting(Request $request, NotificationSetting $setting): void
     {
         if (Auth::id() !== $setting->user_id) {

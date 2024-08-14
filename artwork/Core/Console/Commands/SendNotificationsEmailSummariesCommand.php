@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\DatabaseNotification\Service\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
@@ -10,6 +11,7 @@ use Artwork\Modules\User\Models\User;
 use Dotenv\Dotenv;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class SendNotificationsEmailSummariesCommand extends Command
 {
@@ -19,8 +21,10 @@ class SendNotificationsEmailSummariesCommand extends Command
 
     private readonly array $env;
 
-    public function __construct(private readonly GeneralSettings $generalSettings)
-    {
+    public function __construct(
+        private readonly GeneralSettings $generalSettings,
+        private readonly DatabaseNotificationService $databaseNotificationService
+    ) {
         parent::__construct();
 
         $this->env = Dotenv::parse(
@@ -45,6 +49,9 @@ class SendNotificationsEmailSummariesCommand extends Command
         return 0;
     }
 
+    /**
+     * @throws Throwable
+     */
     protected function sendNotificationsSummary(User $user, string $frequency): void
     {
         $typesOfUser = $user->notificationSettings()
@@ -60,6 +67,7 @@ class SendNotificationsEmailSummariesCommand extends Command
             ->whereNull('read_at')
             ->whereIn('type', $notificationClasses->unique())
             ->whereDate('created_at', '>=', now()->subWeeks(2))
+            ->where('sent_in_summary', false)
             ->get()
             ->groupBy(function ($notification) {
                 return $notification['data']['groupType'];
@@ -81,7 +89,8 @@ class SendNotificationsEmailSummariesCommand extends Command
             }
             foreach ($notification as $notificationBody) {
                 $notificationArray[$notificationBody->data['groupType']]['notifications'][] = [
-                    'body' => $notificationBody->data
+                    'body' => $notificationBody->data,
+                    'model' => $notificationBody,
                 ];
             }
         }
@@ -95,6 +104,15 @@ class SendNotificationsEmailSummariesCommand extends Command
                     $this->env['SYSTEM_MAIL']
                 )
             );
+        }
+
+        foreach ($notificationArray as $group) {
+            foreach ($group['notifications'] as $notification) {
+                $this->databaseNotificationService->updateSentInSummary(
+                    $notification['model'],
+                    true
+                );
+            }
         }
     }
 }

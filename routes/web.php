@@ -297,6 +297,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_team');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
+    Route::post('/project/{project}/bulk/event/store', [EventController::class, 'bulkProjectEventStore'])
+        ->name('events.bulk.store');
 
     //ProjectTabs
     Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
@@ -1023,6 +1025,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // MultiEdit
     Route::patch('/multi-edit', [EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
+    Route::patch('/multi-duplicate', [EventController::class, 'updateMultiDuplicate'])->name('multi-duplicate.save');
     Route::post('/multi-edit', [EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
 
     // Calendar

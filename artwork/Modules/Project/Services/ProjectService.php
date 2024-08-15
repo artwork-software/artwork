@@ -634,4 +634,9 @@ readonly class ProjectService
         $this->projectRepository->update($project, $data);
         return $project;
     }
+
+    public function getMyLastProject(int $userId): ?Project
+    {
+        return $this->projectRepository->getMyLastProject($userId);
+    }
 }

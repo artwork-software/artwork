@@ -178,6 +178,14 @@ class DefaultComponentSeeder extends Seeder
                 'special' => true,
                 'sidebar_enabled' => true,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
+                'name' => 'Bulk Event Create',
+                'type' => ProjectTabComponentEnum::BULK_EDIT,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]
         ];
 
@@ -423,8 +431,12 @@ class DefaultComponentSeeder extends Seeder
             'order' => 2
         ]);
 
+
         $scheduleTab->components()->create([
-            'component_id' => Component::query()->where('name', 'Calendar')->first()->id,
+            'component_id' => Component::query()
+                ->where('type', ProjectTabComponentEnum::BULK_EDIT)
+                ->first()
+                ?->id,
             'order' => 1,
             'scope' => []
         ]);

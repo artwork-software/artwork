@@ -58,7 +58,7 @@ class ProjectTabService implements ServiceWithArrayCache
 
     public function findFirstProjectTabWithCalendarComponent(): ProjectTab|null
     {
-        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::CALENDAR);
+        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::BULK_EDIT);
     }
 
     private function findFirstProjectTabWithType(ProjectTabComponentEnum $type): ProjectTab|null

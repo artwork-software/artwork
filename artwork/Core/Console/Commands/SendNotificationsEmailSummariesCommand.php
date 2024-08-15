@@ -44,7 +44,12 @@ class SendNotificationsEmailSummariesCommand extends Command
             return 1;
         }
 
-        User::all()->each(fn (User $user) => $this->sendNotificationsSummary($user, $frequency));
+        User::all()->each(
+            /**
+             * @throws Throwable
+             */
+            fn (User $user) => $this->sendNotificationsSummary($user, $frequency)
+        );
 
         return 0;
     }
@@ -93,6 +98,10 @@ class SendNotificationsEmailSummariesCommand extends Command
                     'model' => $notificationBody,
                 ];
             }
+        }
+
+        if ($user->id === 2) {
+            dd($notifications);
         }
 
         if (!empty($notificationArray)) {

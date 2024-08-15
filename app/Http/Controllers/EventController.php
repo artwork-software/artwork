@@ -27,6 +27,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -248,7 +249,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function showDashboardPage(): Response
+    public function showDashboardPage(GlobalNotificationService $globalNotificationService): Response
     {
         $event = null;
         $tasks = Task::query()
@@ -339,6 +340,7 @@ class EventController extends Controller
             'shiftsOfDay' => $shiftsOfDay,
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
+            'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'notificationOfToday' => $notification->get()->groupBy('priority'),
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,

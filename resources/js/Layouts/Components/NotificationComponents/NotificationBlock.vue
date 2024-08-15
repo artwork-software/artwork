@@ -5,13 +5,13 @@
             <div class="">
                 <div class="flex items-center gap-4">
                     <div class="flex gap-5 items-center">
-                        <h4 class="sDark">{{ notification.data.title }}</h4>
+                        <h4 class="xsDark">{{ notification.data.title }}</h4>
                         <div class="" v-if="notification.data.showHistory">
                             <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-artwork-buttons-create">
                                 <ChevronRightIcon class="h-3 w-3"/>
                                 <span>
                                     {{ $t('View history')}}
-                        </span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -31,8 +31,9 @@
                 <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
-                            <span
-                                v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">{{ $t('Concerns')}}: </span>
+                            <span v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">
+                                {{ $t('Concerns')}}:&nbsp;
+                            </span>
                             <a :href="description.href" v-if="description.type === 'link'"
                                class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
@@ -42,7 +43,6 @@
                 <p v-if="notification.data?.description[5]" class="mt-2 xxsLight">
                     {{ notification.data?.description[5]?.title }}
                 </p>
-
                 <NotificationButtons v-if="!isArchive"
                                      :buttons="notification.data.buttons"
                                      @openDeclineModal="loadEventDataForDecline"
@@ -66,26 +66,19 @@
                  aria-hidden="true" alt=""/>
         </div>
     </div>
-
-
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
         :project_history="historyObjects"
         @closed="showProjectHistory = false"
     />
-
     <UserVacationHistoryModal
         v-if="showUserVacationHistory"
         :project_history="historyObjects"
         @closed="showUserVacationHistory = false" />
-
-
     <EventHistoryModal
         v-if="showEventHistory"
         :project_history="historyObjects"
         @closed="showEventHistory = false" />
-
-
     <DeclineEventModal
         :request-to-decline="event"
         :event-types="eventTypes"
@@ -93,7 +86,6 @@
         @declined="finishDeclineEvent"
         v-if="showDeclineEventModal"
     />
-
     <event-component
         v-if="createEventComponentIsVisible"
         @closed="onEventComponentClose"
@@ -108,7 +100,6 @@
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
-
     <room-request-dialog-component
         v-if="showRoomRequestDialogComponent"
         @closed="onDialogComponentClose"
@@ -123,7 +114,6 @@
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
-
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
         v-if="showEventWithoutRoomComponent"
@@ -136,7 +126,6 @@
         :removeNotificationOnAction="true"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
-
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
         @delete="deleteEvent"
@@ -149,11 +138,10 @@
 <script>
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {router} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
-import {useForm} from "@inertiajs/vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
@@ -161,6 +149,7 @@ import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacat
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+
 export default {
     name: "NotificationBlock",
     components: {

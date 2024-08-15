@@ -10,12 +10,12 @@ use Artwork\Modules\Event\Notifications\ConflictNotification;
 use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
+use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
-use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Notifications\ProjectNotification;
@@ -31,7 +31,6 @@ use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -42,8 +41,10 @@ class NotificationController extends Controller
     }
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function index(ProjectTabService $projectTabService): Response|ResponseFactory
-    {
+    public function index(
+        ProjectTabService $projectTabService,
+        GlobalNotificationService $globalNotificationService
+    ): Response|ResponseFactory {
         $historyObjects = [];
         $event = null;
         // reload functions
@@ -99,11 +100,6 @@ class NotificationController extends Controller
             $event = Event::find(request('eventId'));
         }
 
-        $globalNotification = GlobalNotification::first();
-        $globalNotification['image_url'] = $globalNotification?->image_name ?
-            Storage::disk('public')->url($globalNotification->image_name) :
-            null;
-
         /** @var User $user */
         $user = Auth::user();
         $output = [];
@@ -127,7 +123,7 @@ class NotificationController extends Controller
             'roomCollisions',
             'notifications' => $output,
             'readNotifications' => $outputRead,
-            'globalNotification' => $globalNotification,
+            'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => NotificationProjectResource::collection(Project::all())->resolve(),

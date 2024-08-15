@@ -3332,5 +3332,4 @@ class ProjectController extends Controller
 
         return $projects;
     }
-
 }

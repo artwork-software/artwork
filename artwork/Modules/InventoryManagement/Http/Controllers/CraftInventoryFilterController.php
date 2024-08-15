@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\InventoryManagement\Http\Controller;
+namespace Artwork\Modules\InventoryManagement\Http\Controllers;
 
 use Artwork\Modules\InventoryManagement\Http\Requests\Filter\UpdateOrCreateInventoryFilterRequest;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;

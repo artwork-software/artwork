@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Controller;
 
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Requests\Filter\UpdateOrCreateInventoryFilterRequest;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;
 use Exception;

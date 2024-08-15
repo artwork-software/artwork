@@ -3,7 +3,7 @@
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Controller;
 
 use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
-use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventoryManagement\Http\Requests\Export\CreateInventoryManagementExportRequest;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementExportService;
 use Exception;

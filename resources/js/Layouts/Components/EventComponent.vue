@@ -98,9 +98,6 @@
                 </div>
             </div>
 
-
-
-
             <div v-if="!canEdit" class="flex w-full">
                 <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
                     {{ $t('assigned to') }}: <a

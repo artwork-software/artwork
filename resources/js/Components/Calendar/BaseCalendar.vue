@@ -36,14 +36,14 @@
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="divide-y w-fit divide-gray-200 divide-dashed events-by-days-container" ref="calendarToCalculate">
+                <div class="divide-y-2 w-fit divide-gray-400 divide-dashed events-by-days-container" :class="!project ? 'pt-8' : ''" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"
-                         class="flex gap-0.5 day-container"
+                         class="flex gap-0.5 day-container "
                          :class="day.is_weekend ? 'bg-userBg/30' : ''"
                          :data-day="day.full_day">
-                        <SingleDayInCalendar :day="day"/>
+                        <SingleDayInCalendar :day="day" />
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
                              :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <div class="fixed bottom-0 w-full h-28 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
+    <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
         <div class="flex items-center justify-center h-full gap-4">
             <div>
                 <FormButton :disabled="computedCheckedEventsForMultiEditCount === 0"
@@ -85,10 +85,27 @@
             </div>
             <div>
                 <FormButton
+                    class="transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="showMultiDuplicateModal = true"
+                    :disabled="computedCheckedEventsForMultiEditCount === 0"
+                    :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Duplicate events')"/>
+            </div>
+            <div>
+                <FormButton
                     class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
                     @click="openDeleteSelectedEventsModal = true"
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Delete events')"/>
+            </div>
+
+
+
+            <div>
+                <FormButton
+                    class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
+                    @click="cancelMultiEditDuplicateSelection"
+                    :disabled="computedCheckedEventsForMultiEditCount === 0"
+                    :text="$t('Cancel selection')"/>
             </div>
         </div>
     </div>
@@ -125,6 +142,11 @@
                     :checked-events="editEvents"
                     :rooms="rooms"
                     @closed="closeMultiEditModal"/>
+
+    <MultiDuplicateModal v-if="showMultiDuplicateModal"
+                    :checked-events="editEvents"
+                    :rooms="rooms"
+                    @closed="closeMultiDuplicateModal"/>
 
     <ConfirmDeleteModal
         v-if="openDeleteSelectedEventsModal"
@@ -177,6 +199,7 @@ import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvent} from "@/Composeables/Event.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
@@ -327,6 +350,7 @@ const props = defineProps({
     eventToDelete = ref(null),
     wantedRoom = ref(null),
     roomCollisions = ref([]),
+    showMultiDuplicateModal = ref(false),
     checkIfScrolledToCalendarRef = ref('!-ml-3'),
     handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
         if (considerOnMultiEdit) {
@@ -372,6 +396,21 @@ const props = defineProps({
                 }
             );
         }
+    },
+    cancelMultiEditDuplicateSelection = () => {
+        editEvents.value = [];
+        editEventsRoomIds.value = [];
+        editEventsRoomsDesiredDays.value = [];
+        calendarDataRef.value.forEach(
+            (calendarData) => {
+                Object.values(calendarData)
+                    .forEach(
+                        (roomEvents) => {
+                            roomEvents.events.forEach((roomEvent) => roomEvent.considerOnMultiEdit = false);
+                        }
+                    );
+            }
+        )
     },
     openDeclineEventModal = (event) => {
         declineEvent.value = event;
@@ -433,6 +472,16 @@ const props = defineProps({
     },
     closeMultiEditModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
         showMultiEditModal.value = false;
+        if (closedOnPurpose) {
+            if (desiredRoomIds && desiredDays) {
+                handleReload(desiredRoomIds, desiredDays);
+            }
+
+            resetMultiEdit();
+        }
+    },
+    closeMultiDuplicateModal = (closedOnPurpose, desiredRoomIds, desiredDays) => {
+        showMultiDuplicateModal.value = false;
         if (closedOnPurpose) {
             if (desiredRoomIds && desiredDays) {
                 handleReload(desiredRoomIds, desiredDays);

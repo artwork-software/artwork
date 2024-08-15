@@ -136,7 +136,6 @@
                     <BasePaginator :entities="projects" property-name="projects" />
                 </div>
             </div>
-
         </div>
 
         <project-create-modal
@@ -150,6 +149,15 @@
             @close-create-project-modal="closeCreateProjectModal"
             :create-settings="createSettings"
             :project="null"
+        />
+
+
+        <AddBulkEventsModal
+            v-if="showAddBulkEventModal"
+            @closed="showAddBulkEventModal = false"
+            :project="myLastProject"
+            :event_types="eventTypes"
+            :rooms="rooms"
         />
 
         <!-- Success Modal - Delete project -->
@@ -260,9 +268,11 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import projects from "@/Pages/Trash/Projects.vue";
+import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
 
 export default defineComponent({
     components: {
+        AddBulkEventsModal,
         BasePaginator,
         SingleProject,
         BaseModal,
@@ -296,7 +306,6 @@ export default defineComponent({
         ListboxOptions,
         CheckIcon,
         SelectorIcon,
-
         InformationCircleIcon,
         ChevronDownIcon,
         ChevronUpIcon,
@@ -326,7 +335,10 @@ export default defineComponent({
         'projectGroups',
         'first_project_tab_id',
         'pinnedProjects',
-        'createSettings'
+        'createSettings',
+        'myLastProject',
+        'eventTypes',
+        'rooms'
     ],
     mixins: [Permissions, IconLib],
     data() {
@@ -363,6 +375,7 @@ export default defineComponent({
             createProject: false,
             showProjectExportBudgetsByBudgetDeadlineModal: false,
             entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
+            showAddBulkEventModal: false
         }
     },
     computed: {
@@ -420,7 +433,8 @@ export default defineComponent({
         closeCreateProjectModal(showSuccessModal) {
             this.createProject = false;
             if (showSuccessModal) {
-                this.openSuccessModal2();
+                this.showAddBulkEventModal = true;
+                //this.openSuccessModal2();
             }
         },
         openEditProjectModal(project) {

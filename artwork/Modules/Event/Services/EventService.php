@@ -1028,4 +1028,40 @@ readonly class EventService
     {
         return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }
+
+    public function createBulkEvent(
+        array $event,
+        Project $project
+    ): void {
+        $startTime = $event['start_time'] ?? null;
+        $endTime = $event['end_time'] ?? null;
+        $day = Carbon::parse($event['day']);
+        $endDay = clone $day;
+        $allDay = !$startTime || !$endTime;
+
+        if (!$allDay) {
+            $startTime = Carbon::parse($startTime);
+            $endTime = Carbon::parse($endTime);
+
+            if ($endTime->lt($startTime)) {
+                $endDay->addDay();
+            }
+
+            $day->setTimeFromTimeString($startTime->toTimeString());
+            $endDay->setTimeFromTimeString($endTime->toTimeString());
+        } else {
+            $day->startOfDay();
+            $endDay->endOfDay();
+        }
+
+        $project->events()->create([
+            'eventName' => $event['name'],
+            'user_id' => auth()->id(),
+            'start_time' => $day,
+            'end_time' => $endDay,
+            'allDay' => $allDay,
+            'event_type_id' => $event['type']['id'],
+            'room_id' => $event['room']['id'],
+        ]);
+    }
 }

@@ -1,28 +1,29 @@
 <template>
     <BaseModal @closed="this.$emit('closeCreateProjectModal')" full-modal>
             <div class="">
-                <ModalHeader
-                    :title="project ? $t('Edit basic data') : isCreateProjectTab ? $t('New project') : $t('New project group')"
-                    :description="$t('Please fill in the following fields to create a new project.')"
-                    full-modal
-                />
 
-                <div class="px-6" v-if="!project">
-                    <div class="hidden sm:block">
-                        <div class="border-gray-200">
-                            <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                 aria-label="Tabs">
-                                <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                   :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                                   :aria-current="tab.current ? 'page' : undefined">
-                                    {{ tab.name }}
-                                </a>
-                            </nav>
-                        </div>
-                    </div>
+                <div class="px-6 mt-5 modal-header"  v-if="!project">
+                    <SwitchGroup as="div" class="flex items-center">
+                        <SwitchLabel as="span" class="mr-3 model-title cursor-pointer" :class="createProject ? '' : '!text-gray-300'">
+                            {{ $t('Project') }}
+                        </SwitchLabel>
+                        <Switch v-model="createProject" :class="[!createProject ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-5 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                            <span aria-hidden="true" :class="[!createProject  ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                        </Switch>
+                        <SwitchLabel as="span" class="ml-3 model-title cursor-pointer" :class="!createProject ? '' : '!text-gray-300'">
+                            {{ $t('Project group') }}
+                        </SwitchLabel>
+                    </SwitchGroup>
                 </div>
-                <div v-if="isCreateProjectTab">
-                    <form @submit.prevent="addProject">
+                <div v-else>
+                    <ModalHeader
+                        :title="project ? $t('Edit basic data') : isCreateProjectTab ? $t('New project') : $t('New project group')"
+                        :description="$t('Please fill in the following fields to create a new project.')"
+                        full-modal
+                    />
+                </div>
+                <div v-if="createProject">
+                    <div>
                        <div v-if="project" class="px-6 py-2">
                            <KeyVisual :project="project"  />
                        </div>
@@ -242,17 +243,29 @@
                             </div>
 
                         </div>
-                        <div class="w-full items-center text-center pb-6">
-                            <FormButton
-                                type="submit"
-                                :text="project ? $t('Save') : $t('Create')"
+                        <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
+                            <BaseButton
+                                v-if="!project"
+                                @click="addProject(true)"
+                                :text="$t('Set up events')"
                                 class="mt-8 inline-flex items-center"
-                            />
+                                classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
+                                <IconCalendarMonth class="w-5 h-5" />
+                            </BaseButton>
+                            <BaseButton
+                                type="submit"
+                                @click="addProject(false)"
+                                :text="project ? $t('Save') : $t('Create')"
+                                class="mt-8 inline-flex items-center "
+                                classes="!w-fit gap-x-2 h-12"
+                            >
+                                <IconCirclePlus class="w-5 h-5" />
+                            </BaseButton>
                         </div>
-                    </form>
+                    </div>
                 </div>
-                <div v-if="isCreateProjectGroupTab && !project">
-                    <form @submit.prevent="addProject" class="px-6 pb-6">
+                <div v-if="!createProject && !project">
+                    <div class="px-6 pb-6">
                         <div class="py-4 w-full">
                             <TextInputComponent
                                 id="sourceName"
@@ -435,12 +448,26 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="w-full items-center text-center mt-5 justify-center flex">
-                            <FormButton
+                        <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
+                            <BaseButton
+                                v-if="!project"
+                                @click="addProject(true)"
+                                :text="$t('Set up events')"
+                                class="mt-8 inline-flex items-center"
+                                classes="!w-fit gap-x-2 h-12 bg-artwork-buttons-create">
+                                <IconCalendarMonth class="w-5 h-5" />
+                            </BaseButton>
+                            <BaseButton
                                 type="submit"
-                                :disabled="this.createProjectForm.name === ''" :text="$t('Create')"/>
+                                @click="addProject(false)"
+                                :text="project ? $t('Save') : $t('Create')"
+                                class="mt-8 inline-flex items-center "
+                                classes="!w-fit gap-x-2 h-12"
+                            >
+                                <IconCirclePlus class="w-5 h-5" />
+                            </BaseButton>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
     </BaseModal>
@@ -464,7 +491,7 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItems
+    MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -480,11 +507,16 @@ import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper],
     components: {
+        BaseButton,
+        Switch,
+        SwitchLabel,
+        SwitchGroup,
         ProjectSearch,
         BaseTabs,
         ModalHeader,
@@ -553,6 +585,7 @@ export default {
                 keyVisual: null,
             }),
             uploadKeyVisualFeedback: "",
+            createProject: true
         }
     },
     computed: {
@@ -589,7 +622,7 @@ export default {
                 this.createProjectForm.isGroup = true;
             }
         },
-        addProject() {
+        addProject(bool) {
             this.projectGroupProjects.forEach((projectToAdd) => {
                 this.createProjectForm.projects.push(projectToAdd.id);
             });
@@ -605,7 +638,7 @@ export default {
                 this.createProjectForm.patch(
                     route('projects.update', this.project.id), {
                         onSuccess: () => {
-                            this.$emit('closeCreateProjectModal', true);
+                            this.$emit('closeCreateProjectModal', bool);
                         }
                     }
                 );
@@ -613,7 +646,7 @@ export default {
                 this.createProjectForm.post(
                     route('projects.store'), {
                         onSuccess: () => {
-                            this.$emit('closeCreateProjectModal', true);
+                            this.$emit('closeCreateProjectModal', bool);
                         }
                     }
                 );

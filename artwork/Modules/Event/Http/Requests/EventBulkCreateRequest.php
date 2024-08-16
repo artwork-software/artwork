@@ -15,7 +15,7 @@ class EventBulkCreateRequest extends FormRequest
     {
         return [
             'events' => 'required|array',
-            'events.*.name' => 'string',
+            'events.*.name' => 'nullable|string',
             'events.*.start_time' => 'nullable',
             'events.*.end_time' => 'nullable',
             'events.*.room' => 'array',

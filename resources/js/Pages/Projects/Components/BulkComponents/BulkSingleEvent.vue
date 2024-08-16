@@ -206,7 +206,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData']);
-
 const createCopyByEventWithData = (event) => {
     emit('createCopyByEventWithData', event);
 }
@@ -230,6 +229,12 @@ const updateEventInDatabase = () => {
             const endTime = new Date(`01/01/2000 ${props.event.end_time}`);
             endTime.setMinutes(endTime.getMinutes() - 30);
             props.event.start_time = endTime.toTimeString().slice(0, 5);
+        }
+
+        // if event.type?.individual_name and event.name is empty, return
+        if (props.event.type?.individual_name && !props.event.name) {
+            props.event.nameError = true;
+            return;
         }
 
         router.patch(route('event.update.single.bulk', { event: props.event.id}), {

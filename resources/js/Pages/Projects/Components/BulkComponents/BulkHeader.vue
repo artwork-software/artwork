@@ -28,7 +28,7 @@
             </SwitchGroup>
             <div v-else class="flex items-center gap-x-4">
                 {{ $t('Period') }}
-                <ToolTipDefault tooltip-text="This is a tooltip text" top/>
+                <ToolTipDefault :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" top/>
             </div>
         </div>
         <div class="font-bold">

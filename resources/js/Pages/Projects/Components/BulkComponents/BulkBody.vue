@@ -38,7 +38,7 @@
         </div>
 
         <BulkHeader v-model="timeArray" :is-in-modal="isInModal"/>
-        <div class="min-h-96 max-h-96 overflow-y-scroll">
+        <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
             <div  v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
                 <BulkSingleEvent
                     :rooms="rooms"
@@ -214,6 +214,7 @@ const addEmptyEvent = () => {
                 }
             }, {
                 preserveState: false,
+                preserveScroll: true,
                 onSuccess: () => {
                     isLoading.value = false;
                 }
@@ -237,6 +238,7 @@ const addEmptyEvent = () => {
                 }
             }, {
                 preserveState: false,
+                preserveScroll: true,
                 onSuccess: () => {
                     isLoading.value = false;
                 }
@@ -320,6 +322,7 @@ const createCopyByEventWithData = (event) => {
             events: createdEvents
         }, {
             preserveState: false,
+            preserveScroll: true,
             onSuccess: () => {
                 isLoading.value = false;
             }

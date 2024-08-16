@@ -1949,5 +1949,6 @@
     "Hold here to move": "Hold here to move",
     "Data is currently loaded. Please wait": "Data is currently loaded. Please wait",
     "No events found. Click on the plus (+) icon to create an event": "No events found. Click on the plus (+) icon to create an event",
-    "Set the event to all-day": "Set the event to all-day"
+    "Set the event to all-day": "Set the event to all-day",
+    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day."
 }

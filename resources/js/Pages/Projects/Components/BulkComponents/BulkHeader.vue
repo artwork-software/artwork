@@ -26,8 +26,9 @@
                     </div>
                 </SwitchLabel>
             </SwitchGroup>
-            <div v-else>
+            <div v-else class="flex items-center gap-x-4">
                 {{ $t('Period') }}
+                <ToolTipDefault tooltip-text="This is a tooltip text" top/>
             </div>
         </div>
         <div class="font-bold">
@@ -38,6 +39,7 @@
 <script setup>
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ref, watch} from "vue";
+import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 // Emit Event
 const emit = defineEmits(['update:modelValue']);

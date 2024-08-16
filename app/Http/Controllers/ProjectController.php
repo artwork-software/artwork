@@ -1888,6 +1888,14 @@ class ProjectController extends Controller
                 case ProjectTabComponentEnum::PROJECT_TEAM->value:
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
+                case ProjectTabComponentEnum::BULK_EDIT->value:
+                    $headerObject->project->events = $project->events()->without([
+                        'series',
+                        'event_type',
+                        'subEvents',
+                        'creator'
+                    ])->get();
+                    break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
                     $loadedProjectInformation['CalendarTab'] =
@@ -1981,7 +1989,7 @@ class ProjectController extends Controller
         $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = $this->sectorService->getAll();
-        $headerObject->rooms = $this->roomService->getAllWithoutTrashed();
+        $headerObject->rooms = $this->roomService->getAllWithoutTrashed(without: ['creator', 'admins']);
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;

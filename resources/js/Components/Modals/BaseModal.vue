@@ -14,7 +14,7 @@
                                      enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4']"  ref="containerRef">
+                        <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4', showBackdrop ? '' : 'border border-gray-300']"  ref="containerRef">
 
                             <!--<img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
                                  :class="fullModal ? '' : '-ml-6 -mt-6'"/>-->

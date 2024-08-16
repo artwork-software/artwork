@@ -53,6 +53,7 @@ use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
 readonly class EventService
@@ -1029,13 +1030,14 @@ readonly class EventService
         return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }
 
-    public function createBulkEvent(
-        array $event,
-        Project $project
-    ): void {
-        $startTime = $event['start_time'] ?? null;
-        $endTime = $event['end_time'] ?? null;
-        $day = Carbon::parse($event['day']);
+    /**
+     * @param Carbon $day
+     * @param string|null $startTime
+     * @param string|null $endTime
+     * @return array{Carbon, Carbon, bool}
+     */
+    private function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
+    {
         $endDay = clone $day;
         $allDay = !$startTime || !$endTime;
 
@@ -1043,7 +1045,7 @@ readonly class EventService
             $startTime = Carbon::parse($startTime);
             $endTime = Carbon::parse($endTime);
 
-            if ($endTime->lt($startTime)) {
+            if ($endTime->lt($startTime) || $endTime->eq($startTime)) {
                 $endDay->addDay();
             }
 
@@ -1053,15 +1055,52 @@ readonly class EventService
             $day->startOfDay();
             $endDay->endOfDay();
         }
+        return [$day, $endDay, $allDay];
+    }
+
+
+    public function createBulkEvent(
+        array $event,
+        Project $project,
+        int $userId
+    ): void {
+        $day = Carbon::parse($event['day']);
+        [$startTime, $endTime, $allDay] = $this->processEventTimes(
+            $day,
+            $event['start_time'] ?? null,
+            $event['end_time'] ?? null
+        );
 
         $project->events()->create([
             'eventName' => $event['name'],
-            'user_id' => auth()->id(),
-            'start_time' => $day,
-            'end_time' => $endDay,
+            'user_id' => $userId,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
             'allDay' => $allDay,
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
+        ]);
+    }
+
+    public function updateBulkEvent(
+        SupportCollection $data,
+        Event $event
+    ): void {
+
+        $day = Carbon::parse($data['day']);
+        [$startTime, $endTime, $allDay] = $this->processEventTimes(
+            $day,
+            $data['start_time'] ?? null,
+            $data['end_time'] ?? null
+        );
+
+        $this->eventRepository->update($event, [
+            'eventName' => $data['name'],
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'allDay' => $allDay,
+            'event_type_id' => $data['type']['id'],
+            'room_id' => $data['room']['id'],
         ]);
     }
 }

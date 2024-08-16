@@ -283,11 +283,19 @@ const createCopyByEventWithData = (event) => {
             newDate.setMonth(newDate.getMonth() + 1);
         }
 
+        let eventName = '';
+
+        if (event.type.individual_name) {
+            eventName = event.name;
+        } else {
+            eventName = '';
+        }
+
         // Kopie des Events erstellen
         events.push({
             index: events.length + 1,
             type: event.type,
-            name: event.name,
+            name: eventName,
             room: event.room,
             day: newDate.toISOString().split('T')[0],
             start_time: event.start_time,
@@ -300,7 +308,7 @@ const createCopyByEventWithData = (event) => {
         // save this event in createdEvents
         createdEvents.push({
             type: event.type,
-            name: event.name,
+            name: eventName,
             room: event.room,
             day: newDate.toISOString().split('T')[0],
             start_time: event.start_time,

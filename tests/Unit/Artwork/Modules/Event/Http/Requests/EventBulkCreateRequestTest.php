@@ -12,9 +12,9 @@ class EventBulkCreateRequestTest extends TestCase
         self::assertSame(
             [
                 'events' => 'required|array',
-                'events.*.name' => 'string',
-                'events.*.start_time' => 'nullable|date',
-                'events.*.end_time' => 'nullable|date',
+                'events.*.name' => 'nullable|string',
+                'events.*.start_time' => 'nullable',
+                'events.*.end_time' => 'nullable',
                 'events.*.room' => 'array',
                 'events.*.room.id' => 'integer|exists:rooms,id',
                 'events.*.type' => 'array',

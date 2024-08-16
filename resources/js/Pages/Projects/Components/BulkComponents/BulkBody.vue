@@ -198,18 +198,6 @@ const addEmptyEvent = () => {
             let lastEvent = events[events.length - 1];
             newDate = new Date(lastEvent.day);
             newDate.setDate(newDate.getDate() + 1);
-            events.push({
-                index: events.length + 1,
-                type: lastEvent.type,
-                name: lastEvent.name,
-                room: lastEvent.room,
-                day: newDate.toISOString().split('T')[0],
-                start_time: lastEvent.start_time,
-                end_time: lastEvent.end_time,
-                copy: false,
-                copyCount: 1,
-                copyType: copyTypes.value[0]
-            });
 
             // save it in database
             router.post(route('event.store.bulk.single', {project: props.project}), {
@@ -232,23 +220,7 @@ const addEmptyEvent = () => {
             });
 
         } else {
-            events.push({
-                index: events.length + 1,
-                type: props.eventTypes ? props.eventTypes[0] : null,
-                name: props.isInModal ? '' : 'Blocker',
-                room: props.rooms ? props.rooms[0] : null,
-                day: newDate.toISOString().split('T')[0],
-                start_time: '',
-                end_time: '',
-                copy: false,
-                copyCount: 1,
-                copyType: copyTypes.value[0]
-            }, {
-                preserveState: false,
-                onSuccess: () => {
-                    isLoading.value = false;
-                }
-            });
+
 
             // save it in database
             router.post(route('event.store.bulk.single', {project: props.project}), {

@@ -489,7 +489,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
+    Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
+        ->name('event.update.single.bulk');
+    Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
+        ->name('event.store.bulk.single');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
         ->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');

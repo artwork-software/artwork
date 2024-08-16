@@ -149,9 +149,11 @@ const removeML = (componentType) => {
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                     :first_project_budget_tab_id="first_project_budget_tab_id"
                     :rooms="headerObject.rooms"
+                    :eventsInProject="headerObject.project.events"
                 />
             </div>
         </div>
+
 
         <BaseSidenav @toggle="show = !show" v-if="currentTab.hasSidebarTabs">
             <div class="w-full">

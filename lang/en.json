@@ -1946,5 +1946,8 @@
     "Duplicate events": "Duplicate events",
     "Would you like to duplicate all selected appointments to another room or by a certain period of time?": "Would you like to duplicate all selected appointments to another room or by a certain period of time?",
     "Cancel selection": "Cancel selection",
-    "Hold here to move": "Hold here to move"
+    "Hold here to move": "Hold here to move",
+    "Data is currently loaded. Please wait": "Data is currently loaded. Please wait",
+    "No events found. Click on the plus (+) icon to create an event": "No events found. Click on the plus (+) icon to create an event",
+    "Set the event to all-day": "Set the event to all-day"
 }

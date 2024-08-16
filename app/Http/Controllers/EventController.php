@@ -58,6 +58,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -85,6 +86,7 @@ class EventController extends Controller
         private readonly SchedulingService $schedulingService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly RoomService $roomService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -1895,7 +1897,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): bool {
+    ): bool|null {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -1918,6 +1920,43 @@ class EventController extends Controller
         }
 
         return true;
+    }
+
+    public function destroyWithoutReturn(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
+        $this->authorize('delete', $event);
+
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
+        );
+
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
+
     }
 
     /**
@@ -2555,8 +2594,39 @@ class EventController extends Controller
         $events = $request->input('events', []);
 
         foreach ($events as $event) {
-            $this->eventService->createBulkEvent($event, $project);
+            $this->eventService->createBulkEvent(
+                $event,
+                $project,
+                $this->authManager->id()
+            );
         }
+
+        return Redirect::back();
+    }
+
+    public function updateSingleBulkEvent(
+        Request $request,
+        Event $event
+    ): RedirectResponse {
+        $data =  $request->collect('data');
+        $this->eventService->updateBulkEvent(
+            $data,
+            $event
+        );
+
+        return Redirect::back();
+    }
+
+    public function createSingleBulkEvent(
+        Request $request,
+        Project $project
+    ): RedirectResponse {
+        $data =  $request->input('event', []);
+        $this->eventService->createBulkEvent(
+            $data,
+            $project,
+            $this->authManager->id()
+        );
 
         return Redirect::back();
     }

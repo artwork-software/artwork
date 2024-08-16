@@ -65,7 +65,7 @@ const textColor = computed(() => {
         case 'dashboard':
             return 'text-gray-500';
         case 'plus':
-            return 'text-artwork-messages-info cursor-pointer';
+            return 'text-artwork-messages-info cursor-pointer !items-center';
         default:
             return 'text-artwork-buttons-create';
     }

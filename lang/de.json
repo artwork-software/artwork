@@ -1946,5 +1946,8 @@
     "Duplicate events": "Termine duplizieren",
     "Would you like to duplicate all selected appointments to another room or by a certain period of time?": "Möchtest du alle ausgewählten Termine in einen anderen Raum oder über einen bestimmten Zeitraum duplizieren?",
     "Cancel selection": "Auswahl aufheben",
-    "Hold here to move": "Hier halten zum Verschieben"
+    "Hold here to move": "Hier halten zum Verschieben",
+    "Data is currently loaded. Please wait": "Daten werden gerade geladen. Bitte warten",
+    "No events found. Click on the plus (+) icon to create an event": "Keine Termine gefunden. Klicke auf das Pluszeichen (+), um einen Termin zu erstellen",
+    "Set the event to all-day": "Termin auf ganztägig setzen"
 }

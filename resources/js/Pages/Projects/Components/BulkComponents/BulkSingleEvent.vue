@@ -2,52 +2,36 @@
    <div>
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="">
-               <Listbox as="div" class="" v-model="event.type" id="eventType">
+               <Listbox as="div" class="relative" v-model="event.type" @update:model-value="updateEventInDatabase" id="type">
                    <ListboxButton class="menu-button">
-                       <div class="flex w-full justify-between">
-                           <div class="flex items-center gap-x-2">
-                               <div>
-                                   <div class="block w-5 h-5 rounded-full"
-                                        :style="{'backgroundColor' : event.type?.hex_code }"/>
-                               </div>
-                               <div>
-                                   {{ event.type?.name }}
-                               </div>
+                       <div class="flex items-center gap-x-2">
+                           <div>
+                               <div class="block w-5 h-5 rounded-full"
+                                    :style="{'backgroundColor' : event.type?.hex_code }"/>
                            </div>
-                           <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                           <div>
+                               {{ event.type?.name }}
+                           </div>
                        </div>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                    </ListboxButton>
-
-                   <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100"
-                               leave-to-class="opacity-0">
-                       <ListboxOptions
-                           class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                           <ListboxOption as="template" class="max-h-8"
-                                          v-for="eventType in event_types"
-                                          :key="eventType.name"
-                                          :value="eventType"
-                                          v-slot="{ active, selected }">
-                               <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                   <div class="flex">
-                                       <div>
-                                           <div class="block w-3 h-3 rounded-full"
-                                                :style="{'backgroundColor' : eventType?.hex_code }"/>
-                                       </div>
-                                       <span
-                                           :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ eventType.name }}
-                                                    </span>
-                                   </div>
-                                   <span
-                                       :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected"
-                                                                 class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                               </li>
-                           </ListboxOption>
-                       </ListboxOptions>
-                   </transition>
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                       <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                      v-for="eventType in event_types"
+                                      :key="eventType.name"
+                                      :value="eventType"
+                                      v-slot="{ active, selected }">
+                           <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
+                               <div>
+                                   <div class="block w-3 h-3 rounded-full"
+                                        :style="{'backgroundColor' : eventType?.hex_code }"/>
+                               </div>
+                               {{ eventType.name }}
+                           </div>
+                           <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                      aria-hidden="true"/>
+                       </ListboxOption>
+                   </ListboxOptions>
                </Listbox>
            </div>
            <div>
@@ -58,10 +42,11 @@
                    class="input h-12"
                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
                    placeholder="Name"
+                   @focusout="updateEventInDatabase"
                />
            </div>
            <div>
-               <Listbox as="div" class="relative" v-model="event.room" id="room">
+               <Listbox as="div" class="relative" v-model="event.room" @update:model-value="updateEventInDatabase" id="room">
                    <ListboxButton class="menu-button">
                        <div class="flex-grow flex text-left xsDark">
                            {{ event.room?.name }}
@@ -90,6 +75,7 @@
                    v-model="event.day"
                    placeholder="Tag"
                    class="input h-12"
+                   @focusout="updateEventInDatabase"
                />
            </div>
            <div class="col-span-2">
@@ -100,6 +86,7 @@
                        v-model="event.start_time"
                        placeholder="Tag"
                        class="input h-12 !rounded-r-none"
+                       @focusout="updateEventInDatabase"
                    />
                    <input
                        type="time"
@@ -107,15 +94,17 @@
                        v-model="event.end_time"
                        placeholder="Tag"
                        class="input h-12 !rounded-l-none border-l-0"
+                       @focusout="updateEventInDatabase"
                    />
                </div>
            </div>
            <div class="flex items-center">
-               <div class="flex items-center gap-x-2">
+               <div class="flex items-center gap-x-3">
+                   <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                              stroke-width="2"/>
-                   <IconTrash v-if="index > 0 && !event.copy" @click="deleteCurrentEvent(event)"
+                   <IconTrash v-if="index > 0 && !event.copy || !isInModal" @click="deleteCurrentEvent(event)"
                               class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-messages-error transition-all duration-150 ease-in-out"
                               stroke-width="2"/>
                    <div v-if="event.copy" class="flex items-center gap-x-2">
@@ -176,10 +165,13 @@ import {
     IconCopy,
     IconPlus,
     IconTrash,
-    IconX
+    IconX, IconClock24
 } from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import {watch} from "vue";
+import {router} from "@inertiajs/vue3";
+import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 const props = defineProps({
     event: {
@@ -205,6 +197,11 @@ const props = defineProps({
     index: {
         type: Number,
         required: true
+    },
+    isInModal: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
@@ -216,6 +213,38 @@ const createCopyByEventWithData = (event) => {
 
 const deleteCurrentEvent = (event) => {
     emit('deleteCurrentEvent', event);
+}
+
+const updateEventInDatabase = () => {
+    if (props.event.id) {
+
+        // if start_time is not empty, but end_time is empty, set end_time to + 30 minutes of start_time
+        if (props.event.start_time && !props.event.end_time) {
+            const startTime = new Date(`01/01/2000 ${props.event.start_time}`);
+            startTime.setMinutes(startTime.getMinutes() + 30);
+            props.event.end_time = startTime.toTimeString().slice(0, 5);
+        }
+
+        // if start_time is empty, but end_time is not empty, set start_time to - 30 minutes of end_time
+        if (!props.event.start_time && props.event.end_time) {
+            const endTime = new Date(`01/01/2000 ${props.event.end_time}`);
+            endTime.setMinutes(endTime.getMinutes() - 30);
+            props.event.start_time = endTime.toTimeString().slice(0, 5);
+        }
+
+        router.patch(route('event.update.single.bulk', { event: props.event.id}), {
+            data: props.event
+        }, {
+            preserveState: false,
+            preserveScroll: true
+        })
+    }
+}
+
+const removeTime = () => {
+    props.event.start_time = null;
+    props.event.end_time = null;
+    updateEventInDatabase();
 }
 
 </script>

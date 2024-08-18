@@ -39,6 +39,7 @@ class NotificationController extends Controller
     public function __construct(private readonly VacationService $vacationService)
     {
     }
+
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function index(

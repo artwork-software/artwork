@@ -1,31 +1,38 @@
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
+                             leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"/>
             </TransitionChild>
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
-                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+                    <TransitionChild as="template" enter="ease-out duration-300"
+                                     enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                     enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200"
+                                     leave-from="opacity-100 translate-y-0 sm:scale-100"
+                                     leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                        <DialogPanel
+                            class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
+                            <img src="/Svgs/Overlays/illu_appointment_edit.svg" alt="edit appointment" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                                        @click="closeModal">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <XIcon class="h-6 w-6" aria-hidden="true"/>
                                 </button>
                             </div>
                             <div class="relative z-40">
                                 <div v-if="hasAdminRole() || $canAny(['change system notification'])">
                                     <div class="headline2 mt-12 mb-6">
-                                        {{ $t('Notification to all')}}
+                                        {{ $t('Notification to all') }}
                                     </div>
                                     <div class="xsLight">
-                                        {{ $t('Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!).')}}
+                                        {{ $t('Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!).') }}
                                     </div>
                                     <div>
                                         <label class="block mt-12 mb-2 xsLight">
-                                            {{$t('Image')}}
+                                            {{ $t('Image') }}
                                         </label>
                                         <div class="items-center">
                                             <div
@@ -37,17 +44,20 @@
                                                     <div class="xsLight flex my-auto h-40 items-center"
                                                          v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
                                                         {{ $t('Drag your image here for the notification') }}
-                                                        <input id="notificationImage-upload" ref="notificationImage"
+                                                        <input id="notificationImage-upload"
+                                                               ref="notificationImage"
                                                                @change="updateNotificationImagePreview()"
                                                                name="file-upload" type="file" class="sr-only"/>
                                                     </div>
                                                     <div class="cursor-pointer" v-else>
-                                                        <img :src="this.globalNotificationForm.notificationImage" :alt="$t('Current picture')"
+                                                        <img :src="this.globalNotificationForm.notificationImage"
+                                                             :alt="$t('Current picture')"
                                                              class="rounded-md h-40 w-40">
                                                     </div>
                                                 </div>
                                                 <div class="cursor-pointer">
-                                                    <img v-show="notificationImagePreview" :src="notificationImagePreview"
+                                                    <img v-show="notificationImagePreview"
+                                                         :src="notificationImagePreview"
                                                          :alt="$t('Current banner')"
                                                          class="rounded-md h-40 w-40">
                                                     <input type="file" class="hidden"
@@ -55,7 +65,8 @@
                                                            @change="updateNotificationImagePreview">
                                                 </div>
                                             </div>
-                                            <p v-if="uploadDocumentFeedback.length > 0" class="text-xs text-red-500 mt-2">
+                                            <p v-if="uploadDocumentFeedback.length > 0"
+                                               class="text-xs text-red-500 mt-2">
                                                 {{ uploadDocumentFeedback }}
                                             </p>
                                         </div>
@@ -63,7 +74,7 @@
                                     <div class="grid grid-cols-2 gap-4 mt-4">
                                         <div class="">
                                             <label for="deadlineDate" class="flex items-center xsLight">
-                                                {{$t('Title')}}:
+                                                {{ $t('Title') }}:
                                             </label>
                                             <input type="text"
                                                    v-model="this.globalNotificationForm.notificationName"
@@ -74,7 +85,7 @@
                                         </div>
                                         <div>
                                             <label for="deadlineDate" class="flex items-center xsLight">
-                                                {{ $t('Expiration date')}}:
+                                                {{ $t('Expiration date') }}:
                                             </label>
                                             <div class="flex items-center w-full">
                                                 <input v-model="this.globalNotificationForm.notificationDeadlineDate"
@@ -97,25 +108,26 @@
                                                   rows="4"
                                                   class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                                     </div>
-
                                     <div class="w-full flex justify-center">
                                         <FormButton
                                             @click="createGlobalNotification()"
                                             v-if="!globalNotification.title"
-                                            class="flex"
                                             :text="$t('Share notification')"
                                         />
-                                        <FormButton
-                                            @click="deleteGlobalNotification(globalNotification.id)"
-                                            v-else
-                                            class="flex"
-                                            :text="$t('Delete notification')"
-                                        />
+                                        <div class="flex flex-row space-x-2" v-else>
+                                            <FormButton
+                                                :text="$t('Edit notification')"
+                                                classes="w-1/2"
+                                                @click="editGlobalNotification()"
+                                            />
+                                            <FormButton
+                                                :text="$t('Delete notification')"
+                                                classes="w-1/2"
+                                                @click="deleteGlobalNotification()"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="flex justify-between mt-5">
-
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -130,6 +142,7 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import {useForm} from "@inertiajs/vue3";
 
 export default {
     name: "GlobalNotificationModal",
@@ -143,12 +156,13 @@ export default {
         XIcon, DialogPanel
     },
     props: ['globalNotification'],
-    data(){
+    data() {
         return {
             open: true,
             notificationImagePreview: null,
             buttonText: this.button ? this.button : this.$t('Delete'),
-            globalNotificationForm: this.$inertia.form({
+            globalNotificationForm: useForm({
+                _method: 'PUT',
                 notificationImage: this.globalNotification?.image_url,
                 notificationName: this.globalNotification?.title,
                 notificationDeadlineDate: this.globalNotification.expiration_date ? this.getDateOfDate(this.globalNotification.expiration_date) : null,
@@ -160,10 +174,10 @@ export default {
     },
     emits: ['closed'],
     methods: {
-        closeModal(bool){
+        closeModal(bool) {
             this.$emit('closed', bool)
         },
-        validateTypeAndUpload(file, type) {
+        validateTypeAndUpload(file) {
             this.uploadDocumentFeedback = "";
 
             const allowedTypes = [
@@ -171,77 +185,85 @@ export default {
                 "image/svg+xml",
                 "image/png",
                 "image/gif"
-            ]
+            ];
 
             if (allowedTypes.includes(file?.type)) {
-
                 const reader = new FileReader();
 
                 reader.onload = (e) => {
-
-                    if (type === 'bigLogo') {
-                        this.bigLogoPreview = e.target.result;
-                        this.form.bigLogo = file
-                    }
-
-                    if (type === 'smallLogo') {
-                        this.smallLogoPreview = e.target.result;
-                        this.form.smallLogo = file
-                    }
-
-                    if (type === 'banner') {
-                        this.bannerPreview = e.target.result;
-                        this.form.banner = file
-                    }
-                    if (type === 'notificationImage') {
-                        this.notificationImagePreview = e.target.result;
-                        this.globalNotificationForm.notificationImage = file
-                    }
-
+                    this.notificationImagePreview = e.target.result;
                 }
 
                 reader.readAsDataURL(file);
 
+                this.globalNotificationForm.notificationImage = file;
+
+                if (this.globalNotification) {
+                    this.editGlobalNotification();
+                } else {
+                    this.createGlobalNotification();
+                }
             } else {
                 this.uploadDocumentFeedback = this.$t('Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.')
             }
+
         },
         getDateOfDate(isoDate) {
-            if(isoDate.split(' ')[0]){
+            if (isoDate.split(' ')[0]) {
                 return isoDate.split(' ')[0];
             }
-
         },
         getTimeOfDate(isoDate) {
-            if(isoDate.split(' ')[1]){
+            if (isoDate.split(' ')[1]) {
                 return isoDate.split(' ')[1].substring(0, 5);
             }
-
         },
         uploadDraggedImage(event) {
-            this.validateTypeAndUpload(event.dataTransfer.files[0], 'notificationImage')
+            this.validateTypeAndUpload(event.dataTransfer.files[0])
         },
         selectNewNotificationImage() {
             this.$refs.notificationImage.click();
         },
-        updateNotificationImagePreview(){
-            this.validateTypeAndUpload(this.$refs.notificationImage.files[0], 'notificationImage')
+        updateNotificationImagePreview() {
+            this.validateTypeAndUpload(this.$refs.notificationImage.files[0])
         },
-        createGlobalNotification(){
-            this.globalNotificationForm.post(route('global_notification.store'), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.closeModal(true)
-                },
-            });
+        createGlobalNotification() {
+            this.globalNotificationForm.post(
+                route('global_notification.store'),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.closeModal(true)
+                    },
+                }
+            );
         },
-        deleteGlobalNotification(globalNotificationId){
-            this.$inertia.delete(route('global_notification.destroy',globalNotificationId));
-            this.globalNotificationForm.notificationImage = null;
-            this.globalNotificationForm.notificationName = null;
-            this.globalNotificationForm.notificationDeadlineDate = null;
-            this.globalNotificationForm.notificationDeadlineTime = null;
-            this.globalNotificationForm.notificationDescription = null;
+        editGlobalNotification() {
+            this.globalNotificationForm.post(
+                route(
+                    'global_notification.update',
+                    {
+                        globalNotification: this.globalNotification.id
+                    }
+                ),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.closeModal(true)
+                    },
+                }
+            );
+        },
+        deleteGlobalNotification() {
+            this.$inertia.delete(
+                route(
+                    'global_notification.destroy',
+                    {
+                        globalNotification: this.globalNotification.id
+                    }
+                )
+            );
+            this.globalNotificationForm.reset();
             this.notificationImagePreview = null;
             this.closeModal(true)
         }

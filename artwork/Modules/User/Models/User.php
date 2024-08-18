@@ -335,7 +335,7 @@ class User extends Model implements
         return $this->getAllPermissions();
     }
 
-    public function globalNotifications(): HasOne
+    public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }

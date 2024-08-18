@@ -1934,5 +1934,22 @@
     "Project period descending": "Projektzeitraum absteigend",
     "ToDo-List name descending": "ToDo-Listen absteigend",
     "ToDo-List name ascending": "ToDo-Listen aufsteigend",
-    "My ToDo-Lists": "Meine ToDo-Listen"
+    "My ToDo-Lists": "Meine ToDo-Listen",
+    "Set up events": "Termine einrichten",
+    "Room": "Raum",
+    "Day": "Tag",
+    "The name is not given for {0} event(s)": "Der Name für {0} Termin(e) ist nicht angegeben",
+    "Event name is mandatory": "Terminname ist Pflicht",
+    "Bulk Event Create": "Massen-Terminerstellung Komponente",
+    "Remove Backdrop": "Hintergrund entfernen",
+    "Show Backdrop": "Hintergrund anzeigen",
+    "Close Window": "Fenster schließen",
+    "Duplicate events": "Termine duplizieren",
+    "Would you like to duplicate all selected appointments to another room or by a certain period of time?": "Möchtest du alle ausgewählten Termine in einen anderen Raum oder über einen bestimmten Zeitraum duplizieren?",
+    "Cancel selection": "Auswahl aufheben",
+    "Hold here to move": "Hier halten zum Verschieben",
+    "Data is currently loaded. Please wait": "Daten werden gerade geladen. Bitte warten",
+    "No events found. Click on the plus (+) icon to create an event": "Keine Termine gefunden. Klicke auf das Pluszeichen (+), um einen Termin zu erstellen",
+    "Set the event to all-day": "Termin auf ganztägig setzen",
+    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "Wenn Start- und Endzeiten identisch sind oder die Endzeit vor der Startzeit liegt, wird das Enddatum auf den nächsten Tag gesetzt; wenn keine Zeit angegeben ist, wird der Termin als ganztägig kategorisiert."
 }

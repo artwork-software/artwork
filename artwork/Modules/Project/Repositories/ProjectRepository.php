@@ -116,4 +116,9 @@ class ProjectRepository extends BaseRepository
     {
         return Project::where('is_group', '=', 1)->with('groups')->get();
     }
+
+    public function getMyLastProject(int $userId): ?Project
+    {
+        return Project::where('user_id', $userId)->orderBy('updated_at', 'DESC')->first();
+    }
 }

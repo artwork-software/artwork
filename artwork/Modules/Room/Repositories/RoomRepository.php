@@ -10,12 +10,16 @@ use Illuminate\Support\Collection as SupportCollection;
 
 class RoomRepository extends BaseRepository
 {
-    public function allWithoutTrashed($with = []): Collection
+    public function allWithoutTrashed($with = [], $without = []): Collection
     {
         $query = Room::withoutTrashed();
 
         if (count($with) > 0) {
             $query->with($with);
+        }
+
+        if (count($without) > 0) {
+            $query->without($without);
         }
 
         return $query->get();

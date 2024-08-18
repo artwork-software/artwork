@@ -30,6 +30,7 @@ import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllCompo
 import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
 import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -61,7 +62,8 @@ const componentMapping = {
     ProjectAllDocumentsComponent,
     ChecklistAllComponent,
     CommentAllTab,
-    BudgetInformations
+    BudgetInformations,
+    BulkBody
 };
 
 const props = defineProps({
@@ -138,7 +140,7 @@ const removeML = (componentType) => {
                     :projectCategoryIds="headerObject.projectCategoryIds"
                     :projectGenreIds="headerObject.projectGenreIds"
                     :projectSectorIds="headerObject.projectSectorIds"
-                    :eventTypes="headerObject.eventTypes"
+                    :event-types="headerObject.eventTypes"
                     :opened_checklists="headerObject.project?.opened_checklists"
                     :checklist_templates="headerObject.project?.checklist_templates"
                     :projectManagerIds="headerObject.projectManagerIds"
@@ -146,9 +148,12 @@ const removeML = (componentType) => {
                     :first_project_tab_id="first_project_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                     :first_project_budget_tab_id="first_project_budget_tab_id"
+                    :rooms="headerObject.rooms"
+                    :eventsInProject="headerObject.project.events"
                 />
             </div>
         </div>
+
 
         <BaseSidenav @toggle="show = !show" v-if="currentTab.hasSidebarTabs">
             <div class="w-full">
@@ -188,6 +193,7 @@ const removeML = (componentType) => {
                             :projectGenreIds="headerObject.projectGenreIds"
                             :projectSectorIds="headerObject.projectSectorIds"
                             :eventTypes="headerObject.eventTypes"
+                            :rooms="headerObject.rooms"
                         />
                     </div>
                 </div>

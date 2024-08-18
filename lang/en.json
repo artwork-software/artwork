@@ -1934,5 +1934,22 @@
     "Project period descending": "Project period descending",
     "ToDo-List name descending": "ToDo-List name descending",
     "ToDo-List name ascending": "ToDo-List name ascending",
-    "My ToDo-Lists": "My ToDo-Lists"
+    "My ToDo-Lists": "My ToDo-Lists",
+    "Set up events": "Set up events",
+    "Room": "Room",
+    "Day": "Day",
+    "The name is not given for {0} event(s)": "The name is not given for {0} event(s)",
+    "Event name is mandatory": "Event name is mandatory",
+    "Bulk Event Create": "Bulk Event Create Component",
+    "Remove Backdrop": "Remove Backdrop",
+    "Show Backdrop": "Show Backdrop",
+    "Close Window": "Close Window",
+    "Duplicate events": "Duplicate events",
+    "Would you like to duplicate all selected appointments to another room or by a certain period of time?": "Would you like to duplicate all selected appointments to another room or by a certain period of time?",
+    "Cancel selection": "Cancel selection",
+    "Hold here to move": "Hold here to move",
+    "Data is currently loaded. Please wait": "Data is currently loaded. Please wait",
+    "No events found. Click on the plus (+) icon to create an event": "No events found. Click on the plus (+) icon to create an event",
+    "Set the event to all-day": "Set the event to all-day",
+    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day."
 }

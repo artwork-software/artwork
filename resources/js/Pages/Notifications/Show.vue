@@ -120,7 +120,7 @@
                     <div  class="col-span-4 pr-8">
                         <div v-if="globalNotification.image_url || globalNotification.title">
                             <div class="bg-backgroundGray rounded-xl">
-                                <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96"
+                                <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96 rounded-t-xl"
                                      :src="globalNotification.image_url"/>
                                 <div class="px-4 py-4">
                                     <div class="headline2 mt-2 mb-2">
@@ -162,26 +162,26 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    ChevronDownIcon,
-    DotsVerticalIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    SearchIcon,
-    TrashIcon,
-    XIcon
+  ChevronDownIcon,
+  DotsVerticalIcon,
+  InformationCircleIcon,
+  PencilAltIcon,
+  SearchIcon,
+  TrashIcon,
+  XIcon
 } from '@heroicons/vue/outline'
 import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
 import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
+  Listbox,
+  ListboxButton,
+  ListboxLabel,
+  ListboxOption,
+  ListboxOptions,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button.vue";
 import JetButton from "@/Jetstream/Button.vue";

@@ -167,7 +167,8 @@ class User extends Model implements
         'show_crafts',
         'goto_mode',
         'checklist_style',
-        'at_a_glance'
+        'at_a_glance',
+        'notification_enums_last_sent'
     ];
 
     protected $casts = [
@@ -181,7 +182,8 @@ class User extends Model implements
         'is_sidebar_opened' => 'boolean',
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
-        'at_a_glance' => 'boolean'
+        'at_a_glance' => 'boolean',
+        'notification_enums_last_sent' => 'array'
     ];
 
     protected $hidden = [

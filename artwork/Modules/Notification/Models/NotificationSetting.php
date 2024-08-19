@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $type
  * @property string $title
  * @property string $description
- * @property string $frequency
+ * @property NotificationFrequencyEnum $frequency
  * @property int $enabled_email
  * @property int $enabled_push
  * @property string $created_at

@@ -57,6 +57,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
@@ -1956,7 +1957,6 @@ class EventController extends Controller
         if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
             $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
         }
-
     }
 
     /**
@@ -2254,13 +2254,21 @@ class EventController extends Controller
         foreach ($eventIds as $eventId) {
             $event = $this->eventService->findEventById($eventId);
             $desiredRoomIds[] = $event->getAttribute('room_id');
-            $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-            $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
+
+            foreach (
+                CarbonPeriod::create(
+                    $event->getAttribute('start_time'),
+                    $event->getAttribute('end_time')
+                ) as $desiredDayOfEvent
+            ) {
+                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+            }
 
             if ($request->integer('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
+
             if ($request->string('date')->toString() === '') {
                 if ($request->integer('value') !== 0) {
                     $endDate = Carbon::parse($event->getAttribute('end_time'));
@@ -2434,8 +2442,15 @@ class EventController extends Controller
 
         foreach ($duplicatedEvents as $event) {
             $desiredRoomIds[] = $event->getAttribute('room_id');
-            $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-            $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
+
+            foreach (
+                CarbonPeriod::create(
+                    $event->getAttribute('start_time'),
+                    $event->getAttribute('end_time')
+                ) as $desiredDayOfEvent
+            ) {
+                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+            }
 
             if ($request->integer('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
@@ -2565,8 +2580,15 @@ class EventController extends Controller
                         }
                     }
                 }
-                $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-                $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
+
+                foreach (
+                    CarbonPeriod::create(
+                        $event->getAttribute('start_time'),
+                        $event->getAttribute('end_time')
+                    ) as $desiredDayOfEvent
+                ) {
+                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+                }
             } else {
                 $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
                 $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');

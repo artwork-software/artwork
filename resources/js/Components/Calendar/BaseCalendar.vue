@@ -355,6 +355,17 @@ const props = defineProps({
     handleMultiEditEventCheckboxChange = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
         if (considerOnMultiEdit) {
             editEvents.value.push(eventId);
+
+            for (const [day, rooms] of Object.entries(calendarDataRef.value)) {
+                for (const [roomId, events] of Object.entries(rooms)) {
+                    events.events.forEach((event) => {
+                        if (eventId === event.id) {
+                            event.considerOnMultiEdit = true;
+                        }
+                    });
+                }
+            }
+
             editEventsRoomIds.value.push(eventRoomId);
             editEventsRoomsDesiredDays.value = getDaysOfEvent(
                 formatEventDateByDayJs(eventStart),
@@ -362,6 +373,16 @@ const props = defineProps({
             ).concat(editEventsRoomsDesiredDays.value);
 
             return;
+        }
+
+        for (const [day, rooms] of Object.entries(calendarDataRef.value)) {
+            for (const [roomId, events] of Object.entries(rooms)) {
+                events.events.forEach((event) => {
+                    if (eventId === event.id) {
+                        event.considerOnMultiEdit = false;
+                    }
+                });
+            }
         }
 
         editEvents.value = editEvents.value.filter((editEventId) => editEventId !== eventId);

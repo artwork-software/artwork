@@ -67,10 +67,9 @@ class ProjectTabService implements ServiceWithArrayCache
             $projectTab = $this->projectTabRepository
                 ->findFirstProjectTabByComponentsComponentType($type);
 
-            if ($projectTab) {
-                ProjectTabArrayCache::setItem($projectTab);
-            }
+            ProjectTabArrayCache::setItem($projectTab);
         }
+
         return $projectTab;
     }
 

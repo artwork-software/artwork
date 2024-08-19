@@ -120,7 +120,7 @@
                     <div  class="col-span-4 pr-8">
                         <div v-if="globalNotification.image_url || globalNotification.title">
                             <div class="bg-backgroundGray">
-                                <img v-if="globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
+                                <img v-if="globalNotification.image_url" alt="Benachrichtigungs-Bild" class="max-h-96"
                                      :src="globalNotification.image_url"/>
                                 <div class="px-4 py-4">
                                     <div class="headline2 mt-2 mb-2">
@@ -133,7 +133,9 @@
                             </div>
                         </div>
                        <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
-                           <SecondaryButton :text="$t('Change notification to all')" class="col-span-12" @click="showGlobalNotificationModal = true"/>
+                           <SecondaryButton :text="$t('Change notification to all')"
+                                            class="col-span-12"
+                                            @click="showGlobalNotificationModal = true"/>
                        </div>
                     </div>
                 </div>
@@ -168,13 +170,7 @@ import {
     TrashIcon,
     XIcon
 } from '@heroicons/vue/outline'
-import {
-    CheckIcon,
-    ChevronRightIcon,
-    ChevronUpIcon,
-    PlusSmIcon,
-    XCircleIcon
-} from '@heroicons/vue/solid'
+import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
 import {
     Listbox,
@@ -194,10 +190,7 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
-import {
-    Link,
-    useForm
-} from "@inertiajs/vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";

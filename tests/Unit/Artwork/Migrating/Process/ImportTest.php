@@ -5,7 +5,6 @@ namespace Tests\Unit\Artwork\Migrating\Process;
 use Artwork\Migrating\Contracts\DataAggregator;
 use Artwork\Migrating\Contracts\Importer;
 use Artwork\Migrating\ImportConfig;
-use Artwork\Migrating\Jobs\ImportProject;
 use Artwork\Migrating\Models\EventTypeImportModel;
 use Artwork\Migrating\Models\ProjectGroupImportModel;
 use Artwork\Migrating\Models\ProjectImportModel;
@@ -45,6 +44,9 @@ class ImportTest extends TestCase
                     return [new ProjectImportModel('lel', 'lard', 'a', 'b', now(), now())];
                 }
 
+                /**
+                 * @return array<int, ProjectGroupImportModel>
+                 */
                 public function findProjectGroups(): array
                 {
                     return [new ProjectGroupImportModel('lel', 'lard', 'a', 'b', now())];

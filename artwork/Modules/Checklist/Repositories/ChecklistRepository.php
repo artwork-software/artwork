@@ -9,8 +9,6 @@ use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
-use function Pest\Laravel\get;
-
 class ChecklistRepository extends BaseRepository
 {
     public function getById(int $id): mixed
@@ -208,8 +206,9 @@ class ChecklistRepository extends BaseRepository
                     'done' => $task->done,
                     'done_by_user' => $task->user_who_done,
                     'done_at' => $task->done_at ? Carbon::parse($task->done_at)->format('d.m.Y, H:i') : null,
-                    'done_at_dt_local' => $task->done_at ? Carbon::parse($task->done_at)
-                        ->toDateTimeLocalString() : null,
+                    'done_at_dt_local' => $task->done_at ?
+                        Carbon::parse($task->done_at)->toDateTimeLocalString() :
+                        null,
                     'users' => $task->task_users,
                     'formatted_dates' => $task->getFormattedDates(),
                 ];

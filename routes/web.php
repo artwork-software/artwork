@@ -33,7 +33,6 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
@@ -83,15 +82,16 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
-use Artwork\Modules\Inventory\Http\Controller\InventoryController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controller\InventorySettingsController;
+use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
+use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -541,9 +541,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('event.notification.delete');
 
     //globalNotification
-    Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
-    Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])
+    Route::put('/globalNotification/create', [GlobalNotificationController::class, 'store'])
         ->name('global_notification.store');
+    Route::put('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'update'])
+        ->name('global_notification.update');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])
         ->name('global_notification.destroy');
 

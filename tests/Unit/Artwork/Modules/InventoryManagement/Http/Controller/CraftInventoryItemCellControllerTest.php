@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\InventoryManagement\Http\Controller;
 
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
 use Artwork\Modules\InventoryManagement\Http\Requests\ItemCell\UpdateCraftInventoryItemCellCellValueRequest;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;

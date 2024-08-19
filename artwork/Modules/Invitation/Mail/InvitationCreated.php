@@ -21,19 +21,24 @@ class InvitationCreated extends Mailable
 
     public function build(): InvitationCreated
     {
+        /** @var GeneralSettings $settings */
         $settings = app(GeneralSettings::class);
+        $pageTitle = $settings->page_title !== '' ? $settings->page_title : 'Artwork';
+        $email = $settings->invitation_email !== '' ? $settings->invitation_email : User::query()->find(1)?->email;
+
         return $this
             ->from(
-                $settings->business_email !== '' ? $settings->business_email : 'noreply@artwork.de',
+                $settings->invitation_email !== '' ? $settings->invitation_email : 'noreply@artwork.de',
                 'Artwork'
             )
             ->replyTo($this->user->email)
-            ->subject("Einladung für das artwork")
+            ->subject("Einladung")
             ->markdown(
                 'emails.invitations',
                 [
                     'token' => $this->token,
-                    'super_user_email' => User::query()->find(1)?->email
+                    'page_title' => $pageTitle,
+                    'email' => $email
                 ]
             );
     }

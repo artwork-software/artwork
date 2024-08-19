@@ -1,10 +1,11 @@
 <?php
 
-namespace Artwork\Modules\Notification\Models;
+namespace Artwork\Modules\GlobalNotification\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -28,8 +29,13 @@ class GlobalNotification extends Model
       'created_by'
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id');
+        return $this->belongsTo(
+            User::class,
+            'id',
+            'created_by',
+            'global_notifications'
+        );
     }
 }

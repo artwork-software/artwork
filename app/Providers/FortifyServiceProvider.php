@@ -43,7 +43,9 @@ class FortifyServiceProvider extends ServiceProvider
 
         ResetPassword::toMailUsing(
             function (User $notifiable, string $token) {
-                $settings = app(GeneralSettings::class);
+                /** @var GeneralSettings $settings */
+                $settings = $this->app->make(GeneralSettings::class);
+
                 return (new MailMessage())
                     ->from(
                         $settings->business_email !== '' ? $settings->business_email : 'noreply@artwork.software',
@@ -54,6 +56,7 @@ class FortifyServiceProvider extends ServiceProvider
                         'emails.password_reset',
                         [
                             'name' => $notifiable->first_name . ' ' . $notifiable->last_name,
+                            'page_title' => $settings->page_title !== '' ? $settings->page_title : 'Artwork',
                             'url' => sprintf(
                                 '%s/reset-password/%s?email=%s',
                                 config('app.url'),

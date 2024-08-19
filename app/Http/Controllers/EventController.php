@@ -14,6 +14,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
+use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
 use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
@@ -27,6 +28,7 @@ use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -56,7 +58,9 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -84,6 +88,7 @@ class EventController extends Controller
         private readonly SchedulingService $schedulingService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly RoomService $roomService,
+        private readonly AuthManager $authManager,
     ) {
     }
 
@@ -248,7 +253,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function showDashboardPage(): Response
+    public function showDashboardPage(GlobalNotificationService $globalNotificationService): Response
     {
         $event = null;
         $tasks = Task::query()
@@ -339,6 +344,7 @@ class EventController extends Controller
             'shiftsOfDay' => $shiftsOfDay,
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
+            'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
             'notificationOfToday' => $notification->get()->groupBy('priority'),
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
@@ -1894,7 +1900,7 @@ class EventController extends Controller
         SubEventService $subEventService,
         NotificationService $notificationService,
         ProjectTabService $projectTabService
-    ): bool {
+    ): bool|null {
         $this->authorize('delete', $event);
 
         $this->eventService->delete(
@@ -1917,6 +1923,42 @@ class EventController extends Controller
         }
 
         return true;
+    }
+
+    public function destroyWithoutReturn(
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+        ChangeService $changeService,
+        EventCommentService $eventCommentService,
+        TimelineService $timelineService,
+        ShiftService $shiftService,
+        SubEventService $subEventService,
+        NotificationService $notificationService,
+        ProjectTabService $projectTabService
+    ): void {
+        $this->authorize('delete', $event);
+
+        $this->eventService->delete(
+            $event,
+            $shiftsQualificationsService,
+            $shiftUserService,
+            $shiftFreelancerService,
+            $shiftServiceProviderService,
+            $changeService,
+            $eventCommentService,
+            $timelineService,
+            $shiftService,
+            $subEventService,
+            $notificationService,
+            $projectTabService
+        );
+
+        if ($isInInventoryEvent = $this->craftInventoryItemEventService->checkIfEventIsInInventoryPlaning($event)) {
+            $this->craftInventoryItemEventService->deleteEventFromInventory($isInInventoryEvent);
+        }
     }
 
     /**
@@ -2214,13 +2256,21 @@ class EventController extends Controller
         foreach ($eventIds as $eventId) {
             $event = $this->eventService->findEventById($eventId);
             $desiredRoomIds[] = $event->getAttribute('room_id');
-            $desiredDaysOfEvents[] = $event->getAttribute('start_time')->format('d.m.Y');
-            $desiredDaysOfEvents[] = $event->getAttribute('end_time')->format('d.m.Y');
+
+            foreach (
+                CarbonPeriod::create(
+                    $event->getAttribute('start_time'),
+                    $event->getAttribute('end_time')
+                ) as $desiredDayOfEvent
+            ) {
+                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+            }
 
             if ($request->integer('newRoomId') !== null) {
                 $event->setAttribute('room_id', $request->integer('newRoomId'));
                 $desiredRoomIds[] = $event->getAttribute('room_id');
             }
+
             if ($request->string('date')->toString() === '') {
                 if ($request->integer('value') !== 0) {
                     $endDate = Carbon::parse($event->getAttribute('end_time'));
@@ -2360,9 +2410,248 @@ class EventController extends Controller
             $event->save();
         }
 
+
         return new JsonResponse([
             'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
             'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
         ]);
+    }
+
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
+    public function updateMultiDuplicate(Request $request): JsonResponse
+    {
+        $desiredRoomIds = [];
+        $desiredDaysOfEvents = [];
+
+        $eventIds = $request->collect('events');
+        $duplicatedEvents = [];
+
+        foreach ($eventIds as $eventId) {
+            $originalEvent = $this->eventService->findEventById($eventId);
+
+            $duplicatedEvent = $originalEvent->replicate();
+            $duplicatedEvent->save();
+
+            $shifts = $originalEvent->shifts;
+            foreach ($shifts as $shift) {
+                $duplicatedShift = $shift->replicate();
+                $duplicatedShift->event_id = $duplicatedEvent->id;
+                $duplicatedShift->save();
+            }
+            $duplicatedEvents[] = $duplicatedEvent;
+        }
+
+        foreach ($duplicatedEvents as $event) {
+            $desiredRoomIds[] = $event->getAttribute('room_id');
+
+            foreach (
+                CarbonPeriod::create(
+                    $event->getAttribute('start_time'),
+                    $event->getAttribute('end_time')
+                ) as $desiredDayOfEvent
+            ) {
+                $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+            }
+
+            if ($request->integer('newRoomId') !== null) {
+                $event->setAttribute('room_id', $request->integer('newRoomId'));
+                $desiredRoomIds[] = $event->getAttribute('room_id');
+            }
+            if ($request->string('date')->toString() === '') {
+                if ($request->integer('value') !== 0) {
+                    $endDate = Carbon::parse($event->getAttribute('end_time'));
+                    $startDate = Carbon::parse($event->getAttribute('start_time'));
+                    $shifts = $event->getAttribute('shifts');
+                    $calculationType = $request->integer('calculationType');
+                    $value = $request->integer('value');
+                    $type = $request->integer('type');
+
+                    // plus
+                    if ($calculationType === 1) {
+                        // stunden
+                        if ($type === 1) {
+                            $event->setAttribute('start_time', $startDate->addHours($value));
+                            $event->setAttribute('end_time', $endDate->addHours($value));
+                        }
+
+                        // Tage
+                        if ($type === 2) {
+                            $event->setAttribute('start_time', $startDate->addDays($value));
+                            $event->setAttribute('end_time', $endDate->addDays($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->addDays($value));
+                                $shift->setAttribute('end_date', $shiftEnd->addDays($value));
+                                $shift->save();
+                            }
+                        }
+                        // Wochen
+                        if ($type === 3) {
+                            $event->setAttribute('start_time', $startDate->addWeeks($value));
+                            $event->setAttribute('end_time', $endDate->addWeeks($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->addWeeks($value));
+                                $shift->setAttribute('end_date', $shiftEnd->addWeeks($value));
+                                $shift->save();
+                            }
+                        }
+                        // Monate
+                        if ($type === 4) {
+                            $event->setAttribute('start_time', $startDate->addMonths($value));
+                            $event->setAttribute('end_time', $endDate->addMonths($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->addMonths($value));
+                                $shift->setAttribute('end_date', $shiftEnd->addMonths($value));
+                                $shift->save();
+                            }
+                        }
+                        // Jahre
+                        if ($type === 5) {
+                            $event->setAttribute('start_time', $startDate->addYears($value));
+                            $event->setAttribute('end_time', $endDate->addYears($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->addYears($value));
+                                $shift->setAttribute('end_date', $shiftEnd->addYears($value));
+                                $shift->save();
+                            }
+                        }
+                    }
+
+                    // minus
+                    if ($calculationType === 2) {
+                        // stunden
+                        if ($type === 1) {
+                            $event->setAttribute('start_time', $startDate->subHours($value));
+                            $event->setAttribute('end_time', $endDate->subHours($value));
+                        }
+                        // Tage
+                        if ($type === 2) {
+                            $event->setAttribute('start_time', $startDate->subDays($value));
+                            $event->setAttribute('end_time', $endDate->subDays($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->subDays($value));
+                                $shift->setAttribute('end_date', $shiftEnd->subDays($value));
+                                $shift->save();
+                            }
+                        }
+                        // Wochen
+                        if ($type === 3) {
+                            $event->setAttribute('start_time', $startDate->subWeeks($value));
+                            $event->setAttribute('end_time', $endDate->subWeeks($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->subWeeks($value));
+                                $shift->setAttribute('end_date', $shiftEnd->subWeeks($value));
+                                $shift->save();
+                            }
+                        }
+                        // Monate
+                        if ($type === 4) {
+                            $event->setAttribute('start_time', $startDate->subMonths($value));
+                            $event->setAttribute('end_time', $endDate->subMonths($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->subMonths($value));
+                                $shift->setAttribute('end_date', $shiftEnd->subMonths($value));
+                                $shift->save();
+                            }
+                        }
+                        // Jahre
+                        if ($type === 5) {
+                            $event->setAttribute('start_time', $startDate->subYears($value));
+                            $event->setAttribute('end_time', $endDate->subYears($value));
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->getAttribute('start_date'));
+                                $shiftEnd = Carbon::parse($shift->getAttribute('end_date'));
+                                $shift->setAttribute('start_date', $shiftStart->subYears($value));
+                                $shift->setAttribute('end_date', $shiftEnd->subYears($value));
+                                $shift->save();
+                            }
+                        }
+                    }
+                }
+
+                foreach (
+                    CarbonPeriod::create(
+                        $event->getAttribute('start_time'),
+                        $event->getAttribute('end_time')
+                    ) as $desiredDayOfEvent
+                ) {
+                    $desiredDaysOfEvents[] = $desiredDayOfEvent->format('d.m.Y');
+                }
+            } else {
+                $endTime = Carbon::parse($event->getAttribute('end_time'))->format('H:i:s');
+                $startTime = Carbon::parse($event->getAttribute('start_time'))->format('H:i:s');
+
+                $newDate = Carbon::parse($request->string('date'));
+                $desiredDaysOfEvents[] = $newDate->format('d.m.Y');
+                $date = $newDate->format('Y-m-d');
+                $event->setAttribute('start_time', $date . ' ' . $startTime);
+                $event->setAttribute('end_time', $date . ' ' . $endTime);
+            }
+            $event->save();
+        }
+
+        return new JsonResponse([
+            'desiredRoomIds' => array_values(array_unique($desiredRoomIds)),
+            'desiredDays' => array_values(array_unique($desiredDaysOfEvents))
+        ]);
+    }
+
+
+    public function bulkProjectEventStore(
+        EventBulkCreateRequest $request,
+        Project $project
+    ): RedirectResponse {
+        $events = $request->input('events', []);
+
+        foreach ($events as $event) {
+            $this->eventService->createBulkEvent(
+                $event,
+                $project,
+                $this->authManager->id()
+            );
+        }
+
+        return Redirect::back();
+    }
+
+    public function updateSingleBulkEvent(
+        Request $request,
+        Event $event
+    ): RedirectResponse {
+        $data =  $request->collect('data');
+        $this->eventService->updateBulkEvent(
+            $data,
+            $event
+        );
+
+        return Redirect::back();
+    }
+
+    public function createSingleBulkEvent(
+        Request $request,
+        Project $project
+    ): RedirectResponse {
+        $data =  $request->input('event', []);
+        $this->eventService->createBulkEvent(
+            $data,
+            $project,
+            $this->authManager->id()
+        );
+
+        return Redirect::back();
     }
 }

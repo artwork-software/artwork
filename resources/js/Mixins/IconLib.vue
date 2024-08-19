@@ -111,7 +111,8 @@ import {
     IconSeparator,
     IconDeviceFloppy,
     IconNote,
-    IconCalendarStar
+    IconCalendarStar,
+    IconApps
 
 } from "@tabler/icons-vue";
 export default {
@@ -227,7 +228,8 @@ export default {
         IconInfoSquare,
         IconSeparator,
         IconDeviceFloppy,
-        IconNote
+        IconNote,
+        IconApps
     }
 }
 </script>

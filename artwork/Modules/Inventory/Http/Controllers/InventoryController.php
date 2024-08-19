@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\Inventory\Http\Controller;
+namespace Artwork\Modules\Inventory\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;

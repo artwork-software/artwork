@@ -12,7 +12,7 @@ class ChecklistUpdateRequestTest extends TestCase
         self::assertSame([
             'user_id' => ['sometimes', 'nullable', 'exists:users,id'],
             'name' => ['sometimes', 'nullable', 'string'],
-
+            'private' => ['boolean'],
             'tasks' => ['sometimes', 'array'],
             'tasks.*.name' => ['sometimes', 'nullable', 'string'],
             'tasks.*.description' => ['sometimes', 'nullable', 'string'],

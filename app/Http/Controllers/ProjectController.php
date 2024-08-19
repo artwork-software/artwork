@@ -157,6 +157,8 @@ class ProjectController extends Controller
         private readonly SectorService $sectorService,
         private readonly CostCenterService $costCenterService,
         private readonly AuthManager $authManager,
+        private readonly EventTypeService $eventTypeService,
+        private readonly RoomService $roomService,
     ) {
     }
 
@@ -194,6 +196,9 @@ class ProjectController extends Controller
             'genres' => $this->genreService->getAll(),
             'sectors' => $this->sectorService->getAll(),
             'createSettings' => app(ProjectCreateSettings::class),
+            'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
+            'eventTypes' => $this->eventTypeService->getAll(),
+            'rooms' => $this->roomService->getAllWithoutTrashed(),
         ]);
     }
 
@@ -277,6 +282,7 @@ class ProjectController extends Controller
 
         $project = Project::create([
             'name' => $request->name,
+            'user_id' => $this->authManager->id(),
             'number_of_participants' => $request->number_of_participants,
         ]);
 
@@ -1882,6 +1888,14 @@ class ProjectController extends Controller
                 case ProjectTabComponentEnum::PROJECT_TEAM->value:
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
+                case ProjectTabComponentEnum::BULK_EDIT->value:
+                    $headerObject->project->events = $project->events()->without([
+                        'series',
+                        'event_type',
+                        'subEvents',
+                        'creator'
+                    ])->get();
+                    break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
                     $loadedProjectInformation['CalendarTab'] =
@@ -1965,7 +1979,7 @@ class ProjectController extends Controller
         $headerObject->firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
         $headerObject->lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
         $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
-        $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
+        $headerObject->eventTypes = $this->eventTypeService->getAll();
         $headerObject->states = $this->projectStateService->getAll();
         $headerObject->projectGroups = $project->groups;
         $headerObject->groupProjects = Project::where('is_group', 1)->get();
@@ -1975,6 +1989,7 @@ class ProjectController extends Controller
         $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = $this->sectorService->getAll();
+        $headerObject->rooms = $this->roomService->getAllWithoutTrashed(without: ['creator', 'admins']);
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;
@@ -1987,6 +2002,7 @@ class ProjectController extends Controller
         $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab' => $projectTab,

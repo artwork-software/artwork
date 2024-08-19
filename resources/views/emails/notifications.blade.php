@@ -1,4 +1,14 @@
-@component('mail::message', ['notifications' => $notifications, 'user' => $user])
+@component(
+    'mail::message',
+    [
+        'notifications' => $notifications,
+        'user' => $user,
+        'page_title' => $page_title
+    ]
+)
+    @php
+        $page_title = $page_title !== '' ?$page_title : 'Artwork';
+    @endphp
     <style>
         body {
             font-family: Inter, serif;
@@ -57,10 +67,9 @@
     </style>
     <div class="email-content">
         <p style="margin-bottom: 2rem; font-size: 16px; font-family: Inter, sans-serif; font-weight: 500; margin-top: 3rem">
-            Hallo {{ $user }}, <br>es gibt Neuigkeiten in deinem artwork!
+            @php echo 'Hallo ' . $user . ',<br> es gibt Neuigkeiten in ' . $page_title @endphp
         </p>
         @foreach($notifications as $notification)
-
             <div style="margin-bottom: 1rem">
                 <h1>{{ $notification['title'] }} <span>{{ $notification['count'] }}</span></h1>
                 @foreach($notification['notifications'] as $body)
@@ -136,10 +145,8 @@
                 @endforeach
             </div>
         @endforeach
-
         <a href="{{ config('app.url') }}"
            style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem">alle
-            Benachrichtigungen im artwork ansehen</a>
+            Benachrichtigungen in {{ $page_title  }} ansehen</a>
     </div>
-
 @endcomponent

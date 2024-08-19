@@ -36,6 +36,7 @@ export default {
     <IconInfoSquare class="w-6 h-6" v-if="type === 'GeneralShiftInformationComponent'" />
     <IconSeparator class="w-6 h-6" v-if="type === 'SeparatorComponent'" />
     <IconCurrencyEuro class="w-6 h-6" v-if="type === 'BudgetInformations'" />
+    <IconApps class="w-6 h-6" v-if="type === 'BulkBody'" />
 
     <!-- TextField, Checkbox, TextArea, Title, DropDown -->
 </template>

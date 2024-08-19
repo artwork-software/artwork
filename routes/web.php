@@ -33,7 +33,6 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
@@ -83,15 +82,16 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
-use Artwork\Modules\Inventory\Http\Controller\InventoryController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryCategoryController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryFilterController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryGroupController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemCellController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftInventoryItemController;
-use Artwork\Modules\InventoryManagement\Http\Controller\CraftsInventoryColumnController;
-use Artwork\Modules\InventoryManagement\Http\Controller\InventoryManagementExportController;
-use Artwork\Modules\InventorySetting\Http\Controller\InventorySettingsController;
+use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
+use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -297,6 +297,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.update_team');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
+    Route::post('/project/{project}/bulk/event/store', [EventController::class, 'bulkProjectEventStore'])
+        ->name('events.bulk.store');
 
     //ProjectTabs
     Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
@@ -487,7 +489,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
+    Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
+        ->name('event.update.single.bulk');
+    Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
+        ->name('event.store.bulk.single');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::delete('/events/{event}/bulk', [EventController::class, 'destroyWithoutReturn'])->name('event.bulk.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
         ->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');
@@ -534,9 +541,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('event.notification.delete');
 
     //globalNotification
-    Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
-    Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])
+    Route::put('/globalNotification/create', [GlobalNotificationController::class, 'store'])
         ->name('global_notification.store');
+    Route::put('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'update'])
+        ->name('global_notification.update');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])
         ->name('global_notification.destroy');
 
@@ -1023,6 +1031,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // MultiEdit
     Route::patch('/multi-edit', [EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
+    Route::patch('/multi-duplicate', [EventController::class, 'updateMultiDuplicate'])->name('multi-duplicate.save');
     Route::post('/multi-edit', [EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
 
     // Calendar

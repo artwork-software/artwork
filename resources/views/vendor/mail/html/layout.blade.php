@@ -65,7 +65,6 @@
     <link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet" type="text/css">
     <style type="text/css">
         @import url(https://fonts.googleapis.com/css?family=Inter);
-
     </style>
     <!--<![endif]-->
     <style type="text/css">
@@ -143,7 +142,13 @@
                                                     <tbody>
                                                     <tr>
                                                         <td style="width:200px;">
-                                                            <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_big.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                            @if($settings->big_logo_path)
+                                                                <img height="auto" src="{{ asset('storage' . $settings->big_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                            @elseif($settings->small_logo_path)
+                                                                <img height="auto" src="{{ asset('storage' . $settings->small_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                            @else
+                                                                <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_big.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -157,35 +162,6 @@
                             </tbody>
                         </table>
                     </div>
-                    <!--[if mso | IE]></td><td class="" style="vertical-align:middle;width:275px;" ><![endif]-->
-                    <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                            <tbody>
-                            <tr>
-                                <td style="vertical-align:middle;padding:0;">
-                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="width:100px;">
-                                                            <img height="auto" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="400" />
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!--[if mso | IE]></td></tr></table><![endif]-->
                 </td>
             </tr>
             </tbody>

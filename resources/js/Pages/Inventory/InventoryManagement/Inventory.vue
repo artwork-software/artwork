@@ -33,8 +33,8 @@
                             <Menu v-show="showMenu === column.id && !column.showColorMenu"
                                   as="div"
                                   class="inventory-th-menu-container">
-                                <MenuButton as="div">
-                                    <IconDotsVertical class="menu-button"
+                                <MenuButton as="div" class="bg-transparent">
+                                    <IconDotsVertical class="inventory-menu-button"
                                                       stroke-width="1.5"
                                                       aria-hidden="true"/>
                                 </MenuButton>

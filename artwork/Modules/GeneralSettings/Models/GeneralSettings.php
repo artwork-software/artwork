@@ -7,6 +7,7 @@ use Spatie\LaravelSettings\Settings;
 class GeneralSettings extends Settings
 {
     public string $page_title;
+
     public string $company_name;
 
     public bool $setup_finished;
@@ -24,6 +25,8 @@ class GeneralSettings extends Settings
     public string $privacy_link;
 
     public string $email_footer;
+
+    public string $invitation_email;
 
     public string $business_email;
 

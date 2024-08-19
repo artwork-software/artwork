@@ -187,6 +187,7 @@ import TextComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
+import Linkifyit from 'linkify-it';
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -441,9 +442,53 @@ export default {
                     console.error('Refs are undefined:', { menuButton, menuItems });
                 }
             });
+        },
+        linkifyBody() {
+            const bodyElement = document.body,
+                linkify = new Linkifyit();
+
+            function replaceTextWithLinks(element) {
+                element.childNodes.forEach((node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent;
+                        const matches = linkify.match(text);
+
+                        if (matches) {
+                            const fragment = document.createDocumentFragment();
+                            let lastIndex = 0;
+
+                            matches.forEach((match) => {
+                                if (match.index > lastIndex) {
+                                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                                }
+
+                                const link = document.createElement('a');
+                                link.href = match.url;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                link.textContent = match.text;
+                                fragment.appendChild(link);
+
+                                lastIndex = match.lastIndex;
+                            });
+
+                            if (lastIndex < text.length) {
+                                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                            }
+
+                            node.replaceWith(fragment);
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        replaceTextWithLinks(node);
+                    }
+                });
+            }
+
+            replaceTextWithLinks(bodyElement);
         }
     },
     mounted() {
+        this.linkifyBody();
 
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
@@ -457,7 +502,6 @@ export default {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
             });
-
     },
     data() {
         return {
@@ -488,7 +532,7 @@ export default {
             type: String,
             default: 'Startseite'
         },
-    }
+    },
 }
 
 </script>

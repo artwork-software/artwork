@@ -8,7 +8,7 @@ use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Mail\NotificationSummary;
 use Artwork\Modules\User\Models\User;
-use Dotenv\Dotenv;
+use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -19,17 +19,12 @@ class SendNotificationsEmailSummariesCommand extends Command
 
     protected $description = 'Sends summaries of notifications to all users.';
 
-    private readonly array $env;
-
     public function __construct(
         private readonly GeneralSettings $generalSettings,
-        private readonly DatabaseNotificationService $databaseNotificationService
+        private readonly DatabaseNotificationService $databaseNotificationService,
+        private readonly Repository $config
     ) {
         parent::__construct();
-
-        $this->env = Dotenv::parse(
-            file_get_contents(base_path('.env'))
-        );
     }
 
     public function handle(): int
@@ -100,17 +95,13 @@ class SendNotificationsEmailSummariesCommand extends Command
             }
         }
 
-        if ($user->id === 2) {
-            dd($notifications);
-        }
-
         if (!empty($notificationArray)) {
             Mail::to($user)->send(
                 new NotificationSummary(
                     $notificationArray,
                     $user->first_name,
                     $this->generalSettings->page_title,
-                    $this->env['SYSTEM_MAIL']
+                    $this->config->get('mail.system_mail')
                 )
             );
         }

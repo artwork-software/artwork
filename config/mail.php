@@ -114,4 +114,5 @@ return [
         ],
     ],
 
+    'system_mail' => env('SYSTEM_MAIL', 'noreply@artwork.software')
 ];

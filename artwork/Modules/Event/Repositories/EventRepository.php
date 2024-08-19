@@ -74,7 +74,7 @@ class EventRepository extends BaseRepository
             ->get();
     }
 
-    public function findById(int $id): Event
+    public function findById(int $id): ?Event
     {
         return Event::find($id);
     }

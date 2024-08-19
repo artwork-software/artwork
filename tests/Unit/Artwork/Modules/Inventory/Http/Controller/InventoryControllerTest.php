@@ -4,7 +4,7 @@ namespace Tests\Unit\Artwork\Modules\Inventory\Http\Controller;
 
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
-use Artwork\Modules\Inventory\Http\Controller\InventoryController;
+use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryManagement\Services\CraftsInventoryColumnService;
 use Artwork\Modules\InventoryManagement\Services\InventoryManagementUserFilterService;

@@ -1,6 +1,6 @@
-@component('mail::message', ['name' => $name, 'url' => $url])
+@component('mail::message', ['name' => $name, 'url' => $url, 'page_title' => $page_title])
     <h1 style="margin: 5rem 0 1rem 0; font-size: 2rem;">
-        Artwork Passwort zurücksetzen
+        Passwort zurücksetzen für {{ $page_title }}
     </h1>
     <p style="font-weight: 300; margin-bottom: 3em;">
         Hallo {{ $name }}. Du erhälst diese E-Mail, weil wir eine Anfrage zum Zurücksetzen des Passworts für

@@ -36,6 +36,8 @@ enum ProjectTabComponentEnum: string
 
     case BUDGET_INFORMATIONS = 'BudgetInformations';
 
+    case BULK_EDIT = 'BulkBody';
+
     /**
      * Get all available values
      * @return array<string, mixed>

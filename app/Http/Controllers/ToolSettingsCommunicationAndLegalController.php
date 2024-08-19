@@ -34,6 +34,7 @@ class ToolSettingsCommunicationAndLegalController extends Controller
         $generalSettings->impressum_link = $request->get('impressumLink') ?? '';
         $generalSettings->privacy_link = $request->get('privacyLink') ?? '';
         $generalSettings->email_footer = $request->get('emailFooter') ?? '';
+        $generalSettings->invitation_email = $request->get('invitationEmail') ?? '';
         $generalSettings->business_email = $request->get('businessEmail') ?? '';
 
         $generalSettings->save();

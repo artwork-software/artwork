@@ -11,11 +11,11 @@ use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\MoneySourceUserPivot\Models\MoneySourceUserPivot;
-use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
@@ -335,7 +335,7 @@ class User extends Model implements
         return $this->getAllPermissions();
     }
 
-    public function globalNotifications(): HasOne
+    public function globalNotification(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }

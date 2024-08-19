@@ -234,7 +234,8 @@ class Event extends Model
     {
         return [
             'start' => Carbon::parse($this->start_time)->format('d.m.Y'),
-            'end' => Carbon::parse($this->end_time)->format('d.m.Y')
+            'end' => Carbon::parse($this->end_time)->format('d.m.Y'),
+            'start_clear' => Carbon::parse($this->start_time)->format('Y-m-d')
         ];
     }
 

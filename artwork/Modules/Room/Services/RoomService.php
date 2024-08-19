@@ -378,9 +378,9 @@ readonly class RoomService
         $this->roomRepository->deleteByReference($area, 'rooms');
     }
 
-    public function getAllWithoutTrashed(array $with = []): EloquentCollection
+    public function getAllWithoutTrashed(array $with = [], array $without = []): EloquentCollection
     {
-        return $this->roomRepository->allWithoutTrashed($with);
+        return $this->roomRepository->allWithoutTrashed($with, $without);
     }
 
     //@todo: refactor

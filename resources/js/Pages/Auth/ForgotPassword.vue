@@ -3,13 +3,13 @@
 
     <jet-authentication-card>
         <div class="text-4xl my-6 flex justify-center font-bold text-black">
-            <img src="/Svgs/Logos/artwork_logo_big.svg"/>
+            <img :src="this.$page.props.big_logo"/>
         </div>
         <h2 class="my-6 text-2xl text-center font-bold text-gray-900">
-            {{  $t('Forgot your password?') }}
+            {{ $t('Forgot your password?') }}
         </h2>
         <div class="mb-4 text-md font-semibold text-gray-600">
-            {{$t('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.')}}
+            {{ $t('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
         </div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">

@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="text-secondary text-right bg-userBg">
+    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-secondary text-right">
         <div :style="textStyle" class="mt-3 mr-2">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}

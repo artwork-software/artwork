@@ -47,7 +47,6 @@ class RoomRequestNotification extends Notification implements ShouldBroadcast
             $channels[] = 'mail';
         }
 
-
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';
         }

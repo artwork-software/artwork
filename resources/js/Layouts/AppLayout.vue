@@ -90,8 +90,12 @@
 
                 <div class="flex flex-col justify-end w-full">
                     <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
-                        <div class="flex items-center">
+                        <div class="flex items-center relative">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                            <div v-if="this.$page.props.unread_notifications > 0"
+                                 class="w-4 h-4 block absolute -top-2 -right-2 rounded-full bg-white text-black text-center">
+                                {{ this.$page.props.unread_notifications }}
+                            </div>
                             <div class="ml-4 w-32" v-if="fullSidenav">
                                 {{ $t('Notifications') }}
                             </div>

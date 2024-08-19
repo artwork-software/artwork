@@ -18,16 +18,27 @@ class NotificationSummary extends Mailable
 
     public string $user;
 
-    public function __construct(array $notifications, string $user)
-    {
+    public string $page_title;
+
+    public string $systemEmail;
+
+    public function __construct(
+        array $notifications,
+        string $user,
+        string $page_title,
+        string $systemEmail,
+    ) {
         $this->notifications = $notifications;
         $this->user = $user;
+        $this->page_title = $page_title;
+        $this->systemEmail = $systemEmail;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Es gibt Neuigkeiten in deinem artwork!',
+            from: $this->systemEmail,
+            subject: 'Es gibt Neuigkeiten in ' . ($this->page_title !== '' ? $this->page_title : 'Artwork')
         );
     }
 
@@ -37,7 +48,8 @@ class NotificationSummary extends Mailable
             markdown: 'emails.notifications',
             with: [
                 'notifications' => $this->notifications,
-                'user' => $this->user
+                'user' => $this->user,
+                'page_title' => $this->page_title
             ]
         );
     }

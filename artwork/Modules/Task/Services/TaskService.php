@@ -46,7 +46,7 @@ class TaskService
         // add all users to $checklist->project when they not in project
         if ($checklist->hasProject()) {
             foreach ($userIds as $userId) {
-                if(!$checklist->project->users->contains($userId)) {
+                if (!$checklist->project->users->contains($userId)) {
                     $checklist->project->users()->attach($userId);
                 }
             }

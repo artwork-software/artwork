@@ -2,7 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\Notification\Models\GlobalNotification;
+use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 

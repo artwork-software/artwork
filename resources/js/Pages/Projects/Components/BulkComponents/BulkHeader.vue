@@ -1,0 +1,76 @@
+<template>
+    <div class="grid gird-cols-1 md:grid-cols-8 gap-4 mb-3 text-gray-400 text-sm">
+        <div class="font-bold">
+            {{ $t('Event type') }}
+        </div>
+        <div class="font-bold">
+            {{ $t('Event name') }}
+        </div>
+        <div class="font-bold">
+            {{ $t('Room') }}
+        </div>
+        <div class="font-bold">
+            {{ $t('Day') }}
+        </div>
+        <div class="font-bold col-span-2">
+            <SwitchGroup as="div" class="flex items-center" v-if="isInModal">
+                <Switch v-model="localValue"
+                        @change="$emit('update:modelValue', localValue)"
+                        :class="[localValue ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex h-4 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-0 focus:ring-indigo-600 focus:ring-offset-2']">
+                    <span aria-hidden="true"
+                          :class="[localValue ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                </Switch>
+                <SwitchLabel as="span" class="ml-3">
+                    <div>
+                        {{ $t('Period') }}
+                    </div>
+                </SwitchLabel>
+            </SwitchGroup>
+            <div v-else class="flex items-center gap-x-4">
+                {{ $t('Period') }}
+                <ToolTipDefault :tooltip-text="$t('If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.')" top/>
+            </div>
+        </div>
+        <div class="font-bold">
+        </div>
+    </div>
+</template>
+
+<script setup>
+import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
+import {ref, watch} from "vue";
+import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+
+// Emit Event
+const emit = defineEmits(['update:modelValue']);
+
+// Props für v-model Unterstützung
+const props = defineProps({
+    modelValue: {
+        type: Boolean,
+        required: true
+    },
+    isInModal: {
+        type: Boolean,
+        required: false,
+        default: false
+    }
+});
+
+// Lokaler Wert, um den Zustand des Switches zu halten
+const localValue = ref(props.modelValue);
+
+// Watcher um Änderungen an modelValue zu berücksichtigen
+watch(() => props.modelValue, (newValue) => {
+    localValue.value = newValue;
+});
+
+// Wenn localValue geändert wird, das update:modelValue Event emittieren
+watch(localValue, (newValue) => {
+    emit('update:modelValue', newValue);
+});
+</script>
+
+<style scoped>
+/* Dein vorhandenes CSS */
+</style>

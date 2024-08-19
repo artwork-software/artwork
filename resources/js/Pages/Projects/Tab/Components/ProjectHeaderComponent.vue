@@ -150,7 +150,7 @@ export default {
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
                         {{ project?.name }}
-                        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(project?.state?.color), color: TextColorWithDarken(project?.state?.color), borderColor: TextColorWithDarken(project?.state?.color)}">
+                        <span v-if="project?.state" class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(project?.state?.color), color: TextColorWithDarken(project?.state?.color), borderColor: TextColorWithDarken(project?.state?.color)}">
                             {{ project?.state?.name }}
                         </span>
                     </h2>

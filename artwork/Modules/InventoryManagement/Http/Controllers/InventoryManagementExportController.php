@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\InventoryManagement\Http\Controller;
+namespace Artwork\Modules\InventoryManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Artwork\Modules\InventoryManagement\Http\Requests\Export\CreateInventoryManagementExportRequest;

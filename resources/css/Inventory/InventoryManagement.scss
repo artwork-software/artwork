@@ -239,9 +239,13 @@
                 }
 
                 .inventory-th-menu-container {
-                    @apply absolute z-50 right-0 cursor-pointer flex flex-row items-center;
+                    @apply absolute z-50 right-0 cursor-pointer flex flex-row items-center bg-transparent;
 
                     .menu-button {
+                        @apply w-5 h-5 flex-shrink-0 z-50;
+                    }
+
+                    .inventory-menu-button {
                         @apply w-5 h-5 flex-shrink-0 z-50;
                     }
 
@@ -494,7 +498,7 @@
             .inventory-menu-container {
                 @apply absolute z-50 bottom-2 right-0 cursor-pointer flex flex-row items-center text-xs;
 
-                .menu-button {
+                .inventory-menu-button {
                     @apply w-5 h-5 flex-shrink-0 z-50;
                 }
 

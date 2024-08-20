@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentPermissionEnum;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
@@ -178,19 +178,22 @@ class DefaultComponentSeeder extends Seeder
                 'special' => true,
                 'sidebar_enabled' => true,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
-            ],
-            [
+            ]
+        ];
+
+        foreach ($components as $component) {
+            Component::create($component);
+        }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::BULK_EDIT)->get()) {
+            Component::create([
                 'name' => 'Bulk Event Create',
                 'type' => ProjectTabComponentEnum::BULK_EDIT,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
-            ]
-        ];
-
-        foreach ($components as $component) {
-            Component::create($component);
+            ]);
         }
 
         $this->createInformationSidebar($this->createProjectInformationTab());

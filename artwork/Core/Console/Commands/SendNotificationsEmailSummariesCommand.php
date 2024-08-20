@@ -2,7 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
-use Artwork\Modules\DatabaseNotification\Service\DatabaseNotificationService;
+use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;

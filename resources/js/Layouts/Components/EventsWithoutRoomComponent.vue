@@ -5,7 +5,6 @@
                 :title="$t('Events without room')"
                 :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
             />
-            <!--    Form    -->
             <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                 <SingleEventInEventsWithoutRoom
                     :computed-events-without-room="computedEventsWithoutRoom"
@@ -16,7 +15,7 @@
                     :isAdmin="isAdmin"
                     :remove-notification-on-action="removeNotificationOnAction"
                     :show-hints="showHints"
-                    @desires-reload="this.closeModal(true)"
+                    @desires-reload="this.requestReload"
                 />
             </div>
         </div>
@@ -28,17 +27,17 @@
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Switch,
-  SwitchGroup,
-  SwitchLabel
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -176,6 +175,16 @@ export default {
         },
     },
     methods: {
+        requestReload(desiredRoomIds, desiredDays, reloadEventsWithoutRoom) {
+            //if opened by notification just close the modal because afterwards the notification
+            //is deleted and the page reloads
+            if (this.removeNotificationOnAction) {
+                this.closeModal(true);
+                return;
+            }
+
+            this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
+        },
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
             return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);

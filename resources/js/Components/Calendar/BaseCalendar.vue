@@ -36,18 +36,18 @@
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="divide-y-2 w-fit divide-gray-400 divide-dashed events-by-days-container" :class="!project ? 'pt-8' : ''" ref="calendarToCalculate">
+                <div class=" w-fit divide-y-2 divide-gray-400 divide-dashed events-by-days-container" :class="!project ? computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'pt-1' : 'pt-8' : ''" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"
-                         class="flex gap-0.5 day-container "
-                         :class="day.is_weekend ? 'bg-userBg/30' : ''"
+                         class="flex gap-0.5 day-container"
+                         :class="day.is_weekend ? 'bg-userBg/70' : ''"
                          :data-day="day.full_day">
                         <SingleDayInCalendar :day="day" />
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
                              :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
-                             :class="[day.is_weekend ? '' : '', zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                             :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                              class="group/container">
                             <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="event in room[day.full_day].events">
                                 <div class="py-0.5" :key="event.id">
@@ -745,6 +745,7 @@ onMounted(() => {
             checkIfScrolledToCalendarRef.value = '';
         }
     });
+
 });
 
 

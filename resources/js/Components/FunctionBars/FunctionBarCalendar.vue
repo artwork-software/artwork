@@ -1,5 +1,5 @@
 <template>
-    <div class="pl-5 py-4 " :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16']">
+    <div class=" py-4 " :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project" class="flex flex-row">

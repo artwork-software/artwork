@@ -284,7 +284,10 @@ readonly class UserService
 
     public function update(int|User $user, array $attributes): User
     {
-        $this->userRepository->update($user, $attributes);
+        $this->userRepository->update(
+            !$user instanceof User ? ($user = $this->userRepository->findUserOrFail($user)) : $user,
+            $attributes
+        );
 
         return $user;
     }

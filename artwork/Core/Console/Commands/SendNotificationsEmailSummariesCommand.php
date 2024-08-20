@@ -71,24 +71,33 @@ class SendNotificationsEmailSummariesCommand extends Command
             /** @var Collection $notificationCollection */
             foreach ($notificationsByType as $notificationCollection) {
                 if (($notificationCollectionCount = $notificationCollection->count()) > 0) {
-                    $notificationArray[$groupType] = [
-                        'title' => __(
-                            'notification-group-enum.title.' .
-                            NotificationGroupEnum::from($groupType)->title(),
-                            [],
-                            'de'
-                        ),
-                        'count' => $notificationCollectionCount,
-                    ];
-                    $notificationArray[$groupType]['notifications'] = array_map(
-                        function (DatabaseNotification $databaseNotification) {
-                            return [
-                                'body' => $databaseNotification['data'],
-                                'model' => $databaseNotification,
-                            ];
-                        },
-                        $notificationCollection->all()
+                    if (!isset($notificationArray[$groupType])) {
+                        $notificationArray[$groupType] = [
+                            'title' => __(
+                                'notification-group-enum.title.' .
+                                NotificationGroupEnum::from($groupType)->title(),
+                                [],
+                                'de'
+                            ),
+                            'count' => 0,
+                            'notifications' => []
+                        ];
+                    }
+
+                    $notificationArray[$groupType]['notifications'] = array_merge(
+                        $notificationArray[$groupType]['notifications'],
+                        array_map(
+                            function (DatabaseNotification $databaseNotification) {
+                                return [
+                                    'body' => $databaseNotification['data'],
+                                    'model' => $databaseNotification,
+                                ];
+                            },
+                            $notificationCollection->all()
+                        )
                     );
+
+                    $notificationArray[$groupType]['count'] += $notificationCollectionCount;
                 }
             }
         }
@@ -115,15 +124,15 @@ class SendNotificationsEmailSummariesCommand extends Command
             }
 
             $nowFormatted = Carbon::now()->format('Y-m-d');
+            $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
+            foreach (array_unique($notificationTypesSentOut) as $notificationTypeSentOut) {
+                $notificationEnumsLastSentDates[$notificationTypeSentOut] = $nowFormatted;
+            }
+
             $this->userService->update(
                 $user,
                 [
-                    'notification_enums_last_sent_dates' => array_map(
-                        function (string $notificationTypeSentOut) use ($nowFormatted): array {
-                            return [$notificationTypeSentOut => $nowFormatted];
-                        },
-                        $notificationTypesSentOut
-                    ),
+                    'notification_enums_last_sent_dates' => $notificationEnumsLastSentDates
                 ]
             );
         }
@@ -144,15 +153,14 @@ class SendNotificationsEmailSummariesCommand extends Command
         ) {
             $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
             foreach ($notificationSettings as $notificationSetting) {
-                $notificationSettingType = $notificationSetting->getAttribute('type');
-                $lastDate = $notificationEnumsLastSentDates[$notificationSettingType->value] ?? null;
+                $notificationSettingTypeValue = $notificationSetting->getAttribute('type')->value;
+                $lastDate = $notificationEnumsLastSentDates[$notificationSettingTypeValue] ?? null;
                 $sendSummary = is_null($notificationEnumsLastSentDates) || !$lastDate;
-                $notificationFrequency = $notificationSetting->getAttribute('frequency')->value;
 
                 if (!$sendSummary) {
                     //daily default
                     $compareDate = Carbon::now()->subDay();
-                    switch ($notificationFrequency) {
+                    switch ($notificationSetting->getAttribute('frequency')->value) {
                         case NotificationFrequencyEnum::WEEKLY_ONCE:
                             $compareDate = Carbon::now()->subWeek();
                             break;
@@ -168,7 +176,7 @@ class SendNotificationsEmailSummariesCommand extends Command
                 if ($sendSummary) {
                     $notifications = $user->notifications()
                         ->whereNull("read_at")
-                        ->whereJsonContains("data->type", $notificationSettingType->value)
+                        ->whereJsonContains("data->type", $notificationSettingTypeValue)
                         ->where("sent_in_summary", false)
                         ->get();
 

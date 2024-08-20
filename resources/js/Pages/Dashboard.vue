@@ -305,7 +305,7 @@ export default defineComponent({
         },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
-            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
+            this.doneTaskForm.patch(route('tasks.done', {task: task.id}));
         },
         getHref(project) {
             return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});

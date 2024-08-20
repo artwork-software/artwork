@@ -281,4 +281,11 @@ readonly class UserService
                         $this->getAuthUser())
         );
     }
+
+    public function update(int|User $user, array $attributes): User
+    {
+        $this->userRepository->update($user, $attributes);
+
+        return $user;
+    }
 }

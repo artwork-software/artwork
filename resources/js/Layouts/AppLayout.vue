@@ -93,6 +93,7 @@
                         <div class="flex items-center relative">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div v-if="this.$page.props.unread_notifications > 0"
+                                 style="font-size: 7px;"
                                  class="w-4 h-4 block absolute -top-2 -right-2 rounded-full bg-white text-black text-center">
                                 {{ this.$page.props.unread_notifications }}
                             </div>

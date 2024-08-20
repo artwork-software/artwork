@@ -28,7 +28,7 @@ class InvitationCreated extends Mailable
 
         return $this
             ->from(
-                $settings->invitation_email !== '' ? $settings->invitation_email : 'noreply@artwork.de',
+                $settings->invitation_email !== '' ? $settings->invitation_email : 'noreply@artwork.software',
                 'Artwork'
             )
             ->replyTo($this->user->email)

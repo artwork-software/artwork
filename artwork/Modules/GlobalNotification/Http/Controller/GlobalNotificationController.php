@@ -10,16 +10,17 @@ use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
 use Artwork\Modules\User\Services\UserService;
 use DateTime;
 use Exception;
+use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Facades\Log;
 
 class GlobalNotificationController extends Controller
 {
     public function __construct(
         private readonly GlobalNotificationService $globalNotificationService,
         private readonly Redirector $redirector,
-        private readonly UserService $userService
+        private readonly UserService $userService,
+        private readonly FilesystemManager $filesystemManager
     ) {
     }
 
@@ -58,7 +59,12 @@ class GlobalNotificationController extends Controller
             $request->file('notificationImage')
                 ?->storePublicly('notificationImage', ['disk' => 'public']) ?? '';
 
-        Log::debug($fileUrl);
+        if ($fileUrl !== ($notificationImage = $globalNotification->getAttribute('image_name'))) {
+            $publicDisk = $this->filesystemManager->disk('public');
+            if ($publicDisk->exists($notificationImage)) {
+                $publicDisk->delete($notificationImage);
+            }
+        }
 
         $this->globalNotificationService->update(
             $globalNotification,

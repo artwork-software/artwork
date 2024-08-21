@@ -12,11 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->boolean('sent_in_summary')->default(false);
-        });
-
-        DB::table('notifications')->update(['sent_in_summary' => true]);
+        DB::table('notification_settings')
+            ->where('frequency', 'immediately')
+            ->update(['frequency' => 'daily']);
     }
 
     /**
@@ -24,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->dropColumn('sent_in_summary');
+        Schema::table('users', function (Blueprint $table) {
+            //@todo: rollback möglichkeit finden
         });
     }
 };

@@ -1,8 +1,8 @@
 <?php
 
-namespace Artwork\Modules\DatabaseNotification\Service;
+namespace Artwork\Modules\DatabaseNotification\Services;
 
-use Artwork\Modules\DatabaseNotification\Repository\DatabaseNotificationRepository;
+use Artwork\Modules\DatabaseNotification\Repositories\DatabaseNotificationRepository;
 use Illuminate\Notifications\DatabaseNotification;
 use Throwable;
 

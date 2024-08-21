@@ -70,20 +70,6 @@ class GlobalNotificationService
         return $globalNotification;
     }
 
-    public function updateImage(
-        GlobalNotification $globalNotification,
-        string $imagePath
-    ): GlobalNotification {
-        $this->globalNotificationRepository->update(
-            $globalNotification,
-            [
-                'image_name' => $imagePath
-            ]
-        );
-
-        return $globalNotification;
-    }
-
     public function delete(
         GlobalNotification $globalNotification
     ): bool {

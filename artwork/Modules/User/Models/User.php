@@ -115,6 +115,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Craft> $assignedCrafts
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<string> $allPermissions
+ * @property array $notification_enums_last_sent_dates
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -167,7 +168,8 @@ class User extends Model implements
         'show_crafts',
         'goto_mode',
         'checklist_style',
-        'at_a_glance'
+        'at_a_glance',
+        'notification_enums_last_sent_dates'
     ];
 
     protected $casts = [
@@ -181,7 +183,8 @@ class User extends Model implements
         'is_sidebar_opened' => 'boolean',
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
-        'at_a_glance' => 'boolean'
+        'at_a_glance' => 'boolean',
+        'notification_enums_last_sent_dates' => 'array'
     ];
 
     protected $hidden = [

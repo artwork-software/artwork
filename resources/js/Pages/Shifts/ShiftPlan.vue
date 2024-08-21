@@ -673,7 +673,6 @@ export default {
                             event.shifts.forEach(shift => {
                                 if (shift.id === shiftId) {
                                     desiredRoomIds.add(room[day.full_day].roomId);
-                                    console.debug(desiredRoomIds);
                                 }
                             });
                         });

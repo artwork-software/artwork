@@ -1,30 +1,25 @@
 <template>
     <BaseModal @closed="closeModal(false)" v-if="true" modal-image="/Svgs/Overlays/illu_appointment_warning.svg">
-            <div class="mx-4">
-                <ModalHeader
-                    :title="$t('Events without room')"
-                    :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
+        <div class="mx-4">
+            <ModalHeader
+                :title="$t('Events without room')"
+                :description="$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')"
+            />
+            <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
+                <SingleEventInEventsWithoutRoom
+                    :computed-events-without-room="computedEventsWithoutRoom"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                    :event="event"
+                    :event-types="eventTypes"
+                    :rooms="rooms"
+                    :isAdmin="isAdmin"
+                    :remove-notification-on-action="removeNotificationOnAction"
+                    :show-hints="showHints"
+                    @desires-reload="this.requestReload"
                 />
-                <!--    Form    -->
-                <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
-                    <SingleEventInEventsWithoutRoom
-                        :computed-events-without-room="computedEventsWithoutRoom"
-                        :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                        :event="event"
-                        :event-types="eventTypes"
-                        :rooms="rooms"
-                        :isAdmin="isAdmin"
-                        :remove-notification-on-action="removeNotificationOnAction"
-                        :show-hints="showHints"
-                        @desires-reload="requestReload"
-                    />
-                </div>
             </div>
+        </div>
     </BaseModal>
-
-    <!-- Event löschen Modal -->
-
-
 </template>
 
 <script>
@@ -181,6 +176,13 @@ export default {
     },
     methods: {
         requestReload(desiredRoomIds, desiredDays, reloadEventsWithoutRoom) {
+            //if opened by notification just close the modal because afterwards the notification
+            //is deleted and the page reloads
+            if (this.removeNotificationOnAction) {
+                this.closeModal(true);
+                return;
+            }
+
             this.$emit('desiresReload', desiredRoomIds, desiredDays, reloadEventsWithoutRoom);
         },
         getTimeOfDate(date) {

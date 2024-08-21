@@ -36,7 +36,7 @@
         <div class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="w-fit divide-y-2 divide-gray-400 divide-dashed events-by-days-container" :class="[!project ? computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'pt-1' : 'pt-8' : '', isFullscreen ? 'mt-6': '']" ref="calendarToCalculate">
+                <div class="w-fit events-by-days-container" :class="[!project ? computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'pt-1' : 'pt-8' : '', isFullscreen ? 'mt-6': '']" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"
@@ -48,7 +48,7 @@
                              :key="room.id"
                              :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
                              :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                             class="group/container">
+                             class="group/container border-b-2 border-gray-400 border-dashed">
                             <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="event in room[day.full_day].events">
                                 <div class="py-0.5" :key="event.id">
                                     <AsyncSingleEventInCalendar

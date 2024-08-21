@@ -1,10 +1,10 @@
 <template>
-    <div class="flex w-full mb-5">
-        <button class="bg-artwork-buttons-create flex relative w-6" @click="showSection = !showSection">
+    <div class="flex w-full mb-5 gap-2">
+        <button class="bg-gray-500 rounded-lg flex relative w-6" @click="showSection = !showSection">
             <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
             <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
         </button>
-        <div class="border border-2 border-gray-300 px-10 w-full">
+        <div class="border-2 border-gray-300 rounded-lg px-10 w-full">
             <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex headline2 ">
                     {{ name }}
@@ -16,6 +16,7 @@
                 <div @click="setAllOnRead()"
                      class="flex cursor-pointer items-center justify-end linkText mr-8">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
+                         alt="Archive icon"
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>{{$t('Archive all')}}
                 </div>
@@ -46,6 +47,7 @@
             <div class="flex justify-between items-center w-full ml-12 mt-8 xsDark" v-if="showReadSection">
                 <div :class="!readNotifications ? 'mb-12' : ''" class="flex items-center">
                     <img src="/Svgs/IconSvgs/icon_archive_black.svg"
+                         alt="Archive icon black"
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>
                     {{$t('Archive')}}
@@ -113,7 +115,6 @@
         :event_history="wantedHistory"
         @closed="closeEventHistoryModal"
     />
-
 </template>
 
 <script>
@@ -125,7 +126,8 @@ import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon.vue"
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent.vue";
-import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
+import AnswerEventRequestWithRoomChangeComponent
+    from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent.vue";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent.vue";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
@@ -204,16 +206,13 @@ export default  {
             }
         },
         isErrorType(type, notification) {
-            if ((type.indexOf('RoomRequestNotification') !== -1 &&
+            return (type.indexOf('RoomRequestNotification') !== -1 &&
                     this.isDateSoon(notification.data.event.start_time)) &&
-                    notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 ||
-                    notification.data.title === 'Termin abgesagt' ||
-                    type.indexOf('DeadlineNotification') !== -1 ||
-                    notification.data.title.indexOf('gelöscht') !== -1
-            ) {
-                return true;
-            }
-            return false;
+                notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 ||
+                notification.data.title === 'Termin abgesagt' ||
+                type.indexOf('DeadlineNotification') !== -1 ||
+                notification.data.title.indexOf('gelöscht') !== -1;
+
         },
         isDateSoon(date){
             const dateTemp = new Date(date);

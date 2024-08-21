@@ -46,15 +46,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(DeleteOldNotificationsCommand::class)->dailyAt('07:00');
         $schedule->command(NotifyCraftIfShiftDeadlineReached::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationsForAllCommand::class)->everyFiveMinutes()->runInBackground();
-        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['daily'])
-            ->dailyAt('9:00');
-        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['weekly_once'])
-            ->weekly()
-            ->mondays()
-            ->at('9:00');
-        $schedule->command(SendNotificationsEmailSummariesCommand::class, ['weekly_twice'])
-            ->days([Schedule::MONDAY, Schedule::THURSDAY])
-            ->at('9:00');
+        $schedule->command(SendNotificationsEmailSummariesCommand::class)->dailyAt('9:00');
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

@@ -188,7 +188,7 @@ class ProjectController extends Controller
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
             ),
-            'pinnedProjects' => $this->projectService->pinnedProjects(),
+            'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
             'states' => $this->projectStateService->getAll(),
             'projectGroups' => $this->projectService->getProjectGroups(),

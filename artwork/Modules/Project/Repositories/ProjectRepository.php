@@ -104,10 +104,11 @@ class ProjectRepository extends BaseRepository
         return Project::search($query);
     }
 
-    public function pinnedProjects(): Collection
+    public function pinnedProjects(int $userId): Collection
     {
-        return Project::whereNotNull('pinned_by_users')
-            ->whereRaw("JSON_LENGTH(pinned_by_users) > 0")
+        return Project::query()
+            ->whereNotNull('pinned_by_users')
+            ->whereJsonContains('pinned_by_users', [$userId])
             ->without(['shiftRelevantEventTypes'])
             ->get();
     }

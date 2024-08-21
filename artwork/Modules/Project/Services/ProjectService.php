@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Scout\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 readonly class ProjectService
 {
@@ -68,7 +68,10 @@ readonly class ProjectService
             'delete_permission_users' => function ($query): void {
                 $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
             },
-        ])->whereNull('pinned_by_users')
+        ])->where(function (Builder $builder): void {
+            $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+                    ->orWhereNull('pinned_by_users');
+        })
             ->orderBy('id', 'DESC')
             ->without(['shiftRelevantEventTypes']);
     }
@@ -99,7 +102,8 @@ readonly class ProjectService
             $pinnedByUsers = [];
         }
         if (in_array($user->id, $pinnedByUsers)) {
-            $pinnedByUsers = array_diff($pinnedByUsers, [$user->id]);
+            $userIndex = array_search($user->id, $pinnedByUsers);
+            array_splice($pinnedByUsers, $userIndex, 1);
         } else {
             $pinnedByUsers[] = $user->id;
         }
@@ -564,9 +568,9 @@ readonly class ProjectService
         return $this->projectRepository->scoutSearch($query);
     }
 
-    public function pinnedProjects(): Collection
+    public function pinnedProjects(int $userId): Collection
     {
-        return $this->projectRepository->pinnedProjects();
+        return $this->projectRepository->pinnedProjects($userId);
     }
 
     public function attachManagementUsersWithoutSelf(Project $project, IlluminateCollection $userIds, int $authId): void

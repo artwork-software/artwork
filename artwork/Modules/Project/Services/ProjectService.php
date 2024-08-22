@@ -563,7 +563,7 @@ readonly class ProjectService
         $project->save();
     }
 
-    public function scoutSearch(string $query): Builder
+    public function scoutSearch(string $query): \Laravel\Scout\Builder
     {
         return $this->projectRepository->scoutSearch($query);
     }

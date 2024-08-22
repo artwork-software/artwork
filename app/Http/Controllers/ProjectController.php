@@ -3334,6 +3334,7 @@ class ProjectController extends Controller
                     'id' => $project->id,
                     'name' => $project->name,
                     'key_visual_path' => $project->key_visual_path,
+                    'is_group' => $project->is_group,
                 ];
             });
         }

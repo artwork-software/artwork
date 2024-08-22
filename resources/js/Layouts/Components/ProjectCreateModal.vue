@@ -405,7 +405,7 @@
                         </div>
                         <div class="mb-2">
                             <div class="relative w-full">
-                                <ProjectSearch @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
+                                <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
                                 <!--<div class="w-full">
                                     <TextInputComponent
                                         id="projectGroupQuery"

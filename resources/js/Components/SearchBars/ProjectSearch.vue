@@ -18,7 +18,7 @@ export default {
     props: {
         label: {
             type: String,
-            default: 'Search for Projects'
+            default: 'Search for projects'
         }
     },
     emits: ['project-selected'],

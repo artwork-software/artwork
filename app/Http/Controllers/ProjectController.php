@@ -308,10 +308,10 @@ class ProjectController extends Controller
 
         if ($request->boolean('isGroup')) {
             $project->update(['is_group' => true]);
-            $project->groups()->sync($request->get('projects'));
+            $project->projectsOfGroup()->sync($request->get('projects'));
         } elseif (!empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
-            $group->groups()->syncWithoutDetaching($project->id);
+            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
         }
 
         $this->projectService->syncCategories($project, $request->collect('assignedCategoryIds'));
@@ -2137,7 +2137,7 @@ class ProjectController extends Controller
         DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         if ($request->get('selectedGroup') !== null) {
             $group = Project::find($request->get('selectedGroup')['id']);
-            $group->groups()->syncWithoutDetaching($project->id);
+            $group->projectsOfGroup()->syncWithoutDetaching($project->id);
         }
 
         $oldProjectName = $project->name;
@@ -2298,7 +2298,7 @@ class ProjectController extends Controller
     public function deleteProjectFromGroup(Request $request): void
     {
         $group = Project::find($request->groupId);
-        $group->groups()->detach($request->projectIdToDelete);
+        $group->projectsOfGroup()->detach($request->projectIdToDelete);
     }
 
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void

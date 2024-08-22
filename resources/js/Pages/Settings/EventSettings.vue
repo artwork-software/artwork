@@ -140,7 +140,7 @@
                         <div class="">
                             <TextInputComponent
                                 :label="$t('Abbreviation of the event type')"
-                                v-model="eventTypeForm.abbreviation"
+                                v-model="editEventTypeForm.abbreviation"
                                 required
                                 id="abbreviation"
                             />

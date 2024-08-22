@@ -9,12 +9,13 @@ use BadMethodCallException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Notifications\DatabaseNotification;
 use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
 {
-    public function getNewModelInstance(): Model|Pivot
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification
     {
         throw new BadMethodCallException(
             'Implement in derived repository. Copy already derived functions and adapt.'
@@ -66,7 +67,7 @@ abstract class BaseRepository
     /**
      * @throws Throwable
      */
-    public function deleteOrFail(Model|Pivot|CanSubstituteBaseModel $model): bool
+    public function deleteOrFail(Model|Pivot|CanSubstituteBaseModel|DatabaseNotification $model): bool
     {
         return $model->deleteOrFail();
     }
@@ -86,8 +87,10 @@ abstract class BaseRepository
     /**
      * @throws Throwable
      */
-    public function updateOrFail(Model|Pivot|CanSubstituteBaseModel $model, array $attributes): Model|Pivot
-    {
+    public function updateOrFail(
+        Model|Pivot|CanSubstituteBaseModel|DatabaseNotification $model,
+        array $attributes
+    ): Model|Pivot {
         $model->updateOrFail($attributes);
 
         return $model;

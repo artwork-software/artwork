@@ -52,6 +52,7 @@
                                      @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
                                      @showInTask="openProjectTasks(notification.data?.taskId)"
                                      @show-project="openProject(notification.data?.projectId)"
+                                     @delete-verification-request="deleteVerificationRequest"
                 />
             </div>
         </div>
@@ -195,6 +196,21 @@ export default {
     },
     computed: {},
     methods: {
+        deleteVerificationRequest() {
+            router.post(
+                route('project.budget.remove.verification'),
+                {
+                    type: this.notification.data.positionVerifyRequestType,
+                    notificationKey: this.notification.data.notificationKey,
+                    position: {
+                        'id': this.notification.data.positionVerifyRequestId
+                    }
+                },
+                {
+                    preserveScroll: true
+                }
+            );
+        },
         setOnRead() {
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
@@ -313,7 +329,7 @@ export default {
         },
         deleteEvent() {
             if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
-                this.$inertia.post(route('events.delete.by.notification', this.notification.data?.eventId), {
+                router.post(route('events.delete.by.notification', this.notification.data?.eventId), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,

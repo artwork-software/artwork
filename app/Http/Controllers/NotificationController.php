@@ -2,35 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Budget\Notifications\BudgetVerified;
-use Artwork\Modules\Department\Notifications\TeamNotification;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Notifications\ConflictNotification;
-use Artwork\Modules\Event\Notifications\EventNotification;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
-use Artwork\Modules\MoneySource\Notifications\MoneySourceNotification;
-use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Notifications\ProjectNotification;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Notifications\RoomNotification;
-use Artwork\Modules\Room\Notifications\RoomRequestNotification;
-use Artwork\Modules\Task\Notifications\DeadlineNotification;
-use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -147,203 +135,6 @@ class NotificationController extends Controller
             'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
             'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
-    }
-
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function create($user, object $notificationData, ?array $broadcastMessage = []): void
-    {
-        switch ($notificationData->type) {
-            case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
-                $notificationBody = [
-                    'groupType' => 'EVENTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'event' => $notificationData->event,
-                    'accepted' => $notificationData->accepted,
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
-                $notificationBody = [
-                    'groupType' => 'ROOMS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'event' => $notificationData->event,
-                    'accepted' => $notificationData->accepted,
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_EVENT_CHANGED:
-                $historyArray = [];
-                $historyComplete = [];
-                if ($notificationData->event) {
-                    $historyComplete = $notificationData->event->historyChanges()->all();
-                }
-
-                foreach ($historyComplete as $history) {
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
-                }
-
-                $notificationBody = [
-                    'groupType' => 'EVENTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'event' => $notificationData->event,
-                    'eventHistory' => $historyArray,
-                    'created_by' => $notificationData->created_by,
-                ];
-                Notification::send($user, new EventNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_TASK_CHANGED:
-                $notificationBody = [
-                    'groupType' => 'TASKS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'task' => [
-                        'title' => $notificationData->task->title,
-                        'deadline' => $notificationData->task->deadline
-                    ],
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_PROJECT:
-                $notificationBody = [
-                    'groupType' => 'PROJECTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'project' => [
-                        'id' => $notificationData->project->id,
-                        'title' => $notificationData->project->title
-                    ],
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new ProjectNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_TEAM:
-                $notificationBody = [
-                    'groupType' => 'PROJECTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'team' => [
-                        'id' => $notificationData->team->id,
-                        'title' => $notificationData->team->title,
-                        'svg_name' => $notificationData->team->svg_name,
-                    ],
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new TeamNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_ROOM_CHANGED:
-                $room = $notificationData->room->id;
-                $historyArray = [];
-                $historyComplete = Room::find($room)->historyChanges()->all();
-                foreach ($historyComplete as $history) {
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
-                }
-                $notificationBody = [
-                    'groupType' => 'ROOMS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'room' => $notificationData->room,
-                    'history' => $historyArray,
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new RoomNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_CONFLICT:
-            case NotificationEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
-                $notificationBody = [
-                    'groupType' => 'EVENTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'conflict' => $notificationData->conflict,
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new ConflictNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_TASK_REMINDER:
-                $notificationBody = [
-                    'groupType' => 'TASKS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'task' => $notificationData->task,
-                ];
-                Notification::send($user, new DeadlineNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_NEW_TASK:
-                $notificationBody = [
-                    'groupType' => 'TASKS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                ];
-                Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
-                $notificationBody = [
-                    'groupType' => 'BUDGET',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'created_by' => $notificationData->created_by,
-                ];
-                Notification::send($user, new MoneySourceNotification($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
-                $notificationBody = [
-                    'groupType' => 'BUDGET',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'requested_position' => $notificationData->requested_position,
-                    'project' => $notificationData->project,
-                    'created_by' => $notificationData->created_by,
-                    'requested_id' => $notificationData->requested_id,
-                    'position' => $notificationData->position,
-                    'changeType' => $notificationData->changeType
-                ];
-                Notification::send($user, new BudgetVerified($notificationBody, $broadcastMessage));
-                break;
-            case NotificationEnum::NOTIFICATION_PUBLIC_RELEVANT:
-                $project = $notificationData->project->id;
-                $historyArray = [];
-                $projectFind = Project::find($project);
-                if (!empty($projectFind)) {
-                    $historyComplete = $projectFind->historyChanges()->all();
-                    foreach ($historyComplete as $history) {
-                        $historyArray[] = [
-                            'changes' => json_decode($history->changes),
-                            'created_at' => $history->created_at->diffInHours() < 24
-                                ? $history->created_at->diffForHumans()
-                                : $history->created_at->format('d.m.Y, H:i'),
-                        ];
-                    }
-                }
-                $notificationBody = [
-                    'groupType' => 'PROJECTS',
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'project' => [
-                        'id' => $notificationData->project->id,
-                        'title' => $notificationData->project->title
-                    ],
-                    'created_by' => $notificationData->created_by,
-                    'history' => $historyArray,
-                ];
-                Notification::send($user, new ProjectNotification($notificationBody, $broadcastMessage));
-                break;
-        }
     }
 
     public function setOnRead(Request $request): void

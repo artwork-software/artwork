@@ -22,11 +22,11 @@ class GlobalNotification extends Model
     use HasFactory;
 
     protected $fillable = [
-      'title',
-      'description',
-      'image_name',
-      'expiration_date',
-      'created_by'
+        'title',
+        'description',
+        'image_name',
+        'expiration_date',
+        'created_by'
     ];
 
     public function user(): BelongsTo

@@ -4,13 +4,13 @@
 
                 <div class="px-6 mt-5 modal-header"  v-if="!project">
                     <SwitchGroup as="div" class="flex items-center">
-                        <SwitchLabel as="span" class="mr-3 model-title cursor-pointer" :class="createProject ? '' : '!text-gray-300'">
+                        <SwitchLabel as="span" class="mr-3 model-title cursor-pointer" :class="!createProjectGroup ? '' : '!text-gray-300'">
                             {{ $t('Project') }}
                         </SwitchLabel>
-                        <Switch v-model="createProject" :class="[!createProject ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-5 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                            <span aria-hidden="true" :class="[!createProject  ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                        <Switch v-model="createProjectGroup" :class="[createProjectGroup ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-5 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                            <span aria-hidden="true" :class="[createProjectGroup  ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
-                        <SwitchLabel as="span" class="ml-3 model-title cursor-pointer" :class="!createProject ? '' : '!text-gray-300'">
+                        <SwitchLabel as="span" class="ml-3 model-title cursor-pointer" :class="createProjectGroup ? '' : '!text-gray-300'">
                             {{ $t('Project group') }}
                         </SwitchLabel>
                     </SwitchGroup>
@@ -22,7 +22,7 @@
                         full-modal
                     />
                 </div>
-                <div v-if="createProject">
+                <div v-if="!createProjectGroup">
                     <div>
                        <div v-if="project" class="px-6 py-2">
                            <KeyVisual :project="project"  />
@@ -264,7 +264,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="!createProject && !project">
+                <div v-if="createProjectGroup && !project">
                     <div class="px-6 pb-6">
                         <div class="py-4 w-full">
                             <TextInputComponent
@@ -405,7 +405,7 @@
                         </div>
                         <div class="mb-2">
                             <div class="relative w-full">
-                                <ProjectSearch @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
+                                <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
                                 <!--<div class="w-full">
                                     <TextInputComponent
                                         id="projectGroupQuery"
@@ -585,7 +585,7 @@ export default {
                 keyVisual: null,
             }),
             uploadKeyVisualFeedback: "",
-            createProject: true
+            createProjectGroup: false
         }
     },
     computed: {
@@ -630,7 +630,7 @@ export default {
             this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
 
-            if ( this.isCreateProjectGroupTab ){
+            if ( this.createProjectGroup ){
                 this.createProjectForm.isGroup = true;
             }
 

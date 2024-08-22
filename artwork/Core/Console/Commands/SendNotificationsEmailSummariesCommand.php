@@ -158,19 +158,13 @@ class SendNotificationsEmailSummariesCommand extends Command
                 $sendSummary = is_null($notificationEnumsLastSentDates) || !$lastDate;
 
                 if (!$sendSummary) {
-                    //daily default
-                    $compareDate = Carbon::now()->subDay();
-                    switch ($notificationSetting->getAttribute('frequency')->value) {
-                        case NotificationFrequencyEnum::WEEKLY_ONCE:
-                            $compareDate = Carbon::now()->subWeek();
-                            break;
-                        case NotificationFrequencyEnum::WEEKLY_TWICE:
-                            $compareDate = Carbon::now()->subDays(3);
-                            break;
-                    }
+                    $lastDate = match ($notificationSetting->getAttribute('frequency')) {
+                        NotificationFrequencyEnum::DAILY => Carbon::parse($lastDate)->addDay(),
+                        NotificationFrequencyEnum::WEEKLY_ONCE => Carbon::parse($lastDate)->addWeek(),
+                        NotificationFrequencyEnum::WEEKLY_TWICE => Carbon::parse($lastDate)->addDays(3),
+                    };
 
-                    //set last summary sent at to 10 o'clock to make sure sendSummary evaluation works properly
-                    $sendSummary = $compareDate <= Carbon::parse($lastDate . '10:00:00');
+                    $sendSummary = Carbon::now()->setTime(0, 0) >= $lastDate;
                 }
 
                 if ($sendSummary) {

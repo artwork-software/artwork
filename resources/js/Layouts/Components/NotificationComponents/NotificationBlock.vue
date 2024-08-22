@@ -31,9 +31,6 @@
                 <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
-                            <span v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">
-                                {{ $t('Concerns')}}:&nbsp;
-                            </span>
                             <a :href="description.href" v-if="description.type === 'link'"
                                class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>

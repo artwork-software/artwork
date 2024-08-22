@@ -70,7 +70,6 @@ class DatabaseNotificationSeeder extends Seeder
             'departmentId' => $project->getAttribute('departments')->first()?->getAttribute('id'),
             'taskId' => null,
             'budgetData' => null,
-            'notificationKey' => Str::random(15),
             'shiftId' => Shift::query()->first()->getAttribute('id'),
         ];
 
@@ -87,13 +86,14 @@ class DatabaseNotificationSeeder extends Seeder
         $this->notificationService->setDepartmentId($values['departmentId']);
         $this->notificationService->setTaskId($values['taskId']);
         $this->notificationService->setBudgetData($values['budgetData']);
-        $this->notificationService->setNotificationKey($values['notificationKey']);
         $this->notificationService->setShiftId($values['shiftId']);
 
         foreach ($this->userService->getAllUsers() as $user) {
             $this->notificationService->setNotificationTo($user);
             foreach (NotificationEnum::cases() as $notificationEnum) {
                 $this->notificationService->setNotificationConstEnum($notificationEnum);
+                $this->notificationService->setNotificationKey(Str::random(15));
+
                 switch ($notificationEnum) {
                     case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
                         $this->notificationService->setButtons(['accept', 'decline']);

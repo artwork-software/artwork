@@ -239,9 +239,9 @@ export default {
                     eventId: this.notification.data?.eventId
                 },
                 onFinish: () => {
-                    this.createEventComponentIsVisible = true
+                    this.createEventComponentIsVisible = true;
                 }
-            })
+            });
         },
         loadEventDataForDialog() {
             router.reload({
@@ -250,9 +250,9 @@ export default {
                     eventId: this.notification.data?.eventId
                 },
                 onFinish: () => {
-                    this.showRoomRequestDialogComponent = true
+                    this.showRoomRequestDialogComponent = true;
                 }
-            })
+            });
         },
         loadEventDataForEventWithoutRoom(){
             router.reload({
@@ -265,10 +265,10 @@ export default {
                 }
             })
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
 
-            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {

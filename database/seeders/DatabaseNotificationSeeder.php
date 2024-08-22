@@ -24,6 +24,7 @@ class DatabaseNotificationSeeder extends Seeder
      *
      * @return void
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function run(): void
     {
         $event = Event::query()

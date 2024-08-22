@@ -7,6 +7,8 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserRepository extends BaseRepository
 {
@@ -32,9 +34,15 @@ class UserRepository extends BaseRepository
         return User::query()->canWorkShifts()->where('id', $workerId)->first();
     }
 
+    /**
+     * @throws ModelNotFoundException<Model>
+     */
     public function findUserOrFail(int $userId): User
     {
-        return User::findOrFail($userId);
+        /** @var User $user */
+        $user = User::query()->findOrFail($userId);
+
+        return $user;
     }
 
     public function getWorkers(): Collection

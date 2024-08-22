@@ -31,9 +31,6 @@
                 <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
-                            <span v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">
-                                {{ $t('Concerns')}}:&nbsp;
-                            </span>
                             <a :href="description.href" v-if="description.type === 'link'"
                                class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
@@ -117,7 +114,6 @@
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
         v-if="showEventWithoutRoomComponent"
-        @closed="onEventWithoutRoomComponentClose"
         :showHints="this.$page.props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -125,6 +121,8 @@
         :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+        :notification-key="this.notification.data?.notificationKey"
+        @closed="onEventWithoutRoomComponentClose"
     />
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
@@ -267,61 +265,62 @@ export default {
                 }
             })
         },
-        onEventComponentClose(bool) {
+        onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            if(bool){
-                this.checkNotificationKey();
+
+            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
-                    preserveState: true
-                })
+                    preserveState: true,
+                });
             }
         },
         onDialogComponentClose(bool) {
             this.showRoomRequestDialogComponent = false;
-            if(bool){
-                this.checkNotificationKey();
+
+            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
                     preserveState: true
-                })
+                });
             }
         },
         onEventWithoutRoomComponentClose(bool) {
             this.showEventWithoutRoomComponent = false;
 
-            if (bool) {
-                this.checkNotificationKey();
+            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,
                     preserveState: true
-                })
+                });
             }
         },
         finishDeclineEvent(){
-            this.checkNotificationKey();
-            router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
-                notificationKey: this.notification.data?.notificationKey
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            })
+            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
+                router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                    notificationKey: this.notification.data?.notificationKey
+                }, {
+                    preserveScroll: true,
+                    preserveState: true
+                });
+            }
         },
         deleteEvent() {
-            this.checkNotificationKey();
-            this.$inertia.post(route('events.delete.by.notification', this.notification.data?.eventId), {
-                notificationKey: this.notification.data?.notificationKey
-            }, {
-                preserveScroll: true,
-                preserveState: true
-            });
-            this.showDeleteConfirmModal = false;
+            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
+                this.$inertia.post(route('events.delete.by.notification', this.notification.data?.eventId), {
+                    notificationKey: this.notification.data?.notificationKey
+                }, {
+                    preserveScroll: true,
+                    preserveState: true
+                });
+                this.showDeleteConfirmModal = false;
+            }
         },
         checkNotificationKey(key){
             return key !== null || key !== '' || key.length > 0;

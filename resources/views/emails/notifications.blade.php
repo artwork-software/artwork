@@ -76,68 +76,20 @@
                     <div class="notification-content">
                         <div class="notification-text">
                             <h2>{{ $body['body']['title'] }}</h2>
-
                             <p>
-                                @if($body['body']['type'] === 'ROOM_REQUEST')
-                                    {{ \Room::find($body['body']['event']['room_id'])->first()->name }}
-                                    | {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
-                                    ,
+                                @if(!empty($body['body']['event']))
+                                    @if(!empty($body['body']['event']['room_id']))
+                                        {{ \Artwork\Modules\Room\Models\Room::query()->find($body['body']['event']['room_id'])->first()?->name ?? 'Termin ohne Raum' }},
+                                    @endif
+                                    {{ \Artwork\Modules\EventType\Models\EventType::query()->find($body['body']['event']['event_type_id'])->first()?->name }}
+                                    |
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::query()->find($body['body']['event']['project_id'])->first()?->name ?? 'Kein Projekt' }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
                                     -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
-                                @endif
-                                @if($body['body']['type'] === 'NOTIFICATION_UPSERT_ROOM_REQUEST')
-                                    {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
-                                    ,
-                                    {{ $body['body']['event']['eventName'] }}
-                                    | @if(!empty($body['body']['event']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
-                                        |
-                                    @endif
-                                    {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
-                                    -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
-                                @endif
-                                @if($body['body']['type'] === 'NOTIFICATION_CONFLICT')
-                                    {{ \Room::find($body['body']['conflict']['event']['room_id'])->first()->name }}
-                                    | {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['conflict']['event']['event_type_id'])->first()->name }}
-                                    ,
-                                    {{ $body['body']['conflict']['event']['eventName'] }}
-                                    | @if(!empty($body['body']['conflict']['event']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['conflict']['event']['project_id'])->first()->name }}
-                                        |
-                                    @endif
-                                    {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['event']['start_time'])) }}
-                                    -  {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['event']['end_time'])) }}
-                                @endif
-                                @if($body['body']['type'] === 'NOTIFICATION_EVENT_CHANGED')
-                                    @if(!empty($body['body']['event']['room_id']))
-                                        {{ \Room::find($body['body']['event']['room_id'])->first()->name }} |
-                                    @endif {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }}
-                                    ,
-                                    {{ $body['body']['event']['eventName'] }}
-                                    | @if(!empty($body['body']['conflict']['event']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
-                                        |
-                                    @endif
-                                    {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
-                                    -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
-                                @endif
-                                @if($body['body']['type'] === 'NOTIFICATION_LOUD_ADJOINING_EVENT')
-                                    @if(!empty($body['body']['event']['room_id']))
-                                        {{ \Room::find($body['body']['event']['room_id'])->first()->name }} |
-                                    @endif {{ \Artwork\Modules\EventType\Models\EventType::find($body['body']['conflict']['event_type_id'])->first()->name }}
-                                    ,
-                                    {{ $body['body']['conflict']['eventName'] }}
-                                    | @if(!empty($body['body']['conflict']['project_id']))
-                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['conflict']['project_id'])->first()->name }}
-                                        |
-                                    @endif
-                                    {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['start_time'])) }}
-                                    -  {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['end_time'])) }}
                                 @endif
                             </p>
                         </div>
@@ -145,8 +97,6 @@
                 @endforeach
             </div>
         @endforeach
-        <a href="{{ config('app.url') }}"
-           style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem">alle
-            Benachrichtigungen in {{ $page_title  }} ansehen</a>
+        <a href="{{ config('app.url') }}" style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem">alle Benachrichtigungen in {{ $page_title  }} ansehen</a>
     </div>
 @endcomponent

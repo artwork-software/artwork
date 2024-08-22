@@ -2,11 +2,11 @@
 
 namespace Artwork\Modules\Notification\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $type
  * @property string $title
  * @property string $description
- * @property string $frequency
+ * @property NotificationFrequencyEnum $frequency
  * @property int $enabled_email
  * @property int $enabled_push
  * @property string $created_at

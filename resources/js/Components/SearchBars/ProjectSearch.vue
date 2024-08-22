@@ -18,7 +18,11 @@ export default {
     props: {
         label: {
             type: String,
-            default: 'Search for Projects'
+            default: 'Search for projects'
+        },
+        noProjectGroups: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['project-selected'],
@@ -61,10 +65,12 @@ export default {
             <div v-if="projects?.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200">
                     <div v-for="(project, index) in projects" :key="index" class="flex items-center cursor-pointer">
-                        <div class="flex-1 text-sm py-4" @click="selectProject(project)">
-                            <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
-                                <span class="ml-2 truncate">{{ project.name }} </span>
-                            </p>
+                        <div v-if="!(noProjectGroups && project.is_group)">
+                            <div class="flex-1 text-sm py-4" @click="selectProject(project)">
+                                <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
+                                    <span class="ml-2 truncate">{{ project.name }} </span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

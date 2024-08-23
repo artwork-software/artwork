@@ -1068,7 +1068,8 @@ readonly class EventService
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $event['start_time'] ?? null,
-            $event['end_time'] ?? null
+            $event['end_time'] ?? null0501
+
         );
 
         $project->events()->create([
@@ -1096,6 +1097,7 @@ readonly class EventService
 
         $this->eventRepository->update($event, [
             'eventName' => $data['name'],
+            'name' => $data['name'],
             'start_time' => $startTime,
             'end_time' => $endTime,
             'allDay' => $allDay,

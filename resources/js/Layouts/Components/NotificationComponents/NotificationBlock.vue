@@ -48,7 +48,7 @@
                                      @deleteEvent="showDeleteConfirmModal = true"
                                      @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
                                      @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
-                                     @deleteNotification="setOnRead"
+                                     @deleteNotification="setReadAt"
                                      @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
                                      @showInTask="openProjectTasks(notification.data?.taskId)"
                                      @show-project="openProject(notification.data?.projectId)"
@@ -57,7 +57,7 @@
             </div>
         </div>
         <div class="">
-            <img @click="setOnRead" v-show="notification.hovered"
+            <img @click="setReadAt" v-show="notification.hovered"
                  v-if="notification.data?.changeType !== 'BUDGET_VERIFICATION_REQUEST' && !isArchive"
                  src="/Svgs/IconSvgs/icon_archive_white.svg"
                  class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-artwork-buttons-create rounded-full"
@@ -137,7 +137,7 @@
 <script>
 import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
 import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {router, useForm} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
@@ -183,9 +183,6 @@ export default {
             showDeclineModal: false,
             showProjectHistory: false,
             showDeclineEventModal: false,
-            setOnReadForm: useForm({
-                notificationId: this.notification.id
-            }),
             createEventComponentIsVisible: false,
             showDeleteConfirmModal: false,
             showEventWithoutRoomComponent: false,
@@ -211,8 +208,16 @@ export default {
                 }
             );
         },
-        setOnRead() {
-            this.setOnReadForm.patch(route('notifications.setReadAt'));
+        setReadAt() {
+            router.patch(
+                route('notifications.setReadAt'),
+                {
+                    notificationId: this.notification.id
+                },
+                {
+                    preserveScroll: true,
+                }
+            );
         },
         openHistory() {
             router.reload({

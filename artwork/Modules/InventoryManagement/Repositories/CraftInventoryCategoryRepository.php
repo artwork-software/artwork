@@ -4,8 +4,8 @@ namespace Artwork\Modules\InventoryManagement\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 
 class CraftInventoryCategoryRepository extends BaseRepository
@@ -25,14 +25,6 @@ class CraftInventoryCategoryRepository extends BaseRepository
         $builder = $this->craftInventoryCategory->newModelQuery();
 
         return $builder;
-    }
-
-    public function find(int $id): CraftInventoryCategory|null
-    {
-        /** @var CraftInventoryCategory|null $craftInventoryCategory */
-        $craftInventoryCategory = $this->getNewModelQuery()->find($id);
-
-        return $craftInventoryCategory;
     }
 
     public function getAllByCraftIdOrderedByOrder(int $craftId): Collection

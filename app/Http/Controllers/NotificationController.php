@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\Carbon\Service\CarbonService;
+use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -18,6 +20,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -94,9 +97,7 @@ class NotificationController extends Controller
         $output = [];
         $outputRead = [];
 
-        $user->notifications()->latest()->limit(10)->get();
-
-        foreach ($user->notifications as $notification) {
+        foreach ($user->notifications()->get() as $notification) {
             if ($notification->read_at === null) {
                 $output[$notification->data['groupType']][] = $notification;
             } else {
@@ -137,11 +138,14 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function setOnRead(Request $request): void
-    {
-        $user = User::find(Auth::id());
-        $wantedNotification = $user->notifications()->find($request->notificationId);
-        $wantedNotification->read_at = now();
+    public function setReadAt(
+        Request $request,
+        DatabaseNotificationService $databaseNotificationService,
+        CarbonService $carbonService
+    ): void {
+        /** @var DatabaseNotification $wantedNotification */
+        $wantedNotification = $databaseNotificationService->find($request->string('notificationId'));
+        $wantedNotification->setAttribute('read_at', $carbonService->getNow());
         $wantedNotification->save();
     }
 

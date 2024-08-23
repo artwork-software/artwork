@@ -218,5 +218,6 @@ enum NotificationEnum: string
             self::NOTIFICATION_SHIFT_OPEN_DEMAND => "Find out if there are any open demands for your shifts.",
         };
     }
+
     // @codingStandardsIgnoreEnd
 }

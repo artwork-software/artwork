@@ -1068,7 +1068,7 @@ readonly class EventService
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
             $event['start_time'] ?? null,
-            $event['end_time'] ?? null0501
+            $event['end_time'] ?? null
 
         );
 

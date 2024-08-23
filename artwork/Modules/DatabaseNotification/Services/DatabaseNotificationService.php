@@ -13,6 +13,11 @@ class DatabaseNotificationService
     ) {
     }
 
+    public function find(string $id): ?DatabaseNotification
+    {
+        return $this->databaseNotificationRepository->find($id);
+    }
+
     /**
      * @throws Throwable
      */

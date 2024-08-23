@@ -530,7 +530,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
-    Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
+    Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
         ->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');

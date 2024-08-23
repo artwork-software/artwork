@@ -52,6 +52,7 @@
                                      @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
                                      @showInTask="openProjectTasks(notification.data?.taskId)"
                                      @show-project="openProject(notification.data?.projectId)"
+                                     @delete-verification-request="deleteVerificationRequest"
                 />
             </div>
         </div>
@@ -195,6 +196,21 @@ export default {
     },
     computed: {},
     methods: {
+        deleteVerificationRequest() {
+            router.post(
+                route('project.budget.remove.verification'),
+                {
+                    type: this.notification.data.positionVerifyRequestType,
+                    notificationKey: this.notification.data.notificationKey,
+                    position: {
+                        'id': this.notification.data.positionVerifyRequestId
+                    }
+                },
+                {
+                    preserveScroll: true
+                }
+            );
+        },
         setOnRead() {
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
@@ -239,9 +255,9 @@ export default {
                     eventId: this.notification.data?.eventId
                 },
                 onFinish: () => {
-                    this.createEventComponentIsVisible = true
+                    this.createEventComponentIsVisible = true;
                 }
-            })
+            });
         },
         loadEventDataForDialog() {
             router.reload({
@@ -250,9 +266,9 @@ export default {
                     eventId: this.notification.data?.eventId
                 },
                 onFinish: () => {
-                    this.showRoomRequestDialogComponent = true
+                    this.showRoomRequestDialogComponent = true;
                 }
-            })
+            });
         },
         loadEventDataForEventWithoutRoom(){
             router.reload({
@@ -265,10 +281,10 @@ export default {
                 }
             })
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
 
-            if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
+            if (bool && this.checkNotificationKey(this.notification.data?.notificationKey)) {
                 router.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -313,7 +329,7 @@ export default {
         },
         deleteEvent() {
             if (this.checkNotificationKey(this.notification.data?.notificationKey)) {
-                this.$inertia.post(route('events.delete.by.notification', this.notification.data?.eventId), {
+                router.post(route('events.delete.by.notification', this.notification.data?.eventId), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
                     preserveScroll: true,

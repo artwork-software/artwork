@@ -21,7 +21,7 @@ class DatabaseNotificationRepositoryTest extends TestCase
 
     public function getRepository(): DatabaseNotificationRepository
     {
-        return new DatabaseNotificationRepository();
+        return new DatabaseNotificationRepository($this->databaseNotification);
     }
 
     /**

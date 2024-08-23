@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
@@ -14,8 +15,9 @@ use Carbon\Carbon;
 use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Mail\MailManager;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -32,6 +34,9 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly DatabaseNotificationService $databaseNotificationService,
         private readonly Repository $config,
         private readonly NotificationSettingService $notificationSettingService,
+        private readonly CarbonService $carbonService,
+        private readonly MailManager $mailManager,
+        private readonly Translator $translator
     ) {
         parent::__construct();
     }
@@ -73,7 +78,7 @@ class SendNotificationsEmailSummariesCommand extends Command
                 if (($notificationCollectionCount = $notificationCollection->count()) > 0) {
                     if (!isset($notificationArray[$groupType])) {
                         $notificationArray[$groupType] = [
-                            'title' => __(
+                            'title' => $this->translator->get(
                                 'notification-group-enum.title.' .
                                 NotificationGroupEnum::from($groupType)->title(),
                                 [],
@@ -103,11 +108,11 @@ class SendNotificationsEmailSummariesCommand extends Command
         }
 
         if (!empty($notificationArray)) {
-            Mail::to($user)->send(
+            $this->mailManager->to($user)->send(
                 new NotificationSummary(
                     $notificationArray,
                     $user->getAttribute('first_name'),
-                    $this->generalSettings->page_title,
+                    $this->generalSettings->__get('page_title'),
                     $this->config->get('mail.system_mail')
                 )
             );
@@ -141,7 +146,7 @@ class SendNotificationsEmailSummariesCommand extends Command
     /**
      * @return array<string, array<string, array<int, DatabaseNotification>>>
      */
-    private function collectNotificationsToSendForUser(User $user): array
+    protected function collectNotificationsToSendForUser(User $user): array
     {
         $notificationsToSend = [];
 
@@ -159,24 +164,25 @@ class SendNotificationsEmailSummariesCommand extends Command
 
                 if (!$sendSummary) {
                     $lastDate = match ($notificationSetting->getAttribute('frequency')) {
-                        NotificationFrequencyEnum::DAILY => Carbon::parse($lastDate)->addDay(),
-                        NotificationFrequencyEnum::WEEKLY_ONCE => Carbon::parse($lastDate)->addWeek(),
-                        NotificationFrequencyEnum::WEEKLY_TWICE => Carbon::parse($lastDate)->addDays(3),
+                        NotificationFrequencyEnum::DAILY => $this->carbonService->parseAndAddDay($lastDate),
+                        NotificationFrequencyEnum::WEEKLY_TWICE => $this->carbonService->parseAndAddThreeDays(
+                            $lastDate
+                        ),
+                        NotificationFrequencyEnum::WEEKLY_ONCE => $this->carbonService->parseAndAddWeek($lastDate),
                     };
 
-                    $sendSummary = Carbon::now()->setTime(0, 0) >= $lastDate;
+                    $sendSummary = $this->carbonService->getTodayMidnight() >= $lastDate;
                 }
 
                 if ($sendSummary) {
-                    $notifications = $user->notifications()
-                        ->whereNull("read_at")
-                        ->whereJsonContains("data->type", $notificationSettingTypeValue)
-                        ->where("sent_in_summary", false)
-                        ->get();
+                    $notifications = $this->userService->getNotReadOfNotificationTypeNotSentInSummaryForUser(
+                        $user,
+                        $notificationSettingTypeValue
+                    );
 
                     if ($notifications->count() > 0) {
                         $notificationsToSend[$notificationSetting->getAttribute('group_type')][
-                            $notificationSetting->getAttribute('type')->value
+                            $notificationSettingTypeValue
                         ] = $notifications;
                     }
                 }

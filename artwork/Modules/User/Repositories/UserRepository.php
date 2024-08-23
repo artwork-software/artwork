@@ -126,4 +126,15 @@ class UserRepository extends BaseRepository
     {
         return $user->getAttribute('at_a_glance');
     }
+
+    public function getNotReadOfNotificationTypeNotSentInSummaryForUser(
+        User $user,
+        string $notificationConstValue
+    ): Collection {
+        return $user->notifications()
+            ->whereNull("read_at")
+            ->whereJsonContains("data->type", $notificationConstValue)
+            ->where("sent_in_summary", false)
+            ->get();
+    }
 }

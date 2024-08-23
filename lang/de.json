@@ -1951,5 +1951,8 @@
     "Data is currently loaded. Please wait": "Daten werden gerade geladen. Bitte warten",
     "No events found. Click on the plus (+) icon to create an event": "Keine Termine gefunden. Klicke auf das Pluszeichen (+), um einen Termin zu erstellen",
     "Set the event to all-day": "Termin auf ganztägig setzen",
-    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "Wenn Start- und Endzeiten identisch sind oder die Endzeit vor der Startzeit liegt, wird das Enddatum auf den nächsten Tag gesetzt; wenn keine Zeit angegeben ist, wird der Termin als ganztägig kategorisiert."
+    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "Wenn Start- und Endzeiten identisch sind oder die Endzeit vor der Startzeit liegt, wird das Enddatum auf den nächsten Tag gesetzt; wenn keine Zeit angegeben ist, wird der Termin als ganztägig kategorisiert.",
+    "Add Project Role": "Projektrolle hinzufügen",
+    "Add a new project role.": "Neue Projektrolle hinzufügen",
+    "No project roles created yet": "Bisher keine Projektrollen angelegt"
 }

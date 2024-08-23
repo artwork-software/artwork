@@ -77,8 +77,10 @@ abstract class BaseRepository
         $model->${$referenceName}()->delete();
     }
 
-    public function update(Model|Pivot|CanSubstituteBaseModel $model, array $attributes): Model|Pivot
-    {
+    public function update(
+        Model|Pivot|CanSubstituteBaseModel $model,
+        array $attributes
+    ): Model|Pivot|CanSubstituteBaseModel {
         $model->update($attributes);
 
         return $model;
@@ -90,7 +92,7 @@ abstract class BaseRepository
     public function updateOrFail(
         Model|Pivot|CanSubstituteBaseModel|DatabaseNotification $model,
         array $attributes
-    ): Model|Pivot {
+    ): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification {
         $model->updateOrFail($attributes);
 
         return $model;

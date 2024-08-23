@@ -49,6 +49,8 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
 
     private readonly Translator $translatorMock;
 
+    private readonly SendNotificationsEmailSummariesCommand $sendNotificationsEmailSummariesCommand;
+
     public function setUp(): void
     {
         $this->loggerMock = $this->getMockBuilder(NullLogger::class)
@@ -110,6 +112,30 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods([])
             ->getMock();
+
+        $this->sendNotificationsEmailSummariesCommand = new class (
+            $this->loggerMock,
+            $this->generalSettingsMock,
+            $this->userServiceMock,
+            $this->databaseNotificationServiceMock,
+            $this->configMock,
+            $this->notificationSettingServiceMock,
+            $this->carbonServiceMock,
+            $this->mailManagerMock,
+            $this->translatorMock
+        ) extends SendNotificationsEmailSummariesCommand {
+            protected function sendNotificationsSummary(User $user): void
+            {
+            }
+
+            /**
+             * @return array<string, array<string, array<int, DatabaseNotification>>>
+             */
+            public function callCollectNotificationsToSendForUser(User $user): array
+            {
+                return $this->collectNotificationsToSendForUser($user);
+            }
+        };
     }
 
     /**
@@ -244,30 +270,6 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
         Carbon $expectedGetTodayMidnightReturnValue,
         array $expectedResult
     ): void {
-        $command = new class (
-            $this->loggerMock,
-            $this->generalSettingsMock,
-            $this->userServiceMock,
-            $this->databaseNotificationServiceMock,
-            $this->configMock,
-            $this->notificationSettingServiceMock,
-            $this->carbonServiceMock,
-            $this->mailManagerMock,
-            $this->translatorMock
-        ) extends SendNotificationsEmailSummariesCommand {
-            protected function sendNotificationsSummary(User $user): void
-            {
-            }
-
-            /**
-             * @return array<string, array<string, array<int, DatabaseNotification>>>
-             */
-            public function callCollectNotificationsToSendForUser(User $user): array
-            {
-                return $this->collectNotificationsToSendForUser($user);
-            }
-        };
-
         $this->userMock->expects($matcher = $this->exactly(2))
             ->method('getAttribute')
             ->willReturnCallback(
@@ -276,12 +278,12 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                     $expectedUserGetAttributeKeys,
                     $expectedUserGetAttributeReturnValues
                 ): int|array {
-                    switch (($invoc = $matcher->numberOfInvocations())) {
+                    switch (($invocationCount = $matcher->numberOfInvocations())) {
                         case 1:
                         case 2:
-                            $this->assertSame($expectedUserGetAttributeKeys[($invoc - 1)], $key);
+                            $this->assertSame($expectedUserGetAttributeKeys[($invocationCount - 1)], $key);
 
-                            return $expectedUserGetAttributeReturnValues[($invoc - 1)];
+                            return $expectedUserGetAttributeReturnValues[($invocationCount - 1)];
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -343,6 +345,19 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
             ->method('count')
             ->willReturn($expectedNotificationsCountReturnValue);
 
+
+
+        self::assertSame(
+            $this->getExpectedResultWithMocks($expectedResult),
+            $this->sendNotificationsEmailSummariesCommand->callCollectNotificationsToSendForUser($this->userMock)
+        );
+    }
+
+    /**
+     * @return array<string, array<string, string>>
+     */
+    private function getExpectedResultWithMocks(array $expectedResult): array
+    {
         foreach ($expectedResult as $groupType => $notificationsByType) {
             foreach ($notificationsByType as $type => $couldBeMock) {
                 if (str_contains($couldBeMock, 'Mock')) {
@@ -351,10 +366,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
             }
         }
 
-        self::assertSame(
-            $expectedResult,
-            $command->callCollectNotificationsToSendForUser($this->userMock)
-        );
+        return $expectedResult;
     }
 
     /**
@@ -384,9 +396,6 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                     NotificationEnum::NOTIFICATION_ROOM_REQUEST,
                     NotificationFrequencyEnum::DAILY
                 ],
-                NotificationEnum::NOTIFICATION_ROOM_REQUEST->value,
-                'collectionMock',
-                1,
                 'parseAndAddDay',
                 Carbon::today()->setTime(9, 0),
                 Carbon::now()->setTime(0, 0),
@@ -413,9 +422,6 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                     NotificationEnum::NOTIFICATION_ROOM_REQUEST,
                     NotificationFrequencyEnum::WEEKLY_TWICE
                 ],
-                NotificationEnum::NOTIFICATION_ROOM_REQUEST->value,
-                'collectionMock',
-                1,
                 'parseAndAddThreeDays',
                 Carbon::today()->setTime(9, 0),
                 Carbon::now()->setTime(0, 0),
@@ -442,9 +448,6 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                     NotificationEnum::NOTIFICATION_ROOM_REQUEST,
                     NotificationFrequencyEnum::WEEKLY_ONCE
                 ],
-                NotificationEnum::NOTIFICATION_ROOM_REQUEST->value,
-                'collectionMock',
-                1,
                 'parseAndAddWeek',
                 Carbon::today()->setTime(9, 0),
                 Carbon::now()->setTime(0, 0),
@@ -463,38 +466,11 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
         string $expectedCollectionMockGroupByColumn,
         array $expectedNotificationSettingGetAttributeKeys,
         array $expectedNotificationSettingGetAttributeReturnValues,
-        string $expectedUserServiceGetNotReadOfNotificationTypeNotSentInSummaryForUserValue,
-        string $expectedUserServiceGetNotReadOfNotificationTypeNotSentInSummaryForUserReturnValue,
-        int $expectedNotificationsCountReturnValue,
         string $expectedParseMethodDependingOnNotificationFrequencyEnum,
         Carbon $expectedParseAndAddDayReturnValue,
         Carbon $expectedGetTodayMidnightReturnValue,
         array $expectedResult
     ): void {
-        $command = new class (
-            $this->loggerMock,
-            $this->generalSettingsMock,
-            $this->userServiceMock,
-            $this->databaseNotificationServiceMock,
-            $this->configMock,
-            $this->notificationSettingServiceMock,
-            $this->carbonServiceMock,
-            $this->mailManagerMock,
-            $this->translatorMock
-        ) extends SendNotificationsEmailSummariesCommand {
-            protected function sendNotificationsSummary(User $user): void
-            {
-            }
-
-            /**
-             * @return array<string, array<string, array<int, DatabaseNotification>>>
-             */
-            public function callCollectNotificationsToSendForUser(User $user): array
-            {
-                return $this->collectNotificationsToSendForUser($user);
-            }
-        };
-
         $this->userMock->expects($matcher = $this->exactly(2))
             ->method('getAttribute')
             ->willReturnCallback(
@@ -503,12 +479,12 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
                     $expectedUserGetAttributeKeys,
                     $expectedUserGetAttributeReturnValues
                 ): int|array {
-                    switch (($invoc = $matcher->numberOfInvocations())) {
+                    switch (($invocationCount = $matcher->numberOfInvocations())) {
                         case 1:
                         case 2:
-                            $this->assertSame($expectedUserGetAttributeKeys[($invoc - 1)], $key);
+                            $this->assertSame($expectedUserGetAttributeKeys[($invocationCount - 1)], $key);
 
-                            return $expectedUserGetAttributeReturnValues[($invoc - 1)];
+                            return $expectedUserGetAttributeReturnValues[($invocationCount - 1)];
                         default:
                             throw new AssertionError('Number of invocations not expected.');
                     }
@@ -565,7 +541,7 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
 
         self::assertSame(
             $expectedResult,
-            $command->callCollectNotificationsToSendForUser($this->userMock)
+            $this->sendNotificationsEmailSummariesCommand->callCollectNotificationsToSendForUser($this->userMock)
         );
     }
 }

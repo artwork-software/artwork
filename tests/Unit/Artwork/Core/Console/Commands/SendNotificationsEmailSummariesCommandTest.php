@@ -345,8 +345,6 @@ class SendNotificationsEmailSummariesCommandTest extends TestCase
             ->method('count')
             ->willReturn($expectedNotificationsCountReturnValue);
 
-
-
         self::assertSame(
             $this->getExpectedResultWithMocks($expectedResult),
             $this->sendNotificationsEmailSummariesCommand->callCollectNotificationsToSendForUser($this->userMock)

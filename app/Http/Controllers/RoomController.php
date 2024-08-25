@@ -15,6 +15,7 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomChangeService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
@@ -36,7 +37,8 @@ class RoomController extends Controller
     public function __construct(
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService,
-        private readonly SchedulingService $schedulingService
+        private readonly SchedulingService $schedulingService,
+        protected readonly RoomChangeService $roomChangeService
     ) {
     }
 
@@ -181,15 +183,11 @@ class RoomController extends Controller
         ChangeService $changeService
     ): RedirectResponse {
 
-        $oldRoomDescription = $room->description;
-        $oldRoomTitle = $room->name;
-        $roomAdminsBefore = $room->users()->wherePivot('is_admin', true)->get();
-        $oldAdjoiningRooms = $room->adjoining_rooms()->get();
-        $oldRoomAttributes = $room->attributes()->get();
-        $oldRoomCategories = $room->categories()->get();
-        $oldTemporary = $room->temporary;
-        $oldStartDate = $room->start_date;
-        $oldEndDate = $room->end_date;
+        $roomReplicate = $room->replicate();
+        $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
+        $roomReplicate->adjoining_rooms = $room->adjoining_rooms()->get();
+        $roomReplicate->attributes = $room->attributes()->get();
+        $roomReplicate->categories = $room->categories()->get();
 
         $room->update(
             $request->only(
@@ -228,62 +226,9 @@ class RoomController extends Controller
             $room->categories()->sync($request->room_categories);
         }
 
-        $newRoomDescription = $room->description;
-        $newRoomTitle = $room->name;
-        $newAdjoiningRooms = $room->adjoining_rooms()->get();
-        $newRoomAttributes = $room->attributes()->get();
-        $roomAdminsAfter = $room->users()->wherePivot('is_admin', true)->get();
-        $newRoomCategories = $room->categories()->get();
-        $newRoomTemporary = $room->temporary;
-        $newStartDate = $room->start_date;
-        $newEndDate = $room->end_date;
-
-        $this->roomService->checkAdjoiningRoomChanges(
-            $room->id,
-            $oldAdjoiningRooms,
-            $newAdjoiningRooms,
-            $changeService
-        );
-        $this->roomService->checkDescriptionChanges(
-            $room->id,
-            $oldRoomDescription,
-            $newRoomDescription,
-            $changeService
-        );
-        $this->roomService->checkMemberChanges(
+        $this->roomChangeService->applyChanges(
             $room,
-            $roomAdminsBefore,
-            $roomAdminsAfter,
-            $notificationService,
-            $changeService
-        );
-        $this->roomService->checkTitleChanges(
-            $room->id,
-            $oldRoomTitle,
-            $newRoomTitle,
-            $changeService
-        );
-        $this->roomService->checkAttributeChanges(
-            $room->id,
-            $oldRoomAttributes,
-            $newRoomAttributes,
-            $changeService
-        );
-        $this->roomService->checkCategoryChanges(
-            $room->id,
-            $oldRoomCategories,
-            $newRoomCategories,
-            $changeService
-        );
-        $this->roomService->checkTemporaryChanges(
-            $room->id,
-            $oldTemporary,
-            $newRoomTemporary,
-            $oldStartDate,
-            $newStartDate,
-            $oldEndDate,
-            $newEndDate,
-            $changeService
+            $roomReplicate
         );
 
         $roomId = $room->id;

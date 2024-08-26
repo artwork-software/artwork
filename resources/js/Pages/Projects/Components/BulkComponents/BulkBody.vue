@@ -58,7 +58,7 @@
             </div>
         </div>
         <div class="flex items-center justify-between pointer-events-none">
-            <IconCirclePlus @click="addEmptyEvent" class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto" stroke-width="2"/>
+            <IconCirclePlus v-if="this.canEditComponent" @click="addEmptyEvent" class="w-8 h-8 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out pointer-events-auto" stroke-width="2"/>
 
             <div class="flex items-center gap-x-4">
                 <div v-if="invalidEvents.length > 0" class="text-artwork-messages-error text-xs">

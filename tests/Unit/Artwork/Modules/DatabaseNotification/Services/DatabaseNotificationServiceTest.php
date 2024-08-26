@@ -52,7 +52,7 @@ class DatabaseNotificationServiceTest extends TestCase
                 $databaseNotificationStub = $this->createStub(DatabaseNotification::class),
                 $attributes
             )
-            ->willReturn(true);
+            ->willReturn($databaseNotificationStub);
 
         $this->getService()->updateSentInSummary($databaseNotificationStub, true);
     }

@@ -20,7 +20,7 @@
                     <IconChevronUp class="h-4 w-4" v-else/>
                 </div>
             </div>
-            <div class="mt-1">
+            <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mt-1">
                 <BaseMenu dots-size="h-4 w-4">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="openDeleteConfirmModal"
@@ -96,6 +96,7 @@ import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -108,7 +109,7 @@ export default defineComponent({
         'shiftTimePresets'
     ],
     emits: ['dropFeedback'],
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions],
     components: {
         BaseMenu,
         SvgCollection,

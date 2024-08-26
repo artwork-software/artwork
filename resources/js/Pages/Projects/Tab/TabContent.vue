@@ -144,6 +144,7 @@ const removeML = (componentType) => {
                     :opened_checklists="headerObject.project?.opened_checklists"
                     :checklist_templates="headerObject.project?.checklist_templates"
                     :projectManagerIds="headerObject.projectManagerIds"
+                    :projectWriteIds="headerObject.projectWriteIds"
                     :tab_id="currentTab.id"
                     :first_project_tab_id="first_project_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"

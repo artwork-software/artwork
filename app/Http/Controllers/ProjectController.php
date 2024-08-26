@@ -51,12 +51,12 @@ use Artwork\Modules\CostCenter\Services\CostCenterService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Currency\Models\Currency;
 use Artwork\Modules\Currency\Services\CurrencyService;
+use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -484,7 +484,6 @@ class ProjectController extends Controller
 
     public function verifiedRequestMainPosition(Request $request): RedirectResponse
     {
-
         $mainPosition = MainPosition::find($request->id);
         $project = $mainPosition->table()->first()->project()->first();
 
@@ -542,6 +541,8 @@ class ProjectController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+        $this->notificationService->setPositionVerifyRequestType('main');
+        $this->notificationService->setPositionVerifyRequestId($mainPosition->getAttribute('id'));
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setButtons(['calculation_check', 'delete_request']);
         $this->notificationService->setBudgetData($budgetData);
@@ -578,7 +579,7 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $notificationTitle = __(
-                'notifications.project.budget.new_verify_request',
+                'notifications.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -640,7 +641,7 @@ class ProjectController extends Controller
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
             $notificationTitle = __(
-                'notifications.project.budget.new_verify_request',
+                'notifications.project.budget.delete_verify_request',
                 [],
                 User::find($verifiedRequest->requested)->language
             );
@@ -707,9 +708,13 @@ class ProjectController extends Controller
             ->delete();
     }
 
-    public function removeVerification(Request $request): RedirectResponse
-    {
-
+    /**
+     * @throws Throwable
+     */
+    public function removeVerification(
+        Request $request,
+        DatabaseNotificationService $databaseNotificationService
+    ): RedirectResponse {
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypeEnum::BUDGET_VERIFICATION_DELETED;
@@ -834,6 +839,10 @@ class ProjectController extends Controller
             );
         }
 
+        if (($notificationKey = $request->string('notificationKey')->value()) !== '') {
+            $databaseNotificationService->deleteByKey($notificationKey);
+        }
+
         return Redirect::back();
     }
 
@@ -922,6 +931,8 @@ class ProjectController extends Controller
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
         $this->notificationService->setNotificationConstEnum(NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+        $this->notificationService->setPositionVerifyRequestType('sub');
+        $this->notificationService->setPositionVerifyRequestId($subPosition->getAttribute('id'));
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setNotificationTo(User::find($request->user));
         $this->notificationService->setButtons(['calculation_check', 'delete_request']);
@@ -988,7 +999,7 @@ class ProjectController extends Controller
 
         foreach ($project->access_budget()->get() as $user) {
             $notificationTitle = __(
-                'notifications.project.budget.new_verify_request',
+                'notifications.project.budget.fixed',
                 [],
                 $user->language
             );
@@ -1989,7 +2000,7 @@ class ProjectController extends Controller
         $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = $this->sectorService->getAll();
-        $headerObject->rooms = $this->roomService->getAllWithoutTrashed(without: ['creator', 'admins']);
+        $headerObject->rooms = $this->roomService->getAllWithoutTrashed();
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;

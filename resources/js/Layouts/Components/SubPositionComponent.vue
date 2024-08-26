@@ -21,7 +21,7 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <BaseMenu v-if="this.$can('edit budget templates') || !table.is_template">
+                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
                             <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
                                 <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
@@ -201,7 +201,7 @@
                         </td>
                     </div>
                     <BaseMenu dots-color="text-artwork-buttons-context" :class="[hoveredRow === row.id ? '' : 'hidden', 'mr-0.5']"
-                    v-if="this.$can('edit budget templates') || !table.is_template">
+                              v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
                         <MenuItem v-slot="{ active }"
                                   v-if="row.commented === false"
                                   @click="updateRowCommented(row.id, true)">
@@ -247,7 +247,7 @@
                 </tr>
                 <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)"
-                     v-if="this.$can('edit budget templates') || !table.is_template"
+                     v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-artwork-buttons-create hover:border-t-2 hover:border-artwork-buttons-create">
                     <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                         {{ $t('Row') }}
@@ -256,7 +256,7 @@
                 </div>
             </div>
             <div v-else @click="addRowToSubPosition(subPosition)"
-                 v-if="this.$can('edit budget templates') || !table.is_template"
+                 v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                     {{ $t('Row') }}
@@ -292,7 +292,7 @@
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
-                                 v-if="this.$can('edit budget templates') || !table.is_template">
+                                 v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
                                 <IconCirclePlus stroke-width="1.5"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full "/>
                             </div>
@@ -303,7 +303,7 @@
             </tbody>
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)"
-             v-if="this.$can('edit budget templates') || !table.is_template"
+             v-if="this.hasBudgetAccess || this.$can('edit budget templates')"
              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
             <div class="group-hover:block hidden uppercase text-artwork-buttons-create text-sm -mt-8">
                 {{ $t('Sub position') }}
@@ -322,7 +322,7 @@
 </template>
 <script>
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link, useForm} from "@inertiajs/vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -359,7 +359,7 @@ export default {
         ConfirmationComponent,
         Link
     },
-    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table', 'projectManagers'],
+    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table', 'projectManagers', 'hasBudgetAccess'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
@@ -669,6 +669,9 @@ export default {
             return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
         },
         async handleCellClick(cell, type = '', index = null, row = null) {
+            if (!this.hasBudgetAccess) {
+                return;
+            }
             if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {
                 return
             }

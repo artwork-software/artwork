@@ -1096,6 +1096,7 @@ readonly class EventService
 
         $this->eventRepository->update($event, [
             'eventName' => $data['name'],
+            'name' => $data['name'],
             'start_time' => $startTime,
             'end_time' => $endTime,
             'allDay' => $allDay,

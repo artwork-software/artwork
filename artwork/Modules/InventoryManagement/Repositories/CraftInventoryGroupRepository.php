@@ -27,14 +27,6 @@ class CraftInventoryGroupRepository extends BaseRepository
         return $builder;
     }
 
-    public function find(int $id): CraftInventoryGroup|null
-    {
-        /** @var CraftInventoryGroup|null $craftInventoryGroup */
-        $craftInventoryGroup = $this->getNewModelQuery()->find($id);
-
-        return $craftInventoryGroup;
-    }
-
     public function getAllByCategoryIdOrderedByOrder(int $categoryId): Collection
     {
         return $this->getNewModelQuery()

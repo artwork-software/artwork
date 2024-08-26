@@ -22,23 +22,29 @@ class NotificationSummary extends Mailable
 
     public string $systemEmail;
 
+    public string $fallbackPageTitle;
+
     public function __construct(
         array $notifications,
         string $user,
         string $page_title,
         string $systemEmail,
+        string $fallbackPageTitle
     ) {
         $this->notifications = $notifications;
         $this->user = $user;
         $this->page_title = $page_title;
         $this->systemEmail = $systemEmail;
+        $this->fallbackPageTitle = $fallbackPageTitle;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
             from: $this->systemEmail,
-            subject: 'Es gibt Neuigkeiten in ' . ($this->page_title !== '' ? $this->page_title : 'Artwork')
+            subject: 'Es gibt Neuigkeiten in ' . (
+                $this->page_title !== '' ? $this->page_title : $this->fallbackPageTitle
+            )
         );
     }
 

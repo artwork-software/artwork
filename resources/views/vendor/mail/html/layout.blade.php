@@ -143,9 +143,9 @@
                                                     <tr>
                                                         <td style="width:200px;">
                                                             @if($settings->big_logo_path)
-                                                                <img height="auto" src="{{ asset('storage' . $settings->big_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                                <img height="auto" src="{{ asset('storage/' . $settings->big_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
                                                             @elseif($settings->small_logo_path)
-                                                                <img height="auto" src="{{ asset('storage' . $settings->small_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
+                                                                <img height="auto" src="{{ asset('storage/' . $settings->small_logo_path) }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
                                                             @else
                                                                 <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_big.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="200" />
                                                             @endif

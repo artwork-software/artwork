@@ -22,7 +22,8 @@
             <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <IconChevronDown class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
-            <IconUpload class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload v-if="this.hasAdminRole() || this.$can('can manage global project budgets')"
+                        class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal"
                                     :close-modal="closeFileUploadModal"
@@ -186,14 +187,13 @@ export default {
             showCopyrightModal: false,
             projectFileToEdit: null,
             projectFileToDelete: null
-
         }
     },
     methods: {
         hasBudgetAccess() {
-          return this.loadedProjectInformation['BudgetInformation'].access_budget.filter(
-              (user) => user.id === this.$page.props.user.id
-          ).length > 0;
+            return this.loadedProjectInformation['BudgetInformation'].access_budget.filter(
+                (user) => user.id === this.$page.props.user.id
+            ).length > 0;
         },
         downloadContract(contract) {
             let link = document.createElement('a');

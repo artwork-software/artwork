@@ -1,3 +1,26 @@
+<template>
+    <div class="my-2">
+        <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : 'text-gray-900'">
+            {{ data.data.label }}
+        </label>
+        <span v-if="descriptionClicked === false"
+              class="mt-2 subpixel-antialiased text-secondary"
+              @click="handleDescriptionClick()"
+              v-html="data.project_value?.data.text ? data.project_value?.data.text : (this.canEditComponent ? $t('Click here to add text') : '')">
+        </span>
+        <TextareaComponent
+            v-else
+            :disabled="!this.canEditComponent"
+            :label="data.data.placeholder"
+            :ref="`description-${this.projectId}`"
+            :class="inSidebar ? 'bg-primary text-white' : ''"
+            id="placeholder"
+            @focusout="updateTextData()"
+            v-model="textData.text">
+        </TextareaComponent>
+    </div>
+</template>
+
 <script>
 import {nextTick} from "vue";
 import Permissions from "@/Mixins/Permissions.vue";
@@ -26,6 +49,10 @@ export default {
             })
         },
         async handleDescriptionClick() {
+            if (!this.canEditComponent) {
+                return;
+            }
+
             if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
                 this.descriptionClicked = true;
 
@@ -37,30 +64,3 @@ export default {
     },
 }
 </script>
-
-<template>
-    <div class="my-2">
-        <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : 'text-gray-900'">
-            {{ data.data.label }}
-        </label>
-        <span v-if="descriptionClicked === false"
-             class="mt-2 subpixel-antialiased text-secondary"
-             @click="handleDescriptionClick()"
-             v-html="data.project_value?.data.text ? data.project_value?.data.text : $t('Click here to add text')">
-        </span>
-        <TextareaComponent
-            v-else
-            :disabled="!this.canEditComponent"
-            :label="data.data.placeholder"
-            :ref="`description-${this.projectId}`"
-            :class="inSidebar ? 'bg-primary text-white' : ''"
-            id="placeholder"
-            @focusout="updateTextData()"
-            v-model="textData.text">
-        </TextareaComponent>
-    </div>
-</template>
-
-<style scoped>
-
-</style>

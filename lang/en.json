@@ -1952,6 +1952,9 @@
     "No events found. Click on the plus (+) icon to create an event": "No events found. Click on the plus (+) icon to create an event",
     "Set the event to all-day": "Set the event to all-day",
     "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.",
+    "Add Project Role": "Add Project Role",
+    "Add a new project role.": "Add a new project role.",
+    "No project roles created yet": "No project roles created yet",
     "projects": "Projects",
     "room_assignment": "Calendar",
     "shift_plan": "Shifts",
@@ -1961,5 +1964,10 @@
     "users": "Users",
     "contracts": "Contracts",
     "Module visibility": "Module visibility",
-    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users"
+    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users",
+    "Budget Informations": "Budget Informations",
+    "Sort by room": "Sort by room",
+    "Sort by appointment type": "Sort by appointment type",
+    "Sort by day": "Sort by day",
+    "Reset sorting": "Reset sorting"
 }

@@ -2000,7 +2000,7 @@ class ProjectController extends Controller
         $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = $this->sectorService->getAll();
-        $headerObject->rooms = $this->roomService->getAllWithoutTrashed(without: ['creator', 'admins']);
+        $headerObject->rooms = $this->roomService->getAllWithoutTrashed();
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;

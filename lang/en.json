@@ -1951,5 +1951,15 @@
     "Data is currently loaded. Please wait": "Data is currently loaded. Please wait",
     "No events found. Click on the plus (+) icon to create an event": "No events found. Click on the plus (+) icon to create an event",
     "Set the event to all-day": "Set the event to all-day",
-    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day."
+    "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.": "If the start and end times are identical or the end time is before the start time, the end date is set to the next day; if no time is specified, the event is categorised as a full day.",
+    "projects": "Projects",
+    "room_assignment": "Calendar",
+    "shift_plan": "Shifts",
+    "inventory": "Inventory",
+    "tasks": "Tasks",
+    "sources_of_funding": "Money Sources",
+    "users": "Users",
+    "contracts": "Contracts",
+    "Module visibility": "Module visibility",
+    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users"
 }

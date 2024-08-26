@@ -11,6 +11,7 @@ use Artwork\Core\Http\Middleware\RedirectIfAuthenticated;
 use Artwork\Core\Http\Middleware\TrimStrings;
 use Artwork\Core\Http\Middleware\TrustProxies;
 use Artwork\Core\Http\Middleware\VerifyCsrfToken;
+use Artwork\Modules\ModuleSettings\Http\Middleware\ModuleSettingsMiddleware;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -51,6 +52,7 @@ class Kernel extends HttpKernel
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
             SubstituteBindings::class,
+            ModuleSettingsMiddleware::class,
             HandleInertiaRequests::class,
             Localization::class,
         ],

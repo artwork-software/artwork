@@ -123,7 +123,7 @@
                                     </template>
                                 </Dropdown>
 
-                                <Dropdown :open="user.openedMenuRoles" align="right" width="60" class="text-right">
+                                <Dropdown :open="user.openedMenuRoles" align="right" width="56" class="text-right">
                                     <template #trigger>
                                         <span class="inline-flex">
                                             <button @click="user.openedMenuRoles = !user.openedMenuRoles" type="button"
@@ -133,12 +133,24 @@
                                         </span>
                                     </template>
                                     <template #content>
-                                        <div class="w-44 p-4">
-                                            <div class="flex mb-2" v-for="role in projectRoles">
+                                        <div class="flex flex-col p-4">
+                                            <div v-if="projectRoles.length > 0"
+                                                 v-for="role in projectRoles"
+                                                 class="flex mb-2">
                                                 <input :id="role.id" :name="role.name" type="checkbox" :checked="user?.pivot_roles?.includes(role.id)" @change="addRoleToUser(user, role)" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p class=" ml-4 my-auto text-sm text-secondary">
                                                     {{ role.name }}
                                                 </p>
+                                            </div>
+                                            <div v-else>
+                                                <Link v-if="hasAdminRole()"
+                                                      class="linkText"
+                                                      :href="route('project-roles.index')">
+                                                    {{ $t('No project roles created yet') }}
+                                                </Link>
+                                                <span v-else class="xxsLight">
+                                                    {{ $t('No project roles created yet') }}
+                                                </span>
                                             </div>
                                         </div>
                                     </template>
@@ -174,7 +186,7 @@
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/vue3";
+import {Link, useForm} from "@inertiajs/vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -191,7 +203,8 @@ export default {
         JetDialogModal,
         TeamIconCollection,
         XCircleIcon,
-        XIcon
+        XIcon,
+        Link
     },
     props: [
         'show',

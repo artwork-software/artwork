@@ -64,6 +64,10 @@ class NotificationService
 
     public object|null $budgetData = null;
 
+    public int|null $positionVerifyRequestId = null;
+
+    public string|null $positionVerifyRequestType = null;
+
     public function __construct(private readonly EventService $eventService)
     {
     }
@@ -272,6 +276,30 @@ class NotificationService
         $this->notificationKey = $notificationKey;
     }
 
+    public function getPositionVerifyRequestId(): ?int
+    {
+        return $this->positionVerifyRequestId;
+    }
+
+    public function setPositionVerifyRequestId(?int $positionVerifyRequestId): self
+    {
+        $this->positionVerifyRequestId = $positionVerifyRequestId;
+
+        return $this;
+    }
+
+    public function getPositionVerifyRequestType(): ?string
+    {
+        return $this->positionVerifyRequestType;
+    }
+
+    public function setPositionVerifyRequestType(?string $positionVerifyRequestType): self
+    {
+        $this->positionVerifyRequestType = $positionVerifyRequestType;
+
+        return $this;
+    }
+
     public function clearNotificationData(): void
     {
         $this->setTitle('');
@@ -291,6 +319,8 @@ class NotificationService
         $this->setBudgetData(null);
         $this->setNotificationKey('');
         $this->setShiftId(null);
+        $this->setPositionVerifyRequestId(null);
+        $this->setPositionVerifyRequestType(null);
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
@@ -322,6 +352,9 @@ class NotificationService
         $body->budgetData = $this->getBudgetData();
         $body->notificationKey = $this->getNotificationKey();
         $body->shiftId = $this->getShiftId();
+        $body->positionVerifyRequestId = $this->getPositionVerifyRequestId();
+        $body->positionVerifyRequestType = $this->getPositionVerifyRequestType();
+
         switch ($this->getNotificationConstEnum()) {
             case NotificationEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationEnum::NOTIFICATION_ROOM_REQUEST:

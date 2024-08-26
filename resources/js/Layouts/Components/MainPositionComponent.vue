@@ -35,7 +35,7 @@
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <BaseMenu  v-if="this.$can('edit budget templates') || !table.is_template" dots-color="text-artwork-context-light">
+                        <BaseMenu v-if="this.hasBudgetAccess || this.$can('edit budget templates')" dots-color="text-artwork-context-light">
                             <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
                                             <span @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <IconLock stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" />
@@ -83,7 +83,7 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+        <div @click="addSubPosition(mainPosition.id)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
             <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                 {{ $t('Sub position') }}
                 <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
@@ -104,6 +104,7 @@
                                       :project="project"
                                       :table="table"
                                       :project-managers="projectManagers"
+                                      :hasBudgetAccess="this.hasBudgetAccess"
                 />
             </tr>
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-artwork-buttons-create' : 'bg-primary'">
@@ -117,14 +118,14 @@
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(mainPosition.columnSums[column.id]?.sum) }}</span>
                         <span v-else>{{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}</span>
-                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
+                        <div v-if="this.hasBudgetAccess" class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
                             <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                         </div>
                     </div>
                 </td>
             </tr>
             </thead>
-            <div @click="addMainPosition(mainPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
+            <div @click="addMainPosition(mainPosition)" v-if="this.hasBudgetAccess || this.$can('edit budget templates')" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-artwork-buttons-create">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     {{ $t('Main position') }}
                     <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-white bg-artwork-buttons-create rounded-full" />
@@ -141,7 +142,7 @@
 
 <script>
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -180,7 +181,8 @@ export default {
         'table',
         'project',
         'projectManagers',
-        'type'
+        'type',
+        'hasBudgetAccess'
     ],
     emits:[
         'openDeleteModal',

@@ -329,57 +329,59 @@ export default {
                     name: this.$t('Projects'),
                     href: route('projects'),
                     route: ['/projects'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('projects'),
                     icon: IconGeometry
                 },
                 {
                     name: this.$t('Room assignment'),
                     href: route('events'),
                     route: ['/calendar/view'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('room_assignment'),
                     icon: IconCalendarMonth
                 },
                 {
                     name: this.$t('Shift plan'),
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
-                    has_permission: this.$can('can view shift plan') || this.hasAdminRole(),
+                    has_permission: this.moduleIsVisible('shift_plan') &&
+                        this.$can('can view shift plan'),
                     icon: IconCalendarUser
                 },
                 {
                     name: this.$t('Inventory'),
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('inventory'),
                     icon: IconBuildingWarehouse
                 },
                 {
                     name: this.$t('Tasks'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('tasks'),
                     icon: IconListCheck
                 },
                 {
                     name: this.$t('Sources of funding'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
-                    has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole(),
+                    has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
+                        ['view edit add money_sources', 'can edit and delete money sources']
+                    ),
                     icon: IconCurrencyEuro
                 },
                 {
                     name: this.$t('Users'),
                     href: route('users'),
                     route: ['/users'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('users'),
                     icon: IconUsers
                 },
-
                 {
                     name: this.$t('Contracts'),
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('contracts'),
                     icon: IconFileText
                 }
             ]
@@ -390,6 +392,9 @@ export default {
         IconTrash,
         IconAdjustmentsAlt,
         usePage,
+        moduleIsVisible(module) {
+            return this.hasAdminRole() || this.$page.props.module_settings[module];
+        },
         getTrashRoute() {
             if (this.$page.url === '/areas') {
                 return route('areas.trashed')

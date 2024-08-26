@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, onUnmounted, ref } from "vue";
+import {defineComponent, onMounted, onUnmounted, ref} from "vue";
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 
 export default defineComponent({
@@ -72,7 +72,8 @@ export default defineComponent({
         widthClass() {
             return {
                 '48': 'w-48',
-                '64':'w-64',
+                '56': 'w-56',
+                '64': 'w-64',
             }[this.width.toString()]
         },
 

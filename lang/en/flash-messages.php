@@ -120,5 +120,10 @@ return [
                 'download' => 'Export could not be created. Please try again.'
             ]
         ]
+    ],
+    'module-settings' => [
+        'success' => [
+            'update' => 'Module visibility has been successfully updated.'
+        ]
     ]
 ];

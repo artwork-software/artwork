@@ -31,7 +31,7 @@
                         id="text_without_html"
                         v-model="headline.text_without_html" :ref="`text-${headline.id}`"
                         @focusout="changeHeadlineText(headline)"
-                        :label="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                        :label="headline.text || $t('Click here to add text')"/>
                 </div>
                 <ProjectDocumentsComponent :project="this.project"
                                            :project-write-ids="this.projectWriteIds"

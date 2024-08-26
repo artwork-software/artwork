@@ -134,5 +134,10 @@ return [
                 'download' => 'Export konnte nicht erzeugt werden. Bitte erneut versuchen.'
             ]
         ]
+    ],
+    'module-settings' => [
+        'success' => [
+            'update' => 'Modul-Sichtbarkeit wurde erfolgreich aktualisiert.'
+        ]
     ]
 ];

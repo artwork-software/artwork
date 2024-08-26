@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -35,7 +36,6 @@ class DatabaseNotificationSeeder extends Seeder
         $project = $event->getAttribute('project');
 
         $values = [
-            'title' => fake()->name,
             'description' => [
                 1 => [
                     'type' => 'link',
@@ -70,11 +70,9 @@ class DatabaseNotificationSeeder extends Seeder
             'departmentId' => $project->getAttribute('departments')->first()?->getAttribute('id'),
             'taskId' => null,
             'budgetData' => null,
-            'notificationKey' => Str::random(15),
             'shiftId' => Shift::query()->first()->getAttribute('id'),
         ];
 
-        $this->notificationService->setTitle($values['title']);
         $this->notificationService->setDescription($values['description']);
         $this->notificationService->setIcon($values['icon']);
         $this->notificationService->setShowHistory($values['showHistory']);
@@ -87,13 +85,15 @@ class DatabaseNotificationSeeder extends Seeder
         $this->notificationService->setDepartmentId($values['departmentId']);
         $this->notificationService->setTaskId($values['taskId']);
         $this->notificationService->setBudgetData($values['budgetData']);
-        $this->notificationService->setNotificationKey($values['notificationKey']);
         $this->notificationService->setShiftId($values['shiftId']);
 
         foreach ($this->userService->getAllUsers() as $user) {
             $this->notificationService->setNotificationTo($user);
             foreach (NotificationEnum::cases() as $notificationEnum) {
+                $this->notificationService->setTitle(fake()->name);
                 $this->notificationService->setNotificationConstEnum($notificationEnum);
+                $this->notificationService->setNotificationKey(Str::random(15));
+
                 switch ($notificationEnum) {
                     case NotificationEnum::NOTIFICATION_ROOM_REQUEST:
                         $this->notificationService->setButtons(['accept', 'decline']);
@@ -106,6 +106,10 @@ class DatabaseNotificationSeeder extends Seeder
                         break;
                     case NotificationEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
                         $this->notificationService->setButtons(['calculation_check', 'delete_request']);
+                        $this->notificationService->setPositionVerifyRequestId(
+                            MainPosition::query()->find(10)->getAttribute('id')
+                        );
+                        $this->notificationService->setPositionVerifyRequestType('main');
                         break;
                     case NotificationEnum::NOTIFICATION_SHIFT_CONFLICT:
                         $this->notificationService->setButtons(['see_shift']);

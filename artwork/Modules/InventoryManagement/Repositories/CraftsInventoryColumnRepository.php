@@ -4,8 +4,8 @@ namespace Artwork\Modules\InventoryManagement\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 
 class CraftsInventoryColumnRepository extends BaseRepository
@@ -26,14 +26,6 @@ class CraftsInventoryColumnRepository extends BaseRepository
         $builder = $this->craftsInventoryColumn->newModelQuery();
 
         return $builder;
-    }
-
-    public function find(int $id): CraftsInventoryColumn|null
-    {
-        /** @var CraftsInventoryColumn|null $column */
-        $column = $this->getNewModelQuery()->find($id);
-
-        return $column;
     }
 
     public function getAllOrdered($orderBy = 'id', $orderByDirection = 'asc'): Collection

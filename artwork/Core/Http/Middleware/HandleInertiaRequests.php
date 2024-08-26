@@ -3,6 +3,7 @@
 namespace Artwork\Core\Http\Middleware;
 
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,10 @@ use Inertia\Middleware;
 class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
+
+    public function __construct(private readonly ModuleSettingsService $moduleSettingsService)
+    {
+    }
 
     /**
      * @return array<string, mixed>
@@ -60,7 +65,8 @@ class HandleInertiaRequests extends Middleware
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
                 'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
                 'calendar_settings' => $calendarSettings,
-                'unread_notifications' => Auth::user()?->notifications()->whereNull('read_at')->count()
+                'unread_notifications' => Auth::user()?->notifications()->whereNull('read_at')->count(),
+                'module_settings' => $this->moduleSettingsService->getModuleSettings()
             ]
         );
     }

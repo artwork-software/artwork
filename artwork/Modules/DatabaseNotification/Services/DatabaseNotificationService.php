@@ -13,16 +13,34 @@ class DatabaseNotificationService
     ) {
     }
 
+    public function find(string $id): ?DatabaseNotification
+    {
+        return $this->databaseNotificationRepository->find($id);
+    }
+
     /**
      * @throws Throwable
      */
-    public function updateSentInSummary(DatabaseNotification $databaseNotification, bool $sent): bool
+    public function updateSentInSummary(DatabaseNotification $databaseNotification, bool $sent): DatabaseNotification
     {
-        return $this->databaseNotificationRepository->updateOrFail(
+        /**
+         * @var DatabaseNotification $databaseNotification
+         */
+        $databaseNotification = $this->databaseNotificationRepository->updateOrFail(
             $databaseNotification,
             [
                 'sent_in_summary' => $sent
             ]
         );
+
+        return $databaseNotification;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function deleteByKey(string $notificationKey): bool
+    {
+        return $this->databaseNotificationRepository->deleteByKey($notificationKey);
     }
 }

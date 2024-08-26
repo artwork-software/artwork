@@ -236,7 +236,7 @@ const filteredChecklists = computed(() => {
 
         // entferne checklisten die nur erledigt aufgaben haben oder keine aufgaben
         if (showChecklistWithoutTasks.value) {
-            include = include && checklist.tasks.length > 0;
+            include = include && checklist.tasks.length >= 0;
         } else {
             include = include && checklist.tasks.length > 0 && checklist.tasks.some(task => !task.done);
         }

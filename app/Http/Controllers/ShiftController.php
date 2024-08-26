@@ -22,8 +22,8 @@ use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Random\RandomException;
 
@@ -34,7 +34,8 @@ class ShiftController extends Controller
         private readonly ChangeService $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
-        private readonly ShiftService $shiftService
+        private readonly ShiftService $shiftService,
+        private readonly Redirector $redirector
     ) {
     }
 
@@ -160,7 +161,7 @@ class ShiftController extends Controller
             'description',
         ]));
 
-        return Redirect::route('shifts.plan');
+         return $this->redirector->route('shifts.plan');
     }
 
     public function updateShift(
@@ -272,10 +273,10 @@ class ShiftController extends Controller
         }
 
         if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
-            return Redirect::route('projects.tab', [$projectId, $projectTab->id]);
+            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
         }
 
-        return Redirect::back();
+        return $this->redirector->back();
     }
 
     private function sendShiftAddedNotificationToUser(Shift $shift, User $user): void
@@ -542,10 +543,10 @@ class ShiftController extends Controller
         }
 
         if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
-            return Redirect::route('projects.tab', [$projectId, $projectTab->id]);
+            return $this->redirector->route('projects.tab', [$projectId, $projectTab->id]);
         }
 
-        return Redirect::back();
+        return $this->redirector->back();
     }
 
     public function destroy(Shift $shift): void
@@ -750,7 +751,8 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService,
-    ): bool {
+    ): bool|RedirectResponse {
+        $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($request->get('userType')) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -759,7 +761,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return true;
+            return $isShiftTab ? $this->redirector->back() : false;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -772,7 +774,7 @@ class ShiftController extends Controller
                 $request->get('seriesShiftData')
             );
 
-            return true;
+            return $isShiftTab ? $this->redirector->back() : true;
         }
 
         $serviceToUse->assignToShift(
@@ -787,7 +789,7 @@ class ShiftController extends Controller
             $request->get('seriesShiftData')
         );
 
-        return true;
+        return $isShiftTab ? $this->redirector->back() : true;
     }
 
     public function removeFromShift(
@@ -802,7 +804,8 @@ class ShiftController extends Controller
         VacationConflictService $vacationConflictService,
         AvailabilityConflictService $availabilityConflictService,
         ChangeService $changeService
-    ): bool {
+    ): bool|RedirectResponse {
+        $isShiftTab = $request->boolean('isShiftTab');
         $serviceToUse = match ($userType) {
             0 => $shiftUserService,
             1 => $shiftFreelancerService,
@@ -811,7 +814,7 @@ class ShiftController extends Controller
         };
 
         if ($serviceToUse === null) {
-            return false;
+            return $isShiftTab ? $this->redirector->back() : false;
         }
 
         if ($serviceToUse instanceof ShiftServiceProviderService) {
@@ -822,7 +825,7 @@ class ShiftController extends Controller
                 $changeService
             );
 
-            return true;
+            return $isShiftTab ? $this->redirector->back() : true;
         }
 
         $serviceToUse->removeFromShift(
@@ -835,7 +838,7 @@ class ShiftController extends Controller
             $changeService
         );
 
-        return true;
+        return $isShiftTab ? $this->redirector->back() : true;
     }
 
     public function removeAllShiftUsers(
@@ -872,13 +875,13 @@ class ShiftController extends Controller
             $shiftService->createRemovedAllUsersFromShiftHistoryEntry($shift, $changeService);
         }
 
-        return Redirect::back();
+        return $this->redirector->back();
     }
 
     public function updateDescription(Request $request, Shift $shift): RedirectResponse
     {
         $shift->update($request->only(['description']));
 
-        return Redirect::back();
+        return $this->redirector->back();
     }
 }

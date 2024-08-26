@@ -11,7 +11,7 @@ use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class ModuleSettingsMiddleware
 {
-    const ROUTE_SETTING_MAPPING = [
+    private const ROUTE_SETTING_MAPPING = [
         '/projects' => 'projects',
         '/calendar/view' => 'room_assignment',
         '/shifts/view' => 'shift_plan',

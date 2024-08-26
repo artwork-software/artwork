@@ -120,7 +120,7 @@
             <div v-for="serviceProvider in shift.service_provider">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
-                        <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
+                        <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover" alt="profile-photo">
                         <span class="text-xs">{{ serviceProvider.name }}</span>
                         <span v-if="serviceProvider.pivot.shift_count > 1" class="text-xs">  1/{{ serviceProvider.pivot.shift_count }} </span>
                         <ShiftQualificationIconCollection
@@ -175,19 +175,9 @@ import {defineComponent} from 'vue'
 import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import dayjs from "dayjs";
-import {
-    DotsVerticalIcon,
-    DuplicateIcon,
-    PencilAltIcon,
-    TrashIcon
-} from "@heroicons/vue/outline";
+import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
@@ -389,7 +379,8 @@ export default defineComponent({
                     'shift.removeUserByType',
                     {
                         usersPivotId: usersPivotId,
-                        userType: userType
+                        userType: userType,
+                        isShiftTab: true
                     }
                 ),
                 {

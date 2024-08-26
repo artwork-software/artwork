@@ -1965,5 +1965,9 @@
     "contracts": "Contracts",
     "Module visibility": "Module visibility",
     "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users",
-    "Budget Informations": "Budget Informations"
+    "Budget Informations": "Budget Informations",
+    "Sort by room": "Sort by room",
+    "Sort by appointment type": "Sort by appointment type",
+    "Sort by day": "Sort by day",
+    "Reset sorting": "Reset sorting"
 }

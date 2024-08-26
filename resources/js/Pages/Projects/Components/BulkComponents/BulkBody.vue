@@ -10,28 +10,28 @@
                 <MenuItem v-slot="{ active }">
                     <div @click="updateSort(1)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                        Nach Räumen sortieren
+                        {{ $t('Sort by room') }}
                         <IconCheck class="w-5 h-5" v-if="currentSort === 1" />
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="updateSort(2)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                        Nach Terminart sortieren
+                        {{ $t('Sort by appointment type') }}
                         <IconCheck class="w-5 h-5" v-if="currentSort === 2" />
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="updateSort(3)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                        Nach Tag sortieren
+                        {{ $t('Sort by day') }}
                         <IconCheck class="w-5 h-5" v-if="currentSort === 3" />
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
                     <div @click="updateSort(0)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                        Sortierung zurücksetzen
+                        {{ $t('Reset sorting') }}
                     </div>
                 </MenuItem>
             </BaseMenu>
@@ -41,15 +41,16 @@
         <div :class="isInModal ? 'min-h-96 max-h-96 overflow-y-scroll' : ''">
             <div  v-if="events.length > 0" v-for="(event, index) in events" class="mb-4">
                 <BulkSingleEvent
+                    :can-edit-component="this.canEditComponent"
                     :rooms="rooms"
                     :event_types="eventTypes"
                     :time-array="timeArray"
                     :event="event"
                     :copy-types="copyTypes"
                     :index="index"
+                    :is-in-modal="isInModal"
                     @delete-current-event="deleteCurrentEvent"
                     @create-copy-by-event-with-data="createCopyByEventWithData"
-                    :is-in-modal="isInModal"
                 />
             </div>
             <div v-else class="flex items-center h-24">
@@ -87,6 +88,7 @@ import {router} from "@inertiajs/vue3";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import {useTranslation} from "@/Composeables/Translation.js";
 
 const props = defineProps({
     project: {
@@ -110,8 +112,14 @@ const props = defineProps({
         type: Object,
         required: false,
         default: () => []
+    },
+    canEditComponent: {
+        type: Boolean,
+        required: true
     }
 })
+
+const $t = useTranslation();
 
 const timeArray = ref(!props.isInModal);
 const invalidEvents = ref([]);
@@ -402,7 +410,3 @@ const updateSort = (type) => {
     isLoading.value = false;
 }
 </script>
-
-<style scoped>
-
-</style>

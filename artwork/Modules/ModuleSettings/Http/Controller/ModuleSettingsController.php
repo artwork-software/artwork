@@ -9,6 +9,7 @@ use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
+use Illuminate\Translation\Translator;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -17,7 +18,8 @@ class ModuleSettingsController extends Controller
     public function __construct(
         private readonly ModuleSettingsService $moduleSettingsService,
         private readonly Redirector $redirector,
-        private readonly ResponseFactory $responseFactory
+        private readonly ResponseFactory $responseFactory,
+        private readonly Translator $translator
     ) {
     }
 
@@ -50,7 +52,7 @@ class ModuleSettingsController extends Controller
 
         return $this->redirector->back()->with(
             'success',
-            __('flash-messages.module-settings.success.update')
+            $this->translator->get('flash-messages.module-settings.success.update')
         );
     }
 }

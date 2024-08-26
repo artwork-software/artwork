@@ -1964,5 +1964,6 @@
     "users": "Benutzer",
     "contracts": "Verträge",
     "Module visibility": "Modul-Sichtbarkeiten",
-    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Hier kannst du für jeden Menüpunkt steuern ob er nur von Admins gesehen werden kann oder auch von anderen Benutzern"
+    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Hier kannst du für jeden Menüpunkt steuern ob er nur von Admins gesehen werden kann oder auch von anderen Benutzern",
+    "Budget Informations": "Budget-Informationen"
 }

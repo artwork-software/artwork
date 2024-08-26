@@ -7,7 +7,7 @@ export default {
     name: "TextArea",
     components: {TextareaComponent},
     mixins: [Permissions],
-    props: ['data', 'projectId', 'inSidebar', 'canEditComponent'],
+    props: ['data', 'projectId', 'inSidebar', 'canEditComponent', 'projectWriteIds', 'project', 'projectManagerIds'],
     data() {
         return {
             textData: {

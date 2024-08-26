@@ -1964,5 +1964,6 @@
     "users": "Users",
     "contracts": "Contracts",
     "Module visibility": "Module visibility",
-    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users"
+    "Here you can control for each menu item whether it can only be seen by admins or also by other users": "Here you can control for each menu item whether it can only be seen by admins or also by other users",
+    "Budget Informations": "Budget Informations"
 }

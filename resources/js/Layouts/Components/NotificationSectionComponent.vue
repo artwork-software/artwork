@@ -21,7 +21,9 @@
                          aria-hidden="true"/>{{$t('Archive all')}}
                 </div>
             </div>
-            <div v-if="showSection" @mouseover="notification.hovered = true" @mouseleave="notification.hovered = false"
+            <div v-if="showSection"
+                 @mouseover="notification.hovered = true"
+                 @mouseleave="notification.hovered = false"
                  :class="index !== 0 && showSection ? 'border-t-2 mb-2 mt-3' : ''"
                  class=""
                  v-for="(notification,index) in notifications">
@@ -44,7 +46,7 @@
                  class="ml-12 my-6 linkText cursor-pointer">
                 {{ $t('View old notifications')}}
             </div>
-            <div class="flex justify-between items-center w-full ml-12 mt-8 xsDark" v-if="showReadSection">
+            <div class="flex justify-between items-center w-full mt-8 xsDark border-t-2 pt-4 pl-4 pr-4" v-if="showReadSection">
                 <div :class="!readNotifications ? 'mb-12' : ''" class="flex items-center">
                     <img src="/Svgs/IconSvgs/icon_archive_black.svg"
                          alt="Archive icon black"
@@ -52,7 +54,7 @@
                          aria-hidden="true"/>
                     {{$t('Archive')}}
                 </div>
-                <div @click="showReadSection = false" v-if="showReadSection" class="mr-12 linkText cursor-pointer">
+                <div @click="showReadSection = false" v-if="showReadSection" class="linkText cursor-pointer">
                     {{$t('Close archive')}}
                 </div>
             </div>
@@ -172,10 +174,6 @@ export default  {
             answerRequestForm: useForm({
                 accepted: false,
             }),
-            setOnReadForm: this.$inertia.form({
-                _method: 'PATCH',
-                notificationId: null
-            }),
             setOnReadAll: useForm({
                 notificationIds: [],
             })
@@ -236,12 +234,6 @@ export default  {
             this.eventToDelete = event;
             this.notificationToDelete = notification;
             this.deleteComponentVisible = true;
-        },
-        setOnRead(notificationId) {
-            this.setOnReadForm.notificationId = notificationId;
-            this.setOnReadForm.patch(route('notifications.setReadAt'), {
-                preserveScroll: true,
-            });
         },
         setAllOnRead() {
             // filter all notifications that icon is not blue

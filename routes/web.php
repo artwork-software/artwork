@@ -530,7 +530,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
-    Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
+    Route::patch('/notifications', [NotificationController::class, 'setReadAt'])->name('notifications.setReadAt');
     Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
         ->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
@@ -1237,7 +1237,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
-            Route::get('index', [ProjectTabController::class, 'index'])->name('tab.index');
+            Route::get('index', [ProjectTabController::class, 'index'])
+                ->name('tab.index')
+                ->middleware('role:artwork admin');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -1276,7 +1278,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'component'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
-                ->name('component.index');
+                ->name('component.index')
+                ->middleware('role:artwork admin');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])
@@ -1360,10 +1363,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('user.calendar.abo.update');
     });
 
-    Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::resource('project-roles', ProjectRoleController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-    });
+    Route::resource('project-roles', ProjectRoleController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:artwork admin');
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {

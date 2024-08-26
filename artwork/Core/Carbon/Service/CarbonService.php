@@ -10,6 +10,11 @@ class CarbonService
     {
     }
 
+    public function getNow(): Carbon
+    {
+        return $this->carbon->copy()->now();
+    }
+
     public function parseAndAddDay(string $date): Carbon
     {
         return $this->carbon->copy()->parse($date)->addDay();

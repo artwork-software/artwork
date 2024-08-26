@@ -37,6 +37,11 @@ abstract class BaseRepository
         );
     }
 
+    public function find(int|string $id): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification
+    {
+        return static::getNewModelQuery()->find($id);
+    }
+
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
     {
         $model->save();

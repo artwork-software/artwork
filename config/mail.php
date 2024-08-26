@@ -114,5 +114,6 @@ return [
         ],
     ],
 
-    'system_mail' => env('SYSTEM_MAIL', 'noreply@artwork.software')
+    'system_mail' => env('SYSTEM_MAIL', 'noreply@artwork.software'),
+    'fallback_page_title' => env('FALLBACK_PAGE_TITLE', 'Artwork')
 ];

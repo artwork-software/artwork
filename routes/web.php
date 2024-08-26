@@ -92,6 +92,7 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemContr
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
+use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -150,6 +151,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'initializeSageSpecificDay'
             ]
         )->name('tool.interfaces.sage.initializeSpecificDay');
+        Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
+            ->name('tool.module-settings.index');
+        Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
+            ->name('tool.module-settings.update');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {

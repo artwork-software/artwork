@@ -34,6 +34,8 @@ use Artwork\Modules\Genre\Models\Genre;
 use Artwork\Modules\Genre\Policies\GenrePolicy;
 use Artwork\Modules\Invitation\Models\Invitation;
 use Artwork\Modules\Invitation\Policies\InvitationPolicy;
+use Artwork\Modules\ModuleSettings\Http\Policies\ModuleSettingsPolicy;
+use Artwork\Modules\ModuleSettings\Models\ModuleSettings;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Policies\CommentPolicy;
@@ -80,7 +82,8 @@ class AuthServiceProvider extends ServiceProvider
         BudgetColumnSetting::class => BudgetColumnSettingPolicy::class,
         BudgetManagementAccount::class => BudgetManagementAccountPolicy::class,
         BudgetManagementCostUnit::class => BudgetManagementCostUnitPolicy::class,
-        Event::class => EventPolicy::class
+        Event::class => EventPolicy::class,
+        ModuleSettings::class => ModuleSettingsPolicy::class
     ];
 
     public function boot(): void

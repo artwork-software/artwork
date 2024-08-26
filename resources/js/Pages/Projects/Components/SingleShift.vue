@@ -25,7 +25,7 @@
                 </div>
 
                 <div>
-                    <BaseMenu dots-size="h-4 w-4">
+                    <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
                         <MenuItem v-slot="{ active }">
                             <div @click="editShift"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -79,7 +79,7 @@
                             :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(user.pivot.id, 0) :
@@ -103,7 +103,7 @@
                             class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(freelancer.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(freelancer.pivot.id, 1) :
@@ -127,7 +127,7 @@
                             class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(serviceProvider.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(serviceProvider.pivot.id, 2) :
@@ -197,6 +197,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "SingleShift",
@@ -220,7 +221,7 @@ export default defineComponent({
         MenuItem,
         MenuItems
     },
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions],
     props: [
         'shift',
         'crafts',

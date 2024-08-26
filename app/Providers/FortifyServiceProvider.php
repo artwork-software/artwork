@@ -10,6 +10,7 @@ use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Config\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\RateLimiter;
@@ -45,11 +46,16 @@ class FortifyServiceProvider extends ServiceProvider
             function (User $notifiable, string $token) {
                 /** @var GeneralSettings $settings */
                 $settings = $this->app->make(GeneralSettings::class);
+                $config = $this->app->make(Repository::class);
+                $fallbackSenderMail = $config->get('mail.system_mail');
+                $pageTitle = $settings->page_title !== '' ?
+                    $settings->page_title :
+                    $config->get('mail.fallback_page_title');
 
                 return (new MailMessage())
                     ->from(
-                        $settings->business_email !== '' ? $settings->business_email : 'noreply@artwork.software',
-                        'Artwork'
+                        $settings->business_email !== '' ? $settings->business_email : $fallbackSenderMail,
+                        $pageTitle
                     )
                     ->subject('Passwort zurücksetzen')
                     ->markdown(
@@ -59,7 +65,7 @@ class FortifyServiceProvider extends ServiceProvider
                             'page_title' => $settings->page_title !== '' ? $settings->page_title : 'Artwork',
                             'url' => sprintf(
                                 '%s/reset-password/%s?email=%s',
-                                config('app.url'),
+                                $config->get('app.url'),
                                 $token,
                                 $notifiable->email
                             )

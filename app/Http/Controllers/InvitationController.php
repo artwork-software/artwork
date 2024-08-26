@@ -12,6 +12,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Config\Repository;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
 {
-    public function __construct()
+    public function __construct(private readonly Repository $config)
     {
         $this->authorizeResource(Invitation::class);
     }
@@ -89,7 +90,13 @@ class InvitationController extends Controller
                     })
             );
 
-            Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
+            Mail::to($email)->send(new InvitationCreated(
+                $invitation,
+                $admin_user,
+                $token['plain'],
+                $this->config->get('mail.fallback_page_title'),
+                $this->config->get('mail.system_mail')
+            ));
         }
 
         return Redirect::route('users');
@@ -114,7 +121,13 @@ class InvitationController extends Controller
 
         if ($newMail !== $oldEmail) {
             $token = $this->createToken();
-            Mail::to($newMail)->send(new InvitationCreated($invitation, Auth::user(), $token['plain']));
+            Mail::to($newMail)->send(new InvitationCreated(
+                $invitation,
+                Auth::user(),
+                $token['plain'],
+                $this->config->get('mail.fallback_page_title'),
+                $this->config->get('mail.system_mail')
+            ));
             $invitation->update(['token' => $token['hash']]);
         }
 

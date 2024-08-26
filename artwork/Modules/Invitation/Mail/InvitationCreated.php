@@ -15,23 +15,30 @@ class InvitationCreated extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public Invitation $invitation, public Authenticatable $user, public string $token)
-    {
+    public function __construct(
+        public Invitation $invitation,
+        public Authenticatable $user,
+        public string $token,
+        public string $fallbackPageTitle,
+        public string $systemMail
+    ) {
     }
 
     public function build(): InvitationCreated
     {
         /** @var GeneralSettings $settings */
         $settings = app(GeneralSettings::class);
-        $pageTitle = $settings->page_title !== '' ? $settings->page_title : 'Artwork';
-        $email = $settings->invitation_email !== '' ? $settings->invitation_email : User::query()->find(1)?->email;
+        $senderAddress = $settings->invitation_email !== '' ?
+            $settings->invitation_email :
+            $this->systemMail;
+        $pageTitle = $settings->page_title !== '' ? $settings->page_title : $this->fallbackPageTitle;
+        $email = $settings->invitation_email !== '' ?
+            $settings->invitation_email :
+            User::query()->find(1)?->getAttribute('email');
 
         return $this
-            ->from(
-                $settings->invitation_email !== '' ? $settings->invitation_email : 'noreply@artwork.software',
-                'Artwork'
-            )
-            ->replyTo($this->user->email)
+            ->from($senderAddress, $pageTitle)
+            ->replyTo($this->user->getAttribute('email'))
             ->subject("Einladung")
             ->markdown(
                 'emails.invitations',

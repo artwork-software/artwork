@@ -1919,8 +1919,6 @@ class ProjectController extends Controller
                                 $filterController,
                                 $this->projectTabService,
                                 $eventTypeService,
-                                $roomCategoryService,
-                                $roomAttributeService,
                                 $areaService,
                                 $projectService,
                                 $project

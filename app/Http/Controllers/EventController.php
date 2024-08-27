@@ -20,6 +20,7 @@ use Artwork\Modules\Event\Http\Requests\EventUpdateRequest;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventCollectorService;
 use Artwork\Modules\Event\Services\EventCollisionService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -89,6 +90,7 @@ class EventController extends Controller
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly RoomService $roomService,
         private readonly AuthManager $authManager,
+        private readonly EventCollectorService $eventCollectorService
     ) {
     }
 
@@ -106,7 +108,7 @@ class EventController extends Controller
             [
                 'roomData' => empty($desiredRoomIds) || empty($desiredDays) ?
                     [] :
-                    $this->roomService->collectEventsForRoomsOnSpecificDays(
+                    $this->eventCollectorService->collectEventsForRoomsOnSpecificDays(
                         $userService,
                         $desiredRoomIds,
                         $desiredDays,
@@ -169,8 +171,6 @@ class EventController extends Controller
                     $filterController,
                     $projectTabService,
                     $eventTypeService,
-                    $roomCategoryService,
-                    $roomAttributeService,
                     $areaService,
                     $projectService
                 ) :
@@ -214,13 +214,9 @@ class EventController extends Controller
                 $serviceProviderService,
                 $roomService,
                 $craftService,
-                $eventTypeService,
                 $filterService,
                 $shiftFilterController,
                 $shiftQualificationService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService,
                 $dayServicesService,
                 $userService->getAuthUser()
             )
@@ -237,7 +233,7 @@ class EventController extends Controller
         UserService $userService
     ): array {
         return [
-            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
+            'roomData' => $this->eventCollectorService->collectEventsForRoomsShiftOnSpecificDays(
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),

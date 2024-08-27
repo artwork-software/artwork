@@ -113,7 +113,7 @@ class TemporaryChangeTest extends TestCase
 
         $table = (new Change())->getTable();
 
-        $this->assertDatabaseMissing($table, [
+        $this->assertDatabaseHas($table, [
             'model_type' => Room::class,
             'model_id' => $newRoom->id,
             'change_type' => 'updated',

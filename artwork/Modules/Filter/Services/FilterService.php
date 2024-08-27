@@ -2,39 +2,35 @@
 
 namespace Artwork\Modules\Filter\Services;
 
-use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Repositories\FilterRepository;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Area\Repositories\AreaRepository;
+use Artwork\Modules\EventType\Repositories\EventTypeRepository;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\RoomAttribute\Repositories\RoomAttributeRepository;
+use Artwork\Modules\RoomCategory\Repositories\RoomCategoryRepository;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 
-readonly class FilterService
+class FilterService
 {
-    public function __construct(private FilterRepository $filterRepository)
-    {
+    public function __construct(
+        private readonly RoomCategoryRepository $roomCategoryRepository,
+        private readonly RoomAttributeRepository $roomAttributeRepository,
+        private readonly EventTypeRepository $eventTypeRepository,
+        private readonly AreaRepository $areaRepository,
+        private readonly RoomRepository $roomRepository
+    ) {
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function getCalendarFilterDefinitions(
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
-        RoomService $roomService
-    ): array {
+    public function getCalendarFilterDefinitions(): array
+    {
         return [
-            'roomCategories' =>  $this->map($roomCategoryService->getAll()),
-            'roomAttributes' => $this->map($roomAttributeService->getAll()),
-            'eventTypes' => $this->map($eventTypeService->getAll()),
-            'areas' => $this->map($areaService->getAll()),
-            'rooms' => $roomService
-                ->getAllWithoutTrashed()
+            'roomCategories' =>  $this->map($this->roomCategoryRepository->getAll()),
+            'roomAttributes' => $this->map($this->roomAttributeRepository->getAll()),
+            'eventTypes' => $this->map($this->eventTypeRepository->getAll()),
+            'areas' => $this->map($this->areaRepository->getAll()),
+            'rooms' => $this->roomRepository
+                ->allWithoutTrashed()
                 ->map(fn(Room $room) => [
                     'id' => $room->getAttribute('id'),
                     'name' => $room->getAttribute('name'),

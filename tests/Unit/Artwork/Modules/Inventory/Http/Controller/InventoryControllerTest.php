@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Artwork\Modules\Inventory\Http\Controller;
 
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
@@ -69,7 +70,7 @@ class InventoryControllerTest extends TestCase
             ->onlyMethods(['getFilterOfUser'])
             ->getMock();
 
-        $calendarServiceMock = $this->getMockBuilder(CalendarService::class)
+        $calendarDataServiceMock = $this->getMockBuilder(CalendarDataService::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -113,7 +114,7 @@ class InventoryControllerTest extends TestCase
             $craftServiceMock,
             $craftsInventoryColumnServiceMock,
             $inventoryManagementUserFilterServiceMock,
-            $calendarServiceMock,
+            $calendarDataServiceMock,
             $craftInventoryItemEventServicesMock,
             $responseFactoryMock
         );

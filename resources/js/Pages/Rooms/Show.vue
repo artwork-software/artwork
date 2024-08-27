@@ -389,10 +389,6 @@
         />
     </BaseSidenav>
 
-
-    <pre>
-        {{ available_categories }}
-    </pre>
     <!-- Room History Modal-->
     <room-history-component
         v-if="showRoomHistory"

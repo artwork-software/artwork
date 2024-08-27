@@ -391,15 +391,15 @@ const updateSort = (type) => {
     currentSort.value = type;
     if (currentSort.value === 1) {
         events.sort((a, b) => {
-            return a.room.name.localeCompare(b.room.name);
+            return a.room.name.localeCompare(b.room.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
         });
     } else if (currentSort.value === 2) {
         events.sort((a, b) => {
-            return a.type.name.localeCompare(b.type.name);
+            return a.type.name.localeCompare(b.type.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
         });
     } else if (currentSort.value === 3) {
         events.sort((a, b) => {
-            return a.day.localeCompare(b.day);
+            return a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
         });
     } else {
         events.sort((a, b) => {

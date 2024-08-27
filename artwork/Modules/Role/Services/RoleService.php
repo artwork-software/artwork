@@ -4,6 +4,8 @@ namespace Artwork\Modules\Role\Services;
 
 use Artwork\Modules\Role\Models\Role;
 use Artwork\Modules\Role\Repositories\RoleRepository;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 
 readonly class RoleService
@@ -41,5 +43,15 @@ readonly class RoleService
     public function getTableFields(): array
     {
         return DB::select('DESCRIBE `roles`');
+    }
+
+    public function getAll(): Collection
+    {
+        return $this->roleRepository->getAll();
+    }
+
+    public function getAllRoleNames(): SupportCollection
+    {
+        return $this->getAll()->pluck('name');
     }
 }

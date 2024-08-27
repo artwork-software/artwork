@@ -6,6 +6,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -16,6 +17,7 @@ use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
+use Artwork\Modules\Event\Repositories\FindsEventsWithoutRoom;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
@@ -56,10 +58,14 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
-readonly class EventService
+class EventService
 {
+    use FindsEventsWithoutRoom;
+
     public function __construct(
-        private EventRepository $eventRepository
+        private readonly EventRepository $eventRepository,
+        private readonly CalendarDataService $calendarDataService,
+        private readonly EventCollectorService $eventCollectorService
     ) {
     }
 
@@ -641,13 +647,9 @@ readonly class EventService
         ServiceProviderService $serviceProviderService,
         RoomService $roomService,
         CraftService $craftService,
-        EventTypeService $eventTypeService,
         FilterService $filterService,
         ShiftFilterController $shiftFilterController,
         ShiftQualificationService $shiftQualificationService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
         DayServicesService $dayServicesService,
         User $user
     ): ShiftPlanDto {
@@ -686,7 +688,7 @@ readonly class EventService
             ->setHistory($this->getEventShiftsHistoryChanges($events))
             ->setCrafts($craftService->getAll())
             ->setShiftPlan(
-                $roomService->collectEventsForRoomsShift(
+                $this->eventCollectorService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
                     $userService->getAuthUser()->getAttribute('shift_calendar_filter')
@@ -695,13 +697,7 @@ readonly class EventService
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
             ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
-                )
+                $filterService->getCalendarFilterDefinitions()
             )
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
@@ -764,8 +760,6 @@ readonly class EventService
         FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
         ?Project $project = null
@@ -833,13 +827,7 @@ readonly class EventService
                 )
             )
             ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
-                )
+                $filterService->getCalendarFilterDefinitions()
             )
             ->setAreas($areaService->getAll())
             ->setPersonalFilters($filterController->index())
@@ -854,15 +842,10 @@ readonly class EventService
      * @throws Throwable
      */
     public function createEventManagementDto(
-        CalendarService $calendarService,
         RoomService $roomService,
         UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
         ?Project $project = null
@@ -884,17 +867,9 @@ readonly class EventService
                     $today->endOfDay()
             ];
 
-        $showCalendar = $calendarService->createCalendarData(
+        $showCalendar = $this->calendarDataService->createCalendarData(
             $startDate,
             $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
             $project,
             $userCalendarFilter
         );
@@ -1025,10 +1000,6 @@ readonly class EventService
         return $this->eventRepository->findById($eventId);
     }
 
-    public function getEventsWithoutRoom(int|Project|null $project = null, array|null $with = null): Collection
-    {
-        return $this->eventRepository->getEventsWithoutRoom($project, $with);
-    }
 
     /**
      * @param Carbon $day

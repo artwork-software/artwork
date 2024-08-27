@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -33,16 +34,10 @@ class ExportPDFController extends Controller
      */
     public function createPDF(
         Request $request,
+        CalendarDataService $calendarDataService,
         ProjectService $projectService,
-        CalendarService $calendarService,
         RoomService $roomService,
         UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
         FilesystemManager $filesystemManager,
         InertiaResponseFactory $inertiaResponseFactory,
         UrlGenerator $urlGenerator,
@@ -51,7 +46,7 @@ class ExportPDFController extends Controller
     ): Response {
         $projectId = $request->get('project');
 
-        $showCalendar = $calendarService->createCalendarData(
+        $showCalendar = $calendarDataService->createCalendarData(
             startDate: $projectId && !$request->get('start') ?
                 $carbon->create($projectService->getFirstEventInProject($projectId)
                     ->getAttribute('start_time'))->startOfDay() :
@@ -61,14 +56,6 @@ class ExportPDFController extends Controller
                     $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
                 )->endOfDay() :
                 $carbon->parse($request->get('end')),
-            userService: $userService,
-            filterService: $filterService,
-            filterController: $filterController,
-            roomService: $roomService,
-            roomCategoryService: $roomCategoryService,
-            roomAttributeService: $roomAttributeService,
-            eventTypeService: $eventTypeService,
-            areaService: $areaService,
             project: $projectId ? $projectService->findById($projectId) : null,
             calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter')
         );

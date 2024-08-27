@@ -28,9 +28,9 @@ use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
-readonly class ProjectService
+class ProjectService
 {
-    public function __construct(private ProjectRepository $projectRepository)
+    public function __construct(private readonly ProjectRepository $projectRepository)
     {
     }
 

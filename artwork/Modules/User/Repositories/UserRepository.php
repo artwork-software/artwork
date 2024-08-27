@@ -2,16 +2,35 @@
 
 namespace Artwork\Modules\User\Repositories;
 
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Notifications\DatabaseNotification;
 
 class UserRepository extends BaseRepository
 {
+    public function __construct(private readonly User $user)
+    {
+    }
+
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
+    {
+        return $this->user->newInstance();
+    }
+
+    public function getNewModelQuery(): BaseBuilder|Builder
+    {
+        return $this->user->newModelQuery();
+    }
+
     /**
      * @return Collection
      */
@@ -136,5 +155,12 @@ class UserRepository extends BaseRepository
             ->whereJsonContains("data->type", $notificationConstValue)
             ->where("sent_in_summary", false)
             ->get();
+    }
+
+    public function syncDepartments(User $user, array $departmentIds): User
+    {
+        $user->departments()->sync($departmentIds);
+
+        return $user;
     }
 }

@@ -15,7 +15,7 @@ use Throwable;
 
 abstract class BaseRepository
 {
-    public function getNewModelInstance(): Model|Pivot|DatabaseNotification
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
     {
         throw new BadMethodCallException(
             'Implement in derived repository. Copy already derived functions and adapt.'

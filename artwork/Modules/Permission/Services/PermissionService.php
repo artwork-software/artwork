@@ -4,6 +4,8 @@ namespace Artwork\Modules\Permission\Services;
 
 use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\Permission\Repositories\PermissionRepository;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 
 readonly class PermissionService
@@ -30,7 +32,10 @@ readonly class PermissionService
 
     public function findByName(string $name): Permission|null
     {
-        return $this->permissionRepository->getByName($name);
+        /** @var Permission $permission */
+        $permission = $this->permissionRepository->getByName($name);
+
+        return $permission;
     }
 
     /**
@@ -39,5 +44,15 @@ readonly class PermissionService
     public function getTableFields(): array
     {
         return DB::select('DESCRIBE `permissions`');
+    }
+
+    public function getAll(): Collection
+    {
+        return $this->permissionRepository->getAll();
+    }
+
+    public function getAllPermissionNames(): SupportCollection
+    {
+        return $this->getAll()->pluck('name');
     }
 }

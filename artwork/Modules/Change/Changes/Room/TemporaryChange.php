@@ -22,6 +22,7 @@ readonly class TemporaryChange implements RoomChange
             $this->temporaryTimeDeleted($room);
             return;
         }
+
         if ($room->temporary && !$oldRoom->temporary) {
             $this->temporaryTimeDeleted($room);
             return;

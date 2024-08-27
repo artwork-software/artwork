@@ -10,32 +10,22 @@
                 </div>
             </div>
         </div>
-
         <div>
             <BulkBody
                 :rooms="rooms"
                 :event-types="event_types"
                 :project="project"
-                @closed="$emit('closed')"
+                :can-edit-component="true"
                 is-in-modal
+                @closed="$emit('closed')"
             />
         </div>
     </BaseModal>
 </template>
 
 <script setup>
-
 import BaseModal from "@/Components/Modals/BaseModal.vue";
-import {reactive, ref, watch} from "vue";
-import {IconCheck, IconTrash, IconChevronDown, IconCirclePlus, IconCopy, IconPlus, IconCircleCheckFilled, IconX} from "@tabler/icons-vue";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
-import Input from "@/Layouts/Components/InputComponent.vue";
-import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
-import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
-
-
 
 const props = defineProps({
     project: {
@@ -50,11 +40,5 @@ const props = defineProps({
         type: Object,
         required: true
     }
-})
-
-
+});
 </script>
-
-<style scoped>
-
-</style>

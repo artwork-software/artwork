@@ -43,10 +43,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Throwable;
 
-readonly class RoomService
+class RoomService
 {
     public function __construct(
-        private RoomRepository $roomRepository,
+        private readonly RoomRepository $roomRepository,
     ) {
     }
 
@@ -447,7 +447,6 @@ readonly class RoomService
      * @return array<string, array<int, array<int, Event>>>
      */
     public function collectEventsForRoomsShiftOnSpecificDays(
-        RoomService $roomService,
         UserService $userService,
         array $desiredRooms,
         array $desiredDays,
@@ -462,7 +461,7 @@ readonly class RoomService
                 $room = $this->roomRepository->findOrFail($roomId);
                 foreach (
                     array_filter(
-                        $roomService->collectEventsForRoomShift(
+                        $this->collectEventsForRoomShift(
                             $room,
                             $calendarPeriod,
                             $userShiftCalendarFilter,

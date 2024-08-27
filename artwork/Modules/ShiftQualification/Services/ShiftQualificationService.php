@@ -9,9 +9,9 @@ use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
-readonly class ShiftQualificationService
+class ShiftQualificationService
 {
-    public function __construct(private ShiftQualificationRepository $shiftQualificationRepository)
+    public function __construct(private readonly ShiftQualificationRepository $shiftQualificationRepository)
     {
     }
 

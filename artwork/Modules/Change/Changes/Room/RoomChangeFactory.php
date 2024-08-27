@@ -4,16 +4,16 @@ namespace Artwork\Modules\Change\Changes\Room;
 
 use Artwork\Modules\Change\Interfaces\RoomChange;
 
-readonly class RoomChangeFactory
+class RoomChangeFactory
 {
     public function __construct(
-        private MemberChange $memberChange,
-        private DescriptionChange $descriptionChange,
-        private AdjoiningRoomChange $adjoiningRoomChange,
-        private AttributeChange $attributeChange,
-        private NameChange $nameChange,
-        private CategoryChange $categoryChange,
-        private TemporaryChange $temporaryChange
+        private readonly MemberChange $memberChange,
+        private readonly DescriptionChange $descriptionChange,
+        private readonly AdjoiningRoomChange $adjoiningRoomChange,
+        private readonly AttributeChange $attributeChange,
+        private readonly NameChange $nameChange,
+        private readonly CategoryChange $categoryChange,
+        private readonly TemporaryChange $temporaryChange
     ) {
     }
 

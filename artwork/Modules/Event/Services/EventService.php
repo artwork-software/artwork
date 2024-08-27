@@ -56,10 +56,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
-readonly class EventService
+class EventService
 {
     public function __construct(
-        private EventRepository $eventRepository
+        private readonly EventRepository $eventRepository
     ) {
     }
 

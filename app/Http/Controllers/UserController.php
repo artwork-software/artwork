@@ -26,6 +26,7 @@ use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserDtoService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -166,7 +167,8 @@ class UserController extends Controller
         EventTypeService $eventTypeService,
         ProjectService $projectService,
         SessionManager $sessionManager,
-        Repository $config
+        Repository $config,
+        UserDtoService $userDtoService
     ): Response|ResponseFactory {
         $showVacationsAndAvailabilities = $request->get('showVacationsAndAvailabilities');
         $vacationMonth = $request->get('vacationMonth');
@@ -181,14 +183,8 @@ class UserController extends Controller
 
         return Inertia::render(
             'Users/UserShiftPlanPage',
-            $userService->getUserShiftPlanPageDto(
+            $userDtoService->getUserShiftPlanPageDto(
                 $user,
-                $calendarService,
-                $eventService,
-                $roomService,
-                $eventTypeService,
-                $projectService,
-                $shiftQualificationService,
                 $selectedPeriodDate,
                 $selectedDate,
                 $request->get('month'),

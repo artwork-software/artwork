@@ -238,7 +238,6 @@ class EventController extends Controller
     ): array {
         return [
             'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
-                $this->roomService,
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),

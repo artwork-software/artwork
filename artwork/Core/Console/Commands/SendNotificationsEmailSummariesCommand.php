@@ -113,7 +113,8 @@ class SendNotificationsEmailSummariesCommand extends Command
                     $notificationArray,
                     $user->getAttribute('first_name'),
                     $this->generalSettings->__get('page_title'),
-                    $this->config->get('mail.system_mail')
+                    $this->config->get('mail.system_mail'),
+                    $this->config->get('mail.fallback_page_title')
                 )
             );
 

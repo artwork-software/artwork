@@ -1,11 +1,11 @@
 <template>
-    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-secondary text-right">
+    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-calendarText text-right">
         <div :style="textStyle" class="mt-3 mr-2">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}
             </div>
             <div>
-                {{ zoom_factor >= 0.8 ? day.full_day : day.short_day }}
+                {{ zoom_factor >= 0.8 ? day.full_day_display : day.short_day }}
             </div>
             <div v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</div>
         </div>

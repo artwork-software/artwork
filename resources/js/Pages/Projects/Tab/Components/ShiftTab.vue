@@ -32,7 +32,7 @@
                         </div>
                     </div>
                     <div>
-                        <div ref="userWindowButton" @click="openUserWindow()">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" ref="userWindowButton" @click="openUserWindow()">
                             <IconUsers class="h-6 w-6"/>
                         </div>
                     </div>
@@ -214,6 +214,7 @@ export default defineComponent({
     props: [
         'loadedProjectInformation',
         'headerObject',
+        'canEditComponent'
     ],
     mixins: [Permissions, IconLib],
     components: {

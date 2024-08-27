@@ -1,6 +1,7 @@
 <script>
 import IconLib from "@/Mixins/IconLib.vue";
 import {useForm} from "@inertiajs/vue3";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: "ShiftNoteComponent",
@@ -14,7 +15,7 @@ export default {
             default: false
         }
     },
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions],
     computed: {
         cutDescription() {
             return this.shift.description?.length > 70 ? this.shift.description.substring(0, 70) + '...' : this.shift.description;
@@ -53,17 +54,19 @@ export default {
             }
         },
         openTextField(){
-            this.showTextField = true
-            this.$nextTick(() => {
-                this.$refs.descriptionField.focus()
-            })
+            if(this.$can('can plan shifts') || this.hasAdminRole()){
+                this.showTextField = true
+                this.$nextTick(() => {
+                    this.$refs.descriptionField.focus()
+                })
+            }
         }
     }
 }
 </script>
 
 <template>
-   <div class="my-2" @click="openTextField" v-if="!showTextField">
+   <div class="my-2" @click="openTextField" v-if="!showTextField && $can('can plan shifts') || hasAdminRole()">
        <div v-if="shift.description?.length === 0 || shift.description === null">
            <IconNote class="w-4 h-4 text-artwork-buttons-context" />
        </div>

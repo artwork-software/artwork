@@ -2,8 +2,13 @@
    <div>
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
            <div class="">
-               <Listbox as="div" class="relative" v-model="event.type" @update:model-value="updateEventInDatabase" id="type">
-                   <ListboxButton class="menu-button">
+               <Listbox v-model="event.type"
+                        @update:model-value="updateEventInDatabase"
+                        id="type"
+                        as="div"
+                        class="relative"
+                        :disabled="canEditComponent === false">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
                        <div class="flex items-center gap-x-2">
                            <div>
                                <div class="block w-5 h-5 rounded-full"
@@ -15,9 +20,9 @@
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                    </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                      v-for="eventType in event_types"
+                                      v-for="eventType in sortedEventTypes"
                                       :key="eventType.name"
                                       :value="eventType"
                                       v-slot="{ active, selected }">
@@ -36,25 +41,31 @@
            </div>
            <div>
                <input
+                   v-model="event.name"
                    type="text"
                    :id="'name-' + index"
-                   v-model="event.name"
                    class="input h-12"
                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
                    placeholder="Name"
                    @focusout="updateEventInDatabase"
+                   :disabled="canEditComponent === false"
                />
            </div>
            <div>
-               <Listbox as="div" class="relative" v-model="event.room" @update:model-value="updateEventInDatabase" id="room">
-                   <ListboxButton class="menu-button">
+               <Listbox id="room"
+                        as="div"
+                        class="relative"
+                        v-model="event.room"
+                        @update:model-value="updateEventInDatabase"
+                        :disabled="canEditComponent === false">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
                        <div class="flex-grow flex text-left xsDark">
                            {{ event.room?.name }}
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                    </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                       <ListboxOption v-for="room in rooms"
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                       <ListboxOption v-for="room in sortedRooms"
                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                       :key="room.name"
                                       :value="room"
@@ -70,35 +81,38 @@
            </div>
            <div>
                <input
+                   v-model="event.day"
                    type="date"
                    :id="'day-' + index"
-                   v-model="event.day"
                    placeholder="Tag"
                    class="input h-12"
+                   :disabled="canEditComponent === false"
                    @focusout="updateEventInDatabase"
                />
            </div>
            <div class="col-span-2">
                <div class="flex items-center" v-if="timeArray">
                    <input
+                       v-model="event.start_time"
                        type="time"
                        :id="'start-time-' + index"
-                       v-model="event.start_time"
                        placeholder="Tag"
                        class="input h-12 !rounded-r-none"
+                       :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                    <input
+                       v-model="event.end_time"
                        type="time"
                        :id="'end_time-' + index"
-                       v-model="event.end_time"
                        placeholder="Tag"
                        class="input h-12 !rounded-l-none border-l-0"
+                       :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                </div>
            </div>
-           <div class="flex items-center">
+           <div v-if="canEditComponent" class="flex items-center">
                <div class="flex items-center gap-x-3">
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
@@ -165,13 +179,13 @@ import {
     IconCopy,
     IconPlus,
     IconTrash,
-    IconX, IconClock24
+    IconX
 } from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import {watch} from "vue";
 import {router} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import {computed} from "vue";
 
 const props = defineProps({
     event: {
@@ -202,6 +216,10 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: false
+    },
+    canEditComponent: {
+        type: Boolean,
+        required: true
     }
 })
 
@@ -246,6 +264,14 @@ const updateEventInDatabase = () => {
     }
 }
 
+const sortedRooms = computed(() => {
+    return props.rooms.sort((a, b) => a.name.localeCompare(b.name));
+})
+
+const sortedEventTypes = computed(() => {
+    return props.event_types.sort((a, b) => a.name.localeCompare(b.name));
+})
+
 const removeTime = () => {
     props.event.start_time = null;
     props.event.end_time = null;
@@ -254,6 +280,3 @@ const removeTime = () => {
 
 </script>
 
-<style scoped>
-
-</style>

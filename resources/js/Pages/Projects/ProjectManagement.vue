@@ -9,7 +9,7 @@
                                 {{ $t('Projects') }}
                             </p>
                         </div>
-                        <div class="flex relative items-center gap-x-3.5" v-if="$can('create and edit own project') || $role('artwork admin')">
+                        <div class="flex relative items-center gap-x-3.5">
                             <div class="flex items-center">
                                 <div v-if="!showSearchbar" @click="openSearchbar"
                                      class="cursor-pointer inset-y-0">
@@ -85,7 +85,8 @@
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <PlusButton @click="openCreateProjectModal" />
+                            <PlusButton v-if="$can('create and edit own project') || $role('artwork admin')"
+                                        @click="openCreateProjectModal"/>
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
@@ -204,24 +205,17 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    DotsVerticalIcon,
     ChevronDownIcon,
-    InformationCircleIcon,
-    XIcon,
-    PencilAltIcon,
-    TrashIcon,
+    DocumentReportIcon,
+    DotsVerticalIcon,
     DuplicateIcon,
-    DocumentReportIcon
+    InformationCircleIcon,
+    PencilAltIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon
 } from '@heroicons/vue/outline'
-import {
-    ChevronUpIcon,
-    PlusSmIcon,
-    CheckIcon,
-    SelectorIcon,
-    XCircleIcon,
-    ChevronRightIcon
-} from '@heroicons/vue/solid'
-import {SearchIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {
     Disclosure,
     DisclosureButton,
@@ -231,10 +225,6 @@ import {
     ListboxLabel,
     ListboxOption,
     ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
     Switch,
     SwitchGroup,
     SwitchLabel

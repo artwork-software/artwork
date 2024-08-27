@@ -41,6 +41,12 @@ export default defineComponent({
                     href: route('tool.interfaces'),
                     current: route().current('tool.interfaces'),
                     hasPermission: this.$can('change tool settings')
+                },
+                {
+                    name: this.$t('Module visibility'),
+                    href: route('tool.module-settings.index'),
+                    current: route().current('tool.module-settings.index'),
+                    hasPermission: this.$can('change tool settings')
                 }
             ]
         }

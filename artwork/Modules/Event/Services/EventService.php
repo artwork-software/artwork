@@ -1040,7 +1040,6 @@ class EventService
             $day,
             $event['start_time'] ?? null,
             $event['end_time'] ?? null
-
         );
 
         $project->events()->create([

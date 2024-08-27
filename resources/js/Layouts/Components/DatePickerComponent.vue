@@ -162,6 +162,16 @@ export default {
 
                         return [next90DaysStart, next90DaysEnd];
                     }
+                },
+                {
+                    label: this.$t('Next 12 months'),
+                    atClick: () => {
+                        const today = new Date();
+                        const next12MonthsStart = new Date(today.setDate(today.getDate() + 1));
+                        const next12MonthsEnd = new Date(today.setDate(today.getDate() + 364));
+
+                        return [next12MonthsStart, next12MonthsEnd];
+                    }
                 }
             ]
         }

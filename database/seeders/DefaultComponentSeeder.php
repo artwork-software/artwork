@@ -172,7 +172,7 @@ class DefaultComponentSeeder extends Seeder
                 'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ],
             [
-                'name' => 'Budgetinformationen',
+                'name' => 'Budget Informations',
                 'type' => ProjectTabComponentEnum::BUDGET_INFORMATIONS,
                 'data' => [],
                 'special' => true,

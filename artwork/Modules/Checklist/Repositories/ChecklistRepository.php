@@ -91,11 +91,8 @@ class ChecklistRepository extends BaseRepository
             });
     }
 
-    /**
-     * Sortieren Sie die Checklisten nach dem Projektzeitraum.
-     */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
     private function sortChecklistsByProjectTime($checklists, $direction = 'asc')
     {
         return $checklists->sort(function ($a, $b) use ($direction) {
@@ -162,11 +159,11 @@ class ChecklistRepository extends BaseRepository
     }
 
     /**
-     * Formatieren Sie die Checkliste mit sortierten Aufgaben und zugehörigen Projektdetails.
+     * @return array<string, mixed>
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
-    private function formatChecklist(Checklist $checklist, $sortedTasks, ProjectTabService $projectTabService)
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
+    private function formatChecklist(Checklist $checklist, $sortedTasks, ProjectTabService $projectTabService): array
     {
         return [
             'id' => $checklist->id,

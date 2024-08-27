@@ -7,8 +7,8 @@
                         id="type"
                         as="div"
                         class="relative"
-                        :disabled="this.canEditComponent === false">
-                   <ListboxButton :class="[this.canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                        :disabled="canEditComponent === false">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
                        <div class="flex items-center gap-x-2">
                            <div>
                                <div class="block w-5 h-5 rounded-full"
@@ -48,7 +48,7 @@
                    :class="event.type?.individual_name && !event.name ? 'border-red-500' : ''"
                    placeholder="Name"
                    @focusout="updateEventInDatabase"
-                   :disabled="this.canEditComponent === false"
+                   :disabled="canEditComponent === false"
                />
            </div>
            <div>
@@ -57,8 +57,8 @@
                         class="relative"
                         v-model="event.room"
                         @update:model-value="updateEventInDatabase"
-                        :disabled="this.canEditComponent === false">
-                   <ListboxButton :class="[this.canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                        :disabled="canEditComponent === false">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
                        <div class="flex-grow flex text-left xsDark">
                            {{ event.room?.name }}
                        </div>
@@ -86,7 +86,7 @@
                    :id="'day-' + index"
                    placeholder="Tag"
                    class="input h-12"
-                   :disabled="this.canEditComponent === false"
+                   :disabled="canEditComponent === false"
                    @focusout="updateEventInDatabase"
                />
            </div>
@@ -98,7 +98,7 @@
                        :id="'start-time-' + index"
                        placeholder="Tag"
                        class="input h-12 !rounded-r-none"
-                       :disabled="this.canEditComponent === false"
+                       :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                    <input
@@ -107,12 +107,12 @@
                        :id="'end_time-' + index"
                        placeholder="Tag"
                        class="input h-12 !rounded-l-none border-l-0"
-                       :disabled="this.canEditComponent === false"
+                       :disabled="canEditComponent === false"
                        @focusout="updateEventInDatabase"
                    />
                </div>
            </div>
-           <div v-if="this.canEditComponent" class="flex items-center">
+           <div v-if="canEditComponent" class="flex items-center">
                <div class="flex items-center gap-x-3">
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
                    <IconCopy @click="event.copy = true" v-if="!event.copy"

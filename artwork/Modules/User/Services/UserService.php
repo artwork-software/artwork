@@ -6,28 +6,75 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
+use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\DTOs\UserShiftPlanPageDto;
+use Artwork\Modules\User\Events\UserUpdated;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Carbon\Carbon;
+use Illuminate\Broadcasting\BroadcastManager;
+use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Throwable;
 
 class UserService
 {
+    public function __construct(
+        private readonly UserRepository $userRepository,
+        private readonly NotificationSettingService $notificationSettingService,
+        private readonly StatefulGuard $statefulGuard,
+        private readonly BroadcastManager $broadcastManager
+    ) {
+    }
+
     /**
-     * @param UserRepository $userRepository
+     * @throws Throwable
      */
-    public function __construct(private readonly UserRepository $userRepository)
-    {
+    public function create(
+        array $attributes,
+        array $roles,
+        array $permissions,
+        array $departmentIds
+    ): User {
+        /** @var User $user */
+        $this->userRepository->saveOrFail(
+            ($user = $this->userRepository->getNewModelInstance())->fill($attributes)
+        );
+
+        foreach ($this->notificationSettingService->getNotificationEnumCases() as $notificationType) {
+            $this->notificationSettingService->create(
+                [
+                    'user_id' => $user->getAttribute('id'),
+                    'group_type' => $notificationType->groupType(),
+                    'type' => $notificationType->value,
+                    'title' => $notificationType->title(),
+                    'description' => $notificationType->description()
+                ]
+            );
+        }
+
+        $this->statefulGuard->login($user);
+
+        $this->broadcastManager->event(new UserUpdated())->toOthers();
+
+        $this->userRepository->syncDepartments($user, $departmentIds);
+
+        $user->assignRole(...$roles);
+        $user->givePermissionTo(...$permissions);
+        $user->calendar_settings()->create();
+        $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
+
+        return $user;
     }
 
     public function searchUsers(string $search): \Illuminate\Support\Collection

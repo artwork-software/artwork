@@ -21,14 +21,6 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[project ? 'ml-10' : '','flex items-center']"  v-if="!project">
-                    <div @click="showCalendarAboSettingModal = true"
-                         class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                        <IconCalendarStar
-                            class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
-                        {{ $t('Subscribe to calendar') }}
-                    </div>
-                </div>
             </div>
             <div class="flex items-center gap-x-2">
                 <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
@@ -36,25 +28,25 @@
                         <MultiEditSwitch :multi-edit="multiEdit" :room-mode="roomMode"
                                          @update:multi-edit="UpdateMultiEditEmits"/>
                         <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance"
-                                :class="[atAGlance ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                :class="[atAGlance ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span class="sr-only">Use setting</span>
                             <span
-                                :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                           <span
                               :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                               aria-hidden="true">
-                             <IconList stroke-width="1.5" class="w-5 h-5"/>
+                             <IconList stroke-width="1.5" class="w-4 h-4"/>
                           </span>
                           <span
                               :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                               aria-hidden="true">
-                              <IconList stroke-width="1.5" class="w-5 h-5"/>
+                              <IconList stroke-width="1.5" class="w-4 h-4"/>
                           </span>
                     </span>
                         </Switch>
                     </div>
                 </div>
-                <div class="flex items-center gap-x-4">
+                <div class="flex items-center gap-x-2">
                     <IconZoomIn @click="incrementZoomFactor" :disabled="zoom_factor <= 0.2" v-if="!atAGlance"
                                 class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
                     <IconZoomOut @click="decrementZoomFactor" :disabled="zoom_factor >= 1.4"
@@ -146,18 +138,26 @@
                             </MenuItems>
                         </transition>
                     </Menu>
+                    <div v-if="!project">
+                        <div @click="showCalendarAboSettingModal = true"
+                             class="flex items-center gap-x-1 text-sm group cursor-pointer">
+                            <IconCalendarStar
+                                class="h-7 w-7 text-artwork-buttons-context"/>
+                        </div>
+                    </div>
+
+                    <div @click="showPDFConfigModal = true">
+                        <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
+                    </div>
+
+                    <PlusButton @click="$emit('wantsToAddNewEvent');"/>
+                    <AddButtonSmall
+                        @click="createEventComponentIsVisible = true"
+                        :text="$t('New occupancy')"
+                        class="hidden"
+                    />
                 </div>
 
-                <div @click="showPDFConfigModal = true">
-                    <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
-                </div>
-
-                <PlusButton @click="$emit('wantsToAddNewEvent');"/>
-                <AddButtonSmall
-                    @click="createEventComponentIsVisible = true"
-                    :text="$t('New occupancy')"
-                    class="hidden"
-                />
             </div>
         </div>
 

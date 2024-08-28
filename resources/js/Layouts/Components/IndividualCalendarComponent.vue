@@ -45,9 +45,9 @@
                             :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
                             <th :style="{height: zoomFactor * 115 + 'px',width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}"
                                 :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
-                                class="text-secondary text-right pr-1">
+                                class="text-calendarText text-right pr-1">
                                 <div :style="textStyle" class="mt-3">
-                                    {{ zoomFactor >= 0.8 ? day.day_string : '' }} {{ zoomFactor >= 0.8 ? day.full_day : day.short_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                                    {{ zoomFactor >= 0.8 ? day.day_string : '' }} {{ day.short_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                 </div>
 
                             </th>

@@ -19,6 +19,7 @@ module.exports = {
                 success:'#1FC687',
                 error:'#FD6D73',
                 secondary:'#A7A6B1',
+                calendarText:'#333',
                 secondaryHover:'#FCFCFB',
                 darkInputBg:'rgba(252,252,251,0.15)',
                 darkInputText: '#D8D7DE',

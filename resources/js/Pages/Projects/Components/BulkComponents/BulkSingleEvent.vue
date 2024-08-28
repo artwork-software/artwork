@@ -20,9 +20,9 @@
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                    </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
                        <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
-                                      v-for="eventType in event_types"
+                                      v-for="eventType in sortedEventTypes"
                                       :key="eventType.name"
                                       :value="eventType"
                                       v-slot="{ active, selected }">
@@ -63,8 +63,8 @@
                        </div>
                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                    </ListboxButton>
-                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                       <ListboxOption v-for="room in rooms"
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                       <ListboxOption v-for="room in sortedRooms"
                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                       :key="room.name"
                                       :value="room"
@@ -235,6 +235,7 @@ import {router} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import {ref} from "vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import {computed} from "vue";
 
 const props = defineProps({
     event: {
@@ -322,6 +323,14 @@ const updateEventInDatabase = () => {
         })
     }
 }
+
+const sortedRooms = computed(() => {
+    return props.rooms.sort((a, b) => a.name.localeCompare(b.name));
+})
+
+const sortedEventTypes = computed(() => {
+    return props.event_types.sort((a, b) => a.name.localeCompare(b.name));
+})
 
 const removeTime = () => {
     props.event.start_time = null;

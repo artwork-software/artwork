@@ -3,9 +3,7 @@
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="filteredEvents?.length > 0"
-                >
-
+                 v-if="filteredEvents?.length > 0">
                 <IconAlertTriangle class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
         </div>
@@ -39,7 +37,6 @@
                     hide-view-selector
                     show-week-numbers
                     :hideTitleBar="currentView !== 'year'"
-
                     sticky-split-labels
                     :disable-views="['years']"
                     :events="displayedEvents"
@@ -53,8 +50,7 @@
                     @event-drag-create="openEventComponent($event)"
                     @event-focus="openEventComponent($event)"
                     @ready="initializeCalendar"
-                    @view-change="initializeCalendar($event)"
-                >
+                    @view-change="initializeCalendar($event)">
                     <template #title="{ title, view }" class="group">
                         <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                             {{ title }}
@@ -258,7 +254,6 @@
 </template>
 
 <script>
-
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";

@@ -186,7 +186,6 @@
                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                 </div>
             </div>
-            <div class="text-xs text-red-800 col-span-full" v-if="event.helpTextLength">{{ event.helpTextLength }}</div>
             <!-- Serien Termin -->
             <div v-if="event?.is_series" class="xsLight mt-2 col-span-full">{{ $t('Event is part of a repeat event') }}</div>
             <div v-if="event?.is_series" class="xsLight mb-2 col-span-full">{{ $t('Cycle: {0} to {1}', {0: event.selectedFrequencyName, 1: convertDateFormat(event.series.end_date) } )}}</div>
@@ -680,7 +679,6 @@ name: "SingleEventInEventsWithoutRoom",
 
             this.validateStartBeforeEndTime(this.event);
             this.checkCollisions(this.event);
-            this.checkEventTimeLength(this.event);
         },
         async validateStartBeforeEndTime(event) {
             event.error = null;
@@ -692,22 +690,6 @@ name: "SingleEventInEventsWithoutRoom",
                     .catch(error => event.error = error.response.data.errors);
             }
 
-        },
-        checkEventTimeLength(event) {
-            if (event.allDay) {
-                event.helpTextLength = '';
-                return;
-            }
-            // check if event min 30min
-            let startFull = new Date(event.startDate + ' ' + event.startTime);
-            let endFull = new Date(event.endDate + ' ' + event.endTime);
-
-            const minimumEnd = this.addMinutes(startFull, 30);
-            if (minimumEnd <= endFull) {
-                event.helpTextLength = '';
-            } else {
-                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
-            }
         },
         addMinutes(date, minutes) {
             date.setMinutes(date.getMinutes() + minutes);

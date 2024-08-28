@@ -64,8 +64,8 @@
                                             </div>
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ eventType.name }}
-                                                    </span>
+                                                {{ eventType.name }}
+                                            </span>
                                         </div>
                                         <span
                                             :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
@@ -78,7 +78,9 @@
                             </ListboxOptions>
                         </transition>
                     </Listbox>
-                    <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
+                    <p class="text-xs text-red-800"
+                       v-html="Array.isArray(error?.eventType) ? error.eventType.join('.<br> ') : error?.eventType">
+                    </p>
                 </div>
                 <div>
                     <div v-if="canEdit">
@@ -89,8 +91,10 @@
                             :disabled="!canEdit"
                         />
 
-                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">
-                            {{ error?.eventName?.join('. ') }}</p>
+                        <p v-if="selectedEventType?.individual_name"
+                           class="text-xs text-error"
+                            v-html="Array.isArray(error?.eventName) ? error.eventName.join('.<br> ') : error?.eventName">
+                        </p>
                     </div>
                     <div v-else class="flex w-1/2 ml-12 items-center">
                         {{ this.eventName }}
@@ -173,7 +177,8 @@
                             required
                         />
                     </div>
-                    <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
+                    <p class="text-xs text-error"
+                       v-html="Array.isArray(error?.start) ? error.start.join('.<br> ') : error?.start"/>
                 </div>
                 <div>
                     <div class="w-full flex">
@@ -195,14 +200,10 @@
                             required
                         />
                     </div>
-                    <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
+                    <p class="text-xs text-error"
+                       v-html="Array.isArray(error?.end) ? error.end.join('.<br> ') : error?.end"/>
                 </div>
 
-            </div>
-            <div>
-                <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">
-                    {{ helpTextLength }}
-                </div>
             </div>
             <div>
                 <div class="text-red-500 text-xs" v-show="helpTextLengthRoom.length > 0">
@@ -276,7 +277,7 @@
             </div>
             <div v-else-if="event?.is_series" class="xsLight mt-2">{{ $t('Event is part of a repeat event') }}</div>
             <div v-if="event?.is_series" class="xsLight mb-2">
-                {{ $t('Cycle: {0} to {1}', {0: selectedFrequency.name, 1: convertDateFormat(seriesEndDate)}) }}
+                {{ $t('Cycle: {0} to {1}', [selectedFrequency.name, convertDateFormat(seriesEndDate)]) }}
             </div>
             <!--    Room    -->
             <div class="pt-3 mb-4" v-if="canEdit">
@@ -306,7 +307,8 @@
                         </ListboxOption>
                     </ListboxOptions>
                 </Listbox>
-                <p class="text-xs text-red-800">{{ error?.roomId?.join('. ') }}</p>
+                <p class="text-xs text-error"
+                   v-html=" Array.isArray(error?.roomId) ? error.roomId.join('.<br> ') : error?.roomId"/>
             </div>
 
             <!--Gray Background Area -->
@@ -381,8 +383,10 @@
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
-                    <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
+                    <p class="text-xs text-error"
+                       v-html="Array.isArray(error?.projectId) ? error.projectId.join('.<br> ') : error?.projectId"/>
+                    <p class="text-xs text-error"
+                       v-html="Array.isArray(error?.projectName) ? error.projectName.join('.<br> ') : error?.projectName"/>
                 </div>
             </div>
 
@@ -610,7 +614,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
@@ -693,7 +697,6 @@ export default {
     data() {
         return {
             submit: true,
-            helpTextLength: '',
             startDate: null,
             startTime: null,
             endDate: null,
@@ -773,7 +776,8 @@ export default {
         'wantedRoomId',
         'roomCollisions',
         'showComments',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'usedInBulkComponent'
     ],
     emits: ['closed'],
     watch: {
@@ -872,7 +876,7 @@ export default {
                 if (frequency.id === this.event.series?.frequency_id) {
                     this.selectedFrequency = frequency;
                 }
-            })
+            });
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName};
             if (this.selectedProject.id) {
                 this.showProjectInfo = true;
@@ -1007,7 +1011,6 @@ export default {
 
             this.validateStartBeforeEndTime();
             this.checkCollisions();
-            this.checkEventTimeLength()
         },
         async validateStartBeforeEndTime() {
             this.error = null;
@@ -1017,18 +1020,6 @@ export default {
                 return await axios
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
-            }
-        },
-        checkEventTimeLength() {
-            // check if event min 30min
-            if (this.startFull && this.endFull) {
-                const date = new Date(this.startFull);
-                const minimumEnd = this.addMinutes(date, 30);
-                if (minimumEnd <= new Date(this.endFull)) {
-                    this.helpTextLength = '';
-                } else {
-                    this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
-                }
             }
         },
         addMinutes(date, minutes) {
@@ -1089,18 +1080,62 @@ export default {
                 this.isOption = true;
             }
 
-            if (!this.event?.id) {
-                return await axios
-                    .post('/events', this.eventData())
-                    .then(() => this.closeModal(true))
-                    .catch(error => this.error = error.response.data.errors);
+            if (this.usedInBulkComponent) {
+                if (!this.event?.id) {
+                    router.post(
+                        route('events.store'),
+                        this.eventData(),
+                        {
+                            preserveScroll: true,
+                            preserveState: (page) => {
+                                //if component exists in response the validation didn't fail and there is no need
+                                //to preserveState, if errors are provided from backend preserveState will be set to
+                                //false causing modal to stay opened
+                                return typeof(page?.component) === 'undefined';
+                            },
+                            onSuccess: () => {
+                                this.closeModal(true);
+                            },
+                            onError: (response) => {
+                                this.error = response;
+                            },
+                        }
+                    );
+                } else {
+                    router.put(
+                        route('events.update', {event: this.event.id}),
+                        this.eventData(),
+                        {
+                            preserveScroll: true,
+                            preserveState: (page) => {
+                                //if component exists in response the validation didn't fail and there is no need
+                                //to preserveState, if errors are provided from backend preserveState will be set to
+                                //false causing modal to stay opened
+                                return typeof(page?.component) === 'undefined';
+                            },
+                            onSuccess: () => {
+                                this.closeModal(true);
+                            },
+                            onError: (response) => {
+                                this.error = response;
+                            },
+                        }
+                    );
+                }
             } else {
-                return await axios
-                    .put('/events/' + this.event?.id, this.eventData())
-                    .then(() => {
-                        this.closeModal(true);
-                    })
-                    .catch(error => this.error = error.response.data.errors);
+                if (!this.event?.id) {
+                    return await axios
+                        .post('/events', this.eventData())
+                        .then(() => this.closeModal(true))
+                        .catch(error => this.error = error.response.data.errors);
+                } else {
+                    return await axios
+                        .put('/events/' + this.event?.id, this.eventData())
+                        .then(() => {
+                            this.closeModal(true);
+                        })
+                        .catch(error => this.error = error.response.data.errors);
+                }
             }
         },
         async singleSaveEvent() {
@@ -1186,6 +1221,7 @@ export default {
                 accept: this.accept,
                 optionAccept: this.optionAccept,
                 allDay: this.allDayEvent,
+                usedInBulkComponent: this.usedInBulkComponent
             };
         },
     },

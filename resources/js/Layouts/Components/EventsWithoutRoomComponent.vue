@@ -283,7 +283,6 @@ export default {
 
             this.validateStartBeforeEndTime(event);
             this.checkCollisions(event);
-            this.checkEventTimeLength(event);
         },
         async validateStartBeforeEndTime(event) {
             event.error = null;
@@ -295,22 +294,6 @@ export default {
                     .catch(error => event.error = error.response.data.errors);
             }
 
-        },
-        checkEventTimeLength(event) {
-            if (event.allDay) {
-                event.helpTextLength = '';
-                return;
-            }
-            // check if event min 30min
-            let startFull = new Date(event.startDate + ' ' + event.startTime);
-            let endFull = new Date(event.endDate + ' ' + event.endTime);
-
-            const minimumEnd = this.addMinutes(startFull, 30);
-            if (minimumEnd <= endFull) {
-                event.helpTextLength = '';
-            } else {
-                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
-            }
         },
         addMinutes(date, minutes) {
             date.setMinutes(date.getMinutes() + minutes);

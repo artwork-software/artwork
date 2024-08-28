@@ -155,8 +155,6 @@ class EventController extends Controller
         FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService
     ): Response {
@@ -175,17 +173,12 @@ class EventController extends Controller
                     $projectService
                 ) :
                 $eventService->createEventManagementDto(
-                    $calendarService,
                     $roomService,
                     $userService,
-                    $filterService,
-                    $filterController,
                     $projectTabService,
                     $eventTypeService,
-                    $roomCategoryService,
-                    $roomAttributeService,
                     $areaService,
-                    $projectService
+                    $projectService,
                 )
         );
     }

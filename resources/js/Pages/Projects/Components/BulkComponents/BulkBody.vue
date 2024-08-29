@@ -5,7 +5,9 @@
                 {{ $t('Data is currently loaded. Please wait') }}
             </div>
         </div>
-        <div class="flex items-center justify-end" v-if="!isInModal">
+        <div class="flex items-center justify-end gap-x-2" v-if="!isInModal">
+            <IconCalendarMonth class="w-6 h-6 cursor-pointer"
+                               @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                 <MenuItem v-slot="{ active }">
                     <div @click="updateSort(1)"
@@ -99,7 +101,7 @@
 <script setup>
 import BulkSingleEvent from "@/Pages/Projects/Components/BulkComponents/BulkSingleEvent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
-import {IconCheck, IconCirclePlus} from "@tabler/icons-vue";
+import {IconCalendarMonth, IconCheck, IconCirclePlus} from "@tabler/icons-vue";
 import BulkHeader from "@/Pages/Projects/Components/BulkComponents/BulkHeader.vue";
 import {onMounted, reactive, ref, watch} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
@@ -372,12 +374,23 @@ const {hasAdminRole} = usePermission(usePage().props),
         isLoading.value = false;
     };
 
+const useProjectTimePeriodAndRedirect = () => {
+    router.patch(
+        route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+        {
+            use_project_time_period: true,
+            project_id: props.project.id
+        }
+    );
+};
+
 onMounted(() => {
     if (props.eventsInProject.length > 0) {
         events.splice(0, 1);
         props.eventsInProject.forEach(event => {
             events.push({
                 id: event.id,
+                project_id: event.projectId,
                 type: props.eventTypes.find(type => type.id === event.event_type_id),
                 name: event.eventName,
                 room: props.rooms.find(room => room.id === event.room_id),

@@ -2,7 +2,7 @@
     <div class=" py-4 " :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div v-if="!project" class="flex flex-row">
+                <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
                     <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
                         <button class="ml-2 text-black previousDay" @click="previousDay">
@@ -21,28 +21,64 @@
                         </button>
                     </div>
                 </div>
+                <div v-else-if="!project" class="relative">
+                    <TextInputComponent
+                        id="calendarProjectSearch"
+                        :label="$t('Search project')"
+                        v-model="projectSearch"
+                    />
+                    <div v-if="projectSearchResults.length > 0"
+                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg">
+                        <div v-for="(project, index) in projectSearchResults"
+                             :key="index"
+                             @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
+                             class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                            {{ project.name }}
+                        </div>
+                    </div>
+                </div>
+                <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class="mt-5 text-sm">
+                    {{ $t('Project period')}}:
+                    <Link :href="route('projects.tab', {projectTab: first_project_tab_id, project: getTimePeriodProjectId()})"
+                          class="font-bold">
+                        {{ projectNameUsedForProjectTimePeriod }}
+                    </Link>
+                    <template v-if="dateValue[0] && dateValue[1]">
+                        &nbsp;- {{ formatDateStringToGermanFormat(dateValue[0]) }} - {{ formatDateStringToGermanFormat(dateValue[1]) }}
+                    </template>
+                </div>
+                <Switch v-if="!project"
+                        v-model="usePage().props.user.calendar_settings.use_project_time_period"
+                        @update:model-value="handleUseTimePeriodChange"
+                        :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2 mt-5' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                    <span class="sr-only">Use project time period toggle</span>
+                    <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                        </span>
+                        <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                        </span>
+                    </span>
+                </Switch>
             </div>
             <div class="flex items-center gap-x-2">
                 <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                     <div class="flex items-center gap-x-2">
-                        <MultiEditSwitch :multi-edit="multiEdit" :room-mode="roomMode"
+                        <MultiEditSwitch :multi-edit="multiEdit"
+                                         :room-mode="roomMode"
                                          @update:multi-edit="UpdateMultiEditEmits"/>
                         <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance"
                                 :class="[atAGlance ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span class="sr-only">Use setting</span>
-                            <span
-                                :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                          <span
-                              :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                              aria-hidden="true">
-                             <IconList stroke-width="1.5" class="w-4 h-4"/>
-                          </span>
-                          <span
-                              :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                              aria-hidden="true">
-                              <IconList stroke-width="1.5" class="w-4 h-4"/>
-                          </span>
-                    </span>
+                            <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                </span>
+                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                </span>
+                            </span>
                         </Switch>
                     </div>
                 </div>
@@ -61,10 +97,7 @@
                         :at-a-glance="atAGlance"
                         :type="project ? 'project' : 'individual'"
                         :user_filters="user_filters"
-                        :extern-updated="externUpdate"
-                    />
-
-
+                        :extern-updated="externUpdate"/>
                     <Menu as="div" class="relative inline-block items-center text-left">
                         <div class="flex items-center">
                             <MenuButton>
@@ -73,10 +106,6 @@
                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
                                     <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
                                 </button>
-                                <span
-                                    v-if="usePage().props.user.calendar_settings.project_status || usePage().props.user.calendar_settings.options || usePage().props.user.calendar_settings.project_management || usePage().props.user.calendar_settings.repeating_events || usePage().props.user.calendar_settings.work_shifts"
-                                    class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
-                                </span>
                             </span>
                             </MenuButton>
                         </div>
@@ -86,8 +115,7 @@
                             enter-to-class="transform scale-100 opacity-100"
                             leave-active-class="transition duration-75 ease-in"
                             leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
+                            leave-to-class="transform scale-95 opacity-0">
                             <MenuItems
                                 class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div class="w-76 p-6">
@@ -100,7 +128,7 @@
                                             class=" ml-4 my-auto text-secondary">{{ $t('Project Status') }}
                                         </div>
                                     </div>
-                                    <div class="flex items-center py-1">
+                                    <div class="hidden items-center py-1">
                                         <input v-model="userCalendarSettings.options"
                                                type="checkbox"
                                                class="input-checklist"/>
@@ -127,6 +155,13 @@
                                                class="input-checklist"/>
                                         <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class=" ml-4 my-auto text-secondary">{{ $t('Shifts') }}</p>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.description"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Description') }}</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end">
@@ -181,13 +216,14 @@
 <script setup>
 
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, inject, ref} from "vue";
+import {computed, inject, ref, watch} from "vue";
 import {
     IconArrowsDiagonal,
     IconCalendarStar,
     IconChevronLeft,
     IconChevronRight,
     IconFileExport,
+    IconGeometry,
     IconList,
     IconSettings,
     IconZoomIn,
@@ -199,12 +235,13 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
+import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
+import Input from "@/Jetstream/Input.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -220,17 +257,44 @@ const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
 const showPDFConfigModal = ref(false);
-const wantedRoom = ref(null)
-const roomCollisions = ref([])
-const externUpdate = ref(false)
-const showCalendarAboInfoModal = ref(false)
+const wantedRoom = ref(null);
+const roomCollisions = ref([]);
+const externUpdate = ref(false);
+const showCalendarAboInfoModal = ref(false);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
-    work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false
-})
+    work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
+    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false
+});
+
+const projectSearch = ref('');
+const projectSearchResults = ref([]);
+const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
+    router.patch(
+        route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+        {
+            use_project_time_period: enabled,
+            project_id: projectId
+        },
+        {
+            preserveState: false
+        }
+    );
+};
+
+const handleUseTimePeriodChange = (enabled) => {
+    if (!enabled && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0) {
+        toggleProjectTimePeriodAndRedirect(0, false);
+    }
+};
+
+watch(() => projectSearch.value, (searchValue) => {
+    axios.get('/projects/search', {params: {query: searchValue}})
+        .then(response => projectSearchResults.value = response.data);
+});
 
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
@@ -258,9 +322,26 @@ const props = defineProps({
         required: false,
         default: false
     },
+    projectNameUsedForProjectTimePeriod: {
+        type: String,
+        required: false,
+        default: ''
+    }
 })
 
+const isCalendarUsingProjectTimePeriod = computed(() => {
+    return usePage().props.user.calendar_settings.use_project_time_period;
+});
 
+const getTimePeriodProjectId = () => {
+    return usePage().props.user.calendar_settings.time_period_project_id;
+}
+
+const formatDateStringToGermanFormat = (dateString) => {
+    let parts = dateString.split('-');
+
+    return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
 
 const closeCalendarAboSettingModal = (bool) => {
     showCalendarAboSettingModal.value = false;
@@ -360,4 +441,3 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
 }
 </script>
-

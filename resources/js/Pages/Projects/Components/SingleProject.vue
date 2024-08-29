@@ -1,155 +1,3 @@
-<script>
-import Permissions from "@/Mixins/Permissions.vue";
-import IconLib from "@/Mixins/IconLib.vue";
-import BaseMenu from "@/Components/Menu/BaseMenu.vue";
-import {Link} from "@inertiajs/vue3";
-import {router} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
-import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
-
-export default {
-    name: "SingleProject",
-    components: {
-        ProjectCreateModal,
-        ProjectDataEditModal,
-        BaseModal, Link, BaseMenu, Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,},
-    mixins: [IconLib, Permissions, ColorHelper],
-    props: {
-        project: {
-            type: Object,
-            required: true
-        },
-        first_project_tab_id: {
-            type: Number,
-            required: true
-        },
-        projectGroups: {
-            type: Object,
-            required: true
-        },
-        states: {
-            type: Object,
-            required: true
-        },
-        createSettings: {
-            type: Object,
-            required: true
-        },
-        sectors: {
-            type: Object,
-            required: true
-        },
-        categories: {
-            type: Object,
-            required: true
-        },
-        genres: {
-            type: Object,
-            required: true
-        },
-    },
-    data(){
-        return {
-            deletingProject: false,
-            editingProject: false,
-        }
-    },
-    computed: {
-        groupPerProject(){
-            let groupPerProject = [];
-            this.projectGroups.forEach((projectGroup) => {
-                projectGroup.groups?.forEach((groupProject) => {
-                    groupPerProject[groupProject.id] = projectGroup;
-                })
-            })
-            return groupPerProject;
-        }
-    },
-    methods: {
-        duplicateProject() {
-            this.$inertia.post(`/projects/${this.project.id}/duplicate`);
-        },
-        openDeleteProjectModal() {
-            this.deletingProject = true;
-        },
-        closeDeleteProjectModal() {
-            this.deletingProject = false;
-            this.projectToDelete = null;
-        },
-        deleteProject() {
-            this.nameOfDeletedProject = this.project.name;
-            router.delete(`/projects/${this.project.id}`);
-            this.closeDeleteProjectModal();
-            this.openSuccessModal();
-        },
-        getEditHref() {
-            return route('projects.tab', {project: this.project?.id, projectTab: this.first_project_tab_id});
-        },
-        checkPermission(project, type) {
-            const writeAuth = [];
-            const managerAuth = [];
-            const deleteAuth = [];
-            const viewAuth = [];
-
-            project?.users?.forEach((user) => {
-                viewAuth.push(user.id);
-            });
-
-            project?.project_managers?.forEach((user) => {
-                managerAuth.push(user.id);
-            })
-
-            project?.write_auth?.forEach((user) => {
-                writeAuth.push(user.id);
-            });
-
-            project?.delete_permission_users?.forEach((user) => {
-                deleteAuth.push(user.id);
-            });
-
-            if(viewAuth.includes(this.$page.props.user.id) && type === 'view') {
-                return true;
-            }
-
-            if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
-                return true;
-            }
-            if (managerAuth.includes(this.$page.props.user.id) || deleteAuth.includes(this.$page.props.user.id) && type === 'delete') {
-                return true;
-            }
-            return false;
-        },
-        pinProject() {
-            router.post(route('project.pin', {project: this.project.id}), {}, {
-                preserveScroll: true,
-                preserveState: true,
-            });
-        },
-        truncate(text, length, clamp) {
-            clamp = clamp || '...';
-            const node = document.createElement('div');
-            node.innerHTML = text;
-            const content = node.textContent;
-            return content.length > length ? content.slice(0, length) + clamp : content;
-        },
-
-        openEditProjectModal() {
-            this.editingProject = true;
-        },
-        closeEditProjectModal() {
-            this.editingProject = false;
-        },
-
-    }
-}
-</script>
-
 <template>
     <div class="col-span-6 flex items-center">
         <div class="grid grid-cols-10 gap-x-3">
@@ -165,13 +13,13 @@ export default {
             <div class="col-span-9 flex items-center">
                 <div class="flex items-center">
                     <Link v-if="
-                                                $can('view projects') ||
-                                                $can('management projects') ||
-                                                $can('write projects') ||
-                                                $role('artwork admin') ||
-                                                $role('budget admin') ||
-                                                checkPermission(project, 'edit') ||
-                                                checkPermission(project, 'view')"
+                            $can('view projects') ||
+                            $can('management projects') ||
+                            $can('write projects') ||
+                            $role('artwork admin') ||
+                            $role('budget admin') ||
+                            checkPermission(project, 'edit') ||
+                            checkPermission(project, 'view')"
                           :href="getEditHref(project)"
                           class="flex w-full my-auto">
                         <p class="xsDark flex items-center">
@@ -204,7 +52,9 @@ export default {
                     <IconPinned class="h-5 w-5 text-primary"/>
                 </div>
             </div>
-            <div class="flex justify-end">
+            <div class="flex justify-end gap-x-2">
+                <IconCalendarMonth class="w-6 h-6 cursor-pointer"
+                                   @click="useProjectTimePeriodAndRedirect()"/>
                 <BaseMenu v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin') || $can('delete projects') || $can('write projects')">
                     <MenuItem v-slot="{ active }"
                               v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
@@ -308,6 +158,164 @@ export default {
     />-->
 </template>
 
-<style scoped>
+<script>
+import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {Link, router} from "@inertiajs/vue3";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
+import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
+import {IconCalendarMonth} from "@tabler/icons-vue";
 
-</style>
+export default {
+    name: "SingleProject",
+    components: {
+        IconCalendarMonth,
+        ProjectCreateModal,
+        ProjectDataEditModal,
+        BaseModal, Link, BaseMenu, Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems,},
+    mixins: [IconLib, Permissions, ColorHelper],
+    props: {
+        project: {
+            type: Object,
+            required: true
+        },
+        first_project_tab_id: {
+            type: Number,
+            required: true
+        },
+        projectGroups: {
+            type: Object,
+            required: true
+        },
+        states: {
+            type: Object,
+            required: true
+        },
+        createSettings: {
+            type: Object,
+            required: true
+        },
+        sectors: {
+            type: Object,
+            required: true
+        },
+        categories: {
+            type: Object,
+            required: true
+        },
+        genres: {
+            type: Object,
+            required: true
+        },
+    },
+    data(){
+        return {
+            deletingProject: false,
+            editingProject: false,
+        }
+    },
+    computed: {
+        groupPerProject(){
+            let groupPerProject = [];
+            this.projectGroups.forEach((projectGroup) => {
+                projectGroup.groups?.forEach((groupProject) => {
+                    groupPerProject[groupProject.id] = projectGroup;
+                })
+            })
+            return groupPerProject;
+        }
+    },
+    methods: {
+        useProjectTimePeriodAndRedirect() {
+            router.patch(
+                route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                {
+                    use_project_time_period: true,
+                    project_id: this.project.id
+                }
+            );
+        },
+        duplicateProject() {
+            this.$inertia.post(`/projects/${this.project.id}/duplicate`);
+        },
+        openDeleteProjectModal() {
+            this.deletingProject = true;
+        },
+        closeDeleteProjectModal() {
+            this.deletingProject = false;
+            this.projectToDelete = null;
+        },
+        deleteProject() {
+            this.nameOfDeletedProject = this.project.name;
+            router.delete(`/projects/${this.project.id}`);
+            this.closeDeleteProjectModal();
+            this.openSuccessModal();
+        },
+        getEditHref() {
+            return route('projects.tab', {project: this.project?.id, projectTab: this.first_project_tab_id});
+        },
+        checkPermission(project, type) {
+            const writeAuth = [];
+            const managerAuth = [];
+            const deleteAuth = [];
+            const viewAuth = [];
+
+            project?.users?.forEach((user) => {
+                viewAuth.push(user.id);
+            });
+
+            project?.project_managers?.forEach((user) => {
+                managerAuth.push(user.id);
+            })
+
+            project?.write_auth?.forEach((user) => {
+                writeAuth.push(user.id);
+            });
+
+            project?.delete_permission_users?.forEach((user) => {
+                deleteAuth.push(user.id);
+            });
+
+            if(viewAuth.includes(this.$page.props.user.id) && type === 'view') {
+                return true;
+            }
+
+            if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
+                return true;
+            }
+            if (managerAuth.includes(this.$page.props.user.id) || deleteAuth.includes(this.$page.props.user.id) && type === 'delete') {
+                return true;
+            }
+            return false;
+        },
+        pinProject() {
+            router.post(route('project.pin', {project: this.project.id}), {}, {
+                preserveScroll: true,
+                preserveState: true,
+            });
+        },
+        truncate(text, length, clamp) {
+            clamp = clamp || '...';
+            const node = document.createElement('div');
+            node.innerHTML = text;
+            const content = node.textContent;
+            return content.length > length ? content.slice(0, length) + clamp : content;
+        },
+
+        openEditProjectModal() {
+            this.editingProject = true;
+        },
+        closeEditProjectModal() {
+            this.editingProject = false;
+        },
+
+    }
+}
+</script>

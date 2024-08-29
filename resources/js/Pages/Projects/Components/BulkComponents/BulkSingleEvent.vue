@@ -118,7 +118,7 @@
                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                              stroke-width="2"/>
                    <Menu as="div"
-                         class="text-sm w-96 cursor-pointer flex flex-row items-center bg-transparent">
+                         class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
                        <MenuButton as="div" class="bg-transparent">
                            <IconDotsVertical class="w-5 h-5 flex-shrink-0 z-50"
                                              stroke-width="1.5"
@@ -131,7 +131,7 @@
                                        leave-active-class="transition-leave-active"
                                        leave-from-class="transition-leave-from"
                                        leave-to-class="transition-leave-to">
-                               <MenuItems class="absolute top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
+                               <MenuItems class="w-56 absolute top-2 shadow-lg rounded-xl bg-artwork-navigation-background focus:outline-none">
                                    <MenuItem v-slot="{ active }"
                                              as="div">
                                        <a @click="openEventComponent(event.id)"
@@ -233,9 +233,8 @@ import {
 import Input from "@/Layouts/Components/InputComponent.vue";
 import {router} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
-import {ref} from "vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 
 const props = defineProps({
     event: {
@@ -275,26 +274,28 @@ const props = defineProps({
 
 const showMenu = ref(false);
 
-
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {
     emit.call(this, 'openEventComponent', eventId)
 };
+
 const createCopyByEventWithData = (event) => {
     emit('createCopyByEventWithData', event);
 }
 
-const showDeleteEventConfirmModal = ref(false),
-    openDeleteEventConfirmModal = () => {
-        showDeleteEventConfirmModal.value = true;
-    },
-    onCloseDeleteEventConfirmModal = (closedOnPurpose) => {
-        if (closedOnPurpose) {
-            emit('deleteCurrentEvent', props.event);
-        }
+const showDeleteEventConfirmModal = ref(false);
 
-        showDeleteEventConfirmModal.value = false;
-    };
+const openDeleteEventConfirmModal = () => {
+    showDeleteEventConfirmModal.value = true;
+};
+
+const onCloseDeleteEventConfirmModal = (closedOnPurpose) => {
+    if (closedOnPurpose) {
+        emit('deleteCurrentEvent', props.event);
+    }
+
+    showDeleteEventConfirmModal.value = false;
+};
 
 const updateEventInDatabase = () => {
     if (props.event.id) {

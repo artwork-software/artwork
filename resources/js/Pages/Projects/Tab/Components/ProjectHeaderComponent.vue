@@ -118,7 +118,7 @@ export default {
 <template>
     <AppLayout :title="project?.name + ' (' + currentTab.name + ')'">
         <!-- Project Header -->
-        <div class="ml-14 pr-14">
+        <div class="ml-14 pr-14 mt-5">
             <div class="flex flex-col">
                 <!-- if in group -->
                 <div v-if="headerObject.currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">

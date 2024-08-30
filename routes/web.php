@@ -186,6 +186,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/toggle/calendar_settings_work_shifts',
         [AppController::class, 'toggle_calendar_settings_work_shifts']
     )->name('toggle.calendar_settings_work_shifts');
+    Route::patch(
+        '/toggle_calendar_settings_use_project_period',
+        [AppController::class, 'toggleCalendarSettingsUseProjectPeriod']
+    )->name('user.calendar_settings.toggle_calendar_settings_use_project_period');
 
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () {

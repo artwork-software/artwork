@@ -6,7 +6,8 @@
                               :rooms="rooms"
                               :days="days"
                               :calendar-data="calendar"
-                              :events-without-room="eventsWithoutRoom"/>
+                              :events-without-room="eventsWithoutRoom"
+                              :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"/>
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :dateValue="dateValue"
                                                      :project="null"
@@ -23,6 +24,7 @@
             <div v-else>
                 <div class="mr-4">
                     <CalendarComponent initial-view="day"
+                                       :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                                        :selected-date="selectedDate"
                                        :dateValue="dateValue"
                                        :eventTypes=eventTypes
@@ -64,7 +66,8 @@ const props = defineProps(
         user_filters: Object,
         first_project_tab_id: Number,
         first_project_calendar_tab_id: Number,
-        areas: Object
+        areas: Object,
+        projectNameUsedForProjectTimePeriod: String
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 

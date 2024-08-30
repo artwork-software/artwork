@@ -25,17 +25,25 @@
                             <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
-
-                    <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                     <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
-                        <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                            <div class="flex items-center">
+                        <template v-for="item in navigation">
+                            <Link v-if="item.desiredClickHandler"
+                                  @click="item.desiredClickHandler()"
+                                  class="hover:bg-artwork-navigation-color/10 text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
-                            </div>
-                        </a>
+                            </Link>
+                            <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
+                                <div class="flex items-center">
+                                    <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <div class="ml-4 w-32" v-if="fullSidenav">
+                                        {{ item.name }}
+                                    </div>
+                                </div>
+                            </a>
+                        </template>
                         <Menu as="div" class="flex flex-col items-center" v-show="
                         $canAny([
                             'usermanagement',
@@ -158,7 +166,7 @@
                 </div>
             </div>
 
-            <main class="main my-5 mx-5">
+            <main class="main mx-5">
                 <slot></slot>
             </main>
         </div>
@@ -171,7 +179,7 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link, usePage, Head} from "@inertiajs/vue3";
+import {Link, usePage, Head, router} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
@@ -230,6 +238,121 @@ export default {
         Link,
         Switch,
         TrashIcon, Head
+    },
+    methods: {
+        IconBell,
+        IconTrash,
+        IconAdjustmentsAlt,
+        usePage,
+        moduleIsVisible(module) {
+            return this.hasAdminRole() || this.$page.props.module_settings[module];
+        },
+        useProjectTimePeriodAndRedirect() {
+            router.patch(
+                route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                {
+                    use_project_time_period: false,
+                    project_id: 0
+                }
+            );
+        },
+        getTrashRoute() {
+            if (this.$page.url === '/areas') {
+                return route('areas.trashed')
+            } else {
+                return route('projects.trashed')
+            }
+        },
+        isCurrentTrashRoute() {
+            if (this.$page.url === '/areas') {
+                return route().current('areas.trashed')
+            } else {
+                return route().current('projects.trashed')
+            }
+        },
+        isCurrent(routes) {
+            for (let url of routes) {
+                if (this.$page.url.indexOf(url) !== -1) {
+                    return true
+                }
+            }
+        },
+        toggle_hints() {
+            this.$inertia.post(route('toggle.hints'))
+        },
+        logout() {
+            this.$i18n.locale = this.$page.props.default_language;
+            document.documentElement.lang = this.$page.props.default_language;
+            this.$inertia.post(route('logout'))
+        },
+        openSideBarOnMobile() {
+            document.querySelector(".sidebar").classList.toggle("hidden");
+            document.querySelector(".main").classList.toggle("hidden");
+        },
+        closePushNotification(id) {
+            const pushNotification = document.getElementById(id);
+            pushNotification?.remove();
+        },
+        changeSidenavMode() {
+            this.fullSidenav = !this.fullSidenav;
+        },
+        setHeightOfMenuItems() {
+            this.$nextTick(() => {
+                const menuButton = this.$refs.menuButton.$el || this.$refs.menuButton;
+                const menuItems = this.$refs.menuItems.$el || this.$refs.menuItems;
+                const offsetLeft = this.fullSidenav ? 80 : 0;
+                if (menuButton && menuItems) {
+                    const rect = menuButton.getBoundingClientRect();
+                    menuItems.style.top = `${rect.bottom - 70}px`;
+                    menuItems.style.left = `${rect.left + offsetLeft}px`;
+                } else {
+                    console.error('Refs are undefined:', { menuButton, menuItems });
+                }
+            });
+        },
+        linkifyBody() {
+            const bodyElement = document.body,
+                linkify = new Linkifyit();
+
+            function replaceTextWithLinks(element) {
+                element.childNodes.forEach((node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent;
+                        const matches = linkify.match(text);
+
+                        if (matches) {
+                            const fragment = document.createDocumentFragment();
+                            let lastIndex = 0;
+
+                            matches.forEach((match) => {
+                                if (match.index > lastIndex) {
+                                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                                }
+
+                                const link = document.createElement('a');
+                                link.href = match.url;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                link.textContent = match.text;
+                                fragment.appendChild(link);
+
+                                lastIndex = match.lastIndex;
+                            });
+
+                            if (lastIndex < text.length) {
+                                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                            }
+
+                            node.replaceWith(fragment);
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        replaceTextWithLinks(node);
+                    }
+                });
+            }
+
+            replaceTextWithLinks(bodyElement);
+        }
     },
     computed: {
         managementNavigation() {
@@ -334,8 +457,9 @@ export default {
                 },
                 {
                     name: this.$t('Room assignment'),
-                    href: route('events'),
+                    href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
                     route: ['/calendar/view'],
+                    desiredClickHandler: this.useProjectTimePeriodAndRedirect,
                     has_permission: this.moduleIsVisible('room_assignment'),
                     icon: IconCalendarMonth
                 },
@@ -385,112 +509,6 @@ export default {
                     icon: IconFileText
                 }
             ]
-        }
-    },
-    methods: {
-        IconBell,
-        IconTrash,
-        IconAdjustmentsAlt,
-        usePage,
-        moduleIsVisible(module) {
-            return this.hasAdminRole() || this.$page.props.module_settings[module];
-        },
-        getTrashRoute() {
-            if (this.$page.url === '/areas') {
-                return route('areas.trashed')
-            } else {
-                return route('projects.trashed')
-            }
-        },
-        isCurrentTrashRoute() {
-            if (this.$page.url === '/areas') {
-                return route().current('areas.trashed')
-            } else {
-                return route().current('projects.trashed')
-            }
-        },
-        isCurrent(routes) {
-            for (let url of routes) {
-                if (this.$page.url.indexOf(url) !== -1) {
-                    return true
-                }
-            }
-        },
-        toggle_hints() {
-            this.$inertia.post(route('toggle.hints'))
-        },
-        logout() {
-            this.$i18n.locale = this.$page.props.default_language;
-            document.documentElement.lang = this.$page.props.default_language;
-            this.$inertia.post(route('logout'))
-        },
-        openSideBarOnMobile() {
-            document.querySelector(".sidebar").classList.toggle("hidden");
-            document.querySelector(".main").classList.toggle("hidden");
-        },
-        closePushNotification(id) {
-            const pushNotification = document.getElementById(id);
-            pushNotification?.remove();
-        },
-        changeSidenavMode() {
-            this.fullSidenav = !this.fullSidenav;
-        },
-        setHeightOfMenuItems() {
-            this.$nextTick(() => {
-                const menuButton = this.$refs.menuButton.$el || this.$refs.menuButton;
-                const menuItems = this.$refs.menuItems.$el || this.$refs.menuItems;
-                const offsetLeft = this.fullSidenav ? 80 : 0;
-                if (menuButton && menuItems) {
-                    const rect = menuButton.getBoundingClientRect();
-                    menuItems.style.top = `${rect.bottom - 70}px`;
-                    menuItems.style.left = `${rect.left + offsetLeft}px`;
-                } else {
-                    console.error('Refs are undefined:', { menuButton, menuItems });
-                }
-            });
-        },
-        linkifyBody() {
-            const bodyElement = document.body,
-                linkify = new Linkifyit();
-
-            function replaceTextWithLinks(element) {
-                element.childNodes.forEach((node) => {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        const text = node.textContent;
-                        const matches = linkify.match(text);
-
-                        if (matches) {
-                            const fragment = document.createDocumentFragment();
-                            let lastIndex = 0;
-
-                            matches.forEach((match) => {
-                                if (match.index > lastIndex) {
-                                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-                                }
-
-                                const link = document.createElement('a');
-                                link.href = match.url;
-                                link.target = '_blank';
-                                link.rel = 'noopener noreferrer';
-                                link.textContent = match.text;
-                                fragment.appendChild(link);
-
-                                lastIndex = match.lastIndex;
-                            });
-
-                            if (lastIndex < text.length) {
-                                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-                            }
-
-                            node.replaceWith(fragment);
-                        }
-                    } else if (node.nodeType === Node.ELEMENT_NODE) {
-                        replaceTextWithLinks(node);
-                    }
-                });
-            }
-
-            replaceTextWithLinks(bodyElement);
         }
     },
     mounted() {

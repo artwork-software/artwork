@@ -2,7 +2,7 @@
     <app-layout :title="$t('Rooms & areas')">
         <div class="">
 
-            <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
+            <div class="max-w-screen-2xl mb-40 flex flex-row mt-5 ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">

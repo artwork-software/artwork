@@ -235,8 +235,8 @@ class Room extends Model
         Builder $builder,
         ?bool $adjoiningNotLoud,
         ?bool $adjoiningNoAudience,
-        Carbon $startDate,
-        Carbon $endDate
+        ?Carbon $startDate,
+        ?Carbon $endDate
     ): Builder {
         return $builder->when(
             ($adjoiningNotLoud || $adjoiningNoAudience),

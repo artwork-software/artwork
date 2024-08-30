@@ -1970,5 +1970,6 @@
     "Sort by room": "Nach Räumen sortieren",
     "Sort by appointment type": "Nach Terminart sortieren",
     "Sort by day": "Nach Tag sortieren",
-    "Reset sorting": "Sortierung aufheben"
+    "Reset sorting": "Sortierung aufheben",
+    "The selected project has no dates": "Das ausgewählte Projekt hat keine Termine"
 }

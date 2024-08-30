@@ -2,7 +2,6 @@
     <div class="mt-6">
         <div class="mt-6 ">
             <div v-if="calendarType && calendarType === 'daily'">
-                Daily
                 <CalendarComponent
                     initial-view="day"
                     :project="project ?? headerObject.project"

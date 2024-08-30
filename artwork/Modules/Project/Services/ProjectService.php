@@ -22,11 +22,11 @@ use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
 
 readonly class ProjectService
 {
@@ -68,10 +68,11 @@ readonly class ProjectService
             'delete_permission_users' => function ($query): void {
                 $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
             },
-        ])->where(function (Builder $builder): void {
-            $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
-                    ->orWhereNull('pinned_by_users');
-        })
+        ])
+            ->where(function (Builder $builder): void {
+                $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+                        ->orWhereNull('pinned_by_users');
+            })
             ->orderBy('id', 'DESC')
             ->without(['shiftRelevantEventTypes']);
     }

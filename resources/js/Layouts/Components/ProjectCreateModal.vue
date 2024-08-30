@@ -406,33 +406,6 @@
                         <div class="mb-2">
                             <div class="relative w-full">
                                 <ProjectSearch :noProjectGroups="createProjectGroup" @project-selected="addProjectToProjectGroup" v-model="projectGroupQuery" />
-                                <!--<div class="w-full">
-                                    <TextInputComponent
-                                        id="projectGroupQuery"
-                                        v-model="projectGroupQuery"
-                                        :label="$t('Which projects belong to this group?')"
-                                    />
-                                </div>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100"
-                                            leave-to-class="opacity-0">
-                                    <div v-if="projectGroupSearchResults.length > 0 && projectGroupQuery.length > 0" class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                        <div class="border-gray-200">
-                                            <div v-for="(projectGroup, index) in projectGroupSearchResults"
-                                                 :key="index"
-                                                 class="flex items-center cursor-pointer">
-                                                <div class="flex-1 text-sm py-4">
-                                                    <p @click="addProjectToProjectGroup(projectGroup)"
-                                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                        {{ projectGroup.name }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </transition>-->
                             </div>
                             <div v-if="projectGroupProjects.length > 0" class="mt-2 mb-4 flex items-center">
                                 <span v-for="(projectGroupProject, index) in projectGroupProjects"
@@ -491,7 +464,10 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -660,9 +636,6 @@ export default {
         deleteProjectFromProjectGroup(index) {
             this.projectGroupProjects.splice(index, 1);
         },
-
-    },
-    watch: {
 
     }
 }

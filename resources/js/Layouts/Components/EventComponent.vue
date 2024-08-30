@@ -614,7 +614,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
@@ -735,7 +735,7 @@ export default {
             eventName: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
-            showProjectInfo: this.project ? true : false,
+            showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
             selectedRoom: null,
@@ -777,7 +777,8 @@ export default {
         'roomCollisions',
         'showComments',
         'first_project_calendar_tab_id',
-        'usedInBulkComponent'
+        'usedInBulkComponent',
+        'calendarProjectPeriod'
     ],
     emits: ['closed'],
     watch: {
@@ -844,6 +845,8 @@ export default {
             if (!this.event) {
                 if (this.project) {
                     this.selectedProject = {id: this.project.id, name: this.project.name};
+                }else if (this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id){
+                    this.selectedProject = {id: this.$page.props.user.calendar_settings.time_period_project_id, name: this.$page.props.projectNameOfCalendarProject};
                 }
                 return;
             }
@@ -1080,7 +1083,7 @@ export default {
                 this.isOption = true;
             }
 
-            if (this.usedInBulkComponent) {
+            if (this.usedInBulkComponent || (this.$page.props.user.calendar_settings.time_period_project_id === this.selectedProject?.id && this.calendarProjectPeriod)) {
                 if (!this.event?.id) {
                     router.post(
                         route('events.store'),
@@ -1221,7 +1224,8 @@ export default {
                 accept: this.accept,
                 optionAccept: this.optionAccept,
                 allDay: this.allDayEvent,
-                usedInBulkComponent: this.usedInBulkComponent
+                usedInBulkComponent: this.usedInBulkComponent,
+                showProjectPeriodInCalendar: this.calendarProjectPeriod,
             };
         },
     },

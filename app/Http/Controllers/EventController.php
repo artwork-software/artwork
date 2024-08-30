@@ -384,7 +384,7 @@ class EventController extends Controller
         MainPositionService $mainPositionService,
         BudgetColumnSettingService $columnSettingService,
         SageApiSettingsService $sageApiSettingsService
-    ): CalendarEventResource {
+    ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
@@ -487,6 +487,9 @@ class EventController extends Controller
 
         broadcast(new OccupancyUpdated())->toOthers();
 
+        if ($request->boolean('showProjectPeriodInCalendar')) {
+            return $this->redirector->back();
+        }
         return new CalendarEventResource($firstEvent);
     }
 

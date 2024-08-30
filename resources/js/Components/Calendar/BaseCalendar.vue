@@ -117,7 +117,7 @@
         :showHints="usePage().props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :has-project-events="usePage().props.user.calendar_settings.use_project_time_period"
+        :calendarProjectPeriod="usePage().props.user.calendar_settings.use_project_time_period"
         :project="project"
         :event="eventToEdit"
         :wantedRoomId="wantedRoom"

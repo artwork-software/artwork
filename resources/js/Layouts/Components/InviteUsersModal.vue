@@ -201,7 +201,7 @@ import Permissions from "@/Mixins/Permissions.vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/outline";
-import {ChevronDownIcon, ChevronUpIcon, XCircleIcon, CheckIcon} from '@heroicons/vue/solid'
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from '@heroicons/vue/solid'
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
@@ -344,7 +344,7 @@ export default {
                 return;
             }
 
-            if(this.form.user_emails?.includes(this.emailInput)){
+            if (this.form.user_emails?.includes(this.emailInput)) {
                 this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
                 return;
             }
@@ -352,15 +352,7 @@ export default {
             // check if email is already in users
             if (this.users) {
                 const user = this.users.find(user => user.email === this.emailInput);
-                if (user) {
-                    this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
-                    return;
-                }
-            }
 
-            // check if email is already in invited users
-            if (this.invitedUsers) {
-                const user = this.invitedUsers.find(user => user.email === this.emailInput);
                 if (user) {
                     this.helpText = this.$t('This e-mail address already exists in the system. {0}', [this.emailInput]);
                     return;

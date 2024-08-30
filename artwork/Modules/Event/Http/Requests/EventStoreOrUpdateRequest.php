@@ -36,6 +36,7 @@ class EventStoreOrUpdateRequest extends FormRequest
             'adminComment' => ['sometimes','nullable','string'],
             'optionString' => ['sometimes','nullable','string'],
             'allDay' => ['sometimes', 'nullable', 'boolean'],
+            'showProjectPeriodInCalendar' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 }

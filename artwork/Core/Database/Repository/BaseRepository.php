@@ -15,7 +15,7 @@ use Throwable;
 
 abstract class BaseRepository
 {
-    public function getNewModelInstance(): Model|Pivot|DatabaseNotification
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
     {
         throw new BadMethodCallException(
             'Implement in derived repository. Copy already derived functions and adapt.'
@@ -37,7 +37,7 @@ abstract class BaseRepository
         );
     }
 
-    public function find(int|string $id): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification
+    public function find(int|string $id): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification|null
     {
         return static::getNewModelQuery()->find($id);
     }

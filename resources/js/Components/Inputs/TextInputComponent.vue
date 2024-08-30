@@ -1,5 +1,5 @@
 <template>
-    <PlaceholderInputLabelContainer>
+    <PlaceholderInputLabelContainer :noMarginTop="noMarginTop">
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
@@ -37,6 +37,10 @@ export default defineComponent({
             required: true
         },
         isSmall: {
+            type: Boolean,
+            default: false
+        },
+        noMarginTop: {
             type: Boolean,
             default: false
         },

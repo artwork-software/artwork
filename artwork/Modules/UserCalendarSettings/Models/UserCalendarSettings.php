@@ -34,7 +34,10 @@ class UserCalendarSettings extends Model
         'options',
         'project_management',
         'repeating_events',
-        'work_shifts'
+        'work_shifts',
+        'description',
+        'use_project_time_period',
+        'time_period_project_id'
     ];
 
     protected $casts = [
@@ -42,7 +45,9 @@ class UserCalendarSettings extends Model
         'options' => 'boolean',
         'project_management' => 'boolean',
         'repeating_events' => 'boolean',
-        'work_shifts' => 'boolean'
+        'work_shifts' => 'boolean',
+        'description' => 'boolean',
+        'use_project_time_period' => 'boolean'
     ];
 
     public function user(): BelongsTo

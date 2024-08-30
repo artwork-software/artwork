@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Invitation\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**

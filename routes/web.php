@@ -33,7 +33,6 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
@@ -92,6 +91,7 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemContr
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
+use Artwork\Modules\Invitation\Http\Controller\InvitationController;
 use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
@@ -186,6 +186,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/toggle/calendar_settings_work_shifts',
         [AppController::class, 'toggle_calendar_settings_work_shifts']
     )->name('toggle.calendar_settings_work_shifts');
+    Route::patch(
+        '/toggle_calendar_settings_use_project_period',
+        [AppController::class, 'toggleCalendarSettingsUseProjectPeriod']
+    )->name('user.calendar_settings.toggle_calendar_settings_use_project_period');
 
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () {
@@ -193,13 +197,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     })->name('checklistTemplates.edit');
 
     //Invitations
-    Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
-    Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])
-        ->name('user.invitations.edit');
     Route::post('/users/invitations', [InvitationController::class, 'store'])->name('invitations.store');
-    Route::patch('/users/invitations/{invitation}', [InvitationController::class, 'update']);
-    Route::delete('/users/invitations/{invitation}', [InvitationController::class, 'destroy']);
 
     Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])
         ->name('user.calendar_settings.update');

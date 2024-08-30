@@ -54,6 +54,7 @@ use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -1905,7 +1906,15 @@ class ProjectController extends Controller
                         'event_type',
                         'subEvents',
                         'creator'
-                    ])->get();
+                    ])->get()->map(
+                        /** @return array<string, mixed> */
+                        function (Event $event): array {
+                            return array_merge(
+                                $event->toArray(),
+                                MinimalCalendarEventResource::make($event)->resolve()
+                            );
+                        }
+                    );
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');

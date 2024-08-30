@@ -152,7 +152,6 @@
             :project="null"
         />
 
-
         <AddBulkEventsModal
             v-if="showAddBulkEventModal"
             @closed="showAddBulkEventModal = false"
@@ -416,7 +415,6 @@ export default defineComponent({
     },
     methods: {
         usePage,
-
         openCreateProjectModal() {
             this.createProject = true;
         },
@@ -424,7 +422,6 @@ export default defineComponent({
             this.createProject = false;
             if (showSuccessModal) {
                 this.showAddBulkEventModal = true;
-                //this.openSuccessModal2();
             }
         },
         openEditProjectModal(project) {

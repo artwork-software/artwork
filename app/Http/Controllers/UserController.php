@@ -490,7 +490,8 @@ class UserController extends Controller
             'options',
             'project_management',
             'repeating_events',
-            'work_shifts'
+            'work_shifts',
+            'description'
         ]));
     }
 

@@ -66,6 +66,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -89,6 +90,7 @@ class EventController extends Controller
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly RoomService $roomService,
         private readonly AuthManager $authManager,
+        private readonly Redirector $redirector
     ) {
     }
 
@@ -382,7 +384,7 @@ class EventController extends Controller
         MainPositionService $mainPositionService,
         BudgetColumnSettingService $columnSettingService,
         SageApiSettingsService $sageApiSettingsService
-    ): CalendarEventResource {
+    ): CalendarEventResource | RedirectResponse {
         $this->authorize('create', Event::class);
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
@@ -485,6 +487,9 @@ class EventController extends Controller
 
         broadcast(new OccupancyUpdated())->toOthers();
 
+        if ($request->boolean('showProjectPeriodInCalendar')) {
+            return $this->redirector->back();
+        }
         return new CalendarEventResource($firstEvent);
     }
 
@@ -927,7 +932,7 @@ class EventController extends Controller
         EventUpdateRequest $request,
         Event $event,
         ProjectController $projectController
-    ): CalendarEventResource {
+    ): CalendarEventResource|RedirectResponse {
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
@@ -1300,6 +1305,10 @@ class EventController extends Controller
             $this->craftInventoryItemEventService->updateEventTimeInInventory($isInInventoryEvent, $event);
         }
 
+        //redirect is required for bulk component event component
+        if ($request->boolean('usedInBulkComponent')) {
+            return $this->redirector->back();
+        }
         return new CalendarEventResource($event);
     }
 

@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('Event Settings')">
-        <div class="max-w-screen-lg ml-14 mr-40">
+        <div class="max-w-screen-lg ml-14 mt-5 mr-40">
             <div class="">
                 <h2 class="headline1">{{$t('Event Settings')}}</h2>
                 <div class="xsLight mt-2">

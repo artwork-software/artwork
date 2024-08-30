@@ -37,8 +37,8 @@ class RoomRepository extends BaseRepository
         ?array $roomCategoryIds,
         ?bool $adjoiningNotLoud,
         ?bool $adjoiningNoAudience,
-        Carbon $startDate,
-        Carbon $endDate
+        ?Carbon $startDate,
+        ?Carbon $endDate
     ): Collection {
         return Room::query()
             ->unlessRoomIds($roomIds)

@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="$t('My tasks')">
-        <div class="ml-14">
+        <div class="ml-14 mt-5">
             <div>
                 <ChecklistFunctionBar
                     title="My ToDo-Lists"

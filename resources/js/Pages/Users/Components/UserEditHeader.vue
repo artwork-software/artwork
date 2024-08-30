@@ -2,7 +2,7 @@
     <app-layout :title="title">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
-                <div class="max-w-screen-lg pl-14 pr-4">
+                <div class="max-w-screen-lg pl-14 mt-5 pr-4">
                     <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
                         {{ $t('My account')}}
                     </div>

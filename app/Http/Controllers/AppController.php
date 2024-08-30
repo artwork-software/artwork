@@ -9,6 +9,8 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\User\Http\Requests\UserCreateRequest;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserCalendarSettings\Http\Requests\ToggleUseProjectTimePeriodRequest;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +25,12 @@ use ZxcvbnPhp\Zxcvbn;
 class AppController extends Controller
 {
     use PasswordValidationRules;
+
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly Redirector $redirector
+    ) {
+    }
 
     public function getPasswordScore(Request $request): int
     {
@@ -115,6 +123,19 @@ class AppController extends Controller
         ]);
 
         return Redirect::back();
+    }
+
+    public function toggleCalendarSettingsUseProjectPeriod(
+        ToggleUseProjectTimePeriodRequest $request
+    ): RedirectResponse {
+        $user = $this->userService->getAuthUser();
+
+        $user->calendar_settings()->update([
+            'use_project_time_period' => $request->boolean('use_project_time_period'),
+            'time_period_project_id' => $request->integer('project_id')
+        ]);
+
+        return $this->redirector->route('events');
     }
 
     public function index(GeneralSettings $settings): RedirectResponse

@@ -42,6 +42,8 @@ class EventManagementDto extends BaseDto
 
     public Collection $areas;
 
+    public ?string $projectNameUsedForProjectTimePeriod = null;
+
     public function getAreas(): Collection
     {
         return $this->areas;
@@ -158,6 +160,12 @@ class EventManagementDto extends BaseDto
 
         return $this;
     }
+    public function setProjectNameUsedForProjectTimePeriod(?string $projectNameUsedForProjectTimePeriod): self
+    {
+        $this->projectNameUsedForProjectTimePeriod = $projectNameUsedForProjectTimePeriod;
+
+        return $this;
+    }
 
     /**
      * @return array<string, mixed>|null
@@ -252,6 +260,11 @@ class EventManagementDto extends BaseDto
         return $this->firstProjectCalendarTabId;
     }
 
+    public function getProjectNameUsedForProjectTimePeriod(): ?string
+    {
+        return $this->projectNameUsedForProjectTimePeriod;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -274,6 +287,7 @@ class EventManagementDto extends BaseDto
             'first_project_tab_id' => $this->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
             'areas' => $this->getAreas(),
+            'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod()
         ];
     }
 }

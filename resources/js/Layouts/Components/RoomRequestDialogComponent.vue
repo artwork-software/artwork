@@ -312,9 +312,6 @@
                     </div>
 
                 </div>
-                <div>
-                    <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
-                </div>
 
                 <!--    Room    -->
                 <div class="py-1" v-if="canEdit">
@@ -421,19 +418,21 @@
 
 <script>
 
-import {ref} from "vue";
-
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
     Listbox,
-    ListboxButton, ListboxLabel,
+    ListboxButton,
+    ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -482,7 +481,6 @@ export default {
     },
     data() {
         return {
-            helpTextLength: '',
             startDate: null,
             startTime: null,
             endDate: null,
@@ -710,7 +708,6 @@ export default {
             }
             this.validateStartBeforeEndTime();
             this.checkCollisions();
-            this.checkEventTimeLength()
         },
         async validateStartBeforeEndTime() {
             this.error = null;
@@ -720,18 +717,6 @@ export default {
                 return await axios
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
-            }
-        },
-        checkEventTimeLength() {
-            // check if event min 30min
-            if (this.startFull && this.endFull) {
-                const date = new Date(this.startFull);
-                const minimumEnd = this.addMinutes(date, 30);
-                if (minimumEnd <= new Date(this.endFull)) {
-                    this.helpTextLength = '';
-                } else {
-                    this.helpTextLength = this.$t('The event must not be shorter than 30 minutes');
-                }
             }
         },
         addMinutes(date, minutes) {

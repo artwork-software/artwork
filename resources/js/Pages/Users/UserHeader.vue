@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="title ?? $t('Users & teams')">
-        <div class=" ml-14 mr-10">
+        <div class="mt-5 ml-14 mr-10">
             <h2 class="headline1">{{ $t('Users & teams')}}</h2>
 
             <UserTabs />

@@ -948,13 +948,11 @@ readonly class EventService
             ->setSelectedDate($showCalendar['selectedDate'])
             ->setEventsWithoutRoom($showCalendar['eventsWithoutRoom'])
             ->setRooms(
-                $useProjectTimePeriod && !$startDate || !$endDate ?
-                    Collection::make() :
-                    $roomService->getFilteredRooms(
-                        $startDate,
-                        $endDate,
-                        $userCalendarFilter
-                    )
+                $roomService->getFilteredRooms(
+                    $startDate,
+                    $endDate,
+                    $userCalendarFilter
+                )
             )
             ->setAreas($areaService->getAll())
             ->setFilterOptions($showCalendar["filterOptions"])

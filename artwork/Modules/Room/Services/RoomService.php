@@ -81,8 +81,8 @@ readonly class RoomService
     }
 
     public function getFilteredRooms(
-        Carbon $startDate,
-        Carbon $endDate,
+        ?Carbon $startDate,
+        ?Carbon $endDate,
         UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter
     ): EloquentCollection {
         return $this->roomRepository->getFilteredRoomsBy(

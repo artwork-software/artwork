@@ -24,6 +24,7 @@
             <div v-else>
                 <div class="mr-4">
                     <CalendarComponent initial-view="day"
+                                       :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                                        :selected-date="selectedDate"
                                        :dateValue="dateValue"
                                        :eventTypes=eventTypes

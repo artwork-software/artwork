@@ -4,25 +4,26 @@
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
-                    <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
-                        <button class="ml-2 text-black previousDay" @click="previousDay">
+                    <div class="flex items-center">
+                        <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
                             <IconChevronLeft class="h-5 w-5 text-primary"/>
                         </button>
-                        <button class="ml-2 text-black nextDay" @click="nextDay">
+                        <button v-else class="ml-2 text-black previousTimeRange" @click="previousDay">
+                            <IconChevronLeft class="h-5 w-5 text-primary"/>
+                        </button>
+                        <button v-if="!dailyView" class="ml-2 text-black nextTimeRange" @click="nextTimeRange">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
-                    </div>
-                    <div v-else class="flex items-center">
-                        <button class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
-                            <IconChevronLeft class="h-5 w-5 text-primary"/>
-                        </button>
-                        <button class="ml-2 text-black nextTimeRange" @click="nextTimeRange">
+                        <button v-else class="ml-2 text-black nextTimeRange" @click="nextDay">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
                     </div>
                 </div>
+
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
+                        :no-margin-top="true"
+                        :is-small="true"
                         id="calendarProjectSearch"
                         :label="$t('Search project')"
                         v-model="projectSearch"
@@ -37,7 +38,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class="mt-5 text-sm">
+                <div v-if="!project && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0" class=" text-sm">
                     {{ $t('Project period')}}:
                     <Link :href="route('projects.tab', {projectTab: first_project_tab_id, project: getTimePeriodProjectId()})"
                           class="font-bold">
@@ -50,7 +51,7 @@
                 <Switch v-if="!project"
                         v-model="usePage().props.user.calendar_settings.use_project_time_period"
                         @update:model-value="handleUseTimePeriodChange"
-                        :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2 mt-5' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                        :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                     <span class="sr-only">Use project time period toggle</span>
                     <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
@@ -298,7 +299,7 @@ watch(() => projectSearch.value, (searchValue) => {
 
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
-const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode', 'wantsToAddNewEvent'])
+const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode', 'wantsToAddNewEvent','previousDay', 'nextDay']);
 
 const props = defineProps({
     project: {
@@ -318,6 +319,11 @@ const props = defineProps({
         required: true
     },
     isFullscreen: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    dailyView: {
         type: Boolean,
         required: false,
         default: false
@@ -417,6 +423,14 @@ const getNextDay = (dateString) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+const previousDay = () => {
+    emits('previousDay')
+}
+
+const nextDay = () => {
+    emits('nextDay')
 }
 
 const getPreviousDay = (dateString) => {

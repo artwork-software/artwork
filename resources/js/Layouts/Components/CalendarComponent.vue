@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
+    <div class=" items-center relative bg-secondaryHover" id="myCalendar">
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
@@ -7,22 +7,19 @@
                 <IconAlertTriangle class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
         </div>
-        <div class="bg-white">
-          <div class="pl-14">
-              <CalendarFunctionBar
-                  @open-event-component="openEventComponent"
+              <FunctionBarCalendar
+                  :multi-edit="false"
+                  :project="project"
+                  :rooms="rooms"
+                  :isFullscreen="isFullscreen"
+                  :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                  @open-fullscreen-mode="openFullscreen"
+                  @wants-to-add-new-event="openEventComponent"
+                  @update-multi-edit="toggleMultiEdit"
                   @nextDay="nextDay"
                   @previousDay="previousDay"
-                  @enterFullscreenMode="openFullscreen"
-                  :dateValue="dateValue"
-                  @change-at-a-glance="changeAtAGlance"
-                  :at-a-glance="atAGlance"
-                  :filter-options="filterOptions"
-                  :personal-filters="personalFilters"
-                  :is-fullscreen="isFullscreen"
-                  :user_filters="user_filters"
-              />
-          </div>
+                  :daily-view="true"
+                  />
 
             <!--  Calendar  -->
             <div class="pl-14 overflow-x-scroll">
@@ -211,7 +208,6 @@
                 </vue-cal>
 
             </div>
-        </div>
 
     </div>
 
@@ -302,11 +298,13 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 export default {
     name: 'CalendarComponent',
     mixins: [Permissions, IconLib],
     components: {
+        FunctionBarCalendar,
         CalendarFunctionBar,
         DatePickerComponent,
         NewUserToolTip,
@@ -364,7 +362,8 @@ export default {
         'filterOptions',
         'personalFilters',
         'user_filters',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'projectNameUsedForProjectTimePeriod',
     ],
     emits: ['changeAtAGlance'],
     mounted() {
@@ -672,6 +671,7 @@ export default {
             }
         },
         nextDay() {
+
             this.$refs.vuecal.next();
             this.dateValueArray[0] = this.addOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.addOneDay(this.dateValueArray[1]);
@@ -684,6 +684,7 @@ export default {
             })
         },
         previousDay() {
+            console.log('hallo');
             this.$refs.vuecal.previous();
             this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);
@@ -721,6 +722,9 @@ export default {
                 this.isFullscreen = false;
                 this.zoomFactor = 1;
             }
+        },
+        toggleMultiEdit(value){
+            this.multiEdit.value = value;
         },
     }
 }

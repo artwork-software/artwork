@@ -423,4 +423,16 @@ class Event extends Model
             'formatted_end' => Carbon::parse($this->series->end_date)->translatedFormat('d. M Y')
         ];
     }
+
+    public function scopeGetOrderBySubQueryBuilder(
+        Builder $builder,
+        string $columnToOrderBy,
+        string $direction
+    ): Builder {
+        return $builder
+            ->select($columnToOrderBy)
+            ->whereRaw('`projects`.`id` = `events`.`project_id`')
+            ->orderBy($columnToOrderBy, $direction)
+            ->take(1);
+    }
 }

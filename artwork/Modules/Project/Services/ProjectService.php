@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Project\Services;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Services\ChecklistService;
@@ -9,6 +10,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\Notification\Services\NotificationService;
+use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
@@ -22,16 +24,24 @@ use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Support\Facades\Auth;
 
-readonly class ProjectService
+class ProjectService
 {
-    public function __construct(private ProjectRepository $projectRepository)
-    {
+    public function __construct(
+        private readonly ProjectRepository $projectRepository,
+        private readonly EventService $eventService,
+        private readonly UserService $userService,
+        private readonly CarbonService $carbonService,
+        private readonly UserProjectManagementSettingService $userFilterAndSortSettingService
+    ) {
     }
 
     public function isManagerForProject(User $user, Project $project): bool
@@ -44,47 +54,198 @@ readonly class ProjectService
         return $this->projectRepository->getProjectByCostCenter($costCenter);
     }
 
-    public function getProjects(): \Illuminate\Database\Eloquent\Builder
-    {
-        return $this->projectRepository->getProjectQuery([
-            'access_budget' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'categories',
-            'genres',
-            'sectors',
-            'costCenter',
-            'groups',
-            'managerUsers' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'users' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'writeUsers' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-            'state',
-            'delete_permission_users' => function ($query): void {
-                $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
-            },
-        ])
-            ->where(function (Builder $builder): void {
-                $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
+    public function getProjects(
+        string $search = '',
+        ?ProjectSortEnum $sortEnum = null,
+        ?IlluminateCollection $projectStateIds = null,
+        ?IlluminateCollection $projectFilters = null,
+    ): \Laravel\Scout\Builder|Builder {
+        $useSort = !is_null($sortEnum);
+
+        $builder = $this->projectRepository->getProjectQuery($search);
+
+        $builderCallback = function (
+            Builder $builder
+        ) use (
+            $search,
+            $useSort,
+            $sortEnum,
+            $projectFilters,
+            $projectStateIds
+        ): Builder {
+            return $builder->with([
+                'access_budget' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'categories',
+                'genres',
+                'sectors',
+                'costCenter',
+                'groups',
+                'managerUsers' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'users' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'writeUsers' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'state',
+                'delete_permission_users' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                }
+            ])
+                /** @todo für Jason:
+                 * search muss raus wenn das mit Meilisearch klappt
+                 */
+                ->when(
+                    strlen($search) > 0,
+                    function (Builder $builder) use ($search): void {
+                        $builder->where('name', 'like', '%' . $search . '%');
+                    }
+                )
+                ->when(
+                    $useSort,
+                    function (Builder $builder) use ($sortEnum): void {
+                        switch ($sortEnum) {
+                            case ProjectSortEnum::ALPHABETICALLY_ASCENDING:
+                            case ProjectSortEnum::ALPHABETICALLY_DESCENDING:
+                                $builder->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                                break;
+                            case ProjectSortEnum::CHRONOLOGICALLY_ASCENDING:
+                            case ProjectSortEnum::CHRONOLOGICALLY_DESCENDING:
+                                $columns = $sortEnum->mapToColumn();
+                                $dir = $sortEnum->mapToDirection();
+
+                                $builder->orderBy(
+                                    //order by no. 1: start time (get always first event)
+                                    $this->eventService->getOrderBySubQueryBuilder($columns[0], 'asc'),
+                                    $dir
+                                );
+                                $builder->orderBy(
+                                    //order by no. 2: end time (get always latest event)
+                                    $this->eventService->getOrderBySubQueryBuilder($columns[1], 'desc'),
+                                    $dir
+                                );
+                                break;
+                        }
+                    }
+                )
+                ->when(
+                    !$useSort,
+                    function (Builder $builder): void {
+                        $builder->orderBy('id', 'DESC');
+                    }
+                )
+                ->when(
+                    $projectStateIds?->isNotEmpty(),
+                    function (Builder $builder) use ($projectStateIds): void {
+                        $builder->whereIn('state', $projectStateIds);
+                    }
+                )
+                ->when(
+                    $projectFilters?->isNotEmpty(),
+                    function (Builder $builder) use ($projectFilters): void {
+                        $builder->where(function (Builder $builder) use ($projectFilters): void {
+                            foreach ($projectFilters as $filter) {
+                                switch ($filter) {
+                                    case 'showProjectGroups':
+                                        $builder->orWhere('is_group', 1);
+                                        break;
+                                    case 'showProjects':
+                                        $builder->orWhere('is_group', 0);
+                                        break;
+                                    case 'showExpiredProjects':
+                                        $builder->orWhereHas(
+                                            'events',
+                                            function (Builder $builder): void {
+                                                $todayMidnight = $this->carbonService->getTodayMidnight();
+                                                $builder->where(
+                                                    'start_time',
+                                                    '>',
+                                                    $todayMidnight
+                                                );
+                                                $builder->where(
+                                                    'end_time',
+                                                    '>',
+                                                    $todayMidnight
+                                                );
+                                            },
+                                            '=',
+                                            0
+                                        );
+                                        break;
+                                    case 'showFutureProjects':
+                                        $builder->orWhereHas(
+                                            'events',
+                                            function (Builder $builder): void {
+                                                $builder->where(
+                                                    'start_time',
+                                                    '>',
+                                                    $this->carbonService->getTodayMidnight()
+                                                );
+                                            },
+                                        );
+                                        break;
+                                    case 'showOnlyMyProjects':
+                                        $builder->orWhere('user_id', $this->userService->getAuthUserId());
+                                        break;
+                                }
+                            }
+                        });
+                    }
+                )
+                ->where(function (Builder $builder): void {
+                    $builder->whereJsonDoesntContain('pinned_by_users', Auth::id())
                         ->orWhereNull('pinned_by_users');
-            })
-            ->orderBy('id', 'DESC')
-            ->without(['shiftRelevantEventTypes']);
+                })
+                ->without(['shiftRelevantEventTypes']);
+        };
+
+        /** @todo für Jason:
+         * Das interne Scout Eloquent query wird hier richtig durch den Callback gejagt aber
+         * die Models die am Ende von Meilisearch rauspurzeln ignorieren das order by
+         * Meilisearch wird ausschließlich für die volltextsuche verwendet
+         * diese wurde erstmal auf die inperformante like suche umgebaut
+         *
+         * Ergebnis ist, dass die Models einfach nicht sortiert, die Filterungen funktionieren aber
+         */
+//        if ($builder instanceof \Laravel\Scout\Builder) {
+//            $builder = $builder->query(function ($query) use ($builderCallback) {
+//                return $builderCallback($query);
+//            });
+//        } else {
+//            $builder = $builderCallback($builder);
+//        }
+
+        return $builderCallback($builder);
     }
 
     public function paginateProjects(
         string $search = '',
-        int $perPage = 10
-    ): \Illuminate\Pagination\LengthAwarePaginator {
-        $projectQuery = $this->getProjects();
-        if ($search) {
-            $projectQuery = $this->scoutSearch($search);
-        }
+        int $perPage = 10,
+        ?ProjectSortEnum $sortEnum = null,
+        ?IlluminateCollection $projectStateIds = null,
+        ?IlluminateCollection $projectFilters = null
+    ): LengthAwarePaginator {
+        $projectQuery = $this->getProjects(
+            $search,
+            $sortEnum,
+            $projectStateIds,
+            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
+            $projectFilters->filter(fn($filter, $enabled) => $enabled)->keys()
+        );
+
+        $this->userFilterAndSortSettingService->updateOrCreateIfNecessary(
+            $this->userService->getAuthUser(),
+            [
+                'sort_by' => $sortEnum?->name,
+                'project_state_ids' => $projectStateIds->toArray(),
+                'project_filters' => $projectFilters->toArray()
+            ]
+        );
 
         return $projectQuery->paginate($perPage);
     }

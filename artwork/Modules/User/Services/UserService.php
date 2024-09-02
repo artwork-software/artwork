@@ -348,4 +348,9 @@ class UserService
             $notificationConstValue
         );
     }
+
+    public function getAuthUserId(): int
+    {
+        return $this->getAuthUser()->getAttribute('id');
+    }
 }

@@ -52,6 +52,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
@@ -853,6 +854,7 @@ readonly class EventService
     /**
      * @throws Throwable
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDto(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -1149,5 +1151,10 @@ readonly class EventService
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
         ]);
+    }
+
+    public function getOrderBySubQueryBuilder(string $column, string $direction): Builder
+    {
+        return $this->eventRepository->getOrderBySubQueryBuilder($column, $direction);
     }
 }

@@ -152,7 +152,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array with project' => [
                 //expected event getAttribute invocation count
-                17,
+                18,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -162,6 +162,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'eventName',
                     'start_time',
                     'id',
+                    'description',
                     'room_id',
                     'room',
                     'end_time',
@@ -182,6 +183,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'Meeting Rock & Wrestling',
                     'carbonMock',
                     2,
+                    'Test',
                     3,
                     'roomMock',
                     'carbonMock',
@@ -334,6 +336,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 [
                     'id' => 2,
                     'projectId' => 1,
+                    'description' => 'Test',
                     'roomId' => 3,
                     'roomName' => 'Hauptraum',
                     'created_by' => [
@@ -772,7 +775,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without project' => [
                 //expected event getAttribute invocation count
-                17,
+                18,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -782,6 +785,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'eventName',
                     'start_time',
                     'id',
+                    'description',
                     'room_id',
                     'room',
                     'end_time',
@@ -802,6 +806,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'Meeting Rock & Wrestling',
                     'carbonMock',
                     2,
+                    'Test',
                     3,
                     'roomMock',
                     'carbonMock',
@@ -917,6 +922,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 [
                     'id' => 2,
                     'projectId' => 1,
+                    'description' => 'Test',
                     'roomId' => 3,
                     'roomName' => 'Hauptraum',
                     'created_by' => [
@@ -1250,7 +1256,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without project state' => [
                 //expected event getAttribute invocation count
-                17,
+                18,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -1260,6 +1266,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'eventName',
                     'start_time',
                     'id',
+                    'description',
                     'room_id',
                     'room',
                     'end_time',
@@ -1280,6 +1287,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'Meeting Rock & Wrestling',
                     'carbonMock',
                     2,
+                    'Test',
                     3,
                     'roomMock',
                     'carbonMock',
@@ -1428,6 +1436,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 [
                     'id' => 2,
                     'projectId' => 1,
+                    'description' => 'Test',
                     'roomId' => 3,
                     'roomName' => 'Hauptraum',
                     'created_by' => [
@@ -1864,7 +1873,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array get title from event type' => [
                 //expected event getAttribute invocation count
-                17,
+                18,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -1874,6 +1883,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'eventName',
                     'start_time',
                     'id',
+                    'description',
                     'room_id',
                     'room',
                     'end_time',
@@ -1894,6 +1904,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     null,
                     'carbonMock',
                     2,
+                    'Test',
                     3,
                     'roomMock',
                     'carbonMock',
@@ -2011,6 +2022,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 [
                     'id' => 2,
                     'projectId' => 1,
+                    'description' => 'Test',
                     'roomId' => 3,
                     'roomName' => 'Hauptraum',
                     'created_by' => [
@@ -2342,7 +2354,7 @@ class MinimalCalendarEventResourceTest extends TestCase
         return [
             'test to array without manager users' => [
                 //expected event getAttribute invocation count
-                17,
+                18,
                 //expected event getAttribute keys
                 [
                     'project_id',
@@ -2352,6 +2364,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'eventName',
                     'start_time',
                     'id',
+                    'description',
                     'room_id',
                     'room',
                     'end_time',
@@ -2372,6 +2385,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                     'Meeting Rock & Wrestling',
                     'carbonMock',
                     2,
+                    'Test',
                     3,
                     'roomMock',
                     'carbonMock',
@@ -2506,6 +2520,7 @@ class MinimalCalendarEventResourceTest extends TestCase
                 [
                     'id' => 2,
                     'projectId' => 1,
+                    'description' => 'Test',
                     'roomId' => 3,
                     'roomName' => 'Hauptraum',
                     'created_by' => [

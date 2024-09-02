@@ -163,7 +163,7 @@ class ProjectController extends Controller
         private readonly EventTypeService $eventTypeService,
         private readonly RoomService $roomService,
         private readonly UserService $userService,
-        private readonly UserProjectManagementSettingService $projectManagementFilterAndSortSettingService
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
     ) {
     }
 
@@ -214,7 +214,7 @@ class ProjectController extends Controller
                 },
                 ProjectSortEnum::cases()
             ),
-            'userProjectManagementSetting' => $this->projectManagementFilterAndSortSettingService
+            'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
                 ?->getAttribute('settings')
         ]);

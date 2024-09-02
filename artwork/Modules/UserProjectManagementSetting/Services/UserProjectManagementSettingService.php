@@ -9,24 +9,24 @@ use Artwork\Modules\UserProjectManagementSetting\Repositories\UserProjectManagem
 class UserProjectManagementSettingService
 {
     public function __construct(
-        private readonly UserProjectManagementSettingRepository $filterAndSortSettingRepository
+        private readonly UserProjectManagementSettingRepository $userProjectManagementSettingRepository
     ) {
     }
 
     public function getFromUser(int|User $user): ?UserProjectManagementSetting
     {
-        return $this->filterAndSortSettingRepository->getByUser($user);
+        return $this->userProjectManagementSettingRepository->getByUser($user);
     }
 
     public function updateOrCreateIfNecessary(int|User $user, array $filters): UserProjectManagementSetting
     {
-        $setting = $this->filterAndSortSettingRepository->getByUser($user);
+        $setting = $this->userProjectManagementSettingRepository->getByUser($user);
 
         if (!$setting instanceof UserProjectManagementSetting) {
-            $setting = $this->filterAndSortSettingRepository->getNewModelInstance();
+            $setting = $this->userProjectManagementSettingRepository->getNewModelInstance();
         }
 
-        $this->filterAndSortSettingRepository->save(
+        $this->userProjectManagementSettingRepository->save(
             $setting->fill(
                 [
                     'user_id' => $user->getAttribute('id'),

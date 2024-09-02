@@ -210,7 +210,7 @@ class ProjectService
          * Meilisearch wird ausschließlich für die volltextsuche verwendet
          * diese wurde erstmal auf die inperformante like suche umgebaut
          *
-         * Ergebnis ist, dass die Models einfach nicht sortiert, die Filterungen funktionieren aber
+         * Ergebnis ist, dass die Models einfach nicht sortiert sind, die Filterungen funktionieren aber
          */
 //        if ($builder instanceof \Laravel\Scout\Builder) {
 //            $builder = $builder->query(function ($query) use ($builderCallback) {

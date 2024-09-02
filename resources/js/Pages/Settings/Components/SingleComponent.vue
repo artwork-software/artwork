@@ -37,23 +37,28 @@ export default {
         <div class="flex items-center bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
             <div class="flex justify-between w-full items-center">
                 <div class="w-full">
-                    <div class="grid gird-cols-1 md:grid-cols-12">
+                    <div class="flex">
                         <div class="col-span-6 flex items-center gap-x-3">
                             <ComponentIcons :type="element.component.type" />
                             <div class="">
-                                {{element.component.name }}
-                                <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
-                                    {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+                                <div class="flex items-center gap-4">
+                                    {{element.component.name }}
+                                    <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
+                                        {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+                                    </div>
+                                    <div class="text-[10px] text-gray-500 font-light truncate" v-if="element.component.data.title_size">
+                                        {{ element.component.data.title_size }} Pixel
+                                    </div>
                                 </div>
-                                <div class="text-[10px] text-gray-500 font-light truncate" v-if="element.component.data.title_size">
-                                    {{ element.component.data.title_size }} Pixel
+
+
+                                <div class="col-span-2 text-xs flex items-center">
+                                    {{ $t(element.component.type)}}
                                 </div>
                             </div>
 
                         </div>
-                        <div class="col-span-2 text-xs flex items-center">
-                            {{ $t(element.component.type)}}
-                        </div>
+
                     </div>
                 </div>
                 <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block cursor-pointer relative z-100"/>

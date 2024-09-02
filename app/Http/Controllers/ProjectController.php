@@ -71,6 +71,7 @@ use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderSer
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
@@ -116,6 +117,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
@@ -160,6 +162,8 @@ class ProjectController extends Controller
         private readonly AuthManager $authManager,
         private readonly EventTypeService $eventTypeService,
         private readonly RoomService $roomService,
+        private readonly UserService $userService,
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
     ) {
     }
 
@@ -182,12 +186,16 @@ class ProjectController extends Controller
     }
 
 
-    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
-    {
+    public function index(
+        ProjectIndexPaginateRequest $request
+    ): Response|ResponseFactory {
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
+                $request->enum('sort', ProjectSortEnum::class),
+                $request->collect('project_state_ids'),
+                $request->collect('project_filters')
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -200,6 +208,15 @@ class ProjectController extends Controller
             'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
             'eventTypes' => $this->eventTypeService->getAll(),
             'rooms' => $this->roomService->getAllWithoutTrashed(),
+            'projectSortEnumNames' => array_map(
+                function (ProjectSortEnum $enum): string {
+                    return $enum->name;
+                },
+                ProjectSortEnum::cases()
+            ),
+            'userProjectManagementSetting' => $this->userProjectManagementSettingService
+                ->getFromUser($this->userService->getAuthUser())
+                ?->getAttribute('settings')
         ]);
     }
 
@@ -1720,24 +1737,20 @@ class ProjectController extends Controller
 
     public function addCalculation(ColumnCell $cell, Request $request): void
     {
-        // current position found in $request->position
-        // add check if $request->position is present, if not set to 0
-        if (!$request->position) {
-            $request->position = 0;
-        }
+        $position = $request->integer('position');
 
         $newCalculation = $cell->calculations()->create([
             'name' => '',
             'value' => 0,
             'description' => '',
-            'position' => $request->position + 1
+            'position' => $position + 1
         ]);
 
         // update all positions of calculations where position is greater than $request->position and cell_id is
         // $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
         CellCalculation::query()
             ->where('cell_id', $cell->id)
-            ->where('position', '>', $request->position)
+            ->where('position', '>', $position)
             ->where('id', '!=', $newCalculation->id)
             ->increment('position');
     }

@@ -22,20 +22,19 @@
                                     <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
                                 </div>
                             </div>
-
                             <BaseFilter only-icon="true" :left="false">
                                 <div class="w-full">
                                     <div class="flex justify-end mb-3">
-                                            <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">
-                                                {{ $t('Reset') }}
-                                            </span>
+                                        <span class="xxsLight cursor-pointer text-right w-full" @click="resetFilter">
+                                            {{ $t('Reset') }}
+                                        </span>
                                     </div>
                                     <SwitchGroup as="div" class="flex items-center">
-                                        <Switch v-model="enabled"
-                                                :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
+                                        <Switch v-model="showOnlyMyProjects"
+                                                :class="[showOnlyMyProjects ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create focus:ring-offset-2']">
                                             <span class="sr-only">Use setting</span>
                                             <span aria-hidden="true"
-                                                  :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                                  :class="[showOnlyMyProjects ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                         </Switch>
                                         <SwitchLabel as="span" class="ml-3 xxsLight">
                                             {{ $t('Show only my projects') }}
@@ -57,6 +56,22 @@
                                             {{ $t('Projects') }}
                                         </p>
                                     </div>
+                                    <div class="flex max-h-8 mb-3 mt-3">
+                                        <input v-model="showExpiredProjects"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                            {{ $t('Show expired projects') }}
+                                        </p>
+                                    </div>
+                                    <div class="flex max-h-8 mb-3 mt-3">
+                                        <input v-model="showFutureProjects"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                            {{ $t('Show future projects') }}
+                                        </p>
+                                    </div>
                                     <div class="flex justify-between xsLight mb-3"
                                          @click="showProjectStateFilter = !showProjectStateFilter">
                                         {{ $t('Project status') }}
@@ -68,8 +83,8 @@
                                                        aria-hidden="true"/>
                                     </div>
                                     <div v-if="showProjectStateFilter">
-                                        <div class="flex mb-3" v-for="state in states">
-                                            <input v-model="state.clicked" @change="addStateToFilter(state)"
+                                        <div class="flex mb-3" v-for="state in computedStates">
+                                            <input v-model="state.clicked"
                                                    type="checkbox"
                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                             <p class=" ml-4 my-auto text-sm text-secondary">{{
@@ -77,8 +92,28 @@
                                                 }}</p>
                                         </div>
                                     </div>
+                                    <div class="flex items-center justify-end py-1">
+                                        <div class="text-xs cursor-pointer hover:text-gray-200 transition-all duration-150 ease-in-out" @click="this.applyFiltersAndSort()">
+                                            {{ $t('Apply') }}
+                                        </div>
+                                    </div>
                                 </div>
                             </BaseFilter>
+                            <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
+                                <div class="flex items-center justify-end py-1">
+                                    <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
+                                        {{ $t('Reset') }}
+                                    </span>
+                                </div>
+                                <MenuItem v-for="projectSortEnumName in projectSortEnumNames"
+                                          v-slot="{ active }">
+                                    <div @click="this.sortBy = projectSortEnumName; this.applyFiltersAndSort()"
+                                         :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                        {{ $t(this.parseTranslationFromEnumName(projectSortEnumName)) }}
+                                        <IconCheck v-if="this.getUserSortBySetting() === projectSortEnumName" class="w-5 h-5"/>
+                                    </div>
+                                </MenuItem>
+                            </BaseMenu>
                             <IconFileExport class="h-7 w-7 cursor-pointer text-artwork-buttons-context" aria-hidden="true"
                                             @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
@@ -90,51 +125,76 @@
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
-                        <span v-if="enabled"
-                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                            {{ $t('My projects') }}
-                            <button type="button" @click="enabled = !enabled">
+                        <span v-if="getUserSortBySetting()"
+                            class="rounded-full items-center font-medium text-tagTextGreen border bg-tagBgGreen border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ $t(this.parseTranslationFromEnumName(this.getUserSortBySetting())) }}
+                            <button type="button" @click="this.resetSort();">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
-                        <span v-if="showProjectGroups"
+                        <span v-if="getUserProjectFilterSetting('showOnlyMyProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    {{ $t('Project groups') }}
-                                    <button type="button" @click="showProjectGroups = !showProjectGroups">
-                                        <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                        <span v-if="showProjects"
+                            {{ $t('My projects') }}
+                            <button type="button" @click="showOnlyMyProjects = !showOnlyMyProjects; this.applyFiltersAndSort();">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <span v-if="getUserProjectFilterSetting('showProjectGroups')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    {{ $t('Projects') }}
-                                    <button type="button" @click="showProjects = !showProjects">
-                                        <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                        <span v-for="state in states">
-                                <span v-if="state.clicked"
-                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                            {{ $t('Project groups') }}
+                            <button type="button" @click="showProjectGroups = !showProjectGroups; this.applyFiltersAndSort();">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <span v-if="getUserProjectFilterSetting('showProjects')"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ $t('Projects') }}
+                            <button type="button" @click="showProjects = !showProjects; this.applyFiltersAndSort();">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <span v-if="getUserProjectFilterSetting('showExpiredProjects')"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ $t('Show expired projects') }}
+                            <button type="button" @click="showExpiredProjects = !showExpiredProjects; this.applyFiltersAndSort();">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <span v-if="getUserProjectFilterSetting('showFutureProjects')"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ $t('Show future projects') }}
+                            <button type="button" @click="showFutureProjects = !showFutureProjects; this.applyFiltersAndSort();">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <template v-for="state in computedStateTags">
+                            <span v-if="state.clicked"
+                                  class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ state.name }}
                                 <button type="button"
-                                        @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
+                                        @click="state.clicked = false; this.applyFiltersAndSort();">
                                     <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                                 </button>
                             </span>
-                        </span>
+                        </template>
                     </div>
 
                     <div class="my-3 w-full">
-                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in pinnedProjects" :key="project.id">
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in pinnedProjects" :key="project.id">
                             <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
                     <div class="my-3 w-full">
-                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in filteredProjects" :key="project.id">
-                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project"  :first_project_tab_id="first_project_tab_id" />
+                        <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in this.projects.data" :key="project.id">
+                            <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />
                         </div>
                     </div>
 
-                    <BasePaginator :entities="projects" property-name="projects" />
+                    <BasePaginator :entities="projects"
+                                   property-name="projects"
+                                   :emit-update-entities-per-page="true"
+                                   @update-page="this.updatePage"
+                                   @update-entities-per-page="this.changeEntitiesPerPage"/>
                 </div>
             </div>
         </div>
@@ -204,29 +264,30 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    ChevronDownIcon,
-    DocumentReportIcon,
-    DotsVerticalIcon,
-    DuplicateIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    SearchIcon,
-    TrashIcon,
-    XIcon
+  ChevronDownIcon,
+  DocumentReportIcon,
+  DotsVerticalIcon,
+  DuplicateIcon,
+  InformationCircleIcon,
+  PencilAltIcon,
+  SearchIcon,
+  TrashIcon,
+  XIcon
 } from '@heroicons/vue/outline'
 import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel,
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Listbox,
+  ListboxButton,
+  ListboxLabel,
+  ListboxOption,
+  ListboxOptions,
+  MenuItem,
+  Switch,
+  SwitchGroup,
+  SwitchLabel
 } from '@headlessui/vue'
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import SingleProject from "@/Pages/Projects/Components/SingleProject.vue";
@@ -236,9 +297,9 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import {IconPin} from "@tabler/icons-vue";
+import {IconCheck, IconPin} from "@tabler/icons-vue";
 import ProjectExportBudgetsByBudgetDeadlineModal
-    from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
+  from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -258,9 +319,12 @@ import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import projects from "@/Pages/Trash/Projects.vue";
 import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
+import debounce from 'lodash.debounce'
 
 export default defineComponent({
     components: {
+        IconCheck,
+        MenuItem,
         AddBulkEventsModal,
         BasePaginator,
         SingleProject,
@@ -327,12 +391,14 @@ export default defineComponent({
         'createSettings',
         'myLastProject',
         'eventTypes',
-        'rooms'
+        'rooms',
+        'projectSortEnumNames',
+        'userProjectManagementSetting',
     ],
     mixins: [Permissions, IconLib],
     data() {
         return {
-            project_search: this.$page.props.urlParameters.query ?? '',
+            project_search: route().params.query,
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectBudgetAccess: {},
@@ -340,7 +406,7 @@ export default defineComponent({
             projectFilter: {'name': this.$t('All projects')},
             isSingleTab: true,
             isGroupTab: false,
-            showSearchbar: this.$page.props.urlParameters.query !== undefined,
+            showSearchbar: route().params.query?.length > 0,
             project_query: '',
             project_search_results: [],
             addingProject: false,
@@ -353,21 +419,47 @@ export default defineComponent({
             projectHistoryToDisplay: [],
             hasGroup: false,
             selectedGroup: null,
-            enabled: false,
-            showProjectGroups: false,
-            showProjects: false,
-            showProjectStateFilter: false,
-            projectStateFilter: [],
+            showOnlyMyProjects: this.userProjectManagementSetting?.project_filters.showOnlyMyProjects === '1',
+            showProjectGroups: this.userProjectManagementSetting?.project_filters.showProjectGroups === '1',
+            showProjects: this.userProjectManagementSetting?.project_filters.showProjects === '1',
+            showExpiredProjects: this.userProjectManagementSetting?.project_filters.showExpiredProjects === '1',
+            showFutureProjects: this.userProjectManagementSetting?.project_filters.showFutureProjects === '1',
+            sortBy: this.userProjectManagementSetting?.sort_by === null ? undefined : this.userProjectManagementSetting?.sort_by,
+            showProjectStateFilter: true,
             openedMenu: false,
             editingProject: false,
             projectToEdit: null,
             createProject: false,
             showProjectExportBudgetsByBudgetDeadlineModal: false,
             entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
+            page: route().params.page ?? 1,
+            perPage: route().params.entitiesPerPage ?? 10,
             showAddBulkEventModal: false
         }
     },
     computed: {
+        computedStates() {
+            if (this.userProjectManagementSetting) {
+                this.states.forEach((state) => {
+                    state.clicked = this.userProjectManagementSetting.project_state_ids.includes(
+                        String(state.id)
+                    );
+                });
+            }
+
+            return this.states;
+        },
+        computedStateTags() {
+            let states = [];
+
+            this.computedStates.forEach((state) => {
+                if (this.userProjectManagementSetting.project_state_ids.includes(String(state.id))) {
+                    states.push(state);
+                }
+            });
+
+            return states;
+        },
         historyTabs() {
             return [
                 {
@@ -382,36 +474,7 @@ export default defineComponent({
                 },
 
             ]
-        },
-        filteredProjects() {
-            return this.projects?.data?.filter(project => {
-                // Check if the project should be included based on user-related status
-                if (this.enabled && !project.users.some(user => user.id === this.$page.props.user.id)) {
-                    return false;
-                }
-
-                // Check if the project should be included based on project type
-                const showGroups = this.showProjectGroups;
-                const showProjects = this.showProjects;
-
-                if (!(showGroups && showProjects) &&
-                    ((showGroups && !project.is_group) ||
-                        (showProjects && project.is_group))) {
-                    return false;
-                }
-
-                // Check if the project should be included based on state filter
-                if (this.projectStateFilter.length > 0 && !this.projectStateFilter.includes(project?.state?.id)) {
-                    return false;
-                }
-
-                return true;
-            });
         }
-
-
-        // sort Projects by pinned_by_users array. if user id in array, project is pinned and in sort function it will be first
-
     },
     methods: {
         usePage,
@@ -432,22 +495,6 @@ export default defineComponent({
             this.editingProject = false;
             this.projectToEdit = null;
         },
-        addStateToFilter(state) {
-            if (!state.clicked) {
-                this.projectStateFilter.splice(this.projectStateFilter.indexOf(state), 1);
-            } else {
-                this.projectStateFilter.push(state.id)
-            }
-        },
-        removeFilter() {
-            this.enabled = false;
-            this.showProjectGroups = false;
-            this.showProjects = false;
-            this.projectStateFilter = []
-            this.states.forEach((state) => {
-                state.clicked = false
-            })
-        },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;
             this.showBudgetHistoryTab = false;
@@ -461,8 +508,6 @@ export default defineComponent({
             this.showSearchbar = !this.showSearchbar;
             this.project_search = '';
         },
-
-
         openSuccessModal() {
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -502,19 +547,119 @@ export default defineComponent({
                     this.$refs.searchBarInput.focus();
                 }
             });
-        }
+        },
+        filterAndSortRequestSuccessHandler(reset) {
+            let data = null;
+
+            if (!reset) {
+                data = {
+                    project_state_ids: this.states.filter((state) => state.clicked).map((state) => state.id),
+                    project_filters: {
+                        showProjectGroups: this.getTruthyOrUndefined(this.showProjectGroups),
+                        showProjects: this.getTruthyOrUndefined(this.showProjects),
+                        showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
+                        showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
+                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects)
+                    },
+                    sort: this.sortBy
+                };
+            } else {
+                data = {
+                    sort: this.sortBy
+                }
+            }
+
+            let projectManagementRoute = route('projects', data);
+            window.localStorage.setItem('userProjectManagementSettingUrl', projectManagementRoute);
+            this.$page.props.userProjectManagementSettingUrl = projectManagementRoute;
+        },
+        applyFiltersAndSort(resetPage = true) {
+            router.get(
+                route().current(),
+                {
+                    page: resetPage ? 1 : this.page,
+                    entitiesPerPage: this.perPage,
+                    query: route().params.query,
+                    project_state_ids: this.states.filter((state) => state.clicked).map((state) => state.id),
+                    project_filters: {
+                        showProjectGroups: this.getTruthyOrUndefined(this.showProjectGroups),
+                        showProjects: this.getTruthyOrUndefined(this.showProjects),
+                        showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
+                        showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
+                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects)
+                    },
+                    sort: this.sortBy
+                },
+                {
+                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(false) }
+                }
+            );
+        },
+        resetFilter() {
+            router.get(
+                route().current(),
+                {
+                    page: 1,
+                    entitiesPerPage: this.perPage,
+                    query: route().params.query,
+                    project_states: undefined,
+                    project_filters: undefined,
+                    sort: this.sortBy
+                },
+                {
+                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(true) }
+                }
+            );
+        },
+        resetSort() {
+            this.sortBy = undefined;
+            this.applyFiltersAndSort();
+        },
+        updatePage(page, entitiesPerPage) {
+            this.page = page;
+            this.perPage = entitiesPerPage;
+            this.applyFiltersAndSort(false);
+        },
+        changeEntitiesPerPage(entitiesPerPage) {
+            this.perPage = entitiesPerPage;
+            this.applyFiltersAndSort();
+        },
+        getTruthyOrUndefined(value) {
+            return value ? 1 : undefined;
+        },
+        parseTranslationFromEnumName(projectSortEnumName) {
+            let parts = projectSortEnumName.split('_');
+
+            return parts[0].slice(0,1) + parts[0].substring(1).toLowerCase() +
+                ' ' + parts[1].toLowerCase();
+        },
+        getUserSortBySetting() {
+            return this.getUserProjectManagementSetting()?.sort_by;
+        },
+        getUserProjectFilterSetting(setting) {
+            return this.getUserProjectManagementSetting()?.project_filters[setting];
+        },
+        getUserProjectManagementSetting() {
+            return this.$page.props.userProjectManagementSetting;
+        },
+        reloadProjects() {
+            router.reload({
+                only: ['projects'],
+                data: {
+                    query: this.project_search,
+                    page: 1,
+                    entitiesPerPage: this.projects.per_page
+                }
+            });
+        },
+        reloadProjectsDebounced: debounce(function() {
+            this.reloadProjects();
+        }, 1000)
     },
     watch: {
         project_search: {
             handler() {
-                router.reload({
-                    only: ['projects'],
-                    data: {
-                        query: this.project_search,
-                        page: 1,
-                        entitiesPerPage: this.projects.per_page
-                    }
-                })
+                this.reloadProjectsDebounced();
             }
         }
     }

@@ -18,29 +18,28 @@
                                 </div>
                             </div>
                             <div class="font-bold text-secondaryHover block">
-                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
                             </div>
                         </div>
                         <div v-if="fullSidenav" class="ml-4">
-                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
-                    <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
+                    <div class="flex flex-col w-full space-y-1 mt-8 overflow-y-auto managementMenu">
                         <template v-for="item in navigation">
                             <Link v-if="item.desiredClickHandler"
+                                  href="#"
                                   @click="item.desiredClickHandler()"
-                                  class="hover:bg-artwork-navigation-color/10 text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs">
+                                  :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
                             </Link>
-                            <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <div class="flex items-center">
-                                    <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                    <div class="ml-4 w-32" v-if="fullSidenav">
-                                        {{ item.name }}
-                                    </div>
+                            <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <div class="ml-4 w-32" v-if="fullSidenav">
+                                    {{ item.name }}
                                 </div>
                             </a>
                         </template>
@@ -58,7 +57,7 @@
                             'create, delete and update rooms'
                         ]) || hasAdminRole()
                         ">
-                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
+                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
                                     <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
@@ -85,7 +84,7 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
+                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
                             <div class="flex items-center">
                                 <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
@@ -97,27 +96,24 @@
                 </div>
 
                 <div class="flex flex-col justify-end w-full">
-                    <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
-                        <div class="flex items-center relative">
-                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.unread_notifications > 0"
-                                 style="font-size: 7px;"
-                                 class="w-4 h-4 block absolute -top-2 -right-2 rounded-full bg-white text-black text-center">
-                                {{ this.$page.props.unread_notifications }}
-                            </div>
-                            <div class="ml-4 w-32" v-if="fullSidenav">
-                                {{ $t('Notifications') }}
-                            </div>
+                    <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs relative']">
+                        <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                        <div v-if="this.$page.props.unread_notifications > 0"
+                             style="font-size: 7px;"
+                             :class="fullSidenav ? 'right-8' : ''"
+                             class="w-4 h-4 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
+                            {{ this.$page.props.unread_notifications }}
+                        </div>
+                        <div class="ml-4 w-32" v-if="fullSidenav">
+                            {{ $t('Notifications') }}
                         </div>
                     </a>
                     <Menu as="div" class="flex flex-col items-center">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
-                            <div class="flex items-center">
-                                <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
-                                <div class="ml-4 w-32 text-left" v-if="fullSidenav">
-                                    Hallo
-                                    {{ $page.props.user.first_name }}
-                                </div>
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
+                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
+                            <div class="ml-4 w-32 text-left" v-if="fullSidenav">
+                                Hallo
+                                {{ $page.props.user.first_name }}
                             </div>
                         </MenuButton>
                         <transition enter-active-class="transition-enter-active"
@@ -450,7 +446,9 @@ export default {
                 },
                 {
                     name: this.$t('Projects'),
-                    href: route('projects'),
+                    href: this.$page.props.userProjectManagementSettingUrl ??
+                        window.localStorage.getItem('userProjectManagementSettingUrl') ??
+                        route('projects'),
                     route: ['/projects'],
                     has_permission: this.moduleIsVisible('projects'),
                     icon: IconGeometry
@@ -527,7 +525,7 @@ export default {
                 }, 3000)
             });
     },
-    data() {
+  data() {
         return {
             showSystemSettings: false,
             showUserMenu: false,

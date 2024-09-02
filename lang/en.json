@@ -1971,5 +1971,11 @@
     "Sort by appointment type": "Sort by appointment type",
     "Sort by day": "Sort by day",
     "Reset sorting": "Reset sorting",
-    "The selected project has no dates": "The selected project has no dates"
+    "The selected project has no dates": "The selected project has no dates",
+    "Alphabetically ascending": "Alphabetically ascending",
+    "Alphabetically descending": "Alphabetically descending",
+    "Chronologically ascending": "Chronologically ascending",
+    "Chronologically descending": "Chronologically descending",
+    "Show expired projects": "Show expired projects",
+    "Show future projects": "Show future projects"
 }

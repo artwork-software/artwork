@@ -77,7 +77,7 @@ export default {
 
 <template>
     <AppLayout>
-        <div class="my-8 ml-14 mr-40">
+        <div class="my-8 ml-14">
             <div class="">
                 <h2 class="headline1 my-6">{{$t('Tab Settings')}}</h2>
                 <div class="xsLight">
@@ -88,9 +88,9 @@ export default {
             <ProjectTabs />
 
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <!-- Tab components -->
-               <div class="w-full">
+               <div class="w-full col-span-1">
                    <div class="flex justify-end mb-5">
                        <PlusButton @click="showAddEditModal = true" />
                    </div>
@@ -109,7 +109,7 @@ export default {
 
                 <!-- Components List -->
 
-                <div>
+                <div class="col-span-1">
                     <div class="flex items-center justify-end w-full mb-3">
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>
@@ -128,14 +128,14 @@ export default {
                             <div class="flex items-center gap-x-4 cursor-pointer">
                                 <h2 class="text-md font-bold mb-2">{{ $t(componentsArray.name) }}</h2>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-2">
+                            <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
                                 <DragComponentElement v-for="component in componentsArray.components" :component="component" />
                             </div>
                         </div>
                    </div>
                    <div>
                        <h2 class="text-md font-bold mb-2">{{ $t('Special components') }}</h2>
-                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-2">
+                       <div class="grid grid-cols-1 2xl:grid-cols-3 gap-2">
                            <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
                        </div>
                    </div>

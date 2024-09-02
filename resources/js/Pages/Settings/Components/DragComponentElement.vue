@@ -26,13 +26,13 @@ export default {
 
 <template>
     <DropComponentsToolTip :top="true" :tooltip-text="component.special ? $t(component.name) : component.name">
-        <div class="p-3 rounded-lg border mb-3 overflow-auto hover:cursor-grab flex flex-col h-28 w-full justify-center items-center" draggable="true" @dragstart="onDragStart">
-            <div class="flex items-center justify-center mb-2">
+        <div class="flex p-3 rounded-lg border mb-3 hover:cursor-grab h-16 w-full items-center gap-2" draggable="true" @dragstart="onDragStart">
+            <div class="flex items-center justify-center">
                 <ComponentIcons :type="component.type" />
             </div>
-            <div class="text-center text-sm font-bold w-20">
-                <div class="w-20 truncate">
-                    {{ $t(component.name) }}
+            <div class="text-sm font-bold">
+                <div class="w-full">
+                    {{ component.name }}
                     <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
                         {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
                     </div>

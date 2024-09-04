@@ -9,6 +9,7 @@
                    placeholder="placeholder"
                   :rows="this.rows"
                   :cols="this.cols"
+                  :maxlength="maxLength"
         />
         <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
@@ -62,6 +63,10 @@ export default defineComponent({
         isDark: {
             type: Boolean,
             default: false
+        },
+        maxLength: {
+            type: Number,
+            default: 255
         }
     },
     emits: [

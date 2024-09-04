@@ -461,11 +461,16 @@ export default defineComponent({
                 if (isDragging) {
                     container.style.left = `${event.clientX - offsetX}px`;
                     container.style.top = `${event.clientY - offsetY}px`;
+                    // add no-select class to body to prevent text selection
+                    document.body.classList.add('select-none');
                 }
             });
 
             document.addEventListener('mouseup', () => {
                 isDragging = false;
+
+                // remove no-select class from body to enable text selection
+                document.body.classList.remove('select-none');
             });
         },
         preventContainerDrag(event) {
@@ -514,4 +519,10 @@ export default defineComponent({
     background-color: #F5F5F3;
 }
 
+.no-select {
+    user-select: none; /* Disable text selection */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+}
 </style>

@@ -193,10 +193,13 @@ const resetForm = () => {
 
 const deleteTime = () => {
     router.delete(
-        route('delete.timeline.row', props.time),
+        route('delete.timeline.row', props.time.id),
         {
-            preserveState: true,
-            preserveScroll: true
+            preserveScroll: true,
+            preserveState: false,
+            onSuccess: () => {
+                emits('wantsFreshPlacements')
+            }
         }
     )
 };

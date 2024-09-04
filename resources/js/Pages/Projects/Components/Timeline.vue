@@ -18,8 +18,8 @@
             </template>
 
             <div>
-                <div class="flex items-center justify-center mt-1 py-2 rounded-lg border-2 border-dashed">
-                    <IconCirclePlus @click="addEmptyTimeline" class="h-6 w-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
+                <div class="flex items-center justify-center mt-1 py-2 rounded-lg cursor-pointer border-2 border-dashed group" @click="addEmptyTimeline">
+                    <IconCirclePlus class="h-6 w-6 text-artwork-buttons-context group-hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
                 </div>
             </div>
         </div>

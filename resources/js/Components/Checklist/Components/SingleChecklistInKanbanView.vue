@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-x-3">
-                <IconCirclePlus v-if="canEditComponent" class="h-5 w-5" @click="openAddTaskModal = true"/>
+                <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5" @click="openAddTaskModal = true"/>
                 <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }" v-if="!checklist.private">
                         <div @click="openEditChecklistTeamsModal = true"

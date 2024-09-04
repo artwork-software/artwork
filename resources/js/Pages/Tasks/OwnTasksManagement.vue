@@ -212,7 +212,7 @@ const noProjects = ref(false);
 const privateChecklists = ref(false);
 const noPrivateChecklists = ref(false);
 const showDoneTasks = ref(false);
-const showChecklistWithoutTasks = ref(false);
+const showChecklistWithoutTasks = ref(true);
 
 const currentSort = ref(usePage().props.urlParameters?.filter > 0 ? parseInt(usePage().props.urlParameters?.filter) : 0);
 

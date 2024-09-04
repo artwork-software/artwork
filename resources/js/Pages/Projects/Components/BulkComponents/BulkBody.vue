@@ -352,6 +352,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         });
     },
     updateUserSortId = (id) => {
+        isLoading.value = true;
         router.patch(
             route('user.update_bulk_sort_id', {user: usePage().props.user.id}),
             {
@@ -359,34 +360,12 @@ const {hasAdminRole} = usePermission(usePage().props),
             },
             {
                 preserveScroll: true,
+                preserveState: false,
                 onSuccess: () => {
-                    updateSort(id);
+                    isLoading.value = false;
                 }
             }
         );
-    },
-    updateSort = (type) => {
-        isLoading.value = true;
-        currentSort.value = type;
-        if (currentSort.value === 1) {
-            events.sort((a, b) => {
-                return a.room.name.localeCompare(b.room.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else if (currentSort.value === 2) {
-            events.sort((a, b) => {
-                return a.type.name.localeCompare(b.type.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else if (currentSort.value === 3) {
-            events.sort((a, b) => {
-                return a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else {
-            events.sort((a, b) => {
-                return a.index - b.index;
-            });
-        }
-
-        isLoading.value = false;
     };
 
 const useProjectTimePeriodAndRedirect = () => {
@@ -426,8 +405,6 @@ onMounted(() => {
     if (props.isInModal) {
         addEmptyEvent();
     }
-
-    updateSort(usePage().props.user.bulk_sort_id);
 });
 
 watch(events, (newEvents) => {

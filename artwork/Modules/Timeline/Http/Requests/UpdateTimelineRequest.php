@@ -18,7 +18,7 @@ class UpdateTimelineRequest extends FormRequest
             'end_date' => 'required|string',
             'start' => 'required|string',
             'end' => 'required|string',
-            'description' => 'string|nullable',
+            'description' => 'string|nullable|max:255',
         ];
     }
 }

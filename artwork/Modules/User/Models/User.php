@@ -117,6 +117,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
+ * @property int $bulk_sort_id
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -170,7 +171,8 @@ class User extends Model implements
         'goto_mode',
         'checklist_style',
         'at_a_glance',
-        'notification_enums_last_sent_dates'
+        'notification_enums_last_sent_dates',
+        'bulk_sort_id'
     ];
 
     protected $casts = [

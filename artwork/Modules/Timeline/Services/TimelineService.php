@@ -4,6 +4,7 @@ namespace Artwork\Modules\Timeline\Services;
 
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
+use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Repositories\TimelineRepository;
 use Carbon\Carbon;
@@ -72,15 +73,19 @@ readonly class TimelineService
 
     public function updateTimeline(Timeline $timeline, SupportCollection $data): Timeline
     {
-        $startDate = Carbon::parse($data->start_date . ' ' . $data->start);
+
+        $startDate = Carbon::parse($data->get('start_date') . ' ' . $data->get('start'));
+        $endDate = Carbon::parse($data->get('end_date') . ' ' . $data->get('end'));
+
         [$startTimeConverted, $endTimeConverted] = $this->processTimes(
             $startDate,
-            $data->start,
-            $data->end,
-            Carbon::parse($data->end_date)
+            $data->get('start'),
+            $data->get('end'),
+            Carbon::parse($data->get('end_date'))
         );
+
         $timeline->update([
-            'description' => $data->description,
+            'description' => $data->get('description'),
             'start' => $startTimeConverted->format('H:i'),
             'end' => $endTimeConverted->format('H:i'),
             'start_date' => $startTimeConverted->format('Y-m-d'),

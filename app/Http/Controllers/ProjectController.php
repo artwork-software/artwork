@@ -3390,6 +3390,6 @@ class ProjectController extends Controller
 
     public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
     {
-        $this->timelineService->updateTimeline($timeline, $request->collect('name', 'date'));
+        $this->timelineService->updateTimeline($timeline, collect($request->all()));
     }
 }

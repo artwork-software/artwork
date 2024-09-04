@@ -1977,5 +1977,8 @@
     "Chronologically ascending": "Chronologisch aufsteigend",
     "Chronologically descending": "Chronologisch absteigend",
     "Show expired projects": "Abgelaufene Projekte anzeigen",
-    "Show future projects": "Zukünftige Projekte anzeigen"
+    "Show future projects": "Zukünftige Projekte anzeigen",
+    "Automatic mode": "Automatikmodus",
+    "Manual mode": "Manueller Modus",
+    "End date must be after start date or the same": "Enddatum muss nach dem Startdatum oder gleich sein"
 }

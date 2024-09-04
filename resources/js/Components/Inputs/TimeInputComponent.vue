@@ -10,7 +10,7 @@
                class="input peer"
                :class="[isSmall ? '' : 'h-12', classes]"
                placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -48,6 +48,10 @@ export default defineComponent({
         classes: {
             type: String,
             default: ''
+        },
+        isDark: {
+            type: Boolean,
+            default: false
         }
     },
     emits: [

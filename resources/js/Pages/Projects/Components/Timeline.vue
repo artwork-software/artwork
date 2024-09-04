@@ -1,34 +1,27 @@
 <template>
-    <div class="w-[175px]">
-        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-lg mb-0.5"  @click="openTimelineModal()">
+    <div class="w-72">
+        <div class="h-9 bg-gray-800/60 flex items-center px-4 rounded-lg mb-0.5">
             <div class="uppercase text-white text-xs">
                 {{ $t('Timeline') }}
             </div>
         </div>
 
         <div>
-            <div v-if="(timeLine?.length === 0 || timeLine === null) && (this.$can('can plan shifts') || this.hasAdminRole())" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
+            <div v-if="(timeLine?.length === 0 || timeLine === null) && (this.$can('can plan shifts') || this.hasAdminRole())" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer hidden" @click="showAddTimeLineModal = true">
                 <p class="text-xs">
                     {{ $t('Click here to add a timeline') }}
                 </p>
             </div>
+
             <template v-for="(time) in timeLine">
-                <div :id="'timeline-container-' + event.id + '-' + time.id"
-                     @click="openTimelineModal()"
-                     class="flex flex-col relative"
-                     :class="{'cursor-pointer': this.$can('can plan shifts') || this.hasAdminRole()}"
-                     v-if="time.start !== null && time.end !== null">
-                    <div class="text-xs bg-gray-900 p-2 text-white h-full rounded-lg">
-                        <p v-if="time.start_date === time.end_date">
-                            {{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.end }}
-                        </p>
-                        <p v-else>
-                            {{ time.formatted_dates.start_date }} {{ time.start }} - {{ time.formatted_dates.end_date }} {{ time.end }}
-                        </p>
-                        <p class="text-xs" v-html="time.description"></p>
-                    </div>
-                </div>
+                <NewSingleTimeline :time="time" :event="event" @wantsFreshPlacements="this.$emit('wantsFreshPlacements')"/>
             </template>
+
+            <div>
+                <div class="flex items-center justify-center mt-1 py-2 rounded-lg cursor-pointer border-2 border-dashed group" @click="addEmptyTimeline">
+                    <IconCirclePlus class="h-6 w-6 text-artwork-buttons-context group-hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
+                </div>
+            </div>
         </div>
     </div>
 
@@ -42,6 +35,9 @@ import {defineComponent} from 'vue'
 import AddTimeLineModal from "@/Pages/Projects/Components/AddTimeLineModal.vue";
 import dayjs from "dayjs";
 import Permissions from "@/Mixins/Permissions.vue";
+import IconLib from "@/Mixins/IconLib.vue";
+import {router} from "@inertiajs/vue3";
+import NewSingleTimeline from "@/Pages/Projects/Components/TimelineComponents/NewSingleTimeline.vue";
 
 export default defineComponent({
     name: "Timeline",
@@ -51,6 +47,7 @@ export default defineComponent({
         }
     },
     components: {
+        NewSingleTimeline,
         AddTimeLineModal
     },
     props: [
@@ -61,7 +58,8 @@ export default defineComponent({
         'wantsFreshPlacements'
     ],
     mixins: [
-        Permissions
+        Permissions,
+        IconLib
     ],
     data(){
         return {
@@ -77,6 +75,16 @@ export default defineComponent({
             if(this.$can('can plan shifts') || this.hasAdminRole()) {
                 this.showAddTimeLineModal = true;
             }
+        },
+        addEmptyTimeline(){
+            router.post(route('add.timeline.row', {event: this.event.id}), {
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    this.$emit('wantsFreshPlacements');
+                }
+            })
         }
     }
 });

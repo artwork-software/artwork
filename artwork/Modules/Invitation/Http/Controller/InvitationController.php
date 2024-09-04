@@ -59,7 +59,7 @@ class InvitationController extends Controller
     public function accept(Request $request): Response|ResponseFactory
     {
         if (
-            !($invitation = $this->invitationService->findByEmail($request->query('email'))) ||
+            !($invitation = $this->invitationService->findByEmail($request->string('email'))) ||
             !$this->hashManager->check($request->query('token'), $invitation->getAttribute('token'))
         ) {
             throw new UnauthorizedException(401);

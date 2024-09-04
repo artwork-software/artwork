@@ -589,7 +589,6 @@
     "Budget deadline": "Budget Stichtag",
     "Project process": "Projektverlauf",
     "Here you can see what was changed by whom and when.": "Hier kannst du nachvollziehen, was von wem wann geändert wurde.",
-    "deleted User": "gelöschte Nutzer:in",
     "Project": "Projekt",
     "Project team": "Projektteam",
     "Project management": "Projektleitung",
@@ -1977,5 +1976,7 @@
     "Chronologically ascending": "Chronologisch aufsteigend",
     "Chronologically descending": "Chronologisch absteigend",
     "Show expired projects": "Abgelaufene Projekte anzeigen",
-    "Show future projects": "Zukünftige Projekte anzeigen"
+    "Show future projects": "Zukünftige Projekte anzeigen",
+    "Creator": "Ersteller:in",
+    "System": "System"
 }

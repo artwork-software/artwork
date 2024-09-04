@@ -549,7 +549,6 @@
     "Budget deadline": "Budget deadline",
     "Project process": "Project process",
     "Here you can see what was changed by whom and when.": "Here you can see what was changed by whom and when.",
-    "deleted User": "deleted User",
     "Project": "Project",
     "Project team": "Project team",
     "Project management": "Project management",
@@ -1977,5 +1976,7 @@
     "Chronologically ascending": "Chronologically ascending",
     "Chronologically descending": "Chronologically descending",
     "Show expired projects": "Show expired projects",
-    "Show future projects": "Show future projects"
+    "Show future projects": "Show future projects",
+    "Creator": "Creator",
+    "System": "System"
 }

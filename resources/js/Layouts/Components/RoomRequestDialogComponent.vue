@@ -14,7 +14,7 @@
                                           :alt="this.event.created_by.last_name"
                                           class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                         <div class="xsLight ml-3" v-else>
-                            {{$t('deleted User')}}
+                            {{ $t('Deleted user') }}
                         </div>
                     </div>
                 </div>
@@ -421,18 +421,18 @@
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+  Listbox,
+  ListboxButton,
+  ListboxLabel,
+  ListboxOption,
+  ListboxOptions,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Switch,
+  SwitchGroup,
+  SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";

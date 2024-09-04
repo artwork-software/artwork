@@ -9,12 +9,12 @@
                 />
                 <div v-if="event?.id" class="flex items-center">
                     {{ $t('Created by') }}
-                    <div v-if="this.event?.created_by">
-                        <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"
-                                            width="7" class="ml-2"/>
-                    </div>
-                    <div class="xsLight ml-3" v-else>
-                        {{ $t('deleted User') }}
+                    <div>
+                        <UserPopoverTooltip :user="this.event.created_by"
+                                            :id="this.event.created_by?.id ?? 'deletedUserTooltip'"
+                                            height="7"
+                                            width="7"
+                                            class="ml-2"/>
                     </div>
                 </div>
             </div>
@@ -110,10 +110,12 @@
                     {{ this.selectedProject?.name }}
                 </a>
                 </div>
-                <div v-if="this.event.created_by" class="flex items-center w-1/2">
+                <div class="flex items-center w-1/2">
                     <p class="truncate xsLight subpixel-antialiased max-w-60">
                         {{ $t('Created by') }}
-                        <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9"
+                        <UserPopoverTooltip :user="this.event.created_by"
+                                            :id="this.event.created_by?.id ?? 'deletedUserTooltip'"
+                                            height="9"
                                             width="9" class="ml-2"/>
                     </p>
                 </div>
@@ -595,18 +597,18 @@ import IconLib from "@/Mixins/IconLib.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+  Listbox,
+  ListboxButton,
+  ListboxLabel,
+  ListboxOption,
+  ListboxOptions,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Switch,
+  SwitchGroup,
+  SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -614,7 +616,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";

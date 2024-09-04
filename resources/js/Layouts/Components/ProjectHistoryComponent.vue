@@ -29,10 +29,11 @@
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
-                                <UserPopoverTooltip v-if="historyItem.changes[0].changed_by" :user="historyItem.changes[0].changed_by" :id="index" height="7" width="7"/>
-                                <div v-else class="xsLight ml-3">
-                                    {{ $t('deleted User') }}
-                                </div>
+                                <UserPopoverTooltip :user="historyItem.changes[0].changed_by"
+                                                    :id="index"
+                                                    height="7"
+                                                    width="7"/>
+
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{
                                         $t(
@@ -51,10 +52,10 @@
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                            <UserPopoverTooltip v-if="historyItem.changes[0].changed_by" :user="historyItem.changes[0].changed_by" :id="index" height="7" width="7"/>
-                            <div v-else class="xsLight ml-3">
-                                {{ $t('deleted User') }}
-                            </div>
+                            <UserPopoverTooltip :user="historyItem.changes[0].changed_by"
+                                                :id="index"
+                                                height="7"
+                                                width="7"/>
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
                                 {{
                                     $t(

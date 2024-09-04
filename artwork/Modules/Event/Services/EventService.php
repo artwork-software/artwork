@@ -1157,4 +1157,11 @@ readonly class EventService
     {
         return $this->eventRepository->getOrderBySubQueryBuilder($column, $direction);
     }
+
+    public function update(Event $event, $attributes): Event
+    {
+        $this->eventRepository->update($event, $attributes);
+
+        return $event;
+    }
 }

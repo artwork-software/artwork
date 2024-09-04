@@ -31,7 +31,7 @@
                      @mouseout="commentHovered = null">
                     <div class="flex justify-between">
                         <div class="flex items-center">
-                            <UserPopoverTooltip v-if="comment.user" :user="comment.user" height="7" width="7" :id="comment.user.id"/>
+                            <UserPopoverTooltip :user="comment.user" height="7" width="7" :id="comment.id"/>
                             <div class="ml-2 text-secondary"
                                  :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                 {{ comment.created_at }}

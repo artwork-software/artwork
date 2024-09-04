@@ -309,7 +309,7 @@ class User extends Model implements
         return $this->hasMany(Checklist::class);
     }
 
-    public function createdRppms(): HasMany
+    public function createdRooms(): HasMany
     {
         return $this->hasMany(Room::class);
     }

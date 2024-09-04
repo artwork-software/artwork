@@ -23,7 +23,7 @@
                             <MenuItems
                                 class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                    <Link href="#" @click="teamForm.svg_name = item.iconName"
+                                    <Link href="#" @click="teamForm.svg_name = item.iconName; editTeam()"
                                           :class="[active ? 'bg-artwork-navigation-color/10 text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TeamIconCollection class="h-16 w-16" :iconName="item.iconName"/>
                                     </Link>
@@ -192,6 +192,22 @@
 
 
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import AppLayout from '@/Layouts/AppLayout.vue'
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import JetButton from "@/Jetstream/Button.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import JetInput from "@/Jetstream/Input.vue";
+import JetInputError from "@/Jetstream/InputError.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import {router} from "@inertiajs/vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -223,23 +239,6 @@ const iconMenuItems = [
     {iconName: 'icon_technik_veranstaltung'},
     {iconName: 'icon_vermietung'},
 ]
-
-import AppLayout from '@/Layouts/AppLayout.vue'
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import JetButton from "@/Jetstream/Button.vue";
-import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInput from "@/Jetstream/Input.vue";
-import JetInputError from "@/Jetstream/InputError.vue";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {router} from "@inertiajs/vue3";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import Permissions from "@/Mixins/Permissions.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import BaseModal from "@/Components/Modals/BaseModal.vue";
 
 export default {
     mixins: [Permissions],

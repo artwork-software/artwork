@@ -42,10 +42,12 @@ class ChecklistController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $this->authorize('createProperties', Project::find($request->project_id));
+        if ($request->integer('project_id')) {
+            $this->authorize('createProperties', Project::find($request->project_id));
+        }
 
         //Check whether checklist should be created on basis of a template
-        if ($request->template_id) {
+        if ($request->integer('template_id')) {
             $this->createFromTemplate($request);
         } else {
             $this->createWithoutTemplate($request);

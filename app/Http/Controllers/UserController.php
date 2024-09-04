@@ -535,6 +535,11 @@ class UserController extends Controller
         $user->update($request->only('at_a_glance'));
     }
 
+    public function updateBulkSortId(User $user, Request $request): void
+    {
+        $user->update($request->only('bulk_sort_id'));
+    }
+
     public function operationPlan(
         Request $request,
         User $user,

@@ -1978,5 +1978,8 @@
     "Show expired projects": "Show expired projects",
     "Show future projects": "Show future projects",
     "Creator": "Creator",
-    "System": "System"
+    "System": "System",
+    "Automatic mode": "Automatic mode",
+    "Manual mode": "Manual mode",
+    "End date must be after start date or the same": "End date must be after start date or the same"
 }

@@ -29,7 +29,7 @@ readonly class CommentService
         ?int $tabId = null
     ): Comment {
         $comment = new Comment();
-        $comment->text = $text;
+        $comment->text = nl2br($text);
         $comment->user()->associate($user);
         $comment->tab_id = $tabId;
         if ($project) {

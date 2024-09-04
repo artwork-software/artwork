@@ -46,7 +46,7 @@
                     <div v-else class="mt-3" v-for="(user, index) in teamForm.users">
                         <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9" :class="index !== 0 ? '-ml-3' : ''"/>
                     </div>
-                    <BaseMenu :right="false">
+                    <BaseMenu right>
                         <MenuItem v-slot="{ active }">
                             <a @click="openChangeTeamMembersModal"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

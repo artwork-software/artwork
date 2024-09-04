@@ -634,6 +634,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/at_a_glance', [UserController::class, 'updateAtAGlance'])
         ->name('user.update.at_a_glance');
 
+    Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
+        ->name('user.update_bulk_sort_id');
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
@@ -656,7 +658,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.sum.money.source.store');
 
         // PATCH
-        Route::patch('/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
+        Route::patch('/timeline/{timeline}/update', [ProjectController::class, 'updateTimeline'])
+            ->name('update.timeline');
         Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
         Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
         Route::patch('/{shift}/update/description', [ShiftController::class, 'updateDescription'])

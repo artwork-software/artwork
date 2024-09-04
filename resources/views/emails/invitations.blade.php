@@ -13,7 +13,7 @@
         Bei Fragen kontaktiere uns gerne unter <a href="mailto:{{$email}}">{{ $email }}</a>
     </p>
 
-    @component('mail::button', ['url' => url("/users/invitations/accept?token=$token&email={$invitation->email}")])
+    @component('mail::button', ['url' => url("/users/invitations/accept?token=$token&email=" . urlencode($invitation->email))])
         Registrierung abschließen
     @endcomponent
 @endcomponent

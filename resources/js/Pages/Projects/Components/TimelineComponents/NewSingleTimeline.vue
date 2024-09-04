@@ -147,7 +147,7 @@ const saveTimeline = () => {
 
         timeLineForm.patch(route('update.timeline', timeLineForm.id), {
             preserveScroll: true,
-            preserveState: true,
+            preserveState: false,
             onSuccess: () => {
                 timeLineForm.clicked = false
                 editDescription.value = false

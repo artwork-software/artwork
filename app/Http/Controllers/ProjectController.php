@@ -111,6 +111,7 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
@@ -163,7 +164,8 @@ class ProjectController extends Controller
         private readonly EventTypeService $eventTypeService,
         private readonly RoomService $roomService,
         private readonly UserService $userService,
-        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
+        private readonly TimelineService $timelineService,
     ) {
     }
 
@@ -2123,18 +2125,29 @@ class ProjectController extends Controller
     }
 
 
-    public function addTimeLineRow(Event $event, Request $request): void
+    public function addTimeLineRow(Event $event): void
     {
+        $startTime = Carbon::parse($event->start_time);
+        $endTime = Carbon::parse($event->end_time);
+
+        $startTime->setTime(8, 0, 0);
+        $endTime->setTime(9, 0, 0);
+
+        // if event has already a timeline, get the last timeline and add 1 hour to start and end time
+        if ($event->timelines()->exists()) {
+            $lastTimeline = $event->timelines()->latest()->first();
+            $startTime = Carbon::parse($lastTimeline->end);
+            $endTime = Carbon::parse($lastTimeline->end)->addHour();
+        }
+
         $event->timelines()->create(
-            $request->validate(
-                [
-                    'start_date' => 'required',
-                    'end_date' => 'required',
-                    'start' => 'required',
-                    'end' => 'required',
-                    'description' => 'nullable'
-                ]
-            )
+            [
+                'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+                'end_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+                'start' => $startTime,
+                'end' => $endTime,
+                'description' => null
+            ]
         );
     }
 
@@ -3373,5 +3386,10 @@ class ProjectController extends Controller
         }
 
         return $projects;
+    }
+
+    public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
+    {
+        $this->timelineService->updateTimeline($timeline, $request->collect('name', 'date'));
     }
 }

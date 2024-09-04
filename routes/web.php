@@ -634,6 +634,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/at_a_glance', [UserController::class, 'updateAtAGlance'])
         ->name('user.update.at_a_glance');
 
+    Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
+        ->name('user.update_bulk_sort_id');
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

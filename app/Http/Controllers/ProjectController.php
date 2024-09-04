@@ -1916,7 +1916,7 @@ class ProjectController extends Controller
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:
-                    $headerObject->project->events = $project->events()->without([
+                    $eventsUnSorted = $project->events()->without([
                         'series',
                         'event_type',
                         'subEvents',
@@ -1930,6 +1930,26 @@ class ProjectController extends Controller
                             );
                         }
                     );
+
+                    $userBulkSortId = (int)$this->userService->getAuthUser()->getAttribute('bulk_sort_id');
+                    $eventsSorted = $eventsUnSorted;
+
+                    // userBulkSortId = 1 sort by room name asc
+                    switch ($userBulkSortId) {
+                        case 1:
+                            $eventsSorted = $eventsUnSorted->sortBy('roomName');
+                            break;
+                        case 2:
+                            // sort by event type name asc
+                            $eventsSorted = $eventsUnSorted->sortBy('eventTypeName');
+                            break;
+                        case 3:
+                            // sort by start time asc
+                            $eventsSorted = $eventsUnSorted->sortBy('startTime');
+                            break;
+                    }
+                    $eventsSorted = $eventsSorted->values();
+                    $headerObject->project->events = $eventsSorted;
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');

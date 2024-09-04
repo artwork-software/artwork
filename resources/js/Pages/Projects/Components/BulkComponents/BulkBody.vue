@@ -10,28 +10,28 @@
                                @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateSort(1)"
+                    <div @click="updateUserSortId(1)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by room') }}
-                        <IconCheck class="w-5 h-5" v-if="currentSort === 1"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 1"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateSort(2)"
+                    <div @click="updateUserSortId(2)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by appointment type') }}
-                        <IconCheck class="w-5 h-5" v-if="currentSort === 2"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 2"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateSort(3)"
+                    <div @click="updateUserSortId(3)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Sort by day') }}
-                        <IconCheck class="w-5 h-5" v-if="currentSort === 3"/>
+                        <IconCheck class="w-5 h-5" v-if="usePage().props.user.bulk_sort_id === 3"/>
                     </div>
                 </MenuItem>
                 <MenuItem v-slot="{ active }">
-                    <div @click="updateSort(0)"
+                    <div @click="updateUserSortId(0)"
                          :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                         {{ $t('Reset sorting') }}
                     </div>
@@ -96,6 +96,7 @@
                      :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                      :used-in-bulk-component="true"
                      @closed="onEventComponentClosed"/>
+
 </template>
 
 <script setup>
@@ -143,7 +144,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         },
         first_project_calendar_tab_id: {
             type: Number,
-            required: true
+            required: false
         }
     }),
     roomCollisions = ref([]),
@@ -350,28 +351,21 @@ const {hasAdminRole} = usePermission(usePage().props),
             }
         });
     },
-    updateSort = (type) => {
+    updateUserSortId = (id) => {
         isLoading.value = true;
-        currentSort.value = type;
-        if (currentSort.value === 1) {
-            events.sort((a, b) => {
-                return a.room.name.localeCompare(b.room.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else if (currentSort.value === 2) {
-            events.sort((a, b) => {
-                return a.type.name.localeCompare(b.type.name) || a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else if (currentSort.value === 3) {
-            events.sort((a, b) => {
-                return a.day.localeCompare(b.day) || a.start_time?.localeCompare(b.start_time);
-            });
-        } else {
-            events.sort((a, b) => {
-                return a.index - b.index;
-            });
-        }
-
-        isLoading.value = false;
+        router.patch(
+            route('user.update_bulk_sort_id', {user: usePage().props.user.id}),
+            {
+                bulk_sort_id: id
+            },
+            {
+                preserveScroll: true,
+                preserveState: false,
+                onSuccess: () => {
+                    isLoading.value = false;
+                }
+            }
+        );
     };
 
 const useProjectTimePeriodAndRedirect = () => {

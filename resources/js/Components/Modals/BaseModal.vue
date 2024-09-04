@@ -22,7 +22,7 @@
                                             <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                         </div>
                                     </div>
-                                    <div ref="dragHandle" class=" hover:text-artwork-messages-waring transition-all duration-150 ease-in-out cursor-pointer" :class="isDragging ? 'text-artwork-messages-waring' : 'text-gray-400' ">
+                                    <div ref="dragHandle" class=" hover:text-artwork-messages-waring transition-all duration-150 ease-in-out cursor-grab" :class="isDragging ? 'text-artwork-messages-waring' : 'text-gray-400' ">
                                         <div>
                                             <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                         </div>
@@ -109,8 +109,46 @@ export default {
         closeModal(bool) {
             this.$emit('closed', bool)
         },
-        makeContainerDraggable() {
-            const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
+        makeContainerDraggable(){
+            const container = this.$refs.containerRef?.$el || this.$refs.containerRef
+            const dragHandle = this.$refs.dragHandle;
+
+            let isDragging = false;
+            let offsetX = 0;
+            let offsetY = 0;
+            let animationFrameId = null;
+
+            dragHandle.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                offsetX = event.clientX - container.offsetLeft;
+                offsetY = event.clientY - container.offsetTop;
+            });
+
+            document.addEventListener('mousemove', (event) => {
+                if (isDragging) {
+                    if (animationFrameId !== null) {
+                        cancelAnimationFrame(animationFrameId);
+                    }
+
+                    animationFrameId = requestAnimationFrame(() => {
+                        container.style.position = 'absolute';
+                        container.style.left = `${event.clientX - offsetX}px`;
+                        container.style.top = `${event.clientY - offsetY}px`;
+                        // Prevent text selection while dragging
+                        document.body.classList.add('select-none');
+                    });
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                if (animationFrameId !== null) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                // Remove no-select class when dragging stops
+                document.body.classList.remove('select-none');
+            });
+            /*const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
             const dragHandle = this.$refs.dragHandle;
 
             if (!container || !(container instanceof HTMLElement) || !dragHandle) {
@@ -160,6 +198,7 @@ export default {
 
             // Füge den mousedown Event-Listener nur am Drag-Handle hinzu
             dragHandle.addEventListener('mousedown', onMouseDown);
+             */
         },
     }
 }

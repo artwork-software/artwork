@@ -1,5 +1,5 @@
 <template>
-    <div :class="noMarginTop ? '' : 'mt-5'" class="flex flex-col relative w-full h-full">
+    <div :class="noMarginTop ? '' : 'mt-5'" class="flex flex-col relative w-full">
         <slot/>
     </div>
 </template>

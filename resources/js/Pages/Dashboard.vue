@@ -170,13 +170,13 @@
                         <DashboardCard :has-padding="false">
                             <div v-if="tasks.length > 0" class="p-4">
                                 <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
-                                    <div class="flex w-full justify-between">
-                                        <div class="flex w-full">
+                                    <div class="flex w-full items-center justify-between">
+                                        <div class="flex items-center w-full">
                                             <input @change="updateTaskStatus(task)"
                                                    v-model="task.done"
                                                    type="checkbox"
-                                                   class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-success"/>
-                                            <div class="ml-4 my-auto mDark truncate w-96"
+                                                   class="input-checklist mt-0.5"/>
+                                            <div class="ml-2 mDark truncate w-96"
                                                  :class="task.done ? 'text-secondary line-through' : 'text-primary'">
                                                 {{ task.name }}
                                             </div>
@@ -190,13 +190,13 @@
 
 
                                     <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
-                                          class="my-1 flex ml-10 xsDark">
+                                          class="my-1 flex ml-8 text-xs">
                                         {{ task.projectName }}
-                                        <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
+                                        <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
                                         {{ task.checklistName }}
                                     </Link>
 
-                                    <div class="ml-10 my-3 xsLight">
+                                    <div class="ml-8 my-3 xsLight">
                                         {{ task.description }}
                                     </div>
 

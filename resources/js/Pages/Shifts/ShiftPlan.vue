@@ -531,7 +531,7 @@ export default {
             multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
-            userOverviewHeight: 570,
+            userOverviewHeight: 580,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,
@@ -1248,10 +1248,10 @@ export default {
             if (!this.showUserOverview) {
                 this.windowHeight = (window.innerHeight - 250);
             } else {
-                this.windowHeight = (window.innerHeight - 160) - this.userOverviewHeight;
+                this.windowHeight = (window.innerHeight - 140) - this.userOverviewHeight;
             }
 
-            if (window.innerHeight - 160 < 400) {
+            if (window.innerHeight - 140 < 400) {
                 this.userOverviewHeight = window.innerHeight - 300;
             }
 

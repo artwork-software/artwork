@@ -188,16 +188,38 @@ class ProjectController extends Controller
     }
 
 
-    public function index(
-        ProjectIndexPaginateRequest $request
-    ): Response|ResponseFactory {
+    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
+    {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userProjectManagementSetting = $this->userProjectManagementSettingService
+            ->getFromUser($this->userService->getAuthUser())
+            ->getAttribute('settings');
+
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
+                $saveFilterAndSort,
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
-                $request->enum('sort', ProjectSortEnum::class),
-                $request->collect('project_state_ids'),
-                $request->collect('project_filters')
+                $saveFilterAndSort ?
+                    $request->enum('sort', ProjectSortEnum::class) :
+                    (
+                    $userProjectManagementSetting['sort_by'] ?
+                        ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                        null
+                    ),
+                $saveFilterAndSort ?
+                    $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                    Collection::make($userProjectManagementSetting['project_state_ids']),
+                $saveFilterAndSort ? $request
+                    ->collect('project_filters')
+                    ->mapWithKeys(
+                        function (string $filter, string $key): array {
+                            return [
+                                $key => (bool)$filter,
+                            ];
+                        }
+                    ) :
+                    Collection::make($userProjectManagementSetting['project_filters'])
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -218,7 +240,7 @@ class ProjectController extends Controller
             ),
             'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
-                ?->getAttribute('settings')
+                ->getAttribute('settings')
         ]);
     }
 
@@ -352,7 +374,7 @@ class ProjectController extends Controller
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
-        return Redirect::route('projects', $project);
+        return Redirect::back();
     }
 
 

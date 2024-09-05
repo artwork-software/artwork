@@ -449,9 +449,7 @@ export default {
                 },
                 {
                     name: this.$t('Projects'),
-                    href: this.$page.props.userProjectManagementSettingUrl ??
-                        window.localStorage.getItem('userProjectManagementSettingUrl') ??
-                        route('projects'),
+                    href: route('projects'),
                     route: ['/projects'],
                     has_permission: this.moduleIsVisible('projects'),
                     icon: IconGeometry

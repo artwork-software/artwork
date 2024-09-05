@@ -11,6 +11,7 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,8 @@ use Illuminate\Support\Facades\Storage;
 class AuthUserSeeder extends Seeder
 {
     public function __construct(
-        private readonly UserShiftQualificationRepository $userShiftQualificationRepository
+        private readonly UserShiftQualificationRepository $userShiftQualificationRepository,
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
     ) {
     }
 
@@ -57,6 +59,11 @@ class AuthUserSeeder extends Seeder
             'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
             'can_work_shifts' => true
         ]);
+
+        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userProjectManagementSettingService->getDefaults()
+        );
 
         $workerShiftQualificationId = ShiftQualification::workerQualification()->first()->id;
         $this->userShiftQualificationRepository->save(
@@ -106,6 +113,10 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userProjectManagementSettingService->getDefaults()
+        );
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([
                 'user_id' => $user->id,
@@ -149,6 +160,10 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userProjectManagementSettingService->getDefaults()
+        );
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([
                 'user_id' => $user->id,

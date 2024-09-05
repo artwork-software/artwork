@@ -1982,5 +1982,7 @@
     "Automatic mode": "Automatic mode",
     "Manual mode": "Manual mode",
     "End date must be after start date or the same": "End date must be after start date or the same",
-    "Please confirm your password here.": "Please confirm your password here."
+    "Please confirm your password here.": "Please confirm your password here.",
+    "Show projects without events": "Show projects without events",
+    "Project created successfully": "Project created successfully"
 }

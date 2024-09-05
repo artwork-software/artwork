@@ -1982,5 +1982,7 @@
     "Automatic mode": "Automatikmodus",
     "Manual mode": "Manueller Modus",
     "End date must be after start date or the same": "Enddatum muss nach dem Startdatum oder gleich sein",
-    "Please confirm your password here.": "Bitte bestätige hier dein Passwort."
+    "Please confirm your password here.": "Bitte bestätige hier dein Passwort.",
+    "Show projects without events": "Projekte ohne Termine anzeigen",
+    "Project created successfully": "Projekt erfolgreich angelegt"
 }

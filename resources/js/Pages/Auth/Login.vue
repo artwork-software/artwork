@@ -1,7 +1,8 @@
 <template>
 
     <Head>
-        <title>{{ $t('Login') }}</title>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $t('Login') }} - {{ $page.props.page_title }}</title>
     </Head>
     <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
         <div class="flex flex-col items-center justify-center h-screen">

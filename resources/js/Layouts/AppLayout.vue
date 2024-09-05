@@ -25,7 +25,7 @@
                             <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
-                    <div :class="computedWindowInnerHeight > 855 ? 'mt-8' : 'mt-0'"  class="flex flex-col w-full space-y-1 overflow-y-auto managementMenu">
+                    <div :class="computedWindowInnerHeight > 855 ? 'mt-4' : 'mt-0'"  class="flex flex-col w-full space-y-0.5 overflow-y-auto managementMenu">
                         <template v-for="item in navigation">
                             <Link v-if="item.desiredClickHandler"
                                   href="#"

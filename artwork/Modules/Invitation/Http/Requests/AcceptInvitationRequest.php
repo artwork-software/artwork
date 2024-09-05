@@ -35,6 +35,8 @@ class AcceptInvitationRequest extends UserCreateRequest
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
             'token' => ['required', 'string', 'min:20', 'max:20'],
+            // password_confirmation same like password
+            'password_confirmation' => ['required', 'string', 'same:password'],
         ];
     }
 }

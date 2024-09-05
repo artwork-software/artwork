@@ -193,11 +193,18 @@ class ProjectController extends Controller
     ): Response|ResponseFactory {
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
+                $request->boolean('saveFilterAndSort'),
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
                 $request->enum('sort', ProjectSortEnum::class),
-                $request->collect('project_state_ids'),
-                $request->collect('project_filters')
+                $request->collect('project_state_ids')->map(fn (string $id) => (int) $id),
+                $request->collect('project_filters')->mapWithKeys(
+                    function (string $filter, string $key): array {
+                        return [
+                            $key => (bool) $filter
+                        ];
+                    }
+                )
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -352,7 +359,7 @@ class ProjectController extends Controller
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
-        return Redirect::route('projects', $project);
+        return Redirect::back();
     }
 
 

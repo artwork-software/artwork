@@ -1981,5 +1981,7 @@
     "System": "System",
     "Automatic mode": "Automatic mode",
     "Manual mode": "Manual mode",
-    "End date must be after start date or the same": "End date must be after start date or the same"
+    "End date must be after start date or the same": "End date must be after start date or the same",
+    "Show projects without events": "Show projects without events",
+    "Project created successfully": "Project created successfully"
 }

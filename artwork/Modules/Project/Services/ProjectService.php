@@ -151,6 +151,9 @@ class ProjectService
                         $builder->where(function (Builder $builder) use ($projectFilters): void {
                             foreach ($projectFilters as $filter) {
                                 switch ($filter) {
+                                    case 'showOnlyMyProjects':
+                                        $builder->orWhere('user_id', $this->userService->getAuthUserId());
+                                        break;
                                     case 'showProjectGroups':
                                         $builder->orWhere('is_group', 1);
                                         break;
@@ -189,8 +192,8 @@ class ProjectService
                                             },
                                         );
                                         break;
-                                    case 'showOnlyMyProjects':
-                                        $builder->orWhere('user_id', $this->userService->getAuthUserId());
+                                    case 'showProjectsWithoutEvents':
+                                        $builder->orWhereDoesntHave('events');
                                         break;
                                 }
                             }
@@ -224,11 +227,12 @@ class ProjectService
     }
 
     public function paginateProjects(
+        bool $saveFilterAndSort,
         string $search = '',
         int $perPage = 10,
         ?ProjectSortEnum $sortEnum = null,
         ?IlluminateCollection $projectStateIds = null,
-        ?IlluminateCollection $projectFilters = null
+        ?IlluminateCollection $projectFilters = null,
     ): LengthAwarePaginator {
         $projectQuery = $this->getProjects(
             $search,
@@ -238,14 +242,16 @@ class ProjectService
             $projectFilters->filter(fn($filter, $enabled) => $enabled)->keys()
         );
 
-        $this->userFilterAndSortSettingService->updateOrCreateIfNecessary(
-            $this->userService->getAuthUser(),
-            [
-                'sort_by' => $sortEnum?->name,
-                'project_state_ids' => $projectStateIds->toArray(),
-                'project_filters' => $projectFilters->toArray()
-            ]
-        );
+        if ($saveFilterAndSort) {
+            $this->userFilterAndSortSettingService->updateOrCreateIfNecessary(
+                $this->userService->getAuthUser(),
+                [
+                    'sort_by' => $sortEnum?->name,
+                    'project_state_ids' => $projectStateIds->toArray(),
+                    'project_filters' => $projectFilters->toArray()
+                ]
+            );
+        }
 
         return $projectQuery->paginate($perPage);
     }

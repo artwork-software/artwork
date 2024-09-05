@@ -386,7 +386,7 @@
     "Company": "Unternehmen",
     "Weak": "Schwach",
     "Strong": "Stark",
-    "The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.": "Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und Sonderzeichen beinhalten.",
+    "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters.": "Das Passwort muss mind. 8 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und Sonderzeichen beinhalten.",
     "Not in any team": "In keinem Team",
     "Edit team membership": "Teamzugehörigkeit bearbeiten",
     "Remove user from all teams": "Nutzer*in aus allen Teams entfernen",
@@ -1982,6 +1982,7 @@
     "Automatic mode": "Automatikmodus",
     "Manual mode": "Manueller Modus",
     "End date must be after start date or the same": "Enddatum muss nach dem Startdatum oder gleich sein",
+    "Please confirm your password here.": "Bitte bestätige hier dein Passwort.",
     "Show projects without events": "Projekte ohne Termine anzeigen",
     "Project created successfully": "Projekt erfolgreich angelegt"
 }

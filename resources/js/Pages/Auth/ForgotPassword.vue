@@ -1,6 +1,8 @@
 <template>
-    <Head title="Forgot Password" />
-
+    <Head>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $t('Forgot Password') }} - {{ $page.props.page_title }}</title>
+    </Head>
     <jet-authentication-card>
         <div class="text-4xl my-6 flex justify-center font-bold text-black">
             <img :src="this.$page.props.big_logo"/>
@@ -34,7 +36,7 @@
 
 <script>
     import { defineComponent } from 'vue'
-    import { Head } from '@inertiajs/vue3';
+    import {Head, Link} from '@inertiajs/vue3';
     import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue'
     import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue'
     import JetButton from '@/Jetstream/Button.vue'
@@ -46,6 +48,7 @@
     export default defineComponent({
         mixins: [Permissions],
         components: {
+            Link,
             Head,
             JetAuthenticationCard,
             JetAuthenticationCardLogo,

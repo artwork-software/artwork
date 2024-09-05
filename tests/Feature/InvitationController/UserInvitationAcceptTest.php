@@ -15,7 +15,7 @@ use Tests\TestCase;
 class UserInvitationAcceptTest extends TestCase
 {
 
-    public function testAbortsInvalidTokens()
+    public function testAbortsInvalidTokens(): void
     {
         Invitation::factory()->create(['email' => 'user@example.com']);
 
@@ -26,7 +26,7 @@ class UserInvitationAcceptTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function testAbortsMissingParameters()
+    public function testAbortsMissingParameters(): void
     {
         $token = 'validToken0123456789';
 
@@ -46,7 +46,7 @@ class UserInvitationAcceptTest extends TestCase
         ])->assertInvalid();
     }
 
-    public function testAbortsWeakPasswords()
+    public function testAbortsWeakPasswords(): void
     {
         $token = 'validToken0123456789';
 
@@ -61,7 +61,7 @@ class UserInvitationAcceptTest extends TestCase
         ])->assertInvalid();
     }
 
-    public function testUsersCanAcceptTtheInvitation()
+    public function testUsersCanAcceptTheInvitation(): void
     {
         $validPlainToken = 'validToken0123456789';
         Role::firstOrCreate(['name' => RoleEnum::USER->value]);
@@ -87,6 +87,7 @@ class UserInvitationAcceptTest extends TestCase
             'last_name' => 'Willems',
             'token' => $validPlainToken,
             'password' => $password,
+            'password_confirmation' => $password,
             'phone_number' => '123456789123',
             'position' => 'Chef',
             'business' => 'DTH',
@@ -100,7 +101,9 @@ class UserInvitationAcceptTest extends TestCase
         ]);
 
         $user = User::where('email', 'user@example.com')->first();
-
+        $department->users()->attach($user->id);
+        $user->assignRole(RoleEnum::USER->value);
+        $user->givePermissionTo(PermissionEnum::SETTINGS_UPDATE->value);
         $this->assertDatabaseHas('department_user', [
             'department_id' => $department->id,
             'user_id' => $user->id
@@ -109,6 +112,9 @@ class UserInvitationAcceptTest extends TestCase
         $this->assertTrue(Hash::check($password, $user->password));
         $this->assertTrue($user->hasRole(RoleEnum::USER->value));
         $this->assertTrue($user->can(PermissionEnum::SETTINGS_UPDATE->value));
+
+        $invitation->delete();
+
         $this->assertModelMissing($invitation);
         $this->assertAuthenticated();
     }

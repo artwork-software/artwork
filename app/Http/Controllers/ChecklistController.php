@@ -124,7 +124,7 @@ class ChecklistController extends Controller
             'private' => $request->private,
         ]);
 
-        if (is_object($request->tasks)) {
+        if ($request->has('tasks')) {
             foreach ($request->tasks as $task) {
                 Task::create([
                     'name' => $task['name'],

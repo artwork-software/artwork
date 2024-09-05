@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
@@ -52,11 +53,8 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(
-        private readonly UserService $userService,
-        private readonly RoomService $roomService,
-        private readonly EventService $eventService
-    ) {
+    public function __construct()
+    {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -70,7 +68,7 @@ class UserController extends Controller
     }
 
 
-    public function scoutSearch(Request $request): JsonResponse
+    public function scoutSearch(Request $request, UserService $userService): JsonResponse
     {
         $users = [];
         if (
@@ -78,7 +76,7 @@ class UserController extends Controller
             request()->get('user_search') !== null &&
             request()->get('user_search') !== ''
         ) {
-            $users = $this->userService->searchUsers($request->string('user_search'));
+            $users = $userService->searchUsers($request->string('user_search'));
         }
 
         return \response()->json($users);
@@ -221,12 +219,16 @@ class UserController extends Controller
 
     public function editUserWorkProfile(
         User $user,
-        ShiftQualificationRepository $shiftQualificationRepository
+        ShiftQualificationRepository $shiftQualificationRepository,
+        CraftService $craftService
     ): Response|ResponseFactory {
         return inertia(
             'Users/UserWorkProfilePage',
             [
-                'userToEdit' => new UserWorkProfileResource($user),
+                'userToEdit' => (new UserWorkProfileResource(
+                    $user,
+                    $craftService->getAll()
+                ))->resolve(),
                 'currentTab' => 'workProfile',
                 'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
             ]
@@ -451,19 +453,23 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(User $user): RedirectResponse
-    {
+    public function destroy(
+        User $user,
+        RoomService $roomService,
+        EventService $eventService,
+        UserService $userService
+    ): RedirectResponse {
         $user->departments()->detach();
         $user->createdRooms()->withTrashed()->each(
-            fn (Room $room) => $this->roomService->update(
+            fn (Room $room) => $roomService->update(
                 $room,
-                ['user_id' => $this->userService->getAuthUserId()]
+                ['user_id' => $userService->getAuthUserId()]
             )
         );
         $user->events()->withTrashed()->each(
-            fn (Event $event) => $this->eventService->update(
+            fn (Event $event) => $eventService->update(
                 $event,
-                ['user_id' => $this->userService->getAuthUserId()]
+                ['user_id' => $userService->getAuthUserId()]
             )
         );
         $user->delete();
@@ -540,6 +546,10 @@ class UserController extends Controller
         $user->update($request->only('bulk_sort_id'));
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function operationPlan(
         Request $request,
         User $user,

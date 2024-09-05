@@ -549,7 +549,6 @@
     "Budget deadline": "Budget deadline",
     "Project process": "Project process",
     "Here you can see what was changed by whom and when.": "Here you can see what was changed by whom and when.",
-    "deleted User": "deleted User",
     "Project": "Project",
     "Project team": "Project team",
     "Project management": "Project management",
@@ -1978,6 +1977,8 @@
     "Chronologically descending": "Chronologically descending",
     "Show expired projects": "Show expired projects",
     "Show future projects": "Show future projects",
+    "Creator": "Creator",
+    "System": "System",
     "Automatic mode": "Automatic mode",
     "Manual mode": "Manual mode",
     "End date must be after start date or the same": "End date must be after start date or the same"

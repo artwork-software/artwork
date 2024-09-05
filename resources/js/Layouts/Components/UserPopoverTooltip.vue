@@ -1,7 +1,14 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0 -mb-1 -pb-1">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0 -mb-1" @click="calculatePopoverPosition">
-            <img :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 " :class="['h-' + this.height, 'w-' + this.width, classes]">
+        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0 -mb-1"
+                       @click="calculatePopoverPosition">
+            <img v-if="user" :src="user.profile_photo_url" alt=""
+                 class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 "
+                 :class="['h-' + this.height, 'w-' + this.width, classes]">
+            <IconUserExclamation v-else
+                                 stroke-width="2"
+                                 class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300"
+                                 :class="['h-' + this.height, 'w-' + this.width, classes]"/>
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active"
@@ -10,11 +17,14 @@
                         leave-active-class="transition-leave-active"
                         leave-from-class="transition-leave-from"
                         leave-to-class="transition-leave-to">
-                <PopoverPanel class="absolute left-1/2 z-50 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5" :style="popoverStyle">
-                    <div class="shadow-lg ring-1 ring-black ring-opacity-5">
+                <PopoverPanel
+                    class="absolute left-1/2 z-50 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5"
+                    :style="popoverStyle">
+                    <div v-if="user" class="shadow-lg ring-1 ring-black ring-opacity-5">
                         <div class="grid grid-cols-4 w-96">
                             <div class="col-span-1 shrink-0 ml-3 flex items-center justify-center">
-                                <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
+                                <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full"
+                                     :src="user.profile_photo_url" alt=""/>
                             </div>
                             <div class="col-span-3">
                                 <div class="font-black font-lexend text-white text-lg">
@@ -40,6 +50,12 @@
                             </div>
                         </div>
                     </div>
+                    <div v-else class="flex flex-row items-center ring-1 ring-black ring-opacity-5 text-white shadow-lg gap-x-3 py-3 px-5">
+                        <IconUserExclamation class="h-14 w-14 rounded-full border-2 border-white"/>
+                        <div class="font-black font-lexend text-white text-lg">
+                            {{ $t('Deleted user') }}
+                        </div>
+                    </div>
                 </PopoverPanel>
             </transition>
         </Teleport>
@@ -47,10 +63,12 @@
 </template>
 
 <script>
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
+import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "UserPopoverTooltip",
+    mixins: [IconLib],
     components: {
         Popover,
         PopoverButton,
@@ -59,7 +77,8 @@ export default {
     props: {
         user: {
             type: Object,
-            required: true
+            required: false,
+            default: null
         },
         height: {
             type: String,
@@ -74,7 +93,7 @@ export default {
             default: ''
         }
     },
-    data(){
+    data() {
         return {
             popoverStyle: {
                 top: '0px',
@@ -84,16 +103,11 @@ export default {
     },
     methods: {
         calculatePopoverPosition(event) {
-            const { top, left, height, width } = event.target.getBoundingClientRect();
-            this.popoverStyle.top = `${top + height}px`;
+            const {top, left, height, width} = event.target.getBoundingClientRect();
+
+            this.popoverStyle.top = `${top + window.scrollY + height}px`;
             this.popoverStyle.left = `${left + width / 2}px`;
         },
     },
 }
 </script>
-
-
-
-<style scoped>
-
-</style>

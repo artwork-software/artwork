@@ -20,6 +20,7 @@ readonly class TaskTemplateService
         foreach ($checklistTemplate->getAttribute('task_templates') as $taskTemplate) {
             /** @var TaskTemplate $newTaskTemplate */
             $newTaskTemplate = $this->taskTemplateRepository->replicate($taskTemplate);
+            $this->taskTemplateRepository->save($newTaskTemplate);
 
             /** @var TaskTemplate $newTaskTemplate */
             $newTaskTemplate = $this->taskTemplateRepository->update(

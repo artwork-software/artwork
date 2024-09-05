@@ -85,10 +85,6 @@ class CraftInventoryItemEventService
     }
 
     /**
-     * Berechnet die Überbuchung eines CraftInventoryItems
-     * für alle Events und gibt die fehlende Menge für jedes Event zurück.
-     *
-     * @param CraftInventoryItem $item
      * @return array<int, int>
      */
     private function calculateOverbookedForAllEvents(CraftInventoryItem $item): array

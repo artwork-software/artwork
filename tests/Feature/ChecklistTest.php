@@ -46,7 +46,8 @@ test('users with the permission can create checklists without a template and ass
         'name' => $name,
         'project_id' => $this->project->id,
         'user_id' => null,
-        'assigned_department_ids' => [$this->assigned_department->id],
+        'private' => false,
+        //'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
                 'name' => 'TestTask',
@@ -78,8 +79,9 @@ test('users with the permission can create checklists with a template and assign
     $this->post('/checklists', [
         'name' => null,
         'project_id' => $this->project->id,
-        'assigned_department_ids' => [$this->assigned_department->id],
+        //'assigned_department_ids' => [$this->assigned_department->id],
         'template_id' => $this->checklist_template->id,
+        'private' => false,
         'tasks' => null,
         'user_id' => $this->auth_user->id
     ]);

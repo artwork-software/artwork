@@ -113,7 +113,8 @@ import {
   IconUserShield,
   IconX,
   IconZoomIn,
-  IconZoomOut
+  IconZoomOut,
+    IconEyeClosed
 } from "@tabler/icons-vue";
 
 export default {
@@ -231,7 +232,8 @@ export default {
         IconSeparator,
         IconDeviceFloppy,
         IconNote,
-        IconApps
+        IconApps,
+        IconEyeClosed
     }
 }
 </script>

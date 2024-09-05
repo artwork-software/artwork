@@ -80,7 +80,7 @@ module.exports = {
                             background: 'rgba(56,173,23,0.1)',
                             color: '#21ad17'
                         },
-                    },
+                    }
                 },
             },
             fontSize: {

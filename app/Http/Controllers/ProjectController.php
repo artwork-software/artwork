@@ -188,23 +188,39 @@ class ProjectController extends Controller
     }
 
 
-    public function index(
-        ProjectIndexPaginateRequest $request
-    ): Response|ResponseFactory {
+    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
+    {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userProjectManagementSetting = $this->userProjectManagementSettingService
+            ->getFromUser($this->userService->getAuthUser())
+            ->getAttribute('settings');
+
+        $desiredSort = $saveFilterAndSort ?
+            $request->enum('sort', ProjectSortEnum::class) :
+            ProjectSortEnum::from($userProjectManagementSetting['sort_by']);
+        $desiredProjectStateIds = $saveFilterAndSort ?
+            $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+            Collection::make(
+                $userProjectManagementSetting['project_state_ids']
+            );
+        $desiredFilters = $saveFilterAndSort ? $request->collect('project_filters')
+            ->mapWithKeys(
+                function (string $filter, string $key): array {
+                    return [
+                        $key => (bool)$filter,
+                    ];
+                }
+            ) :
+            Collection::make($userProjectManagementSetting['project_filters']);
+
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
-                $request->boolean('saveFilterAndSort'),
+                $saveFilterAndSort,
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
-                $request->enum('sort', ProjectSortEnum::class),
-                $request->collect('project_state_ids')->map(fn (string $id) => (int) $id),
-                $request->collect('project_filters')->mapWithKeys(
-                    function (string $filter, string $key): array {
-                        return [
-                            $key => (bool) $filter
-                        ];
-                    }
-                )
+                $desiredSort,
+                $desiredProjectStateIds,
+                $desiredFilters
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -225,7 +241,7 @@ class ProjectController extends Controller
             ),
             'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
-                ?->getAttribute('settings')
+                ->getAttribute('settings')
         ]);
     }
 

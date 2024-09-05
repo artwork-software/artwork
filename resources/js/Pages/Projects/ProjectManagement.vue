@@ -566,33 +566,6 @@ export default defineComponent({
                 }
             });
         },
-        filterAndSortRequestSuccessHandler(reset) {
-            let data = null;
-
-            if (!reset) {
-                data = {
-                    project_state_ids: this.states.filter((state) => state.clicked).map((state) => state.id),
-                    project_filters: {
-                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects),
-                        showProjectGroups: this.getTruthyOrUndefined(this.showProjectGroups),
-                        showProjects: this.getTruthyOrUndefined(this.showProjects),
-                        showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
-                        showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
-                        showProjectsWithoutEvents: this.getTruthyOrUndefined(this.showProjectsWithoutEvents)
-                    },
-                    sort: this.sortBy
-                };
-            } else {
-                data = {
-                    sort: this.sortBy
-                }
-            }
-
-            let projectManagementRoute = route('projects', data);
-
-            window.localStorage.setItem('userProjectManagementSettingUrl', projectManagementRoute);
-            this.$page.props.userProjectManagementSettingUrl = projectManagementRoute;
-        },
         applyFiltersAndSort(resetPage = true) {
             router.get(
                 route().current(),
@@ -611,9 +584,6 @@ export default defineComponent({
                     },
                     sort: this.sortBy,
                     saveFilterAndSort: 1
-                },
-                {
-                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(false); }
                 }
             );
         },
@@ -628,9 +598,6 @@ export default defineComponent({
                     project_filters: undefined,
                     sort: this.sortBy,
                     saveFilterAndSort: 1
-                },
-                {
-                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(true); }
                 }
             );
         },

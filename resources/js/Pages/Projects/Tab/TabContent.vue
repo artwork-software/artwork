@@ -1,3 +1,87 @@
+<template>
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id">
+        <div class="my-10 w-full">
+            <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
+                <Component
+                    v-if="canSeeComponent(component.component)"
+                    :is="componentMapping[component.component?.type]"
+                    :can-edit-component="canEditComponent(component.component)"
+                    :project="headerObject.project"
+                    :in-sidebar="false"
+                    :loadedProjectInformation="loadedProjectInformation"
+                    :header-object="headerObject"
+                    :data="component.component"
+                    :project-id="headerObject.project.id"
+                    :projectCategories="headerObject.projectCategories"
+                    :projectGenres="headerObject.projectGenres"
+                    :projectSectors="headerObject.projectSectors"
+                    :categories="headerObject.categories"
+                    :sectors="headerObject.sectors"
+                    :genres="headerObject.genres"
+                    :projectCategoryIds="headerObject.projectCategoryIds"
+                    :projectGenreIds="headerObject.projectGenreIds"
+                    :projectSectorIds="headerObject.projectSectorIds"
+                    :event-types="headerObject.eventTypes"
+                    :opened_checklists="headerObject.project?.opened_checklists"
+                    :checklist_templates="headerObject.project?.checklist_templates"
+                    :projectManagerIds="headerObject.projectManagerIds"
+                    :projectWriteIds="headerObject.projectWriteIds"
+                    :tab_id="currentTab.id"
+                    :first_project_tab_id="first_project_tab_id"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                    :first_project_budget_tab_id="first_project_budget_tab_id"
+                    :rooms="headerObject.rooms"
+                    :eventsInProject="headerObject.project.events"
+                />
+            </div>
+        </div>
+        <BaseSidenav @toggle="show = !show" v-if="currentTab.hasSidebarTabs">
+            <div class="w-full">
+                <div class="mb-5 ml-3">
+                    <div class="hidden sm:block">
+                        <div class="border-gray-200">
+                            <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
+                                <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name"
+                                     @click="currentSideBarTab = index"
+                                     :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
+                                     :aria-current="index === currentSideBarTab ? 'page' : undefined">
+                                    {{ tab.name }}
+                                </div>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-3">
+                    <div v-for="component in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
+                        <Component
+                            v-if="canSeeComponent(component.component)"
+                            :is="componentMapping[component.component?.type]"
+                            :can-edit-component="canEditComponent(component.component)"
+                            :project="headerObject.project"
+                            :in-sidebar="true"
+                            :loadedProjectInformation="loadedProjectInformation"
+                            :header-object="headerObject"
+                            :data="component.component"
+                            :project-id="headerObject.project.id"
+                            :projectCategories="headerObject.projectCategories"
+                            :projectGenres="headerObject.projectGenres"
+                            :projectSectors="headerObject.projectSectors"
+                            :categories="headerObject.categories"
+                            :sectors="headerObject.sectors"
+                            :genres="headerObject.genres"
+                            :projectCategoryIds="headerObject.projectCategoryIds"
+                            :projectGenreIds="headerObject.projectGenreIds"
+                            :projectSectorIds="headerObject.projectSectorIds"
+                            :eventTypes="headerObject.eventTypes"
+                            :rooms="headerObject.rooms"
+                        />
+                    </div>
+                </div>
+            </div>
+        </BaseSidenav>
+    </ProjectHeaderComponent>
+</template>
+
 <script setup>
 import {provide, ref} from 'vue';
 import {usePage} from "@inertiajs/vue3";
@@ -18,7 +102,7 @@ import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupCompo
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
 import RelevantDatesForShiftPlanningComponent
-    from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+  from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
 import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
@@ -116,92 +200,3 @@ const removeML = (componentType) => {
     }
 };
 </script>
-
-<template>
-    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project" :current-tab="currentTab" :create-settings="createSettings" :first_project_tab_id="first_project_tab_id">
-        <div class="my-10 w-full">
-            <div v-for="component in currentTab.components" :class="removeML(component.component?.type)">
-                <Component
-                    v-if="canSeeComponent(component.component)"
-                    :is="componentMapping[component.component?.type]"
-                    :can-edit-component="canEditComponent(component.component)"
-                    :project="headerObject.project"
-                    :in-sidebar="false"
-                    :loadedProjectInformation="loadedProjectInformation"
-                    :header-object="headerObject"
-                    :data="component.component"
-                    :project-id="headerObject.project.id"
-                    :projectCategories="headerObject.projectCategories"
-                    :projectGenres="headerObject.projectGenres"
-                    :projectSectors="headerObject.projectSectors"
-                    :categories="headerObject.categories"
-                    :sectors="headerObject.sectors"
-                    :genres="headerObject.genres"
-                    :projectCategoryIds="headerObject.projectCategoryIds"
-                    :projectGenreIds="headerObject.projectGenreIds"
-                    :projectSectorIds="headerObject.projectSectorIds"
-                    :event-types="headerObject.eventTypes"
-                    :opened_checklists="headerObject.project?.opened_checklists"
-                    :checklist_templates="headerObject.project?.checklist_templates"
-                    :projectManagerIds="headerObject.projectManagerIds"
-                    :projectWriteIds="headerObject.projectWriteIds"
-                    :tab_id="currentTab.id"
-                    :first_project_tab_id="first_project_tab_id"
-                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                    :first_project_budget_tab_id="first_project_budget_tab_id"
-                    :rooms="headerObject.rooms"
-                    :eventsInProject="headerObject.project.events"
-                />
-            </div>
-        </div>
-
-
-        <BaseSidenav @toggle="show = !show" v-if="currentTab.hasSidebarTabs">
-            <div class="w-full">
-                <div class="mb-5 ml-3">
-                    <div class="hidden sm:block">
-                        <div class="border-gray-200">
-                            <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                                <div v-for="(tab, index) in currentTab.sidebar_tabs" :key="tab?.name"
-                                     @click="currentSideBarTab = index"
-                                     :class="[index === currentSideBarTab ? 'text-artwork-context-light border-artwork-context-light' : 'border-transparent text-secondary hover:text-artwork-buttons-hover hover:border-artwork-buttons-hover', 'whitespace-nowrap py-2 px-1 border-b-2 font-semibold cursor-pointer']"
-                                     :aria-current="index === currentSideBarTab ? 'page' : undefined">
-                                    {{ tab.name }}
-                                </div>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-                <div class="px-3">
-                    <div v-for="component in currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
-                        <Component
-                            v-if="canSeeComponent(component.component)"
-                            :is="componentMapping[component.component?.type]"
-                            :can-edit-component="canEditComponent(component.component)"
-                            :project="headerObject.project"
-                            :in-sidebar="true"
-                            :loadedProjectInformation="loadedProjectInformation"
-                            :header-object="headerObject"
-                            :data="component.component"
-                            :project-id="headerObject.project.id"
-                            :projectCategories="headerObject.projectCategories"
-                            :projectGenres="headerObject.projectGenres"
-                            :projectSectors="headerObject.projectSectors"
-                            :categories="headerObject.categories"
-                            :sectors="headerObject.sectors"
-                            :genres="headerObject.genres"
-                            :projectCategoryIds="headerObject.projectCategoryIds"
-                            :projectGenreIds="headerObject.projectGenreIds"
-                            :projectSectorIds="headerObject.projectSectorIds"
-                            :eventTypes="headerObject.eventTypes"
-                            :rooms="headerObject.rooms"
-                        />
-                    </div>
-                </div>
-            </div>
-        </BaseSidenav>
-    </ProjectHeaderComponent>
-</template>
-
-<style scoped>
-</style>

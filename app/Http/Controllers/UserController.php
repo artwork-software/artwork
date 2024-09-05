@@ -6,6 +6,7 @@ use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -15,6 +16,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
@@ -52,6 +54,8 @@ class UserController extends Controller
 {
     public function __construct(
         private readonly UserService $userService,
+        private readonly RoomService $roomService,
+        private readonly EventService $eventService
     ) {
         $this->authorizeResource(User::class, 'user');
     }
@@ -450,6 +454,18 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $user->departments()->detach();
+        $user->createdRooms()->withTrashed()->each(
+            fn (Room $room) => $this->roomService->update(
+                $room,
+                ['user_id' => $this->userService->getAuthUserId()]
+            )
+        );
+        $user->events()->withTrashed()->each(
+            fn (Event $event) => $this->eventService->update(
+                $event,
+                ['user_id' => $this->userService->getAuthUserId()]
+            )
+        );
         $user->delete();
 
         broadcast(new UserUpdated())->toOthers();

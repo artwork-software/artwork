@@ -76,23 +76,28 @@ export default {
             this.showAddProjectRoleModal = false;
         },
         addProjectRole() {
-            if(this.projectRoleForm.id) {
-                this.projectRoleForm.patch(route('project-roles.update', {projectRole: this.projectRoleForm.id}), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.showAddProjectRoleModal = false;
-                        this.projectRoleForm.reset();
+            if (this.projectRoleForm.id) {
+                this.projectRoleForm.patch(
+                    route('project-roles.update', {project_role: this.projectRoleForm.id}),
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.showAddProjectRoleModal = false;
+                            this.projectRoleForm.reset();
+                        }
                     }
-                });
-            } else {
-                this.projectRoleForm.post(route('project-roles.store'), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.showAddProjectRoleModal = false;
-                        this.projectRoleForm.reset();
-                    }
-                });
+                );
+
+                return;
             }
+
+            this.projectRoleForm.post(route('project-roles.store'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showAddProjectRoleModal = false;
+                    this.projectRoleForm.reset();
+                }
+            });
         },
         openRoleEditForm(role) {
             this.projectRoleForm.id = role.id;

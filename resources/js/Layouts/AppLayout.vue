@@ -25,7 +25,7 @@
                             <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
-                    <div class="flex flex-col w-full space-y-1 mt-8 overflow-y-auto managementMenu">
+                    <div :class="computedWindowInnerHeight > 855 ? 'mt-8' : 'mt-0'"  class="flex flex-col w-full space-y-1 overflow-y-auto managementMenu">
                         <template v-for="item in navigation">
                             <Link v-if="item.desiredClickHandler"
                                   href="#"
@@ -53,15 +53,18 @@
                             'change project settings',
                             'change event settings',
                             'change system notification',
+                            'create, delete and update rooms',
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs',
                             'view budget templates',
-                            'create, delete and update rooms'
-                        ]) || hasAdminRole()
+                            'edit budget templates',
+                        ])
                         ">
                             <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-row justify-center items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
                                     <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
-                                        System
+                                        {{ $t('System') }}
                                     </div>
                                 </div>
                             </MenuButton>
@@ -348,7 +351,7 @@ export default {
             }
 
             replaceTextWithLinks(bodyElement);
-        }
+        },
     },
     computed: {
         managementNavigation() {
@@ -507,6 +510,9 @@ export default {
                     icon: IconFileText
                 }
             ]
+        },
+        computedWindowInnerHeight() {
+            return this.windowInnerHeight;
         }
     },
     mounted() {
@@ -515,7 +521,7 @@ export default {
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
         window.document.dispatchEvent(ev);
-        this.$i18n.locale = this.$page.props.selected_language; // Für VueI18n 9.x und Vue 3
+        this.$i18n.locale = this.$page.props.selected_language;
         document.documentElement.lang = this.$page.props.selected_language;
         Echo.private('App.Models.User.' + this.$page.props.user.id)
             .notification((notification) => {
@@ -524,6 +530,10 @@ export default {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
             });
+
+        window.addEventListener('resize', () => {
+            this.windowInnerHeight = window.innerHeight;
+        });
     },
   data() {
         return {
@@ -537,6 +547,7 @@ export default {
             testModel2: '',
             testModel3: '',
             testModel4: '',
+            windowInnerHeight: window.innerHeight,
         }
     },
     setup() {

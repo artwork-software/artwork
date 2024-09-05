@@ -908,4 +908,11 @@ readonly class RoomService
     {
         return $this->roomRepository->findByName($name);
     }
+
+    public function update(Room $room, array $attributes): Room
+    {
+        $this->roomRepository->update($room, $attributes);
+
+        return $room;
+    }
 }

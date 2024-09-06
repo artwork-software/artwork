@@ -123,27 +123,29 @@ export default class {
 
     calculateMargins() {
         this.getSortedTimelinesAndShifts().forEach((currentTimelineOrShift, index) => {
-            const currentIsShiftObject = this.isShiftObject(currentTimelineOrShift),
-                element = this.getTimelineOrShiftElement(currentTimelineOrShift);
-
             if (index === 0) {
                 //no margin for first item
                 return;
             }
 
-            const previousTimelineOrShift = this.timelinesAndShifts[(index - 1)],
-                previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShift),
-                previousIsShiftObject = this.isShiftObject(previousTimelineOrShift);
+            let currentIsShiftObject = this.isShiftObject(currentTimelineOrShift);
+            let element = this.getTimelineOrShiftElement(currentTimelineOrShift);
+            let previousTimelineOrShift = this.timelinesAndShifts[(index - 1)];
+            let previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShift);
+            let previousIsShiftObject = this.isShiftObject(previousTimelineOrShift);
 
             //handle timeline after timeline placement
             if (!currentIsShiftObject && !previousIsShiftObject) {
                 //if timeline after timeline is placed we just need to add 2 pixel margin top and calculate hint
+                let diff = this.getDiffToPreviousElementsEndDate(currentTimelineOrShift, previousTimelineOrShift);
 
-                if (!this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift)) {
+                if (diff <= 0) {
                     //set margin top to 2px if there is no diff to previous
                     this.setElementMarginTop(element, 2);
+                    return;
                 }
 
+                this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift)
                 return;
             }
 
@@ -158,7 +160,7 @@ export default class {
                             marginTop -= this.getElementHeight(tmp);
                             marginTop -= this.getElementMarginTop(tmp);
                         }
-                    )
+                    );
 
                     if (marginTop > 0) {
                         marginTop -= this.elementsHeaderHeight;
@@ -175,7 +177,8 @@ export default class {
                     (index - 1)
                 );
 
-                let desiredHeightForCalculation = this.getElementHeight(previousTimelineOrShiftElement);
+                let desiredHeightForCalculation = this.getElementHeight(previousTimelineOrShiftElement) +
+                    this.defaultMarginToAdd;
 
                 if (previousSameStarting.length > 1) {
                     //the previousTimelineOrShift is included in the result set, if we have more
@@ -184,14 +187,31 @@ export default class {
                         (element) => {
                             let elementHeight = this.getElementHeight(this.getTimelineOrShiftElement(element));
 
-                            if (elementHeight > desiredHeightForCalculation) {
-                                desiredHeightForCalculation = elementHeight;
+                            if (elementHeight > (desiredHeightForCalculation - this.defaultMarginToAdd)) {
+                                previousTimelineOrShift = element;
+                                previousTimelineOrShiftElement = this.getTimelineOrShiftElement(element);
+                                desiredHeightForCalculation = elementHeight + this.defaultMarginToAdd;
                             }
                         }
                     )
                 }
 
-                marginTop += desiredHeightForCalculation;
+                let diffToPreviousHandling = false;
+                if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                    //placement depending on start dates difference (current starts before previous ends)
+                    marginTop += (
+                        this.getDiffToPreviousElementsStartDate(
+                            currentTimelineOrShift,
+                            previousTimelineOrShift
+                        ) * this.getElementsHeightInPixelPerMinuteDependantOnShift(previousTimelineOrShift)
+                    );
+                } else {
+                    //placement depending on previous (biggest) container height as timeline is starting after previous
+                    //shift
+                    marginTop += desiredHeightForCalculation;
+                    diffToPreviousHandling = true;
+                }
+
                 marginTop -= this.elementsHeaderHeight;
 
                 this.getPreviousTimelines(index).forEach(
@@ -202,10 +222,10 @@ export default class {
                     }
                 );
 
-                marginTop += this.defaultMarginToAdd;
-
                 this.setElementMarginTop(element, marginTop);
-                this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+                if (diffToPreviousHandling) {
+                    this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+                }
                 return;
             }
 
@@ -213,18 +233,36 @@ export default class {
             if (currentIsShiftObject && !previousIsShiftObject) {
                 if ((index - 1) === 0) {
                     //previous element also was first element
+                    let desiredHeightForCalculation = 0;
+                    let diffToPreviousHandling = false;
+
+                    if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                        //placement depending on start dates difference (current starts before previous ends)
+                        desiredHeightForCalculation = (
+                            this.getDiffToPreviousElementsStartDate(
+                                currentTimelineOrShift,
+                                previousTimelineOrShift
+                            ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
+                        ) + 8; //(+8px margin from event heading bar)
+                    } else {
+                        desiredHeightForCalculation = this.getElementHeight(previousTimelineOrShiftElement) +
+                            this.defaultMarginToAdd;
+                        diffToPreviousHandling = true;
+                    }
+
                     this.setElementMarginTop(
                         element,
-                        this.getElementHeight(previousTimelineOrShiftElement) +
+                        desiredHeightForCalculation +
                         this.getElementMarginTop(previousTimelineOrShiftElement) +
-                        this.elementsHeaderHeight +
-                        this.defaultMarginToAdd
+                        this.elementsHeaderHeight
                     );
-                    this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+                    if (diffToPreviousHandling) {
+                        this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+                    }
                     return;
                 }
 
-                //if start same as previous shift placed on same height
+                //if start same as previous timeline placed on same height
                 //margin = (margins of all previous timelines + heights)
                 if (this.startsIdentical(previousTimelineOrShift, currentTimelineOrShift)) {
                     let marginTop = this.elementsHeaderHeight +
@@ -252,16 +290,60 @@ export default class {
                 if (previousSameStarting.length > 1) {
                     //determine biggest container
                     let marginTop = 0;
+                    let replacedByShift = false;
 
                     previousSameStarting.forEach(
                         (element) => {
                             let elementHeight = this.getElementHeight(this.getTimelineOrShiftElement(element));
 
-                            if (elementHeight > marginTop) {
-                                marginTop = elementHeight;
+                            if (elementHeight > (marginTop - this.defaultMarginToAdd)) {
+                                replacedByShift = this.isShiftObject(element);
+                                previousTimelineOrShift = element;
+                                previousTimelineOrShiftElement = this.getTimelineOrShiftElement(element);
+                                marginTop = elementHeight + this.defaultMarginToAdd;
                             }
                         }
                     );
+
+                    if (replacedByShift) {
+                        if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                            //placement depending on start dates difference (current starts before previous ends)
+                            marginTop = (
+                                this.getDiffToPreviousElementsStartDate(
+                                    currentTimelineOrShift,
+                                    previousTimelineOrShift
+                                ) * this.getElementsHeightInPixelPerMinuteDependantOnShift(previousTimelineOrShift)
+                            );
+                        }
+                        this.setElementMarginTop(
+                            element,
+                            this.getElementMarginTop(previousTimelineOrShiftElement) + marginTop
+                        );
+
+                        return;
+                    }
+
+                    if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                        this.getPreviousTimelines((index - 1)).forEach(
+                            (previousTimeline) => {
+                                let tmp = this.getTimelineOrShiftElement(previousTimeline);
+                                marginTop += this.getElementMarginTop(tmp);
+                                marginTop += this.getElementHeight(tmp);
+                            }
+                        );
+                        marginTop += this.elementsHeaderHeight;
+                        marginTop -= this.getElementHeight(previousTimelineOrShiftElement);
+                        marginTop -= this.defaultMarginToAdd;
+                        marginTop += (
+                            this.getDiffToPreviousElementsStartDate(
+                                currentTimelineOrShift,
+                                previousTimelineOrShift
+                            ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
+                        ) + 8; //(+8px margin from event heading bar)
+
+                        this.setElementMarginTop(element, marginTop);
+                        return;
+                    }
 
                     //now we have the desired height, we will now get all timelines except the one
                     //which is the previous object of the current shift to be placed
@@ -273,9 +355,6 @@ export default class {
                             marginTop += this.getElementHeight(tmp);
                         }
                     );
-                    marginTop += this.defaultMarginToAdd;
-                    //just add the marginTop of the previous element, height not desired as its already determined
-                    marginTop += this.getElementMarginTop(previousTimelineOrShiftElement);
 
                     this.setElementMarginTop(element, marginTop);
                     this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
@@ -283,9 +362,22 @@ export default class {
                     return;
                 }
 
-                //determine all previous margins and container heights + elementsHeaderHeight
                 let marginTop = this.elementsHeaderHeight;
 
+                if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                    marginTop += this.getElementMarginTop(previousTimelineOrShiftElement);
+                    marginTop += (
+                        this.getDiffToPreviousElementsStartDate(
+                            currentTimelineOrShift,
+                            previousTimelineOrShift
+                        ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
+                    ) + 8; //(+8px margin from event heading bar)
+
+                    this.setElementMarginTop(element, marginTop);
+                    return;
+                }
+
+                //determine all previous margins and container heights + elementsHeaderHeight
                 this.getPreviousTimelines(index).forEach(
                     (previousTimeline) => {
                         let tmp = this.getTimelineOrShiftElement(previousTimeline);
@@ -302,7 +394,6 @@ export default class {
 
             //handle shift after shift placement
             if (currentIsShiftObject && previousIsShiftObject) {
-                //placement shift after shift
                 if (this.startsIdentical(previousTimelineOrShift, currentTimelineOrShift)) {
                     this.setElementMarginTop(element, this.getElementMarginTop(previousTimelineOrShiftElement));
 
@@ -317,7 +408,40 @@ export default class {
                 );
 
                 //get height of previous container
-                let desiredElementHeight = this.getElementHeight(previousTimelineOrShiftElement);
+                let desiredElementHeight = this.getElementHeight(previousTimelineOrShiftElement) +
+                    this.defaultMarginToAdd;
+
+                //if previous shift is starting in between its previous timeline element
+                //placement is depending on previous shift previous timeline element
+                let previousTimelineOrShiftOfPreviousIndex = index - 2;
+                if (previousTimelineOrShiftOfPreviousIndex >= 0) {
+                    let previousTimelineOrShiftOfPrevious = this.timelinesAndShifts[(index - 2)];
+
+                    if (
+                        !this.isShiftObject(previousTimelineOrShiftOfPrevious) &&
+                        this.startsInBetween(previousTimelineOrShiftOfPrevious, previousTimelineOrShift)
+                    ) {
+                        previousTimelineOrShift = previousTimelineOrShiftOfPrevious;
+                        previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShiftOfPrevious);
+                        let marginTop = this.getElementHeight(
+                            this.getTimelineOrShiftElement(previousTimelineOrShiftOfPrevious)
+                        ) + this.defaultMarginToAdd;
+
+                        marginTop += this.elementsHeaderHeight;
+                        this.getPreviousTimelines((previousTimelineOrShiftOfPrevious - 1)).forEach(
+                            (previousTimeline) => {
+                                let tmp = this.getTimelineOrShiftElement(previousTimeline);
+                                marginTop += this.getElementMarginTop(tmp);
+                                marginTop += this.getElementHeight(tmp);
+                            }
+                        );
+
+                        this.setElementMarginTop(element, marginTop);
+                        this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+
+                        return;
+                    }
+                }
 
                 //check if any of the previous containers is bigger
                 if (previousSameStarting.length > 1) {
@@ -325,18 +449,35 @@ export default class {
                         (element) => {
                             let elementHeight = this.getElementHeight(this.getTimelineOrShiftElement(element));
 
-                            if (elementHeight > desiredElementHeight) {
-                                desiredElementHeight = elementHeight;
+                            if (elementHeight > (desiredElementHeight - this.defaultMarginToAdd)) {
+                                previousTimelineOrShift = element;
+                                previousTimelineOrShiftElement = this.getTimelineOrShiftElement(element);
+                                desiredElementHeight = elementHeight + this.defaultMarginToAdd;
                             }
                         }
                     );
                 }
 
+                if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
+                    //placement depending on start dates difference (current starts before previous ends)
+                    desiredElementHeight = (
+                        this.getDiffToPreviousElementsStartDate(
+                            currentTimelineOrShift,
+                            previousTimelineOrShift
+                        ) * this.getElementsHeightInPixelPerMinuteDependantOnShift(previousTimelineOrShift)
+                    );
+                    this.setElementMarginTop(
+                        element,
+                        this.getElementMarginTop(previousTimelineOrShiftElement) +
+                        desiredElementHeight
+                    );
+                    return;
+                }
+
                 this.setElementMarginTop(
                     element,
                     this.getElementMarginTop(previousTimelineOrShiftElement) +
-                    desiredElementHeight +
-                    this.defaultMarginToAdd
+                    desiredElementHeight
                 );
                 this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
             }
@@ -344,10 +485,10 @@ export default class {
     }
 
     handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift) {
-        let diff = this.getDiffToPreviousElement(currentTimelineOrShift, previousTimelineOrShift);
+        let diff = this.getDiffToPreviousElementsEndDate(currentTimelineOrShift, previousTimelineOrShift);
 
         if (diff <= 0) {
-            return false;
+            return;
         }
 
         let existingHintElement = element.querySelector('.shiftPlanTimeHint'),
@@ -397,10 +538,57 @@ export default class {
         return Number(element.style.marginTop.replace('px', ''));
     }
 
-    getDiffToPreviousElement(timelineOrShift, previousTimelineOrShift) {
+    getElementsHeightInPixelPerMinuteDependantOnShift(shift) {
+        let startDate = this.parseShiftDateFromDateAndTime(shift.start_date, shift.start);
+        let endDate = this.parseShiftDateFromDateAndTime(shift.end_date, shift.end);
+        let element = this.getTimelineOrShiftElement(shift);
+
+        let recalculateHeightInPixelPerMinute = (
+            this.getDifferenceInMinutes(startDate, endDate) *
+            this.elementsHeightInPixelsPerMinute +
+            this.elementsHeaderHeight
+        ) < this.getElementHeight(element);
+
+        if (!recalculateHeightInPixelPerMinute) {
+            return this.elementsHeightInPixelsPerMinute;
+        }
+
+        return this.getElementHeight(element) / this.getDifferenceInMinutes(startDate, endDate);
+    }
+
+    getElementsHeightInPixelPerMinuteDependantOnTimeline(timeline) {
+        let startDate = this.parseShiftDateFromDateAndTime(timeline.start_date, timeline.start);
+        let endDate = this.parseShiftDateFromDateAndTime(timeline.end_date, timeline.end);
+        let element = this.getTimelineOrShiftElement(timeline);
+
+        let recalculateHeightInPixelPerMinute = (
+            this.getDifferenceInMinutes(startDate, endDate) *
+            this.elementsHeightInPixelsPerMinute +
+            this.elementsHeaderHeight
+        ) < this.getElementHeight(element);
+
+        if (!recalculateHeightInPixelPerMinute) {
+            return this.elementsHeightInPixelsPerMinute;
+        }
+
+        return this.getElementHeight(element) / this.getDifferenceInMinutes(startDate, endDate);
+    }
+
+    getDiffToPreviousElementsEndDate(timelineOrShift, previousTimelineOrShift) {
         let previousEndDate = this.isShiftObject(previousTimelineOrShift) ?
                 this.parseShiftDateFromDateAndTime(previousTimelineOrShift.end_date, previousTimelineOrShift.end) :
                 this.parseTimelineDateFromDateAndTime(previousTimelineOrShift.end_date, previousTimelineOrShift.end),
+            startDate = this.isShiftObject(timelineOrShift) ?
+                this.parseShiftDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start) :
+                this.parseTimelineDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start);
+        //@todo: diff in days und dann 24h pro tag abziehen
+        return this.getDifferenceInMinutes(previousEndDate, startDate);
+    }
+
+    getDiffToPreviousElementsStartDate(timelineOrShift, previousTimelineOrShift) {
+        let previousEndDate = this.isShiftObject(previousTimelineOrShift) ?
+                this.parseShiftDateFromDateAndTime(previousTimelineOrShift.start_date, previousTimelineOrShift.start) :
+                this.parseTimelineDateFromDateAndTime(previousTimelineOrShift.start_date, previousTimelineOrShift.start),
             startDate = this.isShiftObject(timelineOrShift) ?
                 this.parseShiftDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start) :
                 this.parseTimelineDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start);
@@ -417,6 +605,17 @@ export default class {
                 this.parseTimelineDateFromDateAndTime(current.start_date, current.start);
 
         return previousStartDate.getTime() === currentStartDate.getTime();
+    }
+
+    startsInBetween(previous, current) {
+        const previousEndDate = this.isShiftObject(previous) ?
+                this.parseShiftDateFromDateAndTime(previous.end_date, previous.end) :
+                this.parseTimelineDateFromDateAndTime(previous.end_date, previous.end),
+            currentStartDate = this.isShiftObject(current) ?
+                this.parseShiftDateFromDateAndTime(current.start_date, current.start) :
+                this.parseTimelineDateFromDateAndTime(current.start_date, current.start);
+
+        return currentStartDate.getTime() < previousEndDate.getTime();
     }
 
     getPreviousTimelines(index) {

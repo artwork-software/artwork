@@ -2171,21 +2171,36 @@ class ProjectController extends Controller
     {
         $startTime = Carbon::parse($event->start_time);
         $endTime = Carbon::parse($event->end_time);
+        $startDate = Carbon::parse($event->start_time);
+        $endDate = Carbon::parse($event->end_time);
 
         $startTime->setTime(8, 0, 0);
         $endTime->setTime(9, 0, 0);
 
         // if event has already a timeline, get the last timeline and add 1 hour to start and end time
         if ($event->timelines()->exists()) {
-            $lastTimeline = $event->timelines()->latest()->first();
+            $lastTimeline = $event->timelines()
+                ->orderBy('start_date')
+                ->orderBy('start')
+                ->orderBy('end_date')
+                ->orderBy('end')
+                ->get()
+                ->last();
             $startTime = Carbon::parse($lastTimeline->end);
             $endTime = Carbon::parse($lastTimeline->end)->addHour();
+
+            $startDate = $lastTimeline->start_date->format('Y-m-d') === $lastTimeline->end_date->format('Y-m-d') &&
+                Carbon::parse($lastTimeline->end) < Carbon::parse($lastTimeline->start) ?
+                    $lastTimeline->start_date->addDay() :
+                    $lastTimeline->start_date;
+
+            $endDate = $startDate?->copy()->addHour();
         }
 
         $event->timelines()->create(
             [
-                'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
-                'end_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'start' => $startTime,
                 'end' => $endTime,
                 'description' => null

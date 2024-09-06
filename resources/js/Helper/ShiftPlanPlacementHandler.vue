@@ -242,7 +242,7 @@ export default class {
                             this.getDiffToPreviousElementsStartDate(
                                 currentTimelineOrShift,
                                 previousTimelineOrShift
-                            ) * this.elementsHeightInPixelsPerMinute
+                            ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
                         ) + 8; //(+8px margin from event heading bar)
                     } else {
                         desiredHeightForCalculation = this.getElementHeight(previousTimelineOrShiftElement) +
@@ -338,7 +338,7 @@ export default class {
                             this.getDiffToPreviousElementsStartDate(
                                 currentTimelineOrShift,
                                 previousTimelineOrShift
-                            ) * this.elementsHeightInPixelsPerMinute
+                            ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
                         ) + 8; //(+8px margin from event heading bar)
 
                         this.setElementMarginTop(element, marginTop);
@@ -370,7 +370,7 @@ export default class {
                         this.getDiffToPreviousElementsStartDate(
                             currentTimelineOrShift,
                             previousTimelineOrShift
-                        ) * this.elementsHeightInPixelsPerMinute
+                        ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
                     ) + 8; //(+8px margin from event heading bar)
 
                     this.setElementMarginTop(element, marginTop);
@@ -411,6 +411,38 @@ export default class {
                 let desiredElementHeight = this.getElementHeight(previousTimelineOrShiftElement) +
                     this.defaultMarginToAdd;
 
+                //if previous shift is starting in between its previous timeline element
+                //placement is depending on previous shift previous timeline element
+                let previousTimelineOrShiftOfPreviousIndex = index - 2;
+                if (previousTimelineOrShiftOfPreviousIndex >= 0) {
+                    let previousTimelineOrShiftOfPrevious = this.timelinesAndShifts[(index - 2)];
+
+                    if (
+                        !this.isShiftObject(previousTimelineOrShiftOfPrevious) &&
+                        this.startsInBetween(previousTimelineOrShiftOfPrevious, previousTimelineOrShift)
+                    ) {
+                        previousTimelineOrShift = previousTimelineOrShiftOfPrevious;
+                        previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShiftOfPrevious);
+                        let marginTop = this.getElementHeight(
+                            this.getTimelineOrShiftElement(previousTimelineOrShiftOfPrevious)
+                        ) + this.defaultMarginToAdd;
+
+                        marginTop += this.elementsHeaderHeight;
+                        this.getPreviousTimelines((previousTimelineOrShiftOfPrevious - 1)).forEach(
+                            (previousTimeline) => {
+                                let tmp = this.getTimelineOrShiftElement(previousTimeline);
+                                marginTop += this.getElementMarginTop(tmp);
+                                marginTop += this.getElementHeight(tmp);
+                            }
+                        );
+
+                        this.setElementMarginTop(element, marginTop);
+                        this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+
+                        return;
+                    }
+                }
+
                 //check if any of the previous containers is bigger
                 if (previousSameStarting.length > 1) {
                     previousSameStarting.forEach(
@@ -432,7 +464,7 @@ export default class {
                         this.getDiffToPreviousElementsStartDate(
                             currentTimelineOrShift,
                             previousTimelineOrShift
-                        ) * this.elementsHeightInPixelsPerMinute
+                        ) * this.getElementsHeightInPixelPerMinuteDependantOnShift(previousTimelineOrShift)
                     );
                     this.setElementMarginTop(
                         element,
@@ -454,6 +486,10 @@ export default class {
 
     handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift) {
         let diff = this.getDiffToPreviousElementsEndDate(currentTimelineOrShift, previousTimelineOrShift);
+
+        if (diff <= 0) {
+            return;
+        }
 
         let existingHintElement = element.querySelector('.shiftPlanTimeHint'),
             hintElement,
@@ -520,6 +556,24 @@ export default class {
         return this.getElementHeight(element) / this.getDifferenceInMinutes(startDate, endDate);
     }
 
+    getElementsHeightInPixelPerMinuteDependantOnTimeline(timeline) {
+        let startDate = this.parseShiftDateFromDateAndTime(timeline.start_date, timeline.start);
+        let endDate = this.parseShiftDateFromDateAndTime(timeline.end_date, timeline.end);
+        let element = this.getTimelineOrShiftElement(timeline);
+
+        let recalculateHeightInPixelPerMinute = (
+            this.getDifferenceInMinutes(startDate, endDate) *
+            this.elementsHeightInPixelsPerMinute +
+            this.elementsHeaderHeight
+        ) < this.getElementHeight(element);
+
+        if (!recalculateHeightInPixelPerMinute) {
+            return this.elementsHeightInPixelsPerMinute;
+        }
+
+        return this.getElementHeight(element) / this.getDifferenceInMinutes(startDate, endDate);
+    }
+
     getDiffToPreviousElementsEndDate(timelineOrShift, previousTimelineOrShift) {
         let previousEndDate = this.isShiftObject(previousTimelineOrShift) ?
                 this.parseShiftDateFromDateAndTime(previousTimelineOrShift.end_date, previousTimelineOrShift.end) :
@@ -527,7 +581,7 @@ export default class {
             startDate = this.isShiftObject(timelineOrShift) ?
                 this.parseShiftDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start) :
                 this.parseTimelineDateFromDateAndTime(timelineOrShift.start_date, timelineOrShift.start);
-
+        //@todo: diff in days und dann 24h pro tag abziehen
         return this.getDifferenceInMinutes(previousEndDate, startDate);
     }
 

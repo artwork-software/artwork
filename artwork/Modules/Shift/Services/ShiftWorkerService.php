@@ -70,11 +70,16 @@ class ShiftWorkerService
             $workerData = array_merge(
                 [
                     'vacations' => $worker->getVacationDays(),
-                    'availabilities' => $this->userRepository->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $worker,
-                        $startDate,
-                        $endDate
-                    ),
+                    'availabilities' => $workerType === 0 ?
+                        $this->userRepository->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
+                            $worker,
+                            $startDate,
+                            $endDate
+                        ) : $this->freelancerRepository->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
+                            $worker,
+                            $startDate,
+                            $endDate
+                        ),
                 ],
                 $workerData
             );

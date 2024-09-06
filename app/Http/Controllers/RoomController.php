@@ -25,7 +25,6 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -313,7 +312,7 @@ class RoomController extends Controller
     public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Rooms', [
-            'trashed_rooms' => Area::all()->map(fn($area) => [
+            'trashed_rooms' => Area::withTrashed()->get()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->trashedRooms)->resolve(),

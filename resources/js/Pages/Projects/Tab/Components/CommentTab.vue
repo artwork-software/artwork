@@ -31,7 +31,7 @@
                      @mouseout="commentHovered = null">
                     <div class="flex justify-between">
                         <div class="flex items-center">
-                            <UserPopoverTooltip v-if="comment.user" :user="comment.user" height="7" width="7" :id="comment.user.id"/>
+                            <UserPopoverTooltip :user="comment.user" height="7" width="7" :id="comment.id"/>
                             <div class="ml-2 text-secondary"
                                  :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                 {{ comment.created_at }}
@@ -43,9 +43,8 @@
                             <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
                         </button>
                     </div>
-                    <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
-                        {{ comment.text }}
-                    </div>
+                    <p class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold" v-html="comment.text">
+                    </p>
                 </div>
                 <div v-else class="xsDark mt-6">
                     {{ $t('No comments yet') }}

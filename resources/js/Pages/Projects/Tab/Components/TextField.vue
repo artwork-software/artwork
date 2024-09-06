@@ -35,14 +35,15 @@ export default {
         <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : ' text-gray-900' ">
             {{ data.data.label }}
         </label>
-        <div class="mt-2">
-            <TextInputComponent type="text"
-                   :disabled="!this.canEditComponent"
-                   @focusout="updateTextData"
-                   v-model="textData.text"
-                   :label="textData.text"
-                   name="email" id="email"
-                   :class="inSidebar ? 'bg-primary text-white' : 'inputMain'"
+        <div class="mt-2 w-96">
+            <TextInputComponent
+                type="text"
+                :disabled="!this.canEditComponent"
+                @focusout="updateTextData"
+                v-model="textData.text"
+                :label="textData.text"
+                name="email" id="email"
+                :class="inSidebar ? 'bg-primary text-white' : ''"
             />
         </div>
     </div>

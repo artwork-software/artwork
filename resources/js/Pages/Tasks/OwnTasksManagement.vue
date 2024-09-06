@@ -9,11 +9,11 @@
                     is-in-own-task-management
                 >
                     <template #search>
-                        <div class="" v-if="!showSearch" @click="showSearch = true">
-                            <IconSearch class="h-6 w-6" />
+                        <div class="" v-if="!showSearch" @click="openSearchbar">
+                            <IconSearch class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
                         </div>
                         <div v-if="showSearch">
-                            <div class="relative -mt-5">
+                            <div class="relative w-72 -mt-5">
                                 <TextInputComponent
                                     id="userSearch"
                                     v-model="search"
@@ -176,7 +176,7 @@
 </template>
 
 <script setup>
-import {computed, ref} from 'vue';
+import {computed, nextTick, ref} from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SingleMoneySourceTask from "@/Pages/Tasks/Components/SingleMoneySourceTask.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
@@ -212,7 +212,7 @@ const noProjects = ref(false);
 const privateChecklists = ref(false);
 const noPrivateChecklists = ref(false);
 const showDoneTasks = ref(false);
-const showChecklistWithoutTasks = ref(false);
+const showChecklistWithoutTasks = ref(true);
 
 const currentSort = ref(usePage().props.urlParameters?.filter > 0 ? parseInt(usePage().props.urlParameters?.filter) : 0);
 
@@ -294,6 +294,13 @@ const removeFilter = () => {
     privateChecklists.value = false;
     noPrivateChecklists.value = false;
     showDoneTasks.value = false;
+}
+
+const openSearchbar = () => {
+    showSearch.value = true;
+    nextTick(() => {
+        document.getElementById('userSearch').focus();
+    });
 }
 
 </script>

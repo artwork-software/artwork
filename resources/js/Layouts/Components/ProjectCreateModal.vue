@@ -523,7 +523,7 @@ export default {
         Button,
         Input
     },
-    emits: ['closeCreateProjectModal'],
+    emits: ['closeCreateProjectModal', 'dropFeedback'],
     props: [
         'show',
         'categories',
@@ -623,6 +623,7 @@ export default {
                     route('projects.store'), {
                         onSuccess: () => {
                             this.$emit('closeCreateProjectModal', bool);
+                            this.$emit('dropFeedback');
                         }
                     }
                 );

@@ -26,7 +26,7 @@
                                     <IconEdit stroke-width="1.5"
                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                               aria-hidden="true"/>
-                                    {{ $t('edit')}}
+                                    {{ $t('Edit')}}
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
@@ -81,11 +81,11 @@
 
 <script setup>
 
-import {Link, router, useForm} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
-import { IconEdit, IconCopy, IconTrash } from "@tabler/icons-vue";
+import {IconCopy, IconEdit, IconTrash} from "@tabler/icons-vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {ref} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

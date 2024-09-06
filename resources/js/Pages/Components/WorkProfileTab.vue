@@ -65,7 +65,8 @@
                           v-for="craft in this.user.accessibleCrafts"
                           :tag="craft"
                           :key="craft.id"
-                          :displayed-text="craft.name" hide-x="true" property=""/>
+                          :displayed-text="craft.name"
+                          hide-x="true"/>
             <span v-else class="text-xs text-gray-500">
                 {{ $t('Not assigned as shift planner.') }}
             </span>
@@ -129,12 +130,11 @@
 <script>
 import Permissions from "@/Mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
-import {router} from "@inertiajs/vue3";
 import {reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";

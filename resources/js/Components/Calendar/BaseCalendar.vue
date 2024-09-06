@@ -12,7 +12,7 @@
                 @update-multi-edit="toggleMultiEdit"
             />
         </div>
-        <div :class="computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'mt-16' : ''">
+        <div :class="computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'mt-20' : ''">
             <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
@@ -38,7 +38,7 @@
         <div v-else class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>
-                <div class="w-fit events-by-days-container mt-5" :class="[!project ? computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'pt-1' : 'pt-8' : '', isFullscreen ? 'mt-6': '']" ref="calendarToCalculate">
+                <div class="w-fit events-by-days-container" :class="[!project ? computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'pt-1' : 'pt-8' : '', isFullscreen ? 'mt-6': '', computedFilteredEvents.length > 0 ? '-mt-1' : 'mt-4' ]" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
                          :style="{ height: zoom_factor * 115 + 'px' }"

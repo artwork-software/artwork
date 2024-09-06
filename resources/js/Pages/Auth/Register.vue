@@ -1,4 +1,8 @@
 <template>
+    <Head>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $t('Register') }} - {{ $page.props.page_title }}</title>
+    </Head>
     <div class="py-8 px-8 md:px-64">
         <form class="space-y-6" @submit.prevent="submit">
             <div class="text-2xl font-bold text-black">

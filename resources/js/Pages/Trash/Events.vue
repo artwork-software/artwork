@@ -44,7 +44,7 @@
                     <p class="xsLight subpixel-antialiased mt-2">
                         {{ event.start }} - {{ event.end }}
                     </p>
-                    <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex">
+                    <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex items-center">
                         <div>
                             <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : event.event_type.hex_code }" />
                         </div>

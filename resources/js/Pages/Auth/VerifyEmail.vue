@@ -1,6 +1,8 @@
 <template>
-    <Head title="Email Verification" />
-
+    <Head>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $t('Email Verification') }} - {{ $page.props.page_title }}</title>
+    </Head>
     <jet-authentication-card>
         <template #logo>
             <jet-authentication-card-logo />

@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white">
-        <div class="sticky top-0 z-40 -my-4">
+        <div class="w-full top-0 left-4 py-4 z-40 -mx-10 -my-4" :class="project ? '' : 'fixed ml-10'">
             <FunctionBarCalendar
                 :multi-edit="multiEdit"
                 :rooms="rooms"
@@ -8,10 +8,10 @@
                 @wants-to-add-new-event="openEditEventModal"
                 @update-multi-edit="changeMultiEdit"/>
         </div>
-        <div class="flex mt-4 relative events-at-a-glance-container">
+        <div class="flex pt-10 relative events-at-a-glance-container">
             <template v-if="eventsAtAGlanceRef">
                 <div v-for="room in computedRooms">
-                    <div class="w-52 py-3 mb-0.5 border-r-4 border-secondaryHover bg-userBg sticky top-[4.75rem] z-40">
+                    <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg sticky top-[4.5rem] z-40 mb-7">
                         <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>

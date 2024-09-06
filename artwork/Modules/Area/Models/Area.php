@@ -6,10 +6,10 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model as IlluminateModel;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Model as IlluminateModel;
 
 class Area extends Model
 {
@@ -21,6 +21,10 @@ class Area extends Model
     {
         parent::booting();
         static::deleting(static fn(IlluminateModel $model) => $model->rooms()->delete());
+        static::restoring(
+            static fn(IlluminateModel $model) => $model->trashedRooms()->each(fn($room) => $room->restore())
+        );
+        static::forceDeleting(static fn(IlluminateModel $model) => $model->rooms()->forceDelete());
     }
 
     protected $fillable = [

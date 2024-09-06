@@ -309,7 +309,16 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
         $user->update(
-            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
+            $request->only(
+                'first_name',
+                'last_name',
+                'phone_number',
+                'position',
+                'business',
+                'description',
+                'email',
+                'language'
+            )
         );
 
         if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {

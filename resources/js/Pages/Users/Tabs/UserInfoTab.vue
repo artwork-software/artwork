@@ -46,13 +46,21 @@
             </div>
         </div>
         <div>
+            <input disabled="disabled"
+                   type="text"
+                   :value="$page.props.businessName"
+                   class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 mb-6"
+                   @focusout="this.editUser()"
+            />
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input disabled="disabled"
+                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
-                               :value="$page.props.businessName"
-                               class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               v-model="userForm.business"
+                               :placeholder="this.$t('Business')"
+                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
                                @focusout="this.editUser()"
                         />
                     </div>
@@ -247,16 +255,25 @@
 
 <script>
 
-import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -317,6 +334,7 @@ export default {
                 email: this.user_to_edit.email,
                 photo:this.user_to_edit.profile_photo_path,
                 position: this.user_to_edit.position,
+                business: this.user_to_edit.business,
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,

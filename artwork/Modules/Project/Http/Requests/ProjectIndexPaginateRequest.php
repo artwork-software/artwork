@@ -21,7 +21,8 @@ class ProjectIndexPaginateRequest extends FormRequest
             'project_state_ids' => 'sometimes|array',
             'project_state_ids.*' => 'exists:project_states,id',
             'project_filters' => 'sometimes|array',
-            'project_filters.*' => 'boolean'
+            'project_filters.*' => 'boolean',
+            'saveFilterAndSort' => ['sometimes', 'boolean']
         ];
     }
 }

@@ -387,7 +387,7 @@
     "Company" : "Company",
     "Weak" : "Weak",
     "Strong" : "Strong",
-    "The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters." : "The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.",
+    "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters." : "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters.",
     "Not in any team" : "Not in any team",
     "Edit team membership" : "Edit team membership",
     "Remove user from all teams" : "Remove user from all teams",
@@ -549,7 +549,6 @@
     "Budget deadline": "Budget deadline",
     "Project process": "Project process",
     "Here you can see what was changed by whom and when.": "Here you can see what was changed by whom and when.",
-    "deleted User": "deleted User",
     "Project": "Project",
     "Project team": "Project team",
     "Project management": "Project management",
@@ -1978,7 +1977,12 @@
     "Chronologically descending": "Chronologically descending",
     "Show expired projects": "Show expired projects",
     "Show future projects": "Show future projects",
+    "Creator": "Creator",
+    "System": "System",
     "Automatic mode": "Automatic mode",
     "Manual mode": "Manual mode",
-    "End date must be after start date or the same": "End date must be after start date or the same"
+    "End date must be after start date or the same": "End date must be after start date or the same",
+    "Please confirm your password here.": "Please confirm your password here.",
+    "Show projects without events": "Show projects without events",
+    "Project created successfully": "Project created successfully"
 }

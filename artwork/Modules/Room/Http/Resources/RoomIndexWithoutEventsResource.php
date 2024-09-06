@@ -32,6 +32,9 @@ class RoomIndexWithoutEventsResource extends JsonResource
             'room_admins' => UserIndexResource::collection(
                 $this->users()->wherePivot('is_admin', true)->get()
             )->resolve(),
+            'admins' => UserIndexResource::collection(
+                $this->users()->wherePivot('is_admin', true)->get()
+            )->resolve(),
         ];
     }
 }

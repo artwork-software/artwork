@@ -72,6 +72,14 @@
                                             {{ $t('Show future projects') }}
                                         </p>
                                     </div>
+                                    <div class="flex max-h-8 mb-3 mt-3">
+                                        <input v-model="showProjectsWithoutEvents"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                        <p class=" ml-4 my-auto text-sm text-secondary">
+                                            {{ $t('Show projects without events') }}
+                                        </p>
+                                    </div>
                                     <div class="flex justify-between xsLight mb-3"
                                          @click="showProjectStateFilter = !showProjectStateFilter">
                                         {{ $t('Project status') }}
@@ -135,35 +143,42 @@
                         <span v-if="getUserProjectFilterSetting('showOnlyMyProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('My projects') }}
-                            <button type="button" @click="showOnlyMyProjects = !showOnlyMyProjects; this.applyFiltersAndSort();">
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showOnlyMyProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjectGroups')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                             {{ $t('Project groups') }}
-                            <button type="button" @click="showProjectGroups = !showProjectGroups; this.applyFiltersAndSort();">
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showProjectGroups');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Projects') }}
-                            <button type="button" @click="showProjects = !showProjects; this.applyFiltersAndSort();">
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showExpiredProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show expired projects') }}
-                            <button type="button" @click="showExpiredProjects = !showExpiredProjects; this.applyFiltersAndSort();">
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showExpiredProjects');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
                         <span v-if="getUserProjectFilterSetting('showFutureProjects')"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                 {{ $t('Show future projects') }}
-                            <button type="button" @click="showFutureProjects = !showFutureProjects; this.applyFiltersAndSort();">
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showFutureProjects');">
+                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
+                        <span v-if="getUserProjectFilterSetting('showProjectsWithoutEvents')"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ $t('Show projects without events') }}
+                            <button type="button" @click="this.disableUserProjectFilterSetting('showProjectsWithoutEvents');">
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
@@ -198,7 +213,8 @@
                 </div>
             </div>
         </div>
-
+        <SideNotification v-if="this.dropFeedbackShown"
+                          type="project_create_success"/>
         <project-create-modal
             v-if="createProject"
             :show="createProject"
@@ -207,9 +223,10 @@
             :sectors="sectors"
             :project-groups="projectGroups"
             :states="states"
-            @close-create-project-modal="closeCreateProjectModal"
             :create-settings="createSettings"
             :project="null"
+            @close-create-project-modal="closeCreateProjectModal"
+            @drop-feedback="showDropFeedback"
         />
 
         <AddBulkEventsModal
@@ -264,30 +281,30 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-  ChevronDownIcon,
-  DocumentReportIcon,
-  DotsVerticalIcon,
-  DuplicateIcon,
-  InformationCircleIcon,
-  PencilAltIcon,
-  SearchIcon,
-  TrashIcon,
-  XIcon
+    ChevronDownIcon,
+    DocumentReportIcon,
+    DotsVerticalIcon,
+    DuplicateIcon,
+    InformationCircleIcon,
+    PencilAltIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon
 } from '@heroicons/vue/outline'
 import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-  MenuItem,
-  Switch,
-  SwitchGroup,
-  SwitchLabel
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    MenuItem,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from '@headlessui/vue'
 import BasePaginator from "@/Components/Paginate/BasePaginator.vue";
 import SingleProject from "@/Pages/Projects/Components/SingleProject.vue";
@@ -299,7 +316,7 @@ import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import {IconCheck, IconPin} from "@tabler/icons-vue";
 import ProjectExportBudgetsByBudgetDeadlineModal
-  from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
+    from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -320,9 +337,11 @@ import Permissions from "@/Mixins/Permissions.vue";
 import projects from "@/Pages/Trash/Projects.vue";
 import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
 import debounce from 'lodash.debounce'
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 
 export default defineComponent({
     components: {
+        SideNotification,
         IconCheck,
         MenuItem,
         AddBulkEventsModal,
@@ -419,11 +438,12 @@ export default defineComponent({
             projectHistoryToDisplay: [],
             hasGroup: false,
             selectedGroup: null,
-            showOnlyMyProjects: this.userProjectManagementSetting?.project_filters.showOnlyMyProjects === '1',
-            showProjectGroups: this.userProjectManagementSetting?.project_filters.showProjectGroups === '1',
-            showProjects: this.userProjectManagementSetting?.project_filters.showProjects === '1',
-            showExpiredProjects: this.userProjectManagementSetting?.project_filters.showExpiredProjects === '1',
-            showFutureProjects: this.userProjectManagementSetting?.project_filters.showFutureProjects === '1',
+            showOnlyMyProjects: this.userProjectManagementSetting?.project_filters.showOnlyMyProjects,
+            showProjectGroups: this.userProjectManagementSetting?.project_filters.showProjectGroups,
+            showProjects: this.userProjectManagementSetting?.project_filters.showProjects,
+            showExpiredProjects: this.userProjectManagementSetting?.project_filters.showExpiredProjects,
+            showFutureProjects: this.userProjectManagementSetting?.project_filters.showFutureProjects,
+            showProjectsWithoutEvents: this.userProjectManagementSetting?.project_filters.showProjectsWithoutEvents,
             sortBy: this.userProjectManagementSetting?.sort_by === null ? undefined : this.userProjectManagementSetting?.sort_by,
             showProjectStateFilter: true,
             openedMenu: false,
@@ -434,16 +454,15 @@ export default defineComponent({
             entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
             page: route().params.page ?? 1,
             perPage: route().params.entitiesPerPage ?? 10,
-            showAddBulkEventModal: false
+            showAddBulkEventModal: false,
+            dropFeedbackShown: null
         }
     },
     computed: {
         computedStates() {
             if (this.userProjectManagementSetting) {
                 this.states.forEach((state) => {
-                    state.clicked = this.userProjectManagementSetting.project_state_ids.includes(
-                        String(state.id)
-                    );
+                    state.clicked = this.userProjectManagementSetting.project_state_ids.includes(state.id);
                 });
             }
 
@@ -453,7 +472,7 @@ export default defineComponent({
             let states = [];
 
             this.computedStates.forEach((state) => {
-                if (this.userProjectManagementSetting.project_state_ids.includes(String(state.id))) {
+                if (this.userProjectManagementSetting.project_state_ids.includes(state.id)) {
                     states.push(state);
                 }
             });
@@ -472,7 +491,6 @@ export default defineComponent({
                     href: '#',
                     current: this.showBudgetHistoryTab
                 },
-
             ]
         }
     },
@@ -548,31 +566,6 @@ export default defineComponent({
                 }
             });
         },
-        filterAndSortRequestSuccessHandler(reset) {
-            let data = null;
-
-            if (!reset) {
-                data = {
-                    project_state_ids: this.states.filter((state) => state.clicked).map((state) => state.id),
-                    project_filters: {
-                        showProjectGroups: this.getTruthyOrUndefined(this.showProjectGroups),
-                        showProjects: this.getTruthyOrUndefined(this.showProjects),
-                        showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
-                        showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
-                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects)
-                    },
-                    sort: this.sortBy
-                };
-            } else {
-                data = {
-                    sort: this.sortBy
-                }
-            }
-
-            let projectManagementRoute = route('projects', data);
-            window.localStorage.setItem('userProjectManagementSettingUrl', projectManagementRoute);
-            this.$page.props.userProjectManagementSettingUrl = projectManagementRoute;
-        },
         applyFiltersAndSort(resetPage = true) {
             router.get(
                 route().current(),
@@ -582,16 +575,15 @@ export default defineComponent({
                     query: route().params.query,
                     project_state_ids: this.states.filter((state) => state.clicked).map((state) => state.id),
                     project_filters: {
+                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects),
                         showProjectGroups: this.getTruthyOrUndefined(this.showProjectGroups),
                         showProjects: this.getTruthyOrUndefined(this.showProjects),
                         showExpiredProjects: this.getTruthyOrUndefined(this.showExpiredProjects),
                         showFutureProjects: this.getTruthyOrUndefined(this.showFutureProjects),
-                        showOnlyMyProjects: this.getTruthyOrUndefined(this.showOnlyMyProjects)
+                        showProjectsWithoutEvents: this.getTruthyOrUndefined(this.showProjectsWithoutEvents)
                     },
-                    sort: this.sortBy
-                },
-                {
-                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(false) }
+                    sort: this.sortBy,
+                    saveFilterAndSort: 1
                 }
             );
         },
@@ -604,10 +596,8 @@ export default defineComponent({
                     query: route().params.query,
                     project_states: undefined,
                     project_filters: undefined,
-                    sort: this.sortBy
-                },
-                {
-                    onSuccess: () => { this.filterAndSortRequestSuccessHandler(true) }
+                    sort: this.sortBy,
+                    saveFilterAndSort: 1
                 }
             );
         },
@@ -639,6 +629,10 @@ export default defineComponent({
         getUserProjectFilterSetting(setting) {
             return this.getUserProjectManagementSetting()?.project_filters[setting];
         },
+        disableUserProjectFilterSetting(setting) {
+            this[setting] = false;
+            this.applyFiltersAndSort();
+        },
         getUserProjectManagementSetting() {
             return this.$page.props.userProjectManagementSetting;
         },
@@ -654,7 +648,13 @@ export default defineComponent({
         },
         reloadProjectsDebounced: debounce(function() {
             this.reloadProjects();
-        }, 1000)
+        }, 1000),
+        showDropFeedback() {
+            this.dropFeedbackShown = true;
+            setTimeout(() => {
+                this.dropFeedbackShown = false;
+            }, 3000)
+        },
     },
     watch: {
         project_search: {

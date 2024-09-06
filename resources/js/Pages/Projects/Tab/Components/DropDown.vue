@@ -55,17 +55,16 @@ export default {
 </script>
 
 <template>
-    <Listbox as="div" v-model="checkedData.selected" :disabled="!this.canEditComponent">
+    <Listbox as="div" class="w-96" v-model="checkedData.selected" :disabled="!this.canEditComponent">
         <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
             {{ data.data.label }}
         </ListboxLabel>
         <div class="relative mt-2">
-            <ListboxButton class="relative w-full text-start px-3 cursor-default h-10 placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border"
-                           :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : 'inputMain  border-gray-300'">
-                <span class="block truncate">{{ checkedData.selected }}</span>
+            <ListboxButton class="menu-button" :class="inSidebar ? 'bg-primary text-white border  border-gray-300' : ''">
+                <div class="block truncate">{{ checkedData.selected }}</div>
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                  <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
-            </span>
+                    <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </span>
             </ListboxButton>
 
             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">

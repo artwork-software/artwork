@@ -130,7 +130,7 @@
                     <form @submit.prevent="editEventType" class="grid grid-cols-1 gap-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
-                                <ColorPickerComponent @updateColor="addColor" :color="editEventTypeForm.hex_code" />
+                                <ColorPickerComponent @updateColor="updateColor" :color="editEventTypeForm.hex_code" />
                             </div>
 
                             <div class="relative my-auto w-full ml-8">
@@ -212,7 +212,7 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import {DotsVerticalIcon, TrashIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline"
+import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";

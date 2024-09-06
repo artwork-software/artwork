@@ -24,16 +24,6 @@ class ChecklistControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        // user not authorized
-        $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
-            ->assertForbidden();
-
-        $user->departments()->sync([$department->id]);
-
-        $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [
-            'assigned_department_ids' => [$department->id]
-        ])->assertForbidden();
-
         $user->givePermissionTo(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
 
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])

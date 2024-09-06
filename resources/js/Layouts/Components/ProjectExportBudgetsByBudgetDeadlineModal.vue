@@ -11,18 +11,12 @@
                         {{ $t('All project budgets whose budget key date is between the following dates are exported.') }}
                     </span>
                 </div>
-                <div class="mt-4 w-full flex flex-row">
-                    <div class="w-1/2">
-                        <label for="startDate" class="xxsLight">
-                            {{ $t('Start date') }}
-                        </label>
-                        <input v-model="startBudgetDeadline" type="date" class="w-full"/>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3">
+                    <div>
+                        <DateInputComponent id="startDate" :label="$t('Start date')" v-model="startBudgetDeadline"/>
                     </div>
-                    <div class="w-1/2">
-                        <label for="endDate" class="xxsLight">
-                            {{ $t('End date') }}
-                        </label>
-                        <input v-model="endBudgetDeadline" type="date" class="w-full"/>
+                    <div>
+                        <DateInputComponent id="startDate" :label="$t('End date')" v-model="endBudgetDeadline"/>
                     </div>
                 </div>
                 <div v-if="showMandatoryFieldsErrorText" class="w-full text-center mt-3">
@@ -31,12 +25,9 @@
                     </span>
                 </div>
                 <div class="mt-5 mb-3 w-full grid justify-items-center">
-                    <button @click="downloadExportProjectBudgetsByBudgetDeadline()"
-                            type="button"
-                            class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-artwork-buttons-create focus:outline-none bg-artwork-buttons-create hover:bg-artwork-buttons-hover">
+                    <BaseButton @click="downloadExportProjectBudgetsByBudgetDeadline()" :text="$t('Export')">
                         <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
-                        <p class="text-sm">{{ $t('Export') }}</p>
-                    </button>
+                    </BaseButton>
                 </div>
             </div>
     </BaseModal>
@@ -51,10 +42,16 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DocumentReportIcon, XIcon} from "@heroicons/vue/outline";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default {
     name: 'ProjectExportBudgetsByBudgetDeadlineModal',
     components: {
+        BaseButton,
+        FormButton,
+        DateInputComponent,
         BaseModal,
         DocumentReportIcon,
         DisclosurePanel,

@@ -16,8 +16,8 @@
                 <div v-if="$page.props.user.checklist_style === 'list'">
                     <div class="bg-gray-100 px-5 py-2 rounded-lg xxsLight mb-5">
                         <div class="grid grid-cols-12 grid-rows-1 gap-4">
-                            <div class="col-span-8">Name</div>
-                            <div class="col-span-4 col-start-9">Creator</div>
+                            <div class="col-span-8">{{ $t('Name') }}</div>
+                            <div class="col-span-4 col-start-9">{{ $t('Creator') }}</div>
                         </div>
                     </div>
                     <SingleChecklistTemplateListView
@@ -49,18 +49,16 @@
 
 <script>
 
-import {router, usePage} from "@inertiajs/vue3";
-import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
+import {Link, router, usePage} from "@inertiajs/vue3";
+import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, SearchIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Link} from "@inertiajs/vue3";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -82,7 +80,6 @@ export default {
         BaseMenu,
         AddButtonSmall,
         SuccessModal,
-        UserPopoverTooltip,
         PlusSmIcon,
         SvgCollection,
         AppLayout,
@@ -184,7 +181,3 @@ export default {
     },
 }
 </script>
-
-<style scoped>
-
-</style>

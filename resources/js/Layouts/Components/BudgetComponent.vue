@@ -64,8 +64,12 @@
                                                       fill="#27233C"/>
                                                  </svg>
                                             </div>
-                                            <div class="-ml-0.5 ">
-                                                <img :src="column?.locked_by?.profile_photo_url" alt="" class="object-cover w-6 h-6 border-2 border-white rounded-full">
+                                            <div class="-ml-0.5">
+                                                <UserPopoverTooltip :user="column.locked_by"
+                                                                    :id="column.locked_by?.id ?? 'lockedByTooltipColumn-' + column.id"
+                                                                    class="w-6 h-6 border-2 border-white rounded-full"
+                                                                    height="5"
+                                                                    width="5"/>
                                             </div>
                                         </div>
                                         <div class="columnSubName text-white ">
@@ -623,30 +627,30 @@
 
 <script>
 import {
-    DocumentReportIcon,
-    PencilAltIcon,
-    PlusCircleIcon,
-    TrashIcon,
-    XCircleIcon,
-    XIcon,
-    ZoomInIcon,
-    ZoomOutIcon
+  DocumentReportIcon,
+  PencilAltIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  XCircleIcon,
+  XIcon,
+  ZoomInIcon,
+  ZoomOutIcon
 } from '@heroicons/vue/outline';
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, PlusIcon} from "@heroicons/vue/solid";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
 import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Switch,
+  SwitchGroup,
+  SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {router, useForm} from "@inertiajs/vue3";
@@ -667,11 +671,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+      UserPopoverTooltip,
         UserSearch,
         ModalHeader,
         BaseModal,

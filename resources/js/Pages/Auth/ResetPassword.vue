@@ -1,5 +1,8 @@
 <template>
-
+    <Head>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $t('Reset Password') }} - {{ $page.props.page_title }}</title>
+    </Head>
     <div class="min-h-full flex">
         <img :src="$page.props.big_logo" class="w-20 h-20 ml-12 mt-12 absolute rounded-full" />
         <div

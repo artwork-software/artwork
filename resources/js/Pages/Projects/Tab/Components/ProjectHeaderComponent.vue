@@ -133,7 +133,7 @@ export default {
                         </a>
                     </div>
                 </div>
-                <div>
+                <div class="hidden">
                     <div class="flex z-10" v-if="project?.key_visual_path !== null">
                         <img :src="'/storage/keyVisual/' + project?.key_visual_path"
                              :alt="$t('Current key visual')"
@@ -148,6 +148,11 @@ export default {
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
                         <span v-if="project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
+                        </span>
+                        <span v-if="project?.key_visual_path !== null">
+                            <img :src="'/storage/keyVisual/' + project?.key_visual_path"
+                                 :alt="$t('Current key visual')"
+                                 class="mx-auto w-8 h-8 rounded-full object-cover mr-2">
                         </span>
                         {{ project?.name }}
                         <span v-if="project?.state" class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex border" :style="{backgroundColor: backgroundColorWithOpacity(project?.state?.color), color: TextColorWithDarken(project?.state?.color), borderColor: TextColorWithDarken(project?.state?.color)}">

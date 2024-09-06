@@ -38,4 +38,9 @@ class UserProjectManagementSettingRepository extends BaseRepository
 
         return $userProjectManagementSetting;
     }
+
+    public function deleteAll(): void
+    {
+        $this->getNewModelQuery()->delete();
+    }
 }

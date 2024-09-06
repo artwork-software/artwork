@@ -146,6 +146,7 @@ const updateTaskStatus = () => {
     router.patch(route('tasks.done', {task: props.task.id}), {
     }, {
         preserveScroll: true,
+        preserveState: false
     });
 }
 

@@ -188,16 +188,38 @@ class ProjectController extends Controller
     }
 
 
-    public function index(
-        ProjectIndexPaginateRequest $request
-    ): Response|ResponseFactory {
+    public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
+    {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userProjectManagementSetting = $this->userProjectManagementSettingService
+            ->getFromUser($this->userService->getAuthUser())
+            ->getAttribute('settings');
+
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
+                $saveFilterAndSort,
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
-                $request->enum('sort', ProjectSortEnum::class),
-                $request->collect('project_state_ids'),
-                $request->collect('project_filters')
+                $saveFilterAndSort ?
+                    $request->enum('sort', ProjectSortEnum::class) :
+                    (
+                    $userProjectManagementSetting['sort_by'] ?
+                        ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                        null
+                    ),
+                $saveFilterAndSort ?
+                    $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                    Collection::make($userProjectManagementSetting['project_state_ids']),
+                $saveFilterAndSort ? $request
+                    ->collect('project_filters')
+                    ->mapWithKeys(
+                        function (string $filter, string $key): array {
+                            return [
+                                $key => (bool)$filter,
+                            ];
+                        }
+                    ) :
+                    Collection::make($userProjectManagementSetting['project_filters'])
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -218,7 +240,7 @@ class ProjectController extends Controller
             ),
             'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
-                ?->getAttribute('settings')
+                ->getAttribute('settings')
         ]);
     }
 
@@ -352,7 +374,7 @@ class ProjectController extends Controller
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
-        return Redirect::route('projects', $project);
+        return Redirect::back();
     }
 
 
@@ -1841,7 +1863,7 @@ class ProjectController extends Controller
      * @throws Throwable
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
         Request $request,
         Project $project,
@@ -1916,7 +1938,7 @@ class ProjectController extends Controller
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:
-                    $headerObject->project->events = $project->events()->without([
+                    $eventsUnSorted = $project->events()->without([
                         'series',
                         'event_type',
                         'subEvents',
@@ -1930,6 +1952,26 @@ class ProjectController extends Controller
                             );
                         }
                     );
+
+                    $userBulkSortId = (int)$this->userService->getAuthUser()->getAttribute('bulk_sort_id');
+                    $eventsSorted = $eventsUnSorted;
+
+                    // userBulkSortId = 1 sort by room name asc
+                    switch ($userBulkSortId) {
+                        case 1:
+                            $eventsSorted = $eventsUnSorted->sortBy('roomName');
+                            break;
+                        case 2:
+                            // sort by event type name asc
+                            $eventsSorted = $eventsUnSorted->sortBy('eventTypeName');
+                            break;
+                        case 3:
+                            // sort by start time asc
+                            $eventsSorted = $eventsUnSorted->sortBy('startTime');
+                            break;
+                    }
+                    $eventsSorted = $eventsSorted->values();
+                    $headerObject->project->events = $eventsSorted;
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
@@ -2129,21 +2171,36 @@ class ProjectController extends Controller
     {
         $startTime = Carbon::parse($event->start_time);
         $endTime = Carbon::parse($event->end_time);
+        $startDate = Carbon::parse($event->start_time);
+        $endDate = Carbon::parse($event->end_time);
 
         $startTime->setTime(8, 0, 0);
         $endTime->setTime(9, 0, 0);
 
         // if event has already a timeline, get the last timeline and add 1 hour to start and end time
         if ($event->timelines()->exists()) {
-            $lastTimeline = $event->timelines()->latest()->first();
+            $lastTimeline = $event->timelines()
+                ->orderBy('start_date')
+                ->orderBy('start')
+                ->orderBy('end_date')
+                ->orderBy('end')
+                ->get()
+                ->pop();
             $startTime = Carbon::parse($lastTimeline->end);
             $endTime = Carbon::parse($lastTimeline->end)->addHour();
+
+            $startDate = $lastTimeline->start_date->format('Y-m-d') === $lastTimeline->end_date->format('Y-m-d') &&
+                Carbon::parse($lastTimeline->end) < Carbon::parse($lastTimeline->start) ?
+                    $lastTimeline->start_date->addDay() :
+                    $lastTimeline->start_date;
+
+            $endDate = $startDate?->copy()->addHour();
         }
 
         $event->timelines()->create(
             [
-                'start_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
-                'end_date' => Carbon::parse($event->start_time)->format('Y-m-d'),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'start' => $startTime,
                 'end' => $endTime,
                 'description' => null

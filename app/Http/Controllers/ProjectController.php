@@ -2185,7 +2185,7 @@ class ProjectController extends Controller
                 ->orderBy('end_date')
                 ->orderBy('end')
                 ->get()
-                ->last();
+                ->pop();
             $startTime = Carbon::parse($lastTimeline->end);
             $endTime = Carbon::parse($lastTimeline->end)->addHour();
 

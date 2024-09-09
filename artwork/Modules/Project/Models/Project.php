@@ -270,6 +270,6 @@ class Project extends Model
 
     public function scopeByName(Builder $builder, string $query): Builder
     {
-        return $builder->where('name', 'like', $query . "%");
+        return $builder->where('name', 'like', "%" . $query . "%");
     }
 }

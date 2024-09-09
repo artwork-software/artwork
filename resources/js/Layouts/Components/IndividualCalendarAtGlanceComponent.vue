@@ -5,13 +5,16 @@
                 :multi-edit="multiEdit"
                 :rooms="rooms"
                 :project="project"
+                :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                @searching-for-project="toggleSearchingForProject"
                 @wants-to-add-new-event="openEditEventModal"
                 @update-multi-edit="changeMultiEdit"/>
         </div>
         <div class="flex pt-10 relative events-at-a-glance-container">
             <template v-if="eventsAtAGlanceRef">
                 <div v-for="room in computedRooms">
-                    <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg sticky top-[4.5rem] z-40 mb-7">
+                    <div :class="isSearchingForProject ? '' : 'sticky'"
+                         class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg top-[4.5rem] z-40 mb-7">
                         <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>
@@ -115,7 +118,8 @@ const {hasAdminRole} = usePermission(usePage().props),
         'personalFilters',
         'user_filters',
         'first_project_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'projectNameUsedForProjectTimePeriod'
     ]),
     showEventsWithoutRoomComponent = ref(false),
     eventsWithoutRoom = ref([]),
@@ -206,6 +210,11 @@ const {hasAdminRole} = usePermission(usePage().props),
     closeMultiEditModal = () => {
         showMultiEditModal.value = false;
     };
+
+const isSearchingForProject = ref(false);
+const toggleSearchingForProject = (isShowingResults) => {
+    isSearchingForProject.value = isShowingResults;
+};
 
 onMounted(() => {
     const observer = new IntersectionObserver(

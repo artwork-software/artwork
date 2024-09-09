@@ -751,6 +751,7 @@ readonly class EventService
         })->all();
     }
 
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function createEventManagementDtoForAtAGlance(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -767,33 +768,69 @@ readonly class EventService
     ): EventManagementDto {
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
         $today = Carbon::now();
-        [$startDate, $endDate] = !$project ?
-            $userService->getUserCalendarFilterDatesOrDefault() :
-            [
-                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
-                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
-                    $today->startOfDay(),
-                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
-                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
-                    $today->endOfDay(),
-            ];
 
-        return EventManagementDto::newInstance()
+        if (
+            !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
+            !$project
+        ) {
+            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+        } else {
+            if (!$project && $useProjectTimePeriod) {
+                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        null,
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        null
+                ];
+            } else {
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        $today->startOfDay(),
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        $today->endOfDay()
+                ];
+            }
+        }
+
+        $desiredProjectHasNoEvents = $useProjectTimePeriod && !$startDate && !$endDate;
+
+        $eventManagementDto = EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->setDateValue(
+                $desiredProjectHasNoEvents ?
+                    [] :
+                    [
+                        $startDate->format('Y-m-d'),
+                        $endDate->format('Y-m-d')
+                    ]
+            )
             ->setCalendarType(
-                $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                    'daily' :
-                    'individual'
+                $desiredProjectHasNoEvents ? 'individual' :
+                    (
+                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                            'daily' :
+                            'individual'
+                    )
             )
             ->setSelectedDate(
-                $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
-                    $startDate->format('Y-m-d') :
-                    null
+                $desiredProjectHasNoEvents ?
+                    null :
+                    (
+                        $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
+                            $startDate?->format('Y-m-d') :
+                            null
+                    )
             )
             ->setEventsWithoutRoom(
                 empty($room) ?
@@ -819,7 +856,15 @@ readonly class EventService
                     )->resolve() :
                     []
             )
-            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate, $project))
+            ->setEventsAtAGlance(
+                $desiredProjectHasNoEvents ?
+                    null :
+                    $calendarService->getEventsAtAGlance(
+                        $startDate,
+                        $endDate,
+                        $useProjectTimePeriod ? null : $project
+                    )
+            )
             ->setRooms(
                 $roomService->getFilteredRooms(
                     $startDate,
@@ -843,6 +888,12 @@ readonly class EventService
             ->setFirstProjectCalendarTabId(
                 $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
             );
+
+        if ($useProjectTimePeriod) {
+            $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
+        }
+
+        return $eventManagementDto;
     }
 
     /**

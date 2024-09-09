@@ -1,11 +1,11 @@
 <template>
-    <tr class="pl-2 h-full cursor-pointer w-full xsLight pb-1" @click="craft.closed = !craft.closed">
+    <tr class="pl-2 h-full cursor-pointer w-full xsLight pb-1" @click="craft.value.closed = !craft.value.closed">
         <td>
-            <div class="py-2.5 px-2 bg-gray-50/30 w-full" :class="craft.closed ? 'rounded-lg' : 'rounded-t-lg'">
+            <div class="py-2.5 px-2 bg-gray-50/30 w-full" :class="craft.value.closed ? 'rounded-lg' : 'rounded-t-lg'">
                 <div class="flex stickyYAxisNoMarginLeft w-48 items-center gap-x-2">
-                    {{craft.name}}
+                    {{craft.value.name}}
                     <ChevronDownIcon
-                        :class="craft.closed ? '' : 'rotate-180 transform'"
+                        :class="craft.value.closed ? '' : 'rotate-180 transform'"
                         class="h-4 w-4 mt-0.5"
                     />
                 </div>
@@ -14,7 +14,7 @@
     </tr>
     <SingleCategoryInCraft v-for="category in craft.value.filtered_inventory_categories"
                            :multi-edit="multiEdit"
-                           :category="category" :days="days" v-if="!craft.closed"/>
+                           :category="category" :days="days" v-if="!craft.value.closed"/>
 </template>
 
 <script setup>

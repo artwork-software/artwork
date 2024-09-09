@@ -25,6 +25,7 @@ use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
 use Artwork\Modules\User\Events\UserUpdated;
+use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
@@ -132,12 +133,14 @@ class UserController extends Controller
     public function index(PermissionPresetService $permissionPresetService): Response|ResponseFactory
     {
         return inertia('Users/Index', [
-            'users' => UserIndexResource::collection(User::all())->resolve(),
+            'users' => MinimalUserIndexResource::collection(
+                User::query()->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])->get()
+            )->resolve(),
             'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             'roles' => Role::all(),
             'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::all(),
+            'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets(),
             'invitedUsers' => Invitation::all()
         ]);
@@ -306,7 +309,16 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
         $user->update(
-            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
+            $request->only(
+                'first_name',
+                'last_name',
+                'phone_number',
+                'position',
+                'business',
+                'description',
+                'email',
+                'language'
+            )
         );
 
         if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {

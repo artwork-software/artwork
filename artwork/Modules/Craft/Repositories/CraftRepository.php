@@ -21,9 +21,16 @@ class CraftRepository extends BaseRepository
         return $craft->users()->detach();
     }
 
-    public function getAll(array $with = []): Collection
+    public function getAll(array $with = [])
     {
         return Craft::query()->with($with)->get();
+        /*$crafts = new Collection();
+        // use here chunk method to avoid memory issues
+        Craft::query()->with($with)->chunk(100, function ($craftsChunk) use (&$crafts): void {
+            $crafts = $crafts->merge($craftsChunk);
+        });
+
+        return $crafts;*/
     }
 
     public function getAssignableByAllCrafts(): Collection

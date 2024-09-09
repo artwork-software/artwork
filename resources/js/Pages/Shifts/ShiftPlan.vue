@@ -600,14 +600,14 @@ export default {
                 if (workerData.type === 'freelancer') {
                     this.freelancersForShifts[this.freelancersForShifts.findIndex(
                         (freelancerWithPlannedWorkingHours) =>
-                            freelancerWithPlannedWorkingHours.user.id === workerData.freelancer.id
+                            freelancerWithPlannedWorkingHours.freelancer.id === workerData.freelancer.id
                     )] = workerData;
                 }
 
                 if (workerData.type === 'service_provider') {
                     this.serviceProvidersForShifts[this.serviceProvidersForShifts.findIndex(
                         (serviceProviderWithPlannedWorkingHours) =>
-                            serviceProviderWithPlannedWorkingHours.user.id === workerData.service_provider.id
+                            serviceProviderWithPlannedWorkingHours.service_provider.id === workerData.service_provider.id
                     )] = workerData;
                 }
             });

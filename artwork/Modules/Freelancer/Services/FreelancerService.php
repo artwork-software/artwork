@@ -105,7 +105,7 @@ readonly class FreelancerService
         );
 
         return ShowDto::newInstance()
-            ->setFreelancer(FreelancerShowResource::make($freelancer))
+            ->setFreelancer(FreelancerShowResource::make($freelancer)->resolve())
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))

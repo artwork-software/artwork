@@ -16,6 +16,7 @@ abstract class TestCase extends BaseTestCase
     use CreatesApplication;
     use DatabaseTransactions;
     use WithFaker;
+    use CreateAdminUser;
 
     protected function setUp(): void
     {
@@ -24,17 +25,4 @@ abstract class TestCase extends BaseTestCase
         ProjectTabArrayCache::forgetAll();
         $this->withoutVite();
     }
-
-    /**
-     * @return \Artwork\Modules\User\Models\User
-     */
-    public function adminUser(User $user = null): User
-    {
-        $user = $user ?? User::factory()->create();
-        Role::firstOrCreate(['name' => RoleEnum::ARTWORK_ADMIN->value]);
-        $user->assignRole(RoleEnum::ARTWORK_ADMIN->value);
-
-        return $user;
-    }
-
 }

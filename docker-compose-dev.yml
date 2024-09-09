@@ -2,6 +2,10 @@ services:
     php: &php
       image: endlezz/php-dev
       user: "1000:1000"
+      depends_on:
+        - mysql
+        - redis
+        - selenium
       networks:
         - sail
       volumes:
@@ -112,6 +116,14 @@ services:
             - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    selenium:
+      image: 'selenium/standalone-chrome'
+      extra_hosts:
+        - 'host.docker.internal:host-gateway'
+      volumes:
+        - '/dev/shm:/dev/shm'
+      networks:
+        - sail
 networks:
     sail:
         driver: bridge

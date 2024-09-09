@@ -18,24 +18,31 @@
                                 </div>
                             </div>
                             <div class="font-bold text-secondaryHover block">
-                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-12 w-12'" class="object-cover" alt="artwork-logo"/>
                             </div>
                         </div>
                         <div v-if="fullSidenav" class="ml-4">
-                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
-
-                    <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
-                    <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
-                        <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                            <div class="flex items-center">
+                    <div :class="computedWindowInnerHeight > 855 ? 'mt-4' : 'mt-0'"  class="flex flex-col w-full space-y-0.5 overflow-y-auto managementMenu">
+                        <template v-for="item in navigation">
+                            <Link v-if="item.desiredClickHandler"
+                                  href="#"
+                                  @click="item.desiredClickHandler()"
+                                  :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
-                            </div>
-                        </a>
+                            </Link>
+                            <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <div class="ml-4 w-32" v-if="fullSidenav">
+                                    {{ item.name }}
+                                </div>
+                            </a>
+                        </template>
                         <Menu as="div" class="flex flex-col items-center" v-show="
                         $canAny([
                             'usermanagement',
@@ -46,15 +53,18 @@
                             'change project settings',
                             'change event settings',
                             'change system notification',
+                            'create, delete and update rooms',
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs',
                             'view budget templates',
-                            'create, delete and update rooms'
-                        ]) || hasAdminRole()
+                            'edit budget templates',
+                        ])
                         ">
-                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
+                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-3000 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
                                     <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
-                                        System
+                                        {{ $t('System') }}
                                     </div>
                                 </div>
                             </MenuButton>
@@ -65,11 +75,11 @@
                                         leave-from-class="transition-leave-from"
                                         leave-to-class="transition-leave-to">
                                 <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-40' : 'ml-14'"
-                                           class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
+                                           class="z-50 managementMenu max-h-40 rounded-lg overflow-y-auto opacity-100 absolute origin-top-left w-48 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                     <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                         <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                             <Link :href="item.href"
-                                                  :class="[item.isCurrent ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
+                                                  :class="[item.isCurrent ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                                                 {{ item.name }}
                                             </Link>
                                         </MenuItem>
@@ -77,7 +87,7 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
+                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                             <div class="flex items-center">
                                 <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
@@ -89,27 +99,24 @@
                 </div>
 
                 <div class="flex flex-col justify-end w-full">
-                    <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs']">
-                        <div class="flex items-center relative">
-                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.unread_notifications > 0"
-                                 style="font-size: 7px;"
-                                 class="w-4 h-4 block absolute -top-2 -right-2 rounded-full bg-white text-black text-center">
-                                {{ this.$page.props.unread_notifications }}
-                            </div>
-                            <div class="ml-4 w-32" v-if="fullSidenav">
-                                {{ $t('Notifications') }}
-                            </div>
+                    <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs relative']">
+                        <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                        <div v-if="this.$page.props.unread_notifications > 0"
+                             style="font-size: 7px;"
+                             :class="fullSidenav ? 'right-8' : ''"
+                             class="w-4 h-4 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
+                            {{ this.$page.props.unread_notifications }}
+                        </div>
+                        <div class="ml-4 w-32" v-if="fullSidenav">
+                            {{ $t('Notifications') }}
                         </div>
                     </a>
                     <Menu as="div" class="flex flex-col items-center">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-150 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
-                            <div class="flex items-center">
-                                <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
-                                <div class="ml-4 w-32 text-left" v-if="fullSidenav">
-                                    Hallo
-                                    {{ $page.props.user.first_name }}
-                                </div>
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
+                            <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
+                            <div class="ml-4 w-32 text-left" v-if="fullSidenav">
+                                Hallo
+                                {{ $page.props.user.first_name }}
                             </div>
                         </MenuButton>
                         <transition enter-active-class="transition-enter-active"
@@ -118,7 +125,7 @@
                                     leave-active-class="transition-leave-active"
                                     leave-from-class="transition-leave-from"
                                     leave-to-class="transition-leave-to">
-                            <MenuItems ref="menuItems" :class="[fullSidenav ? 'ml-40' : 'ml-14', '']" class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-44 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
+                            <MenuItems ref="menuItems" :class="[fullSidenav ? 'ml-40' : 'ml-14', '']" class="z-50 managementMenu rounded-lg max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-44 shadow-lg py-1 bg-artwork-navigation-background ring-1 ring-black focus:outline-none">
                                 <div class="z-50">
                                     <MenuItem v-slot="{ active }">
                                         <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
@@ -158,7 +165,7 @@
                 </div>
             </div>
 
-            <main class="main my-5 mx-5">
+            <main class="main mx-5">
                 <slot></slot>
             </main>
         </div>
@@ -171,7 +178,7 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link, usePage, Head} from "@inertiajs/vue3";
+import {Link, usePage, Head, router} from "@inertiajs/vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {
@@ -230,6 +237,121 @@ export default {
         Link,
         Switch,
         TrashIcon, Head
+    },
+    methods: {
+        IconBell,
+        IconTrash,
+        IconAdjustmentsAlt,
+        usePage,
+        moduleIsVisible(module) {
+            return this.hasAdminRole() || this.$page.props.module_settings[module];
+        },
+        useProjectTimePeriodAndRedirect() {
+            router.patch(
+                route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                {
+                    use_project_time_period: false,
+                    project_id: 0
+                }
+            );
+        },
+        getTrashRoute() {
+            if (this.$page.url === '/areas') {
+                return route('areas.trashed')
+            } else {
+                return route('projects.trashed')
+            }
+        },
+        isCurrentTrashRoute() {
+            if (this.$page.url === '/areas') {
+                return route().current('areas.trashed')
+            } else {
+                return route().current('projects.trashed')
+            }
+        },
+        isCurrent(routes) {
+            for (let url of routes) {
+                if (this.$page.url.indexOf(url) !== -1) {
+                    return true
+                }
+            }
+        },
+        toggle_hints() {
+            this.$inertia.post(route('toggle.hints'))
+        },
+        logout() {
+            this.$i18n.locale = this.$page.props.default_language;
+            document.documentElement.lang = this.$page.props.default_language;
+            this.$inertia.post(route('logout'))
+        },
+        openSideBarOnMobile() {
+            document.querySelector(".sidebar").classList.toggle("hidden");
+            document.querySelector(".main").classList.toggle("hidden");
+        },
+        closePushNotification(id) {
+            const pushNotification = document.getElementById(id);
+            pushNotification?.remove();
+        },
+        changeSidenavMode() {
+            this.fullSidenav = !this.fullSidenav;
+        },
+        setHeightOfMenuItems() {
+            this.$nextTick(() => {
+                const menuButton = this.$refs.menuButton.$el || this.$refs.menuButton;
+                const menuItems = this.$refs.menuItems.$el || this.$refs.menuItems;
+                const offsetLeft = this.fullSidenav ? 80 : 0;
+                if (menuButton && menuItems) {
+                    const rect = menuButton.getBoundingClientRect();
+                    menuItems.style.top = `${rect.bottom - 70}px`;
+                    menuItems.style.left = `${rect.left + offsetLeft}px`;
+                } else {
+                    console.error('Refs are undefined:', { menuButton, menuItems });
+                }
+            });
+        },
+        linkifyBody() {
+            const bodyElement = document.body,
+                linkify = new Linkifyit();
+
+            function replaceTextWithLinks(element) {
+                element.childNodes.forEach((node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent;
+                        const matches = linkify.match(text);
+
+                        if (matches) {
+                            const fragment = document.createDocumentFragment();
+                            let lastIndex = 0;
+
+                            matches.forEach((match) => {
+                                if (match.index > lastIndex) {
+                                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                                }
+
+                                const link = document.createElement('a');
+                                link.href = match.url;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                link.textContent = match.text;
+                                fragment.appendChild(link);
+
+                                lastIndex = match.lastIndex;
+                            });
+
+                            if (lastIndex < text.length) {
+                                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                            }
+
+                            node.replaceWith(fragment);
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        replaceTextWithLinks(node);
+                    }
+                });
+            }
+
+            replaceTextWithLinks(bodyElement);
+        },
     },
     computed: {
         managementNavigation() {
@@ -329,163 +451,66 @@ export default {
                     name: this.$t('Projects'),
                     href: route('projects'),
                     route: ['/projects'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('projects'),
                     icon: IconGeometry
                 },
                 {
                     name: this.$t('Room assignment'),
-                    href: route('events'),
+                    href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
                     route: ['/calendar/view'],
-                    has_permission: true,
+                    desiredClickHandler: this.useProjectTimePeriodAndRedirect,
+                    has_permission: this.moduleIsVisible('room_assignment'),
                     icon: IconCalendarMonth
                 },
                 {
                     name: this.$t('Shift plan'),
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
-                    has_permission: this.$can('can view shift plan') || this.hasAdminRole(),
+                    has_permission: this.moduleIsVisible('shift_plan') &&
+                        this.$can('can view shift plan'),
                     icon: IconCalendarUser
                 },
                 {
                     name: this.$t('Inventory'),
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('inventory'),
                     icon: IconBuildingWarehouse
                 },
                 {
                     name: this.$t('Tasks'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('tasks'),
                     icon: IconListCheck
                 },
                 {
                     name: this.$t('Sources of funding'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
-                    has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole(),
+                    has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
+                        ['view edit add money_sources', 'can edit and delete money sources']
+                    ),
                     icon: IconCurrencyEuro
                 },
                 {
                     name: this.$t('Users'),
                     href: route('users'),
                     route: ['/users'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('users'),
                     icon: IconUsers
                 },
-
                 {
                     name: this.$t('Contracts'),
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
-                    has_permission: true,
+                    has_permission: this.moduleIsVisible('contracts'),
                     icon: IconFileText
                 }
             ]
-        }
-    },
-    methods: {
-        IconBell,
-        IconTrash,
-        IconAdjustmentsAlt,
-        usePage,
-        getTrashRoute() {
-            if (this.$page.url === '/areas') {
-                return route('areas.trashed')
-            } else {
-                return route('projects.trashed')
-            }
         },
-        isCurrentTrashRoute() {
-            if (this.$page.url === '/areas') {
-                return route().current('areas.trashed')
-            } else {
-                return route().current('projects.trashed')
-            }
-        },
-        isCurrent(routes) {
-            for (let url of routes) {
-                if (this.$page.url.indexOf(url) !== -1) {
-                    return true
-                }
-            }
-        },
-        toggle_hints() {
-            this.$inertia.post(route('toggle.hints'))
-        },
-        logout() {
-            this.$i18n.locale = this.$page.props.default_language;
-            document.documentElement.lang = this.$page.props.default_language;
-            this.$inertia.post(route('logout'))
-        },
-        openSideBarOnMobile() {
-            document.querySelector(".sidebar").classList.toggle("hidden");
-            document.querySelector(".main").classList.toggle("hidden");
-        },
-        closePushNotification(id) {
-            const pushNotification = document.getElementById(id);
-            pushNotification?.remove();
-        },
-        changeSidenavMode() {
-            this.fullSidenav = !this.fullSidenav;
-        },
-        setHeightOfMenuItems() {
-            this.$nextTick(() => {
-                const menuButton = this.$refs.menuButton.$el || this.$refs.menuButton;
-                const menuItems = this.$refs.menuItems.$el || this.$refs.menuItems;
-                const offsetLeft = this.fullSidenav ? 80 : 0;
-                if (menuButton && menuItems) {
-                    const rect = menuButton.getBoundingClientRect();
-                    menuItems.style.top = `${rect.bottom - 70}px`;
-                    menuItems.style.left = `${rect.left + offsetLeft}px`;
-                } else {
-                    console.error('Refs are undefined:', { menuButton, menuItems });
-                }
-            });
-        },
-        linkifyBody() {
-            const bodyElement = document.body,
-                linkify = new Linkifyit();
-
-            function replaceTextWithLinks(element) {
-                element.childNodes.forEach((node) => {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        const text = node.textContent;
-                        const matches = linkify.match(text);
-
-                        if (matches) {
-                            const fragment = document.createDocumentFragment();
-                            let lastIndex = 0;
-
-                            matches.forEach((match) => {
-                                if (match.index > lastIndex) {
-                                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-                                }
-
-                                const link = document.createElement('a');
-                                link.href = match.url;
-                                link.target = '_blank';
-                                link.rel = 'noopener noreferrer';
-                                link.textContent = match.text;
-                                fragment.appendChild(link);
-
-                                lastIndex = match.lastIndex;
-                            });
-
-                            if (lastIndex < text.length) {
-                                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-                            }
-
-                            node.replaceWith(fragment);
-                        }
-                    } else if (node.nodeType === Node.ELEMENT_NODE) {
-                        replaceTextWithLinks(node);
-                    }
-                });
-            }
-
-            replaceTextWithLinks(bodyElement);
+        computedWindowInnerHeight() {
+            return this.windowInnerHeight;
         }
     },
     mounted() {
@@ -494,7 +519,7 @@ export default {
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
         window.document.dispatchEvent(ev);
-        this.$i18n.locale = this.$page.props.selected_language; // Für VueI18n 9.x und Vue 3
+        this.$i18n.locale = this.$page.props.selected_language;
         document.documentElement.lang = this.$page.props.selected_language;
         Echo.private('App.Models.User.' + this.$page.props.user.id)
             .notification((notification) => {
@@ -503,8 +528,12 @@ export default {
                     this.closePushNotification(notification.message.id)
                 }, 3000)
             });
+
+        window.addEventListener('resize', () => {
+            this.windowInnerHeight = window.innerHeight;
+        });
     },
-    data() {
+  data() {
         return {
             showSystemSettings: false,
             showUserMenu: false,
@@ -516,6 +545,7 @@ export default {
             testModel2: '',
             testModel3: '',
             testModel4: '',
+            windowInnerHeight: window.innerHeight,
         }
     },
     setup() {

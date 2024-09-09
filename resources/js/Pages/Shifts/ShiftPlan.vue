@@ -547,6 +547,7 @@ export default {
             currentDayOnView: this.days ? this.days[0] : null,
             currentDaysInView: new Set(),
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
+            screenHeight: screen.height,
         }
     },
     mounted() {
@@ -1246,12 +1247,12 @@ export default {
         },
         updateHeight() {
             if (!this.showUserOverview) {
-                this.windowHeight = (window.innerHeight - 250);
+                this.windowHeight = (window.innerHeight - 120);
             } else {
-                this.windowHeight = (window.innerHeight - 160) - this.userOverviewHeight;
+                this.windowHeight = (window.innerHeight - 110) - this.userOverviewHeight;
             }
 
-            if (window.innerHeight - 160 < 400) {
+            if (window.innerHeight - 110  < 400) {
                 this.userOverviewHeight = window.innerHeight - 300;
             }
 

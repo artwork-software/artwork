@@ -16,8 +16,8 @@
         </template>
 
         <!-- Empty -->
-        <div class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
-            <IconCirclePlus class="h-6 w-6 rounded-full bg-artwork-buttons-create text-white p-0.5 hover:bg-artwork-buttons-hover cursor-pointer transition-all" />
+        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="w-[175px] h-[144px] rounded-lg flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
+            <IconCirclePlus class="h-6 w-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" stroke-width="2" />
         </div>
     </div>
     <AddShiftModal v-if="showAddShiftModal"
@@ -47,6 +47,7 @@ import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
 import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import ShiftPlanPlacementHandler from "@/Helper/ShiftPlanPlacementHandler.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "TimeLineShiftsComponent",
@@ -82,7 +83,7 @@ export default defineComponent({
             elementsHeaderHeight: 36
         }
     },
-    mixins: [IconLib],
+    mixins: [IconLib,Permissions],
     emits: ['dropFeedback'],
     mounted() {
         this.getPlacementHandler().initialize();

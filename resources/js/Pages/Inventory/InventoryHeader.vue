@@ -1,6 +1,6 @@
 <template>
     <app-layout :title="title + '-' + $t('Inventory Management')">
-        <div class="inventory-management-container">
+        <div class="mt-5 inventory-management-container">
             <div class="headline-container">
                 <h2>{{ $t('Inventory Management') }}</h2>
                 <div>

@@ -33,7 +33,6 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
-use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
@@ -92,6 +91,8 @@ use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemContr
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\InventoryManagementExportController;
 use Artwork\Modules\InventorySetting\Http\Controllers\InventorySettingsController;
+use Artwork\Modules\Invitation\Http\Controller\InvitationController;
+use Artwork\Modules\ModuleSettings\Http\Controller\ModuleSettingsController;
 use Artwork\Modules\MoneySource\Http\Middleware\CanEditMoneySource;
 use Artwork\Modules\Project\Http\Middleware\CanEditProject;
 use Artwork\Modules\Project\Http\Middleware\CanViewProject;
@@ -150,6 +151,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'initializeSageSpecificDay'
             ]
         )->name('tool.interfaces.sage.initializeSpecificDay');
+        Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
+            ->name('tool.module-settings.index');
+        Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
+            ->name('tool.module-settings.update');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -181,6 +186,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/toggle/calendar_settings_work_shifts',
         [AppController::class, 'toggle_calendar_settings_work_shifts']
     )->name('toggle.calendar_settings_work_shifts');
+    Route::patch(
+        '/toggle_calendar_settings_use_project_period',
+        [AppController::class, 'toggleCalendarSettingsUseProjectPeriod']
+    )->name('user.calendar_settings.toggle_calendar_settings_use_project_period');
 
     Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () {
@@ -188,13 +197,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     })->name('checklistTemplates.edit');
 
     //Invitations
-    Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
-    Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])
-        ->name('user.invitations.edit');
     Route::post('/users/invitations', [InvitationController::class, 'store'])->name('invitations.store');
-    Route::patch('/users/invitations/{invitation}', [InvitationController::class, 'update']);
-    Route::delete('/users/invitations/{invitation}', [InvitationController::class, 'destroy']);
 
     Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])
         ->name('user.calendar_settings.update');
@@ -630,6 +634,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/user/{user}/update/at_a_glance', [UserController::class, 'updateAtAGlance'])
         ->name('user.update.at_a_glance');
 
+    Route::patch('/user/{user}/update/bulk/sort_id', [UserController::class, 'updateBulkSortId'])
+        ->name('user.update_bulk_sort_id');
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
@@ -652,7 +658,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.sum.money.source.store');
 
         // PATCH
-        Route::patch('/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
+        Route::patch('/timeline/{timeline}/update', [ProjectController::class, 'updateTimeline'])
+            ->name('update.timeline');
         Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
         Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
         Route::patch('/{shift}/update/description', [ShiftController::class, 'updateDescription'])
@@ -1237,7 +1244,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {
-            Route::get('index', [ProjectTabController::class, 'index'])->name('tab.index');
+            Route::get('index', [ProjectTabController::class, 'index'])
+                ->name('tab.index')
+                ->middleware('role:artwork admin');
             Route::post('/{projectTab}/update/component/order', [ProjectTabController::class,
                 'updateComponentOrder'])
                 ->name('tab.update.component.order');
@@ -1276,7 +1285,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'component'], function (): void {
             // index
             Route::get('index', [ComponentController::class, 'index'])
-                ->name('component.index');
+                ->name('component.index')
+                ->middleware('role:artwork admin');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [ProjectComponentValueController::class,
                 'update'])
@@ -1360,10 +1370,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         )->name('user.calendar.abo.update');
     });
 
-    Route::group(['prefix' => 'project-roles'], function (): void {
-        Route::resource('project-roles', ProjectRoleController::class)
-            ->only(['index', 'store', 'update', 'destroy']);
-    });
+    Route::resource('project-roles', ProjectRoleController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:artwork admin');
 
     // route for shift time preset
     Route::group(['prefix' => 'shift-time-preset'], function (): void {

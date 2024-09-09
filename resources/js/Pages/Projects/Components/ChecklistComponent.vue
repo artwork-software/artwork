@@ -10,11 +10,11 @@
             :checklist_templates="checklist_templates"
         >
             <template #search>
-                <div v-if="!showSearch" @click="showSearch = true">
-                    <IconSearch class="h-6 w-6" />
+                <div v-if="!showSearch" @click="openSearchBar">
+                    <IconSearch class="h-6 w-6 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" />
                 </div>
                 <div v-if="showSearch">
-                    <div class="relative -mt-4">
+                    <div class="relative w-72 -mt-5">
                         <TextInputComponent
                             id="userSearch"
                             v-model="search"
@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import {ref, computed, nextTick} from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ChecklistKanbanView from "@/Components/Checklist/ChecklistKanbanView.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
@@ -144,6 +144,13 @@ const removeSearch = () => {
     showSearch.value = false;
 };
 
+
+const openSearchBar = () => {
+    showSearch.value = true;
+    nextTick(() => {
+        document.getElementById('userSearch').focus();
+    });
+};
 
 
 </script>

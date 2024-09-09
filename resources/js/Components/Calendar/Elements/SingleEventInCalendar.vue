@@ -1,7 +1,6 @@
 <template>
-    <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg relative group" :class="event.occupancy_option ? 'event-disabled' : ''">
+    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group" :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
         <div v-if="zoom_factor > 0.4"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -52,7 +51,7 @@
                 </div>
             </div>
         </div>
-        <div class="px-1 py-1 ">
+        <div class="px-1 py-1">
             <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: textColorWithDarken}"
                  :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
@@ -91,7 +90,7 @@
             </div>
             <div class="flex">
                 <!-- Time -->
-                <div class="flex" :style="{lineHeight: lineHeight,fontSize: fontSize, color: textColorWithDarken}"
+                <div class="flex" :style="{lineHeight: lineHeight, fontSize: fontSize, color: textColorWithDarken}"
                      :class="[zoom_factor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                     <div
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
@@ -222,6 +221,16 @@
                 </span>
             </div>
         </div>
+        <div v-if="usePage().props.user.calendar_settings.description && event.description?.length > 0"
+             :style="{lineHeight: lineHeight, fontSize: fontSize, color: textColorWithDarken}"
+             class="p-0.5 ml-0.5">
+            <template v-if="event.description?.length <= 50">
+                {{ event.description }}
+            </template>
+            <template v-else>
+                {{ event.description.slice(0, 49) + "..." }}
+            </template>
+        </div>
     </div>
     <div v-if="event.subEvents?.length > 0">
         <div v-for="subEvent in event.subEvents" class="mb-1">
@@ -329,7 +338,7 @@
 </template>
 
 <script setup>
-import {computed, ref, watch} from "vue";
+import {computed, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
@@ -505,5 +514,4 @@ const gcd = (a, b) => {
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});
 };
-
 </script>

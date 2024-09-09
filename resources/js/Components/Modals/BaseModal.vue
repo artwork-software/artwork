@@ -15,9 +15,6 @@
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4', showBackdrop ? '' : 'border border-gray-300']"  ref="containerRef">
-
-                            <!--<img v-if="showImage" :src="modalImage" class=" mb-4 rounded-tl-lg"
-                                 :class="fullModal ? '' : '-ml-6 -mt-6'"/>-->
                             <div class="absolute top-0 right-0 pt-4 pr-4 hidden sm:block z-50">
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-gray-400 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
@@ -25,7 +22,7 @@
                                             <ToolTipDefault top show-background-icon :tooltip-text="showBackdrop ? $t('Remove Backdrop') : $t('Show Backdrop')"/>
                                         </div>
                                     </div>
-                                    <div ref="dragHandle" class=" hover:text-artwork-messages-waring transition-all duration-150 ease-in-out cursor-pointer" :class="isDragging ? 'text-artwork-messages-waring' : 'text-gray-400' ">
+                                    <div ref="dragHandle" class=" hover:text-artwork-messages-waring transition-all duration-150 ease-in-out cursor-grab" :class="isDragging ? 'text-artwork-messages-waring' : 'text-gray-400' ">
                                         <div>
                                             <ToolTipDefault top show-draggable :tooltip-text="$t('Hold here to move')"/>
                                         </div>
@@ -54,8 +51,9 @@ import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
-import { IconBackground } from "@tabler/icons-vue";
+import {IconBackground} from "@tabler/icons-vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+
 export default {
     name: "BaseModal",
     mixins: [Permissions, IconLib],
@@ -76,10 +74,12 @@ export default {
         }
     },
     props: {
+        //@todo: deprecated, remove
         modalImage: {
             type: String,
             default: '/Svgs/Overlays/illu_appointment_edit.svg'
         },
+        //@todo: deprecated, remove
         showImage: {
             type: Boolean,
             default: true
@@ -109,8 +109,46 @@ export default {
         closeModal(bool) {
             this.$emit('closed', bool)
         },
-        makeContainerDraggable() {
-            const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
+        makeContainerDraggable(){
+            const container = this.$refs.containerRef?.$el || this.$refs.containerRef
+            const dragHandle = this.$refs.dragHandle;
+
+            let isDragging = false;
+            let offsetX = 0;
+            let offsetY = 0;
+            let animationFrameId = null;
+
+            dragHandle.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                offsetX = event.clientX - container.offsetLeft;
+                offsetY = event.clientY - container.offsetTop;
+            });
+
+            document.addEventListener('mousemove', (event) => {
+                if (isDragging) {
+                    if (animationFrameId !== null) {
+                        cancelAnimationFrame(animationFrameId);
+                    }
+
+                    animationFrameId = requestAnimationFrame(() => {
+                        container.style.position = 'absolute';
+                        container.style.left = `${event.clientX - offsetX}px`;
+                        container.style.top = `${event.clientY - offsetY}px`;
+                        // Prevent text selection while dragging
+                        document.body.classList.add('select-none');
+                    });
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                if (animationFrameId !== null) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                // Remove no-select class when dragging stops
+                document.body.classList.remove('select-none');
+            });
+            /*const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
             const dragHandle = this.$refs.dragHandle;
 
             if (!container || !(container instanceof HTMLElement) || !dragHandle) {
@@ -160,6 +198,7 @@ export default {
 
             // Füge den mousedown Event-Listener nur am Drag-Handle hinzu
             dragHandle.addEventListener('mousedown', onMouseDown);
+             */
         },
     }
 }

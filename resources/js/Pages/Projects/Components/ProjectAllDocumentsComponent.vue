@@ -4,7 +4,7 @@
             <h3 class="sDark">{{ $t('All Documents') }}</h3>
         </div>
         <div
-            v-if="this.canEditComponent && ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id))">
+            v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id))">
             <input
                 @change="uploadChosenDocuments"
                 class="hidden"
@@ -24,7 +24,7 @@
         </div>
         <div class="mb-3">
             <div class="space-y-1"
-                 v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                 >
                 <div v-for="project_file in project.project_files_all"
                      class="cursor-pointer group flex items-center">
                     <div :data-tooltip-target="project_file.name" class="flex truncate">
@@ -33,7 +33,7 @@
                             {{ project_file.name }}</p>
 
                         <IconCircleX
-                            v-if="this.canEditComponent && ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
+                            v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
                             @click="openConfirmDeleteModal(project_file)"
                             class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else class="xsDark">
+            <div v-if="project?.project_files_all?.length === 0" class="xsDark">
                 {{ $t('No files available') }}
             </div>
         </div>

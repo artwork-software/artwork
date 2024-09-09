@@ -2,7 +2,7 @@
     <app-layout :title="room.name">
         <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
-                <div class="flex items-center">
+                <div class="flex items-center pt-5">
                     <h2 class="headline1">{{ room.name }}</h2>
                     <BaseMenu :right="false" v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin" class="ml-2">
                         <MenuItem v-slot="{ active }">
@@ -389,10 +389,6 @@
         />
     </BaseSidenav>
 
-
-    <pre>
-        {{ available_categories }}
-    </pre>
     <!-- Room History Modal-->
     <room-history-component
         v-if="showRoomHistory"

@@ -107,16 +107,19 @@ export default {
                                             <div class="col-span-6 flex items-center gap-x-3">
                                                 <ComponentIcons :type="element.component.type" />
                                                 <div class="">
-                                                    {{element.component.name }}
-                                                    <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
-                                                        {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+                                                   <div class="flex items-center gap-4">
+                                                       {{element.component.name }}
+                                                       <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
+                                                           {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+                                                       </div>
+                                                   </div>
+                                                    <div class="col-span-2 text-xs flex items-center">
+                                                        {{ $t(element.component.type)}}
                                                     </div>
                                                 </div>
 
                                             </div>
-                                            <div class="col-span-2 text-xs flex items-center">
-                                                {{ $t(element.component.type)}}
-                                            </div>
+
                                         </div>
                                     </div>
                                     <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block"/>

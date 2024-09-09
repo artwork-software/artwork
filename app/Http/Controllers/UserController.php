@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
@@ -15,6 +17,7 @@ use Artwork\Modules\Permission\Models\Permission;
 use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
@@ -50,9 +53,8 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(
-        private readonly UserService $userService,
-    ) {
+    public function __construct()
+    {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -66,7 +68,7 @@ class UserController extends Controller
     }
 
 
-    public function scoutSearch(Request $request): JsonResponse
+    public function scoutSearch(Request $request, UserService $userService): JsonResponse
     {
         $users = [];
         if (
@@ -74,7 +76,7 @@ class UserController extends Controller
             request()->get('user_search') !== null &&
             request()->get('user_search') !== ''
         ) {
-            $users = $this->userService->searchUsers($request->string('user_search'));
+            $users = $userService->searchUsers($request->string('user_search'));
         }
 
         return \response()->json($users);
@@ -217,12 +219,16 @@ class UserController extends Controller
 
     public function editUserWorkProfile(
         User $user,
-        ShiftQualificationRepository $shiftQualificationRepository
+        ShiftQualificationRepository $shiftQualificationRepository,
+        CraftService $craftService
     ): Response|ResponseFactory {
         return inertia(
             'Users/UserWorkProfilePage',
             [
-                'userToEdit' => new UserWorkProfileResource($user),
+                'userToEdit' => (new UserWorkProfileResource(
+                    $user,
+                    $craftService->getAll()
+                ))->resolve(),
                 'currentTab' => 'workProfile',
                 'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
             ]
@@ -447,9 +453,25 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(User $user): RedirectResponse
-    {
+    public function destroy(
+        User $user,
+        RoomService $roomService,
+        EventService $eventService,
+        UserService $userService
+    ): RedirectResponse {
         $user->departments()->detach();
+        $user->createdRooms()->withTrashed()->each(
+            fn (Room $room) => $roomService->update(
+                $room,
+                ['user_id' => $userService->getAuthUserId()]
+            )
+        );
+        $user->events()->withTrashed()->each(
+            fn (Event $event) => $eventService->update(
+                $event,
+                ['user_id' => $userService->getAuthUserId()]
+            )
+        );
         $user->delete();
 
         broadcast(new UserUpdated())->toOthers();
@@ -490,7 +512,8 @@ class UserController extends Controller
             'options',
             'project_management',
             'repeating_events',
-            'work_shifts'
+            'work_shifts',
+            'description'
         ]));
     }
 
@@ -518,6 +541,15 @@ class UserController extends Controller
         $user->update($request->only('at_a_glance'));
     }
 
+    public function updateBulkSortId(User $user, Request $request): void
+    {
+        $user->update($request->only('bulk_sort_id'));
+    }
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function operationPlan(
         Request $request,
         User $user,

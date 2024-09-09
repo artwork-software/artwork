@@ -1,45 +1,3 @@
-<script>
-import {IconChevronDown} from "@tabler/icons-vue";
-import {Link, usePage} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {router} from "@inertiajs/vue3";
-
-export default {
-    name: "BasePaginator",
-    components: {Link, IconChevronDown,  Menu,
-        MenuButton,
-        MenuItem,
-        MenuItems,},
-    props: {
-        entities: {
-            type: Object,
-            required: true
-        },
-        propertyName: {
-            type: String,
-            required: true
-        }
-    },
-    data() {
-        return {
-            entitiesPerPage: [1, 10, 25, 50, 100],
-        }
-    },
-    methods: {
-        usePage,
-        updateEntitiesPerPage(entitiesToShow) {
-            router.reload({
-                only: [this.propertyName],
-                data: {
-                    entitiesPerPage: entitiesToShow,
-                    page: 1
-                }
-            })
-        },
-    }
-}
-</script>
-
 <template>
     <div class="flex items-center justify-between w-full">
         <div class="text-xs">
@@ -73,18 +31,99 @@ export default {
             <div class="flex items-center">
                 <div v-if="entities.links.length > 3">
                     <div class="flex flex-wrap -mb-1">
-                        <template v-for="(link, key) in entities.links" :key="key">
-                            <div v-if="link.url === null" class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400" v-html="link.label"></div>
-                            <Link preserve-state preserve-scroll v-else class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white" :data="{ entitiesPerPage: entities.per_page }" :class="{ 'text-artwork-buttons-create': link.active }" :href="link.url" v-html="link.label"></Link>
-                        </template>
+                        <div v-for="(link, key) in entities.links" :key="key">
+                            <div v-if="link.url === null"
+                                 v-html="link.label"
+                                 class="mr-1 mb-1 px-2 py-1.5 text-sm leading-4 text-gray-400"/>
+                            <a v-else
+                               v-html="link.label"
+                               class="cursor-pointer mr-1 mb-1 px-2 py-1.5 text-sm leading-4 rounded hover:bg-white"
+                               :class="{ 'text-artwork-buttons-create': link.active }"
+                               @click="updatePage(link.label, entities.current_page, entities.per_page)"/>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </template>
 
-<style scoped>
+<script>
+import {IconChevronDown} from "@tabler/icons-vue";
+import {Link, router, usePage} from "@inertiajs/vue3";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
-</style>
+export default {
+    name: "BasePaginator",
+    emits: ['updateEntitiesPerPage', 'updatePage'],
+    components: {
+        Link,
+        IconChevronDown,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems,
+    },
+    props: {
+        entities: {
+            type: Object,
+            required: true
+        },
+        propertyName: {
+            type: String,
+            required: true
+        },
+        emitUpdateEntitiesPerPage: {
+            type: Boolean,
+            required: false,
+            default: false
+        }
+    },
+    data() {
+        return {
+            entitiesPerPage: [1, 10, 25, 50, 100],
+        }
+    },
+    methods: {
+        usePage,
+        updatePage(page, currentPage, entitiesPerPage) {
+            if (page.includes('Weiter') || page.includes('Next')) {
+                page = ++currentPage;
+            } else if (page.includes('Zurück') || page.includes('Previous') || page.includes('Back')) {
+                page = --currentPage;
+            }
+
+            if (this.emitUpdateEntitiesPerPage) {
+                this.$emit('updatePage', page, entitiesPerPage);
+
+                return;
+            }
+
+            router.reload(
+                {
+                    only: [this.propertyName],
+                    data: {
+                        page: page,
+                        entitiesPerPage: entitiesPerPage
+                    }
+                }
+            );
+        },
+        updateEntitiesPerPage(entitiesToShow) {
+            if (this.emitUpdateEntitiesPerPage) {
+                this.$emit('updateEntitiesPerPage', entitiesToShow);
+
+                return;
+            }
+
+            router.reload({
+                only: [this.propertyName],
+                data: {
+                    page: 1,
+                    entitiesPerPage: entitiesToShow,
+                }
+            })
+        },
+    }
+}
+</script>

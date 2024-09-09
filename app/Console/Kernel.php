@@ -36,7 +36,6 @@ class Kernel extends ConsoleKernel
         parent::__construct($app, $events);
     }
 
-
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();

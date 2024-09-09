@@ -26,8 +26,10 @@
 import {defineComponent} from 'vue';
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
-import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
+import MultipleShiftQualificationSlotsAvailable
+    from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import {router} from "@inertiajs/vue3";
+
 export default defineComponent({
     name: 'ShiftsQualificationsDropElement',
     components: {
@@ -264,7 +266,8 @@ export default defineComponent({
                     userId: droppedUser.id,
                     userType: droppedUser.type,
                     shiftQualificationId: shiftQualificationId,
-                    seriesShiftData: this.seriesShiftData
+                    seriesShiftData: this.seriesShiftData,
+                    isShiftTab: true
                 },
                 {
                     preserveScroll: true

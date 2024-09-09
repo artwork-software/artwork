@@ -5,6 +5,7 @@ namespace Artwork\Modules\Project\Repositories;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laravel\Scout\Builder;
@@ -88,15 +89,17 @@ class ProjectRepository extends BaseRepository
         return $query->get();
     }
 
-    public function getProjectQuery($with): \Illuminate\Database\Eloquent\Builder
+    //@todo für Jason: ignore entfernen
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function getProjectQuery(string $search): EloquentBuilder|Builder
     {
-        $query = Project::query();
-
-        if (count($with) > 0) {
-            $query->with($with);
-        }
-
-        return $query;
+            /** @todo für Jason:
+             * Scout search wieder einbauen
+             */
+//        if (strlen($search) > 0) {
+//            return Project::search($search);
+//        }
+        return Project::query();
     }
 
     public function scoutSearch(string $query): Builder

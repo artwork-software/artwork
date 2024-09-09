@@ -2,15 +2,14 @@ import './bootstrap';
 import '../css/app.scss';
 import '../css/global.css';
 
-import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import {createApp, h} from 'vue';
+import {createInertiaApp} from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker';
 import VueMathjax from 'vue-mathjax-next';
 import * as VueI18n from 'vue-i18n';
 
 import en from '../../lang/en.json';
 import de from '../../lang/de.json';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 const svgColors = {
     eventType0: '#A7A6B1',
@@ -38,17 +37,12 @@ const i18n = VueI18n.createI18n({
     messages,
 });
 
-const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
-
-// Verwende import.meta.glob für das dynamische Importieren der Vue-Komponenten
 const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
     title: (title) => `${title}`,
-    // Resolve-Funktion, die die Vue-Komponente dynamisch lädt
     resolve: async (name) => {
         const pagePath = `./Pages/${name}.vue`;
-        // Lade die Vue-Komponente nur dann, wenn sie benötigt wird
         const { default: component } = await pages[pagePath]();
         return component;
     },

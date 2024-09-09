@@ -25,7 +25,7 @@
                 </div>
 
                 <div>
-                    <BaseMenu dots-size="h-4 w-4">
+                    <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
                         <MenuItem v-slot="{ active }">
                             <div @click="editShift"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -79,7 +79,7 @@
                             :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(user.pivot.id, 0) :
@@ -103,7 +103,7 @@
                             class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(freelancer.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(freelancer.pivot.id, 1) :
@@ -120,14 +120,14 @@
             <div v-for="serviceProvider in shift.service_provider">
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
-                        <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
+                        <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover" alt="profile-photo">
                         <span class="text-xs">{{ serviceProvider.name }}</span>
                         <span v-if="serviceProvider.pivot.shift_count > 1" class="text-xs">  1/{{ serviceProvider.pivot.shift_count }} </span>
                         <ShiftQualificationIconCollection
                             class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(serviceProvider.pivot.shift_qualification_id).icon"/>
                     </div>
-                    <div class="hidden group-hover:block"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
                          @click="
                             this.event.is_series ?
                                 openDeleteUserModal(serviceProvider.pivot.id, 2) :
@@ -175,19 +175,9 @@ import {defineComponent} from 'vue'
 import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import dayjs from "dayjs";
-import {
-    DotsVerticalIcon,
-    DuplicateIcon,
-    PencilAltIcon,
-    TrashIcon
-} from "@heroicons/vue/outline";
+import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
@@ -197,6 +187,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default defineComponent({
     name: "SingleShift",
@@ -220,7 +211,7 @@ export default defineComponent({
         MenuItem,
         MenuItems
     },
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions],
     props: [
         'shift',
         'crafts',
@@ -389,7 +380,8 @@ export default defineComponent({
                     'shift.removeUserByType',
                     {
                         usersPivotId: usersPivotId,
-                        userType: userType
+                        userType: userType,
+                        isShiftTab: true
                     }
                 ),
                 {

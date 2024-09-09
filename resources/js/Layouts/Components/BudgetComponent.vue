@@ -64,8 +64,12 @@
                                                       fill="#27233C"/>
                                                  </svg>
                                             </div>
-                                            <div class="-ml-0.5 ">
-                                                <img :src="column?.locked_by?.profile_photo_url" alt="" class="object-cover w-6 h-6 border-2 border-white rounded-full">
+                                            <div class="-ml-0.5">
+                                                <UserPopoverTooltip :user="column.locked_by"
+                                                                    :id="column.locked_by?.id ?? 'lockedByTooltipColumn-' + column.id"
+                                                                    class="w-6 h-6 border-2 border-white rounded-full"
+                                                                    height="5"
+                                                                    width="5"/>
                                             </div>
                                         </div>
                                         <div class="columnSubName text-white ">
@@ -121,7 +125,7 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" v-show="showMenu === column.id" v-if="this.$can('edit budget templates') || !table.is_template">
+                            <BaseMenu dots-color="text-artwork-context-dark" v-show="showMenu === column.id" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -179,11 +183,11 @@
                             <div v-if="showMenu !== column.id" class="w-5"></div>
                         </div>
                     </th>
-                    <th>
+                    <th v-if="this.hasBudgetAccess()">
                         <div class="flex items-center">
-                    <div class="text-white hidden xl:block ml-3 mt-3">
-                        {{ $t('New column') }}
-                    </div>
+                        <div class="text-white hidden xl:block ml-3 mt-3">
+                            {{ $t('New column') }}
+                        </div>
                         <button v-if="this.$can('edit budget templates') || !table.is_template"
                                 class="font-bold mr-2 ml-2 text-xl hover:bg-artwork-buttons-hover p-1 mt-3 bg-secondary border-white border-2 rounded-full items-center uppercase shadow-sm text-secondaryHover transition-all duration-150"
                                 @click="openAddColumnModal()">
@@ -211,7 +215,7 @@
                                 <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" v-if="!table.is_template">
+                            <BaseMenu dots-color="text-artwork-context-dark" v-if="this.hasBudgetAccess()">
                                 <MenuItem v-slot="{ active }">
                                     <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -273,6 +277,7 @@
                                                        :project="project"
                                                        :main-position="mainPosition"
                                                        :project-managers="projectManager"
+                                                       :hasBudgetAccess="this.hasBudgetAccess()"
                                                        type="BUDGET_TYPE_COST"
                                 />
                             </tr>
@@ -295,7 +300,8 @@
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(0, column.id)) }}</span>
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(0)) }}</span>
-                                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
+                                        <div v-if="this.hasBudgetAccess()"
+                                             class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
                                             <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
@@ -380,7 +386,8 @@
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
                                         <span v-if="column.type !== 'sage'">{{ this.toCurrencyString(this.getSumOfTable(1, column.id)) }}</span>
                                         <span v-else>{{ this.toCurrencyString(this.calculateSageColumnWithCellSageDataValue(1)) }}</span>
-                                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
+                                        <div v-if="this.hasBudgetAccess()"
+                                             class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
                                             <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-white bg-artwork-buttons-create rounded-full " />
                                         </div>
@@ -620,34 +627,33 @@
 
 <script>
 import {
-    PencilAltIcon,
-    PlusCircleIcon,
-    TrashIcon,
-    XCircleIcon,
-    XIcon,
-    ZoomInIcon,
-    ZoomOutIcon,
-    DocumentReportIcon
+  DocumentReportIcon,
+  PencilAltIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  XCircleIcon,
+  XIcon,
+  ZoomInIcon,
+  ZoomOutIcon
 } from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, PlusIcon} from "@heroicons/vue/solid";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
 import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems,
-    Switch,
-    SwitchGroup,
-    SwitchLabel
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Switch,
+  SwitchGroup,
+  SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {useForm} from "@inertiajs/vue3";
-import {router} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
@@ -665,11 +671,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions, IconLib, CurrencyFloatToStringFormatter],
     components: {
+      UserPopoverTooltip,
         UserSearch,
         ModalHeader,
         BaseModal,
@@ -895,6 +903,18 @@ export default {
         },
     },
     methods: {
+        hasBudgetAccess() {
+            return this.hasAdminRole() ||
+                this.budgetAccess?.filter(
+                    (user) => user.id === this.$page.props.user.id
+                ).length > 0 ||
+                this.$canAny(
+                    [
+                        'can manage global project budgets',
+                        'can manage all project budgets without docs'
+                    ]
+                );
+        },
         updateColumnCommented(columnId, bool) {
             router.patch(
                 route(

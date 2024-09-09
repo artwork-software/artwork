@@ -1,9 +1,7 @@
 <template>
     <BaseModal v-if="show" @closed="closeModal">
         <div class="relative z-40 px-4">
-            <ModalHeader
-                :title="isCreateMode() ? $t('Create a new component') : $t('Edit component')"
-            />
+            <ModalHeader :title="isCreateMode() ? $t('Create a new component') : $t('Edit component')"/>
             <div class="grid grid-cols-1 gap-4">
                 <Listbox v-if="this.isCreateMode()" as="div" v-model="selectedType">
                     <ListboxLabel class="xsLight">{{$t('Component Layout')}}</ListboxLabel>
@@ -11,18 +9,17 @@
                         <ListboxButton class="menu-button">
                             <div class="block truncate">{{ $t(selectedType?.name) }}</div>
                             <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                              <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                                            </span>
+                                <IconChevronDown class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                            </span>
                         </ListboxButton>
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" v-for="componentTyp in tabComponentTypes" :key="componentTyp.name" :value="componentTyp" v-slot="{ active, selected }">
                                     <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                         <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(componentTyp.name) }}</span>
-
                                         <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                            <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
-                                                          </span>
+                                            <IconCircleCheck class="h-5 w-5" aria-hidden="true" />
+                                        </span>
                                     </li>
                                 </ListboxOption>
                             </ListboxOptions>
@@ -106,14 +103,14 @@
                             <div>
                                 <TextInputComponent v-model="textData.options[optionIndex].value" :label="'Option (' + (optionIndex + 1) + ')'" :id="'option-' + optionIndex" />
                                 <span v-if="optionIndex !== 0" class="text-xs text-end underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="removeOption(optionIndex)">
-                                                        Option ({{ optionIndex + 1 }}) {{ $t('Remove') }}
-                                                    </span>
+                                    Option ({{ optionIndex + 1 }}) {{ $t('Remove') }}
+                                </span>
                             </div>
                         </div>
                         <div class="flex items-center justify-end">
                             <div class="text-xs underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="addMoreOneOption">{{ $t('Add another option')}}</div>
                         </div>
-                        <div  v-if="textData.options[0].value">
+                        <div v-if="textData.options[0].value">
                             <Listbox as="div" v-model="textData.selected">
                                 <ListboxLabel class="xsLight">{{ $t('Standard Option') }}</ListboxLabel>
                                 <div class="relative mt-2">
@@ -296,8 +293,8 @@
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <span class="flex ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
+                                            {{ user.first_name }} {{ user.last_name }}
+                                        </span>
                                         <div class="flex flex-row space-x-1">
                                             <input v-model="user.pivot.can_write"
                                                    type="checkbox"
@@ -316,8 +313,8 @@
                                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
                                                             class="rounded-full h-11 w-11 object-cover"/>
                                         <span class="flex ml-4">
-                                                                {{ department.name }}
-                                                            </span>
+                                            {{ department.name }}
+                                        </span>
                                         <div class="flex flex-row space-x-1">
                                             <input v-model="department.pivot.can_write"
                                                    type="checkbox"
@@ -335,7 +332,8 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="!this.isComponentQualifiedForPermissions()" class="xsLight">
+            <div v-else-if="!this.isComponentQualifiedForPermissions() && !(this.componentToEdit.type === 'Title')"
+                 class="xsLight">
                 {{ $t('The permissions for this component are administered via the user settings and the project.') }}
             </div>
             <div class="flex justify-between items-center mt-5">
@@ -351,24 +349,24 @@
 </template>
 
 <script>
-import {defineComponent, reactive} from "vue";
+import {defineComponent} from "vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {
     Dialog,
     DialogPanel,
-    TransitionChild,
-    TransitionRoot,
     Listbox,
     ListboxButton,
     ListboxLabel,
     ListboxOption,
-    ListboxOptions
+    ListboxOptions,
+    TransitionChild,
+    TransitionRoot
 } from "@headlessui/vue";
 import inputComponent from "@/Layouts/Components/InputComponent.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
-import Input from "@/Layouts/Components/InputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
@@ -430,7 +428,8 @@ export default defineComponent({
                 return this.selectedType.name !== 'SeparatorComponent';
             }
 
-            return this.componentToEdit.type !== 'SeparatorComponent' &&
+            return this.componentToEdit.type !== 'Title' &&
+                this.componentToEdit.type !== 'SeparatorComponent' &&
                 this.componentToEdit.type !== 'ShiftTab' &&
                 this.componentToEdit.type !== 'BudgetTab' &&
                 this.componentToEdit.type !== 'CalendarTab';

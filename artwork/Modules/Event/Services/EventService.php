@@ -52,6 +52,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
@@ -853,6 +854,7 @@ readonly class EventService
     /**
      * @throws Throwable
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDto(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -869,37 +871,77 @@ readonly class EventService
     ): EventManagementDto {
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
 
         //today is used if project calendar is opened and no events are given as project calendar
         //do not rely on user calendar filter dates
         $today = Carbon::now();
-        [$startDate, $endDate] = !$project ?
-            $userService->getUserCalendarFilterDatesOrDefault() :
-            [
-                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
-                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
-                    $today->startOfDay(),
-                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
-                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
-                    $today->endOfDay()
+
+        if (
+            !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
+            !$project
+        ) {
+            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+        } else {
+            if (!$project && $useProjectTimePeriod) {
+                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        null,
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        null
+                ];
+            } else {
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        $today->startOfDay(),
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        $today->endOfDay()
+                ];
+            }
+        }
+
+        if ($useProjectTimePeriod && !$startDate && !$endDate) {
+            $showCalendar = [
+                'roomsWithEvents' => SupportCollection::make(),
+                'days' => [],
+                'dateValue' => [],
+                'calendarType' => 'individual',
+                'selectedDate' => '',
+                'eventsWithoutRoom' => [],
+                'filterOptions' => $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $roomService
+                ),
+                'personalFilters' => $filterController->index(),
+                'user_filters' => $userService->getAuthUser()->calendar_filter,
             ];
+        } else {
+            $showCalendar = $calendarService->createCalendarData(
+                $startDate,
+                $endDate,
+                $userService,
+                $filterService,
+                $filterController,
+                $roomService,
+                $roomCategoryService,
+                $roomAttributeService,
+                $eventTypeService,
+                $areaService,
+                !$useProjectTimePeriod ? $project : null,
+                $userCalendarFilter
+            );
+        }
 
-        $showCalendar = $calendarService->createCalendarData(
-            $startDate,
-            $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $project,
-            $userCalendarFilter
-        );
-
-        return EventManagementDto::newInstance()
+        $eventManagementDto = EventManagementDto::newInstance()
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
@@ -915,13 +957,19 @@ readonly class EventService
                 )
             )
             ->setAreas($areaService->getAll())
-            ->setFilterOptions($showCalendar["filterOptions"],)
+            ->setFilterOptions($showCalendar["filterOptions"])
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
             ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
             ->setFirstProjectCalendarTabId(
                 $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
             );
+
+        if ($useProjectTimePeriod) {
+            $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
+        }
+
+        return $eventManagementDto;
     }
 
     /** @return Event[]|Collection */
@@ -1069,7 +1117,6 @@ readonly class EventService
             $day,
             $event['start_time'] ?? null,
             $event['end_time'] ?? null
-
         );
 
         $project->events()->create([
@@ -1104,5 +1151,17 @@ readonly class EventService
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
         ]);
+    }
+
+    public function getOrderBySubQueryBuilder(string $column, string $direction): Builder
+    {
+        return $this->eventRepository->getOrderBySubQueryBuilder($column, $direction);
+    }
+
+    public function update(Event $event, $attributes): Event
+    {
+        $this->eventRepository->update($event, $attributes);
+
+        return $event;
     }
 }

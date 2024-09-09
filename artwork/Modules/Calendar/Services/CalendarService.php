@@ -180,6 +180,7 @@ class CalendarService
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
+                'full_day_display' => $period->format('d.m.y'),
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),

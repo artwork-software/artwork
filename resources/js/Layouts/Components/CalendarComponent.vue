@@ -1,30 +1,25 @@
 <template>
-    <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
+    <div class=" items-center relative bg-secondaryHover" id="myCalendar">
         <div class="flex justify-center" :class="filteredEvents?.length ? 'mt-10' : ''">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="filteredEvents?.length > 0"
-                >
-
+                 v-if="filteredEvents?.length > 0">
                 <IconAlertTriangle class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
         </div>
-        <div class="bg-white">
-          <div class="pl-14">
-              <CalendarFunctionBar
-                  @open-event-component="openEventComponent"
+              <FunctionBarCalendar
+                  :multi-edit="false"
+                  :project="project"
+                  :rooms="rooms"
+                  :isFullscreen="isFullscreen"
+                  :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                  @open-fullscreen-mode="openFullscreen"
+                  @wants-to-add-new-event="openEventComponent"
+                  @update-multi-edit="toggleMultiEdit"
                   @nextDay="nextDay"
                   @previousDay="previousDay"
-                  @enterFullscreenMode="openFullscreen"
-                  :dateValue="dateValue"
-                  @change-at-a-glance="changeAtAGlance"
-                  :at-a-glance="atAGlance"
-                  :filter-options="filterOptions"
-                  :personal-filters="personalFilters"
-                  :is-fullscreen="isFullscreen"
-                  :user_filters="user_filters"
-              />
-          </div>
+                  :daily-view="true"
+                  />
 
             <!--  Calendar  -->
             <div class="pl-14 overflow-x-scroll">
@@ -39,7 +34,6 @@
                     hide-view-selector
                     show-week-numbers
                     :hideTitleBar="currentView !== 'year'"
-
                     sticky-split-labels
                     :disable-views="['years']"
                     :events="displayedEvents"
@@ -53,8 +47,7 @@
                     @event-drag-create="openEventComponent($event)"
                     @event-focus="openEventComponent($event)"
                     @ready="initializeCalendar"
-                    @view-change="initializeCalendar($event)"
-                >
+                    @view-change="initializeCalendar($event)">
                     <template #title="{ title, view }" class="group">
                         <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                             {{ title }}
@@ -215,7 +208,6 @@
                 </vue-cal>
 
             </div>
-        </div>
 
     </div>
 
@@ -258,7 +250,6 @@
 </template>
 
 <script>
-
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -307,11 +298,13 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import FunctionBarCalendar from "@/Components/FunctionBars/FunctionBarCalendar.vue";
 
 export default {
     name: 'CalendarComponent',
     mixins: [Permissions, IconLib],
     components: {
+        FunctionBarCalendar,
         CalendarFunctionBar,
         DatePickerComponent,
         NewUserToolTip,
@@ -369,7 +362,8 @@ export default {
         'filterOptions',
         'personalFilters',
         'user_filters',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'projectNameUsedForProjectTimePeriod',
     ],
     emits: ['changeAtAGlance'],
     mounted() {
@@ -677,6 +671,7 @@ export default {
             }
         },
         nextDay() {
+
             this.$refs.vuecal.next();
             this.dateValueArray[0] = this.addOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.addOneDay(this.dateValueArray[1]);
@@ -689,6 +684,7 @@ export default {
             })
         },
         previousDay() {
+            console.log('hallo');
             this.$refs.vuecal.previous();
             this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);
@@ -726,6 +722,9 @@ export default {
                 this.isFullscreen = false;
                 this.zoomFactor = 1;
             }
+        },
+        toggleMultiEdit(value){
+            this.multiEdit.value = value;
         },
     }
 }

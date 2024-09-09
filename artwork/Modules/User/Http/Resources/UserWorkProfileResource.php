@@ -4,6 +4,7 @@ namespace Artwork\Modules\User\Http\Resources;
 
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\User\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -13,31 +14,44 @@ class UserWorkProfileResource extends JsonResource
 {
     public static $wrap = null;
 
+    private Collection $crafts;
+
+    public function __construct(
+        $resource,
+        Collection $crafts
+    ) {
+        parent::__construct($resource);
+
+        $this->crafts = $crafts;
+    }
+
     /**
      * @return array<string, mixed>
      */
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
+        $assignedCrafts = $this->getAttribute('assignedCrafts');
+
         return [
             'resource' => class_basename($this),
-            'id' => $this->id,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'profile_photo_url' => $this->profile_photo_url,
-            'work_name' => $this->work_name,
-            'work_description' => $this->work_description,
-            'can_work_shifts' => $this->can_work_shifts,
-            'accessibleCrafts' => Craft::query()
-                ->where('assignable_by_all', '=', true)
-                ->get()
-                ->merge($this->crafts)
-                ->toArray(),
-            'assignedCrafts' => $this->assignedCrafts,
-            'assignableCrafts' => Craft::query()->get()->filter(
-                fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
+            'id' => $this->getAttribute('id'),
+            'first_name' => $this->getAttribute('first_name'),
+            'last_name' => $this->getAttribute('last_name'),
+            'profile_photo_url' => $this->getAttribute('profile_photo_url'),
+            'work_name' => $this->getAttribute('work_name'),
+            'work_description' => $this->getAttribute('work_description'),
+            'can_work_shifts' => $this->getAttribute('can_work_shifts'),
+            'accessibleCrafts' => $this->can('can plan shifts') ?
+                $this->crafts->filter(fn(Craft $craft) => $craft->getAttribute('assignable_by_all') === true)
+                    ->merge($this->getAttribute('crafts'))
+                    ->toArray() :
+                [],
+            'assignedCrafts' => $assignedCrafts,
+            'assignableCrafts' => $this->crafts->filter(
+                fn($craft) => !$assignedCrafts->pluck('id')->contains($craft->getAttribute('id'))
             )->toArray(),
-            'shiftQualifications' => $this->shiftQualifications
+            'shiftQualifications' => $this->getAttribute('shiftQualifications')
         ];
     }
 }

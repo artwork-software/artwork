@@ -20,13 +20,6 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center" v-if="!project">
-                <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
-                    {{ $t('Subscribe to calendar') }}
-                </div>
-            </div>
-
         </div>
 
         <div class="flex items-center gap-x-2">
@@ -139,7 +132,11 @@
                     </transition>
                 </Menu>
             </div>
-
+            <div class="flex items-center" v-if="!project">
+                <div @click="showCalendarAboSettingModal = true" class="flex items-center gap-x-1 text-sm group cursor-pointer">
+                    <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
+                </div>
+            </div>
             <div @click="showPDFConfigModal = true">
                 <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer" />
             </div>

@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-x-3">
-                <IconCirclePlus class="h-5 w-5" @click="openAddTaskModal = true"/>
+                <IconCirclePlus v-if="canEditComponent || isInOwnTaskManagement" class="h-5 w-5 cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out" @click="openAddTaskModal = true"/>
                 <BaseMenu v-if="(canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id))) || isInOwnTaskManagement">
                     <MenuItem v-slot="{ active }" v-if="!checklist.private">
                         <div @click="openEditChecklistTeamsModal = true"
@@ -98,7 +98,7 @@
                     />
                 </template>
             </draggable>
-            <div  class="checklist-body-add-task" @click="openAddTaskModal = true">
+            <div v-if="canEditComponent"   class="checklist-body-add-task" @click="openAddTaskModal = true">
                 <AlertComponent :text="$t('Click here to create a task')" type="plus" show-icon icon-size="h-4 w-4" />
             </div>
         </div>

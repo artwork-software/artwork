@@ -1,15 +1,15 @@
 <template>
     <div class="mb-3 flex flex-col gap-2">
         <!-- Event Header -->
-        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg"
-             :style="{backgroundColor: event.event_type.hex_code}">
+        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm rounded-lg bg-opacity-50"
+             :style="{backgroundColor: backgroundColorWithOpacity(event.event_type.hex_code, 50), color: TextColorWithDarken(event.event_type.hex_code, 100)}">
             <div class="flex items-center">
                 <span v-if="!event.event.allDay">
                     {{ event.event?.formatted_dates.start }} - {{ event.event?.formatted_dates.end }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
 
                 <span v-else>
-                    {{ event.event?.event_date_without_time.start }} - {{ event.event?.event_date_without_time.end }} {{ $t('All day') }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                    {{ event.event?.event_date_without_time.start }} {{ $t('All day') }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 </span>
 
                 <span v-if="event.event.is_series" class="ml-3">
@@ -20,8 +20,8 @@
                     <IconChevronUp class="h-4 w-4" v-else/>
                 </div>
             </div>
-            <div class="mt-1">
-                <BaseMenu dots-size="h-4 w-4">
+            <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mt-1">
+                <BaseMenu dots-size="h-4 w-4" dots-color="text-white">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="openDeleteConfirmModal"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -96,6 +96,8 @@ import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -108,7 +110,7 @@ export default defineComponent({
         'shiftTimePresets'
     ],
     emits: ['dropFeedback'],
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions, ColorHelper],
     components: {
         BaseMenu,
         SvgCollection,

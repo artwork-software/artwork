@@ -107,7 +107,7 @@ class WalidRaadSeeder extends Seeder
             'name' => 'Walid Raad',
             'shift_description' => 'Wird blutig',
             'key_visual_path' => 'default_keyVisual.png',
-            'state' => 4
+            'state' => 2
         ]);
 
         /** @var Component $shortDescriptionComponent */
@@ -258,15 +258,11 @@ class WalidRaadSeeder extends Seeder
          */
         $faker = \Faker\Factory::create();
         ProjectState::create(['name' => 'Optional', 'color' => $faker->hexColor()]);
-        ProjectState::create(['name' => 'Läuft aktuell', 'color' => $faker->hexColor()]);
-        ProjectState::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
         ProjectState::create(['name' => 'In Planung', 'color' => $faker->hexColor()]);
-        ProjectState::create(['name' => 'Läuft', 'color' => $faker->hexColor()]);
-        ProjectState::create(['name' => 'Abgeschlossen', 'color' => $faker->hexColor()]);
-        ProjectState::create(['name' => 'Abgebrochen', 'color' => $faker->hexColor()]);
         ProjectState::create(['name' => 'In Bearbeitung', 'color' => $faker->hexColor()]);
-
-
+        ProjectState::create(['name' => 'Läuft aktuell', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Abgebrochen', 'color' => $faker->hexColor()]);
+        ProjectState::create(['name' => 'Abgeschlossen', 'color' => $faker->hexColor()]);
 
         /**
          * Add Project Walid Raad to Money Source

@@ -1,8 +1,7 @@
 <template>
     <app-layout :title="$t('Rooms & areas')">
         <div class="">
-
-            <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
+            <div class="max-w-screen-2xl mb-40 flex flex-row mt-5 ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
@@ -192,11 +191,11 @@
                                                                         {{ element.name }}
                                                                     </Link>
                                                                     <div
-                                                                        class="ml-6 mt-1 flex items-center xsLight my-auto">
-                                                                        {{$t('created on { created_at } by', {'created_at': element.created_at })}}
+                                                                        class="ml-6 mt-1 flex items-center xsLight my-auto relative">
+                                                                        {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
                                                                         <UserPopoverTooltip :user="element.created_by"
-                                                                                            :id="element.created_by.id"
-                                                                                            :height="6" :width="6"
+                                                                                            :id="element.created_by.id + '-room-' + element.id"
+                                                                                            height="6" width="6"
                                                                                             class="ml-2"/>
                                                                     </div>
                                                                 </div>
@@ -238,12 +237,12 @@
                                             <div v-show="area.rooms.filter(room => room.temporary === true).length > 0"
                                                  class="mt-12">
                                                 <h2 v-on:click="switchVisibility(area.id)"
-                                                    class="pb-2 flex xxsDarkBold cursor-pointer">
+                                                    class="pb-2 flex xxsDarkBold cursor-pointer items-center">
                                                     {{ $t('Temporary rooms')}}
                                                     <IconChevronUp stroke-width="1.5" v-if="showTemporaryRooms.includes(area.id)"
-                                                                   class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                                                                   class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
                                                     <IconChevronDown stroke-width="1.5" v-else
-                                                                     class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
+                                                                     class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
                                                 </h2>
                                                 <draggable v-show="showTemporaryRooms.includes(area.id)"
                                                            ghost-class="opacity-50"
@@ -269,23 +268,24 @@
                                                                         </Link>
                                                                         <div
                                                                             class="ml-6 flex items-center xsLight my-auto">
-                                                                            {{$t('created on { created_at } by', {'crated_at': element.created_at })}}
+                                                                            {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
                                                                             <UserPopoverTooltip
                                                                                 :user="element.created_by"
-                                                                                :id="element.created_by.id"
+                                                                                :id="element.created_by.id + '-room-' + element.id"
                                                                                 height="6"
                                                                                 width="6"
                                                                                 class="ml-2"></UserPopoverTooltip>
                                                                         </div>
                                                                     </div>
-                                                                    <BaseMenu :key="element.id" v-show="showMenu === element.id">
+                                                                    <BaseMenu v-show="showMenu === element.id"
+                                                                              :key="element.id">
                                                                         <MenuItem v-slot="{ active }">
                                                                             <a @click="openEditRoomModal(element)"
                                                                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                                 <IconEdit stroke-width="1.5"
                                                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                           aria-hidden="true"/>
-                                                                                {{ $t('edit')}}
+                                                                                {{ $t('Edit')}}
                                                                             </a>
                                                                         </MenuItem>
                                                                         <MenuItem v-slot="{ active }">
@@ -550,7 +550,7 @@
                 </div>
                 <div class="flex items-center">
                     <input v-model="newRoomForm.temporary" type="checkbox" class="input-checklist"/>
-                    <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']" class="ml-4 text-sm">Temporärer Raum</p>
+                    <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']" class="ml-4 text-sm">{{ $t('Temporary room') }}</p>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                         <span class="ml-1 my-auto hind">{{ $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
@@ -606,9 +606,10 @@
                 </div>
                 <div class="">
                     <TextareaComponent
-                        :label="$t('Short description')"
-                        v-model="editRoomForm.description" rows="4"
+                        v-model="editRoomForm.description"
                         id="description"
+                        :label="$t('Short description')"
+                        :rows="4"
                     />
                 </div>
                 <Menu as="span" class="relative inline-block w-full text-left">
@@ -858,25 +859,27 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Button from "@/Jetstream/Button.vue";
-import {
-    DotsVerticalIcon,
-    InformationCircleIcon,
-    PencilAltIcon,
-    SearchIcon, TrashIcon,
-    XIcon, DuplicateIcon, DocumentTextIcon
-} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronUpIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
-import {Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import JetButton from "@/Jetstream/Button.vue";
+import {
+  DocumentTextIcon,
+  DotsVerticalIcon,
+  DuplicateIcon,
+  InformationCircleIcon,
+  PencilAltIcon,
+  SearchIcon,
+  TrashIcon,
+  XIcon
+} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {defineComponent} from 'vue'
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton.vue";
-import {Link, useForm} from "@inertiajs/vue3";
+import {Link, router, useForm} from "@inertiajs/vue3";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
@@ -1145,8 +1148,22 @@ export default defineComponent({
             this.closeAddAreaModal();
         },
         addRoom() {
-            this.newRoomForm.post(route('rooms.store'), {});
-            this.closeAddRoomModal();
+            this.newRoomForm.adjoining_roomsToDisplay.forEach((adjoining_room) => {
+                this.newRoomForm.adjoining_rooms.push(adjoining_room.id);
+            });
+            this.newRoomForm.room_categoriesToDisplay.forEach((room_category) => {
+                this.newRoomForm.room_categories.push(room_category.id);
+            });
+            this.newRoomForm.room_attributesToDisplay.forEach((room_attributes) => {
+                this.newRoomForm.room_attributes.push(room_attributes.id);
+            });
+            this.newRoomForm.post(
+                route('rooms.store'),
+                {
+                    preserveScroll: true,
+                    onSuccess: this.closeAddRoomModal
+                }
+            );
         },
         openAddRoomModal(area) {
             this.newRoomForm.area_id = area.id;
@@ -1154,19 +1171,7 @@ export default defineComponent({
         },
         closeAddRoomModal() {
             this.showAddRoomModal = false;
-            this.newRoomForm.area_id = null;
-            this.newRoomForm.name = "";
-            this.newRoomForm.description = "";
-            this.newRoomForm.start_date = null;
-            this.newRoomForm.end_date = null;
-            this.newRoomForm.temporary = false;
-            this.newRoomForm.everyone_can_book = false;
-            this.newRoomForm.room_categories = [];
-            this.newRoomForm.room_attributes = [];
-            this.newRoomForm.adjoining_rooms = [];
-            this.newRoomForm.room_categoriesToDisplay = [];
-            this.newRoomForm.room_attributesToDisplay = [];
-            this.newRoomForm.adjoining_roomsToDisplay = [];
+            this.newRoomForm.reset();
         },
         openEditAreaModal(area) {
             this.editAreaForm.id = area.id;
@@ -1233,7 +1238,7 @@ export default defineComponent({
         openEditRoomModal(room) {
             this.editRoomForm.id = room.id;
             this.editRoomForm.name = room.name;
-            this.editRoomForm.description = room.description;
+            this.editRoomForm.description = room.description ?? '';
             this.editRoomForm.start_date = room.start_date;
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
@@ -1256,15 +1261,7 @@ export default defineComponent({
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
-            this.editRoomForm.id = null;
-            this.editRoomForm.name = null;
-            this.editRoomForm.description = null;
-            this.editRoomForm.start_date = null;
-            this.editRoomForm.end_date = null;
-            this.editRoomForm.start_date_dt_local = null;
-            this.editRoomForm.end_date_dt_local = null;
-            this.editRoomForm.adjoining_roomsToDisplay = [];
-            this.editRoomForm.room_categoriesToDisplay = [];
+            this.editRoomForm.reset();
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -1275,7 +1272,7 @@ export default defineComponent({
             this.roomToSoftDelete = null;
         },
         softDeleteRoom() {
-            router.delete(`/rooms/${this.roomToSoftDelete.id}`);
+            router.delete(`/rooms/${this.roomToSoftDelete.id}`, {preserveScroll: true});
             this.closeSoftDeleteRoomModal();
             this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
@@ -1295,16 +1292,21 @@ export default defineComponent({
 
             this.editRoomForm.adjoining_roomsToDisplay.forEach((adjoining_room) => {
                 this.editRoomForm.adjoining_rooms.push(adjoining_room.id);
-            })
+            });
             this.editRoomForm.room_categoriesToDisplay.forEach((room_category) => {
                 this.editRoomForm.room_categories.push(room_category.id);
-            })
+            });
             this.editRoomForm.room_attributesToDisplay.forEach((room_attributes) => {
                 this.editRoomForm.room_attributes.push(room_attributes.id);
-            })
+            });
 
-            this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
-            this.closeEditRoomModal();
+            this.editRoomForm.patch(
+                route('rooms.update', {room: this.editRoomForm.id}),
+                {
+                    preserveScroll: true,
+                    onSuccess: this.closeEditRoomModal
+                }
+            );
         }
     },
 })

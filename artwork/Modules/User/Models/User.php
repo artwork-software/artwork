@@ -33,6 +33,7 @@ use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
+use Artwork\Modules\UserProjectManagementSetting\Models\UserProjectManagementSetting;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -116,6 +117,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<Shift> $shiftIdsBetweenStartDateAndEndDate
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
+ * @property int $bulk_sort_id
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -169,7 +171,8 @@ class User extends Model implements
         'goto_mode',
         'checklist_style',
         'at_a_glance',
-        'notification_enums_last_sent_dates'
+        'notification_enums_last_sent_dates',
+        'bulk_sort_id'
     ];
 
     protected $casts = [
@@ -308,7 +311,7 @@ class User extends Model implements
         return $this->hasMany(Checklist::class);
     }
 
-    public function createdRppms(): HasMany
+    public function createdRooms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
@@ -513,6 +516,15 @@ class User extends Model implements
     {
         return $this->hasOne(
             InventoryManagementUserFilter::class,
+            'user_id',
+            'id'
+        );
+    }
+
+    public function projectFilterAndSortSetting(): HasOne
+    {
+        return $this->hasOne(
+            UserProjectManagementSetting::class,
             'user_id',
             'id'
         );

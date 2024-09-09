@@ -10,7 +10,7 @@
                :class="[isSmall ? '' : 'h-12', classes]"
                :disabled="disabled"
                placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -50,6 +50,10 @@ export default defineComponent({
             default: ''
         },
         disabled: {
+            type: Boolean,
+            default: false
+        },
+        isDark: {
             type: Boolean,
             default: false
         }

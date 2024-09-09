@@ -54,6 +54,7 @@ use Artwork\Modules\Currency\Services\CurrencyService;
 use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -70,6 +71,7 @@ use Artwork\Modules\MoneySourceReminder\Services\MoneySourceThresholdReminderSer
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
+use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
@@ -109,12 +111,14 @@ use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvent\Services\SubEventService;
 use Artwork\Modules\Task\Services\TaskService;
+use Artwork\Modules\Timeline\Http\Requests\UpdateTimelineRequest;
 use Artwork\Modules\Timeline\Http\Requests\UpdateTimelinesRequest;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserWithoutShiftsResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthManager;
@@ -159,6 +163,9 @@ class ProjectController extends Controller
         private readonly AuthManager $authManager,
         private readonly EventTypeService $eventTypeService,
         private readonly RoomService $roomService,
+        private readonly UserService $userService,
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
+        private readonly TimelineService $timelineService,
     ) {
     }
 
@@ -183,10 +190,36 @@ class ProjectController extends Controller
 
     public function index(ProjectIndexPaginateRequest $request): Response|ResponseFactory
     {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userProjectManagementSetting = $this->userProjectManagementSettingService
+            ->getFromUser($this->userService->getAuthUser())
+            ->getAttribute('settings');
+
         return inertia('Projects/ProjectManagement', [
             'projects' => $this->projectService->paginateProjects(
+                $saveFilterAndSort,
                 $request->string('query'),
                 $request->integer('entitiesPerPage', 10),
+                $saveFilterAndSort ?
+                    $request->enum('sort', ProjectSortEnum::class) :
+                    (
+                    $userProjectManagementSetting['sort_by'] ?
+                        ProjectSortEnum::from($userProjectManagementSetting['sort_by']) :
+                        null
+                    ),
+                $saveFilterAndSort ?
+                    $request->collect('project_state_ids')->map(fn(string $id) => (int)$id) :
+                    Collection::make($userProjectManagementSetting['project_state_ids']),
+                $saveFilterAndSort ? $request
+                    ->collect('project_filters')
+                    ->mapWithKeys(
+                        function (string $filter, string $key): array {
+                            return [
+                                $key => (bool)$filter,
+                            ];
+                        }
+                    ) :
+                    Collection::make($userProjectManagementSetting['project_filters'])
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
@@ -199,6 +232,15 @@ class ProjectController extends Controller
             'myLastProject' => $this->projectService->getMyLastProject($this->authManager->id()),
             'eventTypes' => $this->eventTypeService->getAll(),
             'rooms' => $this->roomService->getAllWithoutTrashed(),
+            'projectSortEnumNames' => array_map(
+                function (ProjectSortEnum $enum): string {
+                    return $enum->name;
+                },
+                ProjectSortEnum::cases()
+            ),
+            'userProjectManagementSetting' => $this->userProjectManagementSettingService
+                ->getFromUser($this->userService->getAuthUser())
+                ->getAttribute('settings')
         ]);
     }
 
@@ -332,7 +374,7 @@ class ProjectController extends Controller
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id');
         $project->shiftRelevantEventTypes()->sync($eventRelevantEventTypeIds);
 
-        return Redirect::route('projects', $project);
+        return Redirect::back();
     }
 
 
@@ -1719,24 +1761,20 @@ class ProjectController extends Controller
 
     public function addCalculation(ColumnCell $cell, Request $request): void
     {
-        // current position found in $request->position
-        // add check if $request->position is present, if not set to 0
-        if (!$request->position) {
-            $request->position = 0;
-        }
+        $position = $request->integer('position');
 
         $newCalculation = $cell->calculations()->create([
             'name' => '',
             'value' => 0,
             'description' => '',
-            'position' => $request->position + 1
+            'position' => $position + 1
         ]);
 
         // update all positions of calculations where position is greater than $request->position and cell_id is
         // $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
         CellCalculation::query()
             ->where('cell_id', $cell->id)
-            ->where('position', '>', $request->position)
+            ->where('position', '>', $position)
             ->where('id', '!=', $newCalculation->id)
             ->increment('position');
     }
@@ -1825,7 +1863,7 @@ class ProjectController extends Controller
      * @throws Throwable
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
         Request $request,
         Project $project,
@@ -1900,12 +1938,40 @@ class ProjectController extends Controller
                     $this->loadProjectTeamData($headerObject, $project);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:
-                    $headerObject->project->events = $project->events()->without([
+                    $eventsUnSorted = $project->events()->without([
                         'series',
                         'event_type',
                         'subEvents',
                         'creator'
-                    ])->get();
+                    ])->get()->map(
+                        /** @return array<string, mixed> */
+                        function (Event $event): array {
+                            return array_merge(
+                                $event->toArray(),
+                                MinimalCalendarEventResource::make($event)->resolve()
+                            );
+                        }
+                    );
+
+                    $userBulkSortId = (int)$this->userService->getAuthUser()->getAttribute('bulk_sort_id');
+                    $eventsSorted = $eventsUnSorted;
+
+                    // userBulkSortId = 1 sort by room name asc
+                    switch ($userBulkSortId) {
+                        case 1:
+                            $eventsSorted = $eventsUnSorted->sortBy('roomName');
+                            break;
+                        case 2:
+                            // sort by event type name asc
+                            $eventsSorted = $eventsUnSorted->sortBy('eventTypeName');
+                            break;
+                        case 3:
+                            // sort by start time asc
+                            $eventsSorted = $eventsUnSorted->sortBy('startTime');
+                            break;
+                    }
+                    $eventsSorted = $eventsSorted->values();
+                    $headerObject->project->events = $eventsSorted;
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
                     $atAGlance = $request->boolean('atAGlance');
@@ -2000,7 +2066,7 @@ class ProjectController extends Controller
         $headerObject->genres = $this->genreService->getAll();
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = $this->sectorService->getAll();
-        $headerObject->rooms = $this->roomService->getAllWithoutTrashed(without: ['creator', 'admins']);
+        $headerObject->rooms = $this->roomService->getAllWithoutTrashed();
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;
@@ -2101,18 +2167,44 @@ class ProjectController extends Controller
     }
 
 
-    public function addTimeLineRow(Event $event, Request $request): void
+    public function addTimeLineRow(Event $event): void
     {
+        $startTime = Carbon::parse($event->start_time);
+        $endTime = Carbon::parse($event->end_time);
+        $startDate = Carbon::parse($event->start_time);
+        $endDate = Carbon::parse($event->end_time);
+
+        $startTime->setTime(8, 0, 0);
+        $endTime->setTime(9, 0, 0);
+
+        // if event has already a timeline, get the last timeline and add 1 hour to start and end time
+        if ($event->timelines()->exists()) {
+            $lastTimeline = $event->timelines()
+                ->orderBy('start_date')
+                ->orderBy('start')
+                ->orderBy('end_date')
+                ->orderBy('end')
+                ->get()
+                ->pop();
+            $startTime = Carbon::parse($lastTimeline->end);
+            $endTime = Carbon::parse($lastTimeline->end)->addHour();
+
+            $startDate = $lastTimeline->start_date->format('Y-m-d') === $lastTimeline->end_date->format('Y-m-d') &&
+                Carbon::parse($lastTimeline->end) < Carbon::parse($lastTimeline->start) ?
+                    $lastTimeline->start_date->addDay() :
+                    $lastTimeline->start_date;
+
+            $endDate = $startDate?->copy()->addHour();
+        }
+
         $event->timelines()->create(
-            $request->validate(
-                [
-                    'start_date' => 'required',
-                    'end_date' => 'required',
-                    'start' => 'required',
-                    'end' => 'required',
-                    'description' => 'nullable'
-                ]
-            )
+            [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'start' => $startTime,
+                'end' => $endTime,
+                'description' => null
+            ]
         );
     }
 
@@ -3351,5 +3443,10 @@ class ProjectController extends Controller
         }
 
         return $projects;
+    }
+
+    public function updateTimeline(Timeline $timeline, UpdateTimelineRequest $request): void
+    {
+        $this->timelineService->updateTimeline($timeline, collect($request->all()));
     }
 }

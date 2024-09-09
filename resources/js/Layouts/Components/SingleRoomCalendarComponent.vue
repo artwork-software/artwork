@@ -14,25 +14,28 @@
                 <ExclamationIcon class="h-6  mr-2"/>
                 {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
+            <pre>
+
+            </pre>
             <!-- Calendar -->
             <table class="w-full flex flex-wrap bg-white">
                 <tbody class="flex w-full flex-wrap">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
-                    <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{day.day_string}} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
-                    </th>
-                    <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
-                        <div class="py-0.5 pr-2" v-for="event in calendarData[day.full_day].events.data">
-                            <SingleCalendarEvent :zoom-factor="zoomFactor"
-                                                 :width="zoomFactor * 204"
-                                                 :event="event"
-                                                 :event-types="eventTypes"
-                                                 @open-edit-event-modal="openEditEventModal"
-                                                 :first_project_tab_id="this.first_project_tab_id"
-                            />
-                        </div>
-                    </td>
-                </tr>
+                    <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
+                        <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
+                            {{day.day_string}} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
+                        </th>
+                        <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
+                            <div class="py-0.5 pr-2" v-for="event in calendarData[day.full_day].events">
+                                <SingleCalendarEvent :zoom-factor="zoomFactor"
+                                                     :width="zoomFactor * 204"
+                                                     :event="event"
+                                                     :event-types="eventTypes"
+                                                     @open-edit-event-modal="openEditEventModal"
+                                                     :first_project_tab_id="this.first_project_tab_id"
+                                />
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

@@ -2,15 +2,34 @@
 
 namespace Artwork\Modules\Event\Repositories;
 
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Notifications\DatabaseNotification;
 
 class EventRepository extends BaseRepository
 {
+    public function __construct(private readonly Event $event)
+    {
+    }
+
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
+    {
+         return $this->event->newInstance();
+    }
+
+    public function getNewModelQuery(): BaseBuilder|Builder
+    {
+        return $this->event->newModelQuery();
+    }
+
     public function getEventsByProjectIdAndEventTypeId(int $projectId, int $eventTypeId): Collection
     {
         return Event::byProjectId($projectId)->byEventTypeId($eventTypeId)->get();
@@ -93,5 +112,10 @@ class EventRepository extends BaseRepository
         }
 
         return $builder->get();
+    }
+
+    public function getOrderBySubQueryBuilder(string $column, string $direction): Builder
+    {
+        return $this->getNewModelQuery()->getOrderBySubQueryBuilder($column, $direction);
     }
 }

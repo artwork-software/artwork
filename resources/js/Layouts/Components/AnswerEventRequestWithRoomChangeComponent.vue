@@ -25,7 +25,7 @@
                         </a>
                         </div>
                         <div class="flex items-center">
-                            erstellt von {{ this.creator.first_name }} {{ this.creator.last_name }}
+                            {{ $t('Created by') }} {{ this.creator.first_name }} {{ this.creator.last_name }}
                             <img v-if="this.creator"
                                  :data-tooltip-target="this.creator.id"
                                  :src="this.creator.profile_photo_url"
@@ -107,11 +107,13 @@ import Permissions from "@/Mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
     mixins: [Permissions, IconLib],
     components: {
+      UserPopoverTooltip,
         BaseModal,
         FormButton,
         JetDialogModal,

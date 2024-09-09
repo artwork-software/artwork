@@ -44,9 +44,8 @@
                             <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
                         </button>
                     </div>
-                    <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
-                        {{ comment.text }}
-                    </div>
+                    <p class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold" v-html="comment.text">
+                    </p>
                 </div>
                 <div v-else class="xsDark mt-6">
                     {{ $t('No comments yet') }}

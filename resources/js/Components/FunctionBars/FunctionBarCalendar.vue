@@ -1,5 +1,5 @@
 <template>
-    <div class=" py-4 " :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
+    <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
@@ -19,14 +19,13 @@
                         </button>
                     </div>
                 </div>
-
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
+                        id="calendarProjectSearch"
+                        v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
-                        id="calendarProjectSearch"
                         :label="$t('Search project')"
-                        v-model="projectSearch"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg">
@@ -215,7 +214,6 @@
 </template>
 
 <script setup>
-
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, inject, ref, watch} from "vue";
 import {
@@ -252,7 +250,14 @@ const first_project_tab_id = inject('first_project_tab_id');
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
 const user_filters = inject('user_filters');
-
+const emits = defineEmits([
+    'updateMultiEdit',
+    'openFullscreenMode',
+    'wantsToAddNewEvent',
+    'previousDay',
+    'nextDay',
+    'searchingForProject'
+]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
@@ -292,14 +297,8 @@ const handleUseTimePeriodChange = (enabled) => {
     }
 };
 
-watch(() => projectSearch.value, (searchValue) => {
-    axios.get('/projects/search', {params: {query: searchValue}})
-        .then(response => projectSearchResults.value = response.data);
-});
-
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
-const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode', 'wantsToAddNewEvent','previousDay', 'nextDay']);
 
 const props = defineProps({
     project: {
@@ -454,4 +453,23 @@ const updateTimes = () => {
 const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
 }
+
+watch(() => projectSearch.value, (searchValue) => {
+    if (searchValue.length === 0) {
+        projectSearchResults.value = [];
+        emits.call(this, 'searchingForProject', false);
+        return;
+    }
+    axios.get(
+        route('projects.search'),
+        {
+            params: {query: searchValue}
+        }
+    ).then(
+        (response) => {
+            projectSearchResults.value = response.data;
+            emits.call(this, 'searchingForProject', true);
+        }
+    );
+});
 </script>

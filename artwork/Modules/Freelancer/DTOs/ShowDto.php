@@ -4,13 +4,12 @@ namespace Artwork\Modules\Freelancer\DTOs;
 
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
-use Artwork\Modules\Freelancer\Http\Resources\FreelancerShowResource;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 
 class ShowDto extends BaseDto
 {
-    public ?FreelancerShowResource $freelancer = null;
+    public ?array $freelancer = null;
 
     public ?array $calendarData = null;
 
@@ -42,7 +41,7 @@ class ShowDto extends BaseDto
 
     public ?Collection $shiftQualifications = null;
 
-    public function setFreelancer(?FreelancerShowResource $freelancer): self
+    public function setFreelancer(?array $freelancer): self
     {
         $this->freelancer = $freelancer;
 
@@ -154,7 +153,10 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function getFreelancer(): ?FreelancerShowResource
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getFreelancer(): ?array
     {
         return $this->freelancer;
     }

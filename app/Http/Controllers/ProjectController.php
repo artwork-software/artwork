@@ -2180,12 +2180,12 @@ class ProjectController extends Controller
         // if event has already a timeline, get the last timeline and add 1 hour to start and end time
         if ($event->timelines()->exists()) {
             $lastTimeline = $event->timelines()
-                ->orderBy('start_date')
-                ->orderBy('start')
-                ->orderBy('end_date')
-                ->orderBy('end')
-                ->get()
-                ->pop();
+                ->orderBy('start_date', 'DESC')
+                ->orderBy('start', 'DESC')
+                ->orderBy('end_date', 'DESC')
+                ->orderBy('end', 'DESC')
+                ->limit(1)
+                ->first();
             $startTime = Carbon::parse($lastTimeline->end);
             $endTime = Carbon::parse($lastTimeline->end)->addHour();
 

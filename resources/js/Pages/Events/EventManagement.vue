@@ -19,7 +19,8 @@
                                                      :personal-filters="personalFilters"
                                                      :user_filters="user_filters"
                                                      :first_project_tab_id="first_project_tab_id"
-                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id"/>
+                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"/>
             </div>
             <div v-else>
                 <div class="mr-4">
@@ -29,7 +30,7 @@
                                        :dateValue="dateValue"
                                        :eventTypes=eventTypes
                                        :rooms="rooms"
-                                       :events="events"
+                                       :events="events ?? eventsAtAGlance"
                                        :events-without-room="eventsWithoutRoom"
                                        :filter-options="filterOptions"
                                        :personal-filters="personalFilters"

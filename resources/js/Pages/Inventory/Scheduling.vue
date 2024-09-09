@@ -5,27 +5,23 @@
         </div>
         <div class="-ml-5">
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div
-                    @scroll="syncScrollShiftPlan"
+                <div @scroll="syncScrollShiftPlan"
                     ref="shiftPlan"
                     class="bg-white flex-grow"
                     :class="[
                         isFullscreen ? 'overflow-y-auto' : '',
                         showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',
                         ' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll'
-                    ]"
-                >
+                    ]">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-100 relative" style="width:192px;"></th>
-                                    <th
-                                        v-for="day in days"
+                                    <th v-for="day in days"
                                         :style="{ width: '200px' }"
                                         :id="day.full_day"
-                                        class="z-20 h-14 py-3 border-r-4 border-secondaryHover truncate"
-                                    >
+                                        class="z-20 h-14 py-3 border-r-4 border-secondaryHover truncate">
                                         <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                             {{ day.day_string }} {{ day.full_day }}
                                             <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
@@ -36,32 +32,24 @@
                         </template>
                         <template #body>
                             <TableBody>
-                                <tr
-                                    v-for="(room, index) in calendar"
+                                <tr v-for="(room, index) in calendar"
                                     class="w-full h-full flex border-b border-dashed"
-                                    :id="'roomHeight' + index"
-                                >
-                                    <th
-                                        class="xsDark flex items-center w-48"
+                                    :id="'roomHeight' + index">
+                                    <th class="xsDark flex items-center w-48"
                                         :style="{ height: roomHeights[index] + 'px' }"
                                         :class="[
                                             index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover',
                                             isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft'
-                                        ]"
-                                    >
+                                        ]">
                                         <Link href="#" class="flex font-semibold items-center ml-4">
                                             {{ room[days[0].full_day].roomName }}
                                         </Link>
                                     </th>
-                                    <td
-                                        v-for="day in days"
+                                    <td v-for="day in days"
                                         :style="{ width: day.week_separator ? '40px' : '200px' }"
                                         class="overflow-y-auto cell border-r-2 border-dotted"
-                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']"
-                                    >
-                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)"
-                                            class="mb-1"
-                                        >
+                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
+                                        <div v-for="(events, index) in groupEventsInDayByProject(room[day.full_day]?.events)" class="mb-1">
                                             <div class="bg-gray-300 py-1.5 px-2 rounded-t-lg text-sm mb-1">
                                                 <span>
                                                     {{ index === 'null' ? $t('No Project') : index }}
@@ -86,69 +74,53 @@
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-40">
                 <div class="flex justify-center overflow-y-scroll">
-                    <div
-                        @click="showCloseUserOverview"
+                    <div @click="showCloseUserOverview"
                         :class="showUserOverview ? '' : 'fixed bottom-0'"
-                        class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background"
-                    >
+                        class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <IconChevronsDown class="h-4 w-4 text-gray-400" />
                         </div>
                     </div>
-                    <div
-                        v-if="showUserOverview"
+                    <div v-if="showUserOverview"
                         @mousedown="startResize"
                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
-                        :title="$t('Hold and drag to change the size')"
-                    >
+                        :title="$t('Hold and drag to change the size')">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <IconCaretUpDown class="h-3 w-6 text-gray-400" />
                         </div>
                     </div>
                 </div>
-                <div
-                    v-show="showUserOverview"
+                <div v-show="showUserOverview"
                     @scroll="syncScrollUserOverview"
                     ref="userOverview"
                     class="relative w-full bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
-                    :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: '20px' }"
-                >
-                    <div
-                        class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3"
-                        :style="{ top: calculateTopPositionOfUserOverView }"
-                    >
-                        <Switch
-                            @click="toggleMultiEditMode"
+                    :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: '20px' }">
+                    <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3"
+                        :style="{ top: calculateTopPositionOfUserOverView }">
+                        <Switch @click="toggleMultiEditMode"
                             v-model="multiEditMode"
                             :class="[
                                 multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200',
                                 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none'
-                            ]"
-                        >
+                            ]">
                             <span class="sr-only">Use setting</span>
-                            <span
-                                :class="[
+                            <span :class="[
                                     multiEditMode ? 'translate-x-7' : 'translate-x-0',
                                     'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
-                                ]"
-                            >
-                                <span
-                                    :class="[
+                                ]">
+                                <span :class="[
                                         multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in',
                                         'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity'
                                     ]"
-                                    aria-hidden="true"
-                                >
+                                    aria-hidden="true">
                                     <IconPencil stroke-width="1.5" class="w-5 h-5" />
                                 </span>
-                                <span
-                                    :class="[
+                                <span :class="[
                                         multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out',
                                         'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity'
                                     ]"
-                                    aria-hidden="true"
-                                >
+                                    aria-hidden="true">
                                     <IconPencil stroke-width="1.5" class="w-5 h-5" />
                                 </span>
                             </span>
@@ -246,7 +218,7 @@ const $t = useTranslation(),
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);
 const windowHeight = ref(window.innerHeight);
-const userOverviewHeight = ref((window.innerHeight / 2) + 50);
+const userOverviewHeight = ref(570);
 const userOverview = ref(null);
 const shiftPlan = ref(null);
 const currentDayOnView = ref(props.days ? props.days[0] : null);
@@ -377,8 +349,8 @@ const resizing = (event) => {
         return;
     }
 
-    if ((window.innerHeight - 160) - (startHeight.value + diff) < 160) {
-        userOverviewHeight.value = (window.innerHeight - 160) - 250;
+    if ((window.innerHeight - 110) - (startHeight.value + diff) < 110) {
+        userOverviewHeight.value = (window.innerHeight - 110) - 250;
         updateHeight();
         return;
     }
@@ -397,11 +369,11 @@ const updateHeight = () => {
     if (!showUserOverview.value) {
         windowHeight.value = window.innerHeight - 250;
     } else {
-        windowHeight.value = window.innerHeight - 270 - userOverviewHeight.value;
+        windowHeight.value = window.innerHeight - 220 - userOverviewHeight.value;
     }
 
-    if (window.innerHeight - 160 < 400) {
-        userOverviewHeight.value = window.innerHeight - 350;
+    if (window.innerHeight - 110 < 400) {
+        userOverviewHeight.value = window.innerHeight - 300;
     }
 
     if (userOverviewHeight.value < 100) {

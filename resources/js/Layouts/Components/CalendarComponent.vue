@@ -501,19 +501,6 @@ export default {
             return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
         },
         initializeCalendar({view = null, startDate = null, endDate = null}) {
-
-            const eventCalendar = this.$page.props.calendar;
-            const newEventObject = [];
-
-            eventCalendar.forEach((event) => {
-                const date = Object.keys(event)[0];
-                const room = event[date];
-                room.events.forEach((event) => {
-                    newEventObject.push(event);
-                });
-            });
-
-
             this.currentView = 'day';
 
             this.scrollToNine();
@@ -521,16 +508,23 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
-            newEventObject?.forEach((event) => {
-                event.start = this.convertDateFormat(new Date(event.startTime))
-                event.end = this.convertDateFormat(new Date(event.end))
+            let events = Object.values(this.events)[0].events;
+
+            events.map(
+                event => event.start = this.convertDateFormat(new Date(event.start))
+            );
+            events.map(
+                event => event.end = this.convertDateFormat(new Date(event.end))
+            );
+
+            //split is needed for the vue-cal component to connect the events with the rooms
+            //class is needed for design purposes
+            events.forEach((event) => {
                 event.split = event.roomId;
-                event.allDay = false;
-                //event.class = event.event_type_color;
-            })
-            console.log(newEventObject)
-            this.displayedEvents = newEventObject
-            this.displayedRooms = this.rooms
+                event.class = event.event_type_color;
+            });
+            this.displayedEvents = events;
+            this.displayedRooms = this.rooms;
         },
         convertDateFormat(dateString) {
             // Create a new Date object using the original date string

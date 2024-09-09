@@ -10,7 +10,7 @@
             </div>
             <div class="overflow-x-auto flex">
                 <div class="w-full grid grid-cols-7">
-                    <div class="h-48 mx-1"
+                    <div class="min-h-48 mx-1"
                          v-for="day in daysWithVacationAndEvents">
                         <div class="calendarRoomHeader">
                             {{ day.day_string }} {{ day.full_day }}
@@ -31,7 +31,7 @@
                         <div v-for="event in day.events" class="flex w-full">
                             <SingleShiftPlanEvent class="w-full"
                                                   :eventType="this.findEventTypeById(event.event_type_id)"
-                                                  :project="this.findProjectById(event.projectId)"
+                                                  :project="this.findProjectById(event.project_id)"
                                                   :room="this.findRoomById(event.room_id)"
                                                   :event="event"
                                                   :showRoom="true"

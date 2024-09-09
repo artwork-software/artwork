@@ -2,9 +2,9 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: event.eventTypeColor}">
+                 :style="{backgroundColor: this.event.eventTypeColor ?? this.eventType?.hex_code}">
                 <div class="w-40 truncate">
-                    {{ event.eventTypeAbbreviation }}: {{ event.projectName }}
+                    {{ event.eventTypeAbbreviation ?? this.eventType?.abbreviation }}: {{ this.event.projectName ?? this.project?.name }}
                 </div>
                 <div v-if="areAllShiftsCommitted(event)">
                     <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
@@ -59,7 +59,9 @@ export default defineComponent({
         'multiEditMode',
         'userForMultiEdit',
         'shiftQualifications',
-        'dayString'
+        'dayString',
+        'eventType',
+        'project'
     ],
     methods: {
         getDropFeedback(event) {

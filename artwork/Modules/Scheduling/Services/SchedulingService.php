@@ -218,7 +218,7 @@ readonly class SchedulingService
                     $project = Project::find($schedulings->model_id);
                     $notificationTitle = __(
                         'notification.scheduling.public_changes_project',
-                        ['project' => $project->name],
+                        ['project' => $project?->name],
                         $user->language
                     );
                     $broadcastMessage = [

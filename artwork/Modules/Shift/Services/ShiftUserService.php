@@ -300,45 +300,44 @@ readonly class ShiftUserService
             }
 
             $usersWhichGotNotification = [];
-            foreach ($user->crafts as $craft) {
-                foreach ($craft->users as $craftUser) {
-                    if ($craftUser->id === $user->id) {
-                        continue;
-                    }
-                    if (in_array($craftUser->id, $usersWhichGotNotification)) {
-                        continue;
-                    }
-                    $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
-                    $notificationService->setTitle($notificationTitle);
-                    $notificationService->setDescription([
-                        1 => [
-                            'type' => 'string',
-                            'title' => __(
-                                'notification.keyWords.concerns',
-                                [],
-                                $craftUser->language
-                            ) . $user->getFullNameAttribute(),
-                            'href' => null
-                        ],
-                        2 => [
-                            'type' => 'string',
-                            'title' => __(
-                                'notification.keyWords.concerns_time_period',
-                                [
-                                    'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
-                                        ->format('d.m.Y'),
-                                    'end' => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
-                                        ->format('d.m.Y')
-                                ],
-                                $craftUser->language
-                            ),
-                            'href' => null
-                        ],
-                    ]);
-                    $notificationService->setNotificationTo($craftUser);
-                    $notificationService->createNotification();
-                    $usersWhichGotNotification[] = $craftUser->id;
+
+            foreach ($shift->craft->users as $craftUser) {
+                if ($craftUser->id === $user->id) {
+                    continue;
                 }
+                if (in_array($craftUser->id, $usersWhichGotNotification)) {
+                    continue;
+                }
+                $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
+                $notificationService->setTitle($notificationTitle);
+                $notificationService->setDescription([
+                    1 => [
+                        'type' => 'string',
+                        'title' => __(
+                            'notification.keyWords.concerns',
+                            [],
+                            $craftUser->language
+                        ) . $user->getFullNameAttribute(),
+                        'href' => null
+                    ],
+                    2 => [
+                        'type' => 'string',
+                        'title' => __(
+                            'notification.keyWords.concerns_time_period',
+                            [
+                                'start' => Carbon::parse($shiftBreakCheck->firstShift->event_start_day)
+                                    ->format('d.m.Y'),
+                                'end' => Carbon::parse($shiftBreakCheck->lastShift->event_start_day)
+                                    ->format('d.m.Y')
+                            ],
+                            $craftUser->language
+                        ),
+                        'href' => null
+                    ],
+                ]);
+                $notificationService->setNotificationTo($craftUser);
+                $notificationService->createNotification();
+                $usersWhichGotNotification[] = $craftUser->id;
             }
             $notificationService->clearNotificationData();
         }

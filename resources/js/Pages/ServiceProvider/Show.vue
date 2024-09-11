@@ -1,7 +1,7 @@
 <template>
     <AppLayout :title="serviceProvider.provider_name + ' ' + $t('edit')">
-        <div class="w-full mt-12 ml-14 mr-40">
-            <div class="flex justify-between w-full items-center">
+        <div class="mt-12 pl-14">
+            <div class="flex justify-between items-center">
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
                         <div>
@@ -13,29 +13,6 @@
                             </h3>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <BaseMenu>
-                        <MenuItem v-slot="{ active }">
-
-                            <a href="#" @click="openChangeTeamsModal"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PencilAltIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit team membership')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="deleteFromAllDepartments"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <TrashIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Remove user from all teams')}}
-                            </a>
-                        </MenuItem>
-                    </BaseMenu>
                 </div>
             </div>
 
@@ -50,7 +27,7 @@
             </div>
         </div>
 
-        <div class="mt-12 ml-14 mr-40">
+        <div class="mt-12 pl-14 mr-40">
             <div v-if="currentTab === 1">
                 <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
                                :days-with-events="daysWithEvents"
@@ -63,7 +40,7 @@
             <!-- Persönliche Daten -->
             <div v-if="currentTab === 3">
                 <!-- Profilbild, Name, Nachname -->
-                <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
+                <div class="grid grid-cols-1 sm:grid-cols-8 gap-4">
                     <div class="col-span-1">
                         <input
                             ref="photoInput"

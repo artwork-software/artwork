@@ -1,7 +1,7 @@
 <template>
     <AppLayout :title="$t('Freelancer') + ' ' + freelancer.first_name + ' ' + freelancer.last_name + ' ' + $t('edit')">
-        <div class="w-full mt-12 ml-14 mr-40">
-            <div class="flex justify-between w-full items-center">
+        <div class="mt-12 ml-14">
+            <div class="flex justify-between items-center">
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
                         <div>
@@ -13,28 +13,6 @@
                             </h3>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <BaseMenu>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="openChangeTeamsModal"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PencilAltIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit team membership')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="deleteFromAllDepartments"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <TrashIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Remove user from all teams')}}
-                            </a>
-                        </MenuItem>
-                    </BaseMenu>
                 </div>
             </div>
             <div class="mt-10">

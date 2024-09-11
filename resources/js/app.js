@@ -10,6 +10,7 @@ import * as VueI18n from 'vue-i18n';
 
 import en from '../../lang/en.json';
 import de from '../../lang/de.json';
+import Icons from "@/icons.js";
 
 const svgColors = {
     eventType0: '#A7A6B1',
@@ -55,7 +56,7 @@ createInertiaApp({
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax);
         app.use(i18n);
-
+        app.use(Icons);
         app.mount(el);
 
         app.config.globalProperties.$updateLocale = function (newLocale) {

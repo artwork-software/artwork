@@ -16,15 +16,15 @@ const props = defineProps({
         default: '',
     },
     classes: {
-        type: String,
+        type: [String, Array],
         default: '',
     },
     icon: {
-        type: String,
-        default: null,
+        type: [String, Object, Function],  // Allow multiple types
+        required: true
     },
     iconSize: {
-        type: String,
+        type: [String, Array],
         default: 'w-6 h-6',
     },
     disabled: {
@@ -32,7 +32,7 @@ const props = defineProps({
         default: false,
     },
     stroke: {
-        type: String,
+        type: [String, Number],
         default: '1',
     },
 });

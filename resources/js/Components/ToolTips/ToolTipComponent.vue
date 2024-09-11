@@ -40,7 +40,8 @@ const props = defineProps({
         default: ''
     },
     classes: {
-        type: String,
+        // string or array
+        type: [String, Array],
         default: ''
     },
     icon: {
@@ -56,7 +57,7 @@ const props = defineProps({
         default: false
     },
     stroke: {
-        type: String,
+        type: [String, Number],
         default: '1'
     },
     relative: {

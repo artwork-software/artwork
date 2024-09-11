@@ -61,6 +61,7 @@
                                         :rooms="rooms"
                                         :has-admin-role="hasAdminRole()"
                                         :width="zoom_factor * 204"
+                                        :first_project_tab_id="first_project_tab_id"
                                         @edit-event="showEditEventModel"
                                         @edit-sub-event="openAddSubEventModal"
                                         @open-add-sub-event-modal="openAddSubEventModal"
@@ -335,6 +336,7 @@ const props = defineProps({
     calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
     eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? []))),
     first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
+    first_project_tab_id = inject('first_project_tab_id'),
     eventTypes = inject('eventTypes'),
     multiEdit = ref(false),
     isFullscreen = ref(false),

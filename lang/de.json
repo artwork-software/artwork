@@ -1984,5 +1984,6 @@
     "End date must be after start date or the same": "Enddatum muss nach dem Startdatum oder gleich sein",
     "Please confirm your password here.": "Bitte bestätige hier dein Passwort.",
     "Show projects without events": "Projekte ohne Termine anzeigen",
-    "Project created successfully": "Projekt erfolgreich angelegt"
+    "Project created successfully": "Projekt erfolgreich angelegt",
+    "At least one project tab must be available": "Mindestens ein Projekttab muss vorhanden sein"
 }

@@ -37,8 +37,7 @@ class ProjectTabService implements ServiceWithArrayCache
 
     public function findFirstProjectTab(): ProjectTab|null
     {
-        return $this->projectTabRepository
-            ->findFirstProjectTab();
+        return $this->projectTabRepository->findFirstProjectTab();
     }
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null

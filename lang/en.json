@@ -1997,5 +1997,6 @@
     "Month": "Month",
     "History": "History",
     "Sorting": "Sorting",
-    "Export project list": "Export project list"
+    "Export project list": "Export project list",
+    "At least one project tab must be available": "At least one project tab must be available"
 }

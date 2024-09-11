@@ -246,6 +246,9 @@ readonly class ShiftUserService
                 ],
                 2 => [
                     'type' => 'string',
+                    /*'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' .
+                        Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),*/
                     'title' => __(
                         'notification.keyWords.concerns_time_period',
                         [

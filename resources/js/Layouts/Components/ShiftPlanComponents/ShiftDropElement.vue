@@ -1,11 +1,11 @@
 <template>
     <div class="w-full cursor-pointer">
         <div :class="[
-                highlightMode && !isIdHighlighted(highlightedId, highlightedType) ?
-                    'opacity-30' :
-                    '',
+                highlightMode && !isIdHighlighted(highlightedId, highlightedType) && highlightedId && highlightedType ?
+                    'opacity-30 px-1' :
+                    'bg-pink-500 text-white px-1',
                 multiEditMode ?
-                'text-[10px] my-1' :
+                'text-[10px]' :
                 ''
              ]"
              class="flex items-center xsLight text-shiftText subpixel-antialiased"

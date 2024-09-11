@@ -102,41 +102,41 @@
                     </div>
                 <div class=" bg-artwork-navigation-background">
                     <div v-show="showUserOverview" ref="userOverview" class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                        <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
+                        <div class="flex items-center justify-between w-full fixed py-3 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
-                                        :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                        :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[multiEditMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconPencil stroke-width="1.5" class="w-5 h-5"/>
+                                         <IconPencil stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                       <span
                                           :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconPencil stroke-width="1.5" class="w-5 h-5"/>
+                                          <IconPencil stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                 </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
                                     <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
-                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
                                         <span
-                                            :class="[dayServiceMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                            :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                         <span
                                             :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-5 h-5"
+                                            <component :is="selectedDayService?.icon" class="w-4 h-4"
                                                        :style="{color: selectedDayService?.hex_color}"/>
                                         </span>
                                         <span
                                             :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-5 h-5"
+                                            <component :is="selectedDayService?.icon" class="w-4 h-4"
                                                        :style="{color: selectedDayService?.hex_color}"/>
                                         </span>
                                     </span>
@@ -148,37 +148,37 @@
                             </div>
                             <div class="flex items-center justify-end gap-x-3 pr-20">
                                 <Switch @click="toggleHighlightMode" v-model="highlightMode"
-                                        :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                        :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[highlightMode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconBulb stroke-width="1.5" class="w-5 h-5"/>
+                                         <IconBulb stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                       <span
                                           :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconBulb stroke-width="1.5" class="w-5 h-5"/>
+                                          <IconBulb stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                 </span>
                                 </Switch>
 
                                 <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode"
-                                        :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                        :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[$page.props.user.compact_mode ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconList stroke-width="1.5" class="w-5 h-5"/>
+                                         <IconList stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                       <span
                                           :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconList stroke-width="1.5" class="w-5 h-5"/>
+                                          <IconList stroke-width="1.5" class="w-4 h-4"/>
                                       </span>
                                 </span>
                                 </Switch>
@@ -189,7 +189,7 @@
                                 </BaseFilter>
                             </div>
                         </div>
-                        <div class="pt-16">
+                        <div class="pt-14">
                             <table class="w-full text-white overflow-y-scroll">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                                 <div>
@@ -971,6 +971,8 @@ export default {
             this.showUserShifts = true
         },
         toggleHighlightMode() {
+            this.idToHighlight = null;
+            this.typeToHighlight = null;
             this.multiEditMode = false;
             this.dayServiceMode = false;
             this.highlightMode = !this.highlightMode;

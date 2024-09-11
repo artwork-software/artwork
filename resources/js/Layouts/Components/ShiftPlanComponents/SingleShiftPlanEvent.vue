@@ -12,7 +12,7 @@
             </div>
         </div>
         <div class="bg-backgroundGray rounded-b-lg" :class="[userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray', dayString.is_weekend ? 'bg-white' : 'bg-backgroundGray']">
-            <div v-for="shift in event.shifts" class="flex justify-between px-1">
+            <div v-for="shift in event.shifts" class="flex justify-between">
                 <!-- Drop Element -->
                 <ShiftDropElement v-if="checkIfShiftInDayString(shift)"
                                   :multiEditMode="multiEditMode"

@@ -8,11 +8,12 @@
                     aria-hidden="true"
                     :class="[dotsColor, dotsSize]"
                 />
-                <IconSortDescending v-else
-                    stroke-width="1.5"
-                    class="flex-shrink-0"
-                    aria-hidden="true"
-                    :class="[dotsColor, dotsSize]"
+                <ToolTipComponent
+                    v-else
+                    direction="bottom"
+                    :tooltip-text="$t('Sorting')"
+                    icon="IconSortDescending"
+                    icon-size="h-8 w-8"
                 />
             </MenuButton>
         </div>
@@ -31,11 +32,13 @@
 import {defineComponent} from 'vue';
 import {Menu, MenuButton, MenuItems} from '@headlessui/vue';
 import IconLib from '@/Mixins/IconLib.vue';
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default defineComponent({
     name: 'BaseMenu',
     mixins: [IconLib],
     components: {
+        ToolTipComponent,
         Menu,
         MenuButton,
         MenuItems,

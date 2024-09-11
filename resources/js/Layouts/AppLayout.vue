@@ -29,19 +29,36 @@
                         <template v-for="item in navigation">
                             <Link v-if="item.desiredClickHandler"
                                   href="#"
+                                  @mouseover="showToolTipForItem(item)"
+                                  @mouseleave="hideToolTipForItem(item)"
                                   @click="item.desiredClickHandler()"
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <Component v-if="fullSidenav" :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                <ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
+                                <div :style="[{ display: item.showToolTipForItem ? 'block' : 'none' }]" class="absolute left-14">
+                                    <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
+                                        {{ item.name }}
+                                    </div>
+                                </div>
                             </Link>
-                            <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <Component v-if="fullSidenav" :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                <ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>
+                            <a v-else
+                               @mouseover="showToolTipForItem(item)"
+                               @mouseleave="hideToolTipForItem(item)"
+                               :key="item.name"
+                               :href="item.href"
+                               :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']"
+                            >
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <!--<ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>-->
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
+                                </div>
+                                <div :style="[{ display: item.showToolTipForItem ? 'block' : 'none' }]" class="absolute left-14">
+                                    <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
+                                        {{ item.name }}
+                                    </div>
                                 </div>
                             </a>
                         </template>
@@ -62,11 +79,20 @@
                             'edit budget templates',
                         ])
                         ">
-                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-3000 ease-in-out hover:font-bold text-xs']">
+                            <MenuButton
+                                @mouseover="!fullSidenav ? hoverManagementMenu = true : null"
+                                @mouseleave="hoverManagementMenu = false"
+                                ref="menuButton"
+                                @click="setHeightOfMenuItems"
+                                :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-3000 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
-                                    <Component v-if="fullSidenav" :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                    <ToolTipNavigationComponent icon="IconAdjustmentsAlt" direction="right" v-else :tooltip-text="$t('System')" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :classes="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
+                                    <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
+                                        {{ $t('System') }}
+                                    </div>
+                                </div>
+                                <div :style="[{ display: hoverManagementMenu ? 'block' : 'none' }]" class="absolute left-14">
+                                    <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
                                         {{ $t('System') }}
                                     </div>
                                 </div>
@@ -90,11 +116,16 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                        <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
+                        <a @mouseover="!fullSidenav ? hoverTrashMenu = true : null"
+                           @mouseleave="hoverTrashMenu = false" :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                             <div class="flex items-center">
-                                <component v-if="fullSidenav" :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                                <ToolTipNavigationComponent icon="IconTrash" direction="right" v-else :tooltip-text="$t('Recycle bin')" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :classes="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
+                                <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
+                                    {{  $t('Recycle bin') }}
+                                </div>
+                            </div>
+                            <div :style="[{ display: hoverTrashMenu ? 'block' : 'none' }]" class="absolute left-14">
+                                <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
                                     {{  $t('Recycle bin') }}
                                 </div>
                             </div>
@@ -103,26 +134,38 @@
                 </div>
 
                 <div class="flex flex-col justify-end w-full">
-                    <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs relative']">
-                        <Component v-if="fullSidenav" :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                        <ToolTipNavigationComponent icon="IconBell" v-else :tooltip-text="$t('Notifications')" :stroke-width="route().current('notifications.*') ? 2 : 1" :classes="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
-
-                        <div v-if="this.$page.props.unread_notifications > 0"
-                             style="font-size: 7px;"
-                             :class="fullSidenav ? 'right-8' : ''"
-                             class="w-4 h-4 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
-                            {{ this.$page.props.unread_notifications }}
+                    <a  @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
+                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
+                        <div class="relative  flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
+                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                            <div v-if="this.$page.props.unread_notifications > 0"
+                                 style="font-size: 7px;"
+                                 :class="fullSidenav ? 'right-8' : ''"
+                                 class="w-4 h-4 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
+                                {{ this.$page.props.unread_notifications }}
+                            </div>
+                            <div class="ml-4 w-32" v-if="fullSidenav">
+                                {{ $t('Notifications') }}
+                            </div>
                         </div>
-                        <div class="ml-4 w-32" v-if="fullSidenav">
-                            {{ $t('Notifications') }}
+                        <div :style="[{ display: hoverNotificationsMenu ? 'block' : 'none' }]" class="absolute left-14">
+                            <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
+                                {{ $t('Notifications') }}
+                            </div>
                         </div>
                     </a>
                     <Menu as="div" class="flex flex-col items-center">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
+                        <MenuButton @mouseover="!fullSidenav ? hoverUserMenu = true : null"
+                                    @mouseleave="hoverUserMenu = false" ref="menuButton" @click="setHeightOfMenuItems" class="text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs hover:bg-artwork-navigation-color/10">
                             <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
                             <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                 Hallo
                                 {{ $page.props.user.first_name }}
+                            </div>
+                            <div :style="[{ display: hoverUserMenu ? 'block' : 'none' }]" class="absolute left-14">
+                                <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
+                                    {{ $t('Edit Profile') }}
+                                </div>
                             </div>
                         </MenuButton>
                         <transition enter-active-class="transition-enter-active"
@@ -180,7 +223,7 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {nextTick, ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
@@ -202,8 +245,6 @@ import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 import Linkifyit from 'linkify-it';
-import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
-import ToolTipNavigationComponent from "@/Components/ToolTips/ToolTipNavigationComponent.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -225,8 +266,6 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
-        ToolTipNavigationComponent,
-        ToolTipComponent,
         DateComponent,
         TextareaComponent,
         NumberComponent,
@@ -362,6 +401,14 @@ export default {
 
             replaceTextWithLinks(bodyElement);
         },
+        showToolTipForItem(item) {
+            if (!this.fullSidenav){
+                item.showToolTipForItem = true;
+            }
+        },
+        hideToolTipForItem(item) {
+            item.showToolTipForItem = false;
+        },
     },
     computed: {
         managementNavigation() {
@@ -448,77 +495,6 @@ export default {
                 },
             ]
         },
-        navigation() {
-            return [
-                {
-                    name: 'Dashboard',
-                    href: route('dashboard'),
-                    route: ['/dashboard'],
-                    has_permission: true,
-                    icon: IconLayoutDashboard
-                },
-                {
-                    name: this.$t('Projects'),
-                    href: route('projects'),
-                    route: ['/projects'],
-                    has_permission: this.moduleIsVisible('projects'),
-                    icon: IconGeometry
-                },
-                {
-                    name: this.$t('Calendar'),
-                    href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
-                    route: ['/calendar/view'],
-                    desiredClickHandler: this.useProjectTimePeriodAndRedirect,
-                    has_permission: this.moduleIsVisible('room_assignment'),
-                    icon: IconCalendarMonth
-                },
-                {
-                    name: this.$t('Shift plan'),
-                    href: route('shifts.plan'),
-                    route: ['/shifts/view'],
-                    has_permission: this.moduleIsVisible('shift_plan') &&
-                        this.$can('can view shift plan'),
-                    icon: IconCalendarUser
-                },
-                {
-                    name: this.$t('Inventory'),
-                    href: route('inventory-management.inventory'),
-                    route: ['/inventory-management', '/inventory-management/scheduling'],
-                    has_permission: this.moduleIsVisible('inventory'),
-                    icon: IconBuildingWarehouse
-                },
-                {
-                    name: this.$t('To-dos'),
-                    href: route('tasks.own'),
-                    route: ['/tasks/own'],
-                    has_permission: this.moduleIsVisible('tasks'),
-                    icon: IconListCheck
-                },
-                {
-                    name: this.$t('Sources of funding'),
-                    href: route('money_sources.index'),
-                    route: ['/money_sources'],
-                    has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
-                        ['view edit add money_sources', 'can edit and delete money sources']
-                    ),
-                    icon: IconCurrencyEuro
-                },
-                {
-                    name: this.$t('Users'),
-                    href: route('users'),
-                    route: ['/users'],
-                    has_permission: this.moduleIsVisible('users'),
-                    icon: IconUsers
-                },
-                {
-                    name: this.$t('Contracts'),
-                    href: route('contracts.index'),
-                    route: ['/contracts/view'],
-                    has_permission: this.moduleIsVisible('contracts'),
-                    icon: IconFileText
-                }
-            ]
-        },
         computedWindowInnerHeight() {
             return this.windowInnerHeight;
         }
@@ -556,11 +532,90 @@ export default {
             testModel3: '',
             testModel4: '',
             windowInnerHeight: window.innerHeight,
+            navigation: [{
+                name: 'Dashboard',
+                href: route('dashboard'),
+                route: ['/dashboard'],
+                has_permission: true,
+                icon: IconLayoutDashboard,
+                showToolTipForItem: false
+            },
+                {
+                    name: this.$t('Projects'),
+                    href: route('projects'),
+                    route: ['/projects'],
+                    has_permission: this.moduleIsVisible('projects'),
+                    icon: IconGeometry,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Calendar'),
+                    href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                    route: ['/calendar/view'],
+                    desiredClickHandler: this.useProjectTimePeriodAndRedirect,
+                    has_permission: this.moduleIsVisible('room_assignment'),
+                    icon: IconCalendarMonth,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Shift plan'),
+                    href: route('shifts.plan'),
+                    route: ['/shifts/view'],
+                    has_permission: this.moduleIsVisible('shift_plan') &&
+                        this.$can('can view shift plan'),
+                    icon: IconCalendarUser,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Inventory'),
+                    href: route('inventory-management.inventory'),
+                    route: ['/inventory-management', '/inventory-management/scheduling'],
+                    has_permission: this.moduleIsVisible('inventory'),
+                    icon: IconBuildingWarehouse,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('To-dos'),
+                    href: route('tasks.own'),
+                    route: ['/tasks/own'],
+                    has_permission: this.moduleIsVisible('tasks'),
+                    icon: IconListCheck,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Sources of funding'),
+                    href: route('money_sources.index'),
+                    route: ['/money_sources'],
+                    has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
+                        ['view edit add money_sources', 'can edit and delete money sources']
+                    ),
+                    icon: IconCurrencyEuro,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Users'),
+                    href: route('users'),
+                    route: ['/users'],
+                    has_permission: this.moduleIsVisible('users'),
+                    icon: IconUsers,
+                    showToolTipForItem: false
+                },
+                {
+                    name: this.$t('Contracts'),
+                    href: route('contracts.index'),
+                    route: ['/contracts/view'],
+                    has_permission: this.moduleIsVisible('contracts'),
+                    icon: IconFileText,
+                    showToolTipForItem: false
+                }],
+            hoverManagementMenu: false,
+            hoverUserMenu: false,
+            hoverTrashMenu: false,
+            hoverNotificationsMenu: false,
         }
     },
     setup() {
         const sidebarOpen = ref(false)
-
 
         return {
             userNavigation,
@@ -577,3 +632,7 @@ export default {
 }
 
 </script>
+
+<style>
+
+</style>

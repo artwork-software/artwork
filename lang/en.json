@@ -1984,5 +1984,18 @@
     "End date must be after start date or the same": "End date must be after start date or the same",
     "Please confirm your password here.": "Please confirm your password here.",
     "Show projects without events": "Show projects without events",
-    "Project created successfully": "Project created successfully"
+    "Project created successfully": "Project created successfully",
+    "Zoom in": "Zoom in",
+    "Zoom out": "Zoom out",
+    "Full screen": "Full screen",
+    "Export calendar": "Export calendar",
+    "To-dos": "To-dos",
+    "Select time": "Select time",
+    "Project search": "Project search",
+    "Jump around": "Jump around",
+    "Calendar week": "Calendar week",
+    "Month": "Month",
+    "History": "History",
+    "Sorting": "Sorting",
+    "Export project list": "Export project list"
 }

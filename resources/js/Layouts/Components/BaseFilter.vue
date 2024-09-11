@@ -9,7 +9,12 @@
                 />
             </MenuButton>
             <MenuButton v-else>
-                <IconFilter class="h-7 w-7 text-artwork-buttons-context" />
+                <ToolTipComponent
+                    direction="bottom"
+                    :tooltip-text="$t('Filter')"
+                    icon="IconFilter"
+                    icon-size="h-7 w-7"
+                />
             </MenuButton>
         </div>
         <transition
@@ -42,11 +47,13 @@ import {
 } from '@heroicons/vue/outline';
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default {
     name: "BaseFilter",
     mixins: [Permissions, IconLib],
     components: {
+        ToolTipComponent,
         Menu,
         MenuItems,
         MenuButton,

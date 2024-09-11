@@ -4,7 +4,7 @@
         <title>{{ title }} - {{ $page.props.page_title }}</title>
     </Head>
     <!-- Static sidebar for desktop -->
-    <div class="my-auto w-full">
+    <div class="my-auto w-full relative">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'" id="sidebar"
              class="fixed sidebar z-50 top-0 bottom-0 p-2 w-full bg-artwork-navigation-background hidden sm:block">
             <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between overflow-auto">
@@ -31,13 +31,15 @@
                                   href="#"
                                   @click="item.desiredClickHandler()"
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <Component v-if="fullSidenav" :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
                             </Link>
                             <a v-else :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
-                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <Component v-if="fullSidenav" :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
@@ -62,7 +64,8 @@
                         ">
                             <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-3000 ease-in-out hover:font-bold text-xs']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
-                                    <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <Component v-if="fullSidenav" :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <ToolTipNavigationComponent icon="IconAdjustmentsAlt" direction="right" v-else :tooltip-text="$t('System')" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :classes="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                         {{ $t('System') }}
                                     </div>
@@ -89,7 +92,8 @@
                         </Menu>
                         <a :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                             <div class="flex items-center">
-                                <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <component v-if="fullSidenav" :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <ToolTipNavigationComponent icon="IconTrash" direction="right" v-else :tooltip-text="$t('Recycle bin')" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :classes="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{  $t('Recycle bin') }}
                                 </div>
@@ -100,7 +104,9 @@
 
                 <div class="flex flex-col justify-end w-full">
                     <a :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs relative']">
-                        <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                        <Component v-if="fullSidenav" :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                        <ToolTipNavigationComponent icon="IconBell" v-else :tooltip-text="$t('Notifications')" :stroke-width="route().current('notifications.*') ? 2 : 1" :classes="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" />
+
                         <div v-if="this.$page.props.unread_notifications > 0"
                              style="font-size: 7px;"
                              :class="fullSidenav ? 'right-8' : ''"
@@ -196,6 +202,8 @@ import NumberComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import DateComponent from "@/Components/Inputs/DateInputComponent.vue";
 import Linkifyit from 'linkify-it';
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ToolTipNavigationComponent from "@/Components/ToolTips/ToolTipNavigationComponent.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -217,6 +225,8 @@ const managementRoutes = [
 export default {
     mixins: [Permissions, IconLib],
     components: {
+        ToolTipNavigationComponent,
+        ToolTipComponent,
         DateComponent,
         TextareaComponent,
         NumberComponent,
@@ -455,7 +465,7 @@ export default {
                     icon: IconGeometry
                 },
                 {
-                    name: this.$t('Room assignment'),
+                    name: this.$t('Calendar'),
                     href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
                     route: ['/calendar/view'],
                     desiredClickHandler: this.useProjectTimePeriodAndRedirect,
@@ -478,7 +488,7 @@ export default {
                     icon: IconBuildingWarehouse
                 },
                 {
-                    name: this.$t('Tasks'),
+                    name: this.$t('To-dos'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
                     has_permission: this.moduleIsVisible('tasks'),

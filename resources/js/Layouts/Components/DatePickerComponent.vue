@@ -1,7 +1,7 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
-            <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <ToolTipComponent direction="right" :tooltip-text="$t('Select time')" icon="IconCalendar" icon-size="h-5 w-5 mr-3" class="cursor-pointer" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <div class="relative rounded-md">
                 <input v-model="dateValue[0]"
                        @change="this.updateTimes"
@@ -49,6 +49,7 @@ import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -58,7 +59,7 @@ const formatter = ref({
 export default {
     mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
-    components: {VueTailwindDatepicker},
+    components: {ToolTipComponent, VueTailwindDatepicker},
     props: ['dateValueArray', 'project', 'is_shift_plan'],
     data() {
         return {

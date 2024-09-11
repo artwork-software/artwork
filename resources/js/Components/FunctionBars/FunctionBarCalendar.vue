@@ -52,12 +52,12 @@
                         @update:model-value="handleUseTimePeriodChange"
                         :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                     <span class="sr-only">Use project time period toggle</span>
-                    <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                    <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                     </span>
                 </Switch>
@@ -71,25 +71,48 @@
                         <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance"
                                 :class="[atAGlance ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span class="sr-only">Use setting</span>
-                            <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                            <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
-                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
                             </span>
                         </Switch>
                     </div>
                 </div>
                 <div class="flex items-center gap-x-2">
-                    <IconZoomIn @click="incrementZoomFactor" :disabled="zoom_factor <= 0.2" v-if="!atAGlance"
-                                class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
-                    <IconZoomOut @click="decrementZoomFactor" :disabled="zoom_factor >= 1.4"
-                                 v-if="!atAGlance"
-                                 class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
-                    <IconArrowsDiagonal class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                        @click="$emit('openFullscreenMode')" v-if="!atAGlance && !isFullscreen"/>
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Zoom in')"
+                        icon="IconZoomIn"
+                        icon-size="h-7 w-7"
+                        :disabled="zoom_factor <= 0.2"
+                        @click="incrementZoomFactor"
+                        v-if="!atAGlance"
+                    />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Zoom out')"
+                        icon="IconZoomOut"
+                        icon-size="h-7 w-7"
+                        :disabled="zoom_factor >= 1.4"
+                        @click="decrementZoomFactor"
+                        v-if="!atAGlance"
+                    />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Full screen')"
+                        icon="IconArrowsDiagonal"
+                        icon-size="h-7 w-7"
+                        @click="$emit('openFullscreenMode')"
+                        v-if="!atAGlance && !isFullscreen"
+                    />
+
                     <IndividualCalendarFilterComponent
                         class=""
                         :filter-options="filterOptions"
@@ -104,7 +127,12 @@
                             <span class="items-center flex">
                                 <button type="button"
                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
-                                    <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
+                                    <ToolTipComponent
+                                        direction="bottom"
+                                        tooltip-text="Anzeige"
+                                        icon="IconSettings"
+                                        icon-size="h-7 w-7"
+                                    />
                                 </button>
                             </span>
                             </MenuButton>
@@ -176,21 +204,30 @@
                     <div v-if="!project">
                         <div @click="showCalendarAboSettingModal = true"
                              class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                            <IconCalendarStar
-                                class="h-7 w-7 text-artwork-buttons-context"/>
+                            <ToolTipComponent
+                                direction="bottom"
+                                :tooltip-text="$t('Subscribe to calendar')"
+                                icon="IconCalendarStar"
+                                icon-size="h-7 w-7"
+                            />
                         </div>
                     </div>
 
                     <div @click="showPDFConfigModal = true">
-                        <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
+                        <ToolTipComponent
+                            direction="left"
+                            :tooltip-text="$t('Export calendar')"
+                            icon="IconFileExport"
+                            icon-size="h-7 w-7"
+                        />
                     </div>
 
                     <PlusButton @click="$emit('wantsToAddNewEvent');"/>
-                    <AddButtonSmall
+                    <!--<AddButtonSmall
                         @click="createEventComponentIsVisible = true"
                         :text="$t('New occupancy')"
                         class="hidden"
-                    />
+                    />-->
                 </div>
 
             </div>
@@ -241,6 +278,7 @@ import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCa
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');

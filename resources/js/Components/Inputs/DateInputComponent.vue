@@ -9,7 +9,9 @@
                class="input peer"
                :class="[isSmall ? '' : 'h-12', classes]"
                :disabled="disabled"
-               placeholder="placeholder"/>
+               placeholder="placeholder"
+               min="2020-01-01"
+        />
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark"/>
     </PlaceholderInputLabelContainer>
 </template>

@@ -1984,5 +1984,6 @@
     "End date must be after start date or the same": "End date must be after start date or the same",
     "Please confirm your password here.": "Please confirm your password here.",
     "Show projects without events": "Show projects without events",
-    "Project created successfully": "Project created successfully"
+    "Project created successfully": "Project created successfully",
+    "At least one project tab must be available": "At least one project tab must be available"
 }

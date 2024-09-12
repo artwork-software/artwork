@@ -425,7 +425,18 @@ readonly class RoomService
             ->where(
                 function (Builder $builder) use ($calendarPeriod, $date): void {
                     $builder->where(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $calendarPeriod,
+                            function (Builder $builder) use ($calendarPeriod): void {
+                                $builder->whereBetween(
+                                    'start_time',
+                                    [
+                                        $calendarPeriod->start,
+                                        $calendarPeriod->end
+                                    ]
+                                );
+                            }
+                        );
                         $builder->when(
                             $date,
                             function (Builder $builder) use ($date): void {
@@ -435,7 +446,18 @@ readonly class RoomService
                             }
                         );
                     })->orWhere(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $calendarPeriod,
+                            function (Builder $builder) use ($calendarPeriod): void {
+                                $builder->whereBetween(
+                                    'end_time',
+                                    [
+                                        $calendarPeriod->start,
+                                        $calendarPeriod->end
+                                    ]
+                                );
+                            }
+                        );
                         $builder->when(
                             $date,
                             function (Builder $builder) use ($date): void {
@@ -446,15 +468,22 @@ readonly class RoomService
                     });
                 }
             )
-            ->where(function ($builder) use ($calendarPeriod): void {
-                $builder->where(function ($builder) use ($calendarPeriod): void {
-                    $builder->where('start_time', '<', $calendarPeriod->start)
-                        ->where('end_time', '>', $calendarPeriod->end);
-                })->orWhere(function ($builder) use ($calendarPeriod): void {
-                    $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-                });
-            })
+            ->when(
+                $calendarPeriod,
+                function (Builder $builder) use ($calendarPeriod): void {
+                    $builder->where(
+                        function ($builder) use ($calendarPeriod): void {
+                            $builder->where(function ($builder) use ($calendarPeriod): void {
+                                $builder->where('start_time', '<', $calendarPeriod->start)
+                                    ->where('end_time', '>', $calendarPeriod->end);
+                            })->orWhere(function ($builder) use ($calendarPeriod): void {
+                                $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                            });
+                        }
+                    );
+                }
+            )
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -562,8 +591,6 @@ readonly class RoomService
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
     ): array {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
-
         $collectedEvents = [];
         foreach ($desiredDays as $desiredDay) {
             foreach ($desiredRooms as $roomId) {
@@ -572,7 +599,7 @@ readonly class RoomService
                         $this->roomRepository->findOrFail($roomId),
                         $calendarFilter,
                         $project,
-                        CarbonPeriod::create($startDate, $endDate),
+                        null,
                         Carbon::parse($desiredDay)
                     )->get()
                 )->resolve();

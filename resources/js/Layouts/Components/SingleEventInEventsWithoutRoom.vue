@@ -42,7 +42,7 @@
                     </div>
                     <p class="ml-2 headline2">{{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
                 </div>
-                <Listbox as="div" class="flex h-12 mr-2" v-model="event.eventTypeId" v-if="event.canEdit" :onchange="checkCollisions(event)" id="eventType">
+                <Listbox as="div" class="flex h-12 mr-2" v-model="event.eventTypeId" v-if="event.canEdit" :onchange="checkCollisions()" id="eventType">
                     <ListboxButton class="menu-button mt-5">
                         <div class="flex items-center justify-between w-full">
                             <div class="flex items-center gap-x-2">
@@ -53,13 +53,11 @@
                                     <span>{{this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}</span>
                                 </span>
                             </div>
-                            <span
-                                class="pointer-events-none">
-                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </span>
+                            <span class="pointer-events-none">
+                                 <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </span>
                         </div>
                     </ListboxButton>
-
                     <transition leave-active-class="transition ease-in duration-100"
                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions
@@ -76,14 +74,14 @@
                                         </div>
                                         <span
                                             :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ eventType.name }}
-                                                    </span>
+                                            {{ eventType.name }}
+                                        </span>
                                     </div>
                                     <span
                                         :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
+                                          <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
+                                                     aria-hidden="true"/>
+                                    </span>
                                 </li>
                             </ListboxOption>
                         </ListboxOptions>
@@ -91,8 +89,7 @@
                 </Listbox>
                 <p class="text-xs text-red-800">{{ event.error?.eventType?.join('. ') }}</p>
             </div>
-
-            <div class="">
+            <div>
                 <TextInputComponent
                     v-if="this.eventTypes.find(type => type.id === event.eventTypeId)?.individual_name"
                     v-model="event.eventName"
@@ -106,7 +103,6 @@
                                     :label="$t('Event name')"
                                     :disabled="!event.canEdit"
                 />
-
                 <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
             </div>
             <!--    Properties    -->
@@ -119,7 +115,6 @@
                     <TagComponent :displayed-text="$t('It gets loud')" hideX="true" property=""></TagComponent>
                 </div>
             </div>
-
             <!--    Time    -->
             <div class="col-span-full">
                 <SwitchGroup as="div" class="flex items-center">
@@ -227,14 +222,18 @@
             </div>
             <div class="bg-lightBackgroundGray pt-1 pb-4 px-3 col-span-full -mx-2">
                 <div class="my-3">
-                    <p v-if="event.error?.projectId" class="errorText pb-4">{{ $t(event.error.projectId[0]) }}</p>
+                    <p v-if="event.error?.projectId" class="errorText pb-4">
+                        {{ $t(event.error.projectId[0]) }}
+                    </p>
                     <input type="checkbox"
-                           v-model="event.showProjectInfo"
+                           v-model="showProjectInfo"
                            class="input-checklist">
-                    <span :class="[event.showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{$t('Assign event to a project')}}</span>
+                    <span :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">
+                        {{$t('Assign event to a project')}}
+                    </span>
                 </div>
                 <!--    Project    -->
-                <div v-if="event.showProjectInfo">
+                <div v-if="showProjectInfo">
                     <div class="xsLight flex" v-if="!event.creatingProject">
                         {{$t('Currently assigned to:')}}
                         <a v-if="event.projectId"
@@ -258,10 +257,10 @@
 
                     <div class="my-2" v-if="event.canEdit">
                         <div class="flex pb-2">
-                                            <span class="mr-4 text-sm"
-                                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
-                                                {{$t('Existing project')}}
-                                            </span>
+                            <span class="mr-4 text-sm"
+                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
+                                {{$t('Existing project')}}
+                            </span>
                             <label for="project-toggle"
                                    class="inline-flex relative items-center cursor-pointer">
                                 <input type="checkbox"
@@ -297,7 +296,7 @@
 
                         <div
                             v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
-                            class="absolute bg-primary truncate sm:text-sm w-10/12">
+                            class="absolute bg-primary truncate sm:text-sm w-10/12 z-10">
                             <div v-for="(project, index) in projectSearchResults"
                                  :key="index"
                                  @click="onLinkingProject(project, event)"
@@ -510,6 +509,16 @@ name: "SingleEventInEventsWithoutRoom",
         ConfirmationComponent,
         TagComponent
     },
+    props: [
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'removeNotificationOnAction',
+        'first_project_calendar_tab_id',
+        'event',
+        'computedEventsWithoutRoom',
+        'showHints'
+    ],
     data() {
         return {
             startDate: null,
@@ -533,7 +542,7 @@ name: "SingleEventInEventsWithoutRoom",
             deleteComponentVisible: false,
             eventToDelete: null,
             allDayEvent: false,
-            showProjectInfo: false,
+            showProjectInfo: this.event.project_id !== null,
             firstCall: true,
             isOption: false,
             frequencies: [
@@ -556,16 +565,6 @@ name: "SingleEventInEventsWithoutRoom",
             ]
         }
     },
-    props: [
-        'eventTypes',
-        'rooms',
-        'isAdmin',
-        'removeNotificationOnAction',
-        'first_project_calendar_tab_id',
-        'event',
-        'computedEventsWithoutRoom',
-        'showHints'
-    ],
     emits: ['desiresReload'],
     watch: {
         projectName: {
@@ -790,7 +789,7 @@ name: "SingleEventInEventsWithoutRoom",
                 audience: event.audience,
                 isLoud: event.isLoud,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: event.showProjectInfo ? event.projectId : null,
+                projectId: this.showProjectInfo ? event.projectId : null,
                 projectName: event.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,

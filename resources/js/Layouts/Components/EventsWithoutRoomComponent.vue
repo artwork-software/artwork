@@ -166,7 +166,6 @@ export default {
                 event.creatingProject = false;
                 //setting show project info for every event on first rendering
                 if (this.firstCall) {
-                    event.showProjectInfo = (event.projectId !== null);
                     event.selectedFrequencyName = this.getFrequencyName(event.series?.frequency_id);
                 }
             })

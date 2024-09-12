@@ -21,6 +21,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\DTOs\ShowDto;
 use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
@@ -867,8 +868,11 @@ readonly class RoomService
             ->setCalendarType($calendarData['calendarType'])
             ->setSelectedDate($calendarData['selectedDate'])
             ->setUserFilters($calendarData['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id)
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
+            ->setFirstProjectCalendarTabId(
+                $projectTabService
+                    ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
             ->setAvailableCategories($roomCategoryService->getAll())
             ->setAvailableAttributes($roomAttributeService->getAll())
             ->setIsRoomAdmin($this->isUserRoomAdmin($room, $userService->getAuthUser()))

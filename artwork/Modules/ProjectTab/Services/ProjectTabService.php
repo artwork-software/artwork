@@ -35,29 +35,19 @@ class ProjectTabService implements ServiceWithArrayCache
     ) {
     }
 
-    public function findFirstProjectTab(): ProjectTab|null
+    public function findFirstProjectTab(): ProjectTab
     {
         return $this->projectTabRepository->findFirstProjectTab();
+    }
+
+    public function getFirstProjectTabId(): int
+    {
+        return $this->findFirstProjectTab()->getAttribute('id');
     }
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null
     {
         return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::SHIFT_TAB);
-    }
-
-    public function findFirstProjectTabWithTasksComponent(): ProjectTab|null
-    {
-        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::CHECKLIST);
-    }
-
-    public function findFirstProjectTabWithBudgetComponent(): ProjectTab|null
-    {
-        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::BUDGET);
-    }
-
-    public function findFirstProjectTabWithCalendarComponent(): ProjectTab|null
-    {
-        return $this->findFirstProjectTabWithType(ProjectTabComponentEnum::BULK_EDIT);
     }
 
     private function findFirstProjectTabWithType(ProjectTabComponentEnum $type): ProjectTab|null
@@ -72,6 +62,12 @@ class ProjectTabService implements ServiceWithArrayCache
         }
 
         return $projectTab;
+    }
+
+    public function getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum $type): int
+    {
+        return $this->findFirstProjectTabWithType($type)?->getAttribute('id') ??
+            $this->getFirstProjectTabId();
     }
 
     public function getShiftTab(

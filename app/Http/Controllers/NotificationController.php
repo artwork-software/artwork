@@ -14,6 +14,7 @@ use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
@@ -132,9 +133,11 @@ class NotificationController extends Controller
                 },
                 []
             ),
-            'first_project_shift_tab_id' => $projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_shift_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_budget_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
+            'first_project_calendar_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 

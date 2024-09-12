@@ -8,17 +8,16 @@ use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\ChecklistTemplate\Models\ChecklistTemplate;
 use Artwork\Modules\MoneySourceTask\Services\MoneySourceTaskService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Task\Http\Requests\FilterOwnTasksRequest;
 use Artwork\Modules\Task\Http\Requests\StoreTaskRequest;
 use Artwork\Modules\Task\Http\Requests\UpdateTaskOrderInChecklistRequest;
 use Artwork\Modules\Task\Http\Requests\UpdateTaskRequest;
-use Artwork\Modules\Task\Http\Resources\ShowOwnTasksResource;
 use Artwork\Modules\Task\Http\Resources\TaskIndexResource;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\Task\Services\TaskService;
-use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +25,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Laravel\Scout\Scout;
 
 class TaskController extends Controller
 {
@@ -70,7 +68,9 @@ class TaskController extends Controller
         return inertia('Tasks/OwnTasksManagement', [
             'checklists' => $checklists,
             'money_source_task' => $moneySourceTasks,
-            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+            'first_project_tasks_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                ProjectTabComponentEnum::CHECKLIST
+            ),
             'checklist_templates' => ChecklistTemplate::all()
         ]);
     }

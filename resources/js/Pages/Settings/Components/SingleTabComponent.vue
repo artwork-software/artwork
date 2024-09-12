@@ -129,9 +129,8 @@ export default {
                 preserveScroll: true
             });
         },
-
         removeTab() {
-            if ((this.allTabs.length - 1) === this.allTabs.findIndex((tab) => this.tab.id === tab.id)) {
+            if (this.allTabs.length === 1) {
                 this.showComponentTabCannotBeDeletedModal = true;
                 return false;
             }
@@ -141,7 +140,6 @@ export default {
         editTab() {
             this.showAddEditModal = true;
         },
-
         openTab() {
             this.tabClosed = false;
         }

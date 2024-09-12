@@ -131,19 +131,17 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="Object.values(notificationOfToday)?.length > 0">
-                                    <div v-for="notificationGroup in Object.values(notificationOfToday)">
-                                        <div v-for="(notification, index) in notificationGroup">
-                                            <NotificationBlock :history-objects="historyObjects"
-                                                               :notification="notification"
-                                                               :event="event"
-                                                               :event-types="eventTypes"
-                                                               :rooms="rooms"
-                                                               :first_project_shift_tab_id="first_project_shift_tab_id"
-                                                               :first_project_budget_tab_id="first_project_budget_tab_id"
-                                                               :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                            />
-                                        </div>
+                                <div v-if="notificationOfToday.length > 0">
+                                    <div v-for="notification in notificationOfToday">
+                                        <NotificationBlock :history-objects="historyObjects"
+                                                           :notification="notification"
+                                                           :event="event"
+                                                           :event-types="eventTypes"
+                                                           :rooms="rooms"
+                                                           :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                           :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                           :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                        />
                                     </div>
                                 </div>
                                 <div v-else>

@@ -36,6 +36,9 @@
                                         :label="$t('Project name*')"
                                         />
                                 </div>
+                                <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
+                                    {{ $t('Project name is a required field.')}}
+                                </div>
                             </div>
                             <div class="px-6 py-2" v-if="createSettings.attributes">
                                 <Menu as="div" class="inline-block text-left w-full">
@@ -561,7 +564,8 @@ export default {
                 keyVisual: null,
             }),
             uploadKeyVisualFeedback: "",
-            createProjectGroup: false
+            createProjectGroup: false,
+            showInvalidProjectNameHelpText: false
         }
     },
     computed: {
@@ -599,6 +603,11 @@ export default {
             }
         },
         addProject(bool) {
+            if (this.createProjectForm.name === '') {
+                this.showInvalidProjectNameHelpText = true;
+                return;
+            }
+
             this.projectGroupProjects.forEach((projectToAdd) => {
                 this.createProjectForm.projects.push(projectToAdd.id);
             });

@@ -305,7 +305,8 @@ class EventController extends Controller
             ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->withCasts(['created_at' => TimeAgoCast::class])
-            ->where('read_at', null);
+            ->where('read_at', null)
+            ->orderBy('created_at', 'desc');
 
         if (request('openEditEvent')) {
             $event = Event::find(request('eventId'));
@@ -348,7 +349,7 @@ class EventController extends Controller
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
-            'notificationOfToday' => $notification->get()->groupBy('priority'),
+            'notificationOfToday' => $notification->get(),
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),

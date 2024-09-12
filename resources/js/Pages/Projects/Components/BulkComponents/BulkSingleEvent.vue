@@ -117,7 +117,8 @@
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                              stroke-width="2"/>
-                   <Menu as="div"
+                   <Menu v-if="!isInModal"
+                         as="div"
                          class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
                        <MenuButton as="div" class="bg-transparent">
                            <IconDotsVertical class="w-5 h-5 flex-shrink-0 z-50"

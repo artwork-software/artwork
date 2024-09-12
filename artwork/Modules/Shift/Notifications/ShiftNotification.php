@@ -2,11 +2,15 @@
 
 namespace Artwork\Modules\Shift\Notifications;
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Bus\Queueable;
+use Illuminate\Config\Repository;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use stdClass;
 
 class ShiftNotification extends Notification implements ShouldBroadcast
@@ -41,9 +45,9 @@ class ShiftNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if ($typeSettings?->enabled_email) {
-            $channels[] = 'mail';
-        }
+//        if ($typeSettings?->enabled_email) {
+//            $channels[] = 'mail';
+//        }
 
 
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
@@ -53,24 +57,23 @@ class ShiftNotification extends Notification implements ShouldBroadcast
         return $channels;
     }
 
-//    /**
-//     * @throws ContainerExceptionInterface
-//     * @throws NotFoundExceptionInterface
-//     */
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function toMail(): MailMessage|null
     {
-        return null;
-//        $settings = app(GeneralSettings::class);
-//        $config = app(Repository::class);
-//        $systemMail = $config->get('mail.system_mail');
-//        $pageTitle = $settings->page_title !== '' ? $settings->page_title : $config->get('mail.fallback_page_title');
-//        return (new MailMessage())
-//            ->from(
-//                $settings->business_email !== '' ? $settings->business_email : $systemMail,
-//                $pageTitle
-//            )
-//            ->subject($this->notificationData->title)
-//            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
+        $settings = app(GeneralSettings::class);
+        $config = app(Repository::class);
+        $systemMail = $config->get('mail.system_mail');
+        $pageTitle = $settings->page_title !== '' ? $settings->page_title : $config->get('mail.fallback_page_title');
+        return (new MailMessage())
+            ->from(
+                $settings->business_email !== '' ? $settings->business_email : $systemMail,
+                $pageTitle
+            )
+            ->subject($this->notificationData->title)
+            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
     public function toArray(): stdClass

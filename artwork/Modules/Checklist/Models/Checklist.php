@@ -12,11 +12,10 @@ use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Scout\Searchable;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * @property int $id
@@ -55,7 +54,12 @@ class Checklist extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
+    }
+
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
     }

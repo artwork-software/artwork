@@ -173,7 +173,8 @@ class User extends Model implements
         'checklist_style',
         'at_a_glance',
         'notification_enums_last_sent_dates',
-        'bulk_sort_id'
+        'bulk_sort_id',
+        'show_notification_indicator'
     ];
 
     protected $casts = [
@@ -188,7 +189,8 @@ class User extends Model implements
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
         'at_a_glance' => 'boolean',
-        'notification_enums_last_sent_dates' => 'array'
+        'notification_enums_last_sent_dates' => 'array',
+        'show_notification_indicator' => 'boolean'
     ];
 
     protected $hidden = [

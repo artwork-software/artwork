@@ -97,7 +97,6 @@ class EventController extends Controller
 
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
-        UserService $userService,
         ProjectService $projectService,
         EventService $eventService
     ): JsonResponse {
@@ -110,7 +109,6 @@ class EventController extends Controller
                 'roomData' => empty($desiredRoomIds) || empty($desiredDays) ?
                     [] :
                     $this->roomService->collectEventsForRoomsOnSpecificDays(
-                        $userService,
                         $desiredRoomIds,
                         $desiredDays,
                         $request->user()->calendar_filter,

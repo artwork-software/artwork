@@ -758,7 +758,7 @@ readonly class EventService
         })->all();
     }
 
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDtoForAtAGlance(
         CalendarService $calendarService,
         RoomService $roomService,

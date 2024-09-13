@@ -360,4 +360,16 @@ class UserService
     {
         return $this->getAuthUser()->getAttribute('id');
     }
+
+    public function updateCurrentUserShowNotificationIndicator(User $user, bool $shown): User
+    {
+        $this->update(
+            $user,
+            [
+                'show_notification_indicator' => $shown
+            ]
+        );
+
+        return $user;
+    }
 }

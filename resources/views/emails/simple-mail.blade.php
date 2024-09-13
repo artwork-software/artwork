@@ -1,4 +1,4 @@
-@component('mail::message', ['body' => $notification])
+@component('mail::message', ['body' => $notification, 'pageTitle' => $pageTitle])
     <style>
         .notification {
             margin-bottom: 1.5rem;
@@ -39,7 +39,7 @@
         </p>
         <a href="{{ config('app.url') }}"
            style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem; margin-top: 2rem">
-            alle Benachrichtigungen im artwork ansehen
+            alle Benachrichtigungen im {{$pageTitle}} ansehen
         </a>
     </div>
 @endcomponent

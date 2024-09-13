@@ -585,7 +585,6 @@ readonly class RoomService
      * @return array<string, array<int, array<int, Event>>>
      */
     public function collectEventsForRoomsOnSpecificDays(
-        UserService $userService,
         array $desiredRooms,
         array $desiredDays,
         ?CalendarFilter $calendarFilter,

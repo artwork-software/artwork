@@ -136,13 +136,11 @@
                 <div class="flex flex-col justify-end w-full">
                     <a  @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
                         @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
-                        <div class="relative  flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
+                        <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div v-if="this.$page.props.unread_notifications > 0"
+                            <div v-if="this.$page.props.user.show_notification_indicator === true"
                                  style="font-size: 7px;"
-                                 :class="fullSidenav ? 'right-8' : ''"
-                                 class="w-4 h-4 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
-                                {{ this.$page.props.unread_notifications }}
+                                 class="w-3 h-3 block absolute top-0 right-0 rounded-full bg-white text-black text-center">
                             </div>
                             <div class="ml-4 w-32" v-if="fullSidenav">
                                 {{ $t('Notifications') }}

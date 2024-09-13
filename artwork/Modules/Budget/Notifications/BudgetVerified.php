@@ -73,7 +73,13 @@ class BudgetVerified extends Notification
                 $pageTitle
             )
             ->subject($this->notificationData->title)
-            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
+            ->markdown(
+                'emails.simple-mail',
+                [
+                    'notification' => $this->notificationData,
+                    'pageTitle' => $pageTitle,
+                ]
+            );
     }
 
     public function toArray(): stdClass

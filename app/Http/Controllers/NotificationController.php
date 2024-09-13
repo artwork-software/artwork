@@ -19,6 +19,7 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -36,8 +37,14 @@ class NotificationController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         ProjectTabService $projectTabService,
-        GlobalNotificationService $globalNotificationService
+        GlobalNotificationService $globalNotificationService,
+        UserService $userService
     ): Response|ResponseFactory {
+        $userService->updateCurrentUserShowNotificationIndicator(
+            $userService->getAuthUser(),
+            false
+        );
+
         $historyObjects = [];
         $event = null;
         // reload functions
@@ -133,7 +140,8 @@ class NotificationController extends Controller
                 },
                 []
             ),
-            'first_project_shift_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_shift_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
             'first_project_budget_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'first_project_calendar_tab_id' => $projectTabService

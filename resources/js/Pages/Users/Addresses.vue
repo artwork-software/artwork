@@ -59,12 +59,12 @@
                                     {{ $t('Reset') }}
                                 </span>
                             </div>
-                            <MenuItem v-for="userSortEnumName in userSortEnumNames"
+                            <MenuItem v-for="memberSortEnum in memberSortEnums"
                                       v-slot="{ active }">
-                                <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()"
+                                <div @click="this.sortBy = memberSortEnum; this.applyFiltersAndSort()"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    {{ $t(this.parseTranslationFromEnumName(userSortEnumName)) }}
-                                    <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
+                                    {{ $t(this.parseTranslationFromEnumName(memberSortEnum)) }}
+                                    <IconCheck v-if="this.getUserSortBySetting() === memberSortEnum" class="w-5 h-5"/>
                                 </div>
                             </MenuItem>
                         </BaseMenu>
@@ -328,7 +328,7 @@
 <script>
 
 
-import {router} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 
 
 import {defineComponent} from 'vue'
@@ -336,6 +336,11 @@ import {
     Disclosure,
     DisclosureButton,
     DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
@@ -343,22 +348,25 @@ import {
     RadioGroup,
     RadioGroupDescription,
     RadioGroupLabel,
-    RadioGroupOption,
-    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
+    RadioGroupOption
 } from "@headlessui/vue";
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
-import {SearchIcon} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    InformationCircleIcon,
+    PencilAltIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon
+} from '@heroicons/vue/outline'
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, PlusIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
-import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link} from "@inertiajs/vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
@@ -432,7 +440,7 @@ export default defineComponent({
         'serviceProviders',
         'permission_presets',
         'invitedUsers',
-        'userSortEnumNames',
+        'memberSortEnums',
         'userUserManagementSetting'
     ],
     data() {
@@ -541,8 +549,8 @@ export default defineComponent({
         getEditHref(user) {
             return route('user.edit.shiftplan', {user: user.id});
         },
-        parseTranslationFromEnumName(userSortEnumName) {
-            let parts = userSortEnumName.split('_');
+        parseTranslationFromEnumName(memberSortEnumName) {
+            let parts = memberSortEnumName.split('_');
 
             return parts[0].slice(0, 1) + parts[0].substring(1).toLowerCase() +
                 ' ' + parts[1].toLowerCase();
@@ -554,7 +562,8 @@ export default defineComponent({
                     query: this.user_query,
                     sort: this.sortBy,
                     saveFilterAndSort: 1
-                },{
+                },
+                {
                     preserveState: true
                 }
             );

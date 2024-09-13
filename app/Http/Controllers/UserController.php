@@ -57,8 +57,6 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
 
-use function PHPUnit\Framework\isNull;
-
 class UserController extends Controller
 {
     public function __construct()
@@ -218,52 +216,64 @@ class UserController extends Controller
         $sortEnum = $saveFilterAndSort ? $request->enum('sort', MemberSortEnum::class) :
             ($userUserManagementSetting['sort_by'] ?
                 UserSortEnum::from($userUserManagementSetting['sort_by']) : null);
+
+        $freelancers = Freelancer::query()->when(
+            strlen($search = $request->string('query')) > 0,
+            function (Builder $builder) use ($search): void {
+                $builder->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%');
+            }
+        )->when(
+            !is_null($sortEnum),
+            function (Builder $builder) use ($sortEnum): void {
+                switch ($sortEnum) {
+                    case MemberSortEnum::ALPHABETICALLY_ASCENDING:
+                    case MemberSortEnum::ALPHABETICALLY_DESCENDING:
+                        $columns = $sortEnum->mapToColumn(1);
+                        $dir = $sortEnum->mapToDirection();
+                        $builder->orderBy($columns[0], $dir);
+                        $builder->orderBy($columns[1], $dir);
+                        break;
+                    case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
+                        $builder->orderBy($sortEnum->mapToColumn(1), $sortEnum->mapToDirection());
+                        break;
+                }
+            }
+        )->get();
+
+        $serviceProviders = ServiceProvider::query()->without(['contacts'])->when(
+            strlen($search = $request->string('query')) > 0,
+            function (Builder $builder) use ($search): void {
+                $builder->where('provider_name', 'like', '%' . $search . '%');
+            }
+        )->when(
+            !is_null($sortEnum),
+            function (Builder $builder) use ($sortEnum): void {
+                switch ($sortEnum) {
+                    case MemberSortEnum::ALPHABETICALLY_ASCENDING:
+                    case MemberSortEnum::ALPHABETICALLY_DESCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
+                        $builder->orderBy($sortEnum->mapToColumn(2), $sortEnum->mapToDirection());
+                        break;
+                }
+            }
+        )->get();
+
+        if ($saveFilterAndSort) {
+            $userUserManagementSettingService->updateOrCreateIfNecessary(
+                $userService->getAuthUser(),
+                [
+                    'sort_by' => $sortEnum?->name,
+                ]
+            );
+        }
+
         return inertia('Users/Addresses', [
-            'freelancers' => Freelancer::query()->when(
-                strlen($search = $request->string('query')) > 0,
-                function (Builder $builder) use ($search): void {
-                    $builder->where('first_name', 'like', '%' . $search . '%')
-                        ->orWhere('last_name', 'like', '%' . $search . '%');
-                }
-            )->when(
-                !is_null($sortEnum),
-                function (Builder $builder) use ($sortEnum): void {
-                    switch ($sortEnum) {
-                        case MemberSortEnum::ALPHABETICALLY_ASCENDING:
-                        case MemberSortEnum::ALPHABETICALLY_DESCENDING:
-                            $columns = $sortEnum->mapToColumn(1);
-                            $dir = $sortEnum->mapToDirection();
-                            $builder->orderBy($columns[0], $dir);
-                            $builder->orderBy($columns[1], $dir);
-                            break;
-                        case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
-                        case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
-                            $builder->orderBy($sortEnum->mapToColumn(1), $sortEnum->mapToDirection());
-                            break;
-                    }
-                }
-            )->get(),
-            'serviceProviders' => ServiceProvider::query()->without(['contacts'])->when(
-                strlen($search = $request->string('query')) > 0,
-                function (Builder $builder) use ($search): void {
-                    $builder->where('provider_name', 'like', '%' . $search . '%');
-                }
-            )->when(
-                !is_null($sortEnum),
-                function (Builder $builder) use ($sortEnum): void {
-                    switch ($sortEnum) {
-                        case MemberSortEnum::ALPHABETICALLY_ASCENDING:
-                        case MemberSortEnum::ALPHABETICALLY_DESCENDING:
-                            $builder->orderBy($sortEnum->mapToColumn(2), $sortEnum->mapToDirection());
-                            break;
-                        case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
-                        case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
-                            $builder->orderBy($sortEnum->mapToColumn(2), $sortEnum->mapToDirection());
-                            break;
-                    }
-                }
-            )->get(),
-            'userSortEnumNames' => array_map(
+            'freelancers' => $freelancers,
+            'serviceProviders' => $serviceProviders,
+            'memberSortEnums' => array_map(
                 function (MemberSortEnum $enum): string {
                     return $enum->name;
                 },

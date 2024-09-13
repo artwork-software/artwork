@@ -50,7 +50,7 @@
                         </div>
                     </div>
                     <div class="flex items-center">
-                        <BaseMenu v-if="index !== 0">
+                        <BaseMenu>
                             <MenuItem v-slot="{ active }">
                                 <a href="#" @click="openEditEventTypeModal(eventType)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -60,7 +60,7 @@
                                     {{$t('Edit event type')}}
                                 </a>
                             </MenuItem>
-                            <MenuItem v-slot="{ active }">
+                            <MenuItem v-if="index !== 0" v-slot="{ active }">
                                 <a href="#" @click="openDeleteEventTypeModal(eventType)"
                                    :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <TrashIcon

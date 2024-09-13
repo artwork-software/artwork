@@ -191,6 +191,13 @@
                                         <p :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary">{{ $t('Description') }}</p>
                                     </div>
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.event_name"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Event name') }}</p>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{
@@ -253,21 +260,9 @@
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, inject, ref, watch} from "vue";
-import {
-    IconArrowsDiagonal,
-    IconCalendarStar,
-    IconChevronLeft,
-    IconChevronRight,
-    IconFileExport,
-    IconGeometry,
-    IconList,
-    IconSettings,
-    IconZoomIn,
-    IconZoomOut
-} from "@tabler/icons-vue";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
@@ -311,7 +306,8 @@ const userCalendarSettings = useForm({
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
     work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
-    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false
+    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
+    event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
 });
 
 const projectSearch = ref('');

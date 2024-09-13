@@ -33,9 +33,9 @@ use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\UserProjectManagementSetting\Models\UserProjectManagementSetting;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -173,7 +173,8 @@ class User extends Model implements
         'checklist_style',
         'at_a_glance',
         'notification_enums_last_sent_dates',
-        'bulk_sort_id'
+        'bulk_sort_id',
+        'show_notification_indicator'
     ];
 
     protected $casts = [
@@ -188,7 +189,8 @@ class User extends Model implements
         'compact_mode' => 'boolean',
         'show_crafts' => 'array',
         'at_a_glance' => 'boolean',
-        'notification_enums_last_sent_dates' => 'array'
+        'notification_enums_last_sent_dates' => 'array',
+        'show_notification_indicator' => 'boolean'
     ];
 
     protected $hidden = [
@@ -525,7 +527,16 @@ class User extends Model implements
     public function projectFilterAndSortSetting(): HasOne
     {
         return $this->hasOne(
-            UserProjectManagementSetting::class,
+            UserUserManagementSetting::class,
+            'user_id',
+            'id'
+        );
+    }
+
+    public function userFilterAndSortSetting(): HasOne
+    {
+        return $this->hasOne(
+            UserUserManagementSetting::class,
             'user_id',
             'id'
         );

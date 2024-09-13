@@ -55,31 +55,33 @@
             <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: textColorWithDarken}"
                  :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
-                <div v-if="!project" class="flex items-center relative w-full">
-                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
-                        {{ event.eventTypeAbbreviation }}:
-                    </div>
-                    <div :style="{ width: width - (64 * zoom_factor) + 'px'}" class=" truncate">
-                        {{ event.eventName ?? event.projectName }}
-                    </div>
-                    <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-1">
-                        <div v-if="event.projectStateColor"
-                             :class="[event.projectStateColor,zoom_factor <= 0.8 ? 'border-2' : 'border-4']"
-                             class="rounded-full">
-                        </div>
-                    </div>
-                </div>
-                <div v-else>
-                    <div class="flex items-center" v-if="event.title !== event.eventTypeName">
+                <template v-if="usePage().props.user.calendar_settings.event_name">
+                    <div v-if="!project" class="flex items-center relative w-full">
                         <div v-if="event.eventTypeAbbreviation" class="mr-1">
                             {{ event.eventTypeAbbreviation }}:
                         </div>
                         <div :style="{ width: width - (64 * zoom_factor) + 'px'}" class=" truncate">
-                            {{ event.alwaysEventName }}
+                            {{ event.eventName ?? event.projectName }}
                         </div>
                     </div>
-                    <div v-else :style="{ width: width - (55 * zoom_factor) + 'px'}" class=" truncate">
-                        {{ event.eventTypeName }}
+                    <div v-else>
+                        <div class="flex items-center" v-if="event.title !== event.eventTypeName">
+                            <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                                {{ event.eventTypeAbbreviation }}:
+                            </div>
+                            <div :style="{ width: width - (64 * zoom_factor) + 'px'}" class=" truncate">
+                                {{ event.alwaysEventName }}
+                            </div>
+                        </div>
+                        <div v-else :style="{ width: width - (55 * zoom_factor) + 'px'}" class=" truncate">
+                            {{ event.eventTypeName }}
+                        </div>
+                    </div>
+                </template>
+                <div v-if="usePage().props.user.calendar_settings.project_status" class="absolute right-1">
+                    <div v-if="event.projectStateColor"
+                         :class="[event.projectStateColor,zoom_factor <= 0.8 ? 'border-2' : 'border-4']"
+                         class="rounded-full">
                     </div>
                 </div>
                 <!-- Icon -->

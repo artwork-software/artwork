@@ -1,41 +1,45 @@
 <template>
     <UserHeader>
         <div class="">
-            <div class="max-w-screen-xl flex flex-row">
-                <div class="flex flex-1 flex-wrap justify-end">
+            <div class="max-w-screen-xl my-12 flex flex-row">
+                <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
-                        <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                                 class="cursor-pointer inset-y-0 mr-3">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                            <div v-else class="flex items-center w-64 mr-2">
-                                <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Suche nach User*innen"
-                                       class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                            </div>
-                        </div>
-                        <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" class="pr-2">
-                            <div class="flex items-center justify-end py-1">
-                                <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full"
-                                      @click="this.resetSort()">
-                                    {{ $t('Reset') }}
-                                </span>
-                            </div>
-                            <MenuItem v-for="userSortEnumName in userSortEnumNames"
-                                      v-slot="{ active }">
-                                <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()"
-                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    {{ $t(this.parseTranslationFromEnumName(userSortEnumName)) }}
-                                    <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
-                                </div>
-                            </MenuItem>
-                        </BaseMenu>
                         <div class="w-full flex my-auto items-center">
+                            <Listbox as="div" class="flex" v-model="selectedFilter">
+                                <ListboxButton
+                                    class="bg-white w-full relative cursor-pointer focus:outline-none">
+                                    <div class="flex items-center my-auto">
+                                        <h2 class="headline1">
+                                            {{ selectedFilter.name }}</h2>
+                                        <span
+                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
+                                    </div>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-80 z-10 mt-12 bg-artwork-navigation-background shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="filter in displayFilters"
+                                                       :key="filter.name"
+                                                       :value="filter"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                <span
+                                                    :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">{{
+                                                        filter.name
+                                                    }}
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
                             <div class="flex" v-if="this.$can('can manage workers') || this.hasAdminRole()">
-                                <button @click="addingUser = true" type="button"
-                                        class="rounded-full justify-end bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
+                                <button @click="openSelectAddUsersModal = true" type="button"
+                                        class="rounded-full bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
                                     <PlusIcon class="h-4 w-4" aria-hidden="true"/>
                                 </button>
                                 <div v-if="this.$page.props.show_hints" class="flex mt-1">
@@ -47,8 +51,36 @@
                             </div>
                         </div>
                     </div>
+                    <div class="flex items-center">
+                        <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72" class="px-2">
+                            <div class="flex items-center justify-end py-1">
+                                <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full"
+                                      @click="this.resetSort()">
+                                    {{ $t('Reset') }}
+                                </span>
+                            </div>
+                            <MenuItem v-for="memberSortEnum in memberSortEnums"
+                                      v-slot="{ active }">
+                                <div @click="this.sortBy = memberSortEnum; this.applyFiltersAndSort()"
+                                     :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                    {{ $t(this.parseTranslationFromEnumName(memberSortEnum)) }}
+                                    <IconCheck v-if="this.getUserSortBySetting() === memberSortEnum" class="w-5 h-5"/>
+                                </div>
+                            </MenuItem>
+                        </BaseMenu>
+                        <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                             class="cursor-pointer inset-y-0 mr-3">
+                            <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                        </div>
+                        <div v-else class="flex items-center w-64 mr-2">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   placeholder="Suche nach User*innen"
+                                   class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                        </div>
+                    </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_search_results.length < 1" v-for="(user,index) in users"
+                        <li v-if="user_search_results.length < 1" v-for="(user,index) in userObjectsToShow"
                             :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
                                 <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
@@ -68,7 +100,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center">
-                                <div class="flex mr-8 items-center">
+                                <div class="flex mr-8 items-center" v-if="selectedFilter.type === 'users'">
                                     <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
                                         <TeamIconCollection :data-tooltip-target="department.id"
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
@@ -289,12 +321,14 @@
         :invited-users="invitedUsers"
     />
 
+    <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false"
+                   @openUserModal="addingUser = true"/>
 </template>
 
 <script>
 
 
-import {router} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 
 
 import {defineComponent} from 'vue'
@@ -302,6 +336,11 @@ import {
     Disclosure,
     DisclosureButton,
     DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
@@ -309,22 +348,25 @@ import {
     RadioGroup,
     RadioGroupDescription,
     RadioGroupLabel,
-    RadioGroupOption,
-    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
+    RadioGroupOption
 } from "@headlessui/vue";
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
-import {SearchIcon} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    InformationCircleIcon,
+    PencilAltIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon
+} from '@heroicons/vue/outline'
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, PlusIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
-import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link} from "@inertiajs/vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
@@ -398,7 +440,7 @@ export default defineComponent({
         'serviceProviders',
         'permission_presets',
         'invitedUsers',
-        'userSortEnumNames',
+        'memberSortEnums',
         'userUserManagementSetting'
     ],
     data() {
@@ -411,9 +453,35 @@ export default defineComponent({
             showSearchbar: route().params.query?.length > 0,
             user_query: route().params.query?.length > 0 ? route().params.query : '',
             user_search_results: [],
+            displayFilters: [
+                {
+                    'name': this.$t('All freelancers'),
+                    'type': 'freelancer'
+                },
+                {
+                    'name': this.$t('All service providers'),
+                    'type': 'service_provider'
+                },
+                {
+                    'name': this.$t('All available addresses'),
+                    'type': 'all'
+                }
+            ],
+            selectedFilter: {'name': this.$t('All available addresses'), 'type': 'all'},
             openSelectAddUsersModal: false,
             sortBy: this.userUserManagementSetting?.sort_by === null ? undefined : this.userUserManagementSetting?.sort_by,
         }
+    },
+    computed: {
+        userObjectsToShow: function () {
+            if (this.selectedFilter.type === 'freelancer') {
+                return this.freelancers;
+            } else if (this.selectedFilter.type === 'service_provider') {
+                return this.serviceProviders;
+            } else if (this.selectedFilter.type === 'all') {
+                return this.freelancers.concat(this.serviceProviders)
+            }
+        },
     },
     methods: {
         checkLink(user) {
@@ -481,20 +549,21 @@ export default defineComponent({
         getEditHref(user) {
             return route('user.edit.shiftplan', {user: user.id});
         },
-        parseTranslationFromEnumName(userSortEnumName) {
-            let parts = userSortEnumName.split('_');
+        parseTranslationFromEnumName(memberSortEnumName) {
+            let parts = memberSortEnumName.split('_');
 
             return parts[0].slice(0, 1) + parts[0].substring(1).toLowerCase() +
                 ' ' + parts[1].toLowerCase();
         },
         applyFiltersAndSort() {
             router.get(
-                route().current(),
+                route('users.addresses'),
                 {
                     query: this.user_query,
                     sort: this.sortBy,
                     saveFilterAndSort: 1
-                }, {
+                },
+                {
                     preserveState: true
                 }
             );
@@ -509,9 +578,10 @@ export default defineComponent({
             this.sortBy = undefined;
             this.applyFiltersAndSort();
         },
-        reloadUsersDebounced: debounce(function () {
+        reloadUsersDebounced: debounce(function() {
             this.applyFiltersAndSort();
         }, 1000),
+
     },
     watch: {
         user_query: {

@@ -3,6 +3,7 @@
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div class="flex items-center mx-4 gap-x-1 select-none">
+                <IconChevronLeftPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="previousTimeRange"/>
                 <IconChevronLeft stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToPreviousDay"/>
                 <Menu as="div" class="relative inline-block text-left">
                     <div class="flex items-center">
@@ -53,6 +54,8 @@
                     </transition>
                 </Menu>
                 <IconChevronRight stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="scrollToNextDay"/>
+
+                <IconChevronRightPipe stroke-width="1.5" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"  @click="nextTimeRange"/>
             </div>
             <div class="items-center hidden">
                 <div class="flex items-center">
@@ -64,13 +67,12 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
-                <SecondaryButton :text="$t('Lock all shifts')" @click="showConfirmCommitModal = true" />
-            </div>
         </div>
 
         <div class="flex items-center">
             <div class="flex items-center gap-x-3">
+
+                <ToolTipComponent v-if="this.$can('can commit shifts') || this.hasAdminRole()" direction="bottom" :tooltip-text="$t('Lock all shifts')" icon="IconCalendarCheck" icon-size="h-7 w-7" @click="openHistoryModal()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('History')" icon="IconHistory" icon-size="h-7 w-7" @click="openHistoryModal()"/>
                 <ToolTipComponent direction="bottom" :tooltip-text="$t('Full screen')" icon="IconArrowsDiagonal" icon-size="h-7 w-7" v-if="!isFullscreen" @click="enterFullscreenMode"/>
                 <ShiftPlanFilter

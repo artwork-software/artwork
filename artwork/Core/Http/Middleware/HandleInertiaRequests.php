@@ -72,7 +72,6 @@ class HandleInertiaRequests extends Middleware
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
                 'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
                 'calendar_settings' => $calendarSettings,
-                'unread_notifications' => Auth::user()?->notifications()->whereNull('read_at')->count(),
                 'module_settings' => $this->moduleSettingsService->getModuleSettings()
             ]
         );

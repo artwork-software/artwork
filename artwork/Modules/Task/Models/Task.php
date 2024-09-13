@@ -43,13 +43,15 @@ class Task extends Model
         'order',
         'user_id',
         'done_at',
-        'contract_id'
+        'contract_id',
+        'sent_deadline_notification'
     ];
 
     protected $casts = [
         'done' => 'boolean',
         'done_at' => 'datetime',
-        'deadline' => 'datetime'
+        'deadline' => 'datetime',
+        'sent_deadline_notification' => 'boolean'
     ];
 
     public function contract(): BelongsTo

@@ -16,7 +16,7 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
-use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Carbon\Carbon;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
@@ -34,7 +34,7 @@ class UserService
         private readonly NotificationSettingService $notificationSettingService,
         private readonly StatefulGuard $statefulGuard,
         private readonly BroadcastManager $broadcastManager,
-        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
+        private readonly UserUserManagementSettingService $userUserManagementSettingService
     ) {
     }
 
@@ -76,9 +76,9 @@ class UserService
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();
 
-        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+        $this->userUserManagementSettingService->updateOrCreateIfNecessary(
             $user,
-            $this->userProjectManagementSettingService->getDefaults()
+            $this->userUserManagementSettingService->getDefaults()
         );
 
         return $user;

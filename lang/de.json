@@ -435,7 +435,7 @@
     "Please select an end date.": "Bitte wähle ein Enddatum aus.",
     "The comment must not be longer than 20 characters.": "Der Kommentar darf nicht länger als 20 Zeichen sein.",
     "New user": "Neue*r Nutzer*in",
-    "Who would you like to add to artwork? You can add users with artwork access or external employees, as well as service providers (companies) without artwork access.": "Wen möchtest du zum artwork hinzufügen? Du kannst Nutzer*innen mit artwork-Zugang oder externe Mitarbeiter*innen, sowie Dienstleister (Unternehmen) ohne artwork-Zugang hinzufügen.",
+    "Who would you like to add to artwork? You can add external employees, as well as service providers (companies) without artwork access.": "Wen möchtest du zum artwork hinzufügen? Du kannst externe Mitarbeiter*innen, sowie Dienstleister (Unternehmen) ohne artwork-Zugang hinzufügen.",
     "Internal user": "Nutzer*in intern",
     "External employee": "Mitarbeiter*in extern",
     "Service provider (company)": "Dienstleister (Unternehmen)",
@@ -1999,5 +1999,8 @@
     "Sorting": "Sortierung",
     "Export project list": "Projektliste exportieren",
     "At least one project tab must be available": "Mindestens ein Projekttab muss vorhanden sein",
-    "Project name is a required field.": "Der Projektname muss zwingend angegeben werden."
+    "Project name is a required field.": "Der Projektname muss zwingend angegeben werden.",
+    "Addresses": "Adressen",
+    "All available addresses": "Alle verfügbaren Adressen",
+    "Add new address": "Neue Adresse hinzufügen"
 }

@@ -436,7 +436,7 @@
     "Please select an end date." : "Please select an end date.",
     "The comment must not be longer than 20 characters." : "The comment must not be longer than 20 characters.",
     "New user" : "New user",
-    "Who would you like to add to artwork? You can add users with artwork access or external employees, as well as service providers (companies) without artwork access." : "Who would you like to add to artwork? You can add users with artwork access or external employees, as well as service providers (companies) without artwork access.",
+    "Who would you like to add to artwork? You can add external employees, as well as service providers (companies) without artwork access." : "Who would you like to add to artwork? You can add external employees, as well as service providers (companies) without artwork access.",
     "Internal user": "Internal user",
     "External employee": "External employee",
     "Service provider (company)": "Service provider (company)",
@@ -1999,5 +1999,8 @@
     "Sorting": "Sorting",
     "Export project list": "Export project list",
     "At least one project tab must be available": "At least one project tab must be available",
-    "Project name is a required field.": "Project name is a required field."
+    "Project name is a required field.": "Project name is a required field.",
+    "Addresses": "Addresses",
+    "All available addresses": "All available addresses",
+    "Add new address": "Add new address"
 }

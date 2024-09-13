@@ -12,6 +12,7 @@ use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
+use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,8 @@ class AuthUserSeeder extends Seeder
 {
     public function __construct(
         private readonly UserShiftQualificationRepository $userShiftQualificationRepository,
-        private readonly UserProjectManagementSettingService $userProjectManagementSettingService
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
+        private readonly UserUserManagementSettingService $userUserManagementSettingService
     ) {
     }
 
@@ -63,6 +65,10 @@ class AuthUserSeeder extends Seeder
         $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
             $user,
             $this->userProjectManagementSettingService->getDefaults()
+        );
+        $this->userUserManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userUserManagementSettingService->getDefaults()
         );
 
         $workerShiftQualificationId = ShiftQualification::workerQualification()->first()->id;
@@ -117,6 +123,10 @@ class AuthUserSeeder extends Seeder
             $user,
             $this->userProjectManagementSettingService->getDefaults()
         );
+        $this->userUserManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userUserManagementSettingService->getDefaults()
+        );
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([
                 'user_id' => $user->id,
@@ -163,6 +173,10 @@ class AuthUserSeeder extends Seeder
         $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
             $user,
             $this->userProjectManagementSettingService->getDefaults()
+        );
+        $this->userUserManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userUserManagementSettingService->getDefaults()
         );
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([

@@ -25,6 +25,7 @@
                         v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
+                        ref="projectSearchInput"
                         :label="$t('Search project')"
                     />
                     <div v-if="projectSearchResults.length > 0"
@@ -191,6 +192,13 @@
                                         <p :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary">{{ $t('Description') }}</p>
                                     </div>
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.event_name"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Event name') }}</p>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{
@@ -252,7 +260,7 @@
 
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, inject, ref, watch} from "vue";
+import {computed, inject, nextTick, ref, watch} from "vue";
 import {
     IconArrowsDiagonal,
     IconCalendarStar,
@@ -267,7 +275,6 @@ import {
 } from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
@@ -305,13 +312,15 @@ const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
+const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
     work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
-    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false
+    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
+    event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
 });
 
 const projectSearch = ref('');
@@ -492,6 +501,7 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
 }
 
+
 watch(() => projectSearch.value, (searchValue) => {
     if (searchValue.length === 0) {
         projectSearchResults.value = [];
@@ -509,5 +519,15 @@ watch(() => projectSearch.value, (searchValue) => {
             emits.call(this, 'searchingForProject', true);
         }
     );
+});
+
+// watch on usePage().props.user.calendar_settings.use_project_time_period
+watch(() => usePage().props.user.calendar_settings.use_project_time_period, (newValue) => {
+    // if to focus on input field
+    if (newValue) {
+        nextTick(() => {
+            document.getElementById('calendarProjectSearch').focus();
+        });
+    }
 });
 </script>

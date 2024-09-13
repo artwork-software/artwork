@@ -12,7 +12,7 @@
                 @update-multi-edit="toggleMultiEdit"
             />
         </div>
-        <div :class="computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'mt-20' : ''">
+        <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
             <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
@@ -24,13 +24,13 @@
                 </div>
             </div>
 
-            <div class="w-full overflow-y-scroll" >
+            <!--<div class="w-full overflow-y-scroll hidden" >
                 <div class="mb-1 ml-4 max-w-7xl">
                     <div class="flex">
                         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
                     </div>
                 </div>
-            </div>
+            </div>-->
         </div>
         <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
             {{ $t('The selected project has no dates') }}

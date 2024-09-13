@@ -21,7 +21,7 @@
                                     {{ $t('New user') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    {{ $t('Who would you like to add to artwork? You can add users with artwork access or external employees, as well as service providers (companies) without artwork access.')}}
+                                    {{ $t('Who would you like to add to artwork? You can add external employees, as well as service providers (companies) without artwork access.')}}
                                 </p>
 
                                 <div class="mt-10">
@@ -29,7 +29,7 @@
                                         <fieldset class="mt-4">
                                             <div class="space-y-4">
                                                 <div v-for="addMethod in addMethods" :key="addMethod.id" class="flex items-center">
-                                                    <input v-model="selectedMethod" :key="addMethod.id" :value="addMethod" :id="addMethod.id" name="notification-method" type="radio" :checked="addMethod.id === 'intern'" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-indigo-600" />
+                                                    <input v-model="selectedMethod" :key="addMethod.id" :value="addMethod" :id="addMethod.id" name="notification-method" type="radio" :checked="addMethod.id === 'extern'" class="h-4 w-4 border-gray-300 text-artwork-buttons-create focus:ring-indigo-600" />
                                                     <label :for="addMethod.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">{{ addMethod.title }}</label>
                                                 </div>
                                             </div>
@@ -84,11 +84,10 @@ export default defineComponent({
         return {
             open: true,
             addMethods: [
-                { id: 'intern', title: this.$t('Internal user') },
                 { id: 'extern', title: this.$t('External employee') },
                 { id: 'service_provider', title: this.$t('Service provider (company)') },
             ],
-            selectedMethod: { id: 'intern', title: this.$t('Internal user') },
+            selectedMethod: { id: 'extern', title: this.$t('External employee') },
         }
     },
     emits: ['closeModal', 'openUserModal'],
@@ -97,10 +96,7 @@ export default defineComponent({
             this.$emit('closeModal', true)
         },
         addUsers(){
-            if(this.selectedMethod.id === 'intern'){
-                this.closeModal();
-                this.$emit('openUserModal', true)
-            } else if (this.selectedMethod.id === 'extern'){
+            if (this.selectedMethod.id === 'extern'){
                 this.$inertia.post(route('freelancer.add'))
             } else {
                 this.$inertia.post(route('service_provider.add'))

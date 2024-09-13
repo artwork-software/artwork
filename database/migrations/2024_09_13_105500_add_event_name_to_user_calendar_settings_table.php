@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('user_calendar_settings', function (Blueprint $table) {
             $table->boolean('event_name')
-                ->default(false)
+                ->default(true)
                 ->after('time_period_project_id');
         });
     }

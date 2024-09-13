@@ -21,6 +21,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\DTOs\ShowDto;
 use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
@@ -424,7 +425,18 @@ readonly class RoomService
             ->where(
                 function (Builder $builder) use ($calendarPeriod, $date): void {
                     $builder->where(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $calendarPeriod,
+                            function (Builder $builder) use ($calendarPeriod): void {
+                                $builder->whereBetween(
+                                    'start_time',
+                                    [
+                                        $calendarPeriod->start,
+                                        $calendarPeriod->end
+                                    ]
+                                );
+                            }
+                        );
                         $builder->when(
                             $date,
                             function (Builder $builder) use ($date): void {
@@ -434,7 +446,18 @@ readonly class RoomService
                             }
                         );
                     })->orWhere(function (Builder $builder) use ($calendarPeriod, $date): void {
-                        $builder->whereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                        $builder->when(
+                            $calendarPeriod,
+                            function (Builder $builder) use ($calendarPeriod): void {
+                                $builder->whereBetween(
+                                    'end_time',
+                                    [
+                                        $calendarPeriod->start,
+                                        $calendarPeriod->end
+                                    ]
+                                );
+                            }
+                        );
                         $builder->when(
                             $date,
                             function (Builder $builder) use ($date): void {
@@ -445,15 +468,22 @@ readonly class RoomService
                     });
                 }
             )
-            ->where(function ($builder) use ($calendarPeriod): void {
-                $builder->where(function ($builder) use ($calendarPeriod): void {
-                    $builder->where('start_time', '<', $calendarPeriod->start)
-                        ->where('end_time', '>', $calendarPeriod->end);
-                })->orWhere(function ($builder) use ($calendarPeriod): void {
-                    $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-                });
-            })
+            ->when(
+                $calendarPeriod,
+                function (Builder $builder) use ($calendarPeriod): void {
+                    $builder->where(
+                        function ($builder) use ($calendarPeriod): void {
+                            $builder->where(function ($builder) use ($calendarPeriod): void {
+                                $builder->where('start_time', '<', $calendarPeriod->start)
+                                    ->where('end_time', '>', $calendarPeriod->end);
+                            })->orWhere(function ($builder) use ($calendarPeriod): void {
+                                $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                            });
+                        }
+                    );
+                }
+            )
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -561,8 +591,6 @@ readonly class RoomService
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
     ): array {
-        [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
-
         $collectedEvents = [];
         foreach ($desiredDays as $desiredDay) {
             foreach ($desiredRooms as $roomId) {
@@ -571,7 +599,7 @@ readonly class RoomService
                         $this->roomRepository->findOrFail($roomId),
                         $calendarFilter,
                         $project,
-                        CarbonPeriod::create($startDate, $endDate),
+                        null,
                         Carbon::parse($desiredDay)
                     )->get()
                 )->resolve();
@@ -877,8 +905,11 @@ readonly class RoomService
             ->setCalendarType($calendarData['calendarType'])
             ->setSelectedDate($calendarData['selectedDate'])
             ->setUserFilters($calendarData['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->id)
-            ->setFirstProjectCalendarTabId($projectTabService->findFirstProjectTabWithCalendarComponent()?->id)
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
+            ->setFirstProjectCalendarTabId(
+                $projectTabService
+                    ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
             ->setAvailableCategories($roomCategoryService->getAll())
             ->setAvailableAttributes($roomAttributeService->getAll())
             ->setIsRoomAdmin($this->isUserRoomAdmin($room, $userService->getAuthUser()))

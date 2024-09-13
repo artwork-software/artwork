@@ -4,6 +4,7 @@ namespace Artwork\Modules\Checklist\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Carbon\Carbon;
@@ -184,7 +185,9 @@ class ChecklistRepository extends BaseRepository
                 'id' => $checklist?->project?->id,
                 'name' => $checklist?->project?->name,
                 'users' => $checklist?->project?->users,
-                'checklist_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+                'checklist_tab_id' => $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::CHECKLIST
+                ),
                 'firstEventInProject' => $checklist?->project?->events()->orderBy('start_time', 'ASC')->first(),
                 'lastEventInProject' => $checklist?->project?->events()->orderBy('end_time', 'DESC')->first(),
             ],

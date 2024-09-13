@@ -372,7 +372,7 @@
                                         v-model="projectName"
                                     />
                                     <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                                         class="absolute bg-primary truncate sm:text-sm w-full">
+                                         class="absolute bg-primary truncate sm:text-sm w-full z-10">
                                         <div v-for="(project, index) in projectSearchResults"
                                              :key="index"
                                              @click="chooseProject(project)"
@@ -597,18 +597,18 @@ import IconLib from "@/Mixins/IconLib.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Switch,
-  SwitchGroup,
-  SwitchLabel
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -780,6 +780,7 @@ export default {
         'showComments',
         'first_project_calendar_tab_id',
         'usedInBulkComponent',
+        'requiresAxiosRequests',
         'calendarProjectPeriod'
     ],
     emits: ['closed'],
@@ -1085,7 +1086,15 @@ export default {
                 this.isOption = true;
             }
 
-            if (this.usedInBulkComponent || (this.$page.props.user.calendar_settings.time_period_project_id === this.selectedProject?.id && this.calendarProjectPeriod)) {
+            if (
+                !this.requiresAxiosRequests && (
+                    this.usedInBulkComponent ||
+                    (
+                        this.$page.props.user.calendar_settings.time_period_project_id === this.selectedProject?.id &&
+                        this.calendarProjectPeriod
+                    )
+                )
+            ) {
                 if (!this.event?.id) {
                     router.post(
                         route('events.store'),

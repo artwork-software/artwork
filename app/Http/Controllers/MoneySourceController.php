@@ -21,6 +21,7 @@ use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -472,7 +473,8 @@ class MoneySourceController extends Controller
                 'name' => $project->name,
             ]),
             'linkedProjects' => $moneySource->projects()->get(),
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+            'first_project_budget_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET)
         ]);
     }
 

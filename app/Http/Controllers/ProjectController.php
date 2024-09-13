@@ -222,7 +222,7 @@ class ProjectController extends Controller
                     Collection::make($userProjectManagementSetting['project_filters'])
             ),
             'pinnedProjects' => $this->projectService->pinnedProjects($this->authManager->id()),
-            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'states' => $this->projectStateService->getAll(),
             'projectGroups' => $this->projectService->getProjectGroups(),
             'categories' => $this->categoryService->getAll(),
@@ -575,7 +575,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
             ]
@@ -648,7 +650,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -709,7 +713,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -790,7 +796,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -850,7 +858,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -921,7 +931,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -964,7 +976,9 @@ class ProjectController extends Controller
                     'projects.tab',
                     [
                         $project->id,
-                        $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::BUDGET
+                        )
                     ]
                 ) : null,
             ]
@@ -1063,7 +1077,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -1129,7 +1145,9 @@ class ProjectController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -2085,10 +2103,11 @@ class ProjectController extends Controller
             'currentTab' => $projectTab,
             'headerObject' => $headerObject,
             'loadedProjectInformation' => $loadedProjectInformation,
-            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->projectTabService
-                ->findFirstProjectTabWithCalendarComponent()?->id,
-            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'first_project_budget_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'createSettings' => app(ProjectCreateSettings::class),
         ]);
     }

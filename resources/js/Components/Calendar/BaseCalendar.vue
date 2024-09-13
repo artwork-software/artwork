@@ -125,6 +125,7 @@
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
+        :requires-axios-requests="true"
         @closed="eventComponentClosed"
     />
 

@@ -29,6 +29,7 @@ use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
@@ -366,7 +367,9 @@ readonly class EventService
                         'projects.tab',
                         [
                             $event->project->id,
-                            $projectTabService->findFirstProjectTabWithCalendarComponent()?->id,
+                            $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            ),
                         ]
                     ) : null,
                 ],
@@ -415,7 +418,9 @@ readonly class EventService
                     'projects.tab',
                     [
                         $event->project->id,
-                        $projectTabService->findFirstProjectTabWithCalendarComponent()?->id,
+                        $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        ),
                     ]
                 ) : null,
             ],
@@ -886,9 +891,10 @@ readonly class EventService
             ->setAreas($areaService->getAll())
             ->setPersonalFilters($filterController->index())
             ->setUserFilters($user->getAttribute('calendar_filter'))
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
-                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+                $projectTabService
+                    ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
             );
 
         if ($useProjectTimePeriod) {
@@ -1007,9 +1013,9 @@ readonly class EventService
             ->setFilterOptions($showCalendar["filterOptions"])
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
-                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
             );
 
         if ($useProjectTimePeriod) {

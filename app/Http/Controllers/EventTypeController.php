@@ -42,6 +42,9 @@ class EventTypeController extends Controller
 
     public function destroy(EventType $eventType)
     {
+        if ($eventType->getAttribute('id') === 1) {
+            return Redirect::back();
+        }
         if ($eventType->name !== 'undefiniert') {
             $events = $eventType->events()->get();
 

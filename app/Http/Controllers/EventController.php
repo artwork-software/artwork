@@ -206,7 +206,8 @@ class EventController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        DayServicesService $dayServicesService
+        DayServicesService $dayServicesService,
+        ProjectTabService $projectTabService
     ): Response {
         return Inertia::render(
             'Shifts/ShiftPlan',
@@ -224,7 +225,8 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $dayServicesService,
-                $userService->getAuthUser()
+                $userService->getAuthUser(),
+                $projectTabService
             )
         );
     }
@@ -236,7 +238,8 @@ class EventController extends Controller
     public function getEventsForRoomsByDaysWithUser(
         Request $request,
         ShiftWorkerService $shiftWorkerService,
-        UserService $userService
+        UserService $userService,
+        ProjectTabService $projectTabService
     ): array {
         return [
             'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
@@ -244,6 +247,7 @@ class EventController extends Controller
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),
+                $projectTabService,
                 $userService->getAuthUser()->getAttribute('shift_calendar_filter')
             ),
             'workerData' => $shiftWorkerService

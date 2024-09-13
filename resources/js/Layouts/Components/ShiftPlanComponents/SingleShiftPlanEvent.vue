@@ -3,9 +3,9 @@
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
                  :style="{backgroundColor: this.event.eventTypeColor ?? this.eventType?.hex_code}">
-                <div class="w-40 truncate">
+                <a :href="route('projects.tab', {project: event.projectId, projectTab: event.project_shift_tab_id})" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                     {{ event.eventTypeAbbreviation ?? this.eventType?.abbreviation }}: {{ this.event.projectName ?? this.project?.name }}
-                </div>
+                </a>
                 <div v-if="areAllShiftsCommitted(event)">
                     <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
                 </div>

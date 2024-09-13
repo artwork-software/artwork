@@ -17,6 +17,7 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -841,21 +842,80 @@ export default {
             }
         },
         previousTimeRange() {
-            const dayDifference = this.calculateDateDifference();
-            this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);
-            const newDate = new Date(this.dateValue[1]);
-            newDate.setDate(newDate.getDate() - dayDifference);
-            this.dateValue[0] = newDate.toISOString().slice(0, 10);
+            const gotoMode = this.$page.props.user.goto_mode;
+            if (gotoMode === 'day') {
+                // Reduziere den Date-Bereich um einen Tag
+                this.dateValue[0] = this.getPreviousDayNew(this.dateValue[0]);
+                this.dateValue[1] = this.getPreviousDayNew(this.dateValue[1]);
+            } else if (gotoMode === 'week') {
+                // Reduziere den Date-Bereich um eine Woche (7 Tage)
+                this.dateValue[0] = this.getPreviousWeek(this.dateValue[0]);
+                this.dateValue[1] = this.getPreviousWeek(this.dateValue[1]);
+            } else if (gotoMode === 'month') {
+                // Reduziere den Date-Bereich um einen Monat
+                this.dateValue[0] = this.getPreviousMonth(this.dateValue[0]);
+                this.dateValue[1] = this.getPreviousMonth(this.dateValue[1]);
+            }
+
             this.updateTimes();
         },
+
+        getPreviousDayNew(date) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() - 1);
+            return newDate.toISOString().slice(0, 10);
+        },
+
+        getPreviousWeek(date) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() - 7);
+            return newDate.toISOString().slice(0, 10);
+        },
+
+        getPreviousMonth(date) {
+            const newDate = new Date(date);
+            newDate.setMonth(newDate.getMonth() - 1);
+            return newDate.toISOString().slice(0, 10);
+        },
+
         nextTimeRange() {
-            const dayDifference = this.calculateDateDifference();
-            this.dateValue[0] = this.getNextDay(this.dateValue[1]);
-            const newDate = new Date(this.dateValue[1]);
-            newDate.setDate(newDate.getDate() + dayDifference + 1);
-            this.dateValue[1] = newDate.toISOString().slice(0, 10);
+            const gotoMode = this.$page.props.user.goto_mode;
+
+            if (gotoMode === 'day') {
+                // Erhöhe den Date-Bereich um einen Tag
+                this.dateValue[0] = this.getNextDayNew(this.dateValue[0]);
+                this.dateValue[1] = this.getNextDayNew(this.dateValue[1]);
+            } else if (gotoMode === 'week') {
+                // Erhöhe den Date-Bereich um eine Woche (7 Tage)
+                this.dateValue[0] = this.getNextWeek(this.dateValue[0]);
+                this.dateValue[1] = this.getNextWeek(this.dateValue[1]);
+            } else if (gotoMode === 'month') {
+                // Erhöhe den Date-Bereich um einen Monat
+                this.dateValue[0] = this.getNextMonth(this.dateValue[0]);
+                this.dateValue[1] = this.getNextMonth(this.dateValue[1]);
+            }
+
             this.updateTimes();
         },
+
+        getNextDayNew(date) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() + 1);
+            return newDate.toISOString().slice(0, 10);
+        },
+
+        getNextWeek(date) {
+            const newDate = new Date(date);
+            newDate.setDate(newDate.getDate() + 7);
+            return newDate.toISOString().slice(0, 10);
+        },
+
+        getNextMonth(date) {
+            const newDate = new Date(date);
+            newDate.setMonth(newDate.getMonth() + 1);
+            return newDate.toISOString().slice(0, 10);
+        },
+
         calculateDateDifference() {
             const date1 = new Date(this.dateValue[0]);
             const date2 = new Date(this.dateValue[1]);

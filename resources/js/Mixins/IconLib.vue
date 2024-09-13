@@ -114,7 +114,10 @@ import {
   IconX,
   IconZoomIn,
   IconZoomOut,
-    IconEyeClosed
+    IconEyeClosed,
+    IconCalendarShare,
+    IconChevronRightPipe,
+    IconChevronLeftPipe
 } from "@tabler/icons-vue";
 
 export default {
@@ -233,7 +236,10 @@ export default {
         IconDeviceFloppy,
         IconNote,
         IconApps,
-        IconEyeClosed
+        IconEyeClosed,
+        IconCalendarShare,
+        IconChevronRightPipe,
+        IconChevronLeftPipe
     }
 }
 </script>

@@ -1,9 +1,9 @@
 <template>
     <div class="w-full cursor-pointer">
         <div :class="[
-                highlightMode && !isIdHighlighted(highlightedId, highlightedType) && highlightedId && highlightedType ?
+                !highlightMode || !isIdHighlighted(highlightedId, highlightedType) ?
                     'opacity-30 px-1' :
-                    'bg-pink-500 text-white px-1',
+                    'bg-pink-500 !text-white px-1',
                 multiEditMode ?
                 'text-[10px]' :
                 ''
@@ -243,6 +243,8 @@ export default defineComponent({
                 1: 'freelancerIds',
                 2: 'providerIds'
             };
+
+            console.log(this.shiftUserIds[typeMap[highlightedType]]);
 
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },

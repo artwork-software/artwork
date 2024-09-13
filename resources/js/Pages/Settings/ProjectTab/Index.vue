@@ -92,7 +92,7 @@ export default {
                 <!-- Tab components -->
                <div class="w-full col-span-1">
                    <div class="flex justify-end mb-5">
-                       <PlusButton @click="showAddEditModal = true" />
+                       <PlusButton @click="showAddEditModal = true" :button-text="$t('Create tab')" />
                    </div>
 
 

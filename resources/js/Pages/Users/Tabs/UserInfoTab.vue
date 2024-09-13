@@ -100,11 +100,11 @@
                         />
                     </div>
                 </div>
-                <div class="col-span-full">
+                <div class="col-span-full" v-if="this.isSignedInUser() || hasAdminRole">
                     <Listbox as="div" class="w-44" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
+                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary rounded-lg focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
                                 <span class="block truncate">{{ selectedLanguage?.name }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                   <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -112,7 +112,7 @@
                             </ListboxButton>
 
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="language in languages" :key="language.id" :value="language" v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ language.name }}</span>

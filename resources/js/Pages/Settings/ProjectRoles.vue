@@ -9,7 +9,7 @@
             </div>
             <ProjectTabs />
             <div class="flex items-center justify-end mb-10">
-                <PlusButton @click="showAddProjectRoleModal = true"/>
+                <PlusButton @click="showAddProjectRoleModal = true" :button-text="$t('Add Project Role')"/>
             </div>
             <div v-for="role in projectRoles">
                 <div class="rounded-lg bg-gray-50 px-4 py-5 mb-3">

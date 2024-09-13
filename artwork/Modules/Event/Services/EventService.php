@@ -650,6 +650,7 @@ readonly class EventService
         AreaService $areaService,
         DayServicesService $dayServicesService,
         User $user,
+        ProjectTabService $projectTabService,
     ): ShiftPlanDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
@@ -689,6 +690,7 @@ readonly class EventService
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
+                    $projectTabService,
                     $userService->getAuthUser()->getAttribute('shift_calendar_filter')
                 )
             )

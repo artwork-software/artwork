@@ -617,6 +617,7 @@ readonly class RoomService
     private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
+        ProjectTabService $projectTabService,
         ?UserShiftCalendarFilter $calendarFilter,
         ?Carbon $desiredDay = null
     ): array {
@@ -703,9 +704,14 @@ readonly class RoomService
 
             foreach ($eventPeriod as $date) {
                 $dateKey = $date->format('d.m.Y');
+                $roomEvent->setAttribute(
+                    'project_shift_tab_id',
+                    $projectTabService->findFirstProjectTabWithShiftsComponent()->getAttribute('id')
+                );
                 $actualEvents[$dateKey][] = $roomEvent;
             }
         }
+
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
@@ -755,6 +761,7 @@ readonly class RoomService
         UserService $userService,
         array $desiredRooms,
         array $desiredDays,
+        ProjectTabService $projectTabService,
         ?UserShiftCalendarFilter $userShiftCalendarFilter,
     ): array {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
@@ -769,6 +776,7 @@ readonly class RoomService
                         $roomService->collectEventsForRoomShift(
                             $room,
                             $calendarPeriod,
+                            $projectTabService,
                             $userShiftCalendarFilter,
                             Carbon::parse($desiredDay)
                         ),
@@ -788,6 +796,7 @@ readonly class RoomService
     public function collectEventsForRoomsShift(
         array|Collection $roomsWithEvents,
         CarbonPeriod $calendarPeriod,
+        ProjectTabService $projectTabService,
         ?UserShiftCalendarFilter $calendarFilter
     ): Collection {
         $roomEvents = collect();
@@ -797,6 +806,7 @@ readonly class RoomService
                 $this->collectEventsForRoomShift(
                     $room,
                     $calendarPeriod,
+                    $projectTabService,
                     $calendarFilter
                 )
             );

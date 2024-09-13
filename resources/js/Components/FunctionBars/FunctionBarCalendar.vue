@@ -25,6 +25,7 @@
                         v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
+                        ref="projectSearchInput"
                         :label="$t('Search project')"
                     />
                     <div v-if="projectSearchResults.length > 0"
@@ -259,8 +260,19 @@
 
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, inject, ref, watch} from "vue";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
+import {computed, inject, nextTick, ref, watch} from "vue";
+import {
+    IconArrowsDiagonal,
+    IconCalendarStar,
+    IconChevronLeft,
+    IconChevronRight,
+    IconFileExport,
+    IconGeometry,
+    IconList,
+    IconSettings,
+    IconZoomIn,
+    IconZoomOut
+} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
@@ -300,6 +312,7 @@ const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
+const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
@@ -488,6 +501,7 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
 }
 
+
 watch(() => projectSearch.value, (searchValue) => {
     if (searchValue.length === 0) {
         projectSearchResults.value = [];
@@ -505,5 +519,15 @@ watch(() => projectSearch.value, (searchValue) => {
             emits.call(this, 'searchingForProject', true);
         }
     );
+});
+
+// watch on usePage().props.user.calendar_settings.use_project_time_period
+watch(() => usePage().props.user.calendar_settings.use_project_time_period, (newValue) => {
+    // if to focus on input field
+    if (newValue) {
+        nextTick(() => {
+            document.getElementById('calendarProjectSearch').focus();
+        });
+    }
 });
 </script>

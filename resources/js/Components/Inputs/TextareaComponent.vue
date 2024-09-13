@@ -1,5 +1,5 @@
 <template>
-    <PlaceholderInputLabelContainer>
+    <PlaceholderInputLabelContainer :noMarginTop="noMarginTop">
         <textarea :id="this.id"
                    :value="this.modelValue"
                    @input="this.$emit('update:modelValue', $event.target.value)"
@@ -11,7 +11,7 @@
                   :cols="this.cols"
                   :maxlength="maxLength"
         />
-        <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" :is-small="isSmall"/>
+        <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -67,6 +67,14 @@ export default defineComponent({
         maxLength: {
             type: Number,
             default: 255
+        },
+        showLabel: {
+            type: Boolean,
+            default: true
+        },
+        noMarginTop: {
+            type: Boolean,
+            default: false
         }
     },
     emits: [

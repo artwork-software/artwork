@@ -12,7 +12,7 @@
                 :readonly="readonly"
                :maxlength="maxlength"
         />
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -63,6 +63,10 @@ export default defineComponent({
         maxlength: {
             type: Number,
             default: 255
+        },
+        showLabel: {
+            type: Boolean,
+            default: true
         },
     },
     emits: [

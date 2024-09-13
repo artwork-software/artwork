@@ -12,7 +12,7 @@
                 <div class="flex items-center justify-end w-full mb-3">
                     <div class="flex items-center gap-x-5">
                         <div>
-                            <PlusButton @click="showAddNewComponentModal = true" />
+                            <PlusButton @click="showAddNewComponentModal = true" :button-text="$t('Create a new component')"/>
                         </div>
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>

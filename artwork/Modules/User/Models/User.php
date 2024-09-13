@@ -33,9 +33,9 @@ use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
 use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetItemsSetting;
-use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -530,6 +530,7 @@ class User extends Model implements
             'id'
         );
     }
+
     public function userFilterAndSortSetting(): HasOne
     {
         return $this->hasOne(

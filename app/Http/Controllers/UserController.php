@@ -145,9 +145,13 @@ class UserController extends Controller
         $userUserManagementSetting = $userUserManagementSettingService
             ->getFromUser($userService->getAuthUser())
             ->getAttribute('settings');
-        $sortEnum = $saveFilterAndSort ? $request->enum('sort', UserSortEnum::class) :
-            ($userUserManagementSetting['sort_by'] ?
-            UserSortEnum::from($userUserManagementSetting['sort_by']) : null);
+        $sortEnum = $saveFilterAndSort ?
+            $request->enum('sort', UserSortEnum::class) :
+            (
+                $userUserManagementSetting['sort_by'] ?
+                    UserSortEnum::from($userUserManagementSetting['sort_by']) :
+                    null
+            );
         $users = MinimalUserIndexResource::collection(
             User::query()->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])->when(
                 strlen($search = $request->string('query')) > 0,
@@ -208,7 +212,6 @@ class UserController extends Controller
         UserService $userService,
         MembersManagementRequest $request
     ): Response|ResponseFactory {
-
         $saveFilterAndSort = $request->boolean('saveFilterAndSort');
         $userUserManagementSetting = $userUserManagementSettingService
             ->getFromUser($userService->getAuthUser())

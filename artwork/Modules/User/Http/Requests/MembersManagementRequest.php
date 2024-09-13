@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\User\Http\Requests;
 
-use Artwork\Modules\User\Enums\UserSortEnum;
+use Artwork\Modules\User\Enums\MemberSortEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,7 +17,7 @@ class MembersManagementRequest extends FormRequest
     {
         return [
             'search' => 'nullable|string',
-            'sort' => ['sometimes', Rule::enum(UserSortEnum::class)],
+            'sort' => ['sometimes', Rule::enum(MemberSortEnum::class)],
             'saveFilterAndSort' => ['sometimes', 'boolean']
         ];
     }

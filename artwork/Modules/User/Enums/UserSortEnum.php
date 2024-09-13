@@ -18,10 +18,9 @@ enum UserSortEnum: string
     public function mapToColumn(): array|string
     {
         return match ($this) {
-            //projects table
+            //users table
             self::ALPHABETICALLY_ASCENDING,
             self::ALPHABETICALLY_DESCENDING => ['last_name', 'first_name'],
-            //events table
             self::CHRONOLOGICALLY_ASCENDING,
             self::CHRONOLOGICALLY_DESCENDING => 'created_at'
         };

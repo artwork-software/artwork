@@ -18,10 +18,9 @@ enum MemberSortEnum: string
     public function mapToColumn(int $userType): array|string
     {
         return match ($this) {
-            //projects table
+            //userType = 1 -> freelancers table, otherwise service_providers table
             self::ALPHABETICALLY_ASCENDING,
             self::ALPHABETICALLY_DESCENDING => $userType === 1 ? ['last_name', 'first_name'] : 'provider_name',
-            //events table
             self::CHRONOLOGICALLY_ASCENDING,
             self::CHRONOLOGICALLY_DESCENDING => 'created_at'
         };

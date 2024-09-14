@@ -45,9 +45,9 @@ class BudgetVerified extends Notification
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if ($typeSettings?->enabled_email) {
-            $channels[] = 'mail';
-        }
+//        if ($typeSettings?->enabled_email) {
+//            $channels[] = 'mail';
+//        }
 
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';
@@ -73,7 +73,13 @@ class BudgetVerified extends Notification
                 $pageTitle
             )
             ->subject($this->notificationData->title)
-            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
+            ->markdown(
+                'emails.simple-mail',
+                [
+                    'notification' => $this->notificationData,
+                    'pageTitle' => $pageTitle,
+                ]
+            );
     }
 
     public function toArray(): stdClass

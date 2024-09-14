@@ -14,10 +14,12 @@ use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Http\Resources\NotificationProjectResource;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -35,8 +37,14 @@ class NotificationController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         ProjectTabService $projectTabService,
-        GlobalNotificationService $globalNotificationService
+        GlobalNotificationService $globalNotificationService,
+        UserService $userService
     ): Response|ResponseFactory {
+        $userService->updateCurrentUserShowNotificationIndicator(
+            $userService->getAuthUser(),
+            false
+        );
+
         $historyObjects = [];
         $event = null;
         // reload functions
@@ -132,9 +140,12 @@ class NotificationController extends Controller
                 },
                 []
             ),
-            'first_project_shift_tab_id' => $projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_shift_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_budget_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
+            'first_project_calendar_tab_id' => $projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 

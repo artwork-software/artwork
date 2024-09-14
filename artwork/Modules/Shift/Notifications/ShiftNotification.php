@@ -45,9 +45,9 @@ class ShiftNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if ($typeSettings?->enabled_email) {
-            $channels[] = 'mail';
-        }
+//        if ($typeSettings?->enabled_email) {
+//            $channels[] = 'mail';
+//        }
 
 
         if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
@@ -61,7 +61,7 @@ class ShiftNotification extends Notification implements ShouldBroadcast
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function toMail(): MailMessage
+    public function toMail(): MailMessage|null
     {
         $settings = app(GeneralSettings::class);
         $config = app(Repository::class);
@@ -73,7 +73,13 @@ class ShiftNotification extends Notification implements ShouldBroadcast
                 $pageTitle
             )
             ->subject($this->notificationData->title)
-            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
+            ->markdown(
+                'emails.simple-mail',
+                [
+                    'notification' => $this->notificationData,
+                    'pageTitle' => $pageTitle,
+                ]
+            );
     }
 
     public function toArray(): stdClass

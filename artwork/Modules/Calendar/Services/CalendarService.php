@@ -74,8 +74,6 @@ class CalendarService
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAvailabilityData(Available $available, $month = null): array
     {
-        $vacationDays = [];
-        $availabilityDays = [];
         $vacationDays = $available->vacations()->orderBy('date', 'ASC')->get();
         $availabilityDays = $available->availabilities()->orderBy('date', 'ASC')->get();
 
@@ -111,13 +109,13 @@ class CalendarService
 
             // check if vacation and availability conflicts
             foreach ($vacationDays as $vacationDay) {
-                if ($vacationDay->conflicts()->exists() && $currentDate->isSameDay($vacationDay->date)) {
+                if ($vacationDay->conflicts->count() > 0 && $currentDate->isSameDay($vacationDay->date)) {
                     $hasConflict = true;
                 }
             }
 
             foreach ($availabilityDays as $availabilityDay) {
-                if ($availabilityDay->conflicts()->exists() && $currentDate->isSameDay($availabilityDay->date)) {
+                if ($availabilityDay->conflicts->count() > 0 && $currentDate->isSameDay($availabilityDay->date)) {
                     $hasConflict = true;
                 }
             }

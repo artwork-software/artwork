@@ -46,13 +46,21 @@
             </div>
         </div>
         <div>
+            <input disabled="disabled"
+                   type="text"
+                   :value="$page.props.businessName"
+                   class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 mb-6"
+                   @focusout="this.editUser()"
+            />
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input disabled="disabled"
+                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
-                               :value="$page.props.businessName"
-                               class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                               v-model="userForm.business"
+                               :placeholder="this.$t('Business')"
+                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
                                @focusout="this.editUser()"
                         />
                     </div>
@@ -92,11 +100,11 @@
                         />
                     </div>
                 </div>
-                <div class="col-span-full">
+                <div class="col-span-full" v-if="this.isSignedInUser() || hasAdminRole">
                     <Listbox as="div" class="w-44" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
-                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
+                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary rounded-lg focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
                                 <span class="block truncate">{{ selectedLanguage?.name }}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                   <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -104,7 +112,7 @@
                             </ListboxButton>
 
                             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" v-for="language in languages" :key="language.id" :value="language" v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ language.name }}</span>
@@ -140,7 +148,7 @@
                                             :iconName="team.svg_name"
                         />
                     </span>
-                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="false">
+                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true">
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="openChangeTeamsModal"
                                :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -247,16 +255,25 @@
 
 <script>
 
-import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
-import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
 import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
@@ -317,6 +334,7 @@ export default {
                 email: this.user_to_edit.email,
                 photo:this.user_to_edit.profile_photo_path,
                 position: this.user_to_edit.position,
+                business: this.user_to_edit.business,
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,

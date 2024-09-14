@@ -12,7 +12,7 @@
                 @update-multi-edit="toggleMultiEdit"
             />
         </div>
-        <div :class="computedFilteredEvents.length > 0 || activeFilters.length > 0 ? 'mt-20' : ''">
+        <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
             <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
                     <IconAlertTriangle class="h-6 mr-2"/>
@@ -24,13 +24,13 @@
                 </div>
             </div>
 
-            <div class="w-full overflow-y-scroll" >
+            <!--<div class="w-full overflow-y-scroll hidden" >
                 <div class="mb-1 ml-4 max-w-7xl">
                     <div class="flex">
                         <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
                     </div>
                 </div>
-            </div>
+            </div>-->
         </div>
         <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
             {{ $t('The selected project has no dates') }}
@@ -61,6 +61,7 @@
                                         :rooms="rooms"
                                         :has-admin-role="hasAdminRole()"
                                         :width="zoom_factor * 204"
+                                        :first_project_tab_id="first_project_tab_id"
                                         @edit-event="showEditEventModel"
                                         @edit-sub-event="openAddSubEventModal"
                                         @open-add-sub-event-modal="openAddSubEventModal"
@@ -124,6 +125,7 @@
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
+        :requires-axios-requests="true"
         @closed="eventComponentClosed"
     />
 
@@ -335,6 +337,7 @@ const props = defineProps({
     calendarDataRef = ref(JSON.parse(JSON.stringify(props.calendarData))),
     eventsWithoutRoomRef = ref(JSON.parse(JSON.stringify(props.eventsWithoutRoom ?? []))),
     first_project_calendar_tab_id = inject('first_project_calendar_tab_id'),
+    first_project_tab_id = inject('first_project_tab_id'),
     eventTypes = inject('eventTypes'),
     multiEdit = ref(false),
     isFullscreen = ref(false),

@@ -7,7 +7,7 @@
                 <div class="text-secondary subpixel-antialiased">
                     {{$t('Here you can see what was changed by whom and when.')}}
                 </div>
-                <div class="flex w-full flex-wrap mt-4 max-h-96">
+                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-y-scroll">
                     <div v-for="(historyItem , index) in computedHistory">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null">
                             <div class="flex w-full ">

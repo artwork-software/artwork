@@ -34,6 +34,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
@@ -96,7 +97,6 @@ class EventController extends Controller
 
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
-        UserService $userService,
         ProjectService $projectService,
         EventService $eventService
     ): JsonResponse {
@@ -109,7 +109,6 @@ class EventController extends Controller
                 'roomData' => empty($desiredRoomIds) || empty($desiredDays) ?
                     [] :
                     $this->roomService->collectEventsForRoomsOnSpecificDays(
-                        $userService,
                         $desiredRoomIds,
                         $desiredDays,
                         $request->user()->calendar_filter,
@@ -206,7 +205,8 @@ class EventController extends Controller
         RoomCategoryService $roomCategoryService,
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
-        DayServicesService $dayServicesService
+        DayServicesService $dayServicesService,
+        ProjectTabService $projectTabService
     ): Response {
         return Inertia::render(
             'Shifts/ShiftPlan',
@@ -224,7 +224,8 @@ class EventController extends Controller
                 $roomAttributeService,
                 $areaService,
                 $dayServicesService,
-                $userService->getAuthUser()
+                $userService->getAuthUser(),
+                $projectTabService
             )
         );
     }
@@ -236,7 +237,8 @@ class EventController extends Controller
     public function getEventsForRoomsByDaysWithUser(
         Request $request,
         ShiftWorkerService $shiftWorkerService,
-        UserService $userService
+        UserService $userService,
+        ProjectTabService $projectTabService
     ): array {
         return [
             'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
@@ -244,6 +246,7 @@ class EventController extends Controller
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),
+                $projectTabService,
                 $userService->getAuthUser()->getAttribute('shift_calendar_filter')
             ),
             'workerData' => $shiftWorkerService
@@ -304,7 +307,8 @@ class EventController extends Controller
             ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->withCasts(['created_at' => TimeAgoCast::class])
-            ->where('read_at', null);
+            ->where('read_at', null)
+            ->orderBy('created_at', 'desc');
 
         if (request('openEditEvent')) {
             $event = Event::find(request('eventId'));
@@ -347,17 +351,21 @@ class EventController extends Controller
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
             'globalNotification' => $globalNotificationService->getGlobalNotificationEnrichedByImageUrl(),
-            'notificationOfToday' => $notification->get()->groupBy('priority'),
+            'notificationOfToday' => $notification->get(),
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::all(),
             'historyObjects' => $historyObjects,
-            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
-            'first_project_shift_tab_id' => $this->projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
-            'first_project_tasks_tab_id' => $this->projectTabService->findFirstProjectTabWithTasksComponent()?->id,
-            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
-            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
+            'first_project_shift_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::SHIFT_TAB),
+            'first_project_tasks_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CHECKLIST),
+            'first_project_budget_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 
@@ -371,7 +379,8 @@ class EventController extends Controller
 
         return inertia('Events/EventRequestsManagement', [
             'event_requests' => EventShowResource::collection($events)->resolve(),
-            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 
@@ -651,7 +660,9 @@ class EventController extends Controller
                     'projects.tab',
                     [
                         $project->id,
-                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        )
                     ]
                 )
             ],
@@ -701,7 +712,9 @@ class EventController extends Controller
                     'projects.tab',
                     [
                         $project->id,
-                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        )
                     ]
                 )
             ],
@@ -775,7 +788,9 @@ class EventController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            )
                         ]
                     ) : null
                 ],
@@ -857,7 +872,9 @@ class EventController extends Controller
                                 'projects.tab',
                                 [
                                     $event->project->id,
-                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                        ProjectTabComponentEnum::CALENDAR
+                                    )
                                 ]
                             ) :
                             null
@@ -903,7 +920,9 @@ class EventController extends Controller
                             'projects.tab',
                             [
                                 $event->project->id,
-                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CALENDAR
+                                )
                             ]
                         ) :
                         null
@@ -992,7 +1011,9 @@ class EventController extends Controller
                                 'projects.tab',
                                 [
                                     $project->id,
-                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                        ProjectTabComponentEnum::CALENDAR
+                                    )
                                 ]
                             ) : null
                         ],
@@ -1041,7 +1062,9 @@ class EventController extends Controller
                             'projects.tab',
                             [
                                 $project->id,
-                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CALENDAR
+                                )
                             ]
                         ) : null
                     ],
@@ -1105,7 +1128,9 @@ class EventController extends Controller
                             'projects.tab',
                             [
                                 $project->id,
-                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CALENDAR
+                                )
                             ]
                         ) : null
                     ],
@@ -1156,7 +1181,9 @@ class EventController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            )
                         ]
                     ) : null
                 ],
@@ -1376,7 +1403,9 @@ class EventController extends Controller
                                 'projects.tab',
                                 [
                                     $event->project->id,
-                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                    $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                        ProjectTabComponentEnum::CALENDAR
+                                    )
                                 ]
                             ) :
                             null
@@ -1427,7 +1456,9 @@ class EventController extends Controller
                             'projects.tab',
                             [
                                 $event->project->id,
-                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CALENDAR
+                                )
                             ]
                         ) :
                         null
@@ -1524,7 +1555,9 @@ class EventController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            )
                         ]
                     ) : null
                 ],
@@ -1570,7 +1603,9 @@ class EventController extends Controller
                     'projects.tab',
                     [
                         $project->id,
-                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        )
                     ]
                 ) : null
             ],
@@ -1658,7 +1693,9 @@ class EventController extends Controller
                             'projects.tab',
                             [
                                 $project->id,
-                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                    ProjectTabComponentEnum::CALENDAR
+                                )
                             ]
                         ) : null
                     ],
@@ -1705,7 +1742,9 @@ class EventController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            )
                         ]
                     ) : null
                 ],
@@ -1777,7 +1816,9 @@ class EventController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            )
                         ]
                     ) : null
                 ],
@@ -1824,7 +1865,9 @@ class EventController extends Controller
                     'projects.tab',
                     [
                         $project->id,
-                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        )
                     ]
                 ) : null
             ],
@@ -1874,7 +1917,8 @@ class EventController extends Controller
                 'end' => $event->end_time->format('d.m.Y, H:i'),
                 'room_name' => $event->room?->label,
             ]),
-            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 

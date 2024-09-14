@@ -35,6 +35,12 @@ export default defineComponent({
                     hasPermission: true
                 },
                 {
+                    name: this.$t('Addresses'),
+                    href: route('users.addresses'),
+                    current: route().current('users.addresses'),
+                    hasPermission: true
+                },
+                {
                     name: 'Teams',
                     href: route('departments'),
                     current: route().current('departments'),

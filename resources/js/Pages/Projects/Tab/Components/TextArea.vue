@@ -15,6 +15,8 @@
             :ref="`description-${this.projectId}`"
             :class="inSidebar ? 'bg-primary text-white' : ''"
             id="placeholder"
+            :show-label="false"
+            no-margin-top
             @focusout="updateTextData()"
             v-model="textData.text">
         </TextareaComponent>

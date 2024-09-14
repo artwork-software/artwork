@@ -43,6 +43,8 @@ export default {
                 v-model="textData.text"
                 :label="textData.text"
                 name="email" id="email"
+                :show-label="false"
+                no-margin-top
                 :class="inSidebar ? 'bg-primary text-white' : ''"
             />
         </div>

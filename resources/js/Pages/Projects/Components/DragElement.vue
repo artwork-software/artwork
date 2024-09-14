@@ -2,10 +2,10 @@
 <template>
     <div class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10)}">
         <div class="" v-if="!$page.props.user.compact_mode">
-            <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
+            <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
         </div>
         <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
-            <div v-if="type === 0" class="text-ellipsis w-32">
+            <div v-if="type === 0" class="text-ellipsis w-28">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
@@ -14,7 +14,7 @@
                 </div>
                 <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
-            <div v-else-if="type === 1" class="text-ellipsis w-32">
+            <div v-else-if="type === 1" class="text-ellipsis w-28">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
@@ -23,7 +23,7 @@
                 </div>
                 <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
             </div>
-            <div v-else class="text-ellipsis w-32">
+            <div v-else class="text-ellipsis w-28">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.provider_name }}</div>
@@ -32,16 +32,20 @@
                 <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
             </div>
         </div>
+        <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
+            <IconCalendarShare class="h-5 w-5" />
+        </a>
     </div>
 
 </template>
 <script>
 import {defineComponent} from 'vue'
 import ColorHelper from "@/Mixins/ColorHelper.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default defineComponent({
     name: "DragElement",
-    mixins: [ColorHelper],
+    mixins: [ColorHelper, IconLib],
     props: ['item', 'type', 'plannedHours', 'expectedHours', 'color'],
     methods: {
         onDragStart(event) {

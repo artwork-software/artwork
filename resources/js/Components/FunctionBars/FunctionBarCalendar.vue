@@ -1,5 +1,5 @@
 <template>
-    <div class=" py-4 " :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
+    <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
@@ -19,14 +19,14 @@
                         </button>
                     </div>
                 </div>
-
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
+                        id="calendarProjectSearch"
+                        v-model="projectSearch"
                         :no-margin-top="true"
                         :is-small="true"
-                        id="calendarProjectSearch"
+                        ref="projectSearchInput"
                         :label="$t('Search project')"
-                        v-model="projectSearch"
                     />
                     <div v-if="projectSearchResults.length > 0"
                          class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg">
@@ -53,12 +53,12 @@
                         @update:model-value="handleUseTimePeriodChange"
                         :class="[isCalendarUsingProjectTimePeriod ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                     <span class="sr-only">Use project time period toggle</span>
-                    <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                    <span :class="[isCalendarUsingProjectTimePeriod ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                         <span :class="[isCalendarUsingProjectTimePeriod ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                            <IconGeometry stroke-width="1.5" class="w-4 h-4"/>
+                            <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconGeometry" :tooltip-text="$t('Project search')" stroke="1.5"/>
                         </span>
                     </span>
                 </Switch>
@@ -72,25 +72,48 @@
                         <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance"
                                 :class="[atAGlance ? 'bg-artwork-buttons-hover mr-2' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                             <span class="sr-only">Use setting</span>
-                            <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                            <span :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
-                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
-                                    <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                    <ToolTipComponent icon-size="w-4 h-4" direction="bottom" icon="IconList" :tooltip-text="$t('At a glance')" stroke="1.5"/>
                                 </span>
                             </span>
                         </Switch>
                     </div>
                 </div>
                 <div class="flex items-center gap-x-2">
-                    <IconZoomIn @click="incrementZoomFactor" :disabled="zoom_factor <= 0.2" v-if="!atAGlance"
-                                class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
-                    <IconZoomOut @click="decrementZoomFactor" :disabled="zoom_factor >= 1.4"
-                                 v-if="!atAGlance"
-                                 class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
-                    <IconArrowsDiagonal class="h-7 w-7 text-artwork-buttons-context cursor-pointer"
-                                        @click="$emit('openFullscreenMode')" v-if="!atAGlance && !isFullscreen"/>
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Zoom in')"
+                        icon="IconZoomIn"
+                        icon-size="h-7 w-7"
+                        :disabled="zoom_factor <= 0.2"
+                        @click="incrementZoomFactor"
+                        v-if="!atAGlance"
+                    />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Zoom out')"
+                        icon="IconZoomOut"
+                        icon-size="h-7 w-7"
+                        :disabled="zoom_factor >= 1.4"
+                        @click="decrementZoomFactor"
+                        v-if="!atAGlance"
+                    />
+
+                    <ToolTipComponent
+                        direction="bottom"
+                        :tooltip-text="$t('Full screen')"
+                        icon="IconArrowsDiagonal"
+                        icon-size="h-7 w-7"
+                        @click="$emit('openFullscreenMode')"
+                        v-if="!atAGlance && !isFullscreen"
+                    />
+
                     <IndividualCalendarFilterComponent
                         class=""
                         :filter-options="filterOptions"
@@ -105,7 +128,12 @@
                             <span class="items-center flex">
                                 <button type="button"
                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
-                                    <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
+                                    <ToolTipComponent
+                                        direction="bottom"
+                                        tooltip-text="Anzeige"
+                                        icon="IconSettings"
+                                        icon-size="h-7 w-7"
+                                    />
                                 </button>
                             </span>
                             </MenuButton>
@@ -164,6 +192,13 @@
                                         <p :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary">{{ $t('Description') }}</p>
                                     </div>
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.event_name"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Event name') }}</p>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{
@@ -177,21 +212,30 @@
                     <div v-if="!project">
                         <div @click="showCalendarAboSettingModal = true"
                              class="flex items-center gap-x-1 text-sm group cursor-pointer">
-                            <IconCalendarStar
-                                class="h-7 w-7 text-artwork-buttons-context"/>
+                            <ToolTipComponent
+                                direction="bottom"
+                                :tooltip-text="$t('Subscribe to calendar')"
+                                icon="IconCalendarStar"
+                                icon-size="h-7 w-7"
+                            />
                         </div>
                     </div>
 
                     <div @click="showPDFConfigModal = true">
-                        <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
+                        <ToolTipComponent
+                            direction="left"
+                            :tooltip-text="$t('Export calendar')"
+                            icon="IconFileExport"
+                            icon-size="h-7 w-7"
+                        />
                     </div>
 
                     <PlusButton @click="$emit('wantsToAddNewEvent');"/>
-                    <AddButtonSmall
+                    <!--<AddButtonSmall
                         @click="createEventComponentIsVisible = true"
                         :text="$t('New occupancy')"
                         class="hidden"
-                    />
+                    />-->
                 </div>
 
             </div>
@@ -215,9 +259,8 @@
 </template>
 
 <script setup>
-
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
-import {computed, inject, ref, watch} from "vue";
+import {computed, inject, nextTick, ref, watch} from "vue";
 import {
     IconArrowsDiagonal,
     IconCalendarStar,
@@ -232,7 +275,6 @@ import {
 } from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
-import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
@@ -243,6 +285,7 @@ import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCa
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -252,7 +295,14 @@ const first_project_tab_id = inject('first_project_tab_id');
 const filterOptions = inject('filterOptions');
 const personalFilters = inject('personalFilters');
 const user_filters = inject('user_filters');
-
+const emits = defineEmits([
+    'updateMultiEdit',
+    'openFullscreenMode',
+    'wantsToAddNewEvent',
+    'previousDay',
+    'nextDay',
+    'searchingForProject'
+]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
@@ -262,13 +312,15 @@ const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
 const showCalendarAboInfoModal = ref(false);
+const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
     work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
-    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false
+    description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
+    event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
 });
 
 const projectSearch = ref('');
@@ -292,14 +344,8 @@ const handleUseTimePeriodChange = (enabled) => {
     }
 };
 
-watch(() => projectSearch.value, (searchValue) => {
-    axios.get('/projects/search', {params: {query: searchValue}})
-        .then(response => projectSearchResults.value = response.data);
-});
-
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
-const emits = defineEmits(['updateMultiEdit', 'openFullscreenMode', 'wantsToAddNewEvent','previousDay', 'nextDay']);
 
 const props = defineProps({
     project: {
@@ -454,4 +500,34 @@ const updateTimes = () => {
 const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
 }
+
+
+watch(() => projectSearch.value, (searchValue) => {
+    if (searchValue.length === 0) {
+        projectSearchResults.value = [];
+        emits.call(this, 'searchingForProject', false);
+        return;
+    }
+    axios.get(
+        route('projects.search'),
+        {
+            params: {query: searchValue}
+        }
+    ).then(
+        (response) => {
+            projectSearchResults.value = response.data;
+            emits.call(this, 'searchingForProject', true);
+        }
+    );
+});
+
+// watch on usePage().props.user.calendar_settings.use_project_time_period
+watch(() => usePage().props.user.calendar_settings.use_project_time_period, (newValue) => {
+    // if to focus on input field
+    if (newValue) {
+        nextTick(() => {
+            document.getElementById('calendarProjectSearch').focus();
+        });
+    }
+});
 </script>

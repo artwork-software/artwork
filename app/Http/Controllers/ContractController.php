@@ -14,6 +14,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
@@ -50,8 +51,9 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
-            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
         ]);
     }
 
@@ -129,7 +131,9 @@ class ContractController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -212,7 +216,9 @@ class ContractController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -271,7 +277,9 @@ class ContractController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ],

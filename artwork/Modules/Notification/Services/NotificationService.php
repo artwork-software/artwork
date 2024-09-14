@@ -18,6 +18,7 @@ use Artwork\Modules\Shift\Notifications\ShiftNotification;
 use Artwork\Modules\Task\Notifications\DeadlineNotification;
 use Artwork\Modules\Task\Notifications\TaskNotification;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -68,8 +69,10 @@ class NotificationService
 
     public string|null $positionVerifyRequestType = null;
 
-    public function __construct(private readonly EventService $eventService)
-    {
+    public function __construct(
+        private readonly EventService $eventService,
+        private readonly UserService $userService,
+    ) {
     }
 
     public function getPriority(): int
@@ -465,6 +468,11 @@ class NotificationService
                 }
                 break;
         }
+
+        $this->userService->updateCurrentUserShowNotificationIndicator(
+            $this->getNotificationTo(),
+            true
+        );
     }
 
     public function checkIfUserInMoreThanTenShifts(User $user, Shift $shift): stdClass

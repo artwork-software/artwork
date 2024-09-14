@@ -78,16 +78,22 @@
                    </ListboxOptions>
                </Listbox>
            </div>
-           <div>
-               <input
-                   v-model="event.day"
-                   type="date"
-                   :id="'day-' + index"
-                   placeholder="Tag"
-                   class="input h-12"
-                   :disabled="canEditComponent === false"
-                   @focusout="updateEventInDatabase"
-               />
+           <div class="">
+               <div class="relative">
+                   <div class="absolute inset-y-0 left-1 text-xs pointer-events-none text-primary flex items-center pl-3 z-40 h-12">
+                       {{ dayString }},
+                   </div>
+                   <input
+                       v-model="event.day"
+                       type="date"
+                       :id="'day-' + index"
+                       placeholder="Tag"
+                       class="input h-12 pl-9 text-xs"
+                       :disabled="canEditComponent === false"
+                       @focusout="updateEventInDatabase"
+                       @change="dayString = getDayOfWeek(new Date(event.day)).replace('.', '')"
+                   />
+               </div>
            </div>
            <div class="col-span-2">
                <div class="flex items-center" v-if="timeArray">
@@ -117,7 +123,8 @@
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
                              stroke-width="2"/>
-                   <Menu as="div"
+                   <Menu v-if="!isInModal"
+                         as="div"
                          class="text-sm cursor-pointer flex flex-row items-center bg-transparent">
                        <MenuButton as="div" class="bg-transparent">
                            <IconDotsVertical class="w-5 h-5 flex-shrink-0 z-50"
@@ -234,7 +241,7 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import {router} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 
 const props = defineProps({
     event: {
@@ -273,6 +280,7 @@ const props = defineProps({
 });
 
 const showMenu = ref(false);
+const dayString = ref(null);
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {
@@ -339,5 +347,11 @@ const removeTime = () => {
     updateEventInDatabase();
 }
 
+const getDayOfWeek = (date) => {
+    const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
+    return days[date.getDay()];
+}
+
+onMounted(() => { dayString.value = getDayOfWeek(new Date(props.event.day)).replace('.', '') });
 </script>
 

@@ -1,8 +1,11 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center gap-x-2" id="datePicker">
-            <IconCalendar  class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <ToolTipComponent direction="right" :tooltip-text="$t('Select time')" icon="IconCalendar" icon-size="h-5 w-5 mr-3" class="cursor-pointer" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <div class="relative rounded-md">
+                <div class="absolute inset-y-0 pointer-events-none left-1 xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
+                    {{ startDateString }},
+                </div>
                 <input v-model="dateValue[0]"
                        @change="this.updateTimes"
                        ref="startDate"
@@ -10,12 +13,15 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Start"
-                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
-                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-40 h-8 top-1" @click="toggleDateRangePicker">
-                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
+                <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 bg-white z-40 h-8 top-1">
+                    <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                 </div>
             </div>
             <div class="relative rounded-md">
+                <div class="absolute inset-y-0 left-1 pointer-events-none xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
+                     {{ endDateString}},
+                </div>
                 <input v-model="dateValue[1]"
                        @change="this.updateTimes"
                        ref="endDate"
@@ -23,9 +29,9 @@
                        type="date"
                        :disabled="!!project"
                        placeholder="Ende"
-                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
-                    <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 cursor-pointer bg-white z-40 h-8 top-1" @click="toggleDateRangePicker">
-                        <IconCalendar class="h-5 w-5 text-artwork-buttons-context" aria-hidden="true" />
+                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
+                    <div class="absolute inset-y-0 right-1.5 flex items-center pl-3 bg-white z-40 h-8 top-1">
+                        <IconCalendar class="h-5 w-5 text-artwork-buttons-context hidden" aria-hidden="true" />
                     </div>
             </div>
         </div>
@@ -49,6 +55,7 @@ import {ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -58,7 +65,7 @@ const formatter = ref({
 export default {
     mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
-    components: {VueTailwindDatepicker},
+    components: {ToolTipComponent, VueTailwindDatepicker},
     props: ['dateValueArray', 'project', 'is_shift_plan'],
     data() {
         return {
@@ -83,6 +90,8 @@ export default {
             customShortcuts: null,
             errorMessage: '',
             hasError: false,
+            startDateString: '',
+            endDateString: '',
         }
     },
     watch: {
@@ -95,6 +104,8 @@ export default {
     },
     mounted() {
         this.removeDateIcons();
+        this.startDateString = this.getDayOfWeek(new Date(this.dateValue[0])).replace('.', '');
+        this.endDateString = this.getDayOfWeek(new Date(this.dateValue[1])).replace('.', '');
         document.addEventListener('click', (event) => {
             if (!event.target.closest('#datePicker') && this.showDateRangePicker) {
                 this.showDateRangePicker = false;
@@ -177,6 +188,10 @@ export default {
         }
     },
     methods: {
+        getDayOfWeek(date) {
+            const days = ['So.', 'Mo.', 'Di.', 'Mi.', 'Do.', 'Fr.', 'Sa.'];
+            return days[date.getDay()];
+        },
         removeDateIcons() {
             const startDateInput = this.$refs.startDate;
             const endDateInput = this.$refs.endDate;

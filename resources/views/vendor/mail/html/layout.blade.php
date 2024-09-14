@@ -183,42 +183,6 @@
     <div style="background:#27233C;background-color:#27233C;margin:0px auto;max-width:600px;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#27233C;background-color:#27233C;width:100%;">
             <tbody>
-            <tr>
-                <td style="direction:ltr;font-size:0px;padding:0px 25px;text-align:center;">
-                    <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:middle;width:600px;" ><![endif]-->
-                    <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
-                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                            <tbody>
-                                <tr>
-                                    <td style="width:100px;">
-                                        <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_small.svg') }}"
-                                            style="border:0;display:block;margin: 3em 0 0 2em;height:auto;width:100px;font-size:13px;"
-                                            width="100"/>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!--[if mso | IE]></td><td class="" style="vertical-align:top;width:600px;" ><![endif]-->
-                    <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tbody>
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                    <div style="font-family:Inter;
-                                            font-size:14px;
-                                            line-height:1.5;
-                                            text-align:left;
-                                            color:#A7A6B1;">
-                                        {{ $settings->email_footer }}
-                                    </div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </td>
-            </tr>
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
                         <a href="{{$settings->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">

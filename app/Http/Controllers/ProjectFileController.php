@@ -9,6 +9,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -113,7 +114,9 @@ class ProjectFileController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ),
                 ]
@@ -196,7 +199,9 @@ class ProjectFileController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]
@@ -257,7 +262,9 @@ class ProjectFileController extends Controller
                         'projects.tab',
                         [
                             $project->id,
-                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                            $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::BUDGET
+                            )
                         ]
                     ) : null,
                 ]

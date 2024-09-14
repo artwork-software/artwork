@@ -29,6 +29,7 @@ use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
@@ -60,7 +61,7 @@ use Throwable;
 readonly class EventService
 {
     public function __construct(
-        private EventRepository $eventRepository
+        private EventRepository $eventRepository,
     ) {
     }
 
@@ -70,7 +71,7 @@ readonly class EventService
         TimelineService $timelineService,
         ShiftService $shiftService,
         ShiftQualificationService $shiftQualificationService,
-        ShiftsQualificationsService $shiftsQualificationsService
+        ShiftsQualificationsService $shiftsQualificationsService,
     ): void {
         $timelineService->forceDeleteTimelines($event->timelines);
         foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
@@ -96,7 +97,7 @@ readonly class EventService
                     $shift->id,
                     [
                         'shift_qualification_id' => $presetShiftShiftsQualification->shift_qualification_id,
-                        'value' => $presetShiftShiftsQualification->value
+                        'value' => $presetShiftShiftsQualification->value,
                     ]
                 );
             }
@@ -109,7 +110,7 @@ readonly class EventService
         TimelineService $timelineService,
         ShiftService $shiftService,
         ShiftQualificationService $shiftQualificationService,
-        ShiftsQualificationsService $shiftsQualificationsService
+        ShiftsQualificationsService $shiftsQualificationsService,
     ): void {
         foreach (
             $this->eventRepository->getEventsByProjectIdAndEventTypeId(
@@ -140,7 +141,7 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
     ): void {
         if (!empty($event->project_id)) {
             $changeService->saveFromBuilder(
@@ -185,7 +186,7 @@ readonly class EventService
         ShiftService $shiftService,
         SubEventService $subEventService,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
@@ -231,7 +232,7 @@ readonly class EventService
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
         ShiftService $shiftService,
-        SubEventService $subEventService
+        SubEventService $subEventService,
     ): void {
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
@@ -263,7 +264,7 @@ readonly class EventService
         TimelineService $timelineService,
         ShiftService $shiftService,
         SubEventService $subEventService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
@@ -293,7 +294,7 @@ readonly class EventService
         EventCommentService $eventCommentService,
         TimelineService $timelineService,
         ShiftService $shiftService,
-        SubEventService $subEventService
+        SubEventService $subEventService,
     ): void {
         /** @var Event $event */
         foreach ($events as $event) {
@@ -326,7 +327,7 @@ readonly class EventService
     private function createEventDeletedNotificationsForProjectManagers(
         Event $event,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
     ): void {
         if (is_null($event->project) || $event->project->managerUsers->isEmpty()) {
             return;
@@ -346,18 +347,18 @@ readonly class EventService
             $notificationService->setBroadcastMessage([
                 'id' => random_int(1, 1000000),
                 'type' => 'error',
-                'message' => $notificationTitle
+                'message' => $notificationTitle,
             ]);
             $notificationService->setDescription([
                 1 => [
                     'type' => 'link',
                     'title' => $event->room?->name,
-                    'href' => $event->room ? route('rooms.show', $event->room->id) : null
+                    'href' => $event->room ? route('rooms.show', $event->room->id) : null,
                 ],
                 2 => [
                     'type' => 'string',
                     'title' => $event->event_type->name . ', ' . $event->eventName,
-                    'href' => null
+                    'href' => null,
                 ],
                 3 => [
                     'type' => 'link',
@@ -366,16 +367,18 @@ readonly class EventService
                         'projects.tab',
                         [
                             $event->project->id,
-                            $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                ProjectTabComponentEnum::CALENDAR
+                            ),
                         ]
-                    ) : null
+                    ) : null,
                 ],
                 4 => [
                     'type' => 'string',
                     'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
                         Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                    'href' => null
-                ]
+                    'href' => null,
+                ],
             ]);
             $notificationService->setNotificationTo($projectManager);
             $notificationService->createNotification();
@@ -385,7 +388,7 @@ readonly class EventService
     private function createEventDeletedNotification(
         Event $event,
         NotificationService $notificationService,
-        ProjectTabService $projectTabService
+        ProjectTabService $projectTabService,
     ): void {
         $notificationService->setIcon('blue');
         $notificationService->setPriority(1);
@@ -395,18 +398,18 @@ readonly class EventService
         $notificationService->setBroadcastMessage([
             'id' => random_int(1, 1000000),
             'type' => 'error',
-            'message' => $notificationTitle
+            'message' => $notificationTitle,
         ]);
         $notificationService->setDescription([
             1 => [
                 'type' => 'link',
                 'title' => $event->room->name ?? '',
-                'href' => $event->room ? route('rooms.show', $event->room->id) : null
+                'href' => $event->room ? route('rooms.show', $event->room->id) : null,
             ],
             2 => [
                 'type' => 'string',
                 'title' => $event->event_type->name . ', ' . $event->eventName,
-                'href' => null
+                'href' => null,
             ],
             3 => [
                 'type' => 'link',
@@ -415,16 +418,18 @@ readonly class EventService
                     'projects.tab',
                     [
                         $event->project->id,
-                        $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                            ProjectTabComponentEnum::CALENDAR
+                        ),
                     ]
-                ) : null
+                ) : null,
             ],
             4 => [
                 'type' => 'string',
                 'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
                     Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                'href' => null
-            ]
+                'href' => null,
+            ],
         ]);
         $notificationService->setNotificationTo($event->creator);
         $notificationService->createNotification();
@@ -436,20 +441,25 @@ readonly class EventService
     public function getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
         int $userId,
         Carbon $startDate,
-        Carbon $endDate
+        Carbon $endDate,
     ): array {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
+        $events = $this->getEventsWhereUserHasShifts($userId);
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $events = $this->getEventsWhereUserHasShiftsFilteredByDateOfShifts($userId, $date);
+            $eventsWhereHasShiftsOnDate = $events->filter(
+                function ($event) use ($date) {
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
+                }
+            );
 
             $earliestStart = null;
             $latestEnd = null;
             $plannedWorkingHours = 0;
             $totalBreakMinutes = 0;
 
-            foreach ($events->all() as $event) {
+            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
                 foreach ($event['shifts'] as $shift) {
                     $start = Carbon::parse($shift['start']);
                     $end = Carbon::parse($shift['end']);
@@ -478,7 +488,7 @@ readonly class EventService
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
                 'short_day' => $date->format('d.m'),
-                'events' => $events,
+                'events' => $eventsWhereHasShiftsOnDate,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
@@ -490,19 +500,13 @@ readonly class EventService
 
         return [
             $daysWithEvents,
-            $totalPlannedWorkingHours
+            $totalPlannedWorkingHours,
         ];
     }
 
-    public function getEventsWhereUserHasShiftsFilteredByDateOfShifts(int $userId, Carbon $date): Collection
+    public function getEventsWhereUserHasShifts(int $userId): Collection
     {
-        return $this->eventRepository
-            ->getEventsWhereUserHasShifts($userId)
-            ->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
+        return $this->eventRepository->getEventsWhereUserHasShifts($userId);
     }
 
     /**
@@ -511,20 +515,24 @@ readonly class EventService
     public function getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
         int $freelancerId,
         Carbon $startDate,
-        Carbon $endDate
+        Carbon $endDate,
     ): array {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
+        $events = $this->getEventsWhereFreelancerHasShifts($freelancerId);
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $events = $this->getEventsWhereFreelancerHasShiftsFilteredByDateOfShifts($freelancerId, $date);
-
+            $eventsWhereHasShiftsOnDate = $events->filter(
+                function ($event) use ($date) {
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
+                }
+            );
             $plannedWorkingHours = 0;
             $earliestStart = null;
             $latestEnd = null;
             $totalBreakMinutes = 0;
 
-            foreach ($events->all() as $event) {
+            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
                 $shifts = $event['shifts'];
 
                 foreach ($shifts as $shift) {
@@ -553,7 +561,7 @@ readonly class EventService
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
                 'short_day' => $date->format('d.m'),
-                'events' => $events,
+                'events' => $eventsWhereHasShiftsOnDate,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
@@ -566,15 +574,9 @@ readonly class EventService
         return [$daysWithEvents, $totalPlannedWorkingHours];
     }
 
-    public function getEventsWhereFreelancerHasShiftsFilteredByDateOfShifts(int $freelancerId, Carbon $date): Collection
+    public function getEventsWhereFreelancerHasShifts(int $freelancerId): Collection
     {
-        return $this->eventRepository
-            ->getEventsWhereFreelancerHasShifts($freelancerId)
-            ->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
+        return $this->eventRepository->getEventsWhereFreelancerHasShifts($freelancerId);
     }
 
     /**
@@ -583,16 +585,21 @@ readonly class EventService
     public function getDaysWithEventsWhereServiceProviderHasShiftsWithTotalPlannedWorkingHours(
         int $serviceProviderId,
         Carbon $startDate,
-        Carbon $endDate
+        Carbon $endDate,
     ): array {
         $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
+        $events = $this->getEventsWhereServiceProviderHasShifts($serviceProviderId);
 
         foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $events = $this->getEventsWhereServiceProviderHasShiftsFilteredByDateOfShifts($serviceProviderId, $date);
+            $eventsWhereHasShiftsOnDate = $events->filter(
+                function ($event) use ($date) {
+                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
+                }
+            );
             $plannedWorkingHours = 0;
 
-            foreach ($events as $event) {
+            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
                 $shifts = $event['shifts'];
                 foreach ($shifts as $shift) {
                     $start = Carbon::parse($shift['start']);
@@ -608,7 +615,7 @@ readonly class EventService
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
                 'short_day' => $date->format('d.m'),
-                'events' => $events,
+                'events' => $eventsWhereHasShiftsOnDate,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
                 'week_number' => $date->weekOfYear,
@@ -623,17 +630,9 @@ readonly class EventService
         ];
     }
 
-    public function getEventsWhereServiceProviderHasShiftsFilteredByDateOfShifts(
-        int $serviceProviderId,
-        Carbon $date
-    ): Collection {
-        return $this->eventRepository
-            ->getEventsWhereServiceProviderHasShifts($serviceProviderId)
-            ->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
+    public function getEventsWhereServiceProviderHasShifts(int $serviceProviderId): Collection
+    {
+        return $this->eventRepository->getEventsWhereServiceProviderHasShifts($serviceProviderId);
     }
 
     public function getShiftPlanDto(
@@ -650,7 +649,8 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         DayServicesService $dayServicesService,
-        User $user
+        User $user,
+        ProjectTabService $projectTabService,
     ): ShiftPlanDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($user);
 
@@ -668,7 +668,7 @@ readonly class EventService
                 'month_number' => $period->month,
                 'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
-                'add_week_separator' => $period->isSunday()
+                'add_week_separator' => $period->isSunday(),
             ];
         }
 
@@ -690,6 +690,7 @@ readonly class EventService
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
+                    $projectTabService,
                     $userService->getAuthUser()->getAttribute('shift_calendar_filter')
                 )
             )
@@ -757,6 +758,7 @@ readonly class EventService
         })->all();
     }
 
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDtoForAtAGlance(
         CalendarService $calendarService,
         RoomService $roomService,
@@ -769,105 +771,7 @@ readonly class EventService
         RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
-        ?Project $project = null
-    ): EventManagementDto {
-        $user = $userService->getAuthUser();
-        $userCalendarFilter = $user->getAttribute('calendar_filter');
-
-        //today is used if project calendar is opened and no events are given as project calendar
-        //do not rely on user calendar filter dates
-        $today = Carbon::now();
-        [$startDate, $endDate] = !$project ?
-            $userService->getUserCalendarFilterDatesOrDefault() :
-            [
-                ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
-                    $firstEventInProject->getAttribute('start_time')->startOfDay() :
-                    $today->startOfDay(),
-                $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
-                    $lastEventInProject->getAttribute('end_time')->endOfDay() :
-                    $today->endOfDay()
-            ];
-
-        return EventManagementDto::newInstance()
-            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
-            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->setCalendarType(
-                $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                    'daily' :
-                    'individual'
-            )
-            ->setSelectedDate(
-                $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
-                    $startDate->format('Y-m-d') :
-                    null
-            )
-            ->setEventsWithoutRoom(
-                empty($room) ?
-                    CalendarEventResource::collection(
-                        $this->getEventsWithoutRoom(
-                            $project,
-                            [
-                                'room',
-                                'creator',
-                                'project',
-                                'project.managerUsers',
-                                'project.state',
-                                'shifts',
-                                'shifts.craft',
-                                'shifts.users',
-                                'shifts.freelancer',
-                                'shifts.serviceProvider',
-                                'shifts.shiftsQualifications',
-                                'subEvents.event',
-                                'subEvents.event.room'
-                            ]
-                        )
-                    )->resolve() :
-                    []
-            )
-            ->setEventsAtAGlance($calendarService->getEventsAtAGlance($startDate, $endDate, $project))
-            ->setRooms(
-                $roomService->getFilteredRooms(
-                    $startDate,
-                    $endDate,
-                    $userCalendarFilter
-                )
-            )
-            ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
-                )
-            )
-            ->setAreas($areaService->getAll())
-            ->setPersonalFilters($filterController->index())
-            ->setUserFilters($user->getAttribute('calendar_filter'))
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
-            ->setFirstProjectCalendarTabId(
-                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
-            );
-    }
-
-    /**
-     * @throws Throwable
-     */
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function createEventManagementDto(
-        CalendarService $calendarService,
-        RoomService $roomService,
-        UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        ProjectTabService $projectTabService,
-        EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
-        ProjectService $projectService,
-        ?Project $project = null
+        ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
         $userCalendarFilter = $user->getAttribute('calendar_filter');
@@ -902,6 +806,155 @@ readonly class EventService
                     $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
                         $lastEventInProject->getAttribute('end_time')->endOfDay() :
                         $today->endOfDay()
+                ];
+            }
+        }
+
+        $desiredProjectHasNoEvents = $useProjectTimePeriod && !$startDate && !$endDate;
+
+        $eventManagementDto = EventManagementDto::newInstance()
+            ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
+            ->setDateValue(
+                $desiredProjectHasNoEvents ?
+                    [] :
+                    [
+                        $startDate->format('Y-m-d'),
+                        $endDate->format('Y-m-d')
+                    ]
+            )
+            ->setCalendarType(
+                $desiredProjectHasNoEvents ? 'individual' :
+                    (
+                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                            'daily' :
+                            'individual'
+                    )
+            )
+            ->setSelectedDate(
+                $desiredProjectHasNoEvents ?
+                    null :
+                    (
+                        $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
+                            $startDate?->format('Y-m-d') :
+                            null
+                    )
+            )
+            ->setEventsWithoutRoom(
+                empty($room) ?
+                    CalendarEventResource::collection(
+                        $this->getEventsWithoutRoom(
+                            $project,
+                            [
+                                'room',
+                                'creator',
+                                'project',
+                                'project.managerUsers',
+                                'project.state',
+                                'shifts',
+                                'shifts.craft',
+                                'shifts.users',
+                                'shifts.freelancer',
+                                'shifts.serviceProvider',
+                                'shifts.shiftsQualifications',
+                                'subEvents.event',
+                                'subEvents.event.room',
+                            ]
+                        )
+                    )->resolve() :
+                    []
+            )
+            ->setEventsAtAGlance(
+                $desiredProjectHasNoEvents ?
+                    null :
+                    $calendarService->getEventsAtAGlance(
+                        $startDate,
+                        $endDate,
+                        $useProjectTimePeriod ? null : $project
+                    )
+            )
+            ->setRooms(
+                $roomService->getFilteredRooms(
+                    $startDate,
+                    $endDate,
+                    $userCalendarFilter
+                )
+            )
+            ->setFilterOptions(
+                $filterService->getCalendarFilterDefinitions(
+                    $roomCategoryService,
+                    $roomAttributeService,
+                    $eventTypeService,
+                    $areaService,
+                    $roomService
+                )
+            )
+            ->setAreas($areaService->getAll())
+            ->setPersonalFilters($filterController->index())
+            ->setUserFilters($user->getAttribute('calendar_filter'))
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
+            ->setFirstProjectCalendarTabId(
+                $projectTabService
+                    ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            );
+
+        if ($useProjectTimePeriod) {
+            $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
+        }
+
+        return $eventManagementDto;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function createEventManagementDto(
+        CalendarService $calendarService,
+        RoomService $roomService,
+        UserService $userService,
+        FilterService $filterService,
+        FilterController $filterController,
+        ProjectTabService $projectTabService,
+        EventTypeService $eventTypeService,
+        RoomCategoryService $roomCategoryService,
+        RoomAttributeService $roomAttributeService,
+        AreaService $areaService,
+        ProjectService $projectService,
+        ?Project $project = null,
+    ): EventManagementDto {
+        $user = $userService->getAuthUser();
+        $userCalendarFilter = $user->getAttribute('calendar_filter');
+        $userCalendarSettings = $user->getAttribute('calendar_settings');
+
+        //today is used if project calendar is opened and no events are given as project calendar
+        //do not rely on user calendar filter dates
+        $today = Carbon::now();
+
+        if (
+            !($useProjectTimePeriod = $userCalendarSettings->getAttribute('use_project_time_period')) &&
+            !$project
+        ) {
+            [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault();
+        } else {
+            if (!$project && $useProjectTimePeriod) {
+                $project = $projectService->findById($userCalendarSettings->getAttribute('time_period_project_id'));
+
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        null,
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        null,
+                ];
+            } else {
+                [$startDate, $endDate] = [
+                    ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
+                        $firstEventInProject->getAttribute('start_time')->startOfDay() :
+                        $today->startOfDay(),
+                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
+                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                        $today->endOfDay(),
                 ];
             }
         }
@@ -960,9 +1013,9 @@ readonly class EventService
             ->setFilterOptions($showCalendar["filterOptions"])
             ->setPersonalFilters($showCalendar['personalFilters'])
             ->setUserFilters($showCalendar['user_filters'])
-            ->setFirstProjectTabId($projectTabService->findFirstProjectTab()?->getAttribute('id'))
+            ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
-                $projectTabService->findFirstProjectTabWithCalendarComponent()?->getAttribute('id')
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
             );
 
         if ($useProjectTimePeriod) {
@@ -1039,7 +1092,7 @@ readonly class EventService
         $request,
         $series,
         $projectId,
-        $user
+        $user,
     ): Model|Event {
         $event = new Event();
 
@@ -1068,7 +1121,7 @@ readonly class EventService
 
 
     public function findEventById(
-        int $eventId
+        int $eventId,
     ): ?Event {
         return $this->eventRepository->findById($eventId);
     }
@@ -1110,7 +1163,7 @@ readonly class EventService
     public function createBulkEvent(
         array $event,
         Project $project,
-        int $userId
+        int $userId,
     ): void {
         $day = Carbon::parse($event['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
@@ -1132,7 +1185,7 @@ readonly class EventService
 
     public function updateBulkEvent(
         SupportCollection $data,
-        Event $event
+        Event $event,
     ): void {
 
         $day = Carbon::parse($data['day']);

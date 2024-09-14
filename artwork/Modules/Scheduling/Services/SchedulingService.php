@@ -6,6 +6,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Scheduling\Models\Scheduling;
@@ -188,7 +189,9 @@ readonly class SchedulingService
                                     'projects.tab',
                                     [
                                         $event->project->id,
-                                        $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                        $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                                            ProjectTabComponentEnum::CALENDAR
+                                        )
                                     ]
                                 ) :
                                 null
@@ -218,7 +221,7 @@ readonly class SchedulingService
                     $project = Project::find($schedulings->model_id);
                     $notificationTitle = __(
                         'notification.scheduling.public_changes_project',
-                        ['project' => $project->name],
+                        ['project' => $project?->name],
                         $user->language
                     );
                     $broadcastMessage = [

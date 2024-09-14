@@ -124,10 +124,6 @@ return new class extends Migration {
             $table->dropIndex('comments_user_id_foreign');
         });
 
-        Schema::table('comments', static function (Blueprint $table) {
-            $table->string('text')->change();
-        });
-
         Schema::table('craft_users', static function (Blueprint $table) {
             $table->dropForeign('craft_users_craft_id_foreign');
             $table->dropForeign('craft_users_user_id_foreign');

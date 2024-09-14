@@ -13,7 +13,8 @@
                             <div class="flex items-center">
                                 <div v-if="!showSearchbar" @click="openSearchbar"
                                      class="cursor-pointer inset-y-0">
-                                    <IconSearch class="h-7 w-7 text-artwork-buttons-context" aria-hidden="true"/>
+                                    <ToolTipComponent icon="IconSearch" icon-size="h-7 w-7" :tooltip-text="$t('Search')"
+                                                      direction="bottom"/>
                                 </div>
                                 <div v-else class="flex items-center w-60">
                                     <div>
@@ -122,13 +123,13 @@
                                     </div>
                                 </MenuItem>
                             </BaseMenu>
-                            <IconFileExport class="h-7 w-7 cursor-pointer text-artwork-buttons-context" aria-hidden="true"
-                                            @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
+                            <ToolTipComponent icon="IconFileExport" icon-size="h-7 w-7" :tooltip-text="$t('Export project list')"
+                                              direction="bottom" @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <PlusButton v-if="$can('create and edit own project') || $role('artwork admin')"
+                            <PlusButton v-if="$can('create and edit own project') || $role('artwork admin')" :button-text="$t('New project')"
                                         @click="openCreateProjectModal"/>
                         </div>
                     </div>
@@ -338,9 +339,11 @@ import projects from "@/Pages/Trash/Projects.vue";
 import AddBulkEventsModal from "@/Pages/Projects/Components/AddBulkEventsModal.vue";
 import debounce from 'lodash.debounce'
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default defineComponent({
     components: {
+        ToolTipComponent,
         SideNotification,
         IconCheck,
         MenuItem,

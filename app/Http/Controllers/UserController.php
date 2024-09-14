@@ -24,16 +24,22 @@ use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificatio
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
+use Artwork\Modules\User\Enums\MemberSortEnum;
+use Artwork\Modules\User\Enums\UserSortEnum;
 use Artwork\Modules\User\Events\UserUpdated;
+use Artwork\Modules\User\Http\Requests\MembersManagementRequest;
+use Artwork\Modules\User\Http\Resources\MinimalUserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserIndexResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Http\Resources\UserWorkProfileResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Config\Repository;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -129,17 +135,156 @@ class UserController extends Controller
         ]);
     }
 
-    public function index(PermissionPresetService $permissionPresetService): Response|ResponseFactory
-    {
+    public function index(
+        PermissionPresetService $permissionPresetService,
+        UserUserManagementSettingService $userUserManagementSettingService,
+        UserService $userService,
+        MembersManagementRequest $request
+    ): Response|ResponseFactory {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userUserManagementSetting = $userUserManagementSettingService
+            ->getFromUser($userService->getAuthUser())
+            ->getAttribute('settings');
+        $sortEnum = $saveFilterAndSort ?
+            $request->enum('sort', UserSortEnum::class) :
+            (
+                $userUserManagementSetting['sort_by'] ?
+                    UserSortEnum::from($userUserManagementSetting['sort_by']) :
+                    null
+            );
+        $users = MinimalUserIndexResource::collection(
+            User::query()->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])->when(
+                strlen($search = $request->string('query')) > 0,
+                function (Builder $builder) use ($search): void {
+                    $builder->where('first_name', 'like', '%' . $search . '%')
+                        ->orWhere('last_name', 'like', '%' . $search . '%');
+                }
+            )->when(
+                !is_null($sortEnum),
+                function (Builder $builder) use ($sortEnum): void {
+                    switch ($sortEnum) {
+                        case UserSortEnum::ALPHABETICALLY_ASCENDING:
+                        case UserSortEnum::ALPHABETICALLY_DESCENDING:
+                            $columns = $sortEnum->mapToColumn();
+                            $dir = $sortEnum->mapToDirection();
+                            $builder->orderBy($columns[0], $dir);
+                            $builder->orderBy($columns[1], $dir);
+                            break;
+                        case UserSortEnum::CHRONOLOGICALLY_ASCENDING:
+                        case UserSortEnum::CHRONOLOGICALLY_DESCENDING:
+                            $builder->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                            break;
+                    }
+                }
+            )->get()
+        )->resolve();
+        if ($saveFilterAndSort) {
+            $userUserManagementSettingService->updateOrCreateIfNecessary(
+                $userService->getAuthUser(),
+                [
+                    'sort_by' => $sortEnum?->name,
+                ]
+            );
+        }
         return inertia('Users/Index', [
-            'users' => UserIndexResource::collection(User::all())->resolve(),
+            'users' => $users,
             'all_permissions' => Permission::all()->groupBy('group'),
             'departments' => Department::all(),
             'roles' => Role::all(),
             'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::all(),
+            'serviceProviders' => ServiceProvider::query()->without('contacts')->get(),
             'permission_presets' => $permissionPresetService->getPermissionPresets(),
-            'invitedUsers' => Invitation::all()
+            'invitedUsers' => Invitation::all(),
+            'userSortEnumNames' => array_map(
+                function (UserSortEnum $enum): string {
+                    return $enum->name;
+                },
+                UserSortEnum::cases()
+            ),
+            'userUserManagementSetting' => $userUserManagementSettingService
+                ->getFromUser($userService->getAuthUser())
+                ->getAttribute('settings')
+        ]);
+    }
+
+    public function getAddresses(
+        UserUserManagementSettingService $userUserManagementSettingService,
+        UserService $userService,
+        MembersManagementRequest $request
+    ): Response|ResponseFactory {
+        $saveFilterAndSort = $request->boolean('saveFilterAndSort');
+        $userUserManagementSetting = $userUserManagementSettingService
+            ->getFromUser($userService->getAuthUser())
+            ->getAttribute('settings');
+        $sortEnum = $saveFilterAndSort ? $request->enum('sort', MemberSortEnum::class) :
+            ($userUserManagementSetting['sort_by'] ?
+                UserSortEnum::from($userUserManagementSetting['sort_by']) : null);
+
+        $freelancers = Freelancer::query()->when(
+            strlen($search = $request->string('query')) > 0,
+            function (Builder $builder) use ($search): void {
+                $builder->where('first_name', 'like', '%' . $search . '%')
+                    ->orWhere('last_name', 'like', '%' . $search . '%');
+            }
+        )->when(
+            !is_null($sortEnum),
+            function (Builder $builder) use ($sortEnum): void {
+                switch ($sortEnum) {
+                    case MemberSortEnum::ALPHABETICALLY_ASCENDING:
+                    case MemberSortEnum::ALPHABETICALLY_DESCENDING:
+                        $columns = $sortEnum->mapToColumn(1);
+                        $dir = $sortEnum->mapToDirection();
+                        $builder->orderBy($columns[0], $dir);
+                        $builder->orderBy($columns[1], $dir);
+                        break;
+                    case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
+                        $builder->orderBy($sortEnum->mapToColumn(1), $sortEnum->mapToDirection());
+                        break;
+                }
+            }
+        )->get();
+
+        $serviceProviders = ServiceProvider::query()->without(['contacts'])->when(
+            strlen($search = $request->string('query')) > 0,
+            function (Builder $builder) use ($search): void {
+                $builder->where('provider_name', 'like', '%' . $search . '%');
+            }
+        )->when(
+            !is_null($sortEnum),
+            function (Builder $builder) use ($sortEnum): void {
+                switch ($sortEnum) {
+                    case MemberSortEnum::ALPHABETICALLY_ASCENDING:
+                    case MemberSortEnum::ALPHABETICALLY_DESCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_ASCENDING:
+                    case MemberSortEnum::CHRONOLOGICALLY_DESCENDING:
+                        $builder->orderBy($sortEnum->mapToColumn(2), $sortEnum->mapToDirection());
+                        break;
+                }
+            }
+        )->get();
+
+        if ($saveFilterAndSort) {
+            $userUserManagementSettingService->updateOrCreateIfNecessary(
+                $userService->getAuthUser(),
+                [
+                    'sort_by' => $sortEnum?->name,
+                ]
+            );
+        }
+
+        return inertia('Users/Addresses', [
+            'freelancers' => $freelancers,
+            'serviceProviders' => $serviceProviders,
+            'memberSortEnums' => array_map(
+                function (MemberSortEnum $enum): string {
+                    return $enum->name;
+                },
+                MemberSortEnum::cases()
+            ),
+            'userUserManagementSetting' => $userUserManagementSettingService
+                ->getFromUser($userService->getAuthUser())
+                ->getAttribute('settings')
         ]);
     }
 
@@ -306,7 +451,16 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
         $user->update(
-            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
+            $request->only(
+                'first_name',
+                'last_name',
+                'phone_number',
+                'position',
+                'business',
+                'description',
+                'email',
+                'language'
+            )
         );
 
         if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
@@ -461,13 +615,13 @@ class UserController extends Controller
     ): RedirectResponse {
         $user->departments()->detach();
         $user->createdRooms()->withTrashed()->each(
-            fn (Room $room) => $roomService->update(
+            fn(Room $room) => $roomService->update(
                 $room,
                 ['user_id' => $userService->getAuthUserId()]
             )
         );
         $user->events()->withTrashed()->each(
-            fn (Event $event) => $eventService->update(
+            fn(Event $event) => $eventService->update(
                 $event,
                 ['user_id' => $userService->getAuthUserId()]
             )
@@ -513,7 +667,8 @@ class UserController extends Controller
             'project_management',
             'repeating_events',
             'work_shifts',
-            'description'
+            'description',
+            'event_name'
         ]));
     }
 

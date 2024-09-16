@@ -50,11 +50,14 @@
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
-                                <IconFilter class="text-white" />
-                                <span v-if="openFilter">
+
+
+                                <span class="flex" v-if="openFilter">
+                                    <IconFilter class="h-5 w-5 text-white"/>
                                    <IconChevronDown class="h-5 w-5 text-white"/>
                                 </span>
-                                <span v-else>
+                                <span class="flex" v-else>
+                                    <IconFilter class="h-5 w-5 text-white"/>
                                     <IconChevronUp class="h-5 w-5 text-white"/>
                                 </span>
                             </div>
@@ -207,6 +210,7 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -218,6 +222,7 @@ export default defineComponent({
     ],
     mixins: [Permissions, IconLib],
     components: {
+        BaseFilter,
         CraftFilter,
         SideNotification,
         Input,

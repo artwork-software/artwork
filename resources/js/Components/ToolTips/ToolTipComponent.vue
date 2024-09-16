@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center z-50 relative">
         <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes" :disabled="disabled">
-            <component :is="icon" class="text-artwork-buttons-context cursor-pointer" :class="[iconSize, classes]" :stroke-width="stroke"/>
+            <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
         <div v-if="show">
             <div v-if="direction === 'top'" class="absolute z-50 -top-3 text-center w-fit text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
@@ -63,6 +63,10 @@ const props = defineProps({
     relative: {
         type: Boolean,
         default: true
+    },
+    whiteIcon: {
+        type: Boolean,
+        default: false
     }
 })
 

@@ -27,8 +27,8 @@
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
                                     <th v-for="day in days" :style="{width:  '200px'}" :id="day.full_day"
-                                        class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                        <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                        class="z-20 h-8 py-2 border-r-4 border-secondaryHover truncate">
+                                        <div class="flex items-center calendarRoomHeaderBold ml-4">
                                             {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday"
                                                                                           class="text-[10px] font-normal ml-2">(KW{{
                                                 day.week_number
@@ -48,7 +48,7 @@
                                         </div>
                                     </th>
                                     <td v-for="day in days" :data-day="day.full_day" style="width: 200px"
-                                        class="max-h-28 overflow-y-auto cell border-r-2 border-dotted day-container"
+                                        class="max-h-28 overflow-y-auto cell border-r-2 border-gray-400 border-dashed day-container"
                                         :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-for="event in room[day.full_day].events" class="mb-1">
@@ -183,7 +183,7 @@
                                       </span>
                                 </span>
                                 </Switch>
-                                <BaseFilter onlyIcon="true" class="text-white">
+                                <BaseFilter :whiteIcon="true" onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
                                         <CraftFilter :crafts="crafts" is_tiny/>
                                     </div>

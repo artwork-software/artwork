@@ -670,6 +670,13 @@ readonly class EventService
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
                 'add_week_separator' => $period->isSunday(),
             ];
+
+            // If it's Sunday, add the extra row immediately after
+            if ($period->isSunday()) {
+                $periodArray[] = [
+                    'is_extra_row' => true
+                ];
+            }
         }
 
         $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(

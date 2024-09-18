@@ -238,8 +238,7 @@ class EventController extends Controller
     public function getEventsForRoomsByDaysWithUser(
         Request $request,
         ShiftWorkerService $shiftWorkerService,
-        UserService $userService,
-        ProjectTabService $projectTabService
+        UserService $userService
     ): array {
         return [
             'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
@@ -247,7 +246,6 @@ class EventController extends Controller
                 $userService,
                 $request->collect('rooms')->all(),
                 $request->collect('days')->all(),
-                $projectTabService,
                 $userService->getAuthUser()->getAttribute('shift_calendar_filter')
             ),
             'workerData' => $shiftWorkerService

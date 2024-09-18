@@ -387,6 +387,7 @@
     "Weak": "Schwach",
     "Strong": "Stark",
     "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters.": "Das Passwort muss mind. 8 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und Sonderzeichen beinhalten.",
+    "The password must be at least 10 characters long." : "Das Passwort muss mind. 10 Zeichen lang sein.",
     "Not in any team": "In keinem Team",
     "Edit team membership": "Teamzugehörigkeit bearbeiten",
     "Remove user from all teams": "Nutzer*in aus allen Teams entfernen",
@@ -2006,5 +2007,6 @@
     "Are you sure you want to delete the user from this shift?": "Bist du sicher, dass du die Nutzer*in von dieser Schicht entfernen willst?",
     "Delete user from shift": "Nutzer*in von Schicht entfernen",
     "Colleagues": "Kolleg*innen",
-    "No colleagues": "Keine Kolleg*innen"
+    "No colleagues": "Keine Kolleg*innen",
+    "Input fields marked with * are mandatory": "Mit * markierte Eingabefelder sind Pflichtfelder"
 }

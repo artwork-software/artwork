@@ -1,16 +1,16 @@
 <template>
     <PlaceholderInputLabelContainer :noMarginTop="noMarginTop">
-        <input :id="this.id"
+        <input class="input peer"
+               placeholder="placeholder"
+               :id="this.id"
                :value="this.modelValue"
-               @input="this.$emit('update:modelValue', $event.target.value)"
                :type="type"
                :required="required"
-               class="input peer"
                :class="isSmall ? '' : 'h-12'"
-               placeholder="placeholder"
                :disabled="disabled"
-                :readonly="readonly"
+               :readonly="readonly"
                :maxlength="maxlength"
+               @input="this.$emit('update:modelValue', $event.target.value)"
         />
         <PlaceholderLabel :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>

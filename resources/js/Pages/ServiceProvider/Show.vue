@@ -15,7 +15,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="mt-10">
                 <div class="hidden sm:block">
                     <div class="">
@@ -26,13 +25,19 @@
                 </div>
             </div>
         </div>
-
         <div class="mt-12 pl-14 mr-40">
             <div v-if="currentTab === 1">
-                <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
-                               :days-with-events="daysWithEvents"
-                               :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                               :vacations="vacations" :shift-qualifications="this.shiftQualifications"></UserShiftPlan>
+                <UserShiftPlan type="service_provider"
+                               :total-planned-working-hours="totalPlannedWorkingHours"
+                               :date-value="dateValue"
+                               :whole-week-date-period="wholeWeekDatePeriod"
+                               :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
+                               :projects="projects"
+                               :event-types="eventTypes"
+                               :rooms="rooms"
+                               :shift-qualifications="shiftQualifications"
+                               :firstProjectShiftTabId="firstProjectShiftTabId"
+                               :user-to-edit-id="serviceProvider.id"/>
             </div>
             <div v-if="currentTab === 2">
                 <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
@@ -144,8 +149,7 @@ import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {useForm} from "@inertiajs/vue3";
-import {router} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
@@ -186,12 +190,14 @@ export default defineComponent({
         'serviceProvider',
         'shifts',
         'dateValue',
-        'daysWithEvents',
+        'wholeWeekDatePeriod',
+        'eventsWithTotalPlannedWorkingHours',
         'rooms',
         'eventTypes',
         'projects',
         'totalPlannedWorkingHours',
-        'shiftQualifications'
+        'shiftQualifications',
+        'firstProjectShiftTabId'
     ],
     mounted() {
         this.showSidebar = true;

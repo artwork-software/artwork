@@ -1,7 +1,7 @@
 <template>
     <span ref="sidebarTagComponent"
           class="rounded-full items-center font-medium border px-3 text-sm mr-1 mb-1 h-8 inline-flex"
-          :style="{ backgroundColor: backgroundColorWithOpacity(item?.color), color: getTextColorBasedOnParent(), borderColor: backgroundColorWithOpacity(item?.color, 30) }">
+          :style="{ backgroundColor: this.backgroundColorWithOpacity(this.item?.color), color: this.getTextColorBasedOnParent(), borderColor: this.backgroundColorWithOpacity(this.item?.color, 30) }">
         {{ item?.name }}
         <button v-if="!hideX" type="button" @click="this.method(property)">
             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
@@ -11,7 +11,7 @@
 
 <script>
 import Button from "@/Jetstream/Button.vue";
-import { XIcon } from "@heroicons/vue/outline";
+import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/Mixins/Permissions.vue";
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 
@@ -74,7 +74,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

@@ -10,6 +10,11 @@ class CarbonService
     {
     }
 
+    public function create(string $date): Carbon
+    {
+        return $this->carbon->create($date);
+    }
+
     public function getNow(): Carbon
     {
         return $this->carbon->copy()->now();

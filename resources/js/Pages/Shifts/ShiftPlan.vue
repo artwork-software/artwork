@@ -67,10 +67,14 @@
                                                     :event="event"
                                                     :shift-qualifications="shiftQualifications"
                                                     :day-string="day"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
                                                     @dropFeedback="showDropFeedback"
                                                     @event-desires-reload="this.eventDesiresReload"
                                                 />
-                                                <SingleEventInShiftPlan v-else :event="event" :day="day"/>
+                                                <SingleEventInShiftPlan v-else
+                                                                        :event="event"
+                                                                        :day="day"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
 
 
@@ -540,7 +544,8 @@ export default {
         'user_filters',
         'crafts',
         'shiftQualifications',
-        'dayServices'
+        'dayServices',
+        'firstProjectShiftTabId'
     ],
     data() {
         return {

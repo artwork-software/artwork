@@ -2004,5 +2004,7 @@
     "All available addresses": "All available addresses",
     "Add new address": "Add new address",
     "Are you sure you want to delete the user from this shift?": "Are you sure you want to delete the user from this shift?",
-    "Delete user from shift": "Delete user from shift"
+    "Delete user from shift": "Delete user from shift",
+    "Colleagues": "Colleagues",
+    "No colleagues": "No colleagues"
 }

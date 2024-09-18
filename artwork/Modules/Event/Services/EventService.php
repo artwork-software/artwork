@@ -659,7 +659,6 @@ readonly class EventService
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
                     $calendarPeriod,
-                    $projectTabService,
                     $userService->getAuthUser()->getAttribute('shift_calendar_filter')
                 )
             )

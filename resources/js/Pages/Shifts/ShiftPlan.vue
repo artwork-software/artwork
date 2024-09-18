@@ -76,8 +76,6 @@
                                                                         :day="day"
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
-
-
                                         </div>
                                         <div class="bg-backgroundGray2 h-full " style="width: 37px" v-else>
                                             <div  >

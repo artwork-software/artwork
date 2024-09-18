@@ -29,7 +29,7 @@
                     <TextInputComponent id="email"
                                         disabled
                                         v-model="form.email"
-                                        :label="$t('E-mail address')" />
+                                        :label="getRequiredFieldLabel($t('E-mail address'))" />
                     <jet-input-error :message="form.errors.email" class="mt-2"/>
                 </div>
                 <div>

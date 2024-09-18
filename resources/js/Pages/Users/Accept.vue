@@ -17,33 +17,39 @@
                     <TextInputComponent id="first_name"
                                         v-model="form.first_name"
                                         :label="getRequiredFieldLabel($t('First name'))"/>
+                    <jet-input-error :message="form.errors.first_name" class="mt-2"/>
                 </div>
                 <div>
                     <TextInputComponent id="last_name"
                                         v-model="form.last_name"
                                         :label="getRequiredFieldLabel($t('Last name'))" />
+                    <jet-input-error :message="form.errors.last_name" class="mt-2"/>
                 </div>
                 <div>
                     <TextInputComponent id="email"
                                         disabled
                                         v-model="form.email"
                                         :label="$t('E-mail address')" />
+                    <jet-input-error :message="form.errors.email" class="mt-2"/>
                 </div>
                 <div>
                     <TextInputComponent id="phone_number"
                                         v-model="form.phone_number"
                                         :label="$t('Phone number')" />
+                    <jet-input-error :message="form.errors.phone_number" class="mt-2"/>
                 </div>
                 <div>
                     <TextInputComponent id="business"
                                         v-model="form.business"
                                         :label="getRequiredFieldLabel($t('Company'))" />
+                    <jet-input-error :message="form.errors.business" class="mt-2"/>
                 </div>
                 <div>
                     <TextInputComponent id="position"
                                         type="text"
                                         v-model="form.position"
                                         :label="$t('Position')" />
+                    <jet-input-error :message="form.errors.position" class="mt-2"/>
                 </div>
                 <div>
                     <div class="relative">

@@ -31,7 +31,7 @@ class AcceptInvitationRequest extends UserCreateRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'exists:invitations'],
             'password' => $this->passwordRules(),
             'password_confirmation' => ['required', 'string', 'same:password'],
-            'phone_number' => ['nullable', 'string', 'max:15'],
+            'phone_number' => ['nullable', 'string', 'max:30'],
             'position' => ['nullable', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],

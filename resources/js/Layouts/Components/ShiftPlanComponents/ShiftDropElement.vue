@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-full" v-if="showQualificationRowExpander">
+        <div class="w-full px-1" v-if="showQualificationRowExpander">
             <div class="w-full flex flex-row flex-wrap">
                 <div v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
                     class="flex xsLight items-center">

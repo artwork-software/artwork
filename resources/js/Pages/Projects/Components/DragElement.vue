@@ -1,16 +1,15 @@
 
 <template>
-    <div class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10)}">
-        <div class="" v-if="!$page.props.user.compact_mode">
+    <div :class="[$page.props.user.compact_mode ? 'h-8' : 'h-12']" class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color)}">
+        <div class="text-white" v-if="!$page.props.user.compact_mode">
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
         </div>
-        <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
+        <div class="text-left cursor-pointer" >
             <div v-if="type === 0" class="text-ellipsis w-28">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
                     </div>
-                <div class="ml-1">(i)</div>
                 </div>
                 <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
@@ -19,7 +18,6 @@
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
                     </div>
-                    <div class="ml-1"> (e) </div>
                 </div>
                 <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
             </div>
@@ -27,12 +25,11 @@
                 <div class="flex">
                     <div class="truncate">
                         {{ item.provider_name }}</div>
-                    <div class="ml-1"> (DL) </div>
                 </div>
                 <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
             </div>
         </div>
-        <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
+        <a :style="{color: TextColorWithDarken(color, 10)}" v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
             <IconCalendarShare class="h-5 w-5" />
         </a>
     </div>

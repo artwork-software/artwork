@@ -6,8 +6,7 @@
                     'bg-green-500' :
                     'bg-gray-500',
                     anyoneHasVacation ? '!bg-red-500' : ''
-            ]"
-        >
+            ]">
             <div class="h-9 flex items-center">
                 {{ shift.craft.abbreviation }} ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
             </div>
@@ -23,7 +22,6 @@
                 <div v-if="shift.infringement || anyoneHasVacation" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                     <IconExclamationCircle class="h-5 w-5" stroke-width="1.5" />
                 </div>
-
                 <div>
                     <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
                         <MenuItem v-slot="{ active }">
@@ -65,7 +63,6 @@
                 <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.end }}
                 </span>
-
                 <span v-if="shift.break_minutes"> | {{ shift.break_formatted }}</span>
             </p>
             <ShiftNoteComponent :shift="shift" />

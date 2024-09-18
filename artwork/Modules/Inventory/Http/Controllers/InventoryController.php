@@ -83,7 +83,7 @@ class InventoryController extends Controller
             true
         );
 
-        $crafts = $this->craftService->getCraftsWithInventory();
+        $crafts = $this->craftService->getCraftsWithInventory($startDate, $endDate);
 
         return Inertia::render('Inventory/Scheduling', [
             'dateValue' => $showCalendar['dateValue'],

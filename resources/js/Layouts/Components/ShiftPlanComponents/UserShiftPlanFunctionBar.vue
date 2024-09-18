@@ -2,7 +2,7 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="flex items-center gap-x-3">
             <div class="inline-flex items-center">
-                <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
+                <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"/>
                 <div class="flex items-center">
                     <div class="flex items-center">
                         <button class="ml-2 text-black" @click="previousTimeRange">
@@ -21,19 +21,14 @@
                 </div>
             </div>
         </div>
-
-        <div v-if="type !== 'freelancer' && type !== 'service_provider'">
-            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}
-        </div>
-        <div v-if="type === 'freelancer' || type === 'service_provider'">
-            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}
-        </div>
+<!--        <div v-if="type !== 'freelancer' && type !== 'service_provider'">-->
+<!--            {{ $t('Planned/target') }}: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}-->
+<!--        </div>-->
+<!--        <div v-if="type === 'freelancer' || type === 'service_provider'">-->
+<!--            {{ $t('Planned') }}: {{ totalPlannedWorkingHours?.toFixed(1) }}-->
+<!--        </div>-->
     </div>
-
-
-
     <CalendarAboSettingModal v-if="showCalendarAboSettingModal" @close="closeCalendarAboSettingModal" :eventTypes="eventTypes"/>
-
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" is_shift_calendar_abo />
 </template>
 

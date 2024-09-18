@@ -37,6 +37,7 @@ readonly class VacationConflictService
     ): void {
         $shifts = collect();
         $vacations = collect();
+
         if ($user) {
             $shifts = $user->shifts()->where('event_start_day', $day)->isCommitted()->get();
             $vacations = $user
@@ -50,7 +51,6 @@ readonly class VacationConflictService
                 ->vacations()
                 ->get();
         }
-
 
         foreach ($shifts as $shift) {
             if ($user) {

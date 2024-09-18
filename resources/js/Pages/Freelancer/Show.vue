@@ -28,10 +28,19 @@
         <div class="mt-12 ml-14 mr-40">
             <!-- Einsatzplan -->
             <div v-if="currentTab === 1">
-                <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="freelancer" :date-value="dateValue"
-                               :days-with-events="daysWithEvents"
-                               :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                               :vacations="vacations" :shift-qualifications="this.shiftQualifications"></UserShiftPlan>
+                <UserShiftPlan type="freelancer"
+                               :totalPlannedWorkingHours="totalPlannedWorkingHours"
+                               :date-value="dateValue"
+                               :whole-week-date-period="wholeWeekDatePeriod"
+                               :events-with-total-planned-working-hours="eventsWithTotalPlannedWorkingHours"
+                               :projects="projects"
+                               :event-types="eventTypes"
+                               :rooms="rooms"
+                               :vacations="vacations"
+                               :shift-qualifications="shiftQualifications"
+                               :firstProjectShiftTabId="firstProjectShiftTabId"
+                               :user-to-edit-whole-week-date-period-vacations="freelancer_to_edit_whole_week_date_period_vacations"
+                               :user-to-edit-id="freelancer.id"/>
                 <Availability type="freelancer"
                               :create-show-date="createShowDate"
                               :show-vacations-and-availabilities-date="showVacationsAndAvailabilitiesDate"
@@ -40,8 +49,7 @@
                               :date-to-show="dateToShow"
                               :user="freelancer"
                               :vacations="vacations"
-                              :availabilities="availabilities"
-                />
+                              :availabilities="availabilities"/>
             </div>
             <!-- Persönliche Daten -->
             <div v-if="currentTab === 2">
@@ -118,8 +126,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {useForm} from "@inertiajs/vue3";
-import {router} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
@@ -158,6 +165,8 @@ export default {
         'shifts',
         'calendarData',
         'dateToShow',
+        'wholeWeekDatePeriod',
+        'eventsWithTotalPlannedWorkingHours',
         'vacations',
         'dateValue',
         'daysWithEvents',
@@ -169,7 +178,9 @@ export default {
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
         'availabilities',
-        'shiftQualifications'
+        'shiftQualifications',
+        'freelancer_to_edit_whole_week_date_period_vacations',
+        'firstProjectShiftTabId'
     ],
     mounted() {
         this.showSidebar = true;

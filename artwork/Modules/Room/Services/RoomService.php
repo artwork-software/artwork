@@ -703,14 +703,9 @@ readonly class RoomService
 
             foreach ($eventPeriod as $date) {
                 $dateKey = $date->format('d.m.Y');
-                $roomEvent->setAttribute(
-                    'project_shift_tab_id',
-                    $projectTabService->findFirstProjectTabWithShiftsComponent()->getAttribute('id')
-                );
                 $actualEvents[$dateKey][] = $roomEvent;
             }
         }
-
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [

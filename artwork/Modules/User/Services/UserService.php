@@ -19,6 +19,7 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -39,6 +40,7 @@ class UserService
         private readonly StatefulGuard $statefulGuard,
         private readonly BroadcastManager $broadcastManager,
         private readonly UserUserManagementSettingService $userUserManagementSettingService,
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService
     ) {
@@ -86,7 +88,10 @@ class UserService
             $user,
             $this->userUserManagementSettingService->getDefaults()
         );
-
+        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userProjectManagementSettingService->getDefaults()
+        );
         return $user;
     }
 

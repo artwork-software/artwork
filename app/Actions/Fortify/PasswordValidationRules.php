@@ -2,8 +2,6 @@
 
 namespace App\Actions\Fortify;
 
-use ZxcvbnPhp\Zxcvbn;
-
 trait PasswordValidationRules
 {
     /**
@@ -14,10 +12,7 @@ trait PasswordValidationRules
         return [
             'required',
             'string',
-            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
-            fn ($attribute, $value, $fail) => (new Zxcvbn())->passwordStrength($value)['score'] >= 2 ?: $fail(
-                'Bitte wähle ein stärkeres Passwort, in dem du z.B. Buchstaben, Zahlen und Sonderzeichen verwendest.'
-            )
+            'min:10'
         ];
     }
 }

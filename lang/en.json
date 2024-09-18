@@ -388,6 +388,7 @@
     "Weak" : "Weak",
     "Strong" : "Strong",
     "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters." : "The password must be at least 8 characters long, contain at least 1 digit, upper and lower case letters and special characters.",
+    "The password must be at least 10 characters long." : "The password must be at least 10 characters long.",
     "Not in any team" : "Not in any team",
     "Edit team membership" : "Edit team membership",
     "Remove user from all teams" : "Remove user from all teams",
@@ -2006,5 +2007,6 @@
     "Are you sure you want to delete the user from this shift?": "Are you sure you want to delete the user from this shift?",
     "Delete user from shift": "Delete user from shift",
     "Colleagues": "Colleagues",
-    "No colleagues": "No colleagues"
+    "No colleagues": "No colleagues",
+    "Input fields marked with * are mandatory": "Input fields marked with * are mandatory"
 }

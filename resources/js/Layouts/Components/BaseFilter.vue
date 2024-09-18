@@ -1,7 +1,7 @@
 <template>
     <Menu as="div" class="relative flex items-center text-left">
         <div class="flex items-center">
-            <MenuButton v-if="!onlyIcon" class="w-52 menu-button">
+            <MenuButton v-if="!onlyIcon" class="w-52 border-white ">
                 <span class="float-left xsDark">Filter</span>
                 <IconChevronDown stroke-width="1.5"
                     class="ml-2 -mr-1 h-5 w-5 text-artwork-buttons-context float-right"
@@ -13,6 +13,7 @@
                     direction="bottom"
                     :tooltip-text="$t('Filter')"
                     icon="IconFilter"
+                    :whiteIcon="whiteIcon"
                     icon-size="h-7 w-7"
                 />
             </MenuButton>
@@ -59,6 +60,6 @@ export default {
         MenuButton,
         ChevronDownIcon
     },
-    props:['onlyIcon', 'left']
+    props:['onlyIcon', 'left','whiteIcon']
 }
 </script>

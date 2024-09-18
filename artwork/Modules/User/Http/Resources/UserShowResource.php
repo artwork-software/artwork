@@ -38,7 +38,7 @@ class UserShowResource extends JsonResource
             'salary_per_hour' => $this->salary_per_hour,
             'salary_description' => $this->salary_description,
             'crafts' => $this->crafts,
-            'language' => $this->language,
+            'language' => $this->language
         ];
     }
 }

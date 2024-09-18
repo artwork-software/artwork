@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
+    <div class="w-[98%] flex justify-between items-center mt-2 mb-2">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div class="flex items-center mx-4 gap-x-1 select-none">

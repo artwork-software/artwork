@@ -11,6 +11,8 @@ class ShowDto extends BaseDto
 {
     public ?array $freelancer = null;
 
+    public ?Collection $freelancerToEditWholeWeekDatePeriodVacations = null;
+
     public ?array $calendarData = null;
 
     public ?array $dateToShow = null;
@@ -25,7 +27,9 @@ class ShowDto extends BaseDto
 
     public ?array $dateValue = null;
 
-    public ?array $daysWithEvents = null;
+    public ?array $wholeWeekDatePeriod = null;
+
+    public ?array $eventsWithTotalPlannedWorkingHours = null;
 
     public ?float $totalPlannedWorkingHours = null;
 
@@ -41,9 +45,18 @@ class ShowDto extends BaseDto
 
     public ?Collection $shiftQualifications = null;
 
+    public ?int $firstProjectShiftTabId = null;
+
     public function setFreelancer(?array $freelancer): self
     {
         $this->freelancer = $freelancer;
+
+        return $this;
+    }
+
+    public function setFreelancerToEditWholeWeekDatePeriodVacations(?Collection $vacations): self
+    {
+        $this->freelancerToEditWholeWeekDatePeriodVacations = $vacations;
 
         return $this;
     }
@@ -97,9 +110,19 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setDaysWithEvents(?array $daysWithEvents): self
+    /**
+     * @param array|null $wholeWeekDatePeriod
+     */
+    public function setWholeWeekDatePeriod(?array $wholeWeekDatePeriod): self
     {
-        $this->daysWithEvents = $daysWithEvents;
+        $this->wholeWeekDatePeriod = $wholeWeekDatePeriod;
+
+        return $this;
+    }
+
+    public function setEventsWithTotalPlannedWorkingHours(?array $eventsWithTotalPlannedWorkingHours): self
+    {
+        $this->eventsWithTotalPlannedWorkingHours = $eventsWithTotalPlannedWorkingHours;
 
         return $this;
     }
@@ -153,12 +176,24 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    {
+        $this->firstProjectShiftTabId = $firstProjectShiftTabId;
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>|null
      */
     public function getFreelancer(): ?array
     {
         return $this->freelancer;
+    }
+
+    public function getFreelancerToEditWholeWeekDatePeriodVacations(): ?Collection
+    {
+        return $this->freelancerToEditWholeWeekDatePeriodVacations;
     }
 
     /**
@@ -209,11 +244,19 @@ class ShowDto extends BaseDto
     }
 
     /**
+     * @return array<int, string>|null
+     */
+    public function getWholeWeekDatePeriod(): ?array
+    {
+        return $this->wholeWeekDatePeriod;
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
-    public function getDaysWithEvents(): ?array
+    public function getEventsWithTotalPlannedWorkingHours(): ?array
     {
-        return $this->daysWithEvents;
+        return $this->eventsWithTotalPlannedWorkingHours;
     }
 
     public function getTotalPlannedWorkingHours(): ?float
@@ -254,6 +297,11 @@ class ShowDto extends BaseDto
         return $this->shiftQualifications;
     }
 
+    public function getFirstProjectShiftTabId(): ?int
+    {
+        return $this->firstProjectShiftTabId;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -261,6 +309,8 @@ class ShowDto extends BaseDto
     {
         return [
             'freelancer' => $this->getFreelancer(),
+            'freelancer_to_edit_whole_week_date_period_vacations' => $this
+                ->getFreelancerToEditWholeWeekDatePeriodVacations(),
             'calendarData' => $this->getCalendarData(),
             'dateToShow' => $this->getDateToShow(),
             'vacations' => $this->getVacations(),
@@ -268,14 +318,16 @@ class ShowDto extends BaseDto
             'createShowDate' => $this->getCreateShowDate(),
             'showVacationsAndAvailabilitiesDate' => $this->getShowVacationsAndAvailabilitiesDate(),
             'dateValue' => $this->getDateValue(),
-            'daysWithEvents' => $this->getDaysWithEvents(),
+            'wholeWeekDatePeriod' => $this->getWholeWeekDatePeriod(),
+            'eventsWithTotalPlannedWorkingHours' => $this->getEventsWithTotalPlannedWorkingHours(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
             'rooms' => $this->getRooms(),
             'eventTypes' => $this->getEventTypes(),
             'projects' => $this->getProjects(),
             'shifts' => $this->getShifts(),
             'availabilities' => $this->getAvailabilities(),
-            'shiftQualifications' => $this->getShiftQualifications()
+            'shiftQualifications' => $this->getShiftQualifications(),
+            'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
         ];
     }
 }

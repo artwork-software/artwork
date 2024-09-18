@@ -27,6 +27,7 @@ module.exports = {
                 darkGray: '#616069',
                 darkGrayBg: 'rgba(255,255,255,0.15)',
                 backgroundGray: '#F5F5F3',
+                backgroundGray2:'#e3e3e3',
                 buttonBlue:'#3017AD',
                 buttonHover:'#2D1FDE',
                 tagBg: 'rgba(48,23,173,0.1)',

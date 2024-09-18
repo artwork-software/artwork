@@ -43,6 +43,8 @@ class ShiftPlanDto extends BaseDto
 
     public ?Collection $dayServices = null;
 
+    public ?int $firstProjectShiftTabId = null;
+
 
     public function setDayServices(?Collection $dayServices): self
     {
@@ -163,6 +165,13 @@ class ShiftPlanDto extends BaseDto
         return $this;
     }
 
+    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    {
+        $this->firstProjectShiftTabId = $firstProjectShiftTabId;
+
+        return $this;
+    }
+
     public function getEvents(): ?Collection
     {
         return $this->events;
@@ -269,6 +278,11 @@ class ShiftPlanDto extends BaseDto
         return $this->dayServices;
     }
 
+    public function getFirstProjectShiftTabId(): ?int
+    {
+        return $this->firstProjectShiftTabId;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -292,6 +306,7 @@ class ShiftPlanDto extends BaseDto
             'serviceProvidersForShifts' => $this->getServiceProvidersForShifts(),
             'shiftQualifications' => $this->getShiftQualifications(),
             'dayServices' => $this->getDayServices(),
+            'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
         ];
     }
 }

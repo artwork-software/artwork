@@ -1,14 +1,20 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0 -mb-1 -pb-1">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0 -mb-1"
+        <PopoverButton :class="open ? '' : 'text-opacity-90'"
+                       class="group inline-flex !ring-0 outline-0 -mb-1"
                        @click="calculatePopoverPosition">
-            <img v-if="user" :src="user.profile_photo_url" alt=""
-                 class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 "
-                 :class="['h-' + this.height, 'w-' + this.width, classes]">
-            <IconUserExclamation v-else
-                                 stroke-width="2"
-                                 class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300"
-                                 :class="['h-' + this.height, 'w-' + this.width, classes]"/>
+            <template v-if="useSlotInsteadOfIcon">
+                <slot/>
+            </template>
+            <template v-else>
+                <img v-if="user" :src="user.profile_photo_url" alt=""
+                     class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 "
+                     :class="['h-' + this.height, 'w-' + this.width, classes]">
+                <IconUserExclamation v-else
+                                     stroke-width="2"
+                                     class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300"
+                                     :class="['h-' + this.height, 'w-' + this.width, classes]"/>
+            </template>
         </PopoverButton>
         <Teleport to="body">
             <transition enter-active-class="transition-enter-active"
@@ -18,7 +24,8 @@
                         leave-from-class="transition-leave-from"
                         leave-to-class="transition-leave-to">
                 <PopoverPanel
-                    class="absolute left-1/2 z-50 -translate-x-1/2 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5"
+                    :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '']"
+                    class="absolute left-1/2 z-50 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5"
                     :style="popoverStyle">
                     <div v-if="user" class="shadow-lg ring-1 ring-black ring-opacity-5">
                         <div class="grid grid-cols-4 w-96">
@@ -91,6 +98,14 @@ export default {
         classes: {
             type: String,
             default: ''
+        },
+        useSlotInsteadOfIcon: {
+            type: Boolean,
+            default: false
+        },
+        dontTranslatePopoverPosition: {
+            type: Boolean,
+            default: false
         }
     },
     data() {

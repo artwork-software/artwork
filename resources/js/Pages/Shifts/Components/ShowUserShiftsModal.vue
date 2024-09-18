@@ -59,7 +59,7 @@
                                             <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
-                                            <button type="button" @click="removeUserFromShift(shift.id, shift.pivotId)">
+                                            <button type="button" @click="openConfirmDeleteModal(shift.id, shift.pivotId)">
                                                 <SvgCollection svg-name="xMarkIcon"/>
                                             </button>
                                         </div>
@@ -104,9 +104,13 @@
                     </TransitionChild>
                 </div>
             </div>
+            <ConfirmDeleteModal :title="$t('Delete user from shift')" :description="$t('Are you sure you want to delete the user from this shift?')" @closed="closeConfirmDeleteModal" @delete="submitDeleteUserFromShift" v-if="showConfirmDeleteModal" />
         </Dialog>
     </TransitionRoot>
+
 </template>
+
+
 <script>
 import {defineComponent} from 'vue'
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
@@ -115,10 +119,12 @@ import Button from "@/Jetstream/Button.vue";
 import axios from "axios";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        ConfirmDeleteModal,
         FormButton,
         SvgCollection,
         Button,
@@ -132,7 +138,10 @@ export default defineComponent({
     data() {
         return {
             open: true,
-            checked: !this.user.vacations?.includes(this.day.without_format)
+            checked: !this.user.vacations?.includes(this.day.without_format),
+            wantedShiftId: null,
+            wantedUserId: null,
+            showConfirmDeleteModal: false
         }
     },
     props: ['user', 'day'],
@@ -159,6 +168,18 @@ export default defineComponent({
                 document.getElementById('shift-' + shiftId).remove();
                 this.$emit('desiresReload', shiftId, user.element.id, user.type, this.day.full_day);
             });
+        },
+        submitDeleteUserFromShift() {
+            this.removeUserFromShift(this.wantedShiftId, this.wantedUserId);
+            this.closeConfirmDeleteModal();
+        },
+        openConfirmDeleteModal(shiftId, usersPivotId) {
+            this.wantedShiftId = shiftId;
+            this.wantedUserId = usersPivotId;
+            this.showConfirmDeleteModal = true;
+        },
+        closeConfirmDeleteModal() {
+            this.showConfirmDeleteModal = false;
         },
         checkVacation() {
             let callback = (afterRequest) => {

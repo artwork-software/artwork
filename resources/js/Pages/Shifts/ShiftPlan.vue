@@ -26,15 +26,17 @@
                             <div class="stickyHeader">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
-                                    <th v-for="day in days" :style="{width:  '200px'}" :id="day.full_day"
-                                        class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                        <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                    <th  v-for="day in days"  :id="day.full_day" style="max-width: 204px"
+                                        class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
+                                        <div v-if="!day.is_extra_row" :style="{width:  '200px'}" class="flex items-center calendarRoomHeaderBold ml-2">
                                             {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday"
                                                                                           class="text-[10px] font-normal ml-2">(KW{{
                                                 day.week_number
                                             }})</span>
                                         </div>
+                                        <div v-else style="width:37px"></div>
                                     </th>
+
                                 </TableHead>
                             </div>
                         </template>
@@ -47,27 +49,42 @@
                                             {{ room[days[0].full_day].roomName }}
                                         </div>
                                     </th>
-                                    <td v-for="day in days" :data-day="day.full_day" style="width: 200px"
-                                        class="max-h-28 overflow-y-auto cell border-r-2 border-dotted day-container"
-                                        :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']">
+                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']"
+                                        class="border-r-2 border-gray-400 border-dashed day-container"
+                                        v-for="day in days" :data-day="day.full_day">
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-for="event in room[day.full_day].events" class="mb-1">
-                                            <SingleShiftPlanEvent
-                                                v-if="checkIfEventHasShiftsToDisplay(event)"
-                                                :multiEditMode="multiEditMode"
-                                                :user-for-multi-edit="userForMultiEdit"
-                                                :highlightMode="highlightMode"
-                                                :highlighted-id="idToHighlight"
-                                                :highlighted-type="typeToHighlight"
-                                                :event="event"
-                                                :shift-qualifications="shiftQualifications"
-                                                :day-string="day"
-                                                @dropFeedback="showDropFeedback"
-                                                @event-desires-reload="this.eventDesiresReload"
-                                            />
-                                            <SingleEventInShiftPlan v-else :event="event" :day="day"/>
+                                        <div v-if="!day.is_extra_row" style="width: 200px"
+                                             class="max-h-28 overflow-y-auto cell "
+                                        >
+                                            <div v-for="event in room[day.full_day].events" class="mb-1">
+                                                <SingleShiftPlanEvent
+                                                    v-if="checkIfEventHasShiftsToDisplay(event)"
+                                                    :multiEditMode="multiEditMode"
+                                                    :user-for-multi-edit="userForMultiEdit"
+                                                    :highlightMode="highlightMode"
+                                                    :highlighted-id="idToHighlight"
+                                                    :highlighted-type="typeToHighlight"
+                                                    :event="event"
+                                                    :shift-qualifications="shiftQualifications"
+                                                    :day-string="day"
+                                                    :firstProjectShiftTabId="firstProjectShiftTabId"
+                                                    @dropFeedback="showDropFeedback"
+                                                    @event-desires-reload="this.eventDesiresReload"
+                                                />
+                                                <SingleEventInShiftPlan v-else
+                                                                        :event="event"
+                                                                        :day="day"
+                                                                        :firstProjectShiftTabId="firstProjectShiftTabId"/>
+                                            </div>
                                         </div>
+                                        <div class="bg-backgroundGray2 h-full " style="width: 37px" v-else>
+                                            <div  >
+                                            </div>
+                                        </div>
+
                                     </td>
+
+
                                 </tr>
                             </TableBody>
                         </template>
@@ -75,35 +92,41 @@
                 </div>
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
-                    <div class="flex justify-center overflow-y-scroll">
-                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
-                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
-                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                     viewBox="0 0 14.123 6.519">
-                                    <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                       transform="translate(-275.125 870.166) rotate(-90)">
-                                        <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                              transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                              stroke-width="1"/>
-                                        <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                              transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                              stroke="#a7a6b1" stroke-width="1"/>
-                                    </g>
-                                </svg>
-                            </div>
-                        </div>
-                        <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
-                            :title="$t('Hold and drag to change the size')">
-                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                                <SelectorIcon class="h-3 w-6 text-gray-400" />
-                            </div>
+                <div class="flex justify-center overflow-y-scroll">
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview"
+                         :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
+                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
+                                 viewBox="0 0 14.123 6.519">
+                                <g id="Gruppe_1608" data-name="Gruppe 1608"
+                                   transform="translate(-275.125 870.166) rotate(-90)">
+                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
+                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
+                                          stroke-width="1"/>
+                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
+                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
+                                          stroke="#a7a6b1" stroke-width="1"/>
+                                </g>
+                            </svg>
                         </div>
                     </div>
+                    <div v-if="showUserOverview" @mousedown="startResize"
+                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
+                         :title="$t('Hold and drag to change the size')">
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                            <SelectorIcon class="h-3 w-6 text-gray-400"/>
+                        </div>
+                    </div>
+                </div>
                 <div class=" bg-artwork-navigation-background">
-                    <div v-show="showUserOverview" ref="userOverview" class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll" :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                        <div class="flex items-center justify-between w-full fixed py-3 z-50 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
+                    <div v-show="showUserOverview" ref="userOverview"
+                         class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
+                         :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
+                        <div
+                            class="flex items-center justify-between w-full fixed py-3 z-50 bg-artwork-navigation-background px-3"
+                            :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
                                         :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
@@ -183,7 +206,7 @@
                                       </span>
                                 </span>
                                 </Switch>
-                                <BaseFilter onlyIcon="true" class="text-white">
+                                <BaseFilter :whiteIcon="true" onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
                                         <CraftFilter :crafts="crafts" is_tiny/>
                                     </div>
@@ -235,10 +258,10 @@
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div
+                                            <div v-if="!day.is_extra_row"
                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden"
-                                                :style="{width: day.is_sunday ? '158px' : '198px'}"
+                                                :style="{width: '202px'}"
                                                 @click="handleCellClick(user, day)">
                                                 <span v-for="shift in user.element?.shifts"
                                                       v-if="!user.vacations?.includes(day.without_format)">
@@ -260,10 +283,18 @@
                                                     </span>
                                                 </span>
                                             </div>
-                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
-                                                 v-if="user.dayServices"
-                                                 v-for="(userDayServices, index) in user.dayServices"
-                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
+                                            <div v-else
+                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 style="width: 39px"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
+                                            </div>
+                                            <div
+                                                v-if="user.dayServices"
+                                                v-for="(userDayServices, index) in user.dayServices"
+                                                class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
                                                 <div v-if="index === day.without_format"
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
@@ -272,14 +303,8 @@
                                                                :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
-                                            <div v-if="day.is_sunday"
-                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 style="width: 37px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                                <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                                </span>
-                                            </div>
+
+
                                         </td>
                                     </tr>
                                     </tbody>
@@ -323,30 +348,44 @@
                                                                :color="null"/>
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"  class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
-                                                 @click="handleCellClick(user, day)"
-                                                 :style="{width: day.is_sunday ? '158px' : '198px'}"
+                                            <div v-if="!day.is_extra_row"
+                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                                @click="handleCellClick(user, day)"
+                                                :style="{width: '202px'}"
                                             >
-                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                            <span v-for="shift in user.element?.shifts"
+                                                  v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                                 </span>
                                             </span>
-                                                <span v-else class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                {{ $t('not available')}}
+                                                <span v-else
+                                                      class="h-full flex justify-center items-center text-artwork-messages-error">
+                                                {{ $t('not available') }}
                                             </span>
                                                 <span v-if="user.availabilities">
                                                 <span v-for="availability in user.availabilities[day.full_day]">
                                                     <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo; </span>
+                                                        <span v-if="availability.comment">&bdquo;{{
+                                                                availability.comment
+                                                            }}&rdquo; </span>
                                                     </span>
                                                 </span>
                                                 </span>
                                             </div>
-                                            <div :style="{marginRight: day.is_sunday ? '40px' : '0px'}"
-                                                 v-if="user.dayServices"
-                                                 v-for="(userDayServices, index) in user.dayServices"
-                                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
+                                            <div v-else
+                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
+                                                 style="width: 39px"
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                <span v-if="user.type === 0">
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                </span>
+                                            </div>
+                                            <div
+                                                v-if="user.dayServices"
+                                                v-for="(userDayServices, index) in user.dayServices"
+                                                class="absolute right-2 top-1/2 transform -translate-y-1/2 flex">
                                                 <div v-if="index === day.without_format"
                                                      v-for="(userDayService, position) in userDayServices"
                                                      class="rounded-full h-6 w-6 bg-white p-0.5 flex items-center justify-center"
@@ -354,14 +393,6 @@
                                                     <component :is="userDayService.icon" class="h-4 w-4"
                                                                :style="{color: userDayService.hex_color}"/>
                                                 </div>
-                                            </div>
-                                            <div v-if="day.is_sunday"
-                                                 class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
-                                                 style="width: 37px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
-                                                <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
-                                                </span>
                                             </div>
                                         </td>
                                     </tr>
@@ -511,7 +542,8 @@ export default {
         'user_filters',
         'crafts',
         'shiftQualifications',
-        'dayServices'
+        'dayServices',
+        'firstProjectShiftTabId'
     ],
     data() {
         return {
@@ -531,7 +563,7 @@ export default {
             userForMultiEdit: null,
             multiEditFeedback: '',
             dropFeedback: null,
-            closedCrafts:[],
+            closedCrafts: [],
             userOverviewHeight: 570,
             startY: 0,
             startHeight: 0,
@@ -1314,7 +1346,7 @@ export default {
                 this.windowHeight = (window.innerHeight - 110) - this.userOverviewHeight;
             }
 
-            if (window.innerHeight - 110  < 400) {
+            if (window.innerHeight - 110 < 400) {
                 this.userOverviewHeight = window.innerHeight - 300;
             }
 

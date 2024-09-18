@@ -12,18 +12,23 @@ use Artwork\Modules\Freelancer\Http\Resources\FreelancerShowResource;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
 readonly class FreelancerService
 {
-    public function __construct(private FreelancerRepository $freelancerRepository)
-    {
+    public function __construct(
+        private FreelancerRepository $freelancerRepository,
+        private ProjectTabService $projectTabService
+    ) {
     }
 
     /**
@@ -86,14 +91,23 @@ readonly class FreelancerService
         ?string $vacationMonth
     ): ShowDto {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        $requestedPeriod = iterator_to_array(
+            CarbonPeriod::create($startDate, $endDate)->map(
+                function (Carbon $date) {
+                    return $date->format('d.m.Y');
+                }
+            )
+        );
+        $startOfWeek = $startDate->copy()->startOfWeek();
+        $endOfWeek = $endDate->copy()->endOfWeek();
 
         [
-            $daysWithEvents,
+            $eventsWithTotalPlannedWorkingHours,
             $totalPlannedWorkingHours
         ] = $eventService->getDaysWithEventsWhereFreelancerHasShiftsWithTotalPlannedWorkingHours(
             $freelancer->id,
-            $startDate,
-            $endDate
+            $startOfWeek,
+            $endOfWeek
         );
 
         [
@@ -106,6 +120,16 @@ readonly class FreelancerService
 
         return ShowDto::newInstance()
             ->setFreelancer(FreelancerShowResource::make($freelancer)->resolve())
+            ->setFreelancerToEditWholeWeekDatePeriodVacations(
+                $freelancer->getAttribute('vacations')
+                    ->whereBetween(
+                        'date',
+                        [
+                            $startOfWeek->format('Y-m-d'),
+                            $endOfWeek->format('Y-m-d')
+                        ]
+                    )
+            )
             ->setCalendarData($calendarData)
             ->setDateToShow($dateToShow)
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
@@ -117,7 +141,29 @@ readonly class FreelancerService
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->setDaysWithEvents($daysWithEvents)
+            ->setWholeWeekDatePeriod(
+                iterator_to_array(
+                    CarbonPeriod::create($startOfWeek, $endOfWeek)
+                        ->map(
+                            function (Carbon $date) use ($requestedPeriod) {
+                                return [
+                                    'inRequestedTimeSpan' => in_array(
+                                        $date->format('d.m.Y'),
+                                        $requestedPeriod
+                                    ),
+                                    'full_day' => $date->format('d.m.Y'),
+                                    'day' => $date->format('d.m.'),
+                                    'day_string' => $date->shortDayName,
+                                    'week_number' => $date->weekOfYear,
+                                    'month_number' => $date->month,
+                                    'is_monday' => $date->isMonday(),
+                                    'is_weekend' => $date->isWeekend(),
+                                ];
+                            }
+                        )
+                )
+            )
+            ->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
             ->setTotalPlannedWorkingHours((float) $totalPlannedWorkingHours)
             ->setRooms($roomService->getAllWithoutTrashed())
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
@@ -125,7 +171,12 @@ readonly class FreelancerService
             ->setVacations($this->getVacationsByDateOrderedByDateAscending($freelancer, $selectedDate))
             ->setShifts($this->getShiftsWithEventsOrderedByStart($freelancer))
             ->setAvailabilities($this->getAvailabilitiesByDateOrderedByDateAscending($freelancer, $selectedDate))
-            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending());
+            ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
+            ->setFirstProjectShiftTabId(
+                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
+            );
     }
 
     public function getVacationsByDateOrderedByDateAscending(int|Freelancer $freelancer, Carbon $date): Collection

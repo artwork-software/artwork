@@ -12,7 +12,9 @@ class ShowDto extends BaseDto
 
     public ?array $dateValue = null;
 
-    public ?array $daysWithEvents = null;
+    public ?array $wholeWeekDatePeriod = null;
+
+    public ?array $eventsWithTotalPlannedWorkingHours = null;
 
     public ?float $totalPlannedWorkingHours = null;
 
@@ -25,6 +27,8 @@ class ShowDto extends BaseDto
     public ?Collection $shifts = null;
 
     public ?Collection $shiftQualifications = null;
+
+    public ?int $firstProjectShiftTabId = null;
 
     public function setServiceProvider(?ServiceProviderShowResource $serviceProvider): self
     {
@@ -40,9 +44,19 @@ class ShowDto extends BaseDto
         return $this;
     }
 
-    public function setDaysWithEvents(?array $daysWithEvents): self
+    /**
+     * @param array|null $wholeWeekDatePeriod
+     */
+    public function setWholeWeekDatePeriod(?array $wholeWeekDatePeriod): self
     {
-        $this->daysWithEvents = $daysWithEvents;
+        $this->wholeWeekDatePeriod = $wholeWeekDatePeriod;
+
+        return $this;
+    }
+
+    public function setEventsWithTotalPlannedWorkingHours(?array $eventsWithTotalPlannedWorkingHours): self
+    {
+        $this->eventsWithTotalPlannedWorkingHours = $eventsWithTotalPlannedWorkingHours;
 
         return $this;
     }
@@ -89,6 +103,13 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    {
+        $this->firstProjectShiftTabId = $firstProjectShiftTabId;
+
+        return $this;
+    }
+
     public function getServiceProvider(): ?ServiceProviderShowResource
     {
         return $this->serviceProvider;
@@ -103,11 +124,19 @@ class ShowDto extends BaseDto
     }
 
     /**
+     * @return array<int, string>|null
+     */
+    public function getWholeWeekDatePeriod(): ?array
+    {
+        return $this->wholeWeekDatePeriod;
+    }
+
+    /**
      * @return array<string, mixed>|null
      */
-    public function getDaysWithEvents(): ?array
+    public function getEventsWithTotalPlannedWorkingHours(): ?array
     {
-        return $this->daysWithEvents;
+        return $this->eventsWithTotalPlannedWorkingHours;
     }
 
     public function getTotalPlannedWorkingHours(): ?float
@@ -140,6 +169,11 @@ class ShowDto extends BaseDto
         return $this->shiftQualifications;
     }
 
+    public function getFirstProjectShiftTabId(): ?int
+    {
+        return $this->firstProjectShiftTabId;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -148,13 +182,15 @@ class ShowDto extends BaseDto
         return [
             'serviceProvider' => $this->getServiceProvider(),
             'dateValue' => $this->getDateValue(),
-            'daysWithEvents' => $this->getDaysWithEvents(),
+            'wholeWeekDatePeriod' => $this->getWholeWeekDatePeriod(),
+            'eventsWithTotalPlannedWorkingHours' => $this->getEventsWithTotalPlannedWorkingHours(),
             'totalPlannedWorkingHours' => $this->getTotalPlannedWorkingHours(),
             'rooms' => $this->getRooms(),
             'eventTypes' => $this->getEventTypes(),
             'projects' => $this->getProjects(),
             'shifts' => $this->getShifts(),
-            'shiftQualifications' => $this->getShiftQualifications()
+            'shiftQualifications' => $this->getShiftQualifications(),
+            'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
         ];
     }
 }

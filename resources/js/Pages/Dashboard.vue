@@ -16,7 +16,6 @@
                                 {{ eventsOfDay?.length ?? 0 }}
                             </div>
                         </div>
-
                         <DashboardCard>
                             <div class="font-semibold flex items-center gap-x-3 mb-3">
                                 <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
@@ -36,7 +35,7 @@
                                         </a>
                                         <div class="text-sm">
                                             <div v-if="event.allDay">
-                                                Ganztags
+                                                {{ $t('All day') }}
                                             </div>
                                             <div v-else>
                                                 {{ event.start_time }} - {{ event.end_time }}
@@ -67,36 +66,30 @@
                                 {{ shiftsOfDay?.length ?? 0 }}
                             </div>
                         </div>
-                        <DashboardCard>
+                        <DashboardCard class="flex flex-col gap-y-2">
                             <div class="font-semibold flex items-center gap-x-3">
                                 {{todayDate}}
                             </div>
-                            <div v-if="shiftsOfDay?.length > 0">
-                                <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="py-2 w-full">
-                                    <div>
-                                        <div>
-                                            <div class="text-secondaryHover xsWhiteBold px-1 py-1"
-                                                 :class="shift.event?.event_type?.svg_name + 'Shift'">
-                                                {{ shift.event?.event_type?.abbreviation }}: {{ shift.event?.project?.name }}
-                                            </div>
-                                        </div>
-                                        <div class="bg-backgroundGray">
-                                            <div class="flex items-center xsLight text-shiftText subpixel-antialiased">
-                                                <div>
-                                                    {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }}
-                                                </div>
-                                                <div v-if="shift.event?.room" class="truncate">
-                                                    , {{ shift.event?.room?.name }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div v-if="shiftsOfDay.length > 0" class="flex flex-col gap-y-2">
+                                <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="w-full">
+                                    <SingleUserEventShift type='user'
+                                                          :event="shift.event"
+                                                          :shift="shift"
+                                                          :project="this.findProjectById(shift.event.project_id)"
+                                                          :event-type="this.findEventTypeById(shift.event.event_type_id)"
+                                                          :user-to-edit-id="this.$page.props.user.id"
+                                                          :first-project-shift-tab-id="this.first_project_shift_tab_id"/>
                                 </div>
                             </div>
                             <div v-else class="mt-3">
                                 <div class="bg-gray-50 p-2 rounded-lg">
                                     <AlertComponent :text="$t('You don\'t have any shifts today.')" type="dashboard" classes="!items-center" text-size="text-sm"/>
                                 </div>
+                            </div>
+                            <div class="flex flex-col gap-y-2">
+                                <template v-for="dayService in users_day_services_of_day">
+                                    <DayServiceComponent :day-service="dayService"/>
+                                </template>
                             </div>
                         </DashboardCard>
                         <div class="flex justify-end mt-3" v-if="this.$can('can view shift plan') || this.hasAdminRole()">
@@ -185,19 +178,15 @@
                                             bis {{ task.deadline }}
                                         </div>
                                     </div>
-
-
                                     <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
                                           class="my-1 flex ml-8 text-xs">
                                         {{ task.projectName }}
                                         <ChevronRightIcon class="h-3 w-3 my-auto mx-2" aria-hidden="true"/>
                                         {{ task.checklistName }}
                                     </Link>
-
                                     <div class="ml-8 my-3 xsLight">
                                         {{ task.description }}
                                     </div>
-
                                 </div>
                             </div>
                             <div v-else class="relative">
@@ -243,6 +232,8 @@ import NotificationButtons from "@/Layouts/Components/NotificationComponents/Not
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import DashboardCard from "@/Components/DashboardCard.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
+import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
 
 export default defineComponent({
     mixins: [Permissions],
@@ -256,8 +247,10 @@ export default defineComponent({
         'notificationCount',
         'event',
         'eventTypes',
+        'projects',
         'rooms',
         'historyObjects',
+        'users_day_services_of_day',
         'first_project_tab_id',
         'first_project_shift_tab_id',
         'first_project_tasks_tab_id',
@@ -265,6 +258,8 @@ export default defineComponent({
         'first_project_calendar_tab_id'
     ],
     components: {
+        DayServiceComponent,
+        SingleUserEventShift,
         AlertComponent,
         DashboardCard,
         NotificationBlock,
@@ -307,6 +302,12 @@ export default defineComponent({
         },
         getHref(project) {
             return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});
+        },
+        findProjectById(projectId) {
+            return this.projects.find(project => project.id === projectId);
+        },
+        findEventTypeById(eventTypeId) {
+            return this.eventTypes.find(eventType => eventType.id === eventTypeId);
         },
     },
     data() {

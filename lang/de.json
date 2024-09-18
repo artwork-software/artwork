@@ -2002,5 +2002,7 @@
     "Project name is a required field.": "Der Projektname muss zwingend angegeben werden.",
     "Addresses": "Adressen",
     "All available addresses": "Alle verfügbaren Adressen",
-    "Add new address": "Neue Adresse hinzufügen"
+    "Add new address": "Neue Adresse hinzufügen",
+    "Colleagues": "Kolleg*innen",
+    "No colleagues": "Keine Kolleg*innen"
 }

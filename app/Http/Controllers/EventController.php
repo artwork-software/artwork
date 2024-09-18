@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Casts\TimeAgoCast;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Services\BudgetService;
@@ -258,8 +259,10 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function showDashboardPage(GlobalNotificationService $globalNotificationService): Response
-    {
+    public function showDashboardPage(
+        GlobalNotificationService $globalNotificationService,
+        CarbonService $carbonService
+    ): Response {
         $event = null;
         $tasks = Task::query()
             ->where('done', false)
@@ -277,11 +280,12 @@ class EventController extends Controller
 
         $user = Auth::user();
 
+        $now = $carbonService->getNow();
         $shiftsOfDay = $user
             ->shifts()
             ->whereDate(
-                'event_start_day',
-                Carbon::now()->format('Y-m-d')
+                'start_date',
+                $now->format('Y-m-d')
             )->with(['event','event.project','event.room'])->get();
 
         // get user events from Projects in which the user is currently working
@@ -344,9 +348,9 @@ class EventController extends Controller
                 }
             }
         }
-
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
+            'users_day_services_of_day' => $user->dayServices()->wherePivot('date', $now)->get(),
             'shiftsOfDay' => $shiftsOfDay,
             'todayDate' => $todayDate,
             'eventsOfDay' => $userEvents,
@@ -356,6 +360,12 @@ class EventController extends Controller
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::all(),
+            'projects' => Project::all()->map((function ($project) {
+                return [
+                    'id' => $project->getAttribute('id'),
+                    'name' => $project->getAttribute('name'),
+                ];
+            })),
             'historyObjects' => $historyObjects,
             'first_project_tab_id' => $this->projectTabService->getFirstProjectTabId(),
             'first_project_shift_tab_id' => $this->projectTabService

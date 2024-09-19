@@ -2008,5 +2008,7 @@
     "Delete user from shift": "Delete user from shift",
     "Colleagues": "Colleagues",
     "No colleagues": "No colleagues",
-    "Input fields marked with * are mandatory": "Input fields marked with * are mandatory"
+    "Input fields marked with * are mandatory": "Input fields marked with * are mandatory",
+    "Projects of this group": "Projekte dieser Gruppe",
+    "This Project is part of the group": "This Project is part of the group"
 }

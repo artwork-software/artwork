@@ -141,13 +141,13 @@ export default {
         },
         updateTimes() {
             router.patch(
-                route('update.user.shift.calendar.filter.dates', this.$page.props.user.id),
+                route('update.user.worker.shift-plan.filters.update', this.$page.props.user.id),
                 {
                     start_date: this.dateValue[0],
                     end_date: this.dateValue[1],
                 },
                 {
-                    preserveState: false,
+                    preserveState: true,
                     preserveScroll: true,
                 }
             );

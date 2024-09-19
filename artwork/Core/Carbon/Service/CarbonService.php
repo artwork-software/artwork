@@ -39,4 +39,9 @@ class CarbonService
     {
         return $this->carbon->clone()->now()->setTime(0, 0);
     }
+
+    public function cloneAndAddWeek(Carbon $date): Carbon
+    {
+        return $date->clone()->addWeek();
+    }
 }

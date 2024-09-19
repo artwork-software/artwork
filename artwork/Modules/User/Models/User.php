@@ -36,6 +36,7 @@ use Artwork\Modules\UserCommentedBudgetItemsSetting\Models\UserCommentedBudgetIt
 use Artwork\Modules\UserShiftCalendarAbo\Models\UserShiftCalendarAbo;
 use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
 use Artwork\Modules\UserUserManagementSetting\Models\UserUserManagementSetting;
+use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -402,6 +403,11 @@ class User extends Model implements
         return $this
             ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
             ->using(UserShiftQualification::class);
+    }
+
+    public function workerShiftPlanFilter(): HasOne
+    {
+        return $this->hasOne(UserWorkerShiftPlanFilter::class);
     }
 
     /**

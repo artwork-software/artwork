@@ -62,9 +62,17 @@ readonly class UserCalendarAboService
 
     public function addEventToCalendar($calendar, $event): void
     {
-        $calendar->event(function ($calendarEvent) use ($event): void {
+        if (!$name = $event->name) {
+            if ($event->project) {
+                $name = $event->eventName . ' - ' . $event->project->name;
+            } else {
+                $name = $event->eventName;
+            }
+        }
+
+        $calendar->event(function ($calendarEvent) use ($event, $name): void {
             $calendarEvent
-                ->name($event->name ?? $event->eventName . ' - ' . $event->project->name)
+                ->name($name)
                 ->description($event->description ?? '')
                 ->uniqueIdentifier($event->id)
                 ->createdAt(Carbon::parse($event->created_at))
@@ -93,8 +101,9 @@ readonly class UserCalendarAboService
                     route(
                         'projects.tab',
                         [
-                        'project' => $event->project->id,
-                        'projectTab' => 1]
+                            'project' => $event->project->id,
+                            'projectTab' => 1
+                        ]
                     ),
                     'Im Projekt anzeigen'
                 );

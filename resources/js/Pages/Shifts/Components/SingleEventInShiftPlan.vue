@@ -3,7 +3,7 @@
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 rounded-lg"
                  :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor), color: textColorWithDarken(event.eventTypeColor)}">
-                <a v-if="event.projectId" :href="route('projects.tab', {project: event.projectId, projectTab: this.firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
+                <a v-if="event.projectId" :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-500 transition-all duration-150 ease-in-out">
                     {{ event.eventTypeAbbreviation }}: {{ event.eventName ?? event.projectName }}
                 </a>
                 <div v-else class="w-40 truncate">
@@ -37,7 +37,7 @@ defineProps({
     },
     firstProjectShiftTabId: {
         type: Number,
-        require: true
+        required: true
     }
 });
 

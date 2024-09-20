@@ -45,6 +45,7 @@ class ShiftPlanDto extends BaseDto
 
     public ?int $firstProjectShiftTabId = null;
 
+    public ?array $shiftPlanWorkerSortEnumNames = null;
 
     public function setDayServices(?Collection $dayServices): self
     {
@@ -172,6 +173,13 @@ class ShiftPlanDto extends BaseDto
         return $this;
     }
 
+    public function setShiftPlanWorkerSortEnumNames(?array $shiftPlanWorkerSortEnumNames): self
+    {
+        $this->shiftPlanWorkerSortEnumNames = $shiftPlanWorkerSortEnumNames;
+
+        return $this;
+    }
+
     public function getEvents(): ?Collection
     {
         return $this->events;
@@ -284,6 +292,14 @@ class ShiftPlanDto extends BaseDto
     }
 
     /**
+     * @return array<int, string>|null
+     */
+    public function getShiftPlanWorkerSortEnumNames(): ?array
+    {
+        return $this->shiftPlanWorkerSortEnumNames;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
@@ -307,6 +323,7 @@ class ShiftPlanDto extends BaseDto
             'shiftQualifications' => $this->getShiftQualifications(),
             'dayServices' => $this->getDayServices(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
+            'shiftPlanWorkerSortEnums' => $this->getShiftPlanWorkerSortEnumNames(),
         ];
     }
 }

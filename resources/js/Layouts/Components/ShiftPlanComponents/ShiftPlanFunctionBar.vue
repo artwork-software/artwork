@@ -201,10 +201,10 @@ export default {
     },
     methods: {
         changeUserSelectedGoTo(type){
-            router.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+            axios.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
                 goto_mode: type,
-            }, {
-                preserveScroll: true,
+            }).then(() => {
+                this.$page.props.user.goto_mode = type;
             });
         },
         removeFilter(filter){

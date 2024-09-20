@@ -7,6 +7,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -56,6 +58,7 @@ use Laravel\Fortify\Fortify;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
@@ -760,5 +763,29 @@ class UserController extends Controller
     public function calendarGoToStepper(User $user, Request $request): void
     {
         $user->update($request->only('goto_mode'));
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateShiftPlanUserSortBy(
+        User $user,
+        Request $request
+    ): bool {
+        $request->validate(
+            [
+                'sortBy' => [
+                    'nullable',
+                    Rule::enum(ShiftPlanWorkerSortEnum::class)
+                ]
+            ]
+        );
+
+        return $user->updateOrFail([
+            'shift_plan_user_sort_by' => $request->enum(
+                'sortBy',
+                ShiftPlanWorkerSortEnum::class
+            )
+        ]);
     }
 }

@@ -27,7 +27,7 @@
                                       v-slot="{ active }">
                                 <div @click="this.sortBy = userSortEnumName; this.applyFiltersAndSort()"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    {{ $t(this.parseTranslationFromEnumName(userSortEnumName)) }}
+                                    {{ getSortEnumTranslation(userSortEnumName) }}
                                     <IconCheck v-if="this.getUserSortBySetting() === userSortEnumName" class="w-5 h-5"/>
                                 </div>
                             </MenuItem>
@@ -292,16 +292,17 @@
 </template>
 
 <script>
-
-
-import {router} from "@inertiajs/vue3";
-
-
+import {Link, router} from "@inertiajs/vue3";
 import {defineComponent} from 'vue'
 import {
     Disclosure,
     DisclosureButton,
     DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
@@ -309,22 +310,25 @@ import {
     RadioGroup,
     RadioGroupDescription,
     RadioGroupLabel,
-    RadioGroupOption,
-    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
+    RadioGroupOption
 } from "@headlessui/vue";
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
-import {SearchIcon} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    InformationCircleIcon,
+    PencilAltIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon
+} from '@heroicons/vue/outline'
+import {CheckIcon, ChevronDownIcon, ChevronUpIcon, PlusIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
-import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import {Link} from "@inertiajs/vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
@@ -337,6 +341,9 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconCheck} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
+import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+
+const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default defineComponent({
     mixins: [Permissions],
@@ -416,6 +423,7 @@ export default defineComponent({
         }
     },
     methods: {
+        getSortEnumTranslation,
         checkLink(user) {
             if (user.type === 'freelancer') {
                 return route('freelancer.show', {freelancer: user.id});
@@ -480,12 +488,6 @@ export default defineComponent({
         },
         getEditHref(user) {
             return route('user.edit.shiftplan', {user: user.id});
-        },
-        parseTranslationFromEnumName(userSortEnumName) {
-            let parts = userSortEnumName.split('_');
-
-            return parts[0].slice(0, 1) + parts[0].substring(1).toLowerCase() +
-                ' ' + parts[1].toLowerCase();
         },
         applyFiltersAndSort() {
             router.get(

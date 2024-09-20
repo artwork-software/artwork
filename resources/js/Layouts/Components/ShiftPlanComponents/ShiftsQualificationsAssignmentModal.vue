@@ -27,7 +27,7 @@
                 <div class="flex flex-col">
                     <div class="grid grid-cols-2 w-full gap-4">
                         <AddButtonSmall v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
-                               :text="$t('Insert as {0}',[ availableShiftQualificationSlot.name])"
+                               :text="$t('Insert as {0}',[availableShiftQualificationSlot.name])"
                                         no-icon
                                @click="this.handleShift(this.currentShiftToAssign.shift.id, availableShiftQualificationSlot.id)"
                         />

@@ -12,11 +12,10 @@
              @dragover="onDragOver"
              @drop="onDrop"
         >
-            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft && computedUsedWorkerCount !== computedMaxWorkerCount">
+            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
                 <input v-model="shift.isCheckedForMultiEdit"
                        id="comments"
                        aria-describedby="comments-description"
-                       name="comments"
                        type="checkbox"
                        class="input-checklist mr-1"
                 />
@@ -34,7 +33,7 @@
                         , {{room?.name}}
                     </div>
                 </div>
-                <div v-if="computedUsedWorkerCount === computedMaxWorkerCount">
+                <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
                     <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                 </div>
             </div>
@@ -244,8 +243,6 @@ export default defineComponent({
                 2: 'providerIds'
             };
 
-            console.log(this.shiftUserIds[typeMap[highlightedType]]);
-
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
@@ -265,37 +262,23 @@ export default defineComponent({
             }
 
             if (this.droppedUser.shift_qualifications.length === 1) {
-                let availableSlot = this.computedShiftsQualificationsWithWorkerCount.find(
-                    (shiftsQualification) =>
-                        shiftsQualification.shift_qualification_id === this.droppedUser.shift_qualifications[0].id &&
-                        shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
-                );
-
-                if (
-                    typeof availableSlot === 'undefined' ||
-                    availableSlot.workerCount === availableSlot.maxWorkerCount
-                ) {
-                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
-                    return;
-                }
-
-                this.assignUser(this.droppedUser, availableSlot.shift_qualification_id);
+                this.assignUser(this.droppedUser, this.droppedUser.shift_qualifications[0].id);
             } else {
                 let availableShiftQualificationSlots = [];
 
                 this.droppedUser.shift_qualifications.forEach((userShiftQualification) => {
                     this.computedShiftsQualificationsWithWorkerCount.forEach((shiftsQualification) => {
-                        if (
-                            userShiftQualification.id === shiftsQualification.shift_qualification_id &&
-                            shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
-                        ) {
+                        if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
                             availableShiftQualificationSlots.push(userShiftQualification);
                         }
                     })
                 });
 
                 if (availableShiftQualificationSlots.length === 0) {
-                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
+                    this.openMultipleShiftQualificationSlotsAvailableModal(
+                        this.droppedUser,
+                        this.droppedUser.shift_qualifications
+                    );
                     return;
                 }
 

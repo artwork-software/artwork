@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Models;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -23,9 +24,14 @@ class ShiftsQualifications extends Model
         'value'
     ];
 
-    public function shift(): HasOne
+    public function shift(): BelongsTo
     {
-        return $this->hasOne(Shift::class);
+        return $this->belongsTo(
+            Shift::class,
+            'shift_id',
+            'id',
+            'shifts'
+        );
     }
 
     public function shiftQualification(): HasOne

@@ -2010,5 +2010,9 @@
     "No colleagues": "Keine Kolleg*innen",
     "Input fields marked with * are mandatory": "Mit * markierte Eingabefelder sind Pflichtfelder",
     "Projects of this group": "Projekte dieser Gruppe",
-    "This Project is part of the group": "Dieses Projekt gehört zur Gruppe"
+    "This Project is part of the group": "Dieses Projekt gehört zur Gruppe",
+    "Alphabetically ascending first name": "Alphabetisch aufsteigend Vorname",
+    "Alphabetically descending first name": "Alphabetisch absteigend Vorname",
+    "Alphabetically ascending last name": "Alphabetisch aufsteigend Nachname",
+    "Alphabetically descending last name": "Alphabetisch absteigend Nachname"
 }

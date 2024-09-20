@@ -175,7 +175,8 @@ class User extends Model implements
         'at_a_glance',
         'notification_enums_last_sent_dates',
         'bulk_sort_id',
-        'show_notification_indicator'
+        'show_notification_indicator',
+        'shift_plan_user_sort_by'
     ];
 
     protected $casts = [

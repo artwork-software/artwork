@@ -54,8 +54,7 @@
                                         v-for="day in days" :data-day="day.full_day">
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-if="!day.is_extra_row" style="width: 200px"
-                                             class="max-h-28 overflow-y-auto cell "
-                                        >
+                                             class="max-h-28 overflow-y-auto cell ">
                                             <div v-for="event in room[day.full_day].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
@@ -185,7 +184,6 @@
                                       </span>
                                 </span>
                                 </Switch>
-
                                 <Switch @click="toggleCompactMode" v-model="$page.props.user.compact_mode"
                                         :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
@@ -208,6 +206,21 @@
                                         <CraftFilter :crafts="crafts" is_tiny/>
                                     </div>
                                 </BaseFilter>
+                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-80">
+                                    <div class="flex items-center justify-end py-1">
+                                    <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
+                                        {{ $t('Reset') }}
+                                    </span>
+                                    </div>
+                                    <MenuItem v-for="shiftPlanWorkerSortEnumName in shiftPlanWorkerSortEnums"
+                                              v-slot="{ active }">
+                                        <div @click="this.applySort(shiftPlanWorkerSortEnumName)"
+                                             :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                            {{ getSortEnumTranslation(shiftPlanWorkerSortEnumName) }}
+                                            <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by === shiftPlanWorkerSortEnumName" class="w-5 h-5"/>
+                                        </div>
+                                    </MenuItem>
+                                </BaseMenu>
                             </div>
                         </div>
                         <div class="pt-14">
@@ -243,6 +256,7 @@
                                                                :multiEditMode="multiEditMode"
                                                                @addUserToMultiEdit="addUserToMultiEdit"
                                                                :color="craft.color"
+                                                               :craft-id="craft.id"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -300,8 +314,6 @@
                                                                :style="{color: userDayService.hex_color}"/>
                                                 </div>
                                             </div>
-
-
                                         </td>
                                     </tr>
                                     </tbody>
@@ -334,6 +346,7 @@
                                                                :multiEditMode="multiEditMode"
                                                                @addUserToMultiEdit="addUserToMultiEdit"
                                                                :color="null"
+                                                               :craft-id="0"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -446,7 +459,6 @@
     />
 </template>
 <script>
-
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/Mixins/Permissions.vue";
 import {ChevronDownIcon, LightBulbIcon} from "@heroicons/vue/outline";
@@ -462,7 +474,7 @@ import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
 import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
-import {Switch} from "@headlessui/vue";
+import {MenuItem, Switch} from "@headlessui/vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import Table from "@/Components/Table/Table.vue";
@@ -479,6 +491,10 @@ import IconLib from "@/Mixins/IconLib.vue";
 import DayServiceFilter from "@/Components/Filter/DayServiceFilter.vue";
 import {useEvent} from "@/Composeables/Event.js";
 import {ref} from "vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+
+const {getSortEnumTranslation} = useSortEnumTranslation();
 
 const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
     {
@@ -493,6 +509,8 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        MenuItem,
+        BaseMenu,
         DayServiceFilter,
         IconPencil,
         SingleEventInShiftPlan,
@@ -540,7 +558,8 @@ export default {
         'crafts',
         'shiftQualifications',
         'dayServices',
-        'firstProjectShiftTabId'
+        'firstProjectShiftTabId',
+        'shiftPlanWorkerSortEnums'
     ],
     data() {
         return {
@@ -625,6 +644,21 @@ export default {
                         (userWithPlannedWorkingHours) =>
                             userWithPlannedWorkingHours.user.id === workerData.user.id
                     )] = workerData;
+
+                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.user.id) {
+                        this.addUserToMultiEdit(
+                            {
+                                id: workerData.user.id,
+                                type: this.userForMultiEdit.type,
+                                craftId: this.userForMultiEdit.craftId,
+                                display_name: workerData.user.first_name + ' ' + workerData.user.last_name,
+                                profile_photo_url: workerData.user.profile_photo_url,
+                                assigned_craft_ids: workerData.user.assigned_craft_ids,
+                                shift_ids: workerData.user.shift_ids,
+                                shift_qualifications: workerData.user.shift_qualifications
+                            }
+                        );
+                    }
                 }
 
                 if (workerData.type === 'freelancer') {
@@ -632,6 +666,21 @@ export default {
                         (freelancerWithPlannedWorkingHours) =>
                             freelancerWithPlannedWorkingHours.freelancer.id === workerData.freelancer.id
                     )] = workerData;
+
+                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.freelancer.id) {
+                        this.addUserToMultiEdit(
+                            {
+                                id: workerData.freelancer.id,
+                                type: this.userForMultiEdit.type,
+                                craftId: this.userForMultiEdit.craftId,
+                                display_name: workerData.freelancer.first_name + ' ' + workerData.freelancer.last_name,
+                                profile_photo_url: workerData.freelancer.profile_photo_url,
+                                assigned_craft_ids: workerData.freelancer.assigned_craft_ids,
+                                shift_ids: workerData.freelancer.shift_ids,
+                                shift_qualifications: workerData.freelancer.shift_qualifications
+                            }
+                        );
+                    }
                 }
 
                 if (workerData.type === 'service_provider') {
@@ -639,8 +688,25 @@ export default {
                         (serviceProviderWithPlannedWorkingHours) =>
                             serviceProviderWithPlannedWorkingHours.service_provider.id === workerData.service_provider.id
                     )] = workerData;
+
+                    if (this.userForMultiEdit && this.userForMultiEdit.id === workerData.service_provider.id) {
+                        this.addUserToMultiEdit(
+                            {
+                                id: workerData.service_provider.id,
+                                type: this.userForMultiEdit.type,
+                                craftId: this.userForMultiEdit.craftId,
+                                display_name: workerData.service_provider.provider_name,
+                                profile_photo_url: workerData.service_provider.profile_photo_url,
+                                assigned_craft_ids: workerData.service_provider.assigned_craft_ids,
+                                shift_ids: workerData.service_provider.shift_ids,
+                                shift_qualifications: workerData.service_provider.shift_qualifications
+                            }
+                        );
+                    }
                 }
             });
+
+            hasReceivedNewShiftPlanWorkerData.value = false;
 
             return this.craftsToDisplay;
         },
@@ -661,6 +727,8 @@ export default {
                 }
             }
 
+            hasReceivedNewShiftPlanData.value = false;
+
             return this.shiftPlanRef;
         },
         craftsToDisplay() {
@@ -677,6 +745,10 @@ export default {
                         }
                     );
 
+                crafts.forEach((craft) => {
+                    crafts.users = this.sortCraftUsers(craft.users);
+                });
+
             if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
                 return crafts;
             } else {
@@ -684,12 +756,17 @@ export default {
             }
         },
         usersWithNoCrafts() {
-            return this.getDropUsers().filter(user =>
+            let usersWithNoCrafts = this.getDropUsers().filter(user =>
                 !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
             );
+
+            usersWithNoCrafts = this.sortCraftUsers(usersWithNoCrafts);
+
+            return usersWithNoCrafts;
         },
     },
     methods: {
+        getSortEnumTranslation,
         userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
             let desiredRoomIds = new Set();
 
@@ -772,7 +849,7 @@ export default {
                     availabilities: user.availabilities,
                     weeklyWorkingHours: user.weeklyWorkingHours,
                     dayServices: user.dayServices
-                })
+                });
             })
             this.freelancersForShifts.forEach((freelancer) => {
                 users.push({
@@ -783,7 +860,7 @@ export default {
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
                     availabilities: freelancer.availabilities,
                     dayServices: freelancer.dayServices
-                })
+                });
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {
                 users.push({
@@ -792,7 +869,7 @@ export default {
                     plannedWorkingHours: service_provider.plannedWorkingHours,
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
                     dayServices: service_provider.dayServices
-                })
+                });
             })
             return users;
         },
@@ -812,28 +889,58 @@ export default {
                 }
                 const hasDayService = user.dayServices?.[day.without_format]?.some(dayService => dayService.id === this.selectedDayService.id)
                 // check if user has allready the selected day service, if yes remove it. the dayServices in User are group by day
+
+                let setWorkerDayServicesCallback = (response) => {
+                    let data = response.data;
+                    let dayServicesRef = data.dayServices;
+
+                    switch (data.type) {
+                        case 'user':
+                            this.usersForShifts.find(
+                                (user) => user.user.id === data.id
+                            ).dayServices = dayServicesRef;
+                            break;
+                        case 'freelancer':
+                            this.freelancersForShifts.find(
+                                (freelancer) => freelancer.freelancer.id === data.id
+                            ).dayServices = dayServicesRef;
+                            break;
+                        case 'service_provider':
+                            this.serviceProvidersForShifts.find(
+                                (service_provider) => service_provider.service_provider.id === data.id
+                            ).dayServices = dayServicesRef;
+                            break;
+                    }
+                };
+
                 if (hasDayService) {
-                    router.patch(route('remove.day.service.from.user', {
-                        dayServiceable: user.element.id,
-                    }), {
-                        dayService: this.selectedDayService.id,
-                        date: day.without_format,
-                        modelType: type
-                    }, {
-                        preserveScroll: true,
-                        preserveState: true
-                    });
+                    axios.patch(
+                        route(
+                            'remove.day.service.from.user',
+                            {
+                                dayServiceable: user.element.id,
+                            }
+                        ),
+                        {
+                            dayService: this.selectedDayService.id,
+                            date: day.without_format,
+                            modelType: type
+                        }
+                    ).then(setWorkerDayServicesCallback);
                 } else {
-                    router.post(route('day-service.attach', {
-                        dayServiceable: user.element.id,
-                        dayService: this.selectedDayService.id,
-                    }), {
-                        date: day.without_format,
-                        modelType: type
-                    }, {
-                        preserveScroll: true,
-                        preserveState: true
-                    });
+                    axios.post(
+                        route(
+                            'day-service.attach',
+                            {
+                                dayServiceable: user.element.id,
+                                dayService: this.selectedDayService.id,
+                            }
+                        ),
+                        {
+                            date: day.without_format,
+                            modelType: type
+                        }
+                    ).then(setWorkerDayServicesCallback);
                 }
 
             } else {
@@ -1070,6 +1177,10 @@ export default {
             this.highlightMode = false;
             this.dayServiceMode = false;
             this.multiEditMode = !this.multiEditMode;
+
+            if (!this.multiEditMode) {
+                this.userForMultiEdit = null;
+            }
         },
         toggleDayServiceMode() {
             this.highlightMode = false;
@@ -1089,9 +1200,8 @@ export default {
             this.typeToHighlight = type;
         },
         addUserToMultiEdit(item) {
-            if (item === null) {
-                this.userForMultiEdit = [];
-            }
+            this.checkedShiftsForMultiEdit = [];
+            this.shiftsAreChecked = [];
             this.userForMultiEdit = item;
         },
         initializeMultiEditSave() {
@@ -1124,15 +1234,15 @@ export default {
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
                 this.checkedShiftsForMultiEdit.forEach((checkedShift) => {
                     if (!this.userForMultiEdit.shift_ids.includes(checkedShift.id)) {
+                        if (checkedShift.shifts_qualifications.length === 0) {
+                            this.showShiftsQualificationsAssignmentModalShifts.push({
+                                shift: checkedShift,
+                                availableSlots: this.userForMultiEdit.shift_qualifications
+                            });
+                            return;
+                        }
+
                         if (this.userForMultiEdit.shift_qualifications.length === 1) {
-                            if (
-                                !this.hasShiftsQualificationFreeSlots(
-                                    checkedShift,
-                                    this.userForMultiEdit.shift_qualifications[0].id
-                                )
-                            ) {
-                                return;
-                            }
                             this.shiftsToHandleOnMultiEdit.assignToShift.push({
                                 shiftId: checkedShift.id,
                                 shiftQualificationId: this.userForMultiEdit.shift_qualifications[0].id
@@ -1143,10 +1253,7 @@ export default {
                         let availableShiftQualificationSlots = [];
                         this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
                             checkedShift.shifts_qualifications.forEach((shiftsQualification) => {
-                                if (
-                                    userShiftQualification.id === shiftsQualification.shift_qualification_id &&
-                                    this.hasShiftsQualificationFreeSlots(checkedShift, userShiftQualification.id)
-                                ) {
+                                if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
                                     availableShiftQualificationSlots.push(userShiftQualification);
                                 }
                             });
@@ -1214,7 +1321,7 @@ export default {
 
             this.shiftPlanRef.forEach(room => {
                 this.days.forEach(day => {
-                    room[day.full_day].events.forEach(event => {
+                    room[day.full_day]?.events.forEach(event => {
                         event.shifts.forEach(shift => {
                             this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
                                 if (shift.id === shiftToAssign.shiftId) {
@@ -1255,48 +1362,10 @@ export default {
             });
         },
         resetMultiEditMode() {
-            this.multiEditMode = false;
             this.shiftsToHandleOnMultiEdit = {
                 assignToShift: [],
                 removeFromShift: []
-            }
-        },
-        hasShiftsQualificationFreeSlots(shift, shiftQualificationId) {
-            let shiftsQualificationById = shift.shifts_qualifications.find((shiftsQualification) => {
-                return shiftsQualification.shift_qualification_id === shiftQualificationId;
-            });
-
-            if (shiftsQualificationById.value === null || shiftsQualificationById.value === 0) {
-                return false;
-            }
-
-            return this.determineUsedShiftsQualificationSlots(
-                shift,
-                shiftQualificationId
-            ) < shiftsQualificationById.value;
-        },
-        determineUsedShiftsQualificationSlots(shift, shiftQualificationId) {
-            let assignedUserCount = 0;
-
-            shift.users.forEach((user) => {
-                if (user.pivot.shift_qualification_id === shiftQualificationId) {
-                    assignedUserCount++;
-                }
-            });
-
-            shift.freelancer.forEach((freelancer) => {
-                if (freelancer.pivot.shift_qualification_id === shiftQualificationId) {
-                    assignedUserCount++;
-                }
-            });
-
-            shift.service_provider.forEach((serviceProvider) => {
-                if (serviceProvider.pivot.shift_qualification_id === shiftQualificationId) {
-                    assignedUserCount++;
-                }
-            });
-
-            return assignedUserCount;
+            };
         },
         changeCraftVisibility(id) {
             if (this.closedCrafts.includes(id)) {
@@ -1355,7 +1424,7 @@ export default {
         setShiftsCheckState(shiftId, state) {
             this.shiftPlanRef.forEach(room => {
                 this.days.forEach(day => {
-                    room[day.full_day].events.forEach(event => {
+                    room[day.full_day]?.events.forEach(event => {
                         event.shifts.forEach(shift => {
                             if (shift.id === shiftId) {
                                 shift.isCheckedForMultiEdit = state;
@@ -1372,6 +1441,59 @@ export default {
                         });
                     });
                 });
+            });
+        },
+        applySort(shiftPlanWorkerSortEnumName) {
+            this.$page.props.user.shift_plan_user_sort_by = shiftPlanWorkerSortEnumName;
+            axios.patch(
+                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
+                {
+                    sortBy: shiftPlanWorkerSortEnumName
+                }
+            );
+        },
+        resetSort() {
+            this.$page.props.user.shift_plan_user_sort_by = null;
+            axios.patch(
+                route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
+                {
+                    sortBy: null
+                }
+            );
+        },
+        sortCraftUsers(users) {
+            if (this.$page.props.user.shift_plan_user_sort_by === null) {
+                return users.sort((a, b) => a.element.id > b.element.id ? 1 : a.element.id < b.element.id ? -1 : 0);
+            }
+
+            return users.sort((workerA, workerB) => {
+                let shiftPlanUserSortBy = this.$page.props.user.shift_plan_user_sort_by;
+
+                let getCompareName = (worker) => {
+                    let workerIsUserOrFreelancer = worker.type === 0 || worker.type === 1;
+                    let sortByFirstName = shiftPlanUserSortBy === 'ALPHABETICALLY_ASCENDING_FIRST_NAME' ||
+                        shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME';
+                    return sortByFirstName ?
+                        (
+                            workerIsUserOrFreelancer ?
+                                worker.element.first_name :
+                                worker.element.provider_name
+                        ) :
+                        (
+                            workerIsUserOrFreelancer ?
+                                worker.element.last_name :
+                                worker.element.provider_name
+                        );
+                };
+
+                if (
+                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME' ||
+                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_LAST_NAME'
+                ) {
+                    return getCompareName(workerB).localeCompare(getCompareName(workerA));
+                }
+
+                return getCompareName(workerA).localeCompare(getCompareName(workerB));
             });
         }
     },
@@ -1394,10 +1516,9 @@ export default {
         shiftPlanRef: {
             handler(shiftPlanRef) {
                 let currentCheckedIds = [...this.shiftsAreChecked];
-
                 shiftPlanRef.forEach(room => {
                     this.days.forEach(day => {
-                        room[day.full_day].events.forEach(event => {
+                        room[day.full_day]?.events.forEach(event => {
                             event.shifts.forEach(shift => {
                                 const index = currentCheckedIds.indexOf(shift.id);
                                 if (shift.isCheckedForMultiEdit) {

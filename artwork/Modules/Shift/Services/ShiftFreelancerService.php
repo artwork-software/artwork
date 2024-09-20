@@ -25,6 +25,7 @@ readonly class ShiftFreelancerService
         private ShiftFreelancerRepository $shiftFreelancerRepository,
         private ShiftServiceProviderRepository $shiftServiceProviderRepository,
         private ShiftsQualificationsRepository $shiftsQualificationsRepository,
+        private ShiftsQualificationsService $shiftsQualificationsService
     ) {
     }
 
@@ -42,6 +43,11 @@ readonly class ShiftFreelancerService
         $shiftFreelancerPivot = $this->shiftFreelancerRepository->createForShift(
             $shift->id,
             $freelancerId,
+            $shiftQualificationId
+        );
+
+        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+            $shift->getAttribute('id'),
             $shiftQualificationId
         );
 
@@ -303,7 +309,7 @@ readonly class ShiftFreelancerService
         ChangeService $changeService
     ): void {
         $this->removeFromShift(
-            $this->shiftFreelancerRepository->findByUserIdAndShiftId(
+            $this->shiftFreelancerRepository->findByFreelancerIdAndShiftId(
                 $freelancerId,
                 $shiftId
             ),

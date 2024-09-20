@@ -14,6 +14,7 @@
                     :tooltip-text="$t('Sorting')"
                     icon="IconSortDescending"
                     icon-size="h-8 w-8"
+                    :white-icon="whiteIcon"
                 />
             </MenuButton>
         </div>
@@ -67,6 +68,11 @@ export default defineComponent({
         menuWidth: {
             type: String,
             default: 'w-56',
+        },
+        whiteIcon: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
 });

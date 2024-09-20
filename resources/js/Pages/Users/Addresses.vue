@@ -63,7 +63,7 @@
                                       v-slot="{ active }">
                                 <div @click="this.sortBy = memberSortEnum; this.applyFiltersAndSort()"
                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                    {{ $t(this.parseTranslationFromEnumName(memberSortEnum)) }}
+                                    {{ getSortEnumTranslation(memberSortEnum) }}
                                     <IconCheck v-if="this.getUserSortBySetting() === memberSortEnum" class="w-5 h-5"/>
                                 </div>
                             </MenuItem>
@@ -326,11 +326,7 @@
 </template>
 
 <script>
-
-
 import {Link, router} from "@inertiajs/vue3";
-
-
 import {defineComponent} from 'vue'
 import {
     Disclosure,
@@ -379,6 +375,9 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import {IconCheck} from "@tabler/icons-vue";
 import debounce from "lodash.debounce";
+import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+
+const {getSortEnumTranslation} = useSortEnumTranslation();
 
 export default defineComponent({
     mixins: [Permissions],
@@ -484,6 +483,7 @@ export default defineComponent({
         },
     },
     methods: {
+        getSortEnumTranslation,
         checkLink(user) {
             if (user.type === 'freelancer') {
                 return route('freelancer.show', {freelancer: user.id});
@@ -548,12 +548,6 @@ export default defineComponent({
         },
         getEditHref(user) {
             return route('user.edit.shiftplan', {user: user.id});
-        },
-        parseTranslationFromEnumName(memberSortEnumName) {
-            let parts = memberSortEnumName.split('_');
-
-            return parts[0].slice(0, 1) + parts[0].substring(1).toLowerCase() +
-                ' ' + parts[1].toLowerCase();
         },
         applyFiltersAndSort() {
             router.get(

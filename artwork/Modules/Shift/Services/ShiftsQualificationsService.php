@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Shift\Services;
 
+use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 
@@ -52,5 +53,50 @@ readonly class ShiftsQualificationsService
     public function restore(ShiftsQualifications $shiftsQualification): bool
     {
         return $this->shiftsQualificationsRepository->restore($shiftsQualification);
+    }
+
+    public function increaseValueOrCreateWithOne(int $shiftId, int $shiftQualificationId): void
+    {
+        /**
+         * @var ShiftsQualifications $existingShiftsQualifications
+         */
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (is_null($existingShiftsQualifications)) {
+            $this->createShiftsQualificationForShift(
+                $shiftId,
+                [
+                    'shift_qualification_id' => $shiftQualificationId,
+                    'value' => 1
+                ]
+            );
+
+            return;
+        }
+
+        /** @var Shift $shiftWithWorker */
+        $shiftWithWorker = $existingShiftsQualifications
+            ->load('shift')
+            ->getAttribute('shift');
+
+        $workerCount = $shiftWithWorker->users()
+                ->wherePivot('shift_qualification_id', $shiftQualificationId)
+                ->count() +
+            $shiftWithWorker->freelancer()
+                ->wherePivot('shift_qualification_id', $shiftQualificationId)
+                ->count() +
+            $shiftWithWorker->serviceProvider()
+                ->wherePivot('shift_qualification_id', $shiftQualificationId)
+                ->count();
+
+        if ($existingShiftsQualifications->getAttribute('value') < $workerCount) {
+            $this->shiftsQualificationsRepository->update(
+                $existingShiftsQualifications,
+                ['value' => $workerCount]
+            );
+        }
     }
 }

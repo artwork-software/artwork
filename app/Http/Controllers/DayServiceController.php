@@ -4,19 +4,14 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\DayService\Http\Requests\CreateDayServiceRequest;
 use Artwork\Modules\DayService\Models\DayService;
-use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Services\DayServicesService;
-use Artwork\Modules\Freelancer\Models\Freelancer;
-use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\User\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class DayServiceController extends Controller
 {
 
     public function __construct(
-        private readonly DayServicesService $dayServicesService
+        private readonly DayServicesService $dayServicesService,
     ) {
     }
     /**
@@ -25,7 +20,7 @@ class DayServiceController extends Controller
     public function index()
     {
         return inertia('Settings/DayServiceIndex', [
-            'dayServices' => $this->dayServicesService->getAll()
+            'dayServices' => $this->dayServicesService->getAll(),
         ]);
     }
 
@@ -77,22 +72,64 @@ class DayServiceController extends Controller
         //
     }
 
+    /**
+     * @return array<string, int|array<int, array<string, mixed>>>
+     */
     public function attachDayServiceable(
         DayService $dayService,
         int $dayServiceable,
-        Request $request
-    ): void {
-        $modelInstance = $this->dayServicesService->findModelInstance($request->modelType, $dayServiceable);
-        $this->dayServicesService->attachDayServiceable($dayService, $modelInstance, $request->date);
+        Request $request,
+    ): array {
+        $modelInstance = $this->dayServicesService->findModelInstance(
+            $modelType = $request->string('modelType'),
+            $dayServiceable
+        );
+
+        $this->dayServicesService->attachDayServiceable(
+            $dayService,
+            $modelInstance,
+            $request->string('date')
+        );
+
+        $dayServicesPerDay = [];
+        foreach ($modelInstance->getAttribute('dayServices') as $dayService) {
+            $dayServicesPerDay[$dayService->getAttribute('pivot')->getAttribute('date')][] = $dayService;
+        }
+
+        return [
+            'id' => $modelInstance->getAttribute('id'),
+            'type' => $modelType,
+            'dayServices' => $dayServicesPerDay,
+        ];
     }
 
-
-
+    /**
+     * @return array<string, int|array<int, array<string, mixed>>>
+     */
     public function removeDayServiceable(
         int $dayServiceable,
-        Request $request
-    ): void {
-        $modelInstance = $this->dayServicesService->findModelInstance($request->modelType, $dayServiceable);
-        $modelInstance->dayServices()->wherePivot('date', $request->date)->detach($request->dayService);
+        Request $request,
+    ): array {
+        $modelInstance = $this->dayServicesService->findModelInstance(
+            $modelType = $request->string('modelType'),
+            $dayServiceable
+        );
+
+        $modelInstance->dayServices()->wherePivot(
+            'date',
+            $request->string('date')
+        )->detach($request->integer('dayService'));
+
+        $dayServicesPerDay = [];
+        /** @var DayService $dayService */
+        foreach ($modelInstance->getAttribute('dayServices') as $dayService) {
+            $dayServicesPerDay[$dayService->getAttribute('pivot')->getAttribute('date')][] = $dayService;
+        }
+
+        return [
+            'id' => $modelInstance->getAttribute('id'),
+            'type' => $modelType,
+            'dayServices' => $dayServicesPerDay,
+        ];
     }
 }

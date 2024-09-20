@@ -1,12 +1,26 @@
 <template>
-    <div class="flex items-center" v-if="project?.is_group ?? headerObject.project?.is_group">
-        <span v-if="!project?.is_group ?? !headerObject.project?.is_group">
+    <div class="flex items-center" v-if="headerObject?.project?.is_group || headerObject?.project?.groups?.length > 0">
+        <span>
             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true" alt=""/>
         </span>
-        {{ $t('Belongs to') }}
-        <Link :href="route('projects.tab', {project: currentGroup?.id ?? headerObject.currentGroup?.id, projectTab: this.first_project_tab_id})" class="text-artwork-buttons-create ml-1">
-            {{ currentGroup?.name ?? headerObject.currentGroup?.name }}
-        </Link>
+        <div class="flex items-center" v-if="headerObject?.project?.is_group">
+            {{ $t('Projects of this group') }}:
+            <div v-for="project in headerObject?.projectsOfGroup">
+                <Link :href="route('projects.tab', {project: project?.id, projectTab: first_project_tab_id})"
+                      class="text-artwork-buttons-create ml-1 mr-3">
+                    {{ project?.name }}
+                </Link>
+            </div>
+        </div>
+        <div class="flex items-center" v-else>
+            {{$t('This Project is part of the group')}}:
+            <div v-for="project in headerObject?.project?.groups">
+                <Link :href="route('projects.tab', {project: project?.id, projectTab: first_project_tab_id})"
+                      class="text-artwork-buttons-create ml-1">
+                    {{ project?.name }}
+                </Link>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -16,8 +30,6 @@ import {Link} from "@inertiajs/vue3";
 
 export default defineComponent({
     props: [
-        'project',
-        'currentGroup',
         'headerObject',
         'loadedProjectInformation',
         'first_project_tab_id'

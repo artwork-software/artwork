@@ -90,7 +90,9 @@ readonly class FreelancerService
         ?string $month,
         ?string $vacationMonth
     ): ShowDto {
-        [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
+        [$startDate, $endDate] = $userService->getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(
+            $userService->getAuthUser()
+        );
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($startDate, $endDate)->map(
                 function (Carbon $date) {

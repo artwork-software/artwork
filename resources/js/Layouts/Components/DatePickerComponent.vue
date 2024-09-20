@@ -6,7 +6,18 @@
                 <div class="absolute inset-y-0 pointer-events-none left-1 xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
                     {{ startDateString }},
                 </div>
-                <input v-model="dateValue[0]"
+                <!-- necessary to bind dateValueArray as v-model, otherwise dates are not updated correctly in user shift plans -->
+                <input v-if="is_user_shift_plan === true"
+                       v-model="dateValueArray[0]"
+                       @change="this.updateTimes"
+                       ref="startDate"
+                       id="startDate"
+                       type="date"
+                       :disabled="!!project"
+                       placeholder="Start"
+                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
+                <input v-else
+                       v-model="dateValue[0]"
                        @change="this.updateTimes"
                        ref="startDate"
                        id="startDate"
@@ -22,7 +33,18 @@
                 <div class="absolute inset-y-0 left-1 pointer-events-none xsDark flex items-center pl-3 bg-white z-40 h-8 top-1">
                      {{ endDateString}},
                 </div>
-                <input v-model="dateValue[1]"
+                <!-- necessary to bind dateValueArray as v-model, otherwise dates are not updated correctly in user shift plans -->
+                <input v-if="is_user_shift_plan === true"
+                       v-model="dateValueArray[1]"
+                       @change="this.updateTimes"
+                       ref="endDate"
+                       id="endDate"
+                       type="date"
+                       :disabled="!!project"
+                       placeholder="Ende"
+                       class="border-gray-300 pl-10 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg min-w-40" />
+                <input v-else
+                       v-model="dateValue[1]"
                        @change="this.updateTimes"
                        ref="endDate"
                        id="endDate"
@@ -66,7 +88,7 @@ export default {
     mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
     components: {ToolTipComponent, VueTailwindDatepicker},
-    props: ['dateValueArray', 'project', 'is_shift_plan'],
+    props: ['dateValueArray', 'project', 'is_shift_plan', 'is_user_shift_plan'],
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
@@ -117,7 +139,6 @@ export default {
                 {
                     label: this.$t('Today'),
                     atClick: () => {
-                        const date = new Date();
                         return [
                             new Date(),
                             new Date()
@@ -248,7 +269,15 @@ export default {
                     }, {
                         preserveState: false,
                         preserveScroll: true,
-                    })
+                    });
+                } else if (this.is_user_shift_plan) {
+                    router.patch(route('update.user.worker.shift-plan.filters.update', this.$page.props.user.id), {
+                        start_date: startDate,
+                        end_date: endDate,
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    });
                 } else {
                     router.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
@@ -256,7 +285,7 @@ export default {
                     }, {
                         preserveState: false,
                         preserveScroll: true,
-                    })
+                    });
                 }
             }
         },
@@ -265,8 +294,6 @@ export default {
 </script>
 
 <style scoped>
-/* In deiner globalen CSS-Datei oder innerhalb eines <style> Tags in der Vue-Komponente */
-
 .remove-date-icon::-webkit-calendar-picker-indicator {
     display: none;
 }

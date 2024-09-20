@@ -25,6 +25,14 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
+    public function updateUserWorkerShiftPlanFilters(Request $request, User $user): void
+    {
+        $user->workerShiftPlanFilter()->update([
+            'start_date' => $request->date('start_date')->format('Y-m-d'),
+            'end_date' => $request->date('end_date')->format('Y-m-d')
+        ]);
+    }
+
     public function singleValueUpdate(Request $request, User $user): void
     {
         $user->shift_calendar_filter()->update([

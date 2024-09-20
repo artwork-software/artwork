@@ -21,6 +21,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
+use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Broadcasting\BroadcastManager;
@@ -42,7 +43,7 @@ class UserService
         private readonly UserUserManagementSettingService $userUserManagementSettingService,
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
     ) {
     }
 
@@ -220,14 +221,10 @@ class UserService
         ?string $month,
         ?string $vacationMonth
     ): UserShiftPlanPageDto {
-        $hasUserShiftCalendarFilterDates = !is_null($user->shift_calendar_filter?->start_date) &&
-            !is_null($user->shift_calendar_filter?->end_date);
-        $requestedStartDate = $hasUserShiftCalendarFilterDates ?
-            $this->carbonService->create($user->shift_calendar_filter->start_date) :
-            $this->carbonService->getNow();
-        $requestedEndDate = $hasUserShiftCalendarFilterDates ?
-            $this->carbonService->create($user->shift_calendar_filter->end_date) :
-            $this->carbonService->getNow();
+        [$requestedStartDate, $requestedEndDate] = $this->getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(
+            $this->getAuthUser()
+        );
+
         $requestedPeriod = iterator_to_array(
             CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(
                 function (Carbon $date) {
@@ -376,6 +373,38 @@ class UserService
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
+    }
+
+    public function getUserWorkerShiftPlanFilter(User $user, array $attributes = []): UserWorkerShiftPlanFilter
+    {
+        /** @var UserWorkerShiftPlanFilter $userWorkerShiftPlanFilter */
+        $userWorkerShiftPlanFilter = $user->workerShiftPlanFilter()->firstOrCreate(
+            [
+                'user_id' => $user->getAttribute('id')
+            ],
+            $attributes
+        );
+
+        return $userWorkerShiftPlanFilter;
+    }
+
+    /**
+     * @return array<int, Carbon>
+     */
+    public function getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(User $user): array
+    {
+        return [
+            (
+                $userWorkerShiftPlanFilter = $this->getUserWorkerShiftPlanFilter(
+                    $user,
+                    [
+                        'start_date' => ($now = $this->carbonService->getNow()),
+                        'end_date' => $this->carbonService->cloneAndAddWeek($now)
+                    ]
+                )
+            )->getAttribute('start_date'),
+            $userWorkerShiftPlanFilter->getAttribute('end_date')
+        ];
     }
 
     public function getAdminUser(): User

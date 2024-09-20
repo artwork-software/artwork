@@ -29,8 +29,8 @@ class ShiftFreelancerRepository extends BaseRepository
         return ShiftFreelancer::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
 
-    public function findByUserIdAndShiftId(int $userId, int $shiftId): ShiftFreelancer
+    public function findByFreelancerIdAndShiftId(int $userId, int $shiftId): ShiftFreelancer
     {
-        return ShiftFreelancer::byUserIdAndShiftId($userId, $shiftId)->first();
+        return ShiftFreelancer::byFreelancerIdAndShiftId($userId, $shiftId)->first();
     }
 }

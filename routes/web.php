@@ -1345,6 +1345,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
+        Route::patch(
+            '/{user}/update/shift-plan-user-sort-by',
+            [
+                UserController::class, 'updateShiftPlanUserSortBy'
+            ]
+        )->name('user.update.shiftPlanUserSortBy');
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');

@@ -12,6 +12,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
+use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -705,6 +706,14 @@ readonly class EventService
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
+            )
+            ->setShiftPlanWorkerSortEnumNames(
+                array_map(
+                    function (ShiftPlanWorkerSortEnum $enum): string {
+                        return $enum->name;
+                    },
+                    ShiftPlanWorkerSortEnum::cases()
+                ),
             );
     }
 

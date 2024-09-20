@@ -121,7 +121,7 @@ const toggleProjectTimePeriodAndRedirect = () => {
 };
 
 const hasColleaguesOnShift = (shift) => {
-    return shift.users.length > 0 && shift.freelancer.length > 0 && shift.service_provider.length > 0;
+    return shift.users.length > 0 || shift.freelancer.length > 0 || shift.service_provider.length > 0;
 };
 
 const parentBackgroundColor = ref(null);

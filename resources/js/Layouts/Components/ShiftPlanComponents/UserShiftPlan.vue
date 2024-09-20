@@ -27,11 +27,12 @@
                                 <span>)</span>
                             </span>
                         </div>
-                        <div v-if="userToEditIsOnVacation(day)">
-                            <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">
-                                {{ $t('not available') }}
-                            </div>
-                        </div>
+                        <!-- @todo: fix wrong backend datatype -->
+<!--                        <div v-if="userToEditIsOnVacation(day)">-->
+<!--                            <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">-->
+<!--                                {{ $t('not available') }}-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col gap-y-2']">
                             <template v-for="event in this.getEventsWhereHasShiftsOnDay(day.full_day)">
                                 <template v-for="shift in event.shifts">
@@ -217,12 +218,8 @@ export default {
             const dayDate = new Date(desiredDay.full_day.split(".").reverse().join("-"));
 
             return this.userToEditWholeWeekDatePeriodVacations?.some((vacation) => {
-                let vacationFrom = vacation.full_day ?
-                    new Date(vacation.date + ' ' + '00:00') :
-                    new Date(vacation.date + ' ' + vacation.start_time);
-                let vacationUntil = vacation.full_day ?
-                    new Date(vacation.date + ' ' + '23:59') :
-                    new Date(vacation.date + ' ' + vacation.end_time);
+                let vacationFrom = new Date(vacation.date + ' ' + '00:00');
+                let vacationUntil = new Date(vacation.date + ' ' + '23:59');
 
                 return dayDate >= vacationFrom && dayDate <= vacationUntil;
             });

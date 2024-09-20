@@ -90,7 +90,7 @@
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
                 <div class="flex justify-center overflow-y-scroll">
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview"
+                    <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">

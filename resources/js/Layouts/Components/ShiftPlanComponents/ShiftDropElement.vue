@@ -13,12 +13,11 @@
              @drop="onDrop"
         >
             <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
-                <input v-model="shift.isCheckedForMultiEdit"
-                       id="comments"
-                       aria-describedby="comments-description"
+                <input v-model="userForMultiEdit.shift_ids"
+                       @change="(e) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
                        type="checkbox"
-                       class="input-checklist mr-1"
-                />
+                       :value="shift.id"
+                       class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between"
                  @click="this.showQualificationRowExpander = !this.showQualificationRowExpander">
@@ -101,7 +100,7 @@ export default defineComponent({
         'userForMultiEdit',
         'shiftQualifications'
     ],
-    emits: ['dropFeedback', 'desiresReload'],
+    emits: ['dropFeedback', 'desiresReload', 'handleShiftAndEventForMultiEdit'],
     mixins: [IconLib],
     data() {
         return {
@@ -434,6 +433,14 @@ export default defineComponent({
                     this.seriesShiftData
                 );
             });
+        },
+        handleShiftAndEventForMultiEdit(checked, shift, event) {
+            this.$emit(
+                'handleShiftAndEventForMultiEdit',
+                checked,
+                shift,
+                event
+            );
         }
     }
 })

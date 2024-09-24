@@ -28,6 +28,7 @@
                                   :shift-qualifications="shiftQualifications"
                                   @drop-feedback="getDropFeedback"
                                   @desires-reload="dropElementDesiresReload"
+                                  @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
                 />
             </div>
         </div>
@@ -49,6 +50,7 @@ export default defineComponent({
         ShiftDropElement,
         CheckIcon,
     },
+    emits: ['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit'],
     props: [
         'event',
         'showRoom',
@@ -79,9 +81,11 @@ export default defineComponent({
         },
         dropElementDesiresReload(userId, userType, seriesShiftData) {
             this.$emit('eventDesiresReload', userId, userType, this.event, seriesShiftData);
+        },
+        handleShiftAndEventForMultiEdit(checked, shift, event) {
+            this.$emit('handleShiftAndEventForMultiEdit', checked, shift, event);
         }
     },
-    emits: ['dropFeedback', 'eventDesiresReload'],
 })
 </script>
 <style scoped>

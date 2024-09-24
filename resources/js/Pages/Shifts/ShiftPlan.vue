@@ -69,6 +69,7 @@
                                                     :firstProjectShiftTabId="firstProjectShiftTabId"
                                                     @dropFeedback="showDropFeedback"
                                                     @event-desires-reload="this.eventDesiresReload"
+                                                    @handle-shift-and-event-for-multi-edit="handleShiftAndEventForMultiEdit"
                                                 />
                                                 <SingleEventInShiftPlan v-else
                                                                         :event="event"
@@ -423,13 +424,10 @@
                                @closed="showHistoryModal = false"/>
         </ShiftHeader>
         <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
-            <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
-                {{ multiEditFeedback }}
-            </div>
             <div class="flex items-center justify-center gap-4">
                 <div>
                     <button type="button"
-                            @click="multiEditMode = false"
+                            @click="resetMultiEditMode()"
                             class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
                         {{ $t('Cancel') }}
                     </button>
@@ -437,9 +435,9 @@
                 <div>
                     <button type="button"
                             @click="initializeMultiEditSave"
-                            :disabled="this.userForMultiEdit === null && this.checkedShiftsForMultiEdit.length === 0"
+                            :disabled="this.userForMultiEdit === null"
                             :class="[
-                                this.userForMultiEdit === null && this.checkedShiftsForMultiEdit.length === 0 ?
+                                this.userForMultiEdit === null ?
                                 'bg-gray-600' :
                                 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
                                 'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
@@ -575,9 +573,9 @@ export default {
             multiEditMode: false,
             dayServiceMode: false,
             selectedDayService: this.dayServices ? this.dayServices[0] : null,
-            checkedShiftsForMultiEdit: [],
             userForMultiEdit: null,
-            multiEditFeedback: '',
+            userToMultiEditCurrentShifts: [],
+            userToMultiEditCheckedShiftsAndEvents: [],
             dropFeedback: null,
             closedCrafts: [],
             userOverviewHeight: 570,
@@ -590,13 +588,11 @@ export default {
             },
             showShiftsQualificationsAssignmentModal: false,
             showShiftsQualificationsAssignmentModalShifts: [],
-            shiftsAreChecked: [],
-            shiftsToRemoveCheckState: [],
             firstDayPosition: this.days ? this.days[0].full_day : null,
             currentDayOnView: this.days ? this.days[0] : null,
             currentDaysInView: new Set(),
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
-            screenHeight: screen.height,
+            screenHeight: screen.height
         }
     },
     mounted() {
@@ -1200,83 +1196,63 @@ export default {
             this.typeToHighlight = type;
         },
         addUserToMultiEdit(item) {
-            this.checkedShiftsForMultiEdit = [];
-            this.shiftsAreChecked = [];
+            this.userToMultiEditCheckedShiftsAndEvents = [];
             this.userForMultiEdit = item;
+            if (item !== null) {
+                this.userToMultiEditCurrentShifts = this.userForMultiEdit.shift_ids;
+            }
         },
         initializeMultiEditSave() {
-            if (this.userForMultiEdit === null) {
-                this.multiEditFeedback = 'Bitte wähle einen Nutzer*in aus!';
-                return;
-            }
-
-            //check if existing shifts are not contained anymore
-            this.userForMultiEdit.shift_ids.forEach((shiftId) => {
-                let checkedShift = this.checkedShiftsForMultiEdit.find((checkedShift) => checkedShift.id === shiftId);
-                if (typeof checkedShift === 'undefined') {
-                    this.shiftsToHandleOnMultiEdit.removeFromShift.push(shiftId);
-                }
-            });
-
-            // Check if the same layer is in the checkedShiftsForMultiEdit twice, if so delete it until it is only in the checkedShiftsForMultiEdit once
-            let shiftIds = this.checkedShiftsForMultiEdit.map(shift => shift.id);
-            let shiftIdsUnique = [...new Set(shiftIds)];
-            shiftIdsUnique.forEach((shiftId) => {
-                let shiftCount = shiftIds.filter(id => id === shiftId).length;
-                if (shiftCount > 1) {
-                    for (let i = 0; i < shiftCount - 1; i++) {
-                        let index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
-                        this.checkedShiftsForMultiEdit.splice(index, 1);
-                    }
-                }
-            });
+            this.shiftsToHandleOnMultiEdit.removeFromShift = this.userToMultiEditCurrentShifts.filter(
+                (shift_id) => !this.userForMultiEdit.shift_ids.includes(shift_id)
+            );
 
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
-                this.checkedShiftsForMultiEdit.forEach((checkedShift) => {
-                    if (!this.userForMultiEdit.shift_ids.includes(checkedShift.id)) {
-                        if (checkedShift.shifts_qualifications.length === 0) {
-                            this.showShiftsQualificationsAssignmentModalShifts.push({
-                                shift: checkedShift,
-                                availableSlots: this.userForMultiEdit.shift_qualifications
-                            });
-                            return;
-                        }
+                this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
+                    let desiredShift = shiftAndEvent.shift;
 
-                        if (this.userForMultiEdit.shift_qualifications.length === 1) {
-                            this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                                shiftId: checkedShift.id,
-                                shiftQualificationId: this.userForMultiEdit.shift_qualifications[0].id
-                            });
-                            return;
-                        }
-
-                        let availableShiftQualificationSlots = [];
-                        this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
-                            checkedShift.shifts_qualifications.forEach((shiftsQualification) => {
-                                if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
-                                    availableShiftQualificationSlots.push(userShiftQualification);
-                                }
-                            });
-                        });
-
-                        if (availableShiftQualificationSlots.length === 0) {
-                            return;
-                        }
-
-                        if (availableShiftQualificationSlots.length === 1) {
-                            this.shiftsToHandleOnMultiEdit.assignToShift.push({
-                                shiftId: checkedShift.id,
-                                shiftQualificationId: availableShiftQualificationSlots[0].id
-                            });
-                            return;
-                        }
-
+                    if (desiredShift.shifts_qualifications.length === 0) {
                         this.showShiftsQualificationsAssignmentModalShifts.push({
-                            shift: checkedShift,
-                            availableSlots: availableShiftQualificationSlots
+                            shift: desiredShift,
+                            availableSlots: this.userForMultiEdit.shift_qualifications
                         });
+                        return;
                     }
-                });
+
+                    if (this.userForMultiEdit.shift_qualifications.length === 1) {
+                        this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                            shiftId: desiredShift.id,
+                            shiftQualificationId: this.userForMultiEdit.shift_qualifications[0].id
+                        });
+                        return;
+                    }
+
+                    let availableShiftQualificationSlots = [];
+                    this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
+                        desiredShift.shifts_qualifications.forEach((shiftsQualification) => {
+                            if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
+                                availableShiftQualificationSlots.push(userShiftQualification);
+                            }
+                        });
+                    });
+
+                    if (availableShiftQualificationSlots.length === 0) {
+                        return;
+                    }
+
+                    if (availableShiftQualificationSlots.length === 1) {
+                        this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                            shiftId: desiredShift.id,
+                            shiftQualificationId: availableShiftQualificationSlots[0].id
+                        });
+                        return;
+                    }
+
+                    this.showShiftsQualificationsAssignmentModalShifts.push({
+                        shift: desiredShift,
+                        availableSlots: availableShiftQualificationSlots
+                    });
+                })
             }
 
             if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
@@ -1319,32 +1295,29 @@ export default {
                     type: this.userForMultiEdit.type
                 };
 
-            this.shiftPlanRef.forEach(room => {
-                this.days.forEach(day => {
-                    room[day.full_day]?.events.forEach(event => {
-                        event.shifts.forEach(shift => {
-                            this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
-                                if (shift.id === shiftToAssign.shiftId) {
-                                    desiredRoomIds.add(room[day.full_day].roomId);
-                                    getDaysOfEvent(
-                                        formatEventDateByDayJs(event.start),
-                                        formatEventDateByDayJs(event.end)
-                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
-                                }
-                            });
+            this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
+                let desiredShift = shiftAndEvent.shift;
+                let desiredEvent = shiftAndEvent.event;
 
-                            this.shiftsToHandleOnMultiEdit.removeFromShift.forEach((shiftIdToRemove) => {
-                                if (shift.id === shiftIdToRemove) {
-                                    desiredRoomIds.add(room[day.full_day].roomId);
+                this.shiftsToHandleOnMultiEdit.assignToShift.forEach((shiftToAssign) => {
+                    if (desiredShift.id === shiftToAssign.shiftId) {
+                        desiredRoomIds.add(desiredEvent.roomId);
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(desiredEvent.start),
+                            formatEventDateByDayJs(desiredEvent.end)
+                        ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                    }
+                });
 
-                                    getDaysOfEvent(
-                                        formatEventDateByDayJs(event.start),
-                                        formatEventDateByDayJs(event.end)
-                                    ).forEach((desiredDay) => desiredDays.add(desiredDay));
-                                }
-                            });
-                        });
-                    });
+                this.shiftsToHandleOnMultiEdit.removeFromShift.forEach((shiftIdToRemove) => {
+                    if (desiredShift.id === shiftIdToRemove) {
+                        desiredRoomIds.add(desiredEvent.roomId);
+
+                        getDaysOfEvent(
+                            formatEventDateByDayJs(desiredEvent.start),
+                            formatEventDateByDayJs(desiredEvent.end)
+                        ).forEach((desiredDay) => desiredDays.add(desiredDay));
+                    }
                 });
             });
 
@@ -1358,14 +1331,19 @@ export default {
                     Array.from(desiredDays),
                     [desiredUser]
                 );
-                this.resetMultiEditMode();
+                this.resetMultiEditMode(false);
             });
         },
-        resetMultiEditMode() {
+        resetMultiEditMode(closeMultiEdit = true) {
             this.shiftsToHandleOnMultiEdit = {
                 assignToShift: [],
                 removeFromShift: []
             };
+            this.userToMultiEditCheckedShiftsAndEvents = [];
+
+            if (closeMultiEdit) {
+                this.multiEditMode = false;
+            }
         },
         changeCraftVisibility(id) {
             if (this.closedCrafts.includes(id)) {
@@ -1421,28 +1399,6 @@ export default {
                 this.userOverviewHeight = 100;
             }
         },
-        setShiftsCheckState(shiftId, state) {
-            this.shiftPlanRef.forEach(room => {
-                this.days.forEach(day => {
-                    room[day.full_day]?.events.forEach(event => {
-                        event.shifts.forEach(shift => {
-                            if (shift.id === shiftId) {
-                                shift.isCheckedForMultiEdit = state;
-                                if (!state) {
-                                    // remove shift form checkedShiftsForMultiEdit
-                                    const index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
-                                    if (index !== -1) {
-                                        this.checkedShiftsForMultiEdit.splice(index, 1);
-                                    }
-                                } else {
-                                    this.checkedShiftsForMultiEdit.push(shift);
-                                }
-                            }
-                        });
-                    });
-                });
-            });
-        },
         applySort(shiftPlanWorkerSortEnumName) {
             this.$page.props.user.shift_plan_user_sort_by = shiftPlanWorkerSortEnumName;
             axios.patch(
@@ -1495,6 +1451,30 @@ export default {
 
                 return getCompareName(workerA).localeCompare(getCompareName(workerB));
             });
+        },
+        handleShiftAndEventForMultiEdit(checked, shift, event) {
+            if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {
+                //return as the shift is already assigned to user and checkbox was unchecked and checked again
+                return;
+            }
+
+            if (!checked) {
+                //remove shift and event from shiftsAndEventsForMultiEdit
+                let idx = this.userToMultiEditCheckedShiftsAndEvents.findIndex(
+                    (shiftAndEvent) => shiftAndEvent.shift.id === shift.id
+                );
+
+                if (idx > -1) {
+                    this.userToMultiEditCheckedShiftsAndEvents.splice(idx, 1);
+                }
+
+                return;
+            }
+
+            this.userToMultiEditCheckedShiftsAndEvents.push({
+                shift: shift,
+                event: event
+            });
         }
     },
     beforeUnmount() {
@@ -1512,33 +1492,8 @@ export default {
                 this.updateHeight();
             },
             deep: true
-        },
-        shiftPlanRef: {
-            handler(shiftPlanRef) {
-                let currentCheckedIds = [...this.shiftsAreChecked];
-                shiftPlanRef.forEach(room => {
-                    this.days.forEach(day => {
-                        room[day.full_day]?.events.forEach(event => {
-                            event.shifts.forEach(shift => {
-                                const index = currentCheckedIds.indexOf(shift.id);
-                                if (shift.isCheckedForMultiEdit) {
-                                    if (index === -1) {
-                                        this.shiftsAreChecked.push(shift.id);
-                                        this.setShiftsCheckState(shift.id, true);
-                                    }
-                                } else if (index !== -1) {
-                                    this.shiftsAreChecked.splice(index, 1);
-                                    this.setShiftsCheckState(shift.id, false);
-                                }
-                            });
-                        });
-                    });
-                });
-            },
-            deep: true
         }
     }
-
 }
 </script>
 

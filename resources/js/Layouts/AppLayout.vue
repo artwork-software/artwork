@@ -31,7 +31,7 @@
                                   :href="item.href"
                                   @mouseover="showToolTipForItem(item)"
                                   @mouseleave="hideToolTipForItem(item)"
-                                  @click.middle="handleMiddleClick()"
+                                  @click.middle="useProjectTimePeriodAndRedirect(null, true)"
                                   @click="item.desiredClickHandler"
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
@@ -293,9 +293,6 @@ export default {
         usePage,
         moduleIsVisible(module) {
             return this.hasAdminRole() || this.$page.props.module_settings[module];
-        },
-        handleMiddleClick() {
-            this.useProjectTimePeriodAndRedirect(null, true);
         },
         useProjectTimePeriodAndRedirect(e, handleMiddleClick = false) {
             //in safari if we click with middle-click on the menu item the click event is also triggered

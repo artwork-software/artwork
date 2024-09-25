@@ -619,7 +619,6 @@ readonly class EventService
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
-            // if it is monday, add extra row
             if ($period->isMonday()) {
                 $periodArray[] = [
                     'is_extra_row' => true,

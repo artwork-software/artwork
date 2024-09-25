@@ -1017,57 +1017,35 @@ export default {
         },
         syncScrollShiftPlan(event) {
             if (this.$refs.userOverview) {
-                // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
-
-                // Get the scrollable container and current scroll position
                 const scrollableContainer = this.$refs.shiftPlan;
-                const scrollPosition = scrollableContainer.scrollLeft;
-
-                // Find the fixed position of the room name relative to the container
-                const roomNameFixedPosition = scrollableContainer.getBoundingClientRect().left + 200; // Adjust this offset to match the actual position of the room name
-
-                // Iterate over all days to find the day closest to the room name position
+                const roomNameFixedPosition = scrollableContainer.getBoundingClientRect().left + 200;
                 let closestDayIndex = null;
                 let closestDayDistance = Infinity;
 
                 for (let i = 0; i < this.days.length; i++) {
                     const day = this.days[i];
-
-                    // Find the element representing the current day
                     const dayElement = document.getElementById(day.full_day || `extra_row_${day.week_number}`);
-                    if (!dayElement) continue; // Skip if the element is not found
-
-                    // Get the left position of the element relative to the viewport
+                    if (!dayElement) continue;
                     const elementLeft = dayElement.getBoundingClientRect().left;
-                    const elementRight = elementLeft + dayElement.offsetWidth;
                     const elementCenter = elementLeft + (dayElement.offsetWidth / 2);
-
-                    // Check if the element is visible and near the room name position
                     const distanceToRoomName = Math.abs(roomNameFixedPosition - elementCenter);
-
-                    // Update if this element is closer to the room name position
                     if (distanceToRoomName < closestDayDistance) {
                         closestDayDistance = distanceToRoomName;
                         closestDayIndex = i;
                     }
                 }
 
-                // Check if we found a day close to the room name position
                 if (closestDayIndex !== null) {
                     const selectedDay = this.days[closestDayIndex];
-
-                    // Check if the selected day is an extra row
                     if (selectedDay.is_extra_row) {
-                        // Find the next Monday after the extra row
                         for (let j = closestDayIndex + 1; j < this.days.length; j++) {
                             if (this.days[j].is_monday) {
                                 this.currentDayOnView = this.days[j];
-                                return; // Exit after finding and setting the correct Monday
+                                return;
                             }
                         }
                     } else {
-                        // Set the currentDayOnView to the day closest to the room name
                         this.currentDayOnView = selectedDay;
                     }
                 }
@@ -1082,15 +1060,10 @@ export default {
             let periodKey, periodValue, scrollOffset;
 
             if (period === 'day') {
-                // Get the current index of the currentDayOnView
                 let currentIndex = this.days.indexOf(this.currentDayOnView);
                 let targetIndex = currentIndex + indexModifier;
-
-                // Ensure the targetIndex is within bounds
                 while (targetIndex >= 0 && targetIndex < this.days.length) {
                     const targetDay = this.days[targetIndex];
-
-                    // Skip extra rows and find the next/previous valid day
                     if (!targetDay.is_extra_row) {
                         scrollOffset = targetIndex;
                         break;
@@ -1107,48 +1080,30 @@ export default {
                 periodValue = this.currentDayOnView.month_number;
                 scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_first_day_of_month);
             }
-
-            // Scroll to the target element if a valid scrollOffset was determined
             if (scrollOffset !== undefined && scrollOffset !== null) {
                 const targetDay = this.days[scrollOffset];
-
-                // Set the currentDayOnView to the target day
                 this.currentDayOnView = targetDay;
-
-                // Find the corresponding DOM element
                 const targetElement = document.getElementById(targetDay.full_day);
                 if (targetElement) {
-                    // Calculate the offset for scrolling based on the roomNameContainer_0
                     const roomNameElement = document.getElementById('roomNameContainer_0');
                     const scrollableContainer = this.$refs.shiftPlan;
 
                     if (roomNameElement) {
-                        // Find the absolute left positions of the target and room name element
                         const roomNameLeft = roomNameElement.getBoundingClientRect().left;
                         const containerLeft = scrollableContainer.getBoundingClientRect().left;
-
-                        // Calculate how much to scroll so that the left side of the target day aligns with the left side of the room name container
-                        const scrollLeftPosition = targetElement.offsetLeft - (roomNameLeft + containerLeft + 65);
-
-                        // Set the scroll position directly
-                        scrollableContainer.scrollLeft = scrollLeftPosition;
+                        scrollableContainer.scrollLeft = targetElement.offsetLeft - (roomNameLeft + containerLeft + 65);
                     }
                 }
             }
         },
         getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, conditionCallback) {
             let targetIndex = this.days.findIndex(day => day[periodKey] === periodValue && conditionCallback(day));
-
-            // Iterate in the direction specified by indexModifier to find the next valid day
             while (true) {
                 targetIndex += indexModifier;
                 if (targetIndex < 0 || targetIndex >= this.days.length) {
-                    return null; // Out of bounds, return null
+                    return null;
                 }
-
                 const day = this.days[targetIndex];
-
-                // Skip extra rows and find the valid target
                 if (!day.is_extra_row && conditionCallback(day)) {
                     return targetIndex;
                 }

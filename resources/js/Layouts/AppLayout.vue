@@ -135,8 +135,8 @@
                 </div>
 
                 <div class="flex flex-col justify-end w-full">
-                    <a  @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
-                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
+                    <a @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
+                       @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div v-if="this.$page.props.user.show_notification_indicator === true"
@@ -295,10 +295,9 @@ export default {
             return this.hasAdminRole() || this.$page.props.module_settings[module];
         },
         handleMiddleClick() {
-            this.clickedMiddle = true;
-            this.useProjectTimePeriodAndRedirect();
+            this.useProjectTimePeriodAndRedirect(null, true);
         },
-        useProjectTimePeriodAndRedirect(e) {
+        useProjectTimePeriodAndRedirect(e, handleMiddleClick = false) {
             //in safari if we click with middle-click on the menu item the click event is also triggered
             //if button === 1 (mousewheel click) we return as this method is called by "handleMiddleClick" before
             if (e?.button === 1) {
@@ -309,13 +308,11 @@ export default {
             let payload = {
                 use_project_time_period: false,
                 project_id: 0,
-                is_axios: this.clickedMiddle
+                is_axios: handleMiddleClick
             };
 
-            if (this.clickedMiddle) {
+            if (handleMiddleClick) {
                 axios.patch(desiredRoute, payload);
-
-                this.clickedMiddle = false;
 
                 return;
             }
@@ -550,7 +547,6 @@ export default {
             testModel3: '',
             testModel4: '',
             windowInnerHeight: window.innerHeight,
-            clickedMiddle: false,
             navigation: [{
                 name: 'Dashboard',
                 href: route('dashboard'),

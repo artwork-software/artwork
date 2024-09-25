@@ -195,7 +195,7 @@
                                 <div class="font-semibold text-sm pb-2">{{ $t('Project management')}}</div>
                                 <UserSearch @user-selected="addUserToProject" only-manager />
 
-                                <div v-if="assignedUsers?.length > 0">
+                                <div v-if="assignedUsers.length > 0">
                                     <div v-for="(user, index) in assignedUsers">
                                         <div class="flex items-center justify-between mt-3 group">
                                             <div class="flex items-center gap-x-2">

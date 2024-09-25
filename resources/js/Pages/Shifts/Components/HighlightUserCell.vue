@@ -5,7 +5,7 @@
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>
         <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
-            <div v-if="type === 0" class="text-ellipsis w-32">
+            <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
                 <div class="truncate">
                     {{ item.first_name }} {{ item.last_name }}
@@ -14,7 +14,7 @@
                 </div>
                 <div class="text-xs w-full flex" v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
-            <div v-else-if="type === 1" class="text-ellipsis w-32">
+            <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
@@ -23,7 +23,7 @@
                 </div>
                 <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
             </div>
-            <div v-else class="text-ellipsis w-32">
+            <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.provider_name }}

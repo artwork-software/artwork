@@ -619,6 +619,12 @@ readonly class EventService
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+            if ($period->isMonday()) {
+                $periodArray[] = [
+                    'is_extra_row' => true,
+                    'week_number' => $period->weekOfYear,
+                ];
+            }
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -635,11 +641,7 @@ readonly class EventService
             ];
 
             // If it's Sunday, add the extra row immediately after
-            if ($period->isSunday()) {
-                $periodArray[] = [
-                    'is_extra_row' => true
-                ];
-            }
+
         }
 
         $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(

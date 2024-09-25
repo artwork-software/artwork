@@ -17,7 +17,6 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -26,15 +25,14 @@
                             <div class="stickyHeader">
                                 <TableHead id="stickyTableHead" ref="stickyTableHead">
                                     <th class="z-0" style="width:192px;"></th>
-                                    <th  v-for="day in days"  :id="day.full_day" style="max-width: 204px"
+                                    <th  v-for="day in days" :id="day.is_extra_row ? 'extra_row_' + day.week_number : day.full_day" style="max-width: 204px"
                                         class="z-20 h-8 py-2 border-r-2 border-secondaryHover truncate">
-                                        <div v-if="!day.is_extra_row" :style="{width:  '200px'}" class="flex items-center calendarRoomHeaderBold ml-2">
-                                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday"
-                                                                                          class="text-[10px] font-normal ml-2">(KW{{
-                                                day.week_number
-                                            }})</span>
+                                        <div v-if="day.is_extra_row" style="width:37px">
+                                            <span class="text-[9px] font-bold">KW{{day.week_number }}</span>
                                         </div>
-                                        <div v-else style="width:37px"></div>
+                                        <div v-else :style="{width:  '200px'}" class="flex items-center calendarRoomHeaderBold ml-2">
+                                            {{ day.day_string }} {{ day.full_day }}
+                                        </div>
                                     </th>
 
                                 </TableHead>
@@ -43,18 +41,20 @@
                         <template #body>
                             <TableBody class="eventByDaysContainer">
                                 <tr v-for="(room,index) in computedShiftPlan" class="w-full flex">
-                                    <th class="xsDark flex items-center h-28 w-48"
-                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                    <th :id="'roomNameContainer_' + index" class="xsDark flex items-center h-28 w-48" :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
-                                            {{ room[days[0].full_day].roomName }}
+                                            {{ renderRoomName(room) }}
+                                            <!--{{ room[days[0].full_day].roomName }}-->
                                         </div>
                                     </th>
-                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white']"
-                                        class="border-r-2 border-gray-400 border-dashed day-container"
+                                    <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
+                                        class="border-r-2 border-gray-400  day-container h-28"
                                         v-for="day in days" :data-day="day.full_day">
+                                        <div class="bg-backgroundGray2 max-h-28 h-28" style="width: 37px" v-if="day.is_extra_row">
+
+                                        </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
-                                        <div v-if="!day.is_extra_row" style="width: 200px"
-                                             class="max-h-28 overflow-y-auto cell ">
+                                        <div v-else style="width: 200px" class="max-h-28 h-28 overflow-y-auto cell ">
                                             <div v-for="event in room[day.full_day].events" class="mb-1">
                                                 <SingleShiftPlanEvent
                                                     v-if="checkIfEventHasShiftsToDisplay(event)"
@@ -77,10 +77,7 @@
                                                                         :firstProjectShiftTabId="firstProjectShiftTabId"/>
                                             </div>
                                         </div>
-                                        <div class="bg-backgroundGray2 h-full " style="width: 37px" v-else>
-                                            <div  >
-                                            </div>
-                                        </div>
+
                                     </td>
                                 </tr>
                             </TableBody>
@@ -89,10 +86,10 @@
                 </div>
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30">
-                <div class="flex justify-center overflow-y-scroll">
+                <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
-                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background ">
+                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
                                  viewBox="0 0 14.123 6.519">
@@ -110,7 +107,7 @@
                     </div>
                     <div v-if="showUserOverview" @mousedown="startResize"
                          :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background  rounded-tr-lg"
+                         class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background pointer-events-auto rounded-tr-lg"
                          :title="$t('Hold and drag to change the size')">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <SelectorIcon class="h-3 w-6 text-gray-400"/>
@@ -491,6 +488,7 @@ import {useEvent} from "@/Composeables/Event.js";
 import {ref} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import dayjs from "dayjs";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -588,8 +586,9 @@ export default {
             },
             showShiftsQualificationsAssignmentModal: false,
             showShiftsQualificationsAssignmentModalShifts: [],
-            firstDayPosition: this.days ? this.days[0].full_day : null,
-            currentDayOnView: this.days ? this.days[0] : null,
+            // firstDayPosition without the extra row
+            firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
+            currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
             currentDaysInView: new Set(),
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height
@@ -762,6 +761,13 @@ export default {
         },
     },
     methods: {
+        renderRoomName(room){
+            const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
+            const firstDayIndex = this.days.indexOf(firstDayWhereAreNotExtraRows);
+            const firstDay = this.days[firstDayIndex].full_day;
+
+            return room[firstDay].roomName;
+        },
         getSortEnumTranslation,
         userShiftModalDesiresReload(shiftId, userId, userType, desiredDay) {
             let desiredRoomIds = new Set();
@@ -974,78 +980,17 @@ export default {
             }
         },
         previousTimeRange() {
-            const gotoMode = this.$page.props.user.goto_mode;
-            if (gotoMode === 'day') {
-                // Reduziere den Date-Bereich um einen Tag
-                this.dateValue[0] = this.getPreviousDayNew(this.dateValue[0]);
-                this.dateValue[1] = this.getPreviousDayNew(this.dateValue[1]);
-            } else if (gotoMode === 'week') {
-                // Reduziere den Date-Bereich um eine Woche (7 Tage)
-                this.dateValue[0] = this.getPreviousWeek(this.dateValue[0]);
-                this.dateValue[1] = this.getPreviousWeek(this.dateValue[1]);
-            } else if (gotoMode === 'month') {
-                // Reduziere den Date-Bereich um einen Monat
-                this.dateValue[0] = this.getPreviousMonth(this.dateValue[0]);
-                this.dateValue[1] = this.getPreviousMonth(this.dateValue[1]);
-            }
-
+            const dateDifference = this.calculateDateDifference();
+            this.dateValue[0] = dayjs(this.dateValue[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
+            this.dateValue[1] = dayjs(this.dateValue[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
             this.updateTimes();
-        },
 
-        getPreviousDayNew(date) {
-            const newDate = new Date(date);
-            newDate.setDate(newDate.getDate() - 1);
-            return newDate.toISOString().slice(0, 10);
         },
-
-        getPreviousWeek(date) {
-            const newDate = new Date(date);
-            newDate.setDate(newDate.getDate() - 7);
-            return newDate.toISOString().slice(0, 10);
-        },
-
-        getPreviousMonth(date) {
-            const newDate = new Date(date);
-            newDate.setMonth(newDate.getMonth() - 1);
-            return newDate.toISOString().slice(0, 10);
-        },
-
         nextTimeRange() {
-            const gotoMode = this.$page.props.user.goto_mode;
-
-            if (gotoMode === 'day') {
-                // Erhöhe den Date-Bereich um einen Tag
-                this.dateValue[0] = this.getNextDayNew(this.dateValue[0]);
-                this.dateValue[1] = this.getNextDayNew(this.dateValue[1]);
-            } else if (gotoMode === 'week') {
-                // Erhöhe den Date-Bereich um eine Woche (7 Tage)
-                this.dateValue[0] = this.getNextWeek(this.dateValue[0]);
-                this.dateValue[1] = this.getNextWeek(this.dateValue[1]);
-            } else if (gotoMode === 'month') {
-                // Erhöhe den Date-Bereich um einen Monat
-                this.dateValue[0] = this.getNextMonth(this.dateValue[0]);
-                this.dateValue[1] = this.getNextMonth(this.dateValue[1]);
-            }
-
+            const dateDifference = this.calculateDateDifference();
+            this.dateValue[0] = dayjs(this.dateValue[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
+            this.dateValue[1] = dayjs(this.dateValue[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
             this.updateTimes();
-        },
-
-        getNextDayNew(date) {
-            const newDate = new Date(date);
-            newDate.setDate(newDate.getDate() + 1);
-            return newDate.toISOString().slice(0, 10);
-        },
-
-        getNextWeek(date) {
-            const newDate = new Date(date);
-            newDate.setDate(newDate.getDate() + 7);
-            return newDate.toISOString().slice(0, 10);
-        },
-
-        getNextMonth(date) {
-            const newDate = new Date(date);
-            newDate.setMonth(newDate.getMonth() + 1);
-            return newDate.toISOString().slice(0, 10);
         },
 
         calculateDateDifference() {
@@ -1053,22 +998,6 @@ export default {
             const date2 = new Date(this.dateValue[1]);
             const timeDifference = date2.getTime() - date1.getTime();
             return timeDifference / (1000 * 3600 * 24);
-        },
-        getNextDay(dateString) {
-            const date = new Date(dateString);
-            date.setDate(date.getDate() + 1);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        },
-        getPreviousDay(dateString) {
-            const date = new Date(dateString);
-            date.setDate(date.getDate() - 1);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
         },
         updateTimes() {
             router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
@@ -1091,17 +1020,56 @@ export default {
                 // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
 
-                // update the current day on view with the day that is currently visible check if day.week_separator is false
-                // because we don't want to update the currentDayOnView with the week separator
-                const firstDay = document.getElementById(this.days[0].full_day)
-                const scrollableContainer = this.$refs.shiftPlan; // Use the shiftPlan reference as the scrollable container
-                const firstDayPosition = scrollableContainer.scrollLeft;
+                // Get the scrollable container and current scroll position
+                const scrollableContainer = this.$refs.shiftPlan;
                 const scrollPosition = scrollableContainer.scrollLeft;
-                const dayIndex = Math.floor(scrollPosition / firstDay.offsetWidth);
-                if (!this.days[dayIndex].week_separator) {
-                    this.currentDayOnView = this.days[dayIndex];
-                } else {
-                    this.currentDayOnView = this.days[dayIndex + 1];
+
+                // Find the fixed position of the room name relative to the container
+                const roomNameFixedPosition = scrollableContainer.getBoundingClientRect().left + 200; // Adjust this offset to match the actual position of the room name
+
+                // Iterate over all days to find the day closest to the room name position
+                let closestDayIndex = null;
+                let closestDayDistance = Infinity;
+
+                for (let i = 0; i < this.days.length; i++) {
+                    const day = this.days[i];
+
+                    // Find the element representing the current day
+                    const dayElement = document.getElementById(day.full_day || `extra_row_${day.week_number}`);
+                    if (!dayElement) continue; // Skip if the element is not found
+
+                    // Get the left position of the element relative to the viewport
+                    const elementLeft = dayElement.getBoundingClientRect().left;
+                    const elementRight = elementLeft + dayElement.offsetWidth;
+                    const elementCenter = elementLeft + (dayElement.offsetWidth / 2);
+
+                    // Check if the element is visible and near the room name position
+                    const distanceToRoomName = Math.abs(roomNameFixedPosition - elementCenter);
+
+                    // Update if this element is closer to the room name position
+                    if (distanceToRoomName < closestDayDistance) {
+                        closestDayDistance = distanceToRoomName;
+                        closestDayIndex = i;
+                    }
+                }
+
+                // Check if we found a day close to the room name position
+                if (closestDayIndex !== null) {
+                    const selectedDay = this.days[closestDayIndex];
+
+                    // Check if the selected day is an extra row
+                    if (selectedDay.is_extra_row) {
+                        // Find the next Monday after the extra row
+                        for (let j = closestDayIndex + 1; j < this.days.length; j++) {
+                            if (this.days[j].is_monday) {
+                                this.currentDayOnView = this.days[j];
+                                return; // Exit after finding and setting the correct Monday
+                            }
+                        }
+                    } else {
+                        // Set the currentDayOnView to the day closest to the room name
+                        this.currentDayOnView = selectedDay;
+                    }
                 }
             }
         },
@@ -1114,12 +1082,20 @@ export default {
             let periodKey, periodValue, scrollOffset;
 
             if (period === 'day') {
-                const currentIndex = this.days.indexOf(this.currentDayOnView);
-                const targetIndex = currentIndex + indexModifier;
-                if (targetIndex >= 0 && targetIndex < this.days.length) {
-                    periodKey = 'full_day';
-                    periodValue = this.currentDayOnView.full_day;
-                    scrollOffset = targetIndex;
+                // Get the current index of the currentDayOnView
+                let currentIndex = this.days.indexOf(this.currentDayOnView);
+                let targetIndex = currentIndex + indexModifier;
+
+                // Ensure the targetIndex is within bounds
+                while (targetIndex >= 0 && targetIndex < this.days.length) {
+                    const targetDay = this.days[targetIndex];
+
+                    // Skip extra rows and find the next/previous valid day
+                    if (!targetDay.is_extra_row) {
+                        scrollOffset = targetIndex;
+                        break;
+                    }
+                    targetIndex += indexModifier;
                 }
             } else if (period === 'week') {
                 periodKey = 'week_number';
@@ -1131,19 +1107,51 @@ export default {
                 scrollOffset = this.getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, day => day.is_first_day_of_month);
             }
 
-            if (scrollOffset !== undefined) {
-                const firstDay = document.getElementById(this.currentDayOnView.full_day);
-                const scrollableContainer = this.$refs.shiftPlan;
-                scrollableContainer.scrollLeft = firstDay.offsetWidth * scrollOffset;
+            // Scroll to the target element if a valid scrollOffset was determined
+            if (scrollOffset !== undefined && scrollOffset !== null) {
+                const targetDay = this.days[scrollOffset];
+
+                // Set the currentDayOnView to the target day
+                this.currentDayOnView = targetDay;
+
+                // Find the corresponding DOM element
+                const targetElement = document.getElementById(targetDay.full_day);
+                if (targetElement) {
+                    // Calculate the offset for scrolling based on the roomNameContainer_0
+                    const roomNameElement = document.getElementById('roomNameContainer_0');
+                    const scrollableContainer = this.$refs.shiftPlan;
+
+                    if (roomNameElement) {
+                        // Find the absolute left positions of the target and room name element
+                        const roomNameLeft = roomNameElement.getBoundingClientRect().left;
+                        const containerLeft = scrollableContainer.getBoundingClientRect().left;
+
+                        // Calculate how much to scroll so that the left side of the target day aligns with the left side of the room name container
+                        const scrollLeftPosition = targetElement.offsetLeft - (roomNameLeft + containerLeft + 65);
+
+                        // Set the scroll position directly
+                        scrollableContainer.scrollLeft = scrollLeftPosition;
+                    }
+                }
             }
         },
-        getIndexForWeekOrMonth(period, key, value, indexModifier, filterFn) {
-            const targetValue = value + indexModifier;
-            const targetDay = this.days.find(day => filterFn(day) && day[key] === targetValue);
-            if (targetDay) {
-                return this.days.indexOf(targetDay);
+        getIndexForWeekOrMonth(period, periodKey, periodValue, indexModifier, conditionCallback) {
+            let targetIndex = this.days.findIndex(day => day[periodKey] === periodValue && conditionCallback(day));
+
+            // Iterate in the direction specified by indexModifier to find the next valid day
+            while (true) {
+                targetIndex += indexModifier;
+                if (targetIndex < 0 || targetIndex >= this.days.length) {
+                    return null; // Out of bounds, return null
+                }
+
+                const day = this.days[targetIndex];
+
+                // Skip extra rows and find the valid target
+                if (!day.is_extra_row && conditionCallback(day)) {
+                    return targetIndex;
+                }
             }
-            return undefined;
         },
         selectGoToNextMode() {
             this.selectGoToMode('next');
@@ -1369,8 +1377,8 @@ export default {
                 return;
             }
 
-            if ((window.innerHeight - 160) - (this.startHeight + diff) < 160) {
-                this.userOverviewHeight = (window.innerHeight - 160) - 200;
+            if ((window.innerHeight - 100) - (this.startHeight + diff) < 100) {
+                this.userOverviewHeight = (window.innerHeight - 100) - 200;
                 this.updateHeight()
                 return;
             }
@@ -1385,13 +1393,13 @@ export default {
         },
         updateHeight() {
             if (!this.showUserOverview) {
-                this.windowHeight = (window.innerHeight - 120);
+                this.windowHeight = (window.innerHeight - 100);
             } else {
-                this.windowHeight = (window.innerHeight - 110) - this.userOverviewHeight;
+                this.windowHeight = (window.innerHeight - 100) - this.userOverviewHeight;
             }
 
-            if (window.innerHeight - 110 < 400) {
-                this.userOverviewHeight = window.innerHeight - 300;
+            if (window.innerHeight - 100 < 400) {
+                this.userOverviewHeight = window.innerHeight - 200;
             }
 
             // check if userOverviewHeight is not smaller than 100

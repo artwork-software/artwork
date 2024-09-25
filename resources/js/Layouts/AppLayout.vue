@@ -28,10 +28,11 @@
                     <div :class="computedWindowInnerHeight > 855 ? 'mt-4' : 'mt-0'"  class="flex flex-col w-full space-y-0.5 overflow-y-auto managementMenu">
                         <template v-for="item in navigation">
                             <Link v-if="item.desiredClickHandler"
-                                  href="#"
+                                  :href="item.href"
                                   @mouseover="showToolTipForItem(item)"
                                   @mouseleave="hideToolTipForItem(item)"
-                                  @click="item.desiredClickHandler()"
+                                  @click.middle="useProjectTimePeriodAndRedirect(null, true)"
+                                  @click="item.desiredClickHandler"
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
@@ -134,8 +135,8 @@
                 </div>
 
                 <div class="flex flex-col justify-end w-full">
-                    <a  @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
-                        @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
+                    <a @mouseover="!fullSidenav ? hoverNotificationsMenu = true : null"
+                       @mouseleave="hoverNotificationsMenu = false" :href="route('notifications.index')" :class="[route().current('notifications.*')  ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
                         <div class="relative flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs">
                             <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div v-if="this.$page.props.user.show_notification_indicator === true"
@@ -221,7 +222,7 @@
 </template>
 
 <script>
-import {nextTick, ref} from 'vue'
+import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
@@ -293,14 +294,27 @@ export default {
         moduleIsVisible(module) {
             return this.hasAdminRole() || this.$page.props.module_settings[module];
         },
-        useProjectTimePeriodAndRedirect() {
-            router.patch(
-                route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
-                {
-                    use_project_time_period: false,
-                    project_id: 0
-                }
-            );
+        useProjectTimePeriodAndRedirect(e, handleMiddleClick = false) {
+            //in safari if we click with middle-click on the menu item the click event is also triggered
+            //if button === 1 (mousewheel click) we return as this method is called by "handleMiddleClick" before
+            if (e?.button === 1) {
+                return;
+            }
+
+            let desiredRoute = route('user.calendar_settings.toggle_calendar_settings_use_project_period');
+            let payload = {
+                use_project_time_period: false,
+                project_id: 0,
+                is_axios: handleMiddleClick
+            };
+
+            if (handleMiddleClick) {
+                axios.patch(desiredRoute, payload);
+
+                return;
+            }
+
+            router.patch(desiredRoute, payload);
         },
         getTrashRoute() {
             if (this.$page.url === '/areas') {
@@ -548,7 +562,7 @@ export default {
                 },
                 {
                     name: this.$t('Calendar'),
-                    href: route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                    href: route('events'),
                     route: ['/calendar/view'],
                     desiredClickHandler: this.useProjectTimePeriodAndRedirect,
                     has_permission: this.moduleIsVisible('room_assignment'),

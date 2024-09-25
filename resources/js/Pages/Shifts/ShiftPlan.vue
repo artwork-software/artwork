@@ -1097,6 +1097,7 @@ export default {
                     }
                     targetIndex += indexModifier;
                 }
+
             } else if (period === 'week') {
                 periodKey = 'week_number';
                 periodValue = this.currentDayOnView.week_number;

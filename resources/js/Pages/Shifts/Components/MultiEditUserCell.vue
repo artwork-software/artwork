@@ -1,14 +1,14 @@
 <template>
     <div class="flex items-center gap-2">
-        <div class="flex items-center ml-2">
-            <input :checked="computedCheckedForMultiEdit" @change="changeUserForMultiEdit" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" :class="[$page.props.user.compact_mode ? 'h-3 w-3 ' : 'h-6 w-6 ']" />
+        <div class="flex items-center">
+            <input :checked="computedCheckedForMultiEdit" @change="changeUserForMultiEdit" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" :class="[$page.props.user.compact_mode ? 'h-3 w-3 ' : 'h-5 w-5 ']" />
         </div>
         <div class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10)}">
             <div class="w-5" v-if="!$page.props.user.compact_mode">
                 <img :src="item.profile_photo_url" alt="" class="h-5 w-5 rounded-full object-cover">
             </div>
             <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
-                <div v-if="type === 0" class="text-ellipsis w-32">
+                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
@@ -17,7 +17,7 @@
                     </div>
                     <div class="text-xs w-full flex" v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
                 </div>
-                <div v-else-if="type === 1" class="text-ellipsis w-32">
+                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
@@ -26,7 +26,7 @@
                     </div>
                     <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
                 </div>
-                <div v-else class="text-ellipsis w-32">
+                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.provider_name }}</div>

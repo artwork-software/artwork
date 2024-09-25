@@ -612,7 +612,7 @@ export default {
                 this.createProjectForm.projects.push(projectToAdd.id);
             });
 
-            this.createProjectForm.assignedUsers = this.assignedUsers?.map(user => user.id);
+            this.createProjectForm.assignedUsers = this.assignedUsers.map(user => user.id);
             this.createProjectForm.state = this.selectedState;
 
             if ( this.createProjectGroup ){

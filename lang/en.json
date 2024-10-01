@@ -2016,5 +2016,7 @@
     "Alphabetically ascending last name": "Alphabetically ascending last name",
     "Alphabetically descending last name": "Alphabetically descending last name",
     "Highlight": "Highlight",
-    "Compact view": "Compact view"
+    "Compact view": "Compact view",
+    "High contrast": "High contrast",
+    "Enable high contrast mode in the application for the event type colors.": "Enable high contrast mode in the application for the event type colors."
 }

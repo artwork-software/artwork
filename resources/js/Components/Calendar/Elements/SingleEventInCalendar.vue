@@ -1,6 +1,6 @@
 <template>
-    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
-        class="rounded-lg relative group" :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
+    <div :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(event.event_type_color, percentage), fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group event-item" :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
         <div v-if="zoom_factor > 0.4"
              class="absolute w-full h-full z-10 rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.considerOnMultiEdit ? 'block bg-green-200/50' : 'hidden bg-artwork-buttons-create/50'">
@@ -52,7 +52,7 @@
             </div>
         </div>
         <div class="px-1 py-1">
-            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: textColorWithDarken}"
+            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
                  :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <template v-if="usePage().props.user.calendar_settings.event_name">
@@ -92,7 +92,7 @@
             </div>
             <div class="flex">
                 <!-- Time -->
-                <div class="flex" :style="{lineHeight: lineHeight, fontSize: fontSize, color: textColorWithDarken}"
+                <div class="flex" :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
                      :class="[zoom_factor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                     <div
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
@@ -224,7 +224,7 @@
             </div>
         </div>
         <div v-if="usePage().props.user.calendar_settings.description && event.description?.length > 0"
-             :style="{lineHeight: lineHeight, fontSize: fontSize, color: textColorWithDarken}"
+             :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
              class="p-0.5 ml-0.5">
             <template v-if="event.description?.length <= 50">
                 {{ event.description }}
@@ -321,7 +321,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
+                    <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs" :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
                             (
@@ -340,13 +340,14 @@
 </template>
 
 <script setup>
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
 import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
 import {useI18n} from "vue-i18n";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
@@ -355,6 +356,7 @@ const deleteComponentVisible = ref(false);
 const deleteTitle = ref('');
 const deleteDescription = ref('');
 const deleteType = ref('');
+
 
 const emits = defineEmits([
     'editEvent',
@@ -410,6 +412,8 @@ const props = defineProps({
     }
 });
 
+const element = ref(null);
+const percentage = usePage().props.high_contrast_percent;
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits.call(this, 'changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd);
 };
@@ -426,12 +430,12 @@ const roomCanBeBookedByEveryone = computed(() => {
     return props.rooms?.find(room => room.id === props.event.roomId).everyone_can_book
 });
 
-const backgroundColorWithOpacity = computed(() => {
-    const percent = 15;
-    const color = props.event.event_type_color;
-    if (!color) return `rgb(255, 255, 255, ${percent}%)`;
-    return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent}%)`;
-});
+const {
+    backgroundColorWithOpacity,
+    detectParentBackgroundColor,
+    getTextColorBasedOnBackground,
+    parentBackgroundColor
+} = useColorHelper();
 
 const textColorWithDarken = computed(() => {
     const percent = 75;
@@ -513,7 +517,14 @@ const gcd = (a, b) => {
     return (b) ? gcd(b, a % b) : a;
 };
 
+onMounted(() => {
+    if (element.value) {
+        detectParentBackgroundColor(element.value);
+    }
+});
+
 const getEditHref = (projectId) => {
     return route('projects.tab', {project: projectId, projectTab: props.first_project_tab_id});
 };
+
 </script>

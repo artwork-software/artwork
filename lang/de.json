@@ -2016,5 +2016,7 @@
     "Alphabetically ascending last name": "Alphabetisch aufsteigend Nachname",
     "Alphabetically descending last name": "Alphabetisch absteigend Nachname",
     "Highlight": "Hervorheben",
-    "Compact view": "Kompakte Ansicht"
+    "Compact view": "Kompakte Ansicht",
+    "High contrast": "Hoher Kontrast",
+    "Enable high contrast mode in the application for the event type colors.": "Aktiviere den Hochkontrastmodus in der Anwendung für die Terminart-Farben."
 }

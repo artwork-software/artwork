@@ -100,7 +100,7 @@
                         />
                     </div>
                 </div>
-                <div class="col-span-full" v-if="this.isSignedInUser() || hasAdminRole">
+                <div class="col-span-1" v-if="this.isSignedInUser() || hasAdminRole">
                     <Listbox as="div" class="w-44" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
@@ -126,6 +126,19 @@
                             </transition>
                         </div>
                     </Listbox>
+                </div>
+                <div class="col-span-4">
+                    <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input id="comments" v-model="userForm.high_contrast" @change="editUser" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="comments" class="font-medium text-gray-900">{{ $t('High contrast')}}</label>
+                            <p id="comments-description" class="text-gray-500">
+                                {{ $t('Enable high contrast mode in the application for the event type colors.')}}
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
@@ -181,17 +194,17 @@
         </div>
     </div>
     <BaseModal @closed="closeChangeTeamsModal" v-if="showChangeTeamsModal" modal-image="/Svgs/Overlays/illu_team_user.svg">
-            <div class="mx-3">
-                <div class="headline1 my-2">
-                     {{$t('Team membership')}}
-                </div>
-                <div class="mt-4 xsLight">
-                    {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.')}}
-                </div>
-                <div class="mt-8 mb-8">
+        <div class="mx-3">
+            <div class="headline1 my-2">
+                {{$t('Team membership')}}
+            </div>
+            <div class="mt-4 xsLight">
+                {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.')}}
+            </div>
+            <div class="mt-8 mb-8">
                     <span v-if="departments.length === 0"
                           class="xsLight flex mb-6 mt-8 my-auto">{{ $t('No teams have been created in the tool yet.')}}</span>
-                    <div v-for="team in departments">
+                <div v-for="team in departments">
                         <span class=" flex items-center pr-4 py-2 text-md">
                             <input :key="team.name" type="checkbox" :value="team" :id="team.id"
                                    v-model="team.checked"
@@ -204,53 +217,56 @@
                             {{ team.name }}
                             </span>
                         </span>
-                    </div>
-                </div>
-                <div class="w-full items-center text-center">
-                    <FormButton @click="saveNewTeams" :text="$t('Save')"/>
                 </div>
             </div>
+            <div class="w-full items-center text-center">
+                <FormButton @click="saveNewTeams" :text="$t('Save')"/>
+            </div>
+        </div>
     </BaseModal>
     <BaseModal @closed="closeChangePictureModal" v-if="showChangePictureModal" modal-image="/Svgs/Overlays/illu_team_user.svg" :show-image="false">
-            <div class="mx-4">
-                <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    {{ $t('Change profile picture')}}
-                </div>
-                <span class="text-secondary my-auto">
+        <div class="mx-4">
+            <div class="font-bold font-lexend text-primary text-2xl my-2">
+                {{ $t('Change profile picture')}}
+            </div>
+            <span class="text-secondary my-auto">
                     {{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}}
                 </span>
-                <!-- New Profile Photo Preview -->
-                <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
-                <div class="flex">
-                    <div class="mt-1 flex items-center">
-                        <div class="mt-2" v-show="photoPreview">
+            <!-- New Profile Photo Preview -->
+            <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
+            <div class="flex">
+                <div class="mt-1 flex items-center">
+                    <div class="mt-2" v-show="photoPreview">
                             <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
                                   :style="'background-image: url(\'' + photoPreview + '\');'">
                             </span>
-                        </div>
-                    </div>
-                    <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                        <BaseButton :text="$t('Select file')" @click.prevent="selectNewPhoto" />
-                        <BaseButton @click.prevent="deletePhoto"
-                                    :text="$t('Delete current profile picture')"
-                                    v-if="this.user_to_edit.profile_photo_url" />
                     </div>
                 </div>
-                <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
-                <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
-                <div class="mt-6">
-                    <BaseButton
-                        :text="$t('Save new profile picture')"
-                        @click="validateTypeAndChange" />
+                <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
+                    <BaseButton :text="$t('Select file')" @click.prevent="selectNewPhoto" />
+                    <BaseButton @click.prevent="deletePhoto"
+                                :text="$t('Delete current profile picture')"
+                                v-if="this.user_to_edit.profile_photo_url" />
                 </div>
             </div>
+            <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
+            <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
+            <div class="mt-6">
+                <BaseButton
+                    :text="$t('Save new profile picture')"
+                    @click="validateTypeAndChange" />
+            </div>
+        </div>
     </BaseModal>
-    <SuccessModal v-if="showSuccessModal"
-                  :title="$t('User successfully edited')"
-                  :description="$t('The changes have been saved successfully.')"
-                  :button="$t('Ok')"
-                  @closed="closeSuccessModal"
+    <SuccessModal
+        v-if="showSuccessModal"
+        :title="$t('User successfully edited')"
+        :description="$t('The changes have been saved successfully.')"
+        :button="$t('Ok')"
+        @closed="closeSuccessModal"
     />
+
+
 </template>
 
 <script>
@@ -309,7 +325,8 @@ export default {
     props: [
         'user_to_edit',
         'password_reset_status',
-        'departments'
+        'departments',
+        'calendar_settings'
     ],
     watch: {
         selectedLanguage: {
@@ -338,7 +355,8 @@ export default {
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
-                language: this.user_to_edit.language
+                language: this.user_to_edit.language,
+                high_contrast: this.calendar_settings.high_contrast,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -349,8 +367,8 @@ export default {
                 text: this.$t('User has been successfully edited')
             },
             languages: [
-                { id: 'en', name: 'English' },
-                { id: 'de', name: 'German' },
+                { id: 'en', name: this.$t('English') },
+                { id: 'de', name: this.$t('German') },
 
             ],
             // set the default selected language to the user's language

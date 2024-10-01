@@ -72,7 +72,8 @@ class HandleInertiaRequests extends Middleware
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
                 'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,
                 'calendar_settings' => $calendarSettings,
-                'module_settings' => $this->moduleSettingsService->getModuleSettings()
+                'module_settings' => $this->moduleSettingsService->getModuleSettings(),
+                'high_contrast_percent' => $calendarSettings?->getAttribute('high_contrast') ? 75 : 15,
             ]
         );
     }

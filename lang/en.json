@@ -2018,5 +2018,9 @@
     "Highlight": "Highlight",
     "Compact view": "Compact view",
     "High contrast": "High contrast",
-    "Enable high contrast mode in the application for the event type colors.": "Enable high contrast mode in the application for the event type colors."
+    "Enable high contrast mode in the application for the event type colors.": "Enable high contrast mode in the application for the event type colors.",
+    "Use to-dos": "Use to-dos",
+    "Allows the creation of lists and to-dos in the general area (overview page) and at project level, unless further restricted by the to-do component.": "Allows the creation of lists and to-dos in the general area (overview page) and at project level, unless further restricted by the to-do component.",
+    "Manage to-dos": "Manage to-dos",
+    "Also allows you to delete all lists, regardless of who created them": "Also allows you to delete all lists, regardless of who created them"
 }

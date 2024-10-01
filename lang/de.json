@@ -2018,5 +2018,9 @@
     "Highlight": "Hervorheben",
     "Compact view": "Kompakte Ansicht",
     "High contrast": "Hoher Kontrast",
-    "Enable high contrast mode in the application for the event type colors.": "Aktiviere den Hochkontrastmodus in der Anwendung für die Terminart-Farben."
+    "Enable high contrast mode in the application for the event type colors.": "Aktiviere den Hochkontrastmodus in der Anwendung für die Terminart-Farben.",
+    "Use to-dos": "To-dos nutzen",
+    "Allows the creation of lists and to-dos in the general area (overview page) and at project level, unless further restricted by the to-do component.": "Erlaubt Erstellen von Listen und To-dos im allgemeinen Bereich (Übersichtsseite) und auf Projektebene, sofern durch To-do-Komponente nicht weiter eingeschränkt.",
+    "Manage to-dos": "To-dos verwalten",
+    "Also allows you to delete all lists, regardless of who created them": "Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat"
 }

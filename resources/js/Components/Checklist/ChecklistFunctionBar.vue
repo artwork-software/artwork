@@ -27,7 +27,7 @@
 
             </slot>
             <div class="flex items-center"
-                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || isInOwnTaskManagement">
+                 v-if="canEditComponent && (isAdmin || projectCanWriteIds?.includes($page.props.user.id) || projectManagerIds.includes($page.props.user.id)) || can('can use checklists') && isInOwnTaskManagement">
                 <AddButtonSmall @click="openAddChecklistModal = true" :text="$t('New checklist')" />
             </div>
         </div>
@@ -52,6 +52,9 @@ import {IconLayoutKanban, IconLayoutList} from "@tabler/icons-vue";
 import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import AddEditChecklistModal from "@/Components/Checklist/Modals/AddEditChecklistModal.vue";
+
+import {usePermission} from "@/Composeables/Permission.js";
+const { can, canAny } = usePermission(usePage().props)
 
 const props = defineProps({
     title: {

@@ -55,7 +55,7 @@
                         {{ $t('Duplicate') }}
                     </div>
                 </MenuItem>
-                <MenuItem as="div" v-slot="{ active }">
+                <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.user.id || can('can edit checklist') || isAdmin">
                     <a @click="showDeleteChecklistModal = true"
                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                         <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>
@@ -174,7 +174,8 @@ import DeleteChecklistModal from "@/Components/Checklist/Modals/DeleteChecklistM
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import AddEditTaskModal from "@/Components/Checklist/Modals/AddEditTaskModal.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
-
+import { usePermission } from "@/Composeables/Permission.js";
+const {can} = usePermission(usePage().props)
 const props = defineProps({
     checklist: {
         type: Object,

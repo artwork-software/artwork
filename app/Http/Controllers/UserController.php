@@ -210,6 +210,9 @@ class UserController extends Controller
         ]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAddresses(
         UserUserManagementSettingService $userUserManagementSettingService,
         UserService $userService,

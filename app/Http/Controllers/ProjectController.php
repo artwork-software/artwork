@@ -1880,8 +1880,9 @@ class ProjectController extends Controller
     /**
      * @throws Throwable
      */
-    //@todo: fix phpcs error - refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectTab(
         Request $request,
         Project $project,

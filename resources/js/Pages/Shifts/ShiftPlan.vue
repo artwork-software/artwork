@@ -85,7 +85,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-100">
+            <div id="userOverview" class="w-full fixed bottom-0 z-20">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
@@ -116,10 +116,10 @@
                 </div>
                 <div class=" bg-artwork-navigation-background">
                     <div v-show="showUserOverview" ref="userOverview"
-                         class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
+                         class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-20 overflow-y-scroll"
                          :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                         <div
-                            class="flex items-center justify-between w-full fixed py-3 z-50 bg-artwork-navigation-background px-3"
+                            class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3"
                             :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
@@ -150,7 +150,7 @@
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
                                     <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
-                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-10 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-20 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
                                         <span
                                             :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
@@ -183,7 +183,7 @@
                                                       @update:current-selected-day-service="updateSelectedDayService"/>
                                 </div>
                             </div>
-                            <div class="flex items-center justify-end gap-x-3 pr-20">
+                            <div class="flex items-center justify-end gap-x-3 pr-20 z-20">
                                 <Switch @click="toggleHighlightMode" v-model="highlightMode"
                                         :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
@@ -260,10 +260,10 @@
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div class="pt-14">
-                            <table class="w-full text-white overflow-y-scroll">
+                        <div class="pt-14 z-10">
+                            <table class="w-full text-white overflow-y-scroll z-10">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                                <div>
+                                <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in reComputedCraftsToDisplay">
                                     <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
                                         @click="changeCraftVisibility(craft.id)">
@@ -274,7 +274,7 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
-                                        class="w-full flex">
+                                        class="w-full flex ">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -1530,7 +1530,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 60px;
-    z-index: 22;
+    z-index: 12;
 }
 
 .stickyYAxisNoMarginLeft {
@@ -1538,6 +1538,6 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 0;
-    z-index: 22;
+    z-index: 12;
 }
 </style>

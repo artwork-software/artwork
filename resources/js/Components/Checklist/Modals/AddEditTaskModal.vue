@@ -136,7 +136,9 @@ const submit = () => {
     usersToAdd.value.forEach((user) => {
         taskForm.users.push(user.id);
     })
+    console.log(props.taskToEdit)
     if ( props.taskToEdit ) {
+        console.log('form', taskForm)
         taskForm.patch(route('tasks.update', {task: props.taskToEdit.id}), {
             preserveState: true,
             preserveScroll: true,

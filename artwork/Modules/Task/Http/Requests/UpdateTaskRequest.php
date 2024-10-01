@@ -25,7 +25,7 @@ class UpdateTaskRequest extends FormRequest
             'id' => 'required|exists:tasks,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:10000',
-            'deadlineDate' => 'required',
+            'deadlineDate' => 'nullable',
             'checklist_id' => 'required|integer|exists:checklists,id',
             'users' => 'array|nullable',
             'users.*.id' => 'integer|exists:users,id',

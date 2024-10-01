@@ -34,4 +34,7 @@ enum PermissionEnum : string
     case EDIT_EXTERNAL_USERS_CONDITIONS = 'can edit external users conditions';
 
     case VIEW_AND_DELETE_SAGE100_API_DATA = 'can view and delete sage100-api-data';
+
+    case CHECKLIST_USE_PERMISSION = 'can use checklists';
+    case CHECKLIST_EDIT_PERMISSION = 'can edit checklist';
 }

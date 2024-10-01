@@ -2097,6 +2097,7 @@ class ProjectController extends Controller
         $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+        $headerObject->project->project_managers = $project->managerUsers;
 
 
         return inertia('Projects/Tab/TabContent', [

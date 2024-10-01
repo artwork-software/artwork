@@ -2,9 +2,9 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center rounded-t-lg"
-                 :style="{backgroundColor: this.event.eventTypeColor ?? this.eventType?.hex_code}">
-                <a :href="route('projects.tab', {project: event.projectId, projectTab: this.firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
-                    {{ event.eventTypeAbbreviation ?? this.eventType?.abbreviation }}: {{ this.event.projectName }}
+                 :style="{backgroundColor: backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.eventTypeColor ?? eventType?.hex_code, percentage))}">
+                <a :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
+                    {{ event.eventTypeAbbreviation ?? eventType?.abbreviation }}: {{ event.projectName }}
                 </a>
                 <div v-if="areAllShiftsCommitted(event)">
                     <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
@@ -34,59 +34,65 @@
         </div>
     </div>
 </template>
-<script>
-
-import {defineComponent} from 'vue'
-import Permissions from "@/Mixins/Permissions.vue";
-import {CheckIcon} from "@heroicons/vue/outline";
+<script setup>
+import {defineEmits, defineProps} from 'vue';
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
-import DropElement from "@/Pages/Projects/Components/DropElement.vue";
-import IconLib from "@/Mixins/IconLib.vue";
+import { IconLock } from "@tabler/icons-vue";
+import {usePage} from "@inertiajs/vue3";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+const percentage = usePage().props.high_contrast_percent;
+const {
+    backgroundColorWithOpacity,
+    detectParentBackgroundColor,
+    getTextColorBasedOnBackground,
+    parentBackgroundColor
+} = useColorHelper();
 
-export default defineComponent({
-    mixins: [Permissions, IconLib],
-    components: {
-        DropElement,
-        ShiftDropElement,
-        CheckIcon,
-    },
-    emits: ['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit'],
-    props: [
-        'event',
-        'showRoom',
-        'room',
-        'highlightMode',
-        'highlightedId',
-        'highlightedType',
-        'multiEditMode',
-        'userForMultiEdit',
-        'shiftQualifications',
-        'dayString',
-        'eventType',
-        'firstProjectShiftTabId'
-    ],
-    methods: {
-        getDropFeedback(event) {
-            this.$emit('dropFeedback', event)
-        },
-        areAllShiftsCommitted(event) {
-            return event.shifts.every(shift => shift.is_committed);
-        },
-        checkIfShiftInDayString(shift) {
-            if (this.$page.props.user?.show_crafts?.length === 0 || this.$page.props.user?.show_crafts === null) {
-                return shift.formatted_dates.start === this.dayString['full_day'];
-            } else {
-                return shift.formatted_dates.start === this.dayString['full_day'] && this.$page.props.user?.show_crafts?.includes(shift.craft.id);
-            }
-        },
-        dropElementDesiresReload(userId, userType, seriesShiftData) {
-            this.$emit('eventDesiresReload', userId, userType, this.event, seriesShiftData);
-        },
-        handleShiftAndEventForMultiEdit(checked, shift, event) {
-            this.$emit('handleShiftAndEventForMultiEdit', checked, shift, event);
-        }
-    },
-})
+// Define emits
+const emit = defineEmits(['dropFeedback', 'eventDesiresReload', 'handleShiftAndEventForMultiEdit']);
+
+// Define props
+const props = defineProps({
+    event: Object,
+    showRoom: Boolean,
+    room: Object,
+    highlightMode: Boolean,
+    highlightedId: [String, Number],
+    highlightedType: String,
+    multiEditMode: Boolean,
+    userForMultiEdit: Object,
+    shiftQualifications: Array,
+    dayString: Object,
+    eventType: String,
+    firstProjectShiftTabId: [String, Number],
+});
+
+
+// Methods converted to functions
+const getDropFeedback = (event) => {
+    emit('dropFeedback', event);
+}
+
+const areAllShiftsCommitted = (event) => {
+    return event.shifts.every(shift => shift.is_committed);
+}
+
+const checkIfShiftInDayString = (shift) => {
+    const user = usePage().props.user;
+    if (user?.show_crafts?.length === 0 || user?.show_crafts === null) {
+        return shift.formatted_dates.start === props.dayString['full_day'];
+    } else {
+        return shift.formatted_dates.start === props.dayString['full_day'] && user?.show_crafts?.includes(shift.craft.id);
+    }
+}
+
+const dropElementDesiresReload = (userId, userType, seriesShiftData) => {
+    emit('eventDesiresReload', userId, userType, props.event, seriesShiftData);
+}
+
+const handleShiftAndEventForMultiEdit = (checked, shift, event) => {
+    emit('handleShiftAndEventForMultiEdit', checked, shift, event);
+}
 </script>
 <style scoped>
 .eventType0 {

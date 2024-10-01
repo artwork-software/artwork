@@ -2,7 +2,7 @@
     <div>
         <div ref="sidebarTagComponent"
              class="text-secondaryHover xsWhiteBold p-1 flex justify-between items-center rounded-t-lg"
-             :style="{ backgroundColor: backgroundColorWithOpacity(eventType?.hex_code), color: getTextColorBasedOnParent(eventType?.hex_code) }">
+             :style="{ backgroundColor: backgroundColorWithOpacity(eventType?.hex_code, percentage), color: getTextColorBasedOnBackground(backgroundColorWithOpacity(eventType?.hex_code, percentage)) }">
             <a :href="project?.id ? route('projects.tab', {project: project.id, projectTab: firstProjectShiftTabId}) : '#'" class="w-40 truncate cursor-pointer hover:text-gray-300 transition-all duration-150 ease-in-out">
                 {{ eventType?.abbreviation }}: {{ event.projectName ?? project?.name }}
             </a>
@@ -72,10 +72,14 @@ import {IconCalendarMonth, IconLock} from "@tabler/icons-vue";
 import {router} from "@inertiajs/vue3";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import ColorHelper from "@/Mixins/ColorHelper.vue";
-import {ref} from "vue";
 
-const {backgroundColorWithOpacity, isDarkColor} = ColorHelper.methods;
+import {usePage} from "@inertiajs/vue3";
+import {useColorHelper} from "@/Composeables/UseColorHelper.js";
+const percentage = usePage().props.high_contrast_percent;
+const {
+    backgroundColorWithOpacity,
+    getTextColorBasedOnBackground,
+} = useColorHelper();
 
 const props = defineProps({
     type: {
@@ -125,50 +129,4 @@ const hasColleaguesOnShift = (shift) => {
     return shift.users.length > 1 || shift.freelancer.length > 0 || shift.service_provider.length > 0;
 };
 
-const parentBackgroundColor = ref(null);
-
-const detectParentBackgroundColor = (element) => {
-    if (!element || !element.parentElement) {
-        this.parentBackgroundColor = 'rgba(255, 255, 255, 1)';
-        return;
-    }
-
-    const parentElement = element.parentElement;
-    const computedStyle = window.getComputedStyle(parentElement);
-    const bgColor = computedStyle.backgroundColor;
-
-    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-        parentBackgroundColor.value = bgColor;
-    } else {
-        detectParentBackgroundColor(parentElement);
-    }
-};
-
-const checkExplicitBackgroundColor = (color) => {
-    const rgbToHex = (r, g, b) => {
-        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
-    };
-
-    const rgbMatch = color.match(/\d+/g);
-    if (rgbMatch) {
-        const [r, g, b] = rgbMatch.map(Number);
-        const hexColor = rgbToHex(r, g, b);
-
-        if (hexColor === "#000000") return "#FFFFFF";
-        if (hexColor === "#FFFFFF") return "#000000";
-    }
-    return null;
-};
-
-const getTextColorBasedOnParent = (color) => {
-    const explicitTextColor = checkExplicitBackgroundColor(backgroundColorWithOpacity(color));
-    if (explicitTextColor) {
-        return explicitTextColor;
-    }
-    if (parentBackgroundColor.value) {
-        const isDark = isDarkColor(parentBackgroundColor.value);
-        return isDark ? '#FFFFFF' : '#000000';
-    }
-    return '#000000';
-};
 </script>

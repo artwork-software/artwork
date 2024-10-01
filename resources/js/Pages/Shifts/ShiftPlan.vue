@@ -48,9 +48,9 @@
                                         </div>
                                     </th>
                                     <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
-                                        class="border-r-2 border-gray-400  day-container h-28"
+                                        class="border-r-2 border-gray-400 day-container h-28"
                                         v-for="day in days" :data-day="day.full_day">
-                                        <div class="bg-backgroundGray2 max-h-28 h-28" style="width: 37px" v-if="day.is_extra_row">
+                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
 
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->

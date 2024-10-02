@@ -3,10 +3,10 @@
         <div class="flex items-center justify-center w-full font-semibold text-artwork-buttons-context">
             <MenuButton>
                 <IconDotsVertical v-if="!showSortIcon"
-                    stroke-width="1.5"
-                    class="flex-shrink-0"
-                    aria-hidden="true"
-                    :class="[dotsColor, dotsSize]"
+                                  stroke-width="1.5"
+                                  class="flex-shrink-0"
+                                  aria-hidden="true"
+                                  :class="[dotsColor, dotsSize]"
                 />
                 <ToolTipComponent
                     v-else
@@ -20,7 +20,7 @@
         </div>
 
         <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-            <MenuItems class="absolute z-10 rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, right ? 'origin-top-left left-0' : 'origin-top-right right-0']">
+            <MenuItems class="z-50 rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, right ? 'origin-top-left' : 'origin-top-right', fixedPosition ? 'fixed' : right ? 'left-0 absolute' : 'right-0 absolute']">
                 <div>
                     <slot />
                 </div>
@@ -73,6 +73,10 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: false
+        },
+        fixedPosition: {
+            type: Boolean,
+            default: false,
         }
     },
 });

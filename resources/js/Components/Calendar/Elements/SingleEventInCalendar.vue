@@ -189,7 +189,7 @@
                 </div>
             </div>
             <div class="mr-3 mt-8 group-hover:block hidden">
-                <BaseMenu no-relative right menuWidth="w-fit">
+                <BaseMenu no-relative right fixed-position menuWidth="w-fit">
                     <MenuItem v-slot="{ active }">
                         <a href="#" @click="$emit('editEvent', event)"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

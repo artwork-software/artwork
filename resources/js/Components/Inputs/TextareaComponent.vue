@@ -10,7 +10,9 @@
                   :rows="this.rows"
                   :cols="this.cols"
                   :maxlength="maxLength"
+                  v-bind="$attrs"
         />
+
         <PlaceholderLabel :is-dark="isDark" :for="this.id" :label="this.label" v-if="showLabel" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
 </template>
@@ -24,13 +26,7 @@ import PlaceholderInputLabelContainer from "@/Components/Inputs/Container/Placeh
 
 export default defineComponent({
     components: {PlaceholderInputLabelContainer, PlaceholderLabel, Label, InputLabelContainer},
-    /*props: [
-        'id',
-        'label',
-        'modelValue',
-        'rows',
-        'cols'
-    ],*/
+
     props: {
         id: {
             type: String,
@@ -66,7 +62,8 @@ export default defineComponent({
         },
         maxLength: {
             type: Number,
-            default: 255
+            default: 255,
+            required: false
         },
         showLabel: {
             type: Boolean,

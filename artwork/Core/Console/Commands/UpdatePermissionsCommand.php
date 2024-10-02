@@ -6,10 +6,10 @@ use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Permission\Models\Permission;
 use Illuminate\Console\Command;
 
-class CreateNewToDoPermissions extends Command
+class UpdatePermissionsCommand extends Command
 {
-    protected $signature = 'artwork:create-new-to-do-permissions';
-    protected $description = 'Create new Permissions for ToDos';
+    protected $signature = 'artwork:update-permissions';
+    protected $description = 'Update the permissions table';
 
     /**
      * Execute the console command.
@@ -35,6 +35,15 @@ class CreateNewToDoPermissions extends Command
                 'group' => 'To-dos',
                 'tooltipText' => 'Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat',
                 'tooltipKey' => "Also allows you to delete all lists, regardless of who created them",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::AVAILABILITY_MANAGEMENT->value,
+                'name_de' => "Verfügbarkeiten manuell verwalten",
+                'translation_key' => "Manually manage availabilities",
+                'group' => 'Shifts',
+                'tooltipText' => 'Stelle die Verfügbarkeiten des Nutzer*innen ein',
+                'tooltipKey' => "Set the availability of the user",
                 'checked' => false
             ],
         ];

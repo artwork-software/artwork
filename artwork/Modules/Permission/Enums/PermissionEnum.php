@@ -37,4 +37,6 @@ enum PermissionEnum : string
 
     case CHECKLIST_USE_PERMISSION = 'can use checklists';
     case CHECKLIST_EDIT_PERMISSION = 'can edit checklist';
+
+    case AVAILABILITY_MANAGEMENT = 'can manage availability';
 }

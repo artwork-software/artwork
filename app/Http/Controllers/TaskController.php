@@ -138,7 +138,6 @@ class TaskController extends Controller
 
     public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {
-
         $this->taskService->updateByRequest(
             $task,
             $request->collect()

@@ -16,6 +16,7 @@
                         :ref="`description-${this.project.id}`"
                         :label="project.description_without_html || $t('Click here to add text')"
                         id="description_without_html"
+                        :maxlength="2000"
                     />
                 </div>
                 <!-- Individual Projectinformation -->
@@ -31,7 +32,9 @@
                         id="text_without_html"
                         v-model="headline.text_without_html" :ref="`text-${headline.id}`"
                         @focusout="changeHeadlineText(headline)"
-                        :label="headline.text || $t('Click here to add text')"/>
+                        :label="headline.text || $t('Click here to add text')"
+                        :max-length="2000"
+                    />
                 </div>
                 <ProjectDocumentsComponent :project="this.project"
                                            :project-write-ids="this.projectWriteIds"

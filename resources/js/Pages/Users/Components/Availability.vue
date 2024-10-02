@@ -26,11 +26,6 @@
             <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" />
         </div>
     </div>
-    <div class="grid grid-cols-7">
-        <div v-for="day in vacationSelectCalendar" :key="day.date" class="day" :class="{ 'today': day.isToday, 'not-in-month': !day.inMonth }">
-            {{ day.day }}
-        </div>
-    </div>
 </template>
 
 <script>
@@ -40,9 +35,11 @@ import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 import TemporarilyHired from "@/Pages/Users/Components/TemporarilyHired.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import dayjs from "dayjs";
+import {usePage} from "@inertiajs/vue3";
 
 export default defineComponent({
     name: "Availability",
+    methods: {usePage},
     computed: {
         dayjs() {
             return dayjs

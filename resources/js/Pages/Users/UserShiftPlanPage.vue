@@ -22,19 +22,21 @@
                       :createShowDate="createShowDate"
                       :date-to-show="dateToShow"
                       :user="user_to_edit"
-                      :vacations="vacations"/>
+                      :vacations="vacations"
+                      v-if="$can('can manage availability') || user_to_edit.id === usePage().props.user.id"/>
     </UserEditHeader>
 </template>
 
 <script>
 
-import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
+import Permissions from "@/Mixins/Permissions.vue";
+import {usePage} from "@inertiajs/vue3";
 
 export default {
     components: {
@@ -43,9 +45,9 @@ export default {
         Availability,
         UserInfoTab,
         UserEditHeader,
-        BaseSidenav,
-        AppLayout
+        BaseSidenav
     },
+    mixins: [Permissions],
     props: [
         'user_to_edit',
         'user_to_edit_whole_week_date_period_vacations',
@@ -73,6 +75,6 @@ export default {
             show: false,
         }
     },
-    methods: {}
+    methods: {usePage}
 }
 </script>

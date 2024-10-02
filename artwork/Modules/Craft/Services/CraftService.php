@@ -88,7 +88,7 @@ class CraftService
             'inventoryCategories',
             'inventoryCategories.groups',
             'inventoryCategories.groups.items',
-            'inventoryCategories.groups.items.events'  => function (HasMany $query) use ($startDate, $endDate) {
+            'inventoryCategories.groups.items.events'  => function (HasMany $query) use ($startDate, $endDate): void {
                 if ($startDate && $endDate) {
                     $query->whereBetween('start', [$startDate, $endDate])
                         ->orWhereBetween('end', [$startDate, $endDate]);

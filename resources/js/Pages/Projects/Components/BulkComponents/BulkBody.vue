@@ -93,7 +93,7 @@
                      :wantedRoomId="null"
                      :isAdmin="hasAdminRole()"
                      :roomCollisions="roomCollisions"
-                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
                      :used-in-bulk-component="true"
                      @closed="onEventComponentClosed"/>
 

@@ -1,5 +1,5 @@
 <template>
-    <Menu as="div" class="relative inline-block">
+    <Menu as="div" class=" inline-block" :class="!noRelative ? 'relative' : ''">
         <div class="flex items-center justify-center w-full font-semibold text-artwork-buttons-context">
             <MenuButton>
                 <IconDotsVertical v-if="!showSortIcon"

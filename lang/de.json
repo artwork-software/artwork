@@ -413,7 +413,7 @@
     "User permissions": "Nutzerrechte",
     "Work profile": "Arbeitsprofil",
     "Availability & absence": "Verfügbarkeit & Abwesenheit",
-    "edit": "bearbeiten",
+    "edit": "Bearbeiten",
     "enter": "eintragen",
     "All day": "Ganztags",
     "Start time": "Startuhrzeit",
@@ -2024,5 +2024,6 @@
     "Manage to-dos": "To-dos verwalten",
     "Also allows you to delete all lists, regardless of who created them": "Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat",
     "Manually manage availabilities": "Verfügbarkeiten manuell verwalten",
-    "Set the availability of the user": "Stelle die Verfügbarkeiten des Nutzer*innen ein"
+    "Set the availability of the user": "Stelle die Verfügbarkeiten des Nutzer*innen ein",
+    "Decline event": "Termin absagen"
 }

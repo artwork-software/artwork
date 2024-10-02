@@ -27,7 +27,7 @@
                     leave-to-class="transform opacity-0 scale-95">
             <MenuItems v-if="menuVisible"
                        class="z-50 rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                       :style="menuStyles">
+                       :style="menuStyles" :class="[menuWidth]">
                 <div>
                     <slot />
                 </div>
@@ -97,24 +97,18 @@ export default defineComponent({
 
         const updateMenuPosition = () => {
             const buttonRect = menuButtonRef.value.getBoundingClientRect();
-            const menuWidth = 224; // w-56 (56 * 4px)
+            const menuWidth = 224;
             const windowWidth = window.innerWidth;
 
             let leftPosition;
 
             if (!props.right) {
-                // Menu opens to the right
                 leftPosition = buttonRect.right - menuWidth;
-
-                // If menu goes off the screen on the left, adjust it
                 if (leftPosition < 0) {
                     leftPosition = 0;
                 }
             } else {
-                // Menu opens to the left
                 leftPosition = buttonRect.left;
-
-                // If menu goes off the screen on the right, adjust it
                 if (leftPosition + menuWidth > windowWidth) {
                     leftPosition = windowWidth - menuWidth;
                 }

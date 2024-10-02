@@ -210,6 +210,9 @@ class UserController extends Controller
         ]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAddresses(
         UserUserManagementSettingService $userUserManagementSettingService,
         UserService $userService,
@@ -297,7 +300,8 @@ class UserController extends Controller
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'info',
             "departments" => Department::all(),
-            "password_reset_status" => session('status')
+            "password_reset_status" => session('status'),
+            'calendar_settings' => $user->calendar_settings,
         ]);
     }
 
@@ -465,6 +469,10 @@ class UserController extends Controller
                 'language'
             )
         );
+
+        $user->calendar_settings->update([
+            'high_contrast' => $request->get('high_contrast')
+        ]);
 
         if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
             $user->departments()->sync(
@@ -671,7 +679,8 @@ class UserController extends Controller
             'repeating_events',
             'work_shifts',
             'description',
-            'event_name'
+            'event_name',
+            'high_contrast'
         ]));
     }
 

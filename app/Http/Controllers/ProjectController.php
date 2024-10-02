@@ -1880,8 +1880,9 @@ class ProjectController extends Controller
     /**
      * @throws Throwable
      */
-    //@todo: fix phpcs error - refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectTab(
         Request $request,
         Project $project,
@@ -2097,6 +2098,7 @@ class ProjectController extends Controller
         $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+        $headerObject->project->project_managers = $project->managerUsers;
 
 
         return inertia('Projects/Tab/TabContent', [

@@ -102,13 +102,13 @@ class Project extends Model
 
     public static function booting(): void
     {
-        static::softDeleted(function ($project) {
+        static::softDeleted(function ($project): void {
             UserCalendarSettings::query()->where('time_period_project_id', $project->id)->update(
                 ['time_period_project_id' => 0, 'use_project_time_period' => 0]
             );
         });
 
-        static::deleted(function ($project) {
+        static::deleted(function ($project): void {
             UserCalendarSettings::query()->where('time_period_project_id', $project->id)->update(
                 ['time_period_project_id' => 0, 'use_project_time_period' => 0]
             );

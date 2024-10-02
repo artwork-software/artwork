@@ -14,6 +14,7 @@
                 </button>
             </div>
         </div>
+
         <table class="w-full border-separate">
             <tr class="bg-backgroundGray sDark">
                 <th class="p-6"></th>
@@ -25,14 +26,23 @@
                 <th class="p-6">{{ $t('Sat') }}</th>
                 <th class="p-6">{{ $t('Sun') }}</th>
             </tr>
-            <tr class="sDark grid-cols-8" v-for="week in calendarData" :key="week.weekNumber">
-                <td class="col-span-1">
+            <tr class="grid-cols-8" v-for="week in calendarData" :key="week.weekNumber">
+                <td class="col-span-1 sDark">
                     <div class="p-6 flex justify-center">
                         KW {{ week.weekNumber }}
                     </div>
                 </td>
                 <td class="col-span-1 cursor-pointer" v-for="day in week.days" :key="day" @click="showVacationsAndAvailabilities(day.day_formatted)">
-                    <div :class="{'text-gray-400' : day.notInMonth, 'bg-gray-900 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate, 'bg-red-500 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate && day.hasConflict, 'text-red-500' : day.hasConflict , 'line-through text-gray-800': day.onVacation &&  day.day_formatted !== showVacationsAndAvailabilitiesDate && !day.hasAvailability, 'text-gray-800': day.hasAvailability, 'text-green-500': day.isToday  }" class="p-6 flex items-center justify-center text-gray-400" >
+                    <div
+                        :class="{
+                            'font-extrabold text-gray-800' : day.isToday,
+                            'bg-gray-800 rounded-full' : day.day_formatted === showVacationsAndAvailabilitiesDate,
+                            'text-gray-400': day.isToday,
+                            'text-green-500': day.hasAvailability,
+                            'text-red-500':  day.onVacation,
+                            'text-white': !day.onVacation && !day.hasAvailability && day.day_formatted === showVacationsAndAvailabilitiesDate
+                        }"
+                         class="p-6 flex items-center justify-center" >
                         {{ day.day }}
                     </div>
                 </td>
@@ -42,6 +52,17 @@
 </template>
 
 <script>
+
+/*
+
+:class="{
+                        'text-gray-400' : day.notInMonth,
+                        '!font-bold' : day.day_formatted === showVacationsAndAvailabilitiesDate || day.isToday,
+                        'bg-red-500 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate && day.hasConflict,
+                        '!text-green-500': day.hasAvailability,
+                         '!text-red-500': day.onVacation &&  day.day_formatted !== showVacationsAndAvailabilitiesDate && !day.hasAvailability || day.hasConflict,
+                        }"
+ */
 import {defineComponent} from 'vue'
 import {router} from "@inertiajs/vue3";
 import {ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";

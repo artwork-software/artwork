@@ -40,7 +40,7 @@
                 </form>
 
             </div>
-            <div class="absolute bottom-10 text-secondary subpixel-antialiased text-sm tracking-wide">
+            <div class="flex gap-x-4 mt-12 text-secondary subpixel-antialiased text-sm tracking-wide">
                 <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                     {{ $t('Imprint') }}
                 </a>

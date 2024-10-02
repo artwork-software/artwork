@@ -14,6 +14,7 @@ class CreateInventoryPerformanceTest extends Seeder
     /**
      * Run the database seeds.
      */
+    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
     public function run(): void
     {
         $crafts = Craft::all();

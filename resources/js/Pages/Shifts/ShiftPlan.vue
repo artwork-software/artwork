@@ -48,9 +48,9 @@
                                         </div>
                                     </th>
                                     <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
-                                        class="border-r-2 border-gray-400  day-container h-28"
+                                        class="border-r-2 border-gray-400 day-container h-28"
                                         v-for="day in days" :data-day="day.full_day">
-                                        <div class="bg-backgroundGray2 max-h-28 h-28" style="width: 37px" v-if="day.is_extra_row">
+                                        <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
 
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
@@ -85,7 +85,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30">
+            <div id="userOverview" class="w-full fixed bottom-0 z-20">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
@@ -116,46 +116,65 @@
                 </div>
                 <div class=" bg-artwork-navigation-background">
                     <div v-show="showUserOverview" ref="userOverview"
-                         class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-30 overflow-y-scroll"
+                         class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-20 overflow-y-scroll"
                          :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                         <div
-                            class="flex items-center justify-between w-full fixed py-3 z-50 bg-artwork-navigation-background px-3"
+                            class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3"
                             :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
                                 <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
                                         :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
-                                    <span
-                                        :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconPencil stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconPencil"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Edit')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                       <span
                                           :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconPencil stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconPencil"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Edit')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                 </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
                                     <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
-                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                            :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-20 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
                                         <span
-                                            :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                            :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                         <span
                                             :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-4 h-4"
-                                                       :style="{color: selectedDayService?.hex_color}"/>
+                                            <ToolTipComponent
+                                                :icon="selectedDayService?.icon"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Day Services')"
+                                                direction="bottom"
+                                                :style="{color: selectedDayService?.hex_color}"
+                                            />
                                         </span>
                                         <span
                                             :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
-                                            <component :is="selectedDayService?.icon" class="w-4 h-4"
-                                                       :style="{color: selectedDayService?.hex_color}"/>
+                                            <ToolTipComponent
+                                                :icon="selectedDayService?.icon"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Day Services')"
+                                                direction="bottom"
+                                                :style="{color: selectedDayService?.hex_color}"
+                                            />
                                         </span>
                                     </span>
                                     </Switch>
@@ -164,21 +183,31 @@
                                                       @update:current-selected-day-service="updateSelectedDayService"/>
                                 </div>
                             </div>
-                            <div class="flex items-center justify-end gap-x-3 pr-20">
+                            <div class="flex items-center justify-end gap-x-3 pr-20 z-20">
                                 <Switch @click="toggleHighlightMode" v-model="highlightMode"
                                         :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconBulb stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconBulb"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Highlight')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                       <span
                                           :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconBulb stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconBulb"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Highlight')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                 </span>
                                 </Switch>
@@ -186,16 +215,26 @@
                                         :class="[$page.props.user.compact_mode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span
-                                        :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
                                           :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                         <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconList"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Compact view')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                       <span
                                           :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
-                                          <IconList stroke-width="1.5" class="w-4 h-4"/>
+                                          <ToolTipComponent
+                                              icon="IconList"
+                                              icon-size="h-4 w-4"
+                                              :tooltip-text="$t('Compact view')"
+                                              direction="bottom"
+                                          />
                                       </span>
                                 </span>
                                 </Switch>
@@ -221,10 +260,10 @@
                                 </BaseMenu>
                             </div>
                         </div>
-                        <div class="pt-14">
-                            <table class="w-full text-white overflow-y-scroll">
+                        <div class="pt-14 z-10">
+                            <table class="w-full text-white overflow-y-scroll z-10">
                                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                                <div>
+                                <div class="z-10">
                                     <tbody class="w-full pt-3" v-for="craft in reComputedCraftsToDisplay">
                                     <tr class="stickyYAxisNoMarginLeft pl-2 cursor-pointer w-48 xsLight flex justify-between pb-1"
                                         @click="changeCraftVisibility(craft.id)">
@@ -235,7 +274,7 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users"
-                                        class="w-full flex">
+                                        class="w-full flex ">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -268,7 +307,11 @@
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.is_extra_row"
-                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
+                                                :class="[
+                                                    highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
+                                                    $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
+                                                 ]"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden"
                                                 :style="{width: '202px'}"
                                                 @click="handleCellClick(user, day)">
@@ -295,7 +338,8 @@
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
                                                  style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
                                                     {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
                                                 </span>
@@ -357,7 +401,8 @@
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.is_extra_row"
-                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']"
+                                                :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px'}"
@@ -385,7 +430,8 @@
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
                                                  style="width: 39px"
-                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12']">
+                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
                                                     {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
                                                 </span>
@@ -489,6 +535,7 @@ import {ref} from "vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -505,6 +552,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        ToolTipComponent,
         MenuItem,
         BaseMenu,
         DayServiceFilter,
@@ -1482,7 +1530,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 60px;
-    z-index: 22;
+    z-index: 12;
 }
 
 .stickyYAxisNoMarginLeft {
@@ -1490,6 +1538,6 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 0;
-    z-index: 22;
+    z-index: 12;
 }
 </style>

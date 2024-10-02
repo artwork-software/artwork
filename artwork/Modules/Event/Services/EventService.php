@@ -639,7 +639,6 @@ readonly class EventService
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
                 'add_week_separator' => $period->isSunday(),
             ];
-
         }
 
         $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(

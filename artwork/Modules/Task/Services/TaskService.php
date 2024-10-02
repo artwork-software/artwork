@@ -36,7 +36,7 @@ class TaskService
                 'checklist_id' => $checklist->id,
                 'name' => $name,
                 'description' => $description,
-                'deadline' => Carbon::parse($deadline)->endOfDay(),
+                'deadline' => $deadline ? Carbon::parse($deadline)->endOfDay() : null,
                 'done' => false,
                 'order' => $this->checklistRepository->getOrderByChecklists($checklist),
             ])
@@ -171,7 +171,7 @@ class TaskService
     ): Task {
         $task->name = $data->get('name');
         $task->description = $data->get('description');
-        $task->deadline = Carbon::parse($data->get('deadlineDate'))->endOfDay();
+        $task->deadline = $data->get('deadlineDate') ? Carbon::parse($data->get('deadlineDate'))->endOfDay() : null;
         $task->done = false;
         $task->done_at = null;
         $task->user_id = null;

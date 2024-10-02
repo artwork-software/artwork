@@ -89,7 +89,7 @@ services:
         - "./:/app:cached"
         - "js:/app/public/js"
     meilisearch:
-        image: 'getmeili/meilisearch:latest'
+        image: 'getmeili/meilisearch:v1.9.1'
         ports:
             - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         volumes:

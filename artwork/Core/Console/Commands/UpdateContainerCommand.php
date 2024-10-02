@@ -2,7 +2,12 @@
 
 namespace Artwork\Core\Console\Commands;
 
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\Permission\Models\Permission;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Facades\Artisan;
@@ -30,6 +35,19 @@ class UpdateContainerCommand extends Command
 
         $this->line('Migrating');
         Artisan::call('migrate --force');
+
+        $this->line('Adding meili-indexes');
+        foreach([
+            'departments' => Department::class,
+            'moneysources' => MoneySource::class,
+            'shifpresets' => ShiftPreset::class,
+            'projects' => Project::class,
+            'users' => User::class,
+                ] as $key => $model) {
+            Artisan::call(sprintf('scout:index %s', $key));
+            Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));
+
+        }
         $this->line('Building frontend');
         exec('npm run build');
         if (!Permission::first()) {

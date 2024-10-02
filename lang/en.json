@@ -2024,5 +2024,8 @@
     "Manage to-dos": "Manage to-dos",
     "Also allows you to delete all lists, regardless of who created them": "Also allows you to delete all lists, regardless of who created them",
     "Manually manage availabilities": "Manually manage availabilities",
-    "Set the availability of the user": "Set the availability of the user"
+    "Set the availability of the user": "Set the availability of the user",
+    "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.": "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.",
+    "Close note": "Close note",
+    "Cancel project selection": "Cancel project selection"
 }

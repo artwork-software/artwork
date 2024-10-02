@@ -23,6 +23,10 @@ export default {
         noProjectGroups: {
             type: Boolean,
             default: false
+        },
+        getFirstLastEvent: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['project-selected'],
@@ -37,6 +41,7 @@ export default {
             handler() {
                 axios.post(route('project.scoutSearch'),{
                     project_search: this.project_search_query,
+                    get_first_last_event: this.getFirstLastEvent,
                     wantsJson: true,
                 }).then(response => {
                     this.projects = response.data;

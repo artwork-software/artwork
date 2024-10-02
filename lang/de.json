@@ -2024,5 +2024,8 @@
     "Manage to-dos": "To-dos verwalten",
     "Also allows you to delete all lists, regardless of who created them": "Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat",
     "Manually manage availabilities": "Verfügbarkeiten manuell verwalten",
-    "Set the availability of the user": "Stelle die Verfügbarkeiten des Nutzer*innen ein"
+    "Set the availability of the user": "Stelle die Verfügbarkeiten des Nutzer*innen ein",
+    "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.": "Wenn ein Projekt angegeben wird, wird für den Export der Projektzeitraum genutzt. Sollte kein Projekt angegeben werden, kannst du entweder selbst Start- und Enddatum angeben oder es wird automatisch dein aktuelles Kalenderstart- und Enddatum genommen.",
+    "Close note": "Hinweis schließen",
+    "Cancel project selection": "Projektauswahl aufheben"
 }

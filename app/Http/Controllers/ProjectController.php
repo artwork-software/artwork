@@ -3453,14 +3453,25 @@ class ProjectController extends Controller
             request()->get('project_search') !== null &&
             request()->get('project_search') !== ''
         ) {
-            $projects = Project::search($request->string('project_search'))->get()->map(function ($project) {
-                return [
+            $projects = Project::search($request->string('project_search'))->get()
+                ->map(function ($project) use ($request) {
+                    $returnProject =  [
                     'id' => $project->id,
                     'name' => $project->name,
                     'key_visual_path' => $project->key_visual_path,
                     'is_group' => $project->is_group,
-                ];
-            });
+                    ];
+
+                    $addEventsToReturnProject = [];
+                    if ($request->boolean('get_first_last_event')) {
+                        $addEventsToReturnProject = [
+                        'first_event' => $this->projectService->getFirstEventInProject($project),
+                        'last_event' => $this->projectService->getLastEventInProject($project),
+                        ];
+                    }
+
+                    return array_merge($returnProject, $addEventsToReturnProject);
+                });
         }
 
         return $projects;

@@ -328,6 +328,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Also allows you to delete all lists, regardless of who created them",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::AVAILABILITY_MANAGEMENT->value,
+                'name_de' => "Verfügbarkeiten manuell verwalten",
+                'translation_key' => "Manually manage availabilities",
+                'group' => 'Shifts',
+                'tooltipText' => 'Stelle die Verfügbarkeiten des Nutzer*innen ein',
+                'tooltipKey' => "Set the availability of the user",
+                'checked' => false
+            ],
         ];
     }
 

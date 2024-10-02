@@ -59,7 +59,7 @@
                             {{ $t('Duplicate') }}
                         </div>
                     </MenuItem>
-                    <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.user.id || can('can edit checklist') || isAdmin">
+                    <MenuItem as="div" v-slot="{ active }" v-if="can('can use checklists') && checklist.user_id === usePage().props.user.id || can('can edit checklist') || isAdmin || checklist.user_id === usePage().props.user.id">
                         <div @click="showDeleteChecklistModal = true"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'base-menu-link']">
                             <IconTrash stroke-width="1.5" class="base-menu-icon" aria-hidden="true"/>

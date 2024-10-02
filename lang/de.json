@@ -2022,5 +2022,7 @@
     "Use to-dos": "To-dos nutzen",
     "Allows the creation of lists and to-dos in the general area (overview page) and at project level, unless further restricted by the to-do component.": "Erlaubt Erstellen von Listen und To-dos im allgemeinen Bereich (Übersichtsseite) und auf Projektebene, sofern durch To-do-Komponente nicht weiter eingeschränkt.",
     "Manage to-dos": "To-dos verwalten",
-    "Also allows you to delete all lists, regardless of who created them": "Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat"
+    "Also allows you to delete all lists, regardless of who created them": "Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat",
+    "Manually manage availabilities": "Verfügbarkeiten manuell verwalten",
+    "Set the availability of the user": "Stelle die Verfügbarkeiten des Nutzer*innen ein"
 }

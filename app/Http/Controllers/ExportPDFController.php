@@ -15,6 +15,7 @@ use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\User\Services\UserService;
 use Barryvdh\DomPDF\PDF;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\Request;
 use Illuminate\Routing\ResponseFactory;
@@ -50,17 +51,42 @@ class ExportPDFController extends Controller
         Carbon $carbon
     ): Response {
         $projectId = $request->get('project');
+        $startDate = $request->get('start');
+        $endDate = $request->get('end');
+        $userCalendarFilter = $userService->getAuthUser()->calendar_filter;
+
+        if (!$startDate && $projectId) {
+            $startDate = $carbon->create($projectService->getFirstEventInProject($projectId)
+                ->getAttribute('start_time'))->startOfDay();
+        }
+
+        if (!$endDate && $projectId) {
+            $endDate = $carbon->create(
+                $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
+            )->endOfDay();
+        }
+
+        if (!$startDate && !$endDate && !$projectId) {
+            if ($userCalendarFilter->start_date && $userCalendarFilter->end_date) {
+                $startDate = $carbon->create($userCalendarFilter->start_date)->startOfDay();
+                $endDate = $carbon->create($userCalendarFilter->end_date)->endOfDay();
+            } else {
+                $startDate = Carbon::now()->startOfMonth()->startOfDay();
+                $endDate = Carbon::now()->endOfMonth()->endOfDay();
+            }
+        }
+
+        if ($request->get('start') && $request->get('end') && $projectId) {
+            $startDate = $carbon->create($request->get('start'))->startOfDay();
+            $endDate = $carbon->create($request->get('end'))->endOfDay();
+        }
+
+        $startDate = Carbon::parse($startDate)->startOfDay();
+        $endDate = Carbon::parse($endDate)->endOfDay();
 
         $showCalendar = $calendarService->createCalendarData(
-            startDate: $projectId && !$request->get('start') ?
-                $carbon->create($projectService->getFirstEventInProject($projectId)
-                    ->getAttribute('start_time'))->startOfDay() :
-                $carbon->parse($request->get('start')),
-            endDate: $projectId && !$request->get('end') ?
-                $carbon->create(
-                    $projectService->getLastEventInProject($projectId)->getAttribute('end_time')
-                )->endOfDay() :
-                $carbon->parse($request->get('end')),
+            startDate: $startDate,
+            endDate: $endDate,
             userService: $userService,
             filterService: $filterService,
             filterController: $filterController,

@@ -90,7 +90,7 @@
                         :tooltip-text="$t('Zoom in')"
                         icon="IconZoomIn"
                         icon-size="h-7 w-7"
-                        :disabled="zoom_factor <= 0.2"
+                        :disabled="zoom_factor >= 1.4"
                         @click="incrementZoomFactor"
                         v-if="!atAGlance"
                     />
@@ -100,7 +100,8 @@
                         :tooltip-text="$t('Zoom out')"
                         icon="IconZoomOut"
                         icon-size="h-7 w-7"
-                        :disabled="zoom_factor >= 1.4"
+                        :disabled="zoom_factor <= 0.2"
+
                         @click="decrementZoomFactor"
                         v-if="!atAGlance"
                     />

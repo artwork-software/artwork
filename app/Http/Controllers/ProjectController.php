@@ -3453,13 +3453,14 @@ class ProjectController extends Controller
             request()->get('project_search') !== null &&
             request()->get('project_search') !== ''
         ) {
-            $projects = Project::search($request->string('project_search'))->get()
+            $projects = Project::search($request->string('project_search'))
+                ->get()
                 ->map(function ($project) use ($request) {
                     $returnProject =  [
-                    'id' => $project->id,
-                    'name' => $project->name,
-                    'key_visual_path' => $project->key_visual_path,
-                    'is_group' => $project->is_group,
+                        'id' => $project->id,
+                        'name' => $project->name,
+                        'key_visual_path' => $project->key_visual_path,
+                        'is_group' => $project->is_group,
                     ];
 
                     $addEventsToReturnProject = [];

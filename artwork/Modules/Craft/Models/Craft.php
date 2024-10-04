@@ -34,11 +34,13 @@ class Craft extends Model
         'abbreviation',
         'assignable_by_all',
         'color',
-        'notify_days'
+        'notify_days',
+        'universally_applicable'
     ];
 
     protected $casts = [
-        'assignable_by_all' => 'boolean'
+        'assignable_by_all' => 'boolean',
+        'universally_applicable' => 'boolean',
     ];
 
     protected $with = ['users'];

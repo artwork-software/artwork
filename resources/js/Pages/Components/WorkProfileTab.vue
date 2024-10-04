@@ -27,7 +27,7 @@
                 <span aria-hidden="true" :class="[workProfileForm.is_freelancer ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
             <SwitchLabel as="span" class="ml-2 text-sm">
-                <span class="text-secondary">Freelancer</span>
+                <span class="text-secondary">freelancer*in</span>
             </SwitchLabel>
         </SwitchGroup>
     </div>

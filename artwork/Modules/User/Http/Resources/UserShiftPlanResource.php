@@ -29,6 +29,7 @@ class UserShiftPlanResource extends WorkerShiftPlanResource
                 'phone_number' => $this->getAttribute('phone_number'),
                 'project_management' => $this->can(PermissionEnum::PROJECT_MANAGEMENT->value),
                 'display_name' => $this->getDisplayNameAttribute(),
+                'is_freelancer' => $this->getAttribute('is_freelancer'),
             ],
             parent::toArray($request)
         );

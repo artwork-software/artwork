@@ -681,7 +681,8 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true
+                    true,
+                    $user
                 )
             )
             ->setFreelancersForShifts(
@@ -689,14 +690,16 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     FreelancerShiftPlanResource::class,
-                    true
+                    true,
+                    $user
                 )
             )
             ->setServiceProvidersForShifts(
                 $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    ServiceProviderShiftPlanResource::class
+                    ServiceProviderShiftPlanResource::class,
+                    $user
                 )
             )
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())

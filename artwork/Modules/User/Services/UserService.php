@@ -24,6 +24,7 @@ use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSetting
 use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
@@ -132,11 +133,15 @@ class UserService
     /**
      * @return array<string, mixed>
      */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        bool $addVacationsAndAvailabilities = false
+        bool $addVacationsAndAvailabilities = false,
+        User $currentUser = null
     ): array {
         $usersWithPlannedWorkingHours = [];
 
@@ -154,6 +159,7 @@ class UserService
                 'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
                 'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
+                'is_freelancer' => $user->getAttribute('is_freelancer'),
             ];
 
             $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
@@ -171,9 +177,26 @@ class UserService
             $usersWithPlannedWorkingHours[] = $userData;
         }
 
+        if ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+            usort($usersWithPlannedWorkingHours, static function ($a, $b) use ($currentUser) {
+                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+                    'ALPHABETICALLY_ASCENDING_FIRST_NAME' =>
+                    strcmp($a['user']['first_name'], $b['user']['first_name']),
+                    'ALPHABETICALLY_DESCENDING_FIRST_NAME' =>
+                    strcmp($b['user']['first_name'], $a['user']['first_name']),
+                    'ALPHABETICALLY_ASCENDING_LAST_NAME' =>
+                    strcmp($a['user']['last_name'], $b['user']['last_name']),
+                    'ALPHABETICALLY_DESCENDING_LAST_NAME' =>
+                    strcmp($b['user']['last_name'], $a['user']['last_name']),
+                    default => 0,
+                };
+            });
+        }
+
         // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
         return $usersWithPlannedWorkingHours;
     }
+
 
     /**
      * @return array<string, float|int>

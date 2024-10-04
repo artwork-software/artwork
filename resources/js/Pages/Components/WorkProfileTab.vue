@@ -9,18 +9,29 @@
         <hr class="mb-2">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
             <div class="mb-2 col-span-full">
-                <TextInputComponent id="" v-model="workProfileForm.workName" :label="$t('Job title')"  @focusout="this.updateWorkProfile()"/>
+                <TextInputComponent id="workName" v-model="workProfileForm.workName" :label="$t('Job title')"  @focusout="this.updateWorkProfile()"/>
             </div>
             <div class="col-span-full mb-2">
                 <TextareaComponent
                     id="jobDescription"
                     v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
                     :label="$t('Job description')"
-                    rows="4"
+                    :rows="4"
                 />
             </div>
         </div>
+
+        <SwitchGroup as="div" class="flex items-center" v-if="userType === 'user'">
+            <Switch v-model="workProfileForm.is_freelancer" @update:modelValue="updateWorkProfile" :disabled="workProfileForm.processing"
+                    :class="[workProfileForm.is_freelancer ? 'bg-artwork-buttons-create' : 'bg-secondary', workProfileForm.processing ? 'cursor-not-allowed' : '', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                <span aria-hidden="true" :class="[workProfileForm.is_freelancer ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+            </Switch>
+            <SwitchLabel as="span" class="ml-2 text-sm">
+                <span class="text-secondary">Freelancer</span>
+            </SwitchLabel>
+        </SwitchGroup>
     </div>
+
     <div class="headline3 mb-2">
         {{ $t('Crafts') }}
     </div>
@@ -135,7 +146,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
-import {reactive} from "vue";
+import {nextTick, reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
@@ -164,7 +175,8 @@ export default {
         return {
             workProfileForm: useForm({
                 workName: this.user.work_name,
-                workDescription: this.user.work_description
+                workDescription: this.user.work_description,
+                is_freelancer: this.user.is_freelancer,
             }),
             craftSettingsForm: useForm({
                 canBeAssignedToShifts: this.user.can_work_shifts
@@ -283,15 +295,17 @@ export default {
             }
 
             if (desiredRoute) {
-                if (this.workProfileForm.isDirty) {
-                    this.workProfileForm.patch(
-                        route(desiredRoute, routeParameter),
-                        {
-                            preserveScroll:true,
-                            preserveState:true
-                        }
-                    );
-                }
+                nextTick( () => {
+                    if (this.workProfileForm.isDirty) {
+                        this.workProfileForm.patch(
+                            route(desiredRoute, routeParameter),
+                            {
+                                preserveScroll:true,
+                                preserveState:true
+                            }
+                        );
+                    }
+                })
             }
         },
         assignCraft() {

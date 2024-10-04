@@ -176,7 +176,8 @@ class User extends Model implements
         'notification_enums_last_sent_dates',
         'bulk_sort_id',
         'show_notification_indicator',
-        'shift_plan_user_sort_by'
+        'shift_plan_user_sort_by',
+        'is_freelancer'
     ];
 
     protected $casts = [
@@ -192,7 +193,8 @@ class User extends Model implements
         'show_crafts' => 'array',
         'at_a_glance' => 'boolean',
         'notification_enums_last_sent_dates' => 'array',
-        'show_notification_indicator' => 'boolean'
+        'show_notification_indicator' => 'boolean',
+        'is_freelancer' => 'boolean',
     ];
 
     protected $hidden = [

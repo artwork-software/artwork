@@ -245,7 +245,7 @@
                                                 <input id="showFreelancers" v-model="showFreelancers" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
                                             </div>
                                             <div class="ml-2 text-sm leading-6">
-                                                <label for="showFreelancers" class="font-medium text-white">Freelancer einblenden</label>
+                                                <label for="showFreelancers" class="font-medium text-white">{{ $t('Show freelancer') }}</label>
                                             </div>
                                         </div>
                                         <CraftFilter :crafts="crafts" is_tiny/>

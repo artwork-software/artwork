@@ -97,21 +97,24 @@ class ProjectTabService implements ServiceWithArrayCache
                 $userService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    UserDropResource::class
+                    UserDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setFreelancersForShifts(
                 $freelancerService->getFreelancersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    FreelancerDropResource::class
+                    FreelancerDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setServiceProvidersForShifts(
                 $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    ServiceProviderDropResource::class
+                    ServiceProviderDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))

@@ -2029,5 +2029,8 @@
     "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.": "Wenn ein Projekt angegeben wird, wird für den Export der Projektzeitraum genutzt. Sollte kein Projekt angegeben werden, kannst du entweder selbst Start- und Enddatum angeben oder es wird automatisch dein aktuelles Kalenderstart- und Enddatum genommen.",
     "Close note": "Hinweis schließen",
     "Cancel project selection": "Projektauswahl aufheben",
-    "Cancel project group selection": "Projektgruppenauswahl aufheben"
+    "Cancel project group selection": "Projektgruppenauswahl aufheben",
+    "Show freelancer": "Freelancer einblenden",
+    "Show as freelancer in the tool": "Als Freelancer*in im Tool anzeigen",
+    "Freelancer Settings": "Freelancer-Einstellungen"
 }

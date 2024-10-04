@@ -44,7 +44,7 @@
                                     <div class="flex max-h-8 mb-3 mt-3">
                                         <input v-model="showProjectGroups"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                               class="input-checklist-dark"/>
                                         <p class=" ml-4 my-auto text-sm text-secondary">
                                             {{ $t('Project groups') }}
                                         </p>
@@ -52,7 +52,7 @@
                                     <div class="flex max-h-8 mb-3 mt-3">
                                         <input v-model="showProjects"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                               class="input-checklist-dark"/>
                                         <p class=" ml-4 my-auto text-sm text-secondary">
                                             {{ $t('Projects') }}
                                         </p>
@@ -60,7 +60,7 @@
                                     <div class="flex max-h-8 mb-3 mt-3">
                                         <input v-model="showExpiredProjects"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                               class="input-checklist-dark"/>
                                         <p class=" ml-4 my-auto text-sm text-secondary">
                                             {{ $t('Show expired projects') }}
                                         </p>
@@ -68,7 +68,7 @@
                                     <div class="flex max-h-8 mb-3 mt-3">
                                         <input v-model="showFutureProjects"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                               class="input-checklist-dark"/>
                                         <p class=" ml-4 my-auto text-sm text-secondary">
                                             {{ $t('Show future projects') }}
                                         </p>
@@ -76,7 +76,7 @@
                                     <div class="flex max-h-8 mb-3 mt-3">
                                         <input v-model="showProjectsWithoutEvents"
                                                type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                               class="input-checklist-dark"/>
                                         <p class=" ml-4 my-auto text-sm text-secondary">
                                             {{ $t('Show projects without events') }}
                                         </p>
@@ -95,7 +95,7 @@
                                         <div class="flex mb-3" v-for="state in computedStates">
                                             <input v-model="state.clicked"
                                                    type="checkbox"
-                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                   class="input-checklist-dark"/>
                                             <p class=" ml-4 my-auto text-sm text-secondary">{{
                                                     state.name
                                                 }}</p>
@@ -133,6 +133,7 @@
                                         @click="openCreateProjectModal"/>
                         </div>
                     </div>
+                    <!-- Tags are not wanted right now
                     <div id="selectedFilter" class="mt-3">
                         <span v-if="getUserSortBySetting()"
                             class="rounded-full items-center font-medium text-tagTextGreen border bg-tagBgGreen border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
@@ -183,6 +184,7 @@
                                 <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
+
                         <template v-for="state in computedStateTags">
                             <span v-if="state.clicked"
                                   class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
@@ -194,7 +196,7 @@
                             </span>
                         </template>
                     </div>
-
+                    -->
                     <div class="my-3 w-full">
                         <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project) in pinnedProjects" :key="project.id">
                             <SingleProject :categories="categories" :genres="genres" :sectors="sectors" :create-settings="createSettings" :states="states" :project-groups="projectGroups" :project="project" :first_project_tab_id="first_project_tab_id" />

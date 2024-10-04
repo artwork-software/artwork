@@ -20,14 +20,20 @@
                 />
             </div>
         </div>
+    </div>
 
+    <div class="my-3">
+        <div class="headline6Light">
+            {{ $t("Freelancer Settings")}}
+        </div>
+        <hr class="mb-2">
         <SwitchGroup as="div" class="flex items-center" v-if="userType === 'user'">
             <Switch v-model="workProfileForm.is_freelancer" @update:modelValue="updateWorkProfile" :disabled="workProfileForm.processing"
                     :class="[workProfileForm.is_freelancer ? 'bg-artwork-buttons-create' : 'bg-secondary', workProfileForm.processing ? 'cursor-not-allowed' : '', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span aria-hidden="true" :class="[workProfileForm.is_freelancer ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
             <SwitchLabel as="span" class="ml-2 text-sm">
-                <span class="text-secondary">freelancer*in</span>
+                <span class="text-secondary">{{ $t('Show as freelancer in the tool') }}</span>
             </SwitchLabel>
         </SwitchGroup>
     </div>

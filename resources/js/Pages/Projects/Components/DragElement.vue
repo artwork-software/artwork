@@ -34,7 +34,7 @@
                 <ToolTipComponent
                     icon="IconId"
                     icon-size="w-4 h-4"
-                    tooltip-text="Freelancer"
+                    tooltip-text="freelancer*in"
                     direction="top"
                     classes="text-gray-300"
                 />

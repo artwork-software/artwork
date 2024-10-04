@@ -2028,5 +2028,6 @@
     "Decline event": "Decline event",
     "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.": "If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.",
     "Close note": "Close note",
-    "Cancel project selection": "Cancel project selection"
+    "Cancel project selection": "Cancel project selection",
+    "Cancel project group selection": "Cancel project group selection"
 }

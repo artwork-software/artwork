@@ -45,6 +45,7 @@ class UserService
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService,
+        private readonly WorkingHourService $workingHourService,
     ) {
     }
 
@@ -132,10 +133,8 @@ class UserService
 
     /**
      * @return array<string, mixed>
+     * @deprecated use the WorkingHourService
      */
-    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
@@ -143,83 +142,18 @@ class UserService
         bool $addVacationsAndAvailabilities = false,
         User $currentUser = null
     ): array {
-        $usersWithPlannedWorkingHours = [];
-
-        /** @var User $user */
-        foreach ($this->userRepository->getWorkers() as $user) {
-            /** @var JsonResource $desiredResourceClass */
-            $desiredUserResource = $desiredResourceClass::make($user);
-
-            if ($desiredUserResource instanceof UserShiftPlanResource) {
-                $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
-            }
-
-            $userData = [
-                'user' => $desiredUserResource->resolve(),
-                'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
-                'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
-                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
-                'is_freelancer' => $user->getAttribute('is_freelancer'),
-            ];
-
-            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
-
-            if ($addVacationsAndAvailabilities) {
-                $userData['vacations'] = $user->getVacationDays();
-                $userData['availabilities'] = $this->userRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $user,
-                        $startDate,
-                        $endDate
-                    );
-            }
-
-            $usersWithPlannedWorkingHours[] = $userData;
-        }
-
-        if ($currentUser->getAttribute('shift_plan_user_sort_by')) {
-            usort($usersWithPlannedWorkingHours, static function ($a, $b) use ($currentUser) {
-                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
-                    'ALPHABETICALLY_ASCENDING_FIRST_NAME' =>
-                    strcmp($a['user']['first_name'], $b['user']['first_name']),
-                    'ALPHABETICALLY_DESCENDING_FIRST_NAME' =>
-                    strcmp($b['user']['first_name'], $a['user']['first_name']),
-                    'ALPHABETICALLY_ASCENDING_LAST_NAME' =>
-                    strcmp($a['user']['last_name'], $b['user']['last_name']),
-                    'ALPHABETICALLY_DESCENDING_LAST_NAME' =>
-                    strcmp($b['user']['last_name'], $a['user']['last_name']),
-                    default => 0,
-                };
-            });
-        }
-
-        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
-        return $usersWithPlannedWorkingHours;
+        trigger_deprecation('artwork', '0.x', 'This method is deprecated, use the WorkingHourService instead.');
+        throw new \Exception('This method is deprecated, use the WorkingHourService instead.');
     }
 
 
     /**
      * @return array<string, float|int>
+     * @deprecated use the WorkingHourService
      */
     public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
     {
-        // first create a carbon period for the given date range
-        $period = Carbon::parse($startDate)->toPeriod($endDate);
-
-        $weeklyWorkingHours = [];
-
-        // iterate over each week and calculate the working hours
-        foreach ($period as $week) {
-            $startDate = $week->copy()->startOfWeek();
-            $endDate = $week->copy()->endOfWeek();
-            $workingHours = $user->plannedWorkingHours(
-                $startDate,
-                $endDate
-            ) - $user->weekly_working_hours;
-            $weeklyWorkingHours[$week->format('W')] = $workingHours;
-        }
-
-        return $weeklyWorkingHours;
+        return $this->workingHourService->calculateWeeklyWorkingHours($user, $startDate, $endDate);
     }
 
     public function getAuthUserCrafts(): Collection

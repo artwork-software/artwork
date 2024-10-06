@@ -52,6 +52,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,6 +64,7 @@ readonly class EventService
 {
     public function __construct(
         private EventRepository $eventRepository,
+        private readonly WorkingHourService $workingHourService
     ) {
     }
 
@@ -653,15 +655,15 @@ readonly class EventService
         );
 
         return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges($events))
+            ->setHistory($this->getEventShiftsHistoryChanges($events)) //7sec
             ->setCrafts($craftService->getAll())
-            ->setShiftPlan(
-                $roomService->collectEventsForRoomsShift(
-                    $filteredRooms,
-                    $calendarPeriod,
-                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
-                )
-            )
+//            ->setShiftPlan(
+//                $roomService->collectEventsForRoomsShift(
+//                    $filteredRooms,
+//                    $calendarPeriod,
+//                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+//                )
+//            ) //8sec
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
             ->setFilterOptions(
@@ -677,14 +679,14 @@ readonly class EventService
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
             ->setUsersForShifts(
-                $userService->getUsersWithPlannedWorkingHours(
+                 $this->workingHourService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
                     true,
                     $user
                 )
-            )
+            ) //16 sec
             ->setFreelancersForShifts(
                 $freelancerService->getFreelancersWithPlannedWorkingHours(
                     $startDate,

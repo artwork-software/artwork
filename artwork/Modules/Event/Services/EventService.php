@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Services;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
@@ -52,6 +53,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,6 +65,7 @@ readonly class EventService
 {
     public function __construct(
         private EventRepository $eventRepository,
+        private readonly WorkingHourService $workingHourService
     ) {
     }
 
@@ -641,7 +644,7 @@ readonly class EventService
             ];
         }
 
-        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(
+        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
             $startDate,
             $endDate
         );
@@ -652,14 +655,16 @@ readonly class EventService
             $userService->getAuthUser()->shift_calendar_filter
         );
 
+        $shifts = $events->pluck('shifts')->flatten();
+
         return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges($events))
+            ->setHistory($this->getEventShiftsHistoryChanges())
             ->setCrafts($craftService->getAll())
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
-                    $calendarPeriod,
-                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                    $events,
+                    $calendarPeriod
                 )
             )
             ->setRooms($filteredRooms)
@@ -677,12 +682,13 @@ readonly class EventService
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
             ->setUsersForShifts(
-                $userService->getUsersWithPlannedWorkingHours(
+                $this->workingHourService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true,
-                    $user
+                    false,
+                    null,
+                    $shifts
                 )
             )
             ->setFreelancersForShifts(
@@ -722,24 +728,22 @@ readonly class EventService
     /**
      * @return array<int, mixed>
      */
-    public function getEventShiftsHistoryChanges(Collection $events): array
+    public function getEventShiftsHistoryChanges(): array
     {
-        return $events->flatMap(function ($event) {
-            return $event->shifts->flatMap(function ($shift) {
-                // Sort each shift's historyChanges by created_at in descending order
-                $historyArray = [];
-                foreach ($shift->historyChanges()->sortByDesc('created_at') as $history) {
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
-                }
+        $q = Change::query();
+        $q->where('model_type', Shift::class);
+        $q->orderBy('created_at', 'desc');
+        $historyArray = [];
+        $q->get()->each(function (Change $history) use (&$historyArray) {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        });
 
-                return $historyArray;
-            });
-        })->all();
+        return $historyArray;
     }
 
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
@@ -809,18 +813,18 @@ readonly class EventService
             ->setCalendarType(
                 $desiredProjectHasNoEvents ? 'individual' :
                     (
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            'daily' :
-                            'individual'
+                    $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                        'daily' :
+                        'individual'
                     )
             )
             ->setSelectedDate(
                 $desiredProjectHasNoEvents ?
                     null :
                     (
-                        $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
-                            $startDate?->format('Y-m-d') :
-                            null
+                    $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
+                        $startDate?->format('Y-m-d') :
+                        null
                     )
             )
             ->setEventsWithoutRoom(
@@ -1171,7 +1175,6 @@ readonly class EventService
         SupportCollection $data,
         Event $event,
     ): void {
-
         $day = Carbon::parse($data['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,

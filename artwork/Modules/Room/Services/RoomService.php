@@ -653,7 +653,13 @@ readonly class RoomService
                     'subEvents.event.room',
                 ]
             )
-            ->without(['created_by', 'shift_relevant_event_types'])
+            ->without([
+                'created_by',
+                'shift_relevant_event_types',
+                'shifts.users.calendar_settings',
+                'shifts.users.calendarAbo',
+                'shifts.users.shiftCalendarAbo',
+            ])
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder

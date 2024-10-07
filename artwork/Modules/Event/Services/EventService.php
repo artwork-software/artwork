@@ -643,7 +643,7 @@ readonly class EventService
             ];
         }
 
-        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(
+        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
             $startDate,
             $endDate
         );
@@ -654,18 +654,18 @@ readonly class EventService
             $userService->getAuthUser()->shift_calendar_filter
         );
 
-        $shifts = $events->pluck('shifts')->flatten()->all();
+        $shifts = $events->pluck('shifts')->flatten();
 
         return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges($events)) //7sec
+            ->setHistory($this->getEventShiftsHistoryChanges($events))
             ->setCrafts($craftService->getAll())
-//            ->setShiftPlan(
-//                $roomService->collectEventsForRoomsShift(
-//                    $filteredRooms,
-//                    $calendarPeriod,
-//                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
-//                )
-//            ) //8sec
+            ->setShiftPlan(
+                $roomService->collectEventsForRoomsShift(
+                    $filteredRooms,
+                    $calendarPeriod,
+                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                )
+            )
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
             ->setFilterOptions(

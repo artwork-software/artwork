@@ -10,6 +10,7 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 class WorkingHourService
 {
@@ -25,14 +26,13 @@ class WorkingHourService
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
         User $currentUser = null,
-        array $shifts = []
+        Collection $shiftCollection = null
     ): array {
         $usersWithPlannedWorkingHours = [];
 
         /** @var User $user */
         foreach ($this->userRepository->getWorkers() as $user) {
             $a = microtime(true);
-
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
             $b = microtime(true) - $a;
@@ -44,10 +44,21 @@ class WorkingHourService
             $b = microtime(true) - $a;
             $c = 1;
             $a = microtime(true);
-            if(!empty($shifts)) {
+
+            if ($shiftCollection) {
+                $shifts = $shiftCollection->filter(function (Shift $shift) use ($user) {
+                    return $shift->users->contains($user);
+                })->all();
                 $plannedWorkingHours = $this->calculatePlannedWorkingHours($shifts);
+                $weeklyWorkingHours = $this->calculateWeeklyWorkingHoursByUserAndShifts(
+                    $user,
+                    $shifts,
+                    $startDate,
+                    $endDate
+                );
             } else {
                 $plannedWorkingHours = $this->plannedWorkingHoursForUser($user, $startDate, $endDate);
+                $weeklyWorkingHours = $this->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
             }
             $b = microtime(true) - $a;
             $c = 1;
@@ -62,12 +73,8 @@ class WorkingHourService
             $b = microtime(true) - $a;
             $c = 1;
             $a = microtime(true);
-            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHoursByUserAndShifts(
-                $user,
-                $shifts,
-                $startDate,
-                $endDate
-            );
+
+            $userData['weeklyWorkingHours'] = $weeklyWorkingHours;
             $b = microtime(true) - $a;
             $c = 1;
             if ($addVacationsAndAvailabilities) {
@@ -81,7 +88,6 @@ class WorkingHourService
             }
 
             $usersWithPlannedWorkingHours[] = $userData;
-
         }
         if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by')) {
             usort($usersWithPlannedWorkingHours, static function ($a, $b) use ($currentUser) {

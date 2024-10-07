@@ -151,7 +151,26 @@ class EventRepository extends BaseRepository
 
     public function getEventsWhereHasShiftsStartAndEndTimeOverlap(Carbon $startDate, Carbon $endDate): Collection
     {
-        return Event::with(['shifts', 'event_type', 'room'])
+        return $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate)->get();
+    }
+
+    public function getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(Carbon $startDate, Carbon $endDate): Collection
+    {
+        $query = $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate);
+        $query->with(['shifts.users']);
+        $query->without([
+            'shifts.users.calendar_settings',
+            'shifts.calendarAbo',
+            'shifts.users.shiftCalendarAbo']
+        );
+
+        return $query->get();
+    }
+
+    private function getEventsWhereHasShiftsStartAndEndTimeOverlapQuery(Carbon $startDate, Carbon $endDate): Builder
+    {
+        $query = Event::query();
+        $query->with(['shifts', 'event_type', 'room'])
             ->whereHas(
                 'shifts',
                 function (Builder $builder): void {
@@ -159,8 +178,9 @@ class EventRepository extends BaseRepository
                 }
             )
             ->startAndEndTimeOverlap($startDate, $endDate)
-            ->without(['series'])
-            ->get();
+            ->without(['series']);
+
+        return $query;
     }
 
     public function findById(int $id): ?Event

@@ -10,12 +10,14 @@ class ShiftUserRepository extends BaseRepository
     public function createForShift(
         int $shiftId,
         int $userId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        string $craftAbbreviation
     ): ShiftUser {
         $shiftUser = new ShiftUser([
             'shift_id' => $shiftId,
             'user_id' => $userId,
-            'shift_qualification_id' => $shiftQualificationId
+            'shift_qualification_id' => $shiftQualificationId,
+            'craft_abbreviation' => $craftAbbreviation
         ]);
 
         $this->save($shiftUser);

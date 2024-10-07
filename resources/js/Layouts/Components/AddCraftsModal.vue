@@ -39,6 +39,17 @@
         />
     </div>
 
+    <div class="my-3">
+        <div class="relative flex items-start mb-2">
+            <div class="flex h-6 items-center">
+                <input id="universally_applicable" v-model="craft.universally_applicable" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
+            </div>
+            <div class="ml-2 text-sm leading-6">
+                <label for="universally_applicable" class="font-medium">{{ $t('Universally applicable') }}</label>
+            </div>
+        </div>
+    </div>
+
     <div class="mt-3">
         <SwitchGroup as="div" class="flex items-center gap-2">
             <SwitchLabel as="span" class="mr-3 text-sm">
@@ -152,7 +163,8 @@ export default defineComponent({
                 users: [],
                 assignable_by_all: true,
                 color: this.craftToEdit ? this.craftToEdit.color : '#ffffff',
-                notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0
+                notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0,
+                universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
             users: this.craftToEdit ? this.craftToEdit.users : []

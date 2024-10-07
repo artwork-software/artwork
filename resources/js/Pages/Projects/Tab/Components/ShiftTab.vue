@@ -149,6 +149,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="craft.color"
+                                                 :craft="craft"
                                                  class="mb-1"
                                     />
                                 </div>
@@ -168,6 +169,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="null"
+                                                 :craft="craft"
                                                  class="mb-1"
                                     />
                                 </div>
@@ -190,8 +192,6 @@
             </div>
         </div>
     </div>
-
-
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
@@ -354,14 +354,18 @@ export default defineComponent({
                     name: craft.name,
                     id: craft.id,
                     users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
+                    color: craft?.color,
+                    universally_applicable: craft.universally_applicable,
+                    abbreviation: craft.abbreviation,
                 }));
             } else {
                 return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
                     name: craft.name,
                     id: craft.id,
                     users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
+                    color: craft?.color,
+                    universally_applicable: craft.universally_applicable,
+                    abbreviation: craft.abbreviation,
                 })).filter(craft => this.$page.props.user.show_crafts?.includes(craft.id));
             }
         },

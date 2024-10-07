@@ -17,6 +17,10 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
+            <pre>
+                {{craftsToDisplay }}
+            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -283,6 +287,7 @@
                                                          :planned-hours="user.plannedWorkingHours"
                                                          :type="user.type"
                                                          :color="craft.color"
+                                                         :craft="craft"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
@@ -309,7 +314,7 @@
                                             <div v-if="!day.is_extra_row"
                                                 :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    $page.props.user.compact_mode ? 'h-8' : 'h-12',
+                                                    $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                  ]"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden"
@@ -318,7 +323,10 @@
                                                 <span v-for="shift in user.element?.shifts"
                                                       v-if="!user.vacations?.includes(day.without_format)">
                                                     <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }},
+                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }}
+                                                        <span v-if="shift.craftAbbreviation !== craft.abbreviation">
+                                                             [{{ craft.abbreviation }}]
+                                                        </span>,
                                                     </span>
                                                 </span>
                                                 <span v-else
@@ -378,6 +386,7 @@
                                                          :planned-hours="user.plannedWorkingHours"
                                                          :type="user.type"
                                                          :color="null"
+                                                         :craft="null"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
@@ -783,7 +792,9 @@ export default {
                                 id: craft.id,
                                 name: craft.name,
                                 users: users.filter(user => user.assigned_craft_ids.includes(craft.id)),
-                                color: craft?.color
+                                color: craft?.color,
+                                universally_applicable: craft.universally_applicable,
+                                abbreviation: craft.abbreviation,
                             };
                         }
                     );

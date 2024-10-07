@@ -245,9 +245,12 @@ export default defineComponent({
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
-            if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
-                this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
-                return;
+            console.log(this.droppedUser.craft_universally_applicable);
+            if(!this.droppedUser.craft_universally_applicable) {
+                if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
+                    this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
+                    return;
+                }
             }
 
             if (this.droppedUserAlreadyWorksOnShift(this.droppedUser)) {
@@ -423,7 +426,8 @@ export default defineComponent({
                     userId: droppedUser.id,
                     userType: droppedUser.type,
                     shiftQualificationId: shiftQualificationId,
-                    seriesShiftData: this.seriesShiftData
+                    seriesShiftData: this.seriesShiftData,
+                    craft_abbreviation: droppedUser.craft_abbreviation
                 }
             ).then(() => {
                 this.$emit(

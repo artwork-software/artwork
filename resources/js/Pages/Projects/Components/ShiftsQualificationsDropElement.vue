@@ -69,7 +69,6 @@ export default defineComponent({
                 this.showChooseUserSeriesShiftModal = true;
                 return;
             }
-
             this.saveUser();
         },
         setSeriesShiftData(seriesShiftData) {
@@ -78,9 +77,11 @@ export default defineComponent({
             this.saveUser();
         },
         saveUser() {
-            if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
-                this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
-                return;
+            if(!this.droppedUser.craft_universally_applicable) {
+                if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
+                    this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
+                    return;
+                }
             }
 
             if (this.droppedUserAlreadyWorksOnShift(this.droppedUser)) {
@@ -267,7 +268,8 @@ export default defineComponent({
                     userType: droppedUser.type,
                     shiftQualificationId: shiftQualificationId,
                     seriesShiftData: this.seriesShiftData,
-                    isShiftTab: true
+                    isShiftTab: true,
+                    craft_abbreviation: droppedUser.craft_abbreviation
                 },
                 {
                     preserveScroll: true

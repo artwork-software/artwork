@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Services;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
@@ -657,13 +658,13 @@ readonly class EventService
         $shifts = $events->pluck('shifts')->flatten();
 
         return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges($events))
+            ->setHistory($this->getEventShiftsHistoryChanges())
             ->setCrafts($craftService->getAll())
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
-                    $calendarPeriod,
-                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                    $events,
+                    $calendarPeriod
                 )
             )
             ->setRooms($filteredRooms)
@@ -727,24 +728,22 @@ readonly class EventService
     /**
      * @return array<int, mixed>
      */
-    public function getEventShiftsHistoryChanges(Collection $events): array
+    public function getEventShiftsHistoryChanges(): array
     {
-        return $events->flatMap(function ($event) {
-            return $event->shifts->flatMap(function ($shift) {
-                // Sort each shift's historyChanges by created_at in descending order
-                $historyArray = [];
-                foreach ($shift->historyChanges()->sortByDesc('created_at') as $history) {
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
-                }
+        $q = Change::query();
+        $q->where('model_type', Shift::class);
+        $q->orderBy('created_at', 'desc');
+        $historyArray = [];
+        $q->get()->each(function (Change $history) use (&$historyArray) {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        });
 
-                return $historyArray;
-            });
-        })->all();
+        return $historyArray;
     }
 
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh

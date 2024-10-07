@@ -157,7 +157,12 @@ class EventRepository extends BaseRepository
     public function getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(Carbon $startDate, Carbon $endDate): Collection
     {
         $query = $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate);
-        $query->with(['shifts.users']);
+        $query->with(['shifts.users',
+            'project',
+            'project.managerUsers',
+            'project.state',
+            'shifts.shiftsQualifications'
+        ]);
         $query->without([
             'shifts.users.calendar_settings',
             'shifts.calendarAbo',

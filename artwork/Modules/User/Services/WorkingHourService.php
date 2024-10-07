@@ -32,19 +32,11 @@ class WorkingHourService
 
         /** @var User $user */
         foreach ($this->userRepository->getWorkers() as $user) {
-            $a = microtime(true);
             /** @var JsonResource $desiredResourceClass */
             $desiredUserResource = $desiredResourceClass::make($user);
-            $b = microtime(true) - $a;
-            $c = 1;
-            $a = microtime(true);
             if ($desiredUserResource instanceof UserShiftPlanResource) {
                 $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
             }
-            $b = microtime(true) - $a;
-            $c = 1;
-            $a = microtime(true);
-
             if ($shiftCollection) {
                 $shifts = $shiftCollection->filter(function (Shift $shift) use ($user) {
                     return $shift->users->contains($user);
@@ -60,9 +52,6 @@ class WorkingHourService
                 $plannedWorkingHours = $this->plannedWorkingHoursForUser($user, $startDate, $endDate);
                 $weeklyWorkingHours = $this->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
             }
-            $b = microtime(true) - $a;
-            $c = 1;
-            $a = microtime(true);
             $userData = [
                 'user' => $desiredUserResource->resolve(),
                 'plannedWorkingHours' => $plannedWorkingHours,
@@ -70,13 +59,8 @@ class WorkingHourService
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
                 'is_freelancer' => $user->getAttribute('is_freelancer'),
             ];
-            $b = microtime(true) - $a;
-            $c = 1;
-            $a = microtime(true);
 
             $userData['weeklyWorkingHours'] = $weeklyWorkingHours;
-            $b = microtime(true) - $a;
-            $c = 1;
             if ($addVacationsAndAvailabilities) {
                 $userData['vacations'] = $user->getVacationDays();
                 $userData['availabilities'] = $this->userRepository

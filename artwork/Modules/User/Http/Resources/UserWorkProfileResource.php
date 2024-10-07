@@ -51,7 +51,8 @@ class UserWorkProfileResource extends JsonResource
             'assignableCrafts' => $this->crafts->filter(
                 fn($craft) => !$assignedCrafts->pluck('id')->contains($craft->getAttribute('id'))
             )->toArray(),
-            'shiftQualifications' => $this->getAttribute('shiftQualifications')
+            'shiftQualifications' => $this->getAttribute('shiftQualifications'),
+            'is_freelancer' => $this->getAttribute('is_freelancer'),
         ];
     }
 }

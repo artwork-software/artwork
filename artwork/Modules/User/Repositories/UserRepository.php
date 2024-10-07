@@ -70,7 +70,10 @@ class UserRepository extends BaseRepository
             'dayServices',
             'shifts',
             'shifts.event',
-            'shifts.event.room'
+            'shifts.event.room',
+            'departments',
+            'shifts.shiftsQualifications',
+            'shiftQualifications',
         )->get();
     }
 

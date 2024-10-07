@@ -24,6 +24,7 @@ use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSetting
 use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
@@ -44,6 +45,7 @@ class UserService
         private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
         private readonly CarbonService $carbonService,
         private readonly ProjectTabService $projectTabService,
+        private readonly WorkingHourService $workingHourService,
     ) {
     }
 
@@ -131,72 +133,27 @@ class UserService
 
     /**
      * @return array<string, mixed>
+     * @deprecated use the WorkingHourService
      */
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        bool $addVacationsAndAvailabilities = false
+        bool $addVacationsAndAvailabilities = false,
+        User $currentUser = null
     ): array {
-        $usersWithPlannedWorkingHours = [];
-
-        /** @var User $user */
-        foreach ($this->userRepository->getWorkers() as $user) {
-            /** @var JsonResource $desiredResourceClass */
-            $desiredUserResource = $desiredResourceClass::make($user);
-
-            if ($desiredUserResource instanceof UserShiftPlanResource) {
-                $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
-            }
-
-            $userData = [
-                'user' => $desiredUserResource->resolve(),
-                'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
-                'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
-                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
-            ];
-
-            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
-
-            if ($addVacationsAndAvailabilities) {
-                $userData['vacations'] = $user->getVacationDays();
-                $userData['availabilities'] = $this->userRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $user,
-                        $startDate,
-                        $endDate
-                    );
-            }
-
-            $usersWithPlannedWorkingHours[] = $userData;
-        }
-
-        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
-        return $usersWithPlannedWorkingHours;
+        trigger_deprecation('artwork', '0.x', 'This method is deprecated, use the WorkingHourService instead.');
+        throw new \Exception('This method is deprecated, use the WorkingHourService instead.');
     }
+
 
     /**
      * @return array<string, float|int>
+     * @deprecated use the WorkingHourService
      */
     public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
     {
-        // first create a carbon period for the given date range
-        $period = Carbon::parse($startDate)->toPeriod($endDate);
-
-        $weeklyWorkingHours = [];
-
-        // iterate over each week and calculate the working hours
-        foreach ($period as $week) {
-            $startDate = $week->copy()->startOfWeek();
-            $endDate = $week->copy()->endOfWeek();
-            $workingHours = $user->plannedWorkingHours(
-                $startDate,
-                $endDate
-            ) - $user->weekly_working_hours;
-            $weeklyWorkingHours[$week->format('W')] = $workingHours;
-        }
-
-        return $weeklyWorkingHours;
+        return $this->workingHourService->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
     }
 
     public function getAuthUserCrafts(): Collection

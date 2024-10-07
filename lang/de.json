@@ -2030,5 +2030,8 @@
     "Close note": "Hinweis schließen",
     "Cancel project selection": "Projektauswahl aufheben",
     "Cancel project group selection": "Projektgruppenauswahl aufheben",
-    "Universally applicable": "Universell einsetzbar"
+    "Universally applicable": "Universell einsetzbar",
+    "Show freelancer": "Freelancer einblenden",
+    "Show as freelancer in the tool": "Als Freelancer*in im Tool anzeigen",
+    "Freelancer Settings": "Freelancer-Einstellungen"
 }

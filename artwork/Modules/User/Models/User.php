@@ -29,6 +29,7 @@ use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Artwork\Modules\UserCalendarAbo\Models\UserCalendarAbo;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Artwork\Modules\UserCalendarSettings\Models\UserCalendarSettings;
@@ -176,7 +177,8 @@ class User extends Model implements
         'notification_enums_last_sent_dates',
         'bulk_sort_id',
         'show_notification_indicator',
-        'shift_plan_user_sort_by'
+        'shift_plan_user_sort_by',
+        'is_freelancer'
     ];
 
     protected $casts = [
@@ -192,7 +194,8 @@ class User extends Model implements
         'show_crafts' => 'array',
         'at_a_glance' => 'boolean',
         'notification_enums_last_sent_dates' => 'array',
-        'show_notification_indicator' => 'boolean'
+        'show_notification_indicator' => 'boolean',
+        'is_freelancer' => 'boolean',
     ];
 
     protected $hidden = [
@@ -465,43 +468,11 @@ class User extends Model implements
         ];
     }
 
+    /** @deprecated user WorkhourService */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        $shiftsInDateRange = array_filter(
-            $this->getAttribute('shifts')->all(),
-            function (Shift $shift) use ($startDate, $endDate): bool {
-                return
-                    //start date between
-                    (
-                        $shift->getAttribute('start_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate
-                    ) ||
-                    //end date between
-                    (
-                        $shift->getAttribute('end_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate
-                    //overlapping
-                    ) || (
-                        $shift->getAttribute('start_date') < $startDate &&
-                        $shift->getAttribute('end_date') > $endDate
-                    );
-            }
-        );
-        $plannedWorkingHours = 0;
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
-            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
-            $breakMinutes = $shift->break_minutes;
-
-            $shiftStart = Carbon::parse($shiftStart);
-            $shiftEnd = Carbon::parse($shiftEnd);
-
-
-            $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
-            $plannedWorkingHours += $shiftDuration;
-        }
-        return $plannedWorkingHours;
+        trigger_deprecation('artwork', '0.x', 'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.');
+        return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate);
     }
 
     public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder

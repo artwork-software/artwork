@@ -28,8 +28,10 @@ class UpdateContainerCommand extends Command
         /** @var Migrator $migrator */
         $migrator = app('migrator');
         $freshConnection = $migrator->resolveConnection('mysql');
-        tap($freshConnection->unprepared(sprintf('CREATE DATABASE IF NOT EXISTS `%s` ', env('DB_DATABASE'))), function () {
-            DB::purge('mysql');
+        tap($freshConnection->unprepared(
+            sprintf('CREATE DATABASE IF NOT EXISTS `%s` ', env('DB_DATABASE'))
+        ), function (): void {
+                DB::purge('mysql');
         });
         config(['database.connections.mysql.database' => env('DB_DATABASE')]);
 
@@ -37,16 +39,17 @@ class UpdateContainerCommand extends Command
         Artisan::call('migrate --force');
 
         $this->line('Adding meili-indexes');
-        foreach([
+        foreach (
+            [
             'departments' => Department::class,
             'moneysources' => MoneySource::class,
             'shifpresets' => ShiftPreset::class,
             'projects' => Project::class,
             'users' => User::class,
-                ] as $key => $model) {
+                ] as $key => $model
+        ) {
             Artisan::call(sprintf('scout:index %s', $key));
             Artisan::call(sprintf('scout:import %s', str_replace('\\', '\\\\', $model)));
-
         }
         $this->line('Building frontend');
         exec('npm run build');

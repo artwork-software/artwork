@@ -240,10 +240,18 @@
                                 </Switch>
                                 <BaseFilter :whiteIcon="true" onlyIcon="true">
                                     <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
+                                        <div class="relative flex items-start mb-2">
+                                            <div class="flex h-6 items-center">
+                                                <input id="showFreelancers" v-model="showFreelancers" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
+                                            </div>
+                                            <div class="ml-2 text-sm leading-6">
+                                                <label for="showFreelancers" class="font-medium text-white">{{ $t('Show freelancer') }}</label>
+                                            </div>
+                                        </div>
                                         <CraftFilter :crafts="crafts" is_tiny/>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-80">
+                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-80" right>
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -639,7 +647,8 @@ export default {
             currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
             currentDaysInView: new Set(),
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
-            screenHeight: screen.height
+            screenHeight: screen.height,
+            showFreelancers: true,
         }
     },
     mounted() {
@@ -789,7 +798,7 @@ export default {
                     );
 
                 crafts.forEach((craft) => {
-                    crafts.users = this.sortCraftUsers(craft.users);
+                    crafts.users = craft.users;
                 });
 
             if (this.$page.props.user.show_crafts?.length === 0 || this.$page.props.user.show_crafts === null) {
@@ -799,13 +808,9 @@ export default {
             }
         },
         usersWithNoCrafts() {
-            let usersWithNoCrafts = this.getDropUsers().filter(user =>
+            return this.getDropUsers().filter(user =>
                 !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
             );
-
-            usersWithNoCrafts = this.sortCraftUsers(usersWithNoCrafts);
-
-            return usersWithNoCrafts;
         },
     },
     methods: {
@@ -889,6 +894,9 @@ export default {
         getDropUsers() {
             const users = [];
             this.usersForShifts.forEach((user) => {
+                if(!this.showFreelancers && user.user.is_freelancer) {
+                    return;
+                }
                 users.push({
                     element: user.user,
                     type: 0,
@@ -898,20 +906,23 @@ export default {
                     assigned_craft_ids: user.user.assigned_craft_ids,
                     availabilities: user.availabilities,
                     weeklyWorkingHours: user.weeklyWorkingHours,
-                    dayServices: user.dayServices
+                    dayServices: user.dayServices,
                 });
             })
-            this.freelancersForShifts.forEach((freelancer) => {
-                users.push({
-                    element: freelancer.freelancer,
-                    type: 1,
-                    plannedWorkingHours: freelancer.plannedWorkingHours,
-                    vacations: freelancer.vacations,
-                    assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                    availabilities: freelancer.availabilities,
-                    dayServices: freelancer.dayServices
-                });
-            })
+            if (this.showFreelancers) {
+                this.freelancersForShifts.forEach((freelancer) => {
+                    users.push({
+                        element: freelancer.freelancer,
+                        type: 1,
+                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                        vacations: freelancer.vacations,
+                        assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
+                        availabilities: freelancer.availabilities,
+                        dayServices: freelancer.dayServices
+                    });
+                })
+            }
+
             this.serviceProvidersForShifts.forEach((service_provider) => {
                 users.push({
                     element: service_provider.service_provider,
@@ -1413,19 +1424,25 @@ export default {
         },
         applySort(shiftPlanWorkerSortEnumName) {
             this.$page.props.user.shift_plan_user_sort_by = shiftPlanWorkerSortEnumName;
-            axios.patch(
+            router.patch(
                 route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
                 {
                     sortBy: shiftPlanWorkerSortEnumName
+                }, {
+                    preserveState: false,
+                    preserveScroll: true,
                 }
             );
         },
         resetSort() {
             this.$page.props.user.shift_plan_user_sort_by = null;
-            axios.patch(
+            router.patch(
                 route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
                 {
                     sortBy: null
+                }, {
+                    preserveState: false,
+                    preserveScroll: true,
                 }
             );
         },

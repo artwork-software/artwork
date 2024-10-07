@@ -545,7 +545,8 @@ class UserController extends Controller
 
         $user->update([
             'work_name' => $request->get('workName'),
-            'work_description' => $request->get('workDescription')
+            'work_description' => $request->get('workDescription'),
+            'is_freelancer' => $request->get('is_freelancer')
         ]);
 
         return Redirect::back();
@@ -780,7 +781,7 @@ class UserController extends Controller
     public function updateShiftPlanUserSortBy(
         User $user,
         Request $request
-    ): bool {
+    ): void {
         $request->validate(
             [
                 'sortBy' => [
@@ -790,7 +791,7 @@ class UserController extends Controller
             ]
         );
 
-        return $user->updateOrFail([
+        $user->updateOrFail([
             'shift_plan_user_sort_by' => $request->enum(
                 'sortBy',
                 ShiftPlanWorkerSortEnum::class

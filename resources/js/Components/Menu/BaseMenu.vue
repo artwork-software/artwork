@@ -1,12 +1,12 @@
 <template>
-    <Menu as="div" class="relative inline-block">
-        <div class="flex items-center justify-center w-full font-semibold text-artwork-buttons-context">
-            <MenuButton>
+    <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
+        <div class="flex items-center justify-center w-full font-semibold text-artwork-buttons-context" ref="menuButtonRef">
+            <MenuButton @click="toggleMenu">
                 <IconDotsVertical v-if="!showSortIcon"
-                    stroke-width="1.5"
-                    class="flex-shrink-0"
-                    aria-hidden="true"
-                    :class="[dotsColor, dotsSize]"
+                                  stroke-width="1.5"
+                                  class="flex-shrink-0"
+                                  aria-hidden="true"
+                                  :class="[dotsColor, dotsSize]"
                 />
                 <ToolTipComponent
                     v-else
@@ -19,8 +19,15 @@
             </MenuButton>
         </div>
 
-        <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-            <MenuItems class="absolute z-10 rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" :class="[menuWidth, right ? 'origin-top-left left-0' : 'origin-top-right right-0']">
+        <transition enter-active-class="transition ease-out duration-100"
+                    enter-from-class="transform opacity-0 scale-95"
+                    enter-to-class="transform opacity-100 scale-100"
+                    leave-active-class="transition ease-in duration-75"
+                    leave-from-class="transform opacity-100 scale-100"
+                    leave-to-class="transform opacity-0 scale-95">
+            <MenuItems v-if="menuVisible"
+                       class="z-50 rounded-lg bg-artwork-navigation-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                       :style="menuStyles" :class="[menuWidth]">
                 <div>
                     <slot />
                 </div>
@@ -30,8 +37,8 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue';
-import {Menu, MenuButton, MenuItems} from '@headlessui/vue';
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
+import { Menu, MenuButton, MenuItems } from '@headlessui/vue';
 import IconLib from '@/Mixins/IconLib.vue';
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
@@ -73,7 +80,77 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: false
-        }
+        },
+    },
+    setup(props) {
+        const menuButtonRef = ref(null);
+        const menuVisible = ref(false);
+        const menuStyles = ref({});
+
+        const toggleMenu = () => {
+            if (menuVisible.value) {
+                hideMenu();
+            } else {
+                updateMenuPosition();
+            }
+        };
+
+        const updateMenuPosition = () => {
+            const buttonRect = menuButtonRef.value.getBoundingClientRect();
+            const menuWidth = 224;
+            const windowWidth = window.innerWidth;
+
+            let leftPosition;
+
+            if (!props.right) {
+                leftPosition = buttonRect.right - menuWidth;
+                if (leftPosition < 0) {
+                    leftPosition = 0;
+                }
+            } else {
+                leftPosition = buttonRect.left;
+                if (leftPosition + menuWidth > windowWidth) {
+                    leftPosition = windowWidth - menuWidth;
+                }
+            }
+
+            menuStyles.value = {
+                position: 'fixed',
+                top: `${buttonRect.bottom}px`,
+                left: `${leftPosition}px`,
+                zIndex: 50,
+            };
+
+            menuVisible.value = true;
+        };
+
+        const hideMenu = () => {
+            menuVisible.value = false;
+        };
+
+        const handleScrollOrResize = () => {
+            if (menuVisible.value) {
+                updateMenuPosition();
+            }
+        };
+
+        onMounted(() => {
+            window.addEventListener('scroll', handleScrollOrResize);
+            window.addEventListener('resize', handleScrollOrResize);
+        });
+
+        onBeforeUnmount(() => {
+            window.removeEventListener('scroll', handleScrollOrResize);
+            window.removeEventListener('resize', handleScrollOrResize);
+        });
+
+        return {
+            menuButtonRef,
+            menuVisible,
+            menuStyles,
+            toggleMenu,
+            hideMenu,
+        };
     },
 });
 </script>

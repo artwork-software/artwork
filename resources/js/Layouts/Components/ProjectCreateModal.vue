@@ -220,7 +220,8 @@
                                 />
                             </div>
 
-                            <div class="px-6 py-2">
+                            <div class="px-6 py-2" v-if="!project?.is_group || !project">
+
                                 <div class="flex items-center ">
                                     <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
                                            class="input-checklist"/>
@@ -230,12 +231,17 @@
                                         {{ $t('Belongs to project group') }}
                                     </label>
                                 </div>
-                                <div v-if="this.addToProjectGroup" class="mt-3">
-                                    <ProjectGroupListbox
-                                        :selected-project-group="createProjectForm.selectedGroup"
-                                        :project-groups="projectGroups"
-                                        @update:selected-project-group="createProjectForm.selectedGroup = $event"
-                                    />
+                                <div v-if="this.addToProjectGroup" class="pt-5">
+                                    <ProjectSearch @project-selected="createProjectForm.selectedGroup = $event" only-project-groups label="Search project group" v-if="!createProjectForm.selectedGroup"/>
+
+                                    <div v-else class="flex items-center gap-x-2 justify-between">
+                                        <div>
+                                            <h3 class="font-semibold text-base">{{ createProjectForm.selectedGroup.name }}</h3>
+                                        </div>
+                                        <div class="text-blue-500 text-xs underline cursor-pointer" @click="createProjectForm.selectedGroup = null">
+                                            Projektgruppenauswahl aufheben
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div v-if="createSettings.budget_deadline" class="px-6 py-2">

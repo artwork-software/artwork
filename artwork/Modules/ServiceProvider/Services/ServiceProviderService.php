@@ -14,6 +14,7 @@ use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShowResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Repositories\ServiceProviderRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -33,7 +34,8 @@ readonly class ServiceProviderService
     public function getServiceProvidersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
-        string $desiredResourceClass
+        string $desiredResourceClass,
+        User $currentUser = null
     ): array {
         $serviceProvidersWithPlannedWorkingHours = [];
 
@@ -50,6 +52,18 @@ readonly class ServiceProviderService
                 'plannedWorkingHours' => $serviceProvider->plannedWorkingHours($startDate, $endDate),
                 'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
             ];
+        }
+
+        if ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+            usort($serviceProvidersWithPlannedWorkingHours, function ($a, $b) use ($currentUser) {
+                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+                    'ALPHABETICALLY_ASCENDING_FIRST_NAME', 'ALPHABETICALLY_ASCENDING_LAST_NAME' =>
+                    strcmp($a['service_provider']['provider_name'], $b['service_provider']['provider_name']),
+                    'ALPHABETICALLY_DESCENDING_FIRST_NAME', 'ALPHABETICALLY_DESCENDING_LAST_NAME' =>
+                    strcmp($b['service_provider']['provider_name'], $a['service_provider']['provider_name']),
+                    default => 0,
+                };
+            });
         }
 
         return $serviceProvidersWithPlannedWorkingHours;

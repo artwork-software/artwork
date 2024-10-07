@@ -1,114 +1,128 @@
 <template>
-    <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
-            <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-            </TransitionChild>
-
-            <div class="fixed inset-0 z-50">
-                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                    <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 rounded-lg">
-                            <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
-                                    <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
-                                </button>
-                            </div>
-                            <div class="relative z-40 pl-4">
-                                <ModalHeader
-                                    :title="$t('Export PDF')"
-                                    :description="$t('Export your calendar as a PDF.')"
-                                />
-                                <div class="pt-4">
-                                    <TextInputComponent
-                                        id="title"
-                                        v-model="pdf.title"
-                                        :label="$t('Heading')"
-                                    />
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mb-4">
-                                    <div>
-                                        <DateInputComponent
-                                            v-model="pdf.start"
-                                            :label="$t('Start-Time')"
-                                            id="start"
-                                        />
-                                    </div>
-                                    <div>
-                                        <DateInputComponent
-                                            v-model="pdf.end"
-                                            :label="$t('Start-Time')"
-                                            id="end"
-                                        />
-                                    </div>
-                                </div>
-                                <!-- defaultPaperSize -->
-                                <div>
-                                    <Listbox as="div" v-model="selectedPaperSize">
-                                        <ListboxLabel class="xsLight">{{$t('Paper size')}}</ListboxLabel>
-                                        <div class="relative mt-2">
-                                            <ListboxButton class="menu-button">
-                                                <div class="block truncate">{{ selectedPaperSize.name }}</div>
-                                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+    <BaseModal full-modal @closed="closeModal">
+        <div class="sm:p-6 px-4 pb-4">
+            <ModalHeader
+                :title="$t('Export PDF')"
+                :description="$t('Export your calendar as a PDF.')"
+            />
+            <div class="pt-4">
+                <TextInputComponent
+                    id="title"
+                    v-model="pdf.title"
+                    :label="$t('Heading')"
+                />
+            </div>
+        </div>
+        <div class="px-6 py-3" v-if="showModalInformation">
+            <div class="bg-blue-50 text-blue-500 rounded-lg border border-blue-200">
+                <div class="flex items-start p-3 gap-x-2">
+                    <IconExclamationCircle class="w-6 h-6" stroke-width="2"/>
+                    <p class="text-sm w-fit">
+                        {{ $t('If a project is specified, the project period is used for the export. If no project is specified, you can either specify the start and end date yourself or your current calendar start and end date will be used automatically.') }}
+                    </p>
+                </div>
+                <div class="text-end px-3 py-2 text-xs underline cursor-pointer" @click="showModalInformation = false">
+                    {{ $t('Close note') }}
+                </div>
+            </div>
+        </div>
+        <div class="bg-backgroundGray px-6 py-4 pb-4">
+            <ProjectSearch @project-selected="addProjectToPdf" no-project-groups v-if="!pdfSelectedProject" get-first-last-event />
+            <div v-else>
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-semibold">{{ pdfSelectedProject.name }}</h3>
+                        <div class="text-sm" v-if="pdfSelectedProject?.first_event && pdfSelectedProject?.last_event">
+                            {{ $t('Project period') }}:
+                            <span class="text-blue-500" v-if="pdfSelectedProject.first_event.start_time">{{ pdfSelectedProject.first_event.start_time }}</span>
+                                -
+                            <span class="text-blue-500" v-if="pdfSelectedProject.last_event.end_time">{{ pdfSelectedProject.last_event.end_time }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-blue-500 underline text-xs cursor-pointer" @click="pdfSelectedProject = null">
+                            {{ $t('Cancel project selection') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mb-4 px-6 pb-4" v-if="!pdfSelectedProject">
+            <div>
+                <DateInputComponent
+                    v-model="pdf.start"
+                    :label="$t('Start-Time')"
+                    id="start"
+                />
+            </div>
+            <div>
+                <DateInputComponent
+                    v-model="pdf.end"
+                    :label="$t('Start-Time')"
+                    id="end"
+                />
+            </div>
+        </div>
+        <!-- defaultPaperSize -->
+        <div class="px-6 pb-4 mt-5">
+            <Listbox as="div" v-model="selectedPaperSize">
+                <ListboxLabel class="xsLight">{{$t('Paper size')}}</ListboxLabel>
+                <div class="relative mt-2">
+                    <ListboxButton class="menu-button">
+                        <div class="block truncate">{{ selectedPaperSize.name }}</div>
+                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 text-gray-400">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                                     </svg>
                                                 </span>
-                                            </ListboxButton>
+                    </ListboxButton>
 
-                                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                    <ListboxOption as="template" v-for="paperSize in paperSizes" :key="paperSize.id" :value="paperSize" v-slot="{ active, selected }">
-                                                        <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
-                                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ paperSize.name }}</span>
+                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                        <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                            <ListboxOption as="template" v-for="paperSize in paperSizes" :key="paperSize.id" :value="paperSize" v-slot="{ active, selected }">
+                                <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ paperSize.name }}</span>
 
-                                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                                                 </svg>
                                                             </span>
-                                                        </li>
-                                                    </ListboxOption>
-                                                </ListboxOptions>
-                                            </transition>
-                                        </div>
-                                    </Listbox>
-                                </div>
-                                <!-- defaultPaperOrientation -->
-                                <div class="mt-4 mb-4">
-                                    <label class="xsLight">{{$t('Paper orientation')}}</label>
-                                    <fieldset class="">
-                                        <legend class="sr-only">Notification method</legend>
-                                        <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
-                                            <div v-for="paperOrientation in paperOrientations" :key="paperOrientation.id" class="flex items-center">
-                                                <input :id="paperOrientation.id" name="notification-method" type="radio" @change="changePaperOrientation(paperOrientation)" :checked="paperOrientation.id === checkedOrientation" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" :disabled="orientationDisabled"/>
-                                                <label :for="paperOrientation.id" class="ml-2 block text-sm font-medium leading-6 text-gray-900">{{ paperOrientation.title }}</label>
-                                            </div>
-
-                                        </div>
-                                        <span class="text-red-500 text-xs" v-if="orientationDisabled"> {{$t('The A6 format is only possible in landscape format.')}}  </span>
-                                    </fieldset>
-                                </div>
-
-                                <div class="pt-2 pb-4">
-                                    <NumberInputComponent
-                                        id="dpi"
-                                        v-model="pdf.dpi"
-                                        :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
-                                    />
-                                </div>
-
-                              <div class="flex justify-center">
-                                  <FormButton @click="createPdf()" :text="$t('Export PDF')"/>
-                              </div>
-                            </div>
-                        </DialogPanel>
-                    </TransitionChild>
+                                </li>
+                            </ListboxOption>
+                        </ListboxOptions>
+                    </transition>
                 </div>
-            </div>
-        </Dialog>
-    </TransitionRoot>
+            </Listbox>
+        </div>
+        <!-- defaultPaperOrientation -->
+        <div class="mt-4 mb-4 px-6 pb-4">
+            <label class="xsLight">{{$t('Paper orientation')}}</label>
+            <fieldset class="">
+                <legend class="sr-only">Notification method</legend>
+                <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
+                    <div v-for="paperOrientation in paperOrientations" :key="paperOrientation.id" class="flex items-center">
+                        <input :id="paperOrientation.id" name="notification-method" type="radio" @change="changePaperOrientation(paperOrientation)" :checked="paperOrientation.id === checkedOrientation" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" :disabled="orientationDisabled"/>
+                        <label :for="paperOrientation.id" class="ml-2 block text-sm font-medium leading-6 text-gray-900">{{ paperOrientation.title }}</label>
+                    </div>
+
+                </div>
+                <span class="text-red-500 text-xs" v-if="orientationDisabled"> {{$t('The A6 format is only possible in landscape format.')}}  </span>
+            </fieldset>
+        </div>
+
+        <div class="pt-2 px-6 pb-4">
+            <NumberInputComponent
+                id="dpi"
+                v-model="pdf.dpi"
+                :label="$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')"
+            />
+        </div>
+
+        <div class="flex justify-center  sm:p-6 px-4 pb-4">
+            <FormButton @click="createPdf()" :text="$t('Export PDF')"/>
+        </div>
+    </BaseModal>
 </template>
 
 <script>
@@ -121,10 +135,15 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import BaseModal from "@/Components/Modals/BaseModal.vue";
+import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 export default {
     name: "PdfConfigModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
+        ProjectSearch,
+        BaseModal,
         NumberInputComponent,
         DateInputComponent,
         ModalHeader,
@@ -139,6 +158,7 @@ export default {
     data(){
         return {
             open: true,
+            showModalInformation: true,
             paperSizes: [
                 { id: 'a4', name: 'A4 (Standard)' },
                 { id: 'a3', name: 'A3' },
@@ -158,6 +178,7 @@ export default {
                 project: null,
                 dpi: 72,
             }),
+            pdfSelectedProject: null,
             selectedPaperSize: { id: 'a4', name: 'A4 (Standard)' },
             selectedPaperOrientation: { id: 'portrait', title: this.$t('Portrait format') },
             checkedOrientation: 'portrait',
@@ -178,6 +199,9 @@ export default {
                 this.pdf.project = this.project.id;
             }
 
+            if (this.pdfSelectedProject) {
+                this.pdf.project = this.pdfSelectedProject.id;
+            }
 
             this.pdf.post(route('calendar.export.pdf'), {
                 preserveScroll: true,
@@ -187,6 +211,9 @@ export default {
         changePaperOrientation(orientation){
             this.selectedPaperOrientation = orientation
         },
+        addProjectToPdf(project){
+            this.pdfSelectedProject = project;
+        }
     },
     watch:{
         selectedPaperSize(){

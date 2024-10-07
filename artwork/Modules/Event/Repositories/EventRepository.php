@@ -176,12 +176,12 @@ class EventRepository extends BaseRepository
     {
         $query = Event::query();
         $query->with(['shifts', 'event_type', 'room'])
-            ->whereHas(
-                'shifts',
-                function (Builder $builder): void {
-                    $builder->whereNotNull('shifts.id')->without('crafts');
-                }
-            )
+//            ->whereHas(
+//                'shifts',
+//                function (Builder $builder): void {
+//                    $builder->whereNotNull('shifts.id')->without('crafts');
+//                }
+//            )
             ->startAndEndTimeOverlap($startDate, $endDate)
             ->without(['series']);
 

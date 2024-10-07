@@ -190,7 +190,7 @@ export default defineComponent({
             return ids;
         },
         checkIfUserIsInCraft() {
-            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id);
+            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id) || this.userForMultiEdit.craft_are_universally_applicable;
         },
     },
     watch: {

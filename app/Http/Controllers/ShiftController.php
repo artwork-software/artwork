@@ -667,7 +667,6 @@ class ShiftController extends Controller
         ChangeService $changeService
     ): bool {
         $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
-
         if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
             return false;
         }
@@ -718,6 +717,7 @@ class ShiftController extends Controller
                     $shift,
                     $request->get('userTypeId'),
                     $shiftToAssign['shiftQualificationId'],
+                    $request->string('craft_abbreviation'),
                     $shiftCountService,
                     $changeService
                 );
@@ -729,6 +729,7 @@ class ShiftController extends Controller
                 $shift,
                 $request->get('userTypeId'),
                 $shiftToAssign['shiftQualificationId'],
+                $request->string('craft_abbreviation'),
                 $notificationService,
                 $shiftCountService,
                 $vacationConflictService,

@@ -17,10 +17,6 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
-
-            <pre>
-                {{craftsToDisplay }}
-            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -307,6 +303,7 @@
                                                                @addUserToMultiEdit="addUserToMultiEdit"
                                                                :color="craft.color"
                                                                :craft-id="craft.id"
+                                                               :craft="craft"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -332,8 +329,8 @@
                                                       v-if="!user.vacations?.includes(day.without_format)">
                                                     <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                         {{ shift.start }} - {{ shift.end }} {{ shift.roomName }}
-                                                        <span v-if="shift.craftAbbreviation !== craft.abbreviation">
-                                                             [{{ craft.abbreviation }}]
+                                                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser">
+                                                             [{{ shift.craftAbbreviationUser }}]
                                                         </span>,
                                                     </span>
                                                 </span>
@@ -406,6 +403,7 @@
                                                                @addUserToMultiEdit="addUserToMultiEdit"
                                                                :color="null"
                                                                :craft-id="0"
+                                                               :craft="null"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -427,7 +425,10 @@
                                             <span v-for="shift in user.element?.shifts"
                                                   v-if="!user.vacations?.includes(day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }}
+                                                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser">
+                                                             [{{ shift.craftAbbreviationUser }}]
+                                                     </span>,
                                                 </span>
                                             </span>
                                                 <span v-else
@@ -716,7 +717,9 @@ export default {
                                 profile_photo_url: workerData.user.profile_photo_url,
                                 assigned_craft_ids: workerData.user.assigned_craft_ids,
                                 shift_ids: workerData.user.shift_ids,
-                                shift_qualifications: workerData.user.shift_qualifications
+                                shift_qualifications: workerData.user.shift_qualifications,
+                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
+                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
                             }
                         );
                     }
@@ -738,7 +741,9 @@ export default {
                                 profile_photo_url: workerData.freelancer.profile_photo_url,
                                 assigned_craft_ids: workerData.freelancer.assigned_craft_ids,
                                 shift_ids: workerData.freelancer.shift_ids,
-                                shift_qualifications: workerData.freelancer.shift_qualifications
+                                shift_qualifications: workerData.freelancer.shift_qualifications,
+                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
+                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
                             }
                         );
                     }
@@ -760,7 +765,9 @@ export default {
                                 profile_photo_url: workerData.service_provider.profile_photo_url,
                                 assigned_craft_ids: workerData.service_provider.assigned_craft_ids,
                                 shift_ids: workerData.service_provider.shift_ids,
-                                shift_qualifications: workerData.service_provider.shift_qualifications
+                                shift_qualifications: workerData.service_provider.shift_qualifications,
+                                craft_are_universally_applicable: this.userForMultiEdit?.universally_applicable ?? false,
+                                craft_abbreviation: this.userForMultiEdit.craft_abbreviation
                             }
                         );
                     }
@@ -1355,9 +1362,12 @@ export default {
                 });
             });
 
+            console.log(this.userForMultiEdit);
+
             axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
                 userTypeId: this.userForMultiEdit.id,
+                craft_abbreviation: this.userForMultiEdit.craft_abbreviation,
                 shiftsToHandle: this.shiftsToHandleOnMultiEdit
             }).then(() => {
                 handleReload(

@@ -245,7 +245,7 @@ class User extends Model implements
     {
         return $this->belongsToMany(Shift::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot('id', 'shift_qualification_id');
+            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
     }
 
     public function getFullNameAttribute(): string

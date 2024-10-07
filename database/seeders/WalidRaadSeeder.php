@@ -276,6 +276,36 @@ class WalidRaadSeeder extends Seeder
             ->first()
             ->id;
 
+        $project->comments()->create([
+            'text' => 'Artwork ist toll!',
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
+        ]);
+
+        $project->comments()->create([
+            'text' => 'Ich weiß, ich habe schon eine Benachrichtigung erhalten ;)',
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
+        ]);
+
+        $project->comments()->create([
+            'text' => 'ich habe dich in die Marketing-Checkliste aufgenommen ;)',
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
+        ]);
+
+        $project->comments()->create([
+            'text' => 'Ich freue mich :)',
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
+        ]);
+
+        $project->comments()->create([
+            'text' => 'Hi, das Projekt wird toll',
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
+        ]);
+
 
         EventType::create([
             'name' => 'Aufbau',
@@ -301,13 +331,13 @@ class WalidRaadSeeder extends Seeder
             'occupancy_option' => false,
             'audience' => false,
             'is_loud' => false,
-            'event_type_id' => 1,
+            'event_type_id' => 3,
             'room_id' => 1,
             'user_id' => 1,
             'is_series' => true,
             'series_id' => 1,
             'accepted' => false,
-            'option_string' => '',
+            'option_string' => null,
             'allDay' => true,
             'earliest_start_datetime' => Carbon::now()->subDays(10)->startOfDay(),
             'latest_end_datetime' => Carbon::now()->subDays(10)->endOfDay()

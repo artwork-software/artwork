@@ -137,7 +137,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-
+    //@todo refactor this too
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

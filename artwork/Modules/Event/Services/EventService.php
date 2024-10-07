@@ -654,6 +654,8 @@ readonly class EventService
             $userService->getAuthUser()->shift_calendar_filter
         );
 
+        $shifts = $events->pluck('shifts')->flatten()->all();
+
         return ShiftPlanDto::newInstance()
             ->setHistory($this->getEventShiftsHistoryChanges($events)) //7sec
             ->setCrafts($craftService->getAll())
@@ -679,14 +681,15 @@ readonly class EventService
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
             ->setUsersForShifts(
-                 $this->workingHourService->getUsersWithPlannedWorkingHours(
+                $this->workingHourService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true,
-                    $user
+                    false,
+                    null,
+                    $shifts
                 )
-            ) //16 sec
+            )
             ->setFreelancersForShifts(
                 $freelancerService->getFreelancersWithPlannedWorkingHours(
                     $startDate,
@@ -811,18 +814,18 @@ readonly class EventService
             ->setCalendarType(
                 $desiredProjectHasNoEvents ? 'individual' :
                     (
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            'daily' :
-                            'individual'
+                    $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                        'daily' :
+                        'individual'
                     )
             )
             ->setSelectedDate(
                 $desiredProjectHasNoEvents ?
                     null :
                     (
-                        $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
-                            $startDate?->format('Y-m-d') :
-                            null
+                    $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
+                        $startDate?->format('Y-m-d') :
+                        null
                     )
             )
             ->setEventsWithoutRoom(
@@ -1173,7 +1176,6 @@ readonly class EventService
         SupportCollection $data,
         Event $event,
     ): void {
-
         $day = Carbon::parse($data['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,

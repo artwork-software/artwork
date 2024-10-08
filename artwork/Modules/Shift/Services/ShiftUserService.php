@@ -35,6 +35,7 @@ readonly class ShiftUserService
         Shift $shift,
         int $userId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         NotificationService $notificationService,
         ShiftCountService $shiftCountService,
         VacationConflictService $vacationConflictService,
@@ -45,7 +46,8 @@ readonly class ShiftUserService
         $shiftUserPivot = $this->shiftUserRepository->createForShift(
             $shift->getAttribute('id'),
             $userId,
-            $shiftQualificationId
+            $shiftQualificationId,
+            $craftAbbreviation,
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

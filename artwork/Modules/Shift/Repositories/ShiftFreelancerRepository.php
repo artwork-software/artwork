@@ -7,12 +7,17 @@ use Artwork\Modules\Shift\Models\ShiftFreelancer;
 
 class ShiftFreelancerRepository extends BaseRepository
 {
-    public function createForShift(int $shiftId, int $freelancerId, int $shiftQualificationId): ShiftFreelancer
-    {
+    public function createForShift(
+        int $shiftId,
+        int $freelancerId,
+        int $shiftQualificationId,
+        string $craftAbbreviation
+    ): ShiftFreelancer {
         $shiftFreelancer = new ShiftFreelancer([
             'shift_id' => $shiftId,
             'freelancer_id' => $freelancerId,
-            'shift_qualification_id' => $shiftQualificationId
+            'shift_qualification_id' => $shiftQualificationId,
+            'craft_abbreviation' => $craftAbbreviation
         ]);
 
         $this->save($shiftFreelancer);

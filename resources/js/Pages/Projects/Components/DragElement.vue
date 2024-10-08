@@ -45,6 +45,8 @@
         </a>
     </div>
 
+
+
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -56,7 +58,7 @@ export default defineComponent({
     name: "DragElement",
     components: {ToolTipComponent},
     mixins: [ColorHelper, IconLib],
-    props: ['item', 'type', 'plannedHours', 'expectedHours', 'color'],
+    props: ['item', 'type', 'plannedHours', 'expectedHours', 'color', 'craft'],
     methods: {
         onDragStart(event) {
             event.dataTransfer.setData(
@@ -66,7 +68,9 @@ export default defineComponent({
                         id: this.item.id,
                         type: this.type,
                         craft_ids: this.item.assigned_craft_ids,
-                        shift_qualifications: this.item.shift_qualifications
+                        shift_qualifications: this.item.shift_qualifications,
+                        craft_universally_applicable: this?.craft?.universally_applicable ?? false,
+                        craft_abbreviation: this.craft.abbreviation
                     }
                 )
             );

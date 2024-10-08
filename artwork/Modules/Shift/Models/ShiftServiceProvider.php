@@ -19,7 +19,8 @@ class ShiftServiceProvider extends Pivot
         'shift_id',
         'service_provider_id',
         'shift_qualification_id',
-        'shift_count'
+        'shift_count',
+        'craft_abbreviation'
     ];
 
     public function shift(): BelongsTo

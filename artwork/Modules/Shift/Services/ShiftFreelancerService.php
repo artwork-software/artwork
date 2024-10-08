@@ -33,6 +33,7 @@ readonly class ShiftFreelancerService
         Shift $shift,
         int $freelancerId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         NotificationService $notificationService,
         ShiftCountService $shiftCountService,
         VacationConflictService $vacationConflictService,
@@ -43,7 +44,8 @@ readonly class ShiftFreelancerService
         $shiftFreelancerPivot = $this->shiftFreelancerRepository->createForShift(
             $shift->id,
             $freelancerId,
-            $shiftQualificationId
+            $shiftQualificationId,
+            $craftAbbreviation
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

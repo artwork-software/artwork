@@ -54,6 +54,7 @@ export default defineComponent({
         'multiEditMode',
         'color',
         'craftId',
+        'craft'
     ],
     watch: {
         multiEditMode: {
@@ -91,7 +92,9 @@ export default defineComponent({
                     profile_photo_url: this.item.profile_photo_url,
                     assigned_craft_ids: this.item.assigned_craft_ids,
                     shift_ids: this.item.shift_ids,
-                    shift_qualifications: this.item.shift_qualifications
+                    shift_qualifications: this.item.shift_qualifications,
+                    craft_are_universally_applicable: this.craft?.universally_applicable ?? false,
+                    craft_abbreviation: this.craft?.abbreviation
                 }
             );
         }

@@ -57,6 +57,7 @@ class WorkerShiftPlanResource extends JsonResource
                 return [
                     'id' => $shift->getAttribute('id'),
                     'pivotId' => $shift->getRelation('pivot')->getAttribute('id'),
+                    'craftAbbreviationUser' => $shift->getRelation('pivot')->getAttribute('craft_abbreviation'),
                     'start' => $shift->getAttribute('start'),
                     'end' => $shift->getAttribute('end'),
                     'description' => $shift->getAttribute('description'),

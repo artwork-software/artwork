@@ -52,7 +52,11 @@
                                          class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
                                         <div>
                                             <div class="flex text-sm">
-                                                {{ shift.craftAbbreviation }} {{ shift.start }} - {{ shift.end }} |
+                                                {{ shift.craftAbbreviation }}
+                                                <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser" class="mx-1">
+                                                    [{{ shift.craftAbbreviationUser }}]
+                                                </span>
+                                                {{ shift.start }} - {{ shift.end }} |
                                                 {{ shift.roomName }} | {{ shift.eventTypeAbbreviation }}:
                                                 {{ shift.eventName }}
                                             </div>

@@ -678,7 +678,6 @@ export default {
             })
         },
         previousDay() {
-            console.log('hallo');
             this.$refs.vuecal.previous();
             this.dateValueArray[0] = this.subtractOneDay(this.dateValueArray[0]);
             this.dateValueArray[1] = this.subtractOneDay(this.dateValueArray[1]);

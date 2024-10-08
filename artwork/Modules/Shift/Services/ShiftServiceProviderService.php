@@ -29,6 +29,7 @@ readonly class ShiftServiceProviderService
         Shift $shift,
         int $serviceProviderId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         ShiftCountService $shiftCountService,
         ChangeService $changeService,
         array|null $seriesShiftData = null
@@ -36,7 +37,8 @@ readonly class ShiftServiceProviderService
         $shiftServiceProviderPivot = $this->shiftServiceProviderRepository->createForShift(
             $shift->id,
             $serviceProviderId,
-            $shiftQualificationId
+            $shiftQualificationId,
+            $craftAbbreviation
         );
 
         $this->shiftsQualificationsService->increaseValueOrCreateWithOne(

@@ -24,6 +24,7 @@
                             <div v-if="event.roomId === room.id" class="min-h-[46px]">
                                 <div class="at-a-glance-event-container py-0.5 pr-1"
                                      :data-event-id="event.id">
+
                                     <SingleCalendarEvent
                                         v-if="currentEventsInView.has(String(event.id))"
                                         :atAGlance="true"

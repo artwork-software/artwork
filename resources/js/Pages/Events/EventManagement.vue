@@ -7,7 +7,11 @@
                               :days="days"
                               :calendar-data="calendar"
                               :events-without-room="eventsWithoutRoom"
-                              :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"/>
+                              :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                              :first-project-shift-tab-id="first_project_shift_tab_id"
+                              :firstProjectCalendarTabId="first_project_calendar_tab_id"
+                />
+
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :dateValue="dateValue"
                                                      :project="null"
@@ -20,6 +24,7 @@
                                                      :user_filters="user_filters"
                                                      :first_project_tab_id="first_project_tab_id"
                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                     :first-project-shift-tab-id="first_project_shift_tab_id"
                                                      :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"/>
             </div>
             <div v-else>
@@ -35,7 +40,8 @@
                                        :filter-options="filterOptions"
                                        :personal-filters="personalFilters"
                                        :user_filters="user_filters"
-                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"/>
+                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                       :first-project-shift-tab-id="firstProjectShiftTabId"/>
                 </div>
             </div>
 
@@ -68,7 +74,8 @@ const props = defineProps(
         first_project_tab_id: Number,
         first_project_calendar_tab_id: Number,
         areas: Object,
-        projectNameUsedForProjectTimePeriod: String
+        projectNameUsedForProjectTimePeriod: String,
+        first_project_shift_tab_id: Number,
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 

@@ -60,8 +60,9 @@
                                         :line-height="textStyle.lineHeight"
                                         :rooms="rooms"
                                         :has-admin-role="hasAdminRole()"
-                                        :width="zoom_factor * 204"
+                                        :width="zoom_factor * 196"
                                         :first_project_tab_id="first_project_tab_id"
+                                        :firstProjectShiftTabId="firstProjectShiftTabId"
                                         @edit-event="showEditEventModel"
                                         @edit-sub-event="openAddSubEventModal"
                                         @open-add-sub-event-modal="openAddSubEventModal"
@@ -236,7 +237,12 @@ const props = defineProps({
             type: String,
             required: false,
             default: ''
-        }
+        },
+        firstProjectShiftTabId: {
+            type: [String, Number],
+            required: false,
+            default: null
+        },
     }),
     $t = useTranslation(),
     {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),

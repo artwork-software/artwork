@@ -734,7 +734,7 @@ readonly class EventService
         $q->where('model_type', Shift::class);
         $q->orderBy('created_at', 'desc');
         $historyArray = [];
-        $q->get()->each(function (Change $history) use (&$historyArray) {
+        $q->get()->each(function (Change $history) use (&$historyArray): void {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -883,6 +883,11 @@ readonly class EventService
             ->setFirstProjectCalendarTabId(
                 $projectTabService
                     ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
+            ->setFirstProjectShiftTabId(
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
             );
 
         if ($useProjectTimePeriod) {
@@ -1004,7 +1009,13 @@ readonly class EventService
             ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
+            ->setFirstProjectShiftTabId(
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
             );
+
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));

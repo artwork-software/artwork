@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex max-w-">
+        <div class="flex">
             <div class="px-1 py-1">
                 <div
                     :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
@@ -225,22 +225,17 @@
             </div>
         </div>
         <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
-            <div v-for="shift in event.shifts">
+            <a v-if="firstProjectShiftTabId" :href="route('projects.tab', {project: event.projectId, projectTab: firstProjectShiftTabId})" v-for="shift in event.shifts">
                 <span>{{ shift.craft.abbreviation }}</span>
                 <span>
                     &nbsp;({{ shift.worker_count }}/{{ shift.max_worker_count }})
                 </span>
-            </div>
+            </a>
         </div>
-        <div v-if="usePage().props.user.calendar_settings.description && event.description?.length > 0"
+        <div v-if="usePage().props.user.calendar_settings.description"
              :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
              class="p-0.5 ml-0.5">
-            <template v-if="event.description?.length <= 50">
-                {{ event.description }}
-            </template>
-            <template v-else>
-                {{ event.description.slice(0, 49) + "..." }}
-            </template>
+            <EventNoteComponent :event="event"/>
         </div>
     </div>
     <div v-if="event.subEvents?.length > 0">
@@ -359,6 +354,7 @@ import VueMathjax from "vue-mathjax-next";
 import {useI18n} from "vue-i18n";
 import {useColorHelper} from "@/Composeables/UseColorHelper.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import EventNoteComponent from "@/Layouts/Components/EventNoteComponent.vue";
 
 const {t} = useI18n(), $t = t;
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
@@ -420,6 +416,11 @@ const props = defineProps({
     width: {
         type: Number,
         required: true
+    },
+    firstProjectShiftTabId: {
+        type: Number,
+        required: false,
+        default: null
     }
 });
 

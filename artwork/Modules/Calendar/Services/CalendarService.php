@@ -261,6 +261,7 @@ class CalendarService
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $actualEvents = $eventsForRoom = [];
 
+
         $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
             ->with(
                 [
@@ -279,7 +280,6 @@ class CalendarService
                     'subEvents.event.room'
                 ]
             )->orderBy('start_time');
-
         foreach ($eventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                 $calendarPeriod->start :

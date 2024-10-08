@@ -2715,4 +2715,11 @@ class EventController extends Controller
 
         return Redirect::back();
     }
+
+    public function updateDescription(Request $request, Event $event): RedirectResponse
+    {
+        $event->update($request->only(['description']));
+
+        return $this->redirector->back();
+    }
 }

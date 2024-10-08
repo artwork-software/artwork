@@ -134,7 +134,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(User::class, 'shift_user')
             ->using(ShiftUser::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count'])
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation'])
             ->without('calendar_settings');
     }
 
@@ -143,7 +143,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(Freelancer::class, 'shifts_freelancers')
             ->using(ShiftFreelancer::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation']);
     }
 
     public function serviceProvider(): BelongsToMany
@@ -151,7 +151,7 @@ class Shift extends Model
         return $this
             ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
             ->using(ShiftServiceProvider::class)
-            ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count', 'craft_abbreviation']);
     }
 
     /**

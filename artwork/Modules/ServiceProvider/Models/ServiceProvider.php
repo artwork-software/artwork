@@ -80,7 +80,7 @@ class ServiceProvider extends Model implements DayServiceable
         return $this
             ->belongsToMany(Shift::class, 'shifts_service_providers')
             ->using(ShiftServiceProvider::class)
-            ->withPivot('id', 'shift_qualification_id');
+            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
     }
 
     public function assignedCrafts(): BelongsToMany

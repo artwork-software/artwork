@@ -17,7 +17,13 @@ class CraftController extends Controller
 
     public function store(CraftStoreRequest $craftStoreRequest): RedirectResponse
     {
-        $craft = Craft::create($craftStoreRequest->only(['name', 'abbreviation', 'color', 'notify_days']));
+        $craft = Craft::create($craftStoreRequest->only([
+            'name',
+            'abbreviation',
+            'color',
+            'notify_days',
+            'universally_applicable'
+        ]));
         if (!$craftStoreRequest->assignable_by_all) {
             $craft->update(['assignable_by_all' => false]);
             $craft->users()->sync($craftStoreRequest->users);

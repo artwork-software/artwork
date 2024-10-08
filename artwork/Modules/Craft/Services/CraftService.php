@@ -46,7 +46,7 @@ class CraftService
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void
     {
         $craft = new Craft();
-        $craft->fill($craftStoreRequest->only(['name', 'abbreviation', 'assignable_by_all']));
+        $craft->fill($craftStoreRequest->only(['name', 'abbreviation', 'assignable_by_all', 'universally_applicable']));
         $this->craftRepository->save($craft);
 
         if (!$craftStoreRequest->boolean('assignable_by_all')) {
@@ -57,7 +57,7 @@ class CraftService
     public function updateByRequest(CraftUpdateRequest $craftUpdateRequest, Craft $craft): void
     {
         $craft->update($craftUpdateRequest
-            ->only(['name', 'abbreviation', 'assignable_by_all', 'color', 'notify_days']));
+            ->only(['name', 'abbreviation', 'assignable_by_all', 'color', 'notify_days', 'universally_applicable']));
         if (!$craftUpdateRequest->boolean('assignable_by_all')) {
             $this->craftRepository->syncUsers($craft, $craftUpdateRequest->get('users'));
         } else {

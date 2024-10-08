@@ -36,6 +36,9 @@
                                 <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(craft.color), borderColor: TextColorWithDarken(craft.color, 90)}"/>
                                 {{ craft.name }} ({{ craft.abbreviation }})
                             </p>
+                            <div v-if="craft.universally_applicable" class="mt-1 truncate xsLight">
+                                {{ $t('Universally applicable') }}
+                            </div>
                             <div class="" v-if="craft.assignable_by_all">
                                 <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
                             </div>

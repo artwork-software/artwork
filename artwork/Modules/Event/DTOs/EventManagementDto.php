@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\DTOs;
 
+use AllowDynamicProperties;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
@@ -39,6 +40,8 @@ class EventManagementDto extends BaseDto
     public ?int $firstProjectTabId = null;
 
     public ?int $firstProjectCalendarTabId = null;
+
+    public ?int $firstProjectShiftTabId = null;
 
     public Collection $areas;
 
@@ -160,6 +163,12 @@ class EventManagementDto extends BaseDto
 
         return $this;
     }
+    public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
+    {
+        $this->firstProjectShiftTabId = $firstProjectShiftTabId;
+
+        return $this;
+    }
     public function setProjectNameUsedForProjectTimePeriod(?string $projectNameUsedForProjectTimePeriod): self
     {
         $this->projectNameUsedForProjectTimePeriod = $projectNameUsedForProjectTimePeriod;
@@ -260,6 +269,10 @@ class EventManagementDto extends BaseDto
         return $this->firstProjectCalendarTabId;
     }
 
+    public function getFirstProjectShiftTabId(): ?int
+    {
+        return $this->firstProjectShiftTabId;
+    }
     public function getProjectNameUsedForProjectTimePeriod(): ?string
     {
         return $this->projectNameUsedForProjectTimePeriod;
@@ -286,6 +299,7 @@ class EventManagementDto extends BaseDto
             'user_filters' => $this->getUserFilters(),
             'first_project_tab_id' => $this->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
+            'first_project_shift_tab_id' => $this->getFirstProjectShiftTabId(),
             'areas' => $this->getAreas(),
             'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod()
         ];

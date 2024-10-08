@@ -10,12 +10,14 @@ class ShiftServiceProviderRepository extends BaseRepository
     public function createForShift(
         int $shiftId,
         int $serviceProviderId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        string $craftAbbreviation
     ): ShiftServiceProvider {
         $shiftServiceProvider = new ShiftServiceProvider([
             'shift_id' => $shiftId,
             'service_provider_id' => $serviceProviderId,
-            'shift_qualification_id' => $shiftQualificationId
+            'shift_qualification_id' => $shiftQualificationId,
+            'craft_abbreviation' => $craftAbbreviation
         ]);
 
         $this->save($shiftServiceProvider);

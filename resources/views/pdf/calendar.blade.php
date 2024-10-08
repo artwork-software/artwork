@@ -66,6 +66,9 @@
 <body>
 <div>
 
+    @php
+        \Illuminate\Support\Carbon::setLocale('de_DE');
+    @endphp
     <h1>{{ $title }}</h1>
     <!-- Kalender -->
     <div style="margin-bottom: 10px">
@@ -182,7 +185,7 @@
                                             </div>
                                             <div>
                                                 @if(!$event['allDay'])
-                                                    {{ \Illuminate\Support\Carbon::parse($event['startTime'])->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event['end'])->format('H:i') }}
+                                                    {{ \Illuminate\Support\Carbon::parse($event['startTime'])->timezone(config('app.timezone'))->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event['end'])->timezone(config('app.timezone'))->format('H:i') }}
                                                 @else
                                                     <span style="font-weight: bold">Ganztägig</span>
                                                 @endif

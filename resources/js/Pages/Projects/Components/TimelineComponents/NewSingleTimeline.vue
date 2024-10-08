@@ -173,7 +173,6 @@ const openCloseTimeEditor = (bool) => {
 const addHeightToTimeline = () => {
     const container = document.getElementById('timeline-container-' + props.event.id + '-' + timeLineForm.id)
 
-    console.log(currentHeight.value)
     if (container){
         if (editDescription.value || props.time.clicked){
             currentHeight.value = parseInt(container.style.height)

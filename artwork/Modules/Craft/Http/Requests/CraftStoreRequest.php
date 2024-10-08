@@ -18,6 +18,7 @@ class CraftStoreRequest extends FormRequest
             'abbreviation' => 'required|string|min:1|max:3',
             'users' => 'array',
             'assignable_by_all' => 'required|boolean',
+            'universally_applicable' => 'required|boolean',
         ];
     }
 }

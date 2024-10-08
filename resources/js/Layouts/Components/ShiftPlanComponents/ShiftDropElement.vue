@@ -245,7 +245,6 @@ export default defineComponent({
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
-            console.log(this.droppedUser.craft_universally_applicable);
             if(!this.droppedUser.craft_universally_applicable) {
                 if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
                     this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);

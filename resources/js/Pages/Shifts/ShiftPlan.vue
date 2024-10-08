@@ -329,7 +329,7 @@
                                                       v-if="!user.vacations?.includes(day.without_format)">
                                                     <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                         {{ shift.start }} - {{ shift.end }} {{ shift.roomName }}
-                                                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser">
+                                                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser && shift.craftAbbreviationUser !== null">
                                                              [{{ shift.craftAbbreviationUser }}]
                                                         </span>,
                                                     </span>
@@ -1361,8 +1361,6 @@ export default {
                     }
                 });
             });
-
-            console.log(this.userForMultiEdit);
 
             axios.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,

@@ -686,7 +686,7 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    false,
+                    true,
                     null,
                     $shifts
                 )

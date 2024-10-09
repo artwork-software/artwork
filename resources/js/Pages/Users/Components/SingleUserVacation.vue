@@ -37,7 +37,7 @@
 
                 </div>
             </div>
-            <p v-if="vacation.comment">&bdquo;{{ vacation.comment }}&rdquo;</p>
+            <p v-if="vacation.comment">&bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;</p>
         </div>
 
 
@@ -90,7 +90,7 @@
 
                     </div>
                 </div>
-                <p v-if="vacation.comment">&bdquo;{{ vacation.comment }}&rdquo;</p>
+                <p v-if="vacation.comment">&bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;</p>
             </div>
 
         </div>

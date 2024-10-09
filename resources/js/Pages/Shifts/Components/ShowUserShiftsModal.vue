@@ -14,7 +14,7 @@
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel
-                            class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 rounded-lg">
+                            class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6 rounded-lg">
                             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500"
@@ -87,15 +87,32 @@
                                             <p v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo;</p>
                                         </div>
                                     </div>
-
                                 </div>
 
                                 <div class="flex items-center mt-10" v-if="this.user.type === 0 || this.user.type === 1">
-                                    <input v-model="checked"
-                                           type="checkbox"
-                                           class="input-checklist"/>
-                                    <p :class="[checked ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">{{ $t('Available') }}</p>
+                                    <Listbox as="div" v-model="checked" class="w-full relative mt-2">
+                                        <ListboxButton class="menu-button">
+                                            <div>
+                                                <div>
+                                                    {{ checked.name }}
+                                                </div>
+                                            </div>
+                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </ListboxButton>
+                                        <ListboxOptions class="absolute w-full z-10 bg-artwork-navigation-background shadow-lg rounded-md max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                            <ListboxOption v-for="type in vacationTypes"
+                                                           class="text-secondary cursor-pointer p-2 flex justify-between "
+                                                           :key="type.type"
+                                                           :value="type"
+                                                           v-slot="{ active, selected }">
+                                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                                    {{ type.name }}
+                                                </div>
+                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </Listbox>
+
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
@@ -116,18 +133,28 @@
 
 
 <script>
-import {defineComponent} from 'vue'
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
-import {XIcon} from "@heroicons/vue/solid";
+import {defineComponent, nextTick} from 'vue'
+import {
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    Listbox,
+    ListboxButton, ListboxOption, ListboxOptions,
+    TransitionChild,
+    TransitionRoot
+} from "@headlessui/vue";
+import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
 import axios from "axios";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {ChevronDownIcon} from "@heroicons/vue/outline";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        ListboxOption, ListboxOptions, ListboxButton, CheckIcon, ChevronDownIcon, Listbox,
         ConfirmDeleteModal,
         FormButton,
         SvgCollection,
@@ -142,15 +169,37 @@ export default defineComponent({
     data() {
         return {
             open: true,
-            checked: !this.user.vacations?.includes(this.day.without_format),
+            checked: null,
             wantedShiftId: null,
             wantedUserId: null,
-            showConfirmDeleteModal: false
+            showConfirmDeleteModal: false,
+            vacationTypes: [
+                { name: 'Verfügbar', type: 'AVAILABLE'},
+                { name: 'Arbeitsfreier Tag', type: 'OFF_WORK'},
+                { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE'},
+            ],
+            vacationTypeBeforeUpdate: null,
         }
     },
     props: ['user', 'day'],
     emits: ['closed', 'delete', 'desiresReload'],
+    mounted() {
+        // Find if there is any vacation for the current day
+        const vacation = this.user.vacations?.find(v => v.date === this.day.without_format);
+
+        // If a vacation is found, find the corresponding name from vacationTypes
+        if (vacation) {
+            const vacationType = this.vacationTypes.find(type => type.type === vacation.type);
+            this.checked =  vacationType ? vacationType : this.vacationTypes[0]; // Return the name or 'Unknown' if not found
+            this.vacationTypeBeforeUpdate =  vacationType ? vacationType : this.vacationTypes[0]; // Return the name or 'Unknown' if not found
+        } else {
+            // If no vacation is found, return a default value
+            this.checked = this.vacationTypes[0]; // Or any default vacation type if not found
+            this.vacationTypeBeforeUpdate = this.vacationTypes[0]; // Or any default vacation type if not found
+        }
+    },
     methods: {
+
         closeModal(bool) {
             this.$emit('closed', bool)
         },
@@ -202,14 +251,16 @@ export default defineComponent({
             if (this.user.type === 0) {
                 axios.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
-                    day: this.day.full_day
+                    day: this.day.full_day,
+                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
                 }).then(() => {
                     callback(true);
                 });
             } else if (this.user.type === 1) {
                 axios.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
                     checked: this.checked,
-                    day: this.day.full_day
+                    day: this.day.full_day,
+                    vacationTypeBeforeUpdate: this.vacationTypeBeforeUpdate,
                 }).then(() => {
                     callback(true);
                 });

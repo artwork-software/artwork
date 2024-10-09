@@ -326,7 +326,7 @@
                                                 :style="{width: '202px'}"
                                                 @click="handleCellClick(user, day)">
                                                 <span v-for="shift in user.element?.shifts"
-                                                      v-if="!user.vacations?.includes(day.without_format)">
+                                                      v-if="!user.vacations?.some(vacation => vacation.date === day.without_format)">
                                                     <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                         {{ shift.start }} - {{ shift.end }} {{ shift.roomName }}
                                                         <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser && shift.craftAbbreviationUser !== null">
@@ -335,8 +335,8 @@
                                                     </span>
                                                 </span>
                                                 <span v-else
-                                                      class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                    {{ $t('not available') }}
+                                                      class="h-full flex justify-center items-center text-[#f08b32]">
+                                                    {{ user.vacations?.find(v => v.date === day.without_format).type === 'OFF_WORK' ? $t('Day off work') :  $t('not available') }}
                                                 </span>
                                                 <span v-if="user.availabilities">
                                                     <span v-for="availability in user.availabilities[day.full_day]">
@@ -422,8 +422,7 @@
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px'}"
                                             >
-                                            <span v-for="shift in user.element?.shifts"
-                                                  v-if="!user.vacations?.includes(day.without_format)">
+                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.some(vacation => vacation.date === day.without_format)">
                                                 <span v-if="shift.days_of_shift?.includes(day.full_day)">
                                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }}
                                                      <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser">
@@ -431,9 +430,8 @@
                                                      </span>,
                                                 </span>
                                             </span>
-                                                <span v-else
-                                                      class="h-full flex justify-center items-center text-artwork-messages-error">
-                                                {{ $t('not available') }}
+                                            <span v-else class="h-full flex justify-center items-center text-[#f08b32]">
+                                                {{ user.vacations?.find(v => v.date === day.without_format).type === 'OFF_WORK' ? $t('Day off work') :  $t('not available') }}
                                             </span>
                                                 <span v-if="user.availabilities">
                                                 <span v-for="availability in user.availabilities[day.full_day]">

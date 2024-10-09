@@ -28,7 +28,8 @@ readonly class VacationService
         VacationSeriesService $vacationSeriesService,
         ChangeService $changeService,
         SchedulingService $schedulingService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        $vacationTypeEnum = \Artwork\Modules\Vacation\Enums\Vacation::NOT_AVAILABLE
     ): Vacation|Model {
         /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
@@ -38,6 +39,7 @@ readonly class VacationService
             'full_day' =>  $request->full_day,
             'comment' => $request->comment,
             'is_serie' => $request->is_series,
+            'type' => $vacationTypeEnum
         ]);
 
         $vacationConflictService->checkVacationConflictsOnDay(

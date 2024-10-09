@@ -65,7 +65,7 @@ class ShiftWorkerService
         $workerData = [
             'type' => $worker->getAttribute('type'),
             'plannedWorkingHours' =>
-                $this->workingHourService->plannedWorkingHoursForUser($worker, $startDate, $endDate),
+                $worker->plannedWorkingHours($startDate, $endDate),
             'dayServices' => $worker->getAttribute('dayServices')->groupBy('pivot.date')
         ];
 

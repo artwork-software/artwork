@@ -69,7 +69,7 @@
                 <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                     :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-artwork-buttons-update' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                    class="bg-secondaryHover flex justify-between items-center border-2">
+                    class="bg-secondaryHover flex justify-between items-center border-2 group">
                     <div class="flex items-center">
                         <td v-for="(cell,index) in row.cells"
                             v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
@@ -200,7 +200,7 @@
                             </div>
                         </td>
                     </div>
-                    <BaseMenu dots-color="text-artwork-buttons-context" :class="[hoveredRow === row.id ? '' : 'hidden', 'mr-0.5']"
+                    <BaseMenu dots-color="text-artwork-buttons-context" class="invisible group-hover:visible"
                               v-if="this.hasBudgetAccess || this.$can('edit budget templates')">
                         <MenuItem v-slot="{ active }"
                                   v-if="row.commented === false"

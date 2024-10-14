@@ -25,13 +25,15 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 
 class ProjectTabService implements ServiceWithArrayCache
 {
     public function __construct(
         private readonly ProjectTabRepository $projectTabRepository,
-        private readonly ShiftTimePresetService $shiftTimePresetService
+        private readonly ShiftTimePresetService $shiftTimePresetService,
+        private readonly WorkingHourService $workingHourService
     ) {
     }
 
@@ -94,24 +96,27 @@ class ProjectTabService implements ServiceWithArrayCache
 
         return ShiftsDto::newInstance()
             ->setUsersForShifts(
-                $userService->getUsersWithPlannedWorkingHours(
+                $this->workingHourService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    UserDropResource::class
+                    UserDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setFreelancersForShifts(
                 $freelancerService->getFreelancersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    FreelancerDropResource::class
+                    FreelancerDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setServiceProvidersForShifts(
                 $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    ServiceProviderDropResource::class
+                    ServiceProviderDropResource::class,
+                    currentUser: $userService->getAuthUser()
                 )
             )
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))

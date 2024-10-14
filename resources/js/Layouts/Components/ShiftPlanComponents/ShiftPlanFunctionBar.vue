@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
+    <div class="w-[98%] flex justify-between items-center mt-2 mb-2">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div class="flex items-center mx-4 gap-x-1 select-none">
@@ -201,10 +201,10 @@ export default {
     },
     methods: {
         changeUserSelectedGoTo(type){
-            router.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
+            axios.patch(route('user.calendar.go.to.stepper', {user: this.$page.props.user.id}), {
                 goto_mode: type,
-            }, {
-                preserveScroll: true,
+            }).then(() => {
+                this.$page.props.user.goto_mode = type;
             });
         },
         removeFilter(filter){

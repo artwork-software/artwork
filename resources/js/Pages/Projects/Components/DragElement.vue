@@ -1,52 +1,64 @@
 
 <template>
-    <div class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color), color: TextColorWithDarken(color, 10)}">
-        <div class="" v-if="!$page.props.user.compact_mode">
+    <div :class="[$page.props.user.compact_mode ? 'h-8 flex items-center justify-between' : 'h-12']" class="drag-item w-full p-2 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart"  :style="{backgroundColor: backgroundColorWithOpacity(color)}">
+        <div class="text-white" v-if="!$page.props.user.compact_mode">
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
         </div>
-        <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
-            <div v-if="type === 0" class="text-ellipsis w-28">
-                <div class="flex">
-                    <div class="truncate">
-                        {{ item.first_name }} {{ item.last_name }}
+        <div class="text-left cursor-pointer flex items-center gap-2">
+            <div>
+                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-fit' : 'w-fit'">
+                    <div class="flex">
+                        <div class="truncate">
+                            {{ item.first_name }} {{ item.last_name }}
+                        </div>
                     </div>
-                <div class="ml-1">(i)</div>
+                    <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
                 </div>
-                <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
-            </div>
-            <div v-else-if="type === 1" class="text-ellipsis w-28">
-                <div class="flex">
-                    <div class="truncate">
-                        {{ item.first_name }} {{ item.last_name }}
+                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                    <div class="flex">
+                        <div class="truncate">
+                            {{ item.first_name }} {{ item.last_name }}
+                        </div>
                     </div>
-                    <div class="ml-1"> (e) </div>
+                    <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
                 </div>
-                <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                    <div class="flex">
+                        <div class="truncate">
+                            {{ item.provider_name }}</div>
+                    </div>
+                    <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                </div>
             </div>
-            <div v-else class="text-ellipsis w-28">
-                <div class="flex">
-                    <div class="truncate">
-                        {{ item.provider_name }}</div>
-                    <div class="ml-1"> (DL) </div>
-                </div>
-                <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+            <div v-if="type === 0 && item.is_freelancer || type === 1">
+                <ToolTipComponent
+                    icon="IconId"
+                    icon-size="w-4 h-4"
+                    tooltip-text="Freelancer*in"
+                    direction="top"
+                    classes="text-gray-300"
+                />
             </div>
         </div>
-        <a v-if="type === 0" :href="route('user.edit.shiftplan', item.id)">
+        <a :style="{color: TextColorWithDarken(color, 10)}" v-if="type === 0" :href="route('user.edit.shiftplan', item.id)" class="flex items-center justify-end w-full">
             <IconCalendarShare class="h-5 w-5" />
         </a>
     </div>
+
+
 
 </template>
 <script>
 import {defineComponent} from 'vue'
 import ColorHelper from "@/Mixins/ColorHelper.vue";
 import IconLib from "@/Mixins/IconLib.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 
 export default defineComponent({
     name: "DragElement",
+    components: {ToolTipComponent},
     mixins: [ColorHelper, IconLib],
-    props: ['item', 'type', 'plannedHours', 'expectedHours', 'color'],
+    props: ['item', 'type', 'plannedHours', 'expectedHours', 'color', 'craft'],
     methods: {
         onDragStart(event) {
             event.dataTransfer.setData(
@@ -56,7 +68,9 @@ export default defineComponent({
                         id: this.item.id,
                         type: this.type,
                         craft_ids: this.item.assigned_craft_ids,
-                        shift_qualifications: this.item.shift_qualifications
+                        shift_qualifications: this.item.shift_qualifications,
+                        craft_universally_applicable: this?.craft?.universally_applicable ?? false,
+                        craft_abbreviation: this.craft.abbreviation
                     }
                 )
             );

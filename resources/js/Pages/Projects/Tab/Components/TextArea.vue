@@ -18,7 +18,9 @@
             :show-label="false"
             no-margin-top
             @focusout="updateTextData()"
-            v-model="textData.text">
+            v-model="textData.text"
+            :maxlength="2000"
+        >
         </TextareaComponent>
     </div>
 </template>
@@ -50,7 +52,7 @@ export default {
                 preserveState: false
             })
         },
-        async handleDescriptionClick() {
+        handleDescriptionClick() {
             if (!this.canEditComponent) {
                 return;
             }
@@ -58,9 +60,10 @@ export default {
             if (this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
                 this.descriptionClicked = true;
 
-                await nextTick()
+                nextTick(() => {
+                    //this.$refs[`description-${this.projectId}`].select();
+                })
 
-                this.$refs[`description-${this.projectId}`].select();
             }
         },
     },

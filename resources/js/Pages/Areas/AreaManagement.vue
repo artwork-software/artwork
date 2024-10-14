@@ -177,10 +177,10 @@
                                                        @start="dragging=true" @end="dragging=false"
                                                        @change="updateRoomOrder(area.rooms)">
                                                 <template #item="{element}" :key="element.id">
-                                                    <div v-show="!element.temporary" class="flex"
+                                                    <div v-show="!element.temporary" class="flex group"
                                                          @mouseover="showMenu = element.id"
                                                          :key="element.id"
-                                                         @mouseout="showMenu = null">
+                                                         @mouseout="showMenu = null" >
                                                         <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                              :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                             <div class="flex w-full items-center">
@@ -199,7 +199,7 @@
                                                                                             class="ml-2"/>
                                                                     </div>
                                                                 </div>
-                                                                <BaseMenu :key="element.id" v-show="showMenu === element.id">
+                                                                <BaseMenu :key="element.id" class="invisible group-hover:visible">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openEditRoomModal(element)"
                                                                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
@@ -251,7 +251,7 @@
                                                            @start="dragging=true" @end="dragging=false"
                                                            @change="updateRoomOrder(area.rooms)">
                                                     <template #item="{element}" :key="element.id">
-                                                        <div v-show="element.temporary" class="flex"
+                                                        <div v-show="element.temporary" class="flex group"
                                                              @mouseover="showMenu = element.id"
                                                              :key="element.id"
                                                              @mouseout="showMenu = null">
@@ -277,7 +277,7 @@
                                                                                 class="ml-2"></UserPopoverTooltip>
                                                                         </div>
                                                                     </div>
-                                                                    <BaseMenu v-show="showMenu === element.id"
+                                                                    <BaseMenu class="invisible group-hover:visible"
                                                                               :key="element.id">
                                                                         <MenuItem v-slot="{ active }">
                                                                             <a @click="openEditRoomModal(element)"

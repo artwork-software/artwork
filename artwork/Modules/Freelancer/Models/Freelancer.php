@@ -86,7 +86,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this
             ->belongsToMany(Shift::class, 'shifts_freelancers')
             ->using(ShiftFreelancer::class)
-            ->withPivot('id', 'shift_qualification_id');
+            ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
     }
 
     public function getProfilePhotoUrlAttribute(): string
@@ -137,7 +137,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
-
+    //@todo refactor this too
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

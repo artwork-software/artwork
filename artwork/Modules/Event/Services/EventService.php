@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Services;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
@@ -12,6 +13,7 @@ use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
+use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -51,6 +53,7 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,6 +65,7 @@ readonly class EventService
 {
     public function __construct(
         private EventRepository $eventRepository,
+        private readonly WorkingHourService $workingHourService
     ) {
     }
 
@@ -443,37 +447,35 @@ readonly class EventService
         Carbon $startDate,
         Carbon $endDate,
     ): array {
-        $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
-        $events = $this->getEventsWhereUserHasShifts($userId);
+        $eventsWithPlannedWorkingHours = [];
 
-        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $eventsWhereHasShiftsOnDate = $events->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
-
+        /** @var Event $event */
+        foreach (
+            $this->eventRepository->getEventsWhereUserHasShiftsInPeriod(
+                $userId,
+                CarbonPeriod::create($startDate, $endDate)
+            ) as $event
+        ) {
             $earliestStart = null;
             $latestEnd = null;
             $plannedWorkingHours = 0;
             $totalBreakMinutes = 0;
 
-            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
-                foreach ($event['shifts'] as $shift) {
-                    $start = Carbon::parse($shift['start']);
-                    $end = Carbon::parse($shift['end']);
+            /** @var Shift $shift */
+            foreach ($event['shifts'] as $shift) {
+                $start = Carbon::parse($shift['start']);
+                $end = Carbon::parse($shift['end']);
 
-                    $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ?
-                        $start :
-                        $earliestStart;
+                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ?
+                    $start :
+                    $earliestStart;
 
-                    $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ?
-                        $end :
-                        $latestEnd;
+                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ?
+                    $end :
+                    $latestEnd;
 
-                    $totalBreakMinutes += $shift['break_minutes'];
-                }
+                $totalBreakMinutes += $shift['break_minutes'];
             }
 
             if ($earliestStart !== null && $latestEnd !== null) {
@@ -483,30 +485,18 @@ readonly class EventService
                 );
             }
 
-            $daysWithEvents[$date->format('Y-m-d')] = [
-                'day' => $date->format('d.m.'),
-                'day_string' => $date->shortDayName,
-                'full_day' => $date->format('d.m.Y'),
-                'short_day' => $date->format('d.m'),
-                'events' => $eventsWhereHasShiftsOnDate,
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'is_monday' => $date->isMonday(),
-                'week_number' => $date->weekOfYear,
-                'month_number' => $date->month,
-            ];
-
             $totalPlannedWorkingHours += $plannedWorkingHours;
+
+            $eventsWithPlannedWorkingHours[] = [
+                'event' => $event->setAttribute('daysOfShifts', $event->getDaysOfShifts()),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
         }
 
         return [
-            $daysWithEvents,
+            $eventsWithPlannedWorkingHours,
             $totalPlannedWorkingHours,
         ];
-    }
-
-    public function getEventsWhereUserHasShifts(int $userId): Collection
-    {
-        return $this->eventRepository->getEventsWhereUserHasShifts($userId);
     }
 
     /**
@@ -517,66 +507,55 @@ readonly class EventService
         Carbon $startDate,
         Carbon $endDate,
     ): array {
-        $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
-        $events = $this->getEventsWhereFreelancerHasShifts($freelancerId);
+        $eventsWithPlannedWorkingHours = [];
 
-        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $eventsWhereHasShiftsOnDate = $events->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
-            $plannedWorkingHours = 0;
+        foreach (
+            $this->eventRepository->getEventsWhereFreelancerHasShiftsInPeriod(
+                $freelancerId,
+                CarbonPeriod::create($startDate, $endDate)
+            ) as $event
+        ) {
             $earliestStart = null;
             $latestEnd = null;
+            $plannedWorkingHours = 0;
             $totalBreakMinutes = 0;
 
-            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
-                $shifts = $event['shifts'];
+            /** @var Shift $shift */
+            foreach ($event['shifts'] as $shift) {
+                $start = Carbon::parse($shift['start']);
+                $end = Carbon::parse($shift['end']);
 
-                foreach ($shifts as $shift) {
-                    $start = Carbon::parse($shift['start']);
-                    $end = Carbon::parse($shift['end']);
-                    $breakMinutes = $shift['break_minutes'];
+                $earliestStart = ($earliestStart === null || $start->lt($earliestStart)) ?
+                    $start :
+                    $earliestStart;
 
-                    if ($earliestStart === null || $start->lt($earliestStart)) {
-                        $earliestStart = $start;
-                    }
-                    if ($latestEnd === null || $end->gt($latestEnd)) {
-                        $latestEnd = $end;
-                    }
+                $latestEnd = ($latestEnd === null || $end->gt($latestEnd)) ?
+                    $end :
+                    $latestEnd;
 
-                    $totalBreakMinutes += $breakMinutes;
-                }
+                $totalBreakMinutes += $shift['break_minutes'];
             }
 
             if ($earliestStart !== null && $latestEnd !== null) {
-                $totalWorkingMinutes = $earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes;
-                $plannedWorkingHours = max($totalWorkingMinutes / 60, 0);
+                $plannedWorkingHours = max(
+                    ($earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes) / 60,
+                    0
+                );
             }
 
-            $daysWithEvents[$date->format('Y-m-d')] = [
-                'day' => $date->format('d.m.'),
-                'day_string' => $date->shortDayName,
-                'full_day' => $date->format('d.m.Y'),
-                'short_day' => $date->format('d.m'),
-                'events' => $eventsWhereHasShiftsOnDate,
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'is_monday' => $date->isMonday(),
-                'week_number' => $date->weekOfYear,
-                'month_number' => $date->month,
-            ];
-
             $totalPlannedWorkingHours += $plannedWorkingHours;
+
+            $eventsWithPlannedWorkingHours[] = [
+                'event' => $event->setAttribute('daysOfShifts', $event->getDaysOfShifts()),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
         }
 
-        return [$daysWithEvents, $totalPlannedWorkingHours];
-    }
-
-    public function getEventsWhereFreelancerHasShifts(int $freelancerId): Collection
-    {
-        return $this->eventRepository->getEventsWhereFreelancerHasShifts($freelancerId);
+        return [
+            $eventsWithPlannedWorkingHours,
+            $totalPlannedWorkingHours,
+        ];
     }
 
     /**
@@ -587,52 +566,39 @@ readonly class EventService
         Carbon $startDate,
         Carbon $endDate,
     ): array {
-        $daysWithEvents = [];
         $totalPlannedWorkingHours = 0;
-        $events = $this->getEventsWhereServiceProviderHasShifts($serviceProviderId);
+        $eventsWithPlannedWorkingHours = [];
 
-        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
-            $eventsWhereHasShiftsOnDate = $events->filter(
-                function ($event) use ($date) {
-                    return in_array($date->format('d.m.Y'), $event->getDaysOfShifts());
-                }
-            );
+        foreach (
+            $this->eventRepository->getEventsWhereServiceProviderHasShiftsInPeriod(
+                $serviceProviderId,
+                CarbonPeriod::create($startDate, $endDate)
+            ) as $event
+        ) {
             $plannedWorkingHours = 0;
 
-            foreach ($eventsWhereHasShiftsOnDate->all() as $event) {
-                $shifts = $event['shifts'];
-                foreach ($shifts as $shift) {
-                    $start = Carbon::parse($shift['start']);
-                    $end = Carbon::parse($shift['end']);
+            /** @var Shift $shift */
+            foreach ($event['shifts'] as $shift) {
+                $start = Carbon::parse($shift['start']);
+                $end = Carbon::parse($shift['end']);
 
-                    $totalWorkingMinutes = 0;
-                    $totalWorkingMinutes += $start->diffInMinutes($end);
-                    $plannedWorkingHours += max($totalWorkingMinutes / 60, 0);
-                }
+                $totalWorkingMinutes = 0;
+                $totalWorkingMinutes += $start->diffInMinutes($end);
+                $plannedWorkingHours += max($totalWorkingMinutes / 60, 0);
             }
-            $daysWithEvents[$date->format('Y-m-d')] = [
-                'day' => $date->format('d.m.'),
-                'day_string' => $date->shortDayName,
-                'full_day' => $date->format('d.m.Y'),
-                'short_day' => $date->format('d.m'),
-                'events' => $eventsWhereHasShiftsOnDate,
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'is_monday' => $date->isMonday(),
-                'week_number' => $date->weekOfYear,
-                'month_number' => $date->month,
-            ];
+
             $totalPlannedWorkingHours += $plannedWorkingHours;
+
+            $eventsWithPlannedWorkingHours[] = [
+                'event' => $event->setAttribute('daysOfShifts', $event->getDaysOfShifts()),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
         }
 
         return [
-            $daysWithEvents,
+            $eventsWithPlannedWorkingHours,
             $totalPlannedWorkingHours,
         ];
-    }
-
-    public function getEventsWhereServiceProviderHasShifts(int $serviceProviderId): Collection
-    {
-        return $this->eventRepository->getEventsWhereServiceProviderHasShifts($serviceProviderId);
     }
 
     public function getShiftPlanDto(
@@ -656,6 +622,12 @@ readonly class EventService
 
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+            if ($period->isMonday()) {
+                $periodArray[] = [
+                    'is_extra_row' => true,
+                    'week_number' => $period->weekOfYear,
+                ];
+            }
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -672,7 +644,7 @@ readonly class EventService
             ];
         }
 
-        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlap(
+        $events = $this->eventRepository->getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
             $startDate,
             $endDate
         );
@@ -683,15 +655,16 @@ readonly class EventService
             $userService->getAuthUser()->shift_calendar_filter
         );
 
+        $shifts = $events->pluck('shifts')->flatten();
+
         return ShiftPlanDto::newInstance()
-            ->setHistory($this->getEventShiftsHistoryChanges($events))
+            ->setHistory($this->getEventShiftsHistoryChanges())
             ->setCrafts($craftService->getAll())
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
-                    $calendarPeriod,
-                    $projectTabService,
-                    $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+                    $events,
+                    $calendarPeriod
                 )
             )
             ->setRooms($filteredRooms)
@@ -709,11 +682,13 @@ readonly class EventService
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->setPersonalFilters($shiftFilterController->index())
             ->setUsersForShifts(
-                $userService->getUsersWithPlannedWorkingHours(
+                $this->workingHourService->getUsersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true
+                    true,
+                    null,
+                    $shifts
                 )
             )
             ->setFreelancersForShifts(
@@ -721,41 +696,54 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     FreelancerShiftPlanResource::class,
-                    true
+                    true,
+                    $user
                 )
             )
             ->setServiceProvidersForShifts(
                 $serviceProviderService->getServiceProvidersWithPlannedWorkingHours(
                     $startDate,
                     $endDate,
-                    ServiceProviderShiftPlanResource::class
+                    ServiceProviderShiftPlanResource::class,
+                    $user
                 )
             )
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
-            ->setDayServices($dayServicesService->getAll());
+            ->setDayServices($dayServicesService->getAll())
+            ->setFirstProjectShiftTabId(
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
+            )
+            ->setShiftPlanWorkerSortEnumNames(
+                array_map(
+                    function (ShiftPlanWorkerSortEnum $enum): string {
+                        return $enum->name;
+                    },
+                    ShiftPlanWorkerSortEnum::cases()
+                ),
+            );
     }
 
     /**
      * @return array<int, mixed>
      */
-    public function getEventShiftsHistoryChanges(Collection $events): array
+    public function getEventShiftsHistoryChanges(): array
     {
-        return $events->flatMap(function ($event) {
-            return $event->shifts->flatMap(function ($shift) {
-                // Sort each shift's historyChanges by created_at in descending order
-                $historyArray = [];
-                foreach ($shift->historyChanges()->sortByDesc('created_at') as $history) {
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
-                }
+        $q = Change::query();
+        $q->where('model_type', Shift::class);
+        $q->orderBy('created_at', 'desc');
+        $historyArray = [];
+        $q->get()->each(function (Change $history) use (&$historyArray): void {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        });
 
-                return $historyArray;
-            });
-        })->all();
+        return $historyArray;
     }
 
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
@@ -796,7 +784,7 @@ readonly class EventService
                         null,
                     $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
                         $lastEventInProject->getAttribute('end_time')->endOfDay() :
-                        null
+                        null,
                 ];
             } else {
                 [$startDate, $endDate] = [
@@ -805,7 +793,7 @@ readonly class EventService
                         $today->startOfDay(),
                     $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
                         $lastEventInProject->getAttribute('end_time')->endOfDay() :
-                        $today->endOfDay()
+                        $today->endOfDay(),
                 ];
             }
         }
@@ -819,24 +807,24 @@ readonly class EventService
                     [] :
                     [
                         $startDate->format('Y-m-d'),
-                        $endDate->format('Y-m-d')
+                        $endDate->format('Y-m-d'),
                     ]
             )
             ->setCalendarType(
                 $desiredProjectHasNoEvents ? 'individual' :
                     (
-                        $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
-                            'daily' :
-                            'individual'
+                    $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ?
+                        'daily' :
+                        'individual'
                     )
             )
             ->setSelectedDate(
                 $desiredProjectHasNoEvents ?
                     null :
                     (
-                        $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
-                            $startDate?->format('Y-m-d') :
-                            null
+                    $startDate?->format('Y-m-d') === $endDate?->format('Y-m-d') ?
+                        $startDate?->format('Y-m-d') :
+                        null
                     )
             )
             ->setEventsWithoutRoom(
@@ -895,6 +883,11 @@ readonly class EventService
             ->setFirstProjectCalendarTabId(
                 $projectTabService
                     ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
+            ->setFirstProjectShiftTabId(
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
             );
 
         if ($useProjectTimePeriod) {
@@ -1016,7 +1009,13 @@ readonly class EventService
             ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+            )
+            ->setFirstProjectShiftTabId(
+                $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
             );
+
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -1187,7 +1186,6 @@ readonly class EventService
         SupportCollection $data,
         Event $event,
     ): void {
-
         $day = Carbon::parse($data['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,

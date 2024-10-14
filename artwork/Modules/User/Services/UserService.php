@@ -2,12 +2,15 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\DTOs\UserShiftPlanPageDto;
@@ -16,8 +19,12 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Http\Resources\UserShowResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
+use Artwork\Modules\UserProjectManagementSetting\Services\UserProjectManagementSettingService;
 use Artwork\Modules\UserUserManagementSetting\Services\UserUserManagementSettingService;
+use Artwork\Modules\UserWorkerShiftPlanFilter\Models\UserWorkerShiftPlanFilter;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Database\Eloquent\Collection;
@@ -34,7 +41,11 @@ class UserService
         private readonly NotificationSettingService $notificationSettingService,
         private readonly StatefulGuard $statefulGuard,
         private readonly BroadcastManager $broadcastManager,
-        private readonly UserUserManagementSettingService $userUserManagementSettingService
+        private readonly UserUserManagementSettingService $userUserManagementSettingService,
+        private readonly UserProjectManagementSettingService $userProjectManagementSettingService,
+        private readonly CarbonService $carbonService,
+        private readonly ProjectTabService $projectTabService,
+        private readonly WorkingHourService $workingHourService,
     ) {
     }
 
@@ -80,7 +91,10 @@ class UserService
             $user,
             $this->userUserManagementSettingService->getDefaults()
         );
-
+        $this->userProjectManagementSettingService->updateOrCreateIfNecessary(
+            $user,
+            $this->userProjectManagementSettingService->getDefaults()
+        );
         return $user;
     }
 
@@ -119,72 +133,27 @@ class UserService
 
     /**
      * @return array<string, mixed>
+     * @deprecated use the WorkingHourService
      */
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
-        bool $addVacationsAndAvailabilities = false
+        bool $addVacationsAndAvailabilities = false,
+        User $currentUser = null
     ): array {
-        $usersWithPlannedWorkingHours = [];
-
-        /** @var User $user */
-        foreach ($this->userRepository->getWorkers() as $user) {
-            /** @var JsonResource $desiredResourceClass */
-            $desiredUserResource = $desiredResourceClass::make($user);
-
-            if ($desiredUserResource instanceof UserShiftPlanResource) {
-                $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
-            }
-
-            $userData = [
-                'user' => $desiredUserResource->resolve(),
-                'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
-                'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
-                'dayServices' => $user->dayServices?->groupBy('pivot.date'),
-            ];
-
-            $userData['weeklyWorkingHours'] = $this->calculateWeeklyWorkingHours($user, $startDate, $endDate);
-
-            if ($addVacationsAndAvailabilities) {
-                $userData['vacations'] = $user->getVacationDays();
-                $userData['availabilities'] = $this->userRepository
-                    ->getAvailabilitiesBetweenDatesGroupedByFormattedDate(
-                        $user,
-                        $startDate,
-                        $endDate
-                    );
-            }
-
-            $usersWithPlannedWorkingHours[] = $userData;
-        }
-
-        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
-        return $usersWithPlannedWorkingHours;
+        trigger_deprecation('artwork', '0.x', 'This method is deprecated, use the WorkingHourService instead.');
+        throw new \Exception('This method is deprecated, use the WorkingHourService instead.');
     }
+
 
     /**
      * @return array<string, float|int>
+     * @deprecated use the WorkingHourService
      */
     public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
     {
-        // first create a carbon period for the given date range
-        $period = Carbon::parse($startDate)->toPeriod($endDate);
-
-        $weeklyWorkingHours = [];
-
-        // iterate over each week and calculate the working hours
-        foreach ($period as $week) {
-            $startDate = $week->copy()->startOfWeek();
-            $endDate = $week->copy()->endOfWeek();
-            $workingHours = $user->plannedWorkingHours(
-                $startDate,
-                $endDate
-            ) - $user->weekly_working_hours;
-            $weeklyWorkingHours[$week->format('W')] = $workingHours;
-        }
-
-        return $weeklyWorkingHours;
+        return $this->workingHourService->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
     }
 
     public function getAuthUserCrafts(): Collection
@@ -209,22 +178,28 @@ class UserService
         ?string $month,
         ?string $vacationMonth
     ): UserShiftPlanPageDto {
-        $hasUserShiftCalendarFilterDates = !is_null($user->shift_calendar_filter?->start_date) &&
-            !is_null($user->shift_calendar_filter?->end_date);
-        $startDate = $hasUserShiftCalendarFilterDates ?
-            Carbon::create($user->shift_calendar_filter->start_date)->startOfDay() :
-            Carbon::now()->startOfDay();
-        $endDate = $hasUserShiftCalendarFilterDates ?
-            Carbon::create($user->shift_calendar_filter->end_date)->endOfDay() :
-            Carbon::now()->addWeeks()->endOfDay();
+        [$requestedStartDate, $requestedEndDate] = $this->getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(
+            $this->getAuthUser()
+        );
+
+        $requestedPeriod = iterator_to_array(
+            CarbonPeriod::create($requestedStartDate, $requestedEndDate)->map(
+                function (Carbon $date) {
+                    return $date->format('d.m.Y');
+                }
+            )
+        );
+
+        $startOfWeek = $requestedStartDate->copy()->startOfWeek();
+        $endOfWeek = $requestedEndDate->copy()->endOfWeek();
 
         [
-            $daysWithEvents,
+            $eventsWithTotalPlannedWorkingHours,
             $totalPlannedWorkingHours
         ] = $eventService->getDaysWithEventsWhereUserHasShiftsWithTotalPlannedWorkingHours(
             $user->id,
-            $startDate,
-            $endDate
+            $startOfWeek,
+            $endOfWeek
         );
 
         [
@@ -237,6 +212,16 @@ class UserService
 
         return UserShiftPlanPageDto::newInstance()
             ->setUserToEdit(UserShowResource::make($user))
+            ->setUserToEditWholeWeekDatePeriodVacations(
+                $user->getAttribute('vacations')
+                    ->whereBetween(
+                        'date',
+                        [
+                            $startOfWeek->format('Y-m-d'),
+                            $endOfWeek->format('Y-m-d')
+                        ]
+                    )
+            )
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setCurrentTab('shiftplan')
             ->setCalendarData($calendarData)
@@ -248,8 +233,30 @@ class UserService
                 ]
             )
             ->setShowVacationsAndAvailabilitiesDate($selectedDate->format('Y-m-d'))
-            ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->setDaysWithEvents($daysWithEvents)
+            ->setDateValue([$requestedStartDate->format('Y-m-d'), $requestedEndDate->format('Y-m-d')])
+            ->setWholeWeekDatePeriod(
+                iterator_to_array(
+                    CarbonPeriod::create($startOfWeek, $endOfWeek)
+                        ->map(
+                            function (Carbon $date) use ($requestedPeriod) {
+                                return [
+                                    'inRequestedTimeSpan' => in_array(
+                                        $date->format('d.m.Y'),
+                                        $requestedPeriod
+                                    ),
+                                    'full_day' => $date->format('d.m.Y'),
+                                    'day' => $date->format('d.m.'),
+                                    'day_string' => $date->shortDayName,
+                                    'week_number' => $date->weekOfYear,
+                                    'month_number' => $date->month,
+                                    'is_monday' => $date->isMonday(),
+                                    'is_weekend' => $date->isWeekend(),
+                                ];
+                            }
+                        )
+                )
+            )
+            ->setEventsWithTotalPlannedWorkingHours($eventsWithTotalPlannedWorkingHours)
             ->setTotalPlannedWorkingHours((float)$totalPlannedWorkingHours)
             ->setVacationSelectCalendar($calendarService->createVacationAndAvailabilityPeriodCalendar($vacationMonth))
             ->setRooms($roomService->getAllWithoutTrashed())
@@ -257,7 +264,12 @@ class UserService
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setShifts($this->getUserShiftsOrderedByStartAscending($user))
             ->setVacations($this->getUserVacationsByDateOrderedByDateAsc($user, $selectedDate))
-            ->setAvailabilities($this->getUserAvailabilitiesByDateOrderedByDateAsc($user, $selectedDate));
+            ->setAvailabilities($this->getUserAvailabilitiesByDateOrderedByDateAsc($user, $selectedDate))
+            ->setFirstProjectShiftTabId(
+                $this->projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
+                    ProjectTabComponentEnum::SHIFT_TAB
+                )
+            );
     }
 
     public function getUserVacationsByDateOrderedByDateAsc(int|User $user, Carbon $selectedDate): Collection
@@ -318,6 +330,38 @@ class UserService
             Carbon::now()->addWeeks()->endOfDay();
 
         return [$startDate, $endDate];
+    }
+
+    public function getUserWorkerShiftPlanFilter(User $user, array $attributes = []): UserWorkerShiftPlanFilter
+    {
+        /** @var UserWorkerShiftPlanFilter $userWorkerShiftPlanFilter */
+        $userWorkerShiftPlanFilter = $user->workerShiftPlanFilter()->firstOrCreate(
+            [
+                'user_id' => $user->getAttribute('id')
+            ],
+            $attributes
+        );
+
+        return $userWorkerShiftPlanFilter;
+    }
+
+    /**
+     * @return array<int, Carbon>
+     */
+    public function getUserWorkerShiftPlanFilterStartAndEndDatesOrDefault(User $user): array
+    {
+        return [
+            (
+                $userWorkerShiftPlanFilter = $this->getUserWorkerShiftPlanFilter(
+                    $user,
+                    [
+                        'start_date' => ($now = $this->carbonService->getNow()),
+                        'end_date' => $this->carbonService->cloneAndAddWeek($now)
+                    ]
+                )
+            )->getAttribute('start_date'),
+            $userWorkerShiftPlanFilter->getAttribute('end_date')
+        ];
     }
 
     public function getAdminUser(): User

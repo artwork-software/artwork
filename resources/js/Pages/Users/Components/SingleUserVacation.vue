@@ -1,6 +1,6 @@
 <template>
     <div class="bg-secondary rounded flex text-sm group relative mb-2" v-if="!vacation.has_conflicts">
-        <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole()">
+        <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.user.id || $can('can manage availability')">
             <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                 <button type="button" @click="openShowEditVacationModal"
                         class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -37,7 +37,7 @@
 
                 </div>
             </div>
-            <p v-if="vacation.comment">&bdquo;{{ vacation.comment }}&rdquo;</p>
+            <p v-if="vacation.comment">&bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;</p>
         </div>
 
 
@@ -45,7 +45,7 @@
 
     <div  v-else>
         <div class="rounded flex text-sm group relative mb-2">
-            <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole()">
+            <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.user.id || $can('can manage availability')">
                 <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                     <button type="button" @click="openShowEditVacationModal"
                             class="rounded-full bg-artwork-buttons-create p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -90,7 +90,7 @@
 
                     </div>
                 </div>
-                <p v-if="vacation.comment">&bdquo;{{ vacation.comment }}&rdquo;</p>
+                <p v-if="vacation.comment">&bdquo;{{ vacation.comment === 'OFF_WORK' || vacation.comment === 'NOT_AVAILABLE' ? $t(vacation.comment) : vacation.comment }}&rdquo;</p>
             </div>
 
         </div>
@@ -121,7 +121,7 @@ import Button from "@/Jetstream/Button.vue";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Permissions from "@/Mixins/Permissions.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 export default defineComponent({
     name: "SingleUserVacation",
     mixins: [Permissions],
@@ -143,6 +143,7 @@ export default defineComponent({
     computed: {
     },
     methods: {
+        usePage,
         openShowEditVacationModal(){
             router.reload({
                 data: {

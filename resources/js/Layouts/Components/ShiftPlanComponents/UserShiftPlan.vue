@@ -2,46 +2,55 @@
     <div class="w-full">
         <div>
             <div class="mb-6 -ml-4">
-                <UserShiftPlanFunctionBar :type="type" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="weeklyWorkingHours"
-                                          @previousTimeRange="previousTimeRange"
-                                          @next-time-range="nextTimeRange"
+                <UserShiftPlanFunctionBar :type="type"
+                                          :totalPlannedWorkingHours="totalPlannedWorkingHours"
+                                          :weeklyWorkingHours="weeklyWorkingHours"
                                           :dateValue="dateValue"
-                :eventTypes="eventTypes"></UserShiftPlanFunctionBar>
+                                          :eventTypes="eventTypes"
+                                          @previousTimeRange="previousTimeRange"
+                                          @next-time-range="nextTimeRange"/>
             </div>
-            <div class="overflow-x-auto flex">
-                <div class="w-full grid grid-cols-7">
-                    <div class="min-h-48 mx-1"
-                         v-for="day in daysWithVacationAndEvents">
-                        <div class="calendarRoomHeader">
+            <div class="w-full grid grid-cols-7 gap-x-2">
+                <template v-for="day in wholeWeekDatePeriod">
+                    <span v-if="day.is_monday" class="sDark text-md col-span-7">KW {{ day.week_number }}</span>
+                    <div :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', 'min-h-48 mb-2 flex flex-col gap-y-2 rounded-lg']">
+                        <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '','calendarRoomHeader']">
                             {{ day.day_string }} {{ day.full_day }}
-                            <br>
-                            <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
                             <span class="text-shiftText subpixel-antialiased">
-                                (<span
-                                :class="day.shiftDurationWarning? 'text-error': ''">{{
-                                    calculateShiftDuration(day.events)
-                                }}</span>  |
-                            <span :class="day.breakWarning">{{ calculateTotalBreakDuration(day.events) }}</span>)</span>
+                                <span>(</span>
+                                <span :class="showShiftDurationWarningForDay(day.full_day)? 'text-error': ''">
+                                    {{ calculateShiftDurationForDay(day.full_day) }}
+                                </span>
+                                <span :class="showBreakWarningForDay(day.full_day)">
+                                    | {{ calculateTotalBreakDuration(this.getEventsWhereHasShiftsOnDay(day.full_day)) }}
+                                </span>
+                                <span>)</span>
+                            </span>
                         </div>
-                        <div v-if="day.in_vacation">
-                            <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">
-                                {{ $t('not available') }}
-                            </div>
-                        </div>
-                        <div v-for="event in day.events" class="flex w-full">
-                            <SingleShiftPlanEvent class="w-full"
-                                                  :eventType="this.findEventTypeById(event.event_type_id)"
-                                                  :project="this.findProjectById(event.project_id)"
-                                                  :room="this.findRoomById(event.room_id)"
-                                                  :event="event"
-                                                  :showRoom="true"
-                                                  :show-duration-info="true"
-                                                  :shift-qualifications="this.shiftQualifications"
-                                                  :day-string="day"
-                            />
+                        <!-- @todo: fix wrong backend datatype -->
+<!--                        <div v-if="userToEditIsOnVacation(day)">-->
+<!--                            <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">-->
+<!--                                {{ $t('not available') }}-->
+<!--                            </div>-->
+<!--                        </div>-->
+                        <div :class="[!day.inRequestedTimeSpan ? 'opacity-30' : '', 'flex flex-col gap-y-2']">
+                            <template v-for="event in this.getEventsWhereHasShiftsOnDay(day.full_day)">
+                                <template v-for="shift in event.shifts">
+                                    <SingleUserEventShift :type="type"
+                                                          :event="event"
+                                                          :shift="shift"
+                                                          :project="this.findProjectById(event.project_id)"
+                                                          :event-type="this.findEventTypeById(event.event_type_id)"
+                                                          :user-to-edit-id="this.userToEditId"
+                                                          :first-project-shift-tab-id="this.firstProjectShiftTabId"/>
+                                </template>
+                                <template v-for="dayService in getUserToEditDayServicesOfShift(event.shifts)">
+                                    <DayServiceComponent :day-service="dayService"/>
+                                </template>
+                            </template>
                         </div>
                     </div>
-                </div>
+                </template>
             </div>
         </div>
     </div>
@@ -53,44 +62,23 @@ import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/U
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import {router} from "@inertiajs/vue3";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
+import SingleUserEventShift from "@/Layouts/Components/ShiftPlanComponents/SingleUserEventShift.vue";
+import DayServiceComponent from "@/Layouts/Components/DayService/DayServiceComponent.vue";
+import IconLib from "@/Mixins/IconLib.vue";
 
 export default {
     name: "UserShiftPlan",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
+        DayServiceComponent,
+        SingleUserEventShift,
         SingleShiftPlanEvent,
         ShiftPlanFunctionBar,
         UserShiftPlanFunctionBar
     },
-    computed: {
-        daysWithVacationAndEvents() {
-            const daysArray = Object.values(this.daysWithEvents);
-            return daysArray.map((day) => {
-                const dayDate = new Date(day.full_day.split(".").reverse().join("-"));
-                const inVacation = this.vacations?.some((vacation) => {
-                    const vacationFrom = new Date(vacation.from);
-                    const vacationUntil = new Date(vacation.until);
-                    return dayDate >= vacationFrom && dayDate <= vacationUntil;
-                });
-
-                const shiftDuration = this.calculateShiftDuration(day.events);
-                const totalBreakDuration = this.calculateTotalBreakDuration(day.events);
-                const shiftDurationWarning = shiftDuration > '10:00';
-                const breakWarning = shiftDuration > '04:00' && totalBreakDuration < '00:30';
-
-                return {
-                    ...day,
-                    in_vacation: inVacation,
-                    shiftDuration,
-                    totalBreakDuration,
-                    shiftDurationWarning,
-                    breakWarning,
-                };
-            });
-        },
-    },
     props: [
-        'daysWithEvents',
+        'eventsWithTotalPlannedWorkingHours',
+        'wholeWeekDatePeriod',
         'dateValue',
         'projects',
         'eventTypes',
@@ -100,6 +88,9 @@ export default {
         'type',
         'totalPlannedWorkingHours',
         'shiftQualifications',
+        'firstProjectShiftTabId',
+        'userToEditWholeWeekDatePeriodVacations',
+        'userToEditId'
     ],
     methods: {
         previousTimeRange() {
@@ -150,13 +141,20 @@ export default {
             return this.rooms.find(room => room.id === roomId);
         },
         updateTimes() {
-            router.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
-                start_date: this.dateValue[0],
-                end_date: this.dateValue[1],
-            })
+            router.patch(
+                route('update.user.worker.shift-plan.filters.update', this.$page.props.user.id),
+                {
+                    start_date: this.dateValue[0],
+                    end_date: this.dateValue[1],
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                }
+            );
         },
-        calculateShiftDuration(events) {
-            events = Object.values(events);
+        calculateShiftDurationForDay(full_day) {
+            const events = this.getEventsWhereHasShiftsOnDay(full_day);
             const allShifts = events.flatMap(event => event.shifts);
             if (allShifts.length === 0) {
                 return '00:00';
@@ -188,10 +186,55 @@ export default {
 
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         },
+        getUserToEditDayServicesOfShift(shifts) {
+            let dayServicesToReturn = [];
+            let user = null;
+            shifts.forEach((shift) => {
+                if (!user) {
+                    user = shift.users.find((user) => user.id === this.userToEditId);
+                }
+
+                if (!user?.day_services) {
+                    return [];
+                }
+
+                dayServicesToReturn = dayServicesToReturn.concat(
+                    user.day_services.filter(
+                        (dayService) => shift.days_of_shift.includes(
+                            dayService.pivot.date.split('-').reverse().join('.')
+                        )
+                    )
+                );
+            });
+
+            return Array.from(new Set(dayServicesToReturn));
+        },
+        getEventsWhereHasShiftsOnDay(full_day) {
+            return this.eventsWithTotalPlannedWorkingHours.filter((eventWithTotalPlannedWorkingHours) => {
+                return eventWithTotalPlannedWorkingHours.event.daysOfShifts.includes(full_day);
+            }).map((eventWithTotalPlannedWorkingHours) => eventWithTotalPlannedWorkingHours.event);
+        },
+        userToEditIsOnVacation(desiredDay) {
+            const dayDate = new Date(desiredDay.full_day.split(".").reverse().join("-"));
+
+            return this.userToEditWholeWeekDatePeriodVacations?.some((vacation) => {
+                let vacationFrom = new Date(vacation.date + ' ' + '00:00');
+                let vacationUntil = new Date(vacation.date + ' ' + '23:59');
+
+                return dayDate >= vacationFrom && dayDate <= vacationUntil;
+            });
+        },
+        showShiftDurationWarningForDay(full_day) {
+            return this.calculateShiftDurationForDay(
+                this.getEventsWhereHasShiftsOnDay(full_day)
+            ) > '10:00';
+        },
+        showBreakWarningForDay(full_day) {
+            const events = this.getEventsWhereHasShiftsOnDay(full_day);
+
+            return this.calculateShiftDurationForDay(events) > '04:00' &&
+                this.calculateTotalBreakDuration(events) < '00:30';
+        }
     }
 }
 </script>
-
-<style scoped>
-
-</style>

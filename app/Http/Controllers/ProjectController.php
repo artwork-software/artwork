@@ -1880,8 +1880,9 @@ class ProjectController extends Controller
     /**
      * @throws Throwable
      */
-    //@todo: fix phpcs error - refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectTab(
         Request $request,
         Project $project,
@@ -2097,6 +2098,7 @@ class ProjectController extends Controller
         $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+        $headerObject->project->project_managers = $project->managerUsers;
 
 
         return inertia('Projects/Tab/TabContent', [
@@ -3451,14 +3453,26 @@ class ProjectController extends Controller
             request()->get('project_search') !== null &&
             request()->get('project_search') !== ''
         ) {
-            $projects = Project::search($request->string('project_search'))->get()->map(function ($project) {
-                return [
-                    'id' => $project->id,
-                    'name' => $project->name,
-                    'key_visual_path' => $project->key_visual_path,
-                    'is_group' => $project->is_group,
-                ];
-            });
+            $projects = Project::search($request->string('project_search'))
+                ->get()
+                ->map(function ($project) use ($request) {
+                    $returnProject =  [
+                        'id' => $project->id,
+                        'name' => $project->name,
+                        'key_visual_path' => $project->key_visual_path,
+                        'is_group' => $project->is_group,
+                    ];
+
+                    $addEventsToReturnProject = [];
+                    if ($request->boolean('get_first_last_event')) {
+                        $addEventsToReturnProject = [
+                        'first_event' => $this->projectService->getFirstEventInProject($project),
+                        'last_event' => $this->projectService->getLastEventInProject($project),
+                        ];
+                    }
+
+                    return array_merge($returnProject, $addEventsToReturnProject);
+                });
         }
 
         return $projects;

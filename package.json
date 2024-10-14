@@ -21,6 +21,7 @@
         "vue": "^3.4.29"
     },
     "dependencies": {
+        "@headlessui-float/vue": "^0.15.0",
         "@headlessui/vue": "^1.7.22",
         "@heroicons/vue": "^1.0.6",
         "@inertiajs/vue3": "^1.2.0",

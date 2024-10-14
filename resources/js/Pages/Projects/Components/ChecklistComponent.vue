@@ -30,6 +30,7 @@
                 </div>
             </template>
             <template #sort>
+                <div class="flex items-center z-10">
                 <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
                     <MenuItem v-slot="{ active }">
                         <div @click="currentSort = 1"
@@ -46,6 +47,7 @@
                         </div>
                     </MenuItem>
                 </BaseMenu>
+                </div>
             </template>
         </ChecklistFunctionBar>
 

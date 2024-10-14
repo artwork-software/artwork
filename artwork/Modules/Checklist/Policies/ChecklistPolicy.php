@@ -14,7 +14,9 @@ class ChecklistPolicy
     public function view(User $user, Checklist $checklist): bool
     {
         return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
-            $checklist->departments->users->contains($user->id) || $checklist->projects->users->contains($user->id);
+            $checklist->departments->users->contains($user->id) || $checklist->projects?->users->contains($user->id) ||
+            ($user->can(PermissionEnum::CHECKLIST_USE_PERMISSION->value) && $checklist->user_id === $user->id) ||
+            $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) || $checklist->user_id === $user->id;
     }
 
     public function create(): bool
@@ -26,16 +28,19 @@ class ChecklistPolicy
     {
         // todo: hier anpassen, wenn die Berechtigungen für die Checkliste festgelegt sind
         return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
-            $checklist->project->users->contains($user->id) ||
+            $checklist->project?->users->contains($user->id) ||
             $checklist->users->contains($user->id) ||
             // if user is in any task in checklist
             $checklist->tasks->each(function ($task) use ($user) {
                 return $task->task_users->contains($user->id);
-            });
+            }) || ($user->can(PermissionEnum::CHECKLIST_USE_PERMISSION->value) && $checklist->user_id === $user->id) ||
+            $user->can(PermissionEnum::CHECKLIST_EDIT_PERMISSION->value) || $checklist->user_id === $user->id;
     }
 
-    public function delete(User $user): bool
+    public function delete(User $user, Checklist $checklist): bool
     {
-        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value);
+        return $user->can(PermissionEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
+            ($user->can(PermissionEnum::CHECKLIST_USE_PERMISSION->value) && $checklist->user_id === $user->id) ||
+            $user->can(PermissionEnum::CHECKLIST_EDIT_PERMISSION->value) || $checklist->user_id === $user->id;
     }
 }

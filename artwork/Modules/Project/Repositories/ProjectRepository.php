@@ -113,6 +113,29 @@ class ProjectRepository extends BaseRepository
             ->whereNotNull('pinned_by_users')
             ->whereJsonContains('pinned_by_users', [$userId])
             ->without(['shiftRelevantEventTypes'])
+            ->with([
+                'access_budget' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'categories',
+                'genres',
+                'sectors',
+                'costCenter',
+                'groups',
+                'managerUsers' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'users' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'writeUsers' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                },
+                'state',
+                'delete_permission_users' => function ($query): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo', 'vacations']);
+                }
+            ])
             ->get();
     }
 

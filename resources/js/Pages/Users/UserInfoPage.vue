@@ -3,6 +3,7 @@
         <UserInfoTab :user_to_edit="user_to_edit"
                      :password_reset_status="password_reset_status"
                      :departments="departments"
+                     :calendar_settings="calendar_settings"
         />
     </UserEditHeader>
 </template>
@@ -26,6 +27,7 @@ export default {
         'currentTab',
         'password_reset_status',
         'departments',
+        'calendar_settings'
     ],
     data() {
         return {

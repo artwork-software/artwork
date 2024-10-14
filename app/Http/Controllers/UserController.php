@@ -7,6 +7,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -48,6 +49,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -56,6 +58,7 @@ use Laravel\Fortify\Fortify;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Spatie\Permission\Models\Role;
+use Throwable;
 
 class UserController extends Controller
 {
@@ -207,6 +210,9 @@ class UserController extends Controller
         ]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAddresses(
         UserUserManagementSettingService $userUserManagementSettingService,
         UserService $userService,
@@ -294,7 +300,8 @@ class UserController extends Controller
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'info',
             "departments" => Department::all(),
-            "password_reset_status" => session('status')
+            "password_reset_status" => session('status'),
+            'calendar_settings' => $user->calendar_settings,
         ]);
     }
 
@@ -463,6 +470,10 @@ class UserController extends Controller
             )
         );
 
+        $user->calendar_settings->update([
+            'high_contrast' => $request->get('high_contrast')
+        ]);
+
         if (Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
             $user->departments()->sync(
                 collect($request->departments)
@@ -534,7 +545,8 @@ class UserController extends Controller
 
         $user->update([
             'work_name' => $request->get('workName'),
-            'work_description' => $request->get('workDescription')
+            'work_description' => $request->get('workDescription'),
+            'is_freelancer' => $request->get('is_freelancer')
         ]);
 
         return Redirect::back();
@@ -668,7 +680,8 @@ class UserController extends Controller
             'repeating_events',
             'work_shifts',
             'description',
-            'event_name'
+            'event_name',
+            'high_contrast'
         ]));
     }
 
@@ -760,5 +773,29 @@ class UserController extends Controller
     public function calendarGoToStepper(User $user, Request $request): void
     {
         $user->update($request->only('goto_mode'));
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateShiftPlanUserSortBy(
+        User $user,
+        Request $request
+    ): void {
+        $request->validate(
+            [
+                'sortBy' => [
+                    'nullable',
+                    Rule::enum(ShiftPlanWorkerSortEnum::class)
+                ]
+            ]
+        );
+
+        $user->updateOrFail([
+            'shift_plan_user_sort_by' => $request->enum(
+                'sortBy',
+                ShiftPlanWorkerSortEnum::class
+            )
+        ]);
     }
 }

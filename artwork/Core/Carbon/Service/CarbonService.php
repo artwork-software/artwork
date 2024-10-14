@@ -10,6 +10,11 @@ class CarbonService
     {
     }
 
+    public function create(string $date): Carbon
+    {
+        return $this->carbon->create($date);
+    }
+
     public function getNow(): Carbon
     {
         return $this->carbon->copy()->now();
@@ -33,5 +38,10 @@ class CarbonService
     public function getTodayMidnight(): Carbon
     {
         return $this->carbon->clone()->now()->setTime(0, 0);
+    }
+
+    public function cloneAndAddWeek(Carbon $date): Carbon
+    {
+        return $date->clone()->addWeek();
     }
 }

@@ -10,12 +10,14 @@ class ShiftServiceProviderRepository extends BaseRepository
     public function createForShift(
         int $shiftId,
         int $serviceProviderId,
-        int $shiftQualificationId
+        int $shiftQualificationId,
+        string $craftAbbreviation
     ): ShiftServiceProvider {
         $shiftServiceProvider = new ShiftServiceProvider([
             'shift_id' => $shiftId,
             'service_provider_id' => $serviceProviderId,
-            'shift_qualification_id' => $shiftQualificationId
+            'shift_qualification_id' => $shiftQualificationId,
+            'craft_abbreviation' => $craftAbbreviation
         ]);
 
         $this->save($shiftServiceProvider);
@@ -32,8 +34,8 @@ class ShiftServiceProviderRepository extends BaseRepository
         return ShiftServiceProvider::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
 
-    public function findByUserIdAndShiftId(int $userId, int $shiftId): ShiftServiceProvider
+    public function findByServiceProviderIdAndShiftId(int $userId, int $shiftId): ShiftServiceProvider
     {
-        return ShiftServiceProvider::byUserIdAndShiftId($userId, $shiftId)->first();
+        return ShiftServiceProvider::byServiceProviderIdAndShiftId($userId, $shiftId)->first();
     }
 }

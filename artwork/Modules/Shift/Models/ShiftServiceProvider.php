@@ -19,7 +19,8 @@ class ShiftServiceProvider extends Pivot
         'shift_id',
         'service_provider_id',
         'shift_qualification_id',
-        'shift_count'
+        'shift_count',
+        'craft_abbreviation'
     ];
 
     public function shift(): BelongsTo
@@ -47,8 +48,8 @@ class ShiftServiceProvider extends Pivot
             ->where('shift_qualification_id', $shiftQualificationId);
     }
 
-    public function scopeByUserIdAndShiftId(Builder $builder, int $userId, int $shiftId): Builder
+    public function scopeByServiceProviderIdAndShiftId(Builder $builder, int $serviceProviderId, int $shiftId): Builder
     {
-        return $builder->where('user_id', $userId)->where('shift_id', $shiftId);
+        return $builder->where('service_provider_id', $serviceProviderId)->where('shift_id', $shiftId);
     }
 }

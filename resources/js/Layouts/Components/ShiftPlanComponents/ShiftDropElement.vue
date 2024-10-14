@@ -12,14 +12,12 @@
              @dragover="onDragOver"
              @drop="onDrop"
         >
-            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft && computedUsedWorkerCount !== computedMaxWorkerCount">
-                <input v-model="shift.isCheckedForMultiEdit"
-                       id="comments"
-                       aria-describedby="comments-description"
-                       name="comments"
+            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
+                <input v-model="userForMultiEdit.shift_ids"
+                       @change="(e) => handleShiftAndEventForMultiEdit(e.target.checked, shift, event)"
                        type="checkbox"
-                       class="input-checklist mr-1"
-                />
+                       :value="shift.id"
+                       class="input-checklist mr-1"/>
             </div>
             <div class="flex items-center justify-between"
                  @click="this.showQualificationRowExpander = !this.showQualificationRowExpander">
@@ -34,12 +32,12 @@
                         , {{room?.name}}
                     </div>
                 </div>
-                <div v-if="computedUsedWorkerCount === computedMaxWorkerCount">
+                <div v-if="computedUsedWorkerCount >= computedMaxWorkerCount">
                     <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                 </div>
             </div>
         </div>
-        <div class="w-full" v-if="showQualificationRowExpander">
+        <div class="w-full px-1" v-if="showQualificationRowExpander">
             <div class="w-full flex flex-row flex-wrap">
                 <div v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
                     class="flex xsLight items-center">
@@ -102,7 +100,7 @@ export default defineComponent({
         'userForMultiEdit',
         'shiftQualifications'
     ],
-    emits: ['dropFeedback', 'desiresReload'],
+    emits: ['dropFeedback', 'desiresReload', 'handleShiftAndEventForMultiEdit'],
     mixins: [IconLib],
     data() {
         return {
@@ -192,7 +190,7 @@ export default defineComponent({
             return ids;
         },
         checkIfUserIsInCraft() {
-            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id);
+            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id) || this.userForMultiEdit.craft_are_universally_applicable;
         },
     },
     watch: {
@@ -244,14 +242,14 @@ export default defineComponent({
                 2: 'providerIds'
             };
 
-            console.log(this.shiftUserIds[typeMap[highlightedType]]);
-
             return highlightedId ? this.shiftUserIds[typeMap[highlightedType]].includes(highlightedId) : false;
         },
         saveUser() {
-            if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
-                this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
-                return;
+            if(!this.droppedUser.craft_universally_applicable) {
+                if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
+                    this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
+                    return;
+                }
             }
 
             if (this.droppedUserAlreadyWorksOnShift(this.droppedUser)) {
@@ -265,37 +263,23 @@ export default defineComponent({
             }
 
             if (this.droppedUser.shift_qualifications.length === 1) {
-                let availableSlot = this.computedShiftsQualificationsWithWorkerCount.find(
-                    (shiftsQualification) =>
-                        shiftsQualification.shift_qualification_id === this.droppedUser.shift_qualifications[0].id &&
-                        shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
-                );
-
-                if (
-                    typeof availableSlot === 'undefined' ||
-                    availableSlot.workerCount === availableSlot.maxWorkerCount
-                ) {
-                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
-                    return;
-                }
-
-                this.assignUser(this.droppedUser, availableSlot.shift_qualification_id);
+                this.assignUser(this.droppedUser, this.droppedUser.shift_qualifications[0].id);
             } else {
                 let availableShiftQualificationSlots = [];
 
                 this.droppedUser.shift_qualifications.forEach((userShiftQualification) => {
                     this.computedShiftsQualificationsWithWorkerCount.forEach((shiftsQualification) => {
-                        if (
-                            userShiftQualification.id === shiftsQualification.shift_qualification_id &&
-                            shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
-                        ) {
+                        if (userShiftQualification.id === shiftsQualification.shift_qualification_id) {
                             availableShiftQualificationSlots.push(userShiftQualification);
                         }
                     })
                 });
 
                 if (availableShiftQualificationSlots.length === 0) {
-                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
+                    this.openMultipleShiftQualificationSlotsAvailableModal(
+                        this.droppedUser,
+                        this.droppedUser.shift_qualifications
+                    );
                     return;
                 }
 
@@ -441,7 +425,8 @@ export default defineComponent({
                     userId: droppedUser.id,
                     userType: droppedUser.type,
                     shiftQualificationId: shiftQualificationId,
-                    seriesShiftData: this.seriesShiftData
+                    seriesShiftData: this.seriesShiftData,
+                    craft_abbreviation: droppedUser.craft_abbreviation
                 }
             ).then(() => {
                 this.$emit(
@@ -451,6 +436,14 @@ export default defineComponent({
                     this.seriesShiftData
                 );
             });
+        },
+        handleShiftAndEventForMultiEdit(checked, shift, event) {
+            this.$emit(
+                'handleShiftAndEventForMultiEdit',
+                checked,
+                shift,
+                event
+            );
         }
     }
 })

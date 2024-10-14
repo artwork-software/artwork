@@ -30,7 +30,6 @@ class MinimalShiftPlanEventResource extends JsonResource
             'isLoud' => $this->getAttribute('is_loud'),
             'projectId' => $this->getAttribute('project_id'),
             'projectName' => $this->getAttribute('project')?->getAttribute('name'),
-            'project_shift_tab_id' => $this->getAttribute('project_shift_tab_id'),
             'roomId' => $this->getAttribute('room_id'),
             'roomName' => $this->getAttribute('room')?->getAttribute('name'),
             'declinedRoomId' => $this->getAttribute('declined_room_id'),

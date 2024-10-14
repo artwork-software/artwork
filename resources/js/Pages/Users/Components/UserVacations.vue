@@ -17,7 +17,7 @@
             <p class="text-sm text-gray-500">{{ $t('No entry has yet been made for this day.') }}</p>
         </div>
     </div>
-    <div v-if="$can('can manage workers') || hasAdminRole()" class="flex items-center gap-2"  @click="showAddEditVacationsModal = true">
+    <div v-if="$can('can manage workers') || hasAdminRole() || user.id === usePage().props.user.id || $can('can manage availability')" class="flex items-center gap-2"  @click="showAddEditVacationsModal = true">
         <PlusCircleIcon class="h-5 w-5 text-white bg-[#3017AD] rounded-full cursor-pointer" />
         <div class="underline underline-offset-1 text-[#3017AD] text-sm cursor-pointer">
             {{ $t('Edit availability & absence') }}
@@ -32,9 +32,11 @@ import {PlusCircleIcon} from "@heroicons/vue/outline";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import SingleUserVacation from "@/Pages/Users/Components/SingleUserVacation.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import {usePage} from "@inertiajs/vue3";
 
 export default defineComponent({
     name: "UserVacations",
+    methods: {usePage},
     mixins: [Permissions],
     components: {
         SingleUserVacation,

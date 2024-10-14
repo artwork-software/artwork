@@ -23,6 +23,14 @@ export default {
         noProjectGroups: {
             type: Boolean,
             default: false
+        },
+        getFirstLastEvent: {
+            type: Boolean,
+            default: false
+        },
+        onlyProjectGroups: {
+            type: Boolean,
+            default: false
         }
     },
     emits: ['project-selected'],
@@ -31,12 +39,21 @@ export default {
             this.$emit('project-selected', selectedProject);
             this.project_search_query = '';
         },
+        checkIfMustListed(project) {
+            if (this.noProjectGroups && project.is_group) {
+                return false;
+            }
+            if (this.onlyProjectGroups && project.is_group) {
+                return true;
+            }
+        }
     },
     watch: {
         project_search_query: {
             handler() {
                 axios.post(route('project.scoutSearch'),{
                     project_search: this.project_search_query,
+                    get_first_last_event: this.getFirstLastEvent,
                     wantsJson: true,
                 }).then(response => {
                     this.projects = response.data;
@@ -65,7 +82,7 @@ export default {
             <div v-if="projects?.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200">
                     <div v-for="(project, index) in projects" :key="index" class="flex items-center cursor-pointer">
-                        <div v-if="!(noProjectGroups && project.is_group)">
+                        <div v-if="checkIfMustListed(project)">
                             <div class="flex-1 text-sm py-4" @click="selectProject(project)">
                                 <p class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
                                     <span class="ml-2 truncate">{{ project.name }} </span>

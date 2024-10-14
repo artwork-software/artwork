@@ -50,11 +50,14 @@
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
-                                <IconFilter class="text-white" />
-                                <span v-if="openFilter">
+
+
+                                <span class="flex" v-if="openFilter">
+                                    <IconFilter class="h-5 w-5 text-white"/>
                                    <IconChevronDown class="h-5 w-5 text-white"/>
                                 </span>
-                                <span v-else>
+                                <span class="flex" v-else>
+                                    <IconFilter class="h-5 w-5 text-white"/>
                                     <IconChevronUp class="h-5 w-5 text-white"/>
                                 </span>
                             </div>
@@ -146,6 +149,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="craft.color"
+                                                 :craft="craft"
                                                  class="mb-1"
                                     />
                                 </div>
@@ -165,6 +169,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="null"
+                                                 :craft="craft"
                                                  class="mb-1"
                                     />
                                 </div>
@@ -187,8 +192,6 @@
             </div>
         </div>
     </div>
-
-
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
@@ -207,6 +210,7 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -218,6 +222,7 @@ export default defineComponent({
     ],
     mixins: [Permissions, IconLib],
     components: {
+        BaseFilter,
         CraftFilter,
         SideNotification,
         Input,
@@ -349,14 +354,18 @@ export default defineComponent({
                     name: craft.name,
                     id: craft.id,
                     users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
+                    color: craft?.color,
+                    universally_applicable: craft.universally_applicable,
+                    abbreviation: craft.abbreviation,
                 }));
             } else {
                 return this.loadedProjectInformation['ShiftTab'].crafts?.map(craft => ({
                     name: craft.name,
                     id: craft.id,
                     users: users.filter(user => user.element.assigned_craft_ids?.includes(craft.id)),
-                    color: craft?.color
+                    color: craft?.color,
+                    universally_applicable: craft.universally_applicable,
+                    abbreviation: craft.abbreviation,
                 })).filter(craft => this.$page.props.user.show_crafts?.includes(craft.id));
             }
         },

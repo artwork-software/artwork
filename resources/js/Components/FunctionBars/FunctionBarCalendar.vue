@@ -90,7 +90,7 @@
                         :tooltip-text="$t('Zoom in')"
                         icon="IconZoomIn"
                         icon-size="h-7 w-7"
-                        :disabled="zoom_factor <= 0.2"
+                        :disabled="zoom_factor >= 1.4"
                         @click="incrementZoomFactor"
                         v-if="!atAGlance"
                     />
@@ -100,7 +100,8 @@
                         :tooltip-text="$t('Zoom out')"
                         icon="IconZoomOut"
                         icon-size="h-7 w-7"
-                        :disabled="zoom_factor >= 1.4"
+                        :disabled="zoom_factor <= 0.2"
+
                         @click="decrementZoomFactor"
                         v-if="!atAGlance"
                     />
@@ -148,6 +149,15 @@
                             <MenuItems
                                 class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div class="w-76 p-6">
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.high_contrast"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <div
+                                            :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                            class=" ml-4 my-auto text-secondary">{{ $t('High contrast') }}
+                                        </div>
+                                    </div>
                                     <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_status"
                                                type="checkbox"
@@ -321,6 +331,7 @@ const userCalendarSettings = useForm({
     work_shifts: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.work_shifts : false,
     description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
     event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
+    high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
 });
 
 const projectSearch = ref('');
@@ -414,22 +425,18 @@ const changeAtAGlance = () => {
         preserveScroll: true
     })
 }
-
 const incrementZoomFactor = () => {
     if (zoom_factor.value < 1.4) {
         zoom_factor.value = Math.round((zoom_factor.value + 0.2) * 10) / 10;
         updateZoomFactorInUser();
     }
 }
-
-
 const decrementZoomFactor = () => {
     if (zoom_factor.value > 0.4) {
         zoom_factor.value = Math.round((zoom_factor.value - 0.2) * 10) / 10;
         updateZoomFactorInUser();
     }
 }
-
 const updateZoomFactorInUser = () => {
     router.patch(route('user.update.zoom_factor', {user: usePage().props.user.id}), {
         zoom_factor: zoom_factor.value
@@ -438,8 +445,6 @@ const updateZoomFactorInUser = () => {
         preserveState: false
     })
 }
-
-
 const calculateDateDifference = () => {
     const date1 = new Date(dateValueCopy.value[0]);
     const date2 = new Date(dateValueCopy.value[1]);
@@ -498,7 +503,9 @@ const updateTimes = () => {
 }
 
 const saveUserCalendarSettings = () => {
-    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}))
+    userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
+        preserveScroll: true,
+    })
 }
 
 

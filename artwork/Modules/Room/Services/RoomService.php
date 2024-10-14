@@ -340,7 +340,6 @@ readonly class RoomService
     private function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
-        ProjectTabService $projectTabService,
         ?UserShiftCalendarFilter $calendarFilter,
         ?Carbon $desiredDay = null
     ): array {
@@ -354,10 +353,7 @@ readonly class RoomService
         $areaIds = $calendarFilter->areas ?? null;
         $roomAttributeIds = $calendarFilter->room_attributes ?? null;
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
-        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
-        $actualEvents = [];
 
-        /** @var Builder $roomEvents */
         $roomEvents = $room
             ->events()
             ->with(
@@ -378,7 +374,13 @@ readonly class RoomService
                     'subEvents.event.room',
                 ]
             )
-            ->without(['created_by', 'shift_relevant_event_types'])
+            ->without([
+                'created_by',
+                'shift_relevant_event_types',
+                'shifts.users.calendar_settings',
+                'shifts.users.calendarAbo',
+                'shifts.users.shiftCalendarAbo',
+            ])
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
                 fn(Builder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
@@ -407,34 +409,40 @@ readonly class RoomService
             ->unless(!$isNotLoud, fn(Builder $builder) => $builder->where('is_loud', false))
             ->when(
                 $desiredDay,
-                fn(Builder $builder)  => $builder->startAndEndTimeOverlap(
+                fn(Builder $builder) => $builder->startAndEndTimeOverlap(
                     $desiredDay->startOfDay(),
                     $desiredDay->clone()->endOfDay()
                 ),
                 fn(Builder $builder) => $builder->startAndEndTimeOverlap($calendarPeriod->start, $calendarPeriod->end)
             )->get();
 
-        foreach ($roomEvents as $roomEvent) {
-            $eventStart = $roomEvent->start_time->isBefore($calendarPeriod->start) ?
-                $calendarPeriod->start :
-                $roomEvent->start_time;
+        return $this->convertEventsForFrontend($room, $roomEvents, $calendarPeriod);
+    }
 
-            $eventEnd = $roomEvent->end_time->isAfter($calendarPeriod->end) ?
+    public function convertEventsForFrontend(
+        Room $room,
+        array|Collection $events,
+        CarbonPeriod $calendarPeriod,
+    ): array {
+        $actualEvents = [];
+        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
+
+        foreach ($events as $event) {
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $event->start_time;
+
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ?
                 $calendarPeriod->end :
-                $roomEvent->end_time;
+                $event->end_time;
 
             $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
             foreach ($eventPeriod as $date) {
                 $dateKey = $date->format('d.m.Y');
-                $roomEvent->setAttribute(
-                    'project_shift_tab_id',
-                    $projectTabService->findFirstProjectTabWithShiftsComponent()->getAttribute('id')
-                );
-                $actualEvents[$dateKey][] = $roomEvent;
+                $actualEvents[$dateKey][] = $event;
             }
         }
-
 
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
@@ -447,7 +455,6 @@ readonly class RoomService
 
         return $eventsForRoom;
     }
-
 
     /**
      * @throws Throwable
@@ -484,7 +491,6 @@ readonly class RoomService
         UserService $userService,
         array $desiredRooms,
         array $desiredDays,
-        ProjectTabService $projectTabService,
         ?UserShiftCalendarFilter $userShiftCalendarFilter,
     ): array {
         [$startDate, $endDate] = $userService->getUserShiftCalendarFilterDatesOrDefault($userService->getAuthUser());
@@ -499,7 +505,6 @@ readonly class RoomService
                         $roomService->collectEventsForRoomShift(
                             $room,
                             $calendarPeriod,
-                            $projectTabService,
                             $userShiftCalendarFilter,
                             Carbon::parse($desiredDay)
                         ),
@@ -517,20 +522,22 @@ readonly class RoomService
     }
 
     public function collectEventsForRoomsShift(
-        array|Collection $roomsWithEvents,
+        array|Collection $rooms,
+        array|Collection $events,
         CarbonPeriod $calendarPeriod,
-        ProjectTabService $projectTabService,
-        ?UserShiftCalendarFilter $calendarFilter
     ): Collection {
         $roomEvents = collect();
 
-        foreach ($roomsWithEvents as $room) {
+        foreach ($rooms as $room) {
             $roomEvents->add(
-                $this->collectEventsForRoomShift(
+                $this->convertEventsForFrontend(
                     $room,
+                    $events->filter(
+                        function ($event) use ($room): bool {
+                            return $event->room_id === $room->id;
+                        }
+                    ),
                     $calendarPeriod,
-                    $projectTabService,
-                    $calendarFilter
                 )
             );
         }

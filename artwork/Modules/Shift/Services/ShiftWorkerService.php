@@ -13,6 +13,7 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Exception;
 use Throwable;
 
@@ -22,7 +23,8 @@ class ShiftWorkerService
         private readonly UserService $userService,
         private readonly UserRepository $userRepository,
         private readonly FreelancerRepository $freelancerRepository,
-        private readonly ServiceProviderRepository $serviceProviderRepository
+        private readonly ServiceProviderRepository $serviceProviderRepository,
+        private readonly WorkingHourService $workingHourService
     ) {
     }
 
@@ -62,7 +64,8 @@ class ShiftWorkerService
 
         $workerData = [
             'type' => $worker->getAttribute('type'),
-            'plannedWorkingHours' => $worker->plannedWorkingHours($startDate, $endDate),
+            'plannedWorkingHours' =>
+                $worker->plannedWorkingHours($startDate, $endDate),
             'dayServices' => $worker->getAttribute('dayServices')->groupBy('pivot.date')
         ];
 

@@ -125,9 +125,6 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
-
-
-
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
         Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])
@@ -494,6 +491,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Event Api
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
+    Route::patch('/events/{event}/description', [EventController::class, 'updateDescription'])
+        ->name('event.update.description');
     Route::patch('/events/{event}/single/bulk', [EventController::class, 'updateSingleBulkEvent'])
         ->name('event.update.single.bulk');
     Route::post('/events/{project}/single/bulk/create', [EventController::class, 'createSingleBulkEvent'])
@@ -626,6 +625,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/user/{user}/shift/calendar/filter/date/update',
         [UserShiftCalendarFilterController::class, 'updateDates']
     )->name('update.user.shift.calendar.filter.dates');
+    Route::patch(
+        '/user/{user}/worker/shift-plan/filters/update',
+        [UserShiftCalendarFilterController::class, 'updateUserWorkerShiftPlanFilters']
+    )->name('update.user.worker.shift-plan.filters.update');
 
     //user.update.zoom_factor
     Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
@@ -1341,6 +1344,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
+        Route::patch(
+            '/{user}/update/shift-plan-user-sort-by',
+            [
+                UserController::class, 'updateShiftPlanUserSortBy'
+            ]
+        )->name('user.update.shiftPlanUserSortBy');
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');

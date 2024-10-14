@@ -308,6 +308,35 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Users with this permission can view unassigned Sage data records.",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CHECKLIST_USE_PERMISSION->value,
+                'name_de' => "To-dos nutzen",
+                'translation_key' => "Use to-dos",
+                'group' => 'To-dos',
+                'tooltipText' => 'Erlaubt Erstellen von Listen und To-dos im allgemeinen Bereich (Übersichtsseite) ' .
+                    'und auf Projektebene, sofern durch To-do-Komponente nicht weiter eingeschränkt.',
+                'tooltipKey' => 'Allows the creation of lists and to-dos in the general area (overview page) and ' .
+                    'at project level, unless further restricted by the to-do component.',
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::CHECKLIST_EDIT_PERMISSION->value,
+                'name_de' => "To-dos verwalten",
+                'translation_key' => "Manage to-dos",
+                'group' => 'To-dos',
+                'tooltipText' => 'Erlaubt zudem das Löschen aller Listen, unabhängig davon wer sie erstellt hat',
+                'tooltipKey' => "Also allows you to delete all lists, regardless of who created them",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::AVAILABILITY_MANAGEMENT->value,
+                'name_de' => "Verfügbarkeiten manuell verwalten",
+                'translation_key' => "Manually manage availabilities",
+                'group' => 'Shifts',
+                'tooltipText' => 'Stelle die Verfügbarkeiten des Nutzer*innen ein',
+                'tooltipKey' => "Set the availability of the user",
+                'checked' => false
+            ],
         ];
     }
 

@@ -6,8 +6,7 @@
                     'bg-green-500' :
                     'bg-gray-500',
                     anyoneHasVacation ? '!bg-red-500' : ''
-            ]"
-        >
+            ]">
             <div class="h-9 flex items-center">
                 {{ shift.craft.abbreviation }} ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount }})
             </div>
@@ -23,7 +22,6 @@
                 <div v-if="shift.infringement || anyoneHasVacation" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                     <IconExclamationCircle class="h-5 w-5" stroke-width="1.5" />
                 </div>
-
                 <div>
                     <BaseMenu v-if="this.$can('can plan shifts') || this.hasAdminRole()" dots-size="h-5 w-5 text-white">
                         <MenuItem v-slot="{ active }">
@@ -65,7 +63,6 @@
                 <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.end }}
                 </span>
-
                 <span v-if="shift.break_minutes"> | {{ shift.break_formatted }}</span>
             </p>
             <ShiftNoteComponent :shift="shift" />
@@ -73,7 +70,10 @@
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <UserPopoverTooltip :user="user" height="4" width="4" class="flex items-center" />
-                        <span class="text-xs">{{ user.full_name }}</span>
+                        <span class="text-xs">
+                            {{ user.full_name }}
+                            <span v-if="user.pivot.craft_abbreviation !== shift.craft.abbreviation && user.pivot.craft_abbreviation !== null">[{{ user.pivot.craft_abbreviation}}]</span>
+                        </span>
                         <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
                             :classes="'w-4 h-4'"
@@ -97,7 +97,10 @@
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <UserPopoverTooltip :user="freelancer" height="4" width="4" class="flex items-center" />
-                        <span class="text-xs">{{ freelancer.name }}</span>
+                        <span class="text-xs">
+                            {{ freelancer.name }}
+                            <span v-if="freelancer.pivot.craft_abbreviation !== shift.craft.abbreviation && freelancer.pivot.craft_abbreviation !== null">[{{ freelancer.pivot.craft_abbreviation}}]</span>
+                        </span>
                         <span v-if="freelancer.pivot.shift_count > 1" class="text-xs"> 1/{{ freelancer.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
                             class="w-5 h-5"  :classes="'w-4 h-4'"
@@ -121,7 +124,10 @@
                 <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover" alt="profile-photo">
-                        <span class="text-xs">{{ serviceProvider.name }}</span>
+                        <span class="text-xs">
+                            {{ serviceProvider.name }}
+                            <span v-if="serviceProvider.pivot.craft_abbreviation !== shift.craft.abbreviation && serviceProvider.pivot.craft_abbreviation !== null">[{{ serviceProvider.pivot.craft_abbreviation}}]</span>
+                        </span>
                         <span v-if="serviceProvider.pivot.shift_count > 1" class="text-xs">  1/{{ serviceProvider.pivot.shift_count }} </span>
                         <ShiftQualificationIconCollection
                             class="w-5 h-5"  :classes="'w-4 h-4'"

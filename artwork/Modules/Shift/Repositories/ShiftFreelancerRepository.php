@@ -7,12 +7,17 @@ use Artwork\Modules\Shift\Models\ShiftFreelancer;
 
 class ShiftFreelancerRepository extends BaseRepository
 {
-    public function createForShift(int $shiftId, int $freelancerId, int $shiftQualificationId): ShiftFreelancer
-    {
+    public function createForShift(
+        int $shiftId,
+        int $freelancerId,
+        int $shiftQualificationId,
+        string $craftAbbreviation
+    ): ShiftFreelancer {
         $shiftFreelancer = new ShiftFreelancer([
             'shift_id' => $shiftId,
             'freelancer_id' => $freelancerId,
-            'shift_qualification_id' => $shiftQualificationId
+            'shift_qualification_id' => $shiftQualificationId,
+            'craft_abbreviation' => $craftAbbreviation
         ]);
 
         $this->save($shiftFreelancer);
@@ -29,8 +34,8 @@ class ShiftFreelancerRepository extends BaseRepository
         return ShiftFreelancer::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
 
-    public function findByUserIdAndShiftId(int $userId, int $shiftId): ShiftFreelancer
+    public function findByFreelancerIdAndShiftId(int $userId, int $shiftId): ShiftFreelancer
     {
-        return ShiftFreelancer::byUserIdAndShiftId($userId, $shiftId)->first();
+        return ShiftFreelancer::byFreelancerIdAndShiftId($userId, $shiftId)->first();
     }
 }

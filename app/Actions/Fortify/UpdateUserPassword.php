@@ -4,12 +4,16 @@ namespace App\Actions\Fortify;
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 
 class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
 
+    /**
+     * @throws ValidationException
+     */
     public function update(mixed $user, array $input): void
     {
         Validator::make($input, [

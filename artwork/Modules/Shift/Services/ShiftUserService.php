@@ -26,7 +26,8 @@ readonly class ShiftUserService
         private ShiftUserRepository $shiftUserRepository,
         private ShiftFreelancerRepository $shiftFreelancerRepository,
         private ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private ShiftsQualificationsRepository $shiftsQualificationsRepository
+        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
+        private ShiftsQualificationsService $shiftsQualificationsService,
     ) {
     }
 
@@ -34,6 +35,7 @@ readonly class ShiftUserService
         Shift $shift,
         int $userId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         NotificationService $notificationService,
         ShiftCountService $shiftCountService,
         VacationConflictService $vacationConflictService,
@@ -42,8 +44,14 @@ readonly class ShiftUserService
         array|null $seriesShiftData = null
     ): void {
         $shiftUserPivot = $this->shiftUserRepository->createForShift(
-            $shift->id,
+            $shift->getAttribute('id'),
             $userId,
+            $shiftQualificationId,
+            $craftAbbreviation,
+        );
+
+        $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+            $shift->getAttribute('id'),
             $shiftQualificationId
         );
 

@@ -78,10 +78,17 @@ class IndividualTimeController extends Controller
 
         $shiftComment = $request->get('shift_comment');
 
-        if ($shiftComment['comment'] !== null || $shiftComment['id']) {
+        if ($shiftComment['comment'] !== null || !isset($shiftComment['id'])) {
             $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
                 $modelInstance,
                 $shiftComment['comment'],
+                $shiftComment['date'],
+                $shiftComment['id'] ?? null,
+            );
+        } elseif (isset($shiftComment['id'])) {
+            $this->shiftPlanCommentService->addOrUpdateShiftPlanComment(
+                $modelInstance,
+                '',
                 $shiftComment['date'],
                 $shiftComment['id'] ?? null,
             );

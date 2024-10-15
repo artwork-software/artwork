@@ -380,11 +380,11 @@
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
         <RoomSidenav
             :room="room"
-            :categories="roomCategories.data"
+            :categories="roomCategories"
             :available-categories="available_categories"
-            :attributes="roomAttributes.data"
+            :attributes="roomAttributes"
             :available-attributes="available_attributes"
-            :adjoiningRooms="adjoiningRooms.data"
+            :adjoiningRooms="adjoiningRooms"
             :available-adjoining-rooms="available_rooms"
         />
     </BaseSidenav>

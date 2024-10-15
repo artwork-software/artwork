@@ -167,9 +167,17 @@ class ChecklistController extends Controller
         TaskService $taskService
     ): RedirectResponse {
 
+        $setTabId = null;
+        if ($request->tab_id === null && $checklist->tab_id !== null) {
+            $setTabId = $checklist->tab_id;
+        }
 
         $this->checklistService->updateByRequest($checklist, $request, $taskService);
 
+        if ($setTabId !== null) {
+            $checklist->tab_id = $setTabId;
+            $checklist->save();
+        }
         if ($request->missing('assigned_user_ids')) {
             return Redirect::back();
         }

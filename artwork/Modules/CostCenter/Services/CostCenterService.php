@@ -11,7 +11,7 @@ readonly class CostCenterService
     {
     }
 
-    public function findOrCreateCostCenter(string $name): int
+    public function findOrCreateCostCenter(string $name): CostCenter
     {
         $createdOrFoundedCostCenter = $this->costCenterRepository->findCostCenterByName($name);
 
@@ -22,6 +22,6 @@ readonly class CostCenterService
             $createdOrFoundedCostCenter = $this->costCenterRepository->save($costCenter);
         }
 
-        return $createdOrFoundedCostCenter->id;
+        return $createdOrFoundedCostCenter;
     }
 }

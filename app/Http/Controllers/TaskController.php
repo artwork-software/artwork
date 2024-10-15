@@ -195,17 +195,19 @@ class TaskController extends Controller
         /** @var Checklist $checklist */
         $checklist = $task->checklist()->first();
 
-        $this->changeService->saveFromBuilder(
-            $this->changeService
-                ->createBuilder()
-                ->setModelClass(Project::class)
-                ->setModelId($checklist->project_id)
-                ->setTranslationKey('Task deleted from')
-                ->setTranslationKeyPlaceholderValues([
-                    $task->name,
-                    $checklist->name
-                ])
-        );
+        if ($checklist->hasProject()) {
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($checklist->project_id)
+                    ->setTranslationKey('Task deleted from')
+                    ->setTranslationKeyPlaceholderValues([
+                        $task->name,
+                        $checklist->name
+                    ])
+            );
+        }
 
         $task->forceDelete();
 

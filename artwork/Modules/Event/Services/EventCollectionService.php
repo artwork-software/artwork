@@ -67,12 +67,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
 use Throwable;
 
-readonly class EventCollectionService
+class EventCollectionService
 {
 
     public function __construct(
-        private RoomRepository $roomRepository,
-        private EventRepository $eventRepository
+        private readonly RoomRepository $roomRepository,
+        private readonly EventRepository $eventRepository
     ) {
     }
 

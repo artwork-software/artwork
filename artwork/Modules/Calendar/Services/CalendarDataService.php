@@ -1,0 +1,114 @@
+<?php
+
+namespace Artwork\Modules\Calendar\Services;
+
+use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
+use Artwork\Modules\Event\Services\EventCollectionService;
+use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
+use Artwork\Modules\UserShiftCalendarFilter\Models\UserShiftCalendarFilter;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+
+readonly class CalendarDataService
+{
+    public function __construct(
+        private RoomRepository $roomRepository,
+        private EventCollectionService $eventCollectionService,
+        private FilterService $filterService,
+    ) {
+    }
+
+    public function createCalendarData(
+        Carbon $startDate,
+        Carbon $endDate,
+        UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter,
+        ?Project $project = null,
+        ?Room $room = null,
+        ?bool $desiresInventorySchedulingResource = null
+    ): array {
+        $periodArray = [];
+        foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+            $periodArray[] = [
+                'day' => $period->format('d.m.'),
+                'day_string' => $period->shortDayName,
+                'is_weekend' => $period->isWeekend(),
+                'full_day' => $period->format('d.m.Y'),
+                'full_day_display' => $period->format('d.m.y'),
+                'short_day' => $period->format('d.m'),
+                'week_number' => $period->weekOfYear,
+                'is_monday' => $period->isMonday(),
+                'month_number' => $period->month,
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
+            ];
+        }
+
+        $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
+        $calendarType = $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ? 'daily' : 'individual';
+        $selectedDate = $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
+            $startDate->format('Y-m-d') :
+            null;
+        $roomsWithEvents = empty($room) ?
+            $this->eventCollectionService->collectEventsForRooms(
+                roomsWithEvents: $this->roomRepository->getFilteredRoomsBy(
+                    $calendarFilter?->rooms,
+                    $calendarFilter?->room_attributes,
+                    $calendarFilter?->areas,
+                    $calendarFilter?->room_categories,
+                    $calendarFilter?->adjoining_not_loud,
+                    $calendarFilter?->adjoining_no_audience,
+                    $startDate,
+                    $endDate
+                ),
+                calendarPeriod: $calendarPeriod,
+                calendarFilter: $calendarFilter,
+                project: $project,
+                desiresInventorySchedulingResource: $desiresInventorySchedulingResource
+            ) :
+            $this->eventCollectionService->collectEventsForRoom(
+                room: $room,
+                calendarPeriod: $calendarPeriod,
+                calendarFilter: $calendarFilter,
+                project: $project
+            );
+        $eventsWithoutRoom = empty($room) ?
+            CalendarEventResource::collection(
+                $this->eventCollectionService->getEventsWithoutRoom(
+                    $project,
+                    [
+                        'room',
+                        'creator',
+                        'project',
+                        'project.managerUsers',
+                        'project.state',
+                        'shifts',
+                        'shifts.craft',
+                        'shifts.users',
+                        'shifts.freelancer',
+                        'shifts.serviceProvider',
+                        'shifts.shiftsQualifications',
+                        'subEvents.event',
+                        'subEvents.event.room'
+                    ]
+                )
+            )->resolve() :
+            [];
+        $filterOptions = $this->filterService->getCalendarFilterDefinitions();
+        $personalFilters = $this->filterService->getPersonalFilter();
+
+        return [
+            'days' => $periodArray,
+            'dateValue' => $dateValue,
+            'calendarType' => $calendarType,
+            'selectedDate' => $selectedDate,
+            'roomsWithEvents' => $roomsWithEvents,
+            'eventsWithoutRoom' => $eventsWithoutRoom,
+            'filterOptions' => $filterOptions,
+            'personalFilters' => $personalFilters,
+            'user_filters' => $calendarFilter,
+        ];
+    }
+}

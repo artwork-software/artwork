@@ -1,5 +1,20 @@
 <?php
 
+uses(
+    Tests\DuskTestCase::class,
+    // Illuminate\Foundation\Testing\DatabaseMigrations::class,
+)->in('Browser');
+
+uses(
+    Tests\DuskTestCase::class,
+    // Illuminate\Foundation\Testing\DatabaseMigrations::class,
+)->in('Browser');
+
+uses(
+    Tests\DuskTestCase::class,
+    // Illuminate\Foundation\Testing\DatabaseMigrations::class,
+)->in('Browser');
+
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -16,7 +31,8 @@ use Tests\TestCase;
 
 uses(
     TestCase::class,
-    DatabaseTransactions::class
+    DatabaseTransactions::class,
+    \Tests\CreateAdminUser::class
 )->beforeEach(
     function (): void {
     }

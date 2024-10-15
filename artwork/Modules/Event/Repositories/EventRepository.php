@@ -154,8 +154,10 @@ class EventRepository extends BaseRepository
         return $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate)->get();
     }
 
-    public function getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(Carbon $startDate, Carbon $endDate): Collection
-    {
+    public function getEventsWhereHasShiftsStartAndEndTimeOverlapWithUsers(
+        Carbon $startDate,
+        Carbon $endDate
+    ): Collection {
         $query = $this->getEventsWhereHasShiftsStartAndEndTimeOverlapQuery($startDate, $endDate);
         $query->with(['shifts.users',
             'project',
@@ -166,9 +168,8 @@ class EventRepository extends BaseRepository
         $query->without([
             'shifts.users.calendar_settings',
             'shifts.calendarAbo',
-            'shifts.users.shiftCalendarAbo']
-        );
-
+            'shifts.users.shiftCalendarAbo'
+        ]);
         return $query->get();
     }
 

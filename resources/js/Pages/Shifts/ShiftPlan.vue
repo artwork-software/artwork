@@ -34,7 +34,6 @@
                                             {{ day.day_string }} {{ day.full_day }}
                                         </div>
                                     </th>
-
                                 </TableHead>
                             </div>
                         </template>
@@ -316,37 +315,15 @@
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
-                                            <div v-if="!day.is_extra_row"
-                                                :class="[
+                                            <div v-if="!day.is_extra_row" :class="[
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
                                                  ]"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer truncate relative overflow-hidden"
-                                                :style="{width: '202px'}"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
+                                                :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                 @click="handleCellClick(user, day)">
-                                                <span v-for="shift in user.element?.shifts"
-                                                      v-if="!user.vacations?.some(vacation => vacation.date === day.without_format)">
-                                                    <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                        {{ shift.start }} - {{ shift.end }} {{ shift.roomName }}
-                                                        <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser && shift.craftAbbreviationUser !== null">
-                                                             [{{ shift.craftAbbreviationUser }}]
-                                                        </span>,
-                                                    </span>
-                                                </span>
-                                                <span v-else
-                                                      class="h-full flex justify-center items-center text-[#f08b32]">
-                                                    {{ user.vacations?.find(v => v.date === day.without_format).type === 'OFF_WORK' ? $t('Day off work') :  $t('not available') }}
-                                                </span>
-                                                <span v-if="user.availabilities">
-                                                    <span v-for="availability in user.availabilities[day.full_day]">
-                                                        <span class="text-green-500">
-                                                            <span v-if="availability.comment">&bdquo;{{
-                                                                    availability.comment
-                                                                }}&rdquo; </span>
-                                                        </span>
-                                                    </span>
-                                                </span>
+                                                <ShiftPlanCell :user="user" :day="day" />
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -354,7 +331,7 @@
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                    {{ user?.weeklyWorkingHours[day.week_number].difference }}
                                                 </span>
                                             </div>
                                             <div
@@ -418,30 +395,10 @@
                                             <div v-if="!day.is_extra_row"
                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 @click="handleCellClick(user, day)"
-                                                :style="{width: '202px'}"
-                                            >
-                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.some(vacation => vacation.date === day.without_format)">
-                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
-                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }}
-                                                     <span v-if="shift.craftAbbreviation !== shift.craftAbbreviationUser">
-                                                             [{{ shift.craftAbbreviationUser }}]
-                                                     </span>,
-                                                </span>
-                                            </span>
-                                            <span v-else class="h-full flex justify-center items-center text-[#f08b32]">
-                                                {{ user.vacations?.find(v => v.date === day.without_format).type === 'OFF_WORK' ? $t('Day off work') :  $t('not available') }}
-                                            </span>
-                                                <span v-if="user.availabilities">
-                                                <span v-for="availability in user.availabilities[day.full_day]">
-                                                    <span class="text-green-500">
-                                                        <span v-if="availability.comment">&bdquo;{{
-                                                                availability.comment
-                                                            }}&rdquo; </span>
-                                                    </span>
-                                                </span>
-                                                </span>
+                                                :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
+                                                <ShiftPlanCell :user="user" :day="day" />
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -449,7 +406,7 @@
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number]?.toFixed(2) }}
+                                                    {{ user?.weeklyWorkingHours[day.week_number].difference }}
                                                 </span>
                                             </div>
                                             <div
@@ -552,6 +509,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -568,6 +526,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        ShiftPlanCell,
         ToolTipComponent,
         MenuItem,
         BaseMenu,
@@ -830,6 +789,7 @@ export default {
         },
     },
     methods: {
+
         renderRoomName(room){
             const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
             const firstDayIndex = this.days.indexOf(firstDayWhereAreNotExtraRows);
@@ -923,6 +883,8 @@ export default {
                     availabilities: user.availabilities,
                     weeklyWorkingHours: user.weeklyWorkingHours,
                     dayServices: user.dayServices,
+                    individual_times: user.individual_times,
+                    shift_comments: user.shift_comments
                 });
             })
             if (this.showFreelancers) {
@@ -934,7 +896,9 @@ export default {
                         vacations: freelancer.vacations,
                         assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
                         availabilities: freelancer.availabilities,
-                        dayServices: freelancer.dayServices
+                        dayServices: freelancer.dayServices,
+                        individual_times: freelancer.individual_times,
+                        shift_comments: freelancer.shift_comments
                     });
                 })
             }
@@ -945,7 +909,9 @@ export default {
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
                     assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
-                    dayServices: service_provider.dayServices
+                    dayServices: service_provider.dayServices,
+                    individual_times: service_provider.individual_times,
+                    shift_comments: service_provider.shift_comments
                 });
             })
             return users;

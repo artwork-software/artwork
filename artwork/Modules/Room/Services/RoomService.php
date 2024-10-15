@@ -239,6 +239,9 @@ readonly class RoomService
         return $this->convertEventsForFrontend($room, $roomEvents, $calendarPeriod);
     }
 
+    /**
+     * @return array<string, array<int, array<int, Event>>>
+     */
     public function convertEventsForFrontend(
         Room $room,
         array|Collection $events,

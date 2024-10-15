@@ -33,6 +33,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\IndividualTimeController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
@@ -1222,6 +1223,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');
+
+    Route::post('/individual-times/add', [IndividualTimeController::class, 'store'])
+        ->name('add.update.individualTimesAndShiftPlanComment');
+
+    Route::delete('/individual-times/{individualTime}/delete', [IndividualTimeController::class, 'destroy'])
+        ->name('delete.individualTimes');
+
     Route::patch('/freelancer/{freelancer}/check/vacation', [VacationController::class, 'checkVacationFreelancer'])
         ->name('freelancer.check.vacation');
 

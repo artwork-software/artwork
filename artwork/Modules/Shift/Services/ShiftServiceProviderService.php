@@ -78,6 +78,7 @@ readonly class ShiftServiceProviderService
                 $seriesShiftData['dayOfWeek'],
                 $serviceProviderId,
                 $shiftQualificationId,
+                $craftAbbreviation,
                 $shiftCountService,
                 $changeService
             );
@@ -91,6 +92,7 @@ readonly class ShiftServiceProviderService
         string $dayOfWeek,
         int $serviceProviderId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         ShiftCountService $shiftCountService,
         ChangeService $changeService
     ): void {
@@ -141,6 +143,7 @@ readonly class ShiftServiceProviderService
                     $shiftBetweenDates,
                     $serviceProviderId,
                     $shiftQualificationId,
+                    $craftAbbreviation,
                     $shiftCountService,
                     $changeService
                 );

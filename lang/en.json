@@ -2036,5 +2036,7 @@
     "Freelancer Settings": "Freelancer Settings",
     "Day off work" : "Day off works",
     "NOT_AVAILABLE": "not available",
-    "OFF_WORK": "Day off works"
+    "OFF_WORK": "Day off works",
+    "Please also enter an end time here.": "Please also enter an end time here.",
+    "Please also enter a start time here.": "Please also enter a start time here."
 }

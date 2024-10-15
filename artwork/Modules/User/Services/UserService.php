@@ -153,7 +153,7 @@ class UserService
      */
     public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
     {
-        return $this->workingHourService->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
+        return $this->workingHourService->calculateWeeklyWorkingHours($user, $startDate, $endDate);
     }
 
     public function getAuthUserCrafts(): Collection

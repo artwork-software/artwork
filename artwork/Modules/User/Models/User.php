@@ -12,6 +12,7 @@ use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\GlobalNotification\Models\GlobalNotification;
+use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\InventoryManagement\Models\InventoryManagementUserFilter;
 use Artwork\Modules\MoneySource\Models\MoneySource;
 use Artwork\Modules\MoneySourceTask\Models\MoneySourceTask;
@@ -26,6 +27,7 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
+use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Task\Models\Task;
@@ -144,6 +146,8 @@ class User extends Model implements
     use GoesOnVacation;
     use HasAvailability;
     use CanHasDayServices;
+    use HasIndividualTimes;
+    use HasShiftPlanComments;
 
     protected $fillable = [
         'first_name',
@@ -472,7 +476,7 @@ class User extends Model implements
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         trigger_deprecation('artwork', '0.x', 'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.');
-        return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate);
+        return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate) / 60;
     }
 
     public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder

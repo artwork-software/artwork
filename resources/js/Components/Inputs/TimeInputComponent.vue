@@ -1,6 +1,6 @@
 <template>
 
-    <PlaceholderInputLabelContainer>
+    <PlaceholderInputLabelContainer :no-margin-top="noMarginTop">
         <input :id="this.id"
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
@@ -10,7 +10,7 @@
                class="input peer"
                :class="[isSmall ? '' : 'h-12', classes]"
                placeholder="placeholder"/>
-        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark"/>
+        <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall" :is-dark="isDark" v-if="showLabel"/>
     </PlaceholderInputLabelContainer>
 </template>
 
@@ -32,6 +32,10 @@ export default defineComponent({
             type: String,
             required: true
         },
+        noMarginTop: {
+            type: Boolean,
+            default: false
+        },
         modelValue: {
             type: String,
             required: true
@@ -52,6 +56,10 @@ export default defineComponent({
         isDark: {
             type: Boolean,
             default: false
+        },
+        showLabel: {
+            type: Boolean,
+            default: true
         }
     },
     emits: [

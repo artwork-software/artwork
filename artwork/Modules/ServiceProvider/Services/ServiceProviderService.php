@@ -16,6 +16,7 @@ use Artwork\Modules\ServiceProvider\Repositories\ServiceProviderRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,7 +25,8 @@ readonly class ServiceProviderService
 {
     public function __construct(
         private ServiceProviderRepository $serviceProviderRepository,
-        private ProjectTabService $projectTabService
+        private ProjectTabService $projectTabService,
+        private WorkingHourService $workingHourService
     ) {
     }
 
@@ -47,10 +49,23 @@ readonly class ServiceProviderService
                 $desiredServiceProviderResource->setStartDate($startDate)->setEndDate($endDate);
             }
 
+            $plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
+                $this->workingHourService->calculateShiftTime($serviceProvider, $startDate, $endDate)
+            );
+            $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
+                $serviceProvider,
+                $startDate,
+                $endDate
+            );
+
             $serviceProvidersWithPlannedWorkingHours[] = [
                 'service_provider' => $desiredServiceProviderResource->resolve(),
-                'plannedWorkingHours' => $serviceProvider->plannedWorkingHours($startDate, $endDate),
+                'plannedWorkingHours' => $plannedWorkingHours,
+                'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $serviceProvider->dayServices?->groupBy('pivot.date'),
+                'individual_times' => $serviceProvider->individualTimes()
+                    ->individualByDateRange($startDate, $endDate)->get(),
+                'shift_comments' => $serviceProvider->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];
         }
 

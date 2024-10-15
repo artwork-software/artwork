@@ -100,13 +100,14 @@ class VacationController extends Controller
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
-
+        $vacations = $this->vacationService->findVacationWithinInterval($user, $day);
         if ($checked['type'] === VacationEnum::AVAILABLE->value) {
-            $this->vacationService->deleteVacationInterval($user, $day);
+            if ($vacations->count() > 0) {
+                $this->vacationService->deleteVacationInterval($user, $day);
+                return;
+            }
             return;
         }
-
-        $vacations = $this->vacationService->findVacationWithinInterval($user, $day);
 
         if ($vacations->count() === 0) {
             $createVacationRequest = new CreateVacationRequest([
@@ -151,13 +152,15 @@ class VacationController extends Controller
         $day = Carbon::parse($request->day)->format('Y-m-d');
         $checked = $request->get('checked');
         $vacationTypeBeforeUpdate = $request->get('vacationTypeBeforeUpdate');
-
+        $vacations = $this->vacationService->findVacationWithinInterval($freelancer, $day);
         if ($checked['type'] === VacationEnum::AVAILABLE->value) {
-            $this->vacationService->deleteVacationInterval($freelancer, $day);
+            if ($vacations->count() > 0) {
+                $this->vacationService->deleteVacationInterval($freelancer, $day);
+                return;
+            }
             return;
         }
 
-        $vacations = $this->vacationService->findVacationWithinInterval($freelancer, $day);
         if ($vacations->count() === 0) {
             $createVacationRequest = new CreateVacationRequest([
                 'date' => $day,

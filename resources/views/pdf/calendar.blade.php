@@ -65,10 +65,6 @@
 </head>
 <body>
 <div>
-
-    @php
-        \Illuminate\Support\Carbon::setLocale('de_DE');
-    @endphp
     <h1>{{ $title }}</h1>
     <!-- Kalender -->
     <div style="margin-bottom: 10px">

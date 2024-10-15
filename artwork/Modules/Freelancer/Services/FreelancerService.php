@@ -18,6 +18,7 @@ use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,7 +29,8 @@ readonly class FreelancerService
 {
     public function __construct(
         private FreelancerRepository $freelancerRepository,
-        private ProjectTabService $projectTabService
+        private ProjectTabService $projectTabService,
+        private WorkingHourService $workingHourService
     ) {
     }
 
@@ -55,10 +57,23 @@ readonly class FreelancerService
                 $desiredFreelancerResource->setStartDate($startDate)->setEndDate($endDate);
             }
 
+            $plannedWorkingHours = $this->workingHourService->convertMinutesInHours(
+                $this->workingHourService->calculateShiftTime($freelancer, $startDate, $endDate)
+            );
+            $weeklyWorkingHours = $this->workingHourService->calculateWeeklyWorkingHours(
+                $freelancer,
+                $startDate,
+                $endDate
+            );
+
             $freelancerData = [
                 'freelancer' => $desiredFreelancerResource->resolve(),
-                'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
+                'plannedWorkingHours' => $plannedWorkingHours, //$freelancer->plannedWorkingHours($startDate, $endDate),
+                'weeklyWorkingHours' => $weeklyWorkingHours,
                 'dayServices' => $freelancer->dayServices?->groupBy('pivot.date'),
+                'individual_times' => $freelancer->individualTimes()
+                    ->individualByDateRange($startDate, $endDate)->get(),
+                'shift_comments' => $freelancer->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];
 
             if ($addVacationsAndAvailabilities) {

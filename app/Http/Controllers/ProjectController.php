@@ -345,7 +345,7 @@ class ProjectController extends Controller
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
-                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
 
         if ($request->boolean('isGroup')) {
@@ -2272,7 +2272,7 @@ class ProjectController extends Controller
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
-                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center')) : null
+                $this->costCenterService->findOrCreateCostCenter($request->string('cost_center'))?->id : null
         ]);
 
         $this->projectService->detachManagementUsers($project, true);

@@ -7,6 +7,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
@@ -65,6 +66,7 @@ readonly class EventService
 {
     public function __construct(
         private EventRepository $eventRepository,
+        private CalendarDataService $calendarDataService,
         private readonly WorkingHourService $workingHourService
     ) {
     }
@@ -670,13 +672,7 @@ readonly class EventService
             ->setRooms($filteredRooms)
             ->setDays($periodArray)
             ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
-                )
+                $filterService->getCalendarFilterDefinitions()
             )
             ->setUserFilters($userService->getAuthUser()->shift_calendar_filter)
             ->setDateValue([$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
@@ -686,9 +682,8 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    false,
-                    null,
-                    $shifts
+                    true,
+                    null
                 )
             )
             ->setFreelancersForShifts(
@@ -868,16 +863,10 @@ readonly class EventService
                 )
             )
             ->setFilterOptions(
-                $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
-                )
+                $filterService->getCalendarFilterDefinitions()
             )
             ->setAreas($areaService->getAll())
-            ->setPersonalFilters($filterController->index())
+            ->setPersonalFilters($filterService->getPersonalFilter())
             ->setUserFilters($user->getAttribute('calendar_filter'))
             ->setFirstProjectTabId($projectTabService->getFirstProjectTabId())
             ->setFirstProjectCalendarTabId(
@@ -961,29 +950,16 @@ readonly class EventService
                 'selectedDate' => '',
                 'eventsWithoutRoom' => [],
                 'filterOptions' => $filterService->getCalendarFilterDefinitions(
-                    $roomCategoryService,
-                    $roomAttributeService,
-                    $eventTypeService,
-                    $areaService,
-                    $roomService
                 ),
-                'personalFilters' => $filterController->index(),
+                'personalFilters' => $filterService->getPersonalFilter(),
                 'user_filters' => $userService->getAuthUser()->calendar_filter,
             ];
         } else {
-            $showCalendar = $calendarService->createCalendarData(
-                $startDate,
-                $endDate,
-                $userService,
-                $filterService,
-                $filterController,
-                $roomService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $eventTypeService,
-                $areaService,
-                !$useProjectTimePeriod ? $project : null,
-                $userCalendarFilter
+            $showCalendar = $this->calendarDataService->createCalendarData(
+                startDate: $startDate,
+                endDate: $endDate,
+                calendarFilter: $userCalendarFilter,
+                project: !$useProjectTimePeriod ? $project : null
             );
         }
 
@@ -1125,6 +1101,7 @@ readonly class EventService
         return $this->eventRepository->findById($eventId);
     }
 
+    /** @deprecated use EventCollectionService */
     public function getEventsWithoutRoom(int|Project|null $project = null, array|null $with = null): Collection
     {
         return $this->eventRepository->getEventsWithoutRoom($project, $with);

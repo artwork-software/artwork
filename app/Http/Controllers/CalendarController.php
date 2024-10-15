@@ -16,18 +16,7 @@ class CalendarController extends Controller
      */
     public function getCalendarFilterDefinitions(
         FilterService $filterService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
-        RoomService $roomService,
     ): array {
-        return $filterService->getCalendarFilterDefinitions(
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            $roomService
-        );
+        return $filterService->getCalendarFilterDefinitions();
     }
 }

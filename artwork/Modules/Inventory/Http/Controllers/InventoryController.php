@@ -5,6 +5,7 @@ namespace Artwork\Modules\Inventory\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\FilterController;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
@@ -34,7 +35,8 @@ class InventoryController extends Controller
         private readonly InventoryManagementUserFilterService $inventoryManagementUserFilterService,
         private readonly CalendarService $calendarService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
-        private readonly ResponseFactory $responseFactory
+        private readonly ResponseFactory $responseFactory,
+        private readonly CalendarDataService $calendarDataService
     ) {
     }
 
@@ -55,30 +57,15 @@ class InventoryController extends Controller
      * @throws Throwable
      */
     public function scheduling(
-        RoomService $roomService,
         UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
     ): Response {
         [$startDate, $endDate] = $userService->getUserCalendarFilterDatesOrDefault($userService->getAuthUser());
 
-        $showCalendar = $this->calendarService->createCalendarData(
+        $showCalendar = $this->calendarDataService->createCalendarData(
             $startDate,
             $endDate,
-            $userService,
-            $filterService,
-            $filterController,
-            $roomService,
-            $roomCategoryService,
-            $roomAttributeService,
-            $eventTypeService,
-            $areaService,
-            null,
             $userService->getAuthUser()->getAttribute('calendar_filter'),
+            null,
             null,
             true
         );

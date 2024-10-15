@@ -2,6 +2,9 @@
 
 namespace Artwork\Modules\User\Services;
 
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -9,6 +12,7 @@ use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
@@ -16,17 +20,78 @@ class WorkingHourService
 {
     public function __construct(
         private UserRepository $userRepository,
-        private ShiftRepository $shiftRepository
     ) {
     }
 
+    public function calculateShiftTime(
+        User|Freelancer|ServiceProvider $entity,
+        Carbon $startDate,
+        Carbon $endDate
+    ): int {
+        // Filtere die Schichten nach dem angegebenen Zeitraum
+        $shiftsInDateRange = array_filter(
+            $entity->getAttribute('shifts')->all(),
+            static function (Shift $shift) use ($startDate, $endDate): bool {
+                return (
+                    ($shift->getAttribute('start_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate) ||
+                    ($shift->getAttribute('end_date') >= $startDate &&
+                        $shift->getAttribute('start_date') <= $endDate) ||
+                    ($shift->getAttribute('start_date') < $startDate && $shift->getAttribute('end_date') > $endDate)
+                );
+            }
+        );
+
+        $plannedWorkingHours = 0;
+
+        $individualTimeInMinutes = $entity->individualTimes()
+            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
+
+        // Berechne die tatsächliche Arbeitszeit für jede Schicht
+        foreach ($shiftsInDateRange as $shift) {
+            $shiftStart = Carbon::parse($shift->start_date->format('Y-m-d') . ' ' . $shift->start);
+            $shiftEnd = Carbon::parse($shift->end_date->format('Y-m-d') . ' ' . $shift->end);
+
+            // Berechne die Dauer der Schicht in Minuten, ziehe die Pausenzeiten ab
+            $shiftDuration = $shiftEnd->diffInMinutes($shiftStart);
+            $plannedWorkingHours += $shiftDuration - $shift->break_minutes;
+        }
+
+        return $plannedWorkingHours + $individualTimeInMinutes; // Rückgabe in Minuten
+    }
+
+
+    public function convertMinutesInHours(int $minutes): string
+    {
+        $hours = intdiv(abs($minutes), 60); // Ganze Stunden
+        $remainingMinutes = abs($minutes) % 60; // Verbleibende Minuten
+
+        // Formatierung: Hinzufügen von "h" und "m" und Umgang mit negativen Werten
+        $formattedTime = sprintf("%dh %dm", $hours, $remainingMinutes);
+
+        // Wenn die Minuten negativ sind, füge ein Minuszeichen hinzu
+        return $minutes < 0 ? '-' . $formattedTime : $formattedTime;
+    }
+
+
+    /**
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @param string $desiredResourceClass
+     * @param bool $addVacationsAndAvailabilities
+     * @param User|null $currentUser
+     * @param Collection|null $shiftCollection
+     * @return string<mixed>
+     */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null,
-        Collection $shiftCollection = null
+        User $currentUser = null
     ): array {
         $usersWithPlannedWorkingHours = [];
 
@@ -37,27 +102,26 @@ class WorkingHourService
             if ($desiredUserResource instanceof UserShiftPlanResource) {
                 $desiredUserResource->setStartDate($startDate)->setEndDate($endDate);
             }
-            if ($shiftCollection) {
-                $shifts = $shiftCollection->filter(function (Shift $shift) use ($user) {
-                    return $shift->users->contains($user);
-                })->all();
-                $plannedWorkingHours = $this->calculatePlannedWorkingHours($shifts);
-                $weeklyWorkingHours = $this->calculateWeeklyWorkingHoursByUserAndShifts(
-                    $user,
-                    $shifts,
-                    $startDate,
-                    $endDate
-                );
-            } else {
-                $plannedWorkingHours = $this->plannedWorkingHoursForUser($user, $startDate, $endDate);
-                $weeklyWorkingHours = $this->calculateWeeklyWorkingHoursByUser($user, $startDate, $endDate);
-            }
+
+            $plannedWorkingHours = $this->convertMinutesInHours(
+                $this->calculateShiftTime($user, $startDate, $endDate)
+            );
+            $weeklyWorkingHours = $this->calculateWeeklyWorkingHours(
+                $user,
+                $startDate,
+                $endDate
+            );
+
             $userData = [
                 'user' => $desiredUserResource->resolve(),
                 'plannedWorkingHours' => $plannedWorkingHours,
-                'expectedWorkingHours' => ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1),
+                'expectedWorkingHours' => $this->convertMinutesInHours(
+                    ($user->weekly_working_hours / 7) * ($startDate->diffInDays($endDate) + 1) * 60
+                ),
                 'dayServices' => $user->dayServices?->groupBy('pivot.date'),
                 'is_freelancer' => $user->getAttribute('is_freelancer'),
+                'individual_times' => $user->individualTimes()->individualByDateRange($startDate, $endDate)->get(),
+                'shift_comments' => $user->getShiftPlanCommentsForPeriod($startDate, $endDate),
             ];
 
             $userData['weeklyWorkingHours'] = $weeklyWorkingHours;
@@ -70,7 +134,6 @@ class WorkingHourService
                         $endDate
                     );
             }
-
             $usersWithPlannedWorkingHours[] = $userData;
         }
         if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by')) {
@@ -88,101 +151,53 @@ class WorkingHourService
                 };
             });
         }
-
-        // calculate the working hours for each calendar week ($startDate - $endDate) and add it to the user data
         return $usersWithPlannedWorkingHours;
     }
 
-    public function calculateWeeklyWorkingHoursByUser(
-        User $user,
-        Carbon|string $startDate,
-        Carbon|string $endDate
-    ): array {
-        return $this->calculateWeeklyWorkingHours(
-            $user,
-            $this->plannedWorkingHoursForUser(
-                $user,
-                $startDate,
-                $endDate
-            ),
-            Carbon::parse($startDate),
-            Carbon::parse($endDate)
-        );
-    }
-
-    public function calculateWeeklyWorkingHoursByUserAndShifts(
-        User $worker,
-        array $shifts,
-        Carbon|string $startDate,
-        Carbon|string $endDate
-    ): array {
-        return $this->calculateWeeklyWorkingHours(
-            $worker,
-            $this->calculatePlannedWorkingHours($shifts),
-            Carbon::parse($startDate),
-            Carbon::parse($endDate)
-        );
-    }
-
-    private function calculateWeeklyWorkingHours(
-        User $user,
-        int|float $plannedWorkingHours,
+    /**
+     * @param User $user
+     * @param int|float $plannedWorkingHours
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return string<mixed>
+     */
+    public function calculateWeeklyWorkingHours(
+        User|Freelancer|ServiceProvider $entity,
         Carbon $startDate,
         Carbon $endDate
     ): array {
-        $period = Carbon::parse($startDate)->toPeriod($endDate);
+        $period = CarbonPeriod::create($startDate->copy()->startOfWeek(), '1 week', $endDate->copy()->endOfWeek());
 
         $weeklyWorkingHours = [];
 
-        foreach ($period as $week) {
-            $workingHours = $plannedWorkingHours - $user->weekly_working_hours;
-            $weeklyWorkingHours[$week->format('W')] = $workingHours;
+        foreach ($period as $weekStart) {
+            $weekEnd = $weekStart->copy()->endOfWeek();
+
+            // Berechne den tatsächlichen Zeitraum für diese Woche
+            $actualStart = $weekStart->greaterThanOrEqualTo($startDate) ? $weekStart : $startDate;
+            $actualEnd = $weekEnd->lessThanOrEqualTo($endDate) ? $weekEnd : $endDate;
+
+            // Berechne die Anzahl der Tage in der Woche
+            $daysInWeek = $actualStart->diffInDays($actualEnd) + 1;
+
+            // Berechne die geplanten Arbeitsstunden in Minuten (basierend auf der Wochenarbeitszeit des Mitarbeiters)
+            $dailyWorkingHours = $entity->weekly_working_hours / 7;
+            $totalPlannedWorkingHoursInMinutes = ($daysInWeek * $dailyWorkingHours) * 60;
+
+            // Berechne die tatsächliche Schichtzeit in Minuten für diese Woche
+            $actualShiftTimeInMinutes = $this->calculateShiftTime($entity, $actualStart, $actualEnd);
+
+            // Berechne die Differenz zwischen den geplanten und tatsächlichen Stunden
+            $differenceInMinutes = $actualShiftTimeInMinutes - $totalPlannedWorkingHoursInMinutes;
+
+            // Konvertiere die Minuten in Stunden und Minuten für die Ausgabe
+            $weeklyWorkingHours[$weekStart->format('W')] = [
+                'planned_hours' => $this->convertMinutesInHours($totalPlannedWorkingHoursInMinutes),
+                'actual_hours' => $this->convertMinutesInHours($actualShiftTimeInMinutes),
+                'difference' => $this->convertMinutesInHours($differenceInMinutes)
+            ];
         }
 
         return $weeklyWorkingHours;
-    }
-
-    public function plannedWorkingHoursForUser(User $user, Carbon|string $startDate, Carbon|string $endDate): float|int
-    {
-        $shiftsInDateRange = array_filter(
-            $user->getAttribute('shifts')->all(),
-            function (Shift $shift) use ($startDate, $endDate): bool {
-                return
-                    //start date between
-                    (
-                        $shift->getAttribute('start_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate
-                    ) ||
-                    //end date between
-                    (
-                        $shift->getAttribute('end_date') >= $startDate &&
-                        $shift->getAttribute('start_date') <= $endDate
-                        //overlapping
-                    ) || (
-                        $shift->getAttribute('start_date') < $startDate &&
-                        $shift->getAttribute('end_date') > $endDate
-                    );
-            }
-        );
-
-        return $this->calculatePlannedWorkingHours($shiftsInDateRange);
-    }
-
-    private function calculatePlannedWorkingHours(array $shiftsInDateRange): float|int
-    {
-        $plannedWorkingHours = 0;
-
-        foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
-            $shiftEnd = $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
-            $breakMinutes = $shift->break_minutes;
-
-            $shiftStart = Carbon::parse($shiftStart);
-            $shiftEnd = Carbon::parse($shiftEnd);
-
-            $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
-            $plannedWorkingHours += $shiftDuration;
-        }
-        return $plannedWorkingHours;
     }
 }

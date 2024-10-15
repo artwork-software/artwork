@@ -35,7 +35,6 @@
     </div>
 </template>
 <script setup>
-import {defineEmits, defineProps} from 'vue';
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 import { IconLock } from "@tabler/icons-vue";
 import {usePage} from "@inertiajs/vue3";

@@ -19,9 +19,10 @@ class VacationRepository
         return $vacationer->vacations()->where('date', $day)->get();
     }
 
+    // TODO: fix type matching
     public function delete(Collection|Vacation $vacations): void
     {
-        if ($vacations instanceof Collection) {
+        if ($vacations->count() > 1) {
             $vacations->each(function ($vacation): void {
                 $vacation->each(function ($vacationConflict): void {
                     $vacationConflict->delete();
@@ -30,7 +31,7 @@ class VacationRepository
             });
             return;
         }
-        $vacations->delete();
+        $vacations->first()->delete();
     }
 
     public function save(Vacation $vacation): Vacation

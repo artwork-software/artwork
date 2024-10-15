@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Event\DTOs\CalendarEventDto;
 use Artwork\Modules\EventType\Services\EventTypeService;
@@ -29,21 +30,18 @@ use Throwable;
 
 class ExportPDFController extends Controller
 {
+    public function __construct(
+        private readonly CalendarDataService $calendarDataService
+    ) {
+    }
     /**
      * @throws Throwable
      */
     public function createPDF(
         Request $request,
         ProjectService $projectService,
-        CalendarService $calendarService,
         RoomService $roomService,
         UserService $userService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        EventTypeService $eventTypeService,
-        AreaService $areaService,
         FilesystemManager $filesystemManager,
         InertiaResponseFactory $inertiaResponseFactory,
         UrlGenerator $urlGenerator,
@@ -84,19 +82,11 @@ class ExportPDFController extends Controller
         $startDate = Carbon::parse($startDate)->startOfDay();
         $endDate = Carbon::parse($endDate)->endOfDay();
 
-        $showCalendar = $calendarService->createCalendarData(
+        $showCalendar = $this->calendarDataService->createCalendarData(
             startDate: $startDate,
             endDate: $endDate,
-            userService: $userService,
-            filterService: $filterService,
-            filterController: $filterController,
-            roomService: $roomService,
-            roomCategoryService: $roomCategoryService,
-            roomAttributeService: $roomAttributeService,
-            eventTypeService: $eventTypeService,
-            areaService: $areaService,
-            project: $projectId ? $projectService->findById($projectId) : null,
-            calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter')
+            calendarFilter: $userService->getAuthUser()->getAttribute('calendar_filter'),
+            project: $projectId ? $projectService->findById($projectId) : null
         );
 
         $pdf = $domPdf->loadView(

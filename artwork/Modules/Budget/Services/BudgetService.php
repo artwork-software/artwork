@@ -25,7 +25,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-readonly class BudgetService
+class BudgetService
 {
     public function generateBasicBudgetValues(
         Project $project,

@@ -15,6 +15,8 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomChangeService;
+use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
@@ -25,6 +27,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,7 +38,9 @@ class RoomController extends Controller
     public function __construct(
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService,
-        private readonly SchedulingService $schedulingService
+        private readonly SchedulingService $schedulingService,
+        protected readonly RoomChangeService $roomChangeService,
+        private readonly RoomFrontendModelService $roomFrontendModelService,
     ) {
     }
 
@@ -124,35 +129,14 @@ class RoomController extends Controller
     }
 
     public function show(
-        UserService $userService,
         Room $room,
-        CalendarService $calendarService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomService $roomService,
-        ProjectTabService $projectTabService,
-        EventTypeService $eventTypeService,
-        ProjectService $projectService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService
     ): Response|ResponseFactory {
         $room->load(['creator']);
         return Inertia::render(
             'Rooms/Show',
-            $roomService->createShowDto(
-                $userService,
+            $this->roomFrontendModelService->createShowDto(
                 $room,
-                $calendarService,
-                $filterService,
-                $filterController,
-                $projectTabService,
-                $eventTypeService,
-                $projectService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService,
-                $userService->getAuthUser()
+                Auth::user(),
             )
         );
     }
@@ -180,15 +164,12 @@ class RoomController extends Controller
         ChangeService $changeService
     ): RedirectResponse {
 
-        $oldRoomDescription = $room->description;
-        $oldRoomTitle = $room->name;
-        $roomAdminsBefore = $room->users()->wherePivot('is_admin', true)->get();
-        $oldAdjoiningRooms = $room->adjoining_rooms()->get();
-        $oldRoomAttributes = $room->attributes()->get();
-        $oldRoomCategories = $room->categories()->get();
-        $oldTemporary = $room->temporary;
-        $oldStartDate = $room->start_date;
-        $oldEndDate = $room->end_date;
+        $roomReplicate = $room->replicate();
+        $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
+        $roomReplicate->adjoining_rooms = $room->adjoining_rooms()->get();
+        $roomReplicate->attributes = $room->attributes()->get();
+        $roomReplicate->categories = $room->categories()->get();
+
 
         $room->update(
             $request->only(
@@ -216,73 +197,13 @@ class RoomController extends Controller
             $room->users()->detach();
             $room->users()->sync($new_users);
         }
-
-        if (
-            !is_null($request->adjoining_rooms) &&
-            !is_null($request->room_attributes) &&
-            !is_null($request->room_categories)
-        ) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
-        }
 
-        $newRoomDescription = $room->description;
-        $newRoomTitle = $room->name;
-        $newAdjoiningRooms = $room->adjoining_rooms()->get();
-        $newRoomAttributes = $room->attributes()->get();
-        $roomAdminsAfter = $room->users()->wherePivot('is_admin', true)->get();
-        $newRoomCategories = $room->categories()->get();
-        $newRoomTemporary = $room->temporary;
-        $newStartDate = $room->start_date;
-        $newEndDate = $room->end_date;
-
-        $this->roomService->checkAdjoiningRoomChanges(
-            $room->id,
-            $oldAdjoiningRooms,
-            $newAdjoiningRooms,
-            $changeService
-        );
-        $this->roomService->checkDescriptionChanges(
-            $room->id,
-            $oldRoomDescription,
-            $newRoomDescription,
-            $changeService
-        );
-        $this->roomService->checkMemberChanges(
+        $this->roomChangeService->applyChanges(
             $room,
-            $roomAdminsBefore,
-            $roomAdminsAfter,
-            $notificationService,
-            $changeService
-        );
-        $this->roomService->checkTitleChanges(
-            $room->id,
-            $oldRoomTitle,
-            $newRoomTitle,
-            $changeService
-        );
-        $this->roomService->checkAttributeChanges(
-            $room->id,
-            $oldRoomAttributes,
-            $newRoomAttributes,
-            $changeService
-        );
-        $this->roomService->checkCategoryChanges(
-            $room->id,
-            $oldRoomCategories,
-            $newRoomCategories,
-            $changeService
-        );
-        $this->roomService->checkTemporaryChanges(
-            $room->id,
-            $oldTemporary,
-            $newRoomTemporary,
-            $oldStartDate,
-            $newStartDate,
-            $oldEndDate,
-            $newEndDate,
-            $changeService
+            $roomReplicate
         );
 
         $roomId = $room->id;

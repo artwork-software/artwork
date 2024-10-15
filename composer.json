@@ -57,6 +57,7 @@
         "laravel-lang/common": "^4.0",
         "laravel-lang/http-statuses": "^3.8",
         "laravel-lang/lang": "^13.12",
+        "laravel/dusk": "^8.2",
         "laravel/sail": "^v1.16.2",
         "mockery/mockery": "^1.5.1",
         "nunomaduro/collision": "^v7.0",

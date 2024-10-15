@@ -8,7 +8,7 @@ use Artwork\Modules\Change\Interfaces\Builder;
 use Artwork\Modules\Change\Repositories\ChangeRepository;
 use InvalidArgumentException;
 
-readonly class ChangeService
+readonly class ChangeService extends \Artwork\Modules\Availability\Services\AvailabilityConflictService
 {
     public function __construct(private ChangeRepository $changeRepository)
     {

@@ -85,6 +85,7 @@ readonly class ShiftUserService
                 $seriesShiftData['dayOfWeek'],
                 $userId,
                 $shiftQualificationId,
+                $craftAbbreviation,
                 $notificationService,
                 $shiftCountService,
                 $vacationConflictService,
@@ -504,6 +505,7 @@ readonly class ShiftUserService
         string $dayOfWeek,
         int $userId,
         int $shiftQualificationId,
+        string $craftAbbreviation,
         NotificationService $notificationService,
         ShiftCountService $shiftCountService,
         VacationConflictService $vacationConflictService,
@@ -557,11 +559,12 @@ readonly class ShiftUserService
                     $shiftBetweenDates,
                     $userId,
                     $shiftQualificationId,
+                    $craftAbbreviation,
                     $notificationService,
                     $shiftCountService,
                     $vacationConflictService,
                     $availabilityConflictService,
-                    $changeService,
+                    $changeService
                 );
             }
         }

@@ -170,6 +170,7 @@ class RoomController extends Controller
         $roomReplicate->attributes = $room->attributes()->get();
         $roomReplicate->categories = $room->categories()->get();
 
+
         $room->update(
             $request->only(
                 'name',
@@ -196,16 +197,9 @@ class RoomController extends Controller
             $room->users()->detach();
             $room->users()->sync($new_users);
         }
-
-        if (
-            !is_null($request->adjoining_rooms) &&
-            !is_null($request->room_attributes) &&
-            !is_null($request->room_categories)
-        ) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
-        }
 
         $this->roomChangeService->applyChanges(
             $room,

@@ -16,6 +16,7 @@ use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomChangeService;
+use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
 use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
@@ -26,6 +27,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,7 +39,8 @@ class RoomController extends Controller
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService,
         private readonly SchedulingService $schedulingService,
-        protected readonly RoomChangeService $roomChangeService
+        protected readonly RoomChangeService $roomChangeService,
+        private readonly RoomFrontendModelService $roomFrontendModelService,
     ) {
     }
 
@@ -126,35 +129,14 @@ class RoomController extends Controller
     }
 
     public function show(
-        UserService $userService,
         Room $room,
-        CalendarService $calendarService,
-        FilterService $filterService,
-        FilterController $filterController,
-        RoomService $roomService,
-        ProjectTabService $projectTabService,
-        EventTypeService $eventTypeService,
-        ProjectService $projectService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService
     ): Response|ResponseFactory {
         $room->load(['creator']);
         return Inertia::render(
             'Rooms/Show',
-            $roomService->createShowDto(
-                $userService,
+            $this->roomFrontendModelService->createShowDto(
                 $room,
-                $calendarService,
-                $filterService,
-                $filterController,
-                $projectTabService,
-                $eventTypeService,
-                $projectService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService,
-                $userService->getAuthUser()
+                Auth::user(),
             )
         );
     }

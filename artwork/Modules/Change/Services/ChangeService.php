@@ -3,15 +3,17 @@
 namespace Artwork\Modules\Change\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Builders\ChangeBuilder;
 use Artwork\Modules\Change\Interfaces\Builder;
 use Artwork\Modules\Change\Repositories\ChangeRepository;
 use InvalidArgumentException;
 
-readonly class ChangeService extends \Artwork\Modules\Availability\Services\AvailabilityConflictService
+class ChangeService
 {
-    public function __construct(private ChangeRepository $changeRepository)
-    {
+    public function __construct(
+        private ChangeRepository $changeRepository
+    ) {
     }
 
     public function createBuilder(): ChangeBuilder

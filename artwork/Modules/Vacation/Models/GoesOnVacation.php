@@ -17,6 +17,9 @@ trait GoesOnVacation
      */
     public function getVacationDays(): array
     {
-        return $this->vacations->map(fn(Vacation $vacation) => $vacation->date)->toArray();
+        return $this->vacations->map(fn(Vacation $vacation) => [
+            'date' => $vacation->date,
+            'type' => $vacation->type,
+        ])->toArray();
     }
 }

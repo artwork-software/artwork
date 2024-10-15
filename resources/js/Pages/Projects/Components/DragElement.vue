@@ -12,7 +12,7 @@
                             {{ item.first_name }} {{ item.last_name }}
                         </div>
                     </div>
-                    <div class="text-xs w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
+                    <div class="text-[9px] w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
                 </div>
                 <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
@@ -20,14 +20,14 @@
                             {{ item.first_name }} {{ item.last_name }}
                         </div>
                     </div>
-                    <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                    <div class="text-[9px] w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours}}</div>
                 </div>
                 <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.provider_name }}</div>
                     </div>
-                    <div class="text-xs w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                    <div class="text-[9px] w-full" v-if="!$page.props.user.compact_mode">{{ plannedHours }}</div>
                 </div>
             </div>
             <div v-if="type === 0 && item.is_freelancer || type === 1">
@@ -70,7 +70,7 @@ export default defineComponent({
                         craft_ids: this.item.assigned_craft_ids,
                         shift_qualifications: this.item.shift_qualifications,
                         craft_universally_applicable: this?.craft?.universally_applicable ?? false,
-                        craft_abbreviation: this.craft.abbreviation
+                        craft_abbreviation: this.craft?.abbreviation ?? '',
                     }
                 )
             );

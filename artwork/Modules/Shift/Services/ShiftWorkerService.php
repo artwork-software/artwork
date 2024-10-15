@@ -64,9 +64,12 @@ class ShiftWorkerService
 
         $workerData = [
             'type' => $worker->getAttribute('type'),
-            'plannedWorkingHours' =>
-                $this->workingHourService->plannedWorkingHoursForUser($worker, $startDate, $endDate),
-            'dayServices' => $worker->getAttribute('dayServices')->groupBy('pivot.date')
+            'plannedWorkingHours' => $this->workingHourService->convertMinutesInHours(
+                $this->workingHourService->calculateShiftTime($worker, $startDate, $endDate)
+            ),
+            'dayServices' => $worker->getAttribute('dayServices')->groupBy('pivot.date'),
+            'individual_times' => $worker->individualTimes()->individualByDateRange($startDate, $endDate)->get(),
+            'shift_comments' => $worker->getShiftPlanCommentsForPeriod($startDate, $endDate),
         ];
 
         if ($workerType === 0 || $workerType === 1) {
@@ -96,9 +99,12 @@ class ShiftWorkerService
                         ->setEndDate($endDate)
                         ->resolve(),
                     'expectedWorkingHours' => (
-                        $worker->getAttribute('weekly_working_hours') / 7) * ($startDate->diffInDays($endDate) + 1
+                        $this->workingHourService->convertMinutesInHours(
+                            ($worker->getAttribute('weekly_working_hours') / 7) *
+                            ($startDate->diffInDays($endDate) + 1) * 60
+                        )
                     ),
-                    'weeklyWorkingHours' => $this->userService->calculateWeeklyWorkingHours(
+                    'weeklyWorkingHours' => $this->workingHourService->calculateWeeklyWorkingHours(
                         $worker,
                         $startDate,
                         $endDate

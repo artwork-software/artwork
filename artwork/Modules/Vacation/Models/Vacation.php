@@ -42,6 +42,7 @@ class Vacation extends Model
         'series_id',
         'vacationer_type',
         'vacationer_id',
+        'type'
     ];
 
     protected $casts = [

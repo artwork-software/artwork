@@ -51,7 +51,7 @@
                     <th v-for="(column,index) in table.columns"
                         v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                         :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
-                        <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
+                        <div class="flex items-center group" @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
                                 <div :class="index <= 2 ? '' : 'justify-end'" class="flex items-center  pr-2">
@@ -125,7 +125,7 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" v-show="showMenu === column.id" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
+                            <BaseMenu dots-color="text-artwork-context-dark" class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

@@ -8,8 +8,10 @@ use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\DayService\Models\DayServiceable;
 use Artwork\Modules\DayService\Models\Traits\CanHasDayServices;
+use Artwork\Modules\IndividualTimes\Models\Traits\HasIndividualTimes;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
+use Artwork\Modules\ShiftPlanComment\Models\Traits\HasShiftPlanComments;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -46,6 +48,8 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     use GoesOnVacation;
     use HasAvailability;
     use CanHasDayServices;
+    use HasIndividualTimes;
+    use HasShiftPlanComments;
 
     /**
      * @var string[]
@@ -146,6 +150,9 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
 
         $plannedWorkingHours = 0;
 
+        $individualTimes = $this->individualTimes()
+            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
+
         foreach ($shiftsInDateRange as $shift) {
             $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
             $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
@@ -155,9 +162,10 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
             $shiftEnd = Carbon::parse($shiftEnd);
 
 
-            $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
+            $shiftDuration = (($shiftEnd->diffInRealMinutes($shiftStart) + $individualTimes) - $breakMinutes) / 60;
             $plannedWorkingHours += $shiftDuration;
         }
+
 
         return $plannedWorkingHours;
     }

@@ -15,5 +15,4 @@ class IndividualTimeRepository extends BaseRepository
     {
         return $model->individualTimes()->create($attributes);
     }
-
 }

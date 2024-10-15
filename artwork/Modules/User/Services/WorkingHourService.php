@@ -83,13 +83,15 @@ class WorkingHourService
      * @param Collection|null $shiftCollection
      * @return string<mixed>
      */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getUsersWithPlannedWorkingHours(
         Carbon $startDate,
         Carbon $endDate,
         string $desiredResourceClass,
         bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null,
-        Collection $shiftCollection = null
+        User $currentUser = null
     ): array {
         $usersWithPlannedWorkingHours = [];
 
@@ -132,7 +134,6 @@ class WorkingHourService
                         $endDate
                     );
             }
-
             $usersWithPlannedWorkingHours[] = $userData;
         }
         if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by')) {

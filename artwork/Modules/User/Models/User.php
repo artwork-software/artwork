@@ -308,7 +308,8 @@ class User extends Model implements
 
     public function projects(): BelongsToMany
     {
-        return $this->belongsToMany(Project::class)->withPivot('access_budget', 'is_manager', 'can_write');
+        return $this->belongsToMany(Project::class)
+            ->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
     public function comments(): HasMany
@@ -475,7 +476,11 @@ class User extends Model implements
     /** @deprecated user WorkhourService */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
-        trigger_deprecation('artwork', '0.x', 'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.');
+        trigger_deprecation(
+            'artwork',
+            '0.x',
+            'User::plannedWorkingHours() is deprecated. Use WorkhourService instead.'
+        );
         return app(WorkingHourService::class)->plannedWorkingHoursForUser($this, $startDate, $endDate) / 60;
     }
 

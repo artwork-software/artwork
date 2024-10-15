@@ -561,7 +561,7 @@ readonly class ShiftUserService
                     $shiftCountService,
                     $vacationConflictService,
                     $availabilityConflictService,
-                    $changeService
+                    $changeService,
                 );
             }
         }

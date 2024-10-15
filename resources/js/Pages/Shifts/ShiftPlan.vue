@@ -331,7 +331,7 @@
                                                  :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '']">
                                                 <span v-if="user.type === 0">
-                                                    {{ user?.weeklyWorkingHours[day.week_number].difference }}
+                                                    {{ user?.weeklyWorkingHours[day.week_number]?.difference }}
                                                 </span>
                                             </div>
                                             <div
@@ -620,8 +620,8 @@ export default {
     },
     mounted() {
         // Listen for scroll events on both sections
-        this.$refs.shiftPlan.addEventListener('scroll', this.syncScrollShiftPlan);
-        this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
+        this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
+        this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
         window.addEventListener('resize', this.updateHeight);
         this.updateHeight();
 

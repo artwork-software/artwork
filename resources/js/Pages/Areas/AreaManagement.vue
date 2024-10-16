@@ -30,7 +30,7 @@
                                                     :label="$t('Enter room category')"/>
                                             </div>
 
-                                            <div class="flex items-center h-full ml-2">
+                                            <div class="flex items-center h-full ml-2 mt-5">
                                                 <button :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']" @click="addRoomCategory" :disabled="!roomCategoryInput">
                                                     <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                                 </button>
@@ -61,7 +61,7 @@
                                                     :label="$t('Enter room property')"
                                                 />
                                             </div>
-                                            <div class="flex items-center ml-2 h-full">
+                                            <div class="flex items-center ml-2 mt-5 h-full">
                                                 <button
                                                     :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
                                                     @click="addRoomAttribute" :disabled="!roomAttributeInput">

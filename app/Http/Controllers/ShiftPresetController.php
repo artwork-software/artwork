@@ -84,9 +84,8 @@ class ShiftPresetController extends Controller
 
     public function search(Request $request): Collection
     {
-        return $this->shiftPresetService->findByNameAndEventTypeId(
-            $request->get('query'),
-            $request->get('eventTypeId')
+        return $this->shiftPresetService->findByName(
+            $request->get('query')
         );
     }
 

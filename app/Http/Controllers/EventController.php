@@ -203,11 +203,7 @@ class EventController extends Controller
         FilterService $filterService,
         ShiftFilterController $shiftFilterController,
         CraftService $craftService,
-        EventTypeService $eventTypeService,
         EventService $eventService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
         DayServicesService $dayServicesService,
         ProjectTabService $projectTabService
     ): Response {
@@ -219,13 +215,9 @@ class EventController extends Controller
                 $serviceProviderService,
                 $roomService,
                 $craftService,
-                $eventTypeService,
                 $filterService,
                 $shiftFilterController,
                 $shiftQualificationService,
-                $roomCategoryService,
-                $roomAttributeService,
-                $areaService,
                 $dayServicesService,
                 $userService->getAuthUser(),
                 $projectTabService

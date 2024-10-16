@@ -118,7 +118,7 @@
 
 
             <div class="flex items-center justify-end my-3">
-                <button class="text-xs" @click="reloadChanges">Anwenden</button>
+                <button class="text-xs" @click="reloadChanges">{{$t('Apply')}}</button>
             </div>
         </div>
     </BaseFilter>

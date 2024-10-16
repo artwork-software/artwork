@@ -14,12 +14,12 @@
                             </div>
                         </div>
                         <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                            <div v-if="!showSearchbar" @click="openSearchbar"
                                  class="cursor-pointer inset-y-0 mr-3">
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <input v-model="department_query" :placeholder="$t('Search for teams')" type="text" />
+                                <input ref="searchBarInput" v-model="department_query" :placeholder="$t('Search for teams')" type="text" />
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -569,7 +569,15 @@ export default defineComponent({
         },
         getEditHref(department) {
             return route('departments.show', {department: department.id});
-        }
+        },
+        openSearchbar(){
+            this.showSearchbar = !this.showSearchbar;
+            this.$nextTick(() => {
+                if (this.showSearchbar) {
+                    this.$refs.searchBarInput.focus();
+                }
+            });
+        },
     },
     watch: {
         department_query: {

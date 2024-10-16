@@ -68,12 +68,12 @@
                                 </div>
                             </MenuItem>
                         </BaseMenu>
-                        <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                        <div v-if="!showSearchbar" @click="openSearchbar"
                              class="cursor-pointer inset-y-0 mr-3">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                         <div v-else class="flex items-center w-64 mr-2">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                            <input id="userSearch" ref="searchBarInput" v-model="user_query" type="text" autocomplete="off"
                                    placeholder="Suche nach User*innen"
                                    class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
@@ -575,6 +575,14 @@ export default defineComponent({
         reloadUsersDebounced: debounce(function() {
             this.applyFiltersAndSort();
         }, 1000),
+        openSearchbar(){
+            this.showSearchbar = !this.showSearchbar;
+            this.$nextTick(() => {
+                if (this.showSearchbar) {
+                    this.$refs.searchBarInput.focus();
+                }
+            });
+        },
 
     },
     watch: {

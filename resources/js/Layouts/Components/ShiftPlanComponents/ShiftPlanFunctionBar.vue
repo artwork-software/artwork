@@ -223,6 +223,7 @@ export default {
                 value: value
             }, {
                 preserveScroll: true,
+                preserveState: false
             });
         },
         scrollToNextDay(){

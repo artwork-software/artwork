@@ -609,13 +609,9 @@ readonly class EventService
         ServiceProviderService $serviceProviderService,
         RoomService $roomService,
         CraftService $craftService,
-        EventTypeService $eventTypeService,
         FilterService $filterService,
         ShiftFilterController $shiftFilterController,
         ShiftQualificationService $shiftQualificationService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
-        AreaService $areaService,
         DayServicesService $dayServicesService,
         User $user,
         ProjectTabService $projectTabService,
@@ -651,13 +647,18 @@ readonly class EventService
             $endDate
         );
 
+        // filter by EventTypeId
+        if ($userService->getAuthUser()->shift_calendar_filter->event_types) {
+            $events = $events->filter(function (Event $event) use ($userService): bool {
+                return in_array($event->event_type_id, $userService->getAuthUser()->shift_calendar_filter->event_types);
+            });
+        }
+
         $filteredRooms = $roomService->getFilteredRooms(
             $startDate,
             $endDate,
             $userService->getAuthUser()->shift_calendar_filter
         );
-
-        $shifts = $events->pluck('shifts')->flatten();
 
         return ShiftPlanDto::newInstance()
             ->setHistory($this->getEventShiftsHistoryChanges())

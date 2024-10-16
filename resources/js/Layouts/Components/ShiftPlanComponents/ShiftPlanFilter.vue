@@ -116,6 +116,10 @@
             <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
             <CraftFilter :crafts="crafts" v-if="crafts.length > 0" />
 
+
+            <div class="flex items-center justify-end my-3">
+                <button class="text-xs" @click="reloadChanges">{{$t('Apply')}}</button>
+            </div>
         </div>
     </BaseFilter>
 
@@ -236,7 +240,6 @@ export default {
             } else {
                 this.eventTypeIds.push(eventType.id)
             }
-            this.reloadChanges()
         },
 
         addRoomsToFilter(room) {
@@ -245,10 +248,11 @@ export default {
             } else {
                 this.roomIds.push(room.id)
             }
-            this.reloadChanges()
         },
         resetCalendarFilter() {
             this.$inertia.delete(route('reset.user.shift.calendar.filter', this.$page.props.user.id), {
+                preserveState: false,
+                preserveScroll: true,
                 onSuccess: () => {
                     this.filterArray.rooms.forEach(room => room.checked = false)
                     this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
@@ -312,6 +316,9 @@ export default {
             router.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
                 rooms: this.arrayToIds(this.filterArray.rooms),
                 event_types: this.arrayToIds(this.filterArray.eventTypes),
+            }, {
+                preserveState: false,
+                preserveScroll: true,
             })
         }
     },

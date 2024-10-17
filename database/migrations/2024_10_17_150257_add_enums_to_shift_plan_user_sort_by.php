@@ -13,16 +13,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $columns = $table->getColumns();
-
-            if (isset($columns['shift_plan_user_sort_by'])) {
+            if (Schema::hasColumn('users', 'shift_plan_user_sort_by')) {
                 $table->dropColumn('shift_plan_user_sort_by');
             }
 
-            $table->string('shift_plan_user_sort_by')
-                ->after('show_crafts')
-                ->default(null)
-                ->nullable();
+            if (!Schema::hasColumn('users', 'shift_plan_user_sort_by')) {
+                $table->string('shift_plan_user_sort_by')
+                    ->after('show_crafts')
+                    ->default(null)
+                    ->nullable();
+            }
         });
     }
 
@@ -32,7 +32,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('shift_plan_user_sort_by');
+            if (Schema::hasColumn('users', 'shift_plan_user_sort_by')) {
+                $table->dropColumn('shift_plan_user_sort_by');
+            }
         });
     }
 };

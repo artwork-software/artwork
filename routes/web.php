@@ -523,6 +523,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
+    // patch shifts.qualifications.add
+    Route::patch('/shifts/{shift}/qualifications/add', [ShiftQualificationController::class, 'updateValue'])
+        ->name('shifts.qualifications.add');
+
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])
         ->name('event_types.management')

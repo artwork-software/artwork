@@ -156,15 +156,10 @@ class UserController extends Controller
                     null
             );
         $users = MinimalUserIndexResource::collection(
-            User::query()->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])->when(
-                strlen($search = $request->string('query')) > 0,
-                function (Builder $builder) use ($search): void {
-                    $builder->where('first_name', 'like', '%' . $search . '%')
-                        ->orWhere('last_name', 'like', '%' . $search . '%');
-                }
-            )->when(
-                !is_null($sortEnum),
-                function (Builder $builder) use ($sortEnum): void {
+            User::search($request->string('query')) // Meilisearch Integration
+            ->query(function (Builder $builder) use ($sortEnum): void {
+                // Hinzufügen der Abfragen für die Sortierung, falls nötig
+                if (!is_null($sortEnum)) {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
                         case UserSortEnum::ALPHABETICALLY_DESCENDING:
@@ -179,8 +174,10 @@ class UserController extends Controller
                             break;
                     }
                 }
-            )->get()
+            })
+                ->get() // Hole die Ergebnisse aus Meilisearch
         )->resolve();
+
         if ($saveFilterAndSort) {
             $userUserManagementSettingService->updateOrCreateIfNecessary(
                 $userService->getAuthUser(),

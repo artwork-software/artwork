@@ -788,6 +788,7 @@ class UserController extends Controller
             ]
         );
 
+
         $user->updateOrFail([
             'shift_plan_user_sort_by' => $request->enum(
                 'sortBy',

@@ -2038,5 +2038,10 @@
     "NOT_AVAILABLE": "nicht verfügbar",
     "OFF_WORK": "Arbeitsfreier Tag",
     "Please also enter an end time here.": "Bitte gib hier auch eine Endzeit an.",
-    "Please also enter a start time here.": "Bitte gib hier auch eine Startzeit an."
+    "Please also enter a start time here.": "Bitte gib hier auch eine Startzeit an.",
+    "Intern external ascending": "Alphabetisch Intern/Extern aufsteigend",
+    "Intern external descending": "Alphabetisch Intern/Extern absteigend",
+    "Without intern external ascending": "Alphabetisch ohne Intern/Extern aufsteigend",
+    "Without intern external descending": "Alphabetisch ohne Intern/Extern absteigend"
+
 }

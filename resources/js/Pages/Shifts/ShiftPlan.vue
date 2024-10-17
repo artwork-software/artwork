@@ -613,7 +613,6 @@ export default {
             },
             showShiftsQualificationsAssignmentModal: false,
             showShiftsQualificationsAssignmentModalShifts: [],
-            // firstDayPosition without the extra row
             firstDayPosition: this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
             currentDayOnView:  this.days ? this.days[this.days.findIndex((day) => !day.is_extra_row)] : null,
             currentDaysInView: new Set(),
@@ -826,72 +825,60 @@ export default {
             if (!this.useFrontendFilter) {
                 return users;
             }
-
-            // Hilfsfunktion, um den Typ von Usern zu klassifizieren (inkl. Freelancer-Flag)
             const classifyUserType = (user) => {
                 if (user.type === 0 && user.element.is_freelancer) {
-                    return 1; // Als Freelancer markierte User werden als Typ 1 gezählt
+                    return 1;
                 }
-                return user.type; // Sonst den ursprünglichen Typ zurückgeben
+                return user.type;
             };
 
-            const sortedUsers = users.sort((a, b) => {
+            return users.sort((a, b) => {
                 const typeA = classifyUserType(a);
                 const typeB = classifyUserType(b);
 
-                // Sicherheitschecks: Stelle sicher, dass die Felder existieren, sonst leere Strings verwenden
                 const lastNameA = a.element.last_name || '';
                 const lastNameB = b.element.last_name || '';
                 const providerNameA = a.element.provider_name || '';
                 const providerNameB = b.element.provider_name || '';
 
-                // Wenn die intern/extern-Sortierung aktiv ist
                 if (sortByInternExtern) {
                     if (isDescending) {
-                        // Absteigend: Dienstleister -> Freelancer -> Interne
                         if (typeA === typeB) {
                             if (typeA === 0 || typeA === 1) {
-                                return lastNameB.localeCompare(lastNameA); // Sortiere interne User und Freelancer nach Nachname (absteigend)
+                                return lastNameB.localeCompare(lastNameA);
                             } else if (typeA === 2) {
-                                return providerNameB.localeCompare(providerNameA); // Sortiere Dienstleister nach provider_name (absteigend)
+                                return providerNameB.localeCompare(providerNameA);
                             }
                         } else {
-                            return typeB - typeA; // Absteigend nach Typ: 2 -> 1 -> 0
+                            return typeB - typeA;
                         }
                     } else {
-                        // Aufsteigend: Interne -> Freelancer -> Dienstleister
                         if (typeA === typeB) {
                             if (typeA === 0 || typeA === 1) {
-                                return lastNameA.localeCompare(lastNameB); // Sortiere interne User und Freelancer nach Nachname (aufsteigend)
+                                return lastNameA.localeCompare(lastNameB);
                             } else if (typeA === 2) {
-                                return providerNameA.localeCompare(providerNameB); // Sortiere Dienstleister nach provider_name (aufsteigend)
+                                return providerNameA.localeCompare(providerNameB);
                             }
                         } else {
-                            return typeA - typeB; // Aufsteigend nach Typ: 0 -> 1 -> 2
+                            return typeA - typeB;
                         }
                     }
                 } else {
-                    // Wenn die intern/extern-Sortierung **aus** ist: Alle Gruppen gemischt nach Namen
                     if (isDescending) {
-                        // Absteigende Sortierung: Dienstleister -> Freelancer -> Interne (nach Namen, aber absteigend)
                         if (typeA === 0 || typeA === 1) {
-                            return lastNameB.localeCompare(lastNameA); // Absteigend nach Nachname für User/Freelancer
+                            return lastNameB.localeCompare(lastNameA);
                         } else if (typeA === 2) {
-                            return providerNameB.localeCompare(providerNameA); // Absteigend nach provider_name für Dienstleister
+                            return providerNameB.localeCompare(providerNameA);
                         }
                     } else {
-                        // Aufsteigende Sortierung: Interne -> Freelancer -> Dienstleister (nach Namen, aufsteigend)
                         if (typeA === 0 || typeA === 1) {
-                            return lastNameA.localeCompare(lastNameB); // Aufsteigend nach Nachname für User/Freelancer
+                            return lastNameA.localeCompare(lastNameB);
                         } else if (typeA === 2) {
-                            return providerNameA.localeCompare(providerNameB); // Aufsteigend nach provider_name für Dienstleister
+                            return providerNameA.localeCompare(providerNameB);
                         }
                     }
                 }
             });
-
-            console.log(sortedUsers);
-            return sortedUsers;
         },
         renderRoomName(room){
             const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);

@@ -6,7 +6,7 @@
         </div>
         <div class="text-left cursor-pointer flex items-center gap-2 w-full">
             <div>
-                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-fit' : 'w-fit'">
+                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
@@ -14,17 +14,16 @@
                     </div>
 
                 </div>
-                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
                         </div>
                     </div>
                 </div>
-                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
-                        <div class="truncate">
-                            {{ item.provider_name }}</div>
+                        <div class="truncate">{{ item.provider_name }}</div>
                     </div>
                 </div>
                 <div class="flex items-center justify-center w-20">

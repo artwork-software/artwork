@@ -13,7 +13,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('shift_plan_user_sort_by');
+            $columns = $table->getColumns();
+
+            if (isset($columns['shift_plan_user_sort_by'])) {
+                $table->dropColumn('shift_plan_user_sort_by');
+            }
+
             $table->string('shift_plan_user_sort_by')
                 ->after('show_crafts')
                 ->default(null)

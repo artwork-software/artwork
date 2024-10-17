@@ -468,9 +468,22 @@ class User extends Model implements
     public function toSearchableArray(): array
     {
         return [
+            'id' => $this->id,
             'first_name' => $this->first_name,
-            'last_name' => $this->last_name
+            'last_name' => $this->last_name,
+            'full_name' => $this->first_name . ' ' . $this->last_name,
+            'profile_photo_url' => $this->profile_photo_url,
+            'profile_photo_path' => $this->profile_photo_path,
+            'position' => $this->position,
+            'business' => $this->business,
+            'phone_number' => $this->phone_number,
+            'email' => $this->email,
         ];
+    }
+
+    public function searchableAs(): string
+    {
+        return 'users_index';
     }
 
     /** @deprecated user WorkhourService */

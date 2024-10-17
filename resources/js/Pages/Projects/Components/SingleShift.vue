@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="h-full mt-1 rounded-b-lg bg-gray-200 px-1 py-2">
+        <div class="mt-1 rounded-b-lg bg-gray-200 px-1 py-2 overflow-y-scroll h-full">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
@@ -159,6 +159,9 @@
                     @dropFeedback="dropFeedback"
                 />
             </div>
+            <div class="my-3 mx-0.5">
+                <component is="IconCirclePlus" @click="showAddShiftQualificationModal = true" class="h-5 w-5 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" stroke-width="1.5" />
+            </div>
         </div>
     </div>
     <AddShiftModal v-if="openEditShiftModal"
@@ -174,6 +177,12 @@
     <ChooseDeleteUserShiftModal v-if="showDeleteUserModal"
                                 @close-modal="this.closeDeleteUserModal"
                                 @returnBuffer="deleteUserWithSeriesShiftData"
+    />
+    <AddShiftQualificationToShiftModel
+        v-if="showAddShiftQualificationModal"
+        @close="showAddShiftQualificationModal = false"
+        :shift="shift"
+        :shift-qualifications="shiftQualifications"
     />
 </template>
 <script>
@@ -194,10 +203,12 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import AddShiftQualificationToShiftModel from "@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        AddShiftQualificationToShiftModel,
         ShiftNoteComponent,
         UserPopoverTooltip,
         BaseMenu,
@@ -238,6 +249,7 @@ export default defineComponent({
             usersPivotIdToDelete: null,
             highlight: null,
             anyoneHasVacation: false,
+            showAddShiftQualificationModal: false
         }
     },
     mounted() {

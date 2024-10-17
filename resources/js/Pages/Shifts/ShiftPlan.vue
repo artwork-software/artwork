@@ -17,6 +17,10 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
+            <pre>
+                {{ useFrontendFilter }}
+            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -182,7 +186,7 @@
                                                       @update:current-selected-day-service="updateSelectedDayService"/>
                                 </div>
                             </div>
-                            <div class="flex items-center justify-end gap-x-3 pr-20 z-20">
+                            <div class="flex items-center justify-end gap-x-3 pr-24 z-20">
                                 <Switch @click="toggleHighlightMode" v-model="highlightMode"
                                         :class="[highlightMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
@@ -250,7 +254,7 @@
                                         <CraftFilter :crafts="crafts" is_tiny/>
                                     </div>
                                 </BaseFilter>
-                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-80" right>
+                                <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right>
                                     <div class="flex items-center justify-end py-1">
                                     <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
                                         {{ $t('Reset') }}
@@ -480,7 +484,7 @@ import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/Singl
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import {Link, router} from "@inertiajs/vue3";
+import {Link, router, usePage} from "@inertiajs/vue3";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
@@ -616,6 +620,10 @@ export default {
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height,
             showFreelancers: true,
+            useFrontendFilter: usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_ASCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_DESCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
         }
     },
     mounted() {
@@ -764,7 +772,11 @@ export default {
                             return {
                                 id: craft.id,
                                 name: craft.name,
-                                users: users.filter(user => user.assigned_craft_ids.includes(craft.id)),
+                                users: this.sortUsersByType(users.filter(
+                                    user => user.assigned_craft_ids.includes(craft.id)),
+                                    this.returnFilteredFunctionValues.sortByInternExtern,
+                                    this.returnFilteredFunctionValues.isDescending
+                                ),
                                 color: craft?.color,
                                 universally_applicable: craft.universally_applicable,
                                 abbreviation: craft.abbreviation,
@@ -783,13 +795,104 @@ export default {
             }
         },
         usersWithNoCrafts() {
-            return this.getDropUsers().filter(user =>
+            const users = this.getDropUsers().filter(user =>
                 !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
             );
+            return this.sortUsersByType(
+                users,
+                this.returnFilteredFunctionValues.sortByInternExtern,
+                this.returnFilteredFunctionValues.isDescending
+            );
+        },
+        returnFilteredFunctionValues(){
+            if (usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_ASCENDING'){
+                return { sortByInternExtern: true, isDescending: false }
+            }
+            if (usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_DESCENDING'){
+                return { sortByInternExtern: true, isDescending: true }
+            }
+            if (usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_ASCENDING'){
+                return { sortByInternExtern: false, isDescending: true }
+            }
+            if (usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_DESCENDING'){
+                return { sortByInternExtern: false, isDescending: false }
+            }
+            return { sortByInternExtern: false, isDescending: false }
         },
     },
     methods: {
+        sortUsersByType(users, sortByInternExtern = false, isDescending = false) {
 
+            if (!this.useFrontendFilter) {
+                return users;
+            }
+
+            // Hilfsfunktion, um den Typ von Usern zu klassifizieren (inkl. Freelancer-Flag)
+            const classifyUserType = (user) => {
+                if (user.type === 0 && user.element.is_freelancer) {
+                    return 1; // Als Freelancer markierte User werden als Typ 1 gezählt
+                }
+                return user.type; // Sonst den ursprünglichen Typ zurückgeben
+            };
+
+            const sortedUsers = users.sort((a, b) => {
+                const typeA = classifyUserType(a);
+                const typeB = classifyUserType(b);
+
+                // Sicherheitschecks: Stelle sicher, dass die Felder existieren, sonst leere Strings verwenden
+                const lastNameA = a.element.last_name || '';
+                const lastNameB = b.element.last_name || '';
+                const providerNameA = a.element.provider_name || '';
+                const providerNameB = b.element.provider_name || '';
+
+                // Wenn die intern/extern-Sortierung aktiv ist
+                if (sortByInternExtern) {
+                    if (isDescending) {
+                        // Absteigend: Dienstleister -> Freelancer -> Interne
+                        if (typeA === typeB) {
+                            if (typeA === 0 || typeA === 1) {
+                                return lastNameB.localeCompare(lastNameA); // Sortiere interne User und Freelancer nach Nachname (absteigend)
+                            } else if (typeA === 2) {
+                                return providerNameB.localeCompare(providerNameA); // Sortiere Dienstleister nach provider_name (absteigend)
+                            }
+                        } else {
+                            return typeB - typeA; // Absteigend nach Typ: 2 -> 1 -> 0
+                        }
+                    } else {
+                        // Aufsteigend: Interne -> Freelancer -> Dienstleister
+                        if (typeA === typeB) {
+                            if (typeA === 0 || typeA === 1) {
+                                return lastNameA.localeCompare(lastNameB); // Sortiere interne User und Freelancer nach Nachname (aufsteigend)
+                            } else if (typeA === 2) {
+                                return providerNameA.localeCompare(providerNameB); // Sortiere Dienstleister nach provider_name (aufsteigend)
+                            }
+                        } else {
+                            return typeA - typeB; // Aufsteigend nach Typ: 0 -> 1 -> 2
+                        }
+                    }
+                } else {
+                    // Wenn die intern/extern-Sortierung **aus** ist: Alle Gruppen gemischt nach Namen
+                    if (isDescending) {
+                        // Absteigende Sortierung: Dienstleister -> Freelancer -> Interne (nach Namen, aber absteigend)
+                        if (typeA === 0 || typeA === 1) {
+                            return lastNameB.localeCompare(lastNameA); // Absteigend nach Nachname für User/Freelancer
+                        } else if (typeA === 2) {
+                            return providerNameB.localeCompare(providerNameA); // Absteigend nach provider_name für Dienstleister
+                        }
+                    } else {
+                        // Aufsteigende Sortierung: Interne -> Freelancer -> Dienstleister (nach Namen, aufsteigend)
+                        if (typeA === 0 || typeA === 1) {
+                            return lastNameA.localeCompare(lastNameB); // Aufsteigend nach Nachname für User/Freelancer
+                        } else if (typeA === 2) {
+                            return providerNameA.localeCompare(providerNameB); // Aufsteigend nach provider_name für Dienstleister
+                        }
+                    }
+                }
+            });
+
+            console.log(sortedUsers);
+            return sortedUsers;
+        },
         renderRoomName(room){
             const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
             const firstDayIndex = this.days.indexOf(firstDayWhereAreNotExtraRows);

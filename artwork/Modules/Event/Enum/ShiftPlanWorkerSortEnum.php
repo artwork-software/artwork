@@ -11,4 +11,16 @@ enum ShiftPlanWorkerSortEnum: string
     case ALPHABETICALLY_ASCENDING_LAST_NAME = 'ALPHABETICALLY_ASCENDING_LAST_NAME';
 
     case ALPHABETICALLY_DESCENDING_LAST_NAME = 'ALPHABETICALLY_DESCENDING_LAST_NAME';
+
+    // Aufsteigend nach intern/extern
+    case INTERN_EXTERNAL_ASCENDING = 'INTERN_EXTERNAL_ASCENDING';
+
+    // Absteigend nach intern/extern
+    case INTERN_EXTERNAL_DESCENDING = 'INTERN_EXTERNAL_DESCENDING';
+
+    // Ohne intern/extern-Sortierung, nur nach Namen
+    case WITHOUT_INTERN_EXTERNAL_ASCENDING = 'WITHOUT_INTERN_EXTERNAL_ASCENDING';
+
+    // Ohne intern/extern-Sortierung, nur nach Namen
+    case WITHOUT_INTERN_EXTERNAL_DESCENDING = 'WITHOUT_INTERN_EXTERNAL_DESCENDING';
 }

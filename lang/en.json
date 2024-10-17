@@ -2038,5 +2038,9 @@
     "NOT_AVAILABLE": "not available",
     "OFF_WORK": "Day off works",
     "Please also enter an end time here.": "Please also enter an end time here.",
-    "Please also enter a start time here.": "Please also enter a start time here."
+    "Please also enter a start time here.": "Please also enter a start time here.",
+    "Intern external ascending": "Alphabetically Intern/External ascending",
+    "Intern external descending": "Alphabetically Intern/External descending",
+    "Without intern external ascending": "Alphabetically without intern/external ascending",
+    "Without intern external descending": "Alphabetically without intern/external descending"
 }

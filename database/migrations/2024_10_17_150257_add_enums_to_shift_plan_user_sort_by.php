@@ -7,25 +7,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table
-                ->enum(
-                    'shift_plan_user_sort_by',
-                    [
-                        ShiftPlanWorkerSortEnum::ALPHABETICALLY_ASCENDING_FIRST_NAME->name,
-                        ShiftPlanWorkerSortEnum::ALPHABETICALLY_DESCENDING_FIRST_NAME->name,
-                        ShiftPlanWorkerSortEnum::ALPHABETICALLY_ASCENDING_LAST_NAME->name,
-                        ShiftPlanWorkerSortEnum::ALPHABETICALLY_DESCENDING_LAST_NAME->name,
-                    ]
-                )
+            $table->string('shift_plan_user_sort_by')
                 ->after('show_crafts')
                 ->default(null)
                 ->nullable();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {

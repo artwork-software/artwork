@@ -2042,6 +2042,8 @@
     "Intern external ascending": "Alphabetisch Intern/Extern aufsteigend",
     "Intern external descending": "Alphabetisch Intern/Extern absteigend",
     "Without intern external ascending": "Alphabetisch ohne Intern/Extern aufsteigend",
-    "Without intern external descending": "Alphabetisch ohne Intern/Extern absteigend"
+    "Without intern external descending": "Alphabetisch ohne Intern/Extern absteigend",
+    "Room name desc": "Raumname alphabetisch absteigend",
+    "Room name asc": "Raumname alphabetisch aufsteigend"
 
 }

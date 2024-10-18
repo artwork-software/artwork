@@ -261,7 +261,7 @@
                                         <div @click="this.applySort(shiftPlanWorkerSortEnumName)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
                                             {{ getSortEnumTranslation(shiftPlanWorkerSortEnumName) }}
-                                            <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by === shiftPlanWorkerSortEnumName" class="w-5 h-5"/>
+                                            <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === shiftPlanWorkerSortEnumName" class="w-5 h-5"/>
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
@@ -615,10 +615,10 @@ export default {
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height,
             showFreelancers: true,
-            useFrontendFilter: usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_DESCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
+            useFrontendFilter: usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
+                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
         }
     },
     mounted() {
@@ -800,16 +800,16 @@ export default {
             );
         },
         returnFilteredFunctionValues(){
-            if (usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_ASCENDING'){
+            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING'){
                 return { sortByInternExtern: true, isDescending: false }
             }
-            if (usePage().props.user.shift_plan_user_sort_by === 'INTERN_EXTERNAL_DESCENDING'){
+            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING'){
                 return { sortByInternExtern: true, isDescending: true }
             }
-            if (usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_ASCENDING'){
+            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING'){
                 return { sortByInternExtern: false, isDescending: true }
             }
-            if (usePage().props.user.shift_plan_user_sort_by === 'WITHOUT_INTERN_EXTERNAL_DESCENDING'){
+            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING'){
                 return { sortByInternExtern: false, isDescending: false }
             }
             return { sortByInternExtern: false, isDescending: false }
@@ -1492,7 +1492,7 @@ export default {
             }
         },
         applySort(shiftPlanWorkerSortEnumName) {
-            this.$page.props.user.shift_plan_user_sort_by = shiftPlanWorkerSortEnumName;
+            this.$page.props.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;
             router.patch(
                 route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
                 {
@@ -1504,7 +1504,7 @@ export default {
             );
         },
         resetSort() {
-            this.$page.props.user.shift_plan_user_sort_by = null;
+            this.$page.props.user.shift_plan_user_sort_by_id = null;
             router.patch(
                 route('user.update.shiftPlanUserSortBy', {user: this.$page.props.user.id}),
                 {
@@ -1516,12 +1516,12 @@ export default {
             );
         },
         sortCraftUsers(users) {
-            if (this.$page.props.user.shift_plan_user_sort_by === null) {
+            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
                 return users.sort((a, b) => a.element.id > b.element.id ? 1 : a.element.id < b.element.id ? -1 : 0);
             }
 
             return users.sort((workerA, workerB) => {
-                let shiftPlanUserSortBy = this.$page.props.user.shift_plan_user_sort_by;
+                let shiftPlanUserSortBy = this.$page.props.user.shift_plan_user_sort_by_id;
 
                 let getCompareName = (worker) => {
                     let workerIsUserOrFreelancer = worker.type === 0 || worker.type === 1;

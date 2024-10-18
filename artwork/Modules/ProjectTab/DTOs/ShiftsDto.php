@@ -23,6 +23,22 @@ class ShiftsDto extends BaseDto
 
     public ?Collection $shiftTimePresets = null;
 
+    public ?array $shiftSortTypes = null;
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getShiftSortTypes(): ?array
+    {
+        return $this->shiftSortTypes;
+    }
+
+    public function setShiftSortTypes(?array $shiftSortTypes): self
+    {
+        $this->shiftSortTypes = $shiftSortTypes;
+        return $this;
+    }
+
     public function setShiftTimePresets(?Collection $shiftTimePresets): self
     {
         $this->shiftTimePresets = $shiftTimePresets;

@@ -21,6 +21,7 @@ use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
@@ -793,6 +794,28 @@ class UserController extends Controller
             'shift_plan_user_sort_by' => $request->enum(
                 'sortBy',
                 ShiftPlanWorkerSortEnum::class
+            )
+        ]);
+    }
+
+    public function updateShiftTabUserSortBy(
+        User $user,
+        Request $request
+    ): void {
+        $request->validate(
+            [
+                'sortBy' => [
+                    'nullable',
+                    Rule::enum(ShiftTabSort::class)
+                ]
+            ]
+        );
+
+
+        $user->updateOrFail([
+            'sort_type_shift_tab' => $request->enum(
+                'sortBy',
+                ShiftTabSort::class
             )
         ]);
     }

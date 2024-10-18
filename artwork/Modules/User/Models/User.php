@@ -182,7 +182,8 @@ class User extends Model implements
         'bulk_sort_id',
         'show_notification_indicator',
         'shift_plan_user_sort_by',
-        'is_freelancer'
+        'is_freelancer',
+        'sort_type_shift_tab'
     ];
 
     protected $casts = [

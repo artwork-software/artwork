@@ -28,4 +28,8 @@ class ShiftPresetRepository extends BaseRepository
     {
         return ShiftPreset::byNameLike($name)->byEventTypeId($eventTypeId)->get();
     }
+    public function findByName(string $name): Collection
+    {
+        return ShiftPreset::byNameLike($name)->get();
+    }
 }

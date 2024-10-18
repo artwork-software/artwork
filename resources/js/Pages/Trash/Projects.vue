@@ -4,7 +4,7 @@
 
         </div>
         <div class="flex justify-end items-center ml-8 -mt-14">
-            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+            <div v-if="!showSearchbar" @click="openSearchbar"
                  class="cursor-pointer inset-y-0 mr-3">
                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
             </div>
@@ -13,6 +13,7 @@
                     <input type="text"
                            :placeholder="$t('Search')"
                            v-model="searchText"
+                           ref="searchBarInput"
                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
@@ -232,7 +233,15 @@ export default {
         closeSearchbar() {
             this.showSearchbar = false
             this.searchText = ''
-        }
+        },
+        openSearchbar(){
+            this.showSearchbar = !this.showSearchbar;
+            this.$nextTick(() => {
+                if (this.showSearchbar) {
+                    this.$refs.searchBarInput.focus();
+                }
+            });
+        },
     },
     components: {
         BaseMenu,

@@ -16,9 +16,10 @@
                 </div>
             </div>
         </BaseFilter>
-        <input v-if="searchOpened"
+        <input v-show="searchOpened"
                class="inventory-top-bar-search-input"
                type="text"
+               ref="searchBarInput"
                aria-label="ajax search text input"
                :placeholder="$t('Search')"
                v-model="searchValue"
@@ -53,7 +54,7 @@ import {IconX, IconSearch, IconFileExport} from "@tabler/icons-vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 import {PlusIcon} from "@heroicons/vue/solid";
-import {ref} from "vue";
+import {nextTick, ref} from "vue";
 import AddColumnModal from "@/Pages/Inventory/InventoryManagement/AddColumnModal.vue";
 import Button from "@/Jetstream/Button.vue";
 import SelectExportTypeModal from "@/Pages/Inventory/InventoryManagement/SelectExportTypeModal.vue";
@@ -72,6 +73,8 @@ const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
     searchOpened = ref(false),
     showAddColumnModal = ref(false),
     showSelectExportTypeModal = ref(false),
+    searchBarInput = ref(null),
+
     searchValue = ref(''),
     toggleSearch = (close = false) => {
         if (close) {
@@ -79,6 +82,11 @@ const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
             emits.call(this, 'updatesSearchValue', '');
         }
         searchOpened.value = !searchOpened.value;
+        nextTick(() => {
+            if (searchOpened.value) {
+                searchBarInput.value.focus()
+            }
+        });
     },
     openAddColumnModal = () => {
         showAddColumnModal.value = true;

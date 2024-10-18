@@ -620,7 +620,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $workerShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -628,7 +628,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $masterShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -648,7 +648,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $workerShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -656,7 +656,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $masterShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -676,7 +676,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $workerShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -684,7 +684,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $masterShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -704,7 +704,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $workerShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 
@@ -712,7 +712,7 @@ class WalidRaadSeeder extends Seeder
             [
                 'shift_id' => $shift->id,
                 'shift_qualification_id' => $masterShiftQualification->id,
-                'value' => fake()->numberBetween(0, 3) ?: null
+                'value' => fake()->numberBetween(1, 3) ?: null
             ]
         );
 

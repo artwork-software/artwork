@@ -53,6 +53,10 @@ readonly class ShiftPresetService
     {
         return $this->shiftPresetRepository->findByNameAndEventTypeId($name, $eventTypeId);
     }
+    public function findByName(string $name): Collection
+    {
+        return $this->shiftPresetRepository->findByName($name);
+    }
 
     public function storeFromEventAndRequest(
         Event $event,

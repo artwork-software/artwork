@@ -39,7 +39,7 @@ readonly class ShiftsQualificationsService
             //update existing shiftsQualification value based on parameters
             $this->shiftsQualificationsRepository->save(
                 $existingShiftsQualification->fill(
-                    ['value' => $shiftsQualification['value']]
+                    ['value' => $shiftsQualification['value'] ?? 0]
                 )
             );
         }
@@ -98,5 +98,33 @@ readonly class ShiftsQualificationsService
                 ['value' => $workerCount]
             );
         }
+    }
+
+    public function increaseValueOrCreateWithOneByQualification(int $shiftId, int $shiftQualificationId): void
+    {
+        /**
+         * @var ShiftsQualifications $existingShiftsQualifications
+         */
+        $existingShiftsQualifications = $this->shiftsQualificationsRepository->findByShiftIdAndShiftQualificationId(
+            $shiftId,
+            $shiftQualificationId
+        );
+
+        if (is_null($existingShiftsQualifications)) {
+            $this->createShiftsQualificationForShift(
+                $shiftId,
+                [
+                    'shift_qualification_id' => $shiftQualificationId,
+                    'value' => 1
+                ]
+            );
+
+            return;
+        }
+
+        $this->shiftsQualificationsRepository->update(
+            $existingShiftsQualifications,
+            ['value' => $existingShiftsQualifications->getAttribute('value') + 1]
+        );
     }
 }

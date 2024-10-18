@@ -15,7 +15,7 @@
                         </div>
                         <div class="ml-1">(i)</div>
                     </div>
-                    <div class="text-xs w-full flex" v-if="!$page.props.user.compact_mode"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
+                    <div class="text-xs w-full flex" v-if="!$page.props.user.compact_mode"> {{plannedHours }}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
                 </div>
                 <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
@@ -24,7 +24,7 @@
                         </div>
                         <div class="ml-1"> (e) </div>
                     </div>
-                    <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                    <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours }}</div>
                 </div>
                 <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                     <div class="flex">
@@ -32,7 +32,7 @@
                             {{ item.provider_name }}</div>
                         <div class="ml-1"> (DL) </div>
                     </div>
-                    <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours.toFixed(1)}}</div>
+                    <div class="text-xs w-full" v-if="!$page.props.user.compact_mode">{{plannedHours}}</div>
                 </div>
             </div>
         </div>

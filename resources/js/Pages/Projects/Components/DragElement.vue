@@ -4,32 +4,36 @@
         <div class="text-white" v-if="!$page.props.user.compact_mode">
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover min-w-6 min-h-6">
         </div>
-        <div class="text-left cursor-pointer flex items-center gap-2">
+        <div class="text-left cursor-pointer flex items-center gap-2 w-full">
             <div>
-                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-fit' : 'w-fit'">
+                <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
                         </div>
                     </div>
-                    <div class="text-[9px] w-full flex"  v-if="!$page.props.user.compact_mode"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
+
                 </div>
-                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
                         <div class="truncate">
                             {{ item.first_name }} {{ item.last_name }}
                         </div>
                     </div>
-                    <div class="text-[9px] w-full"  v-if="!$page.props.user.compact_mode">{{plannedHours}}</div>
                 </div>
-                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
+                <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-24'">
                     <div class="flex">
-                        <div class="truncate">
-                            {{ item.provider_name }}</div>
+                        <div class="truncate">{{ item.provider_name }}</div>
                     </div>
-                    <div class="text-[9px] w-full" v-if="!$page.props.user.compact_mode">{{ plannedHours }}</div>
+                </div>
+                <div class="flex items-center justify-center w-20">
+                    <div class="text-[9px] w-full " v-if="!$page.props.user.compact_mode && type === 0"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
+                    <div class="text-[9px] w-full" v-if="!$page.props.user.compact_mode && type !== 0">{{ plannedHours }}</div>
                 </div>
             </div>
+
+        </div>
+        <div class="flex items-center justify-end w-full gap-2">
             <div v-if="type === 0 && item.is_freelancer || type === 1">
                 <ToolTipComponent
                     icon="IconId"
@@ -39,10 +43,11 @@
                     classes="text-gray-300"
                 />
             </div>
+            <a :style="{color: TextColorWithDarken(color, 10)}" v-if="type === 0" :href="route('user.edit.shiftplan', item.id)" class="">
+                <IconCalendarShare class="w-4 h-4" />
+            </a>
         </div>
-        <a :style="{color: TextColorWithDarken(color, 10)}" v-if="type === 0" :href="route('user.edit.shiftplan', item.id)" class="flex items-center justify-end w-full">
-            <IconCalendarShare class="h-5 w-5" />
-        </a>
+
     </div>
 
 

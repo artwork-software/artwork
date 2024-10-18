@@ -363,6 +363,7 @@
                                                        :project="project"
                                                        :main-position="mainPosition"
                                                         :project-managers="projectManager"
+                                                       :hasBudgetAccess="this.hasBudgetAccess()"
                                                        type="BUDGET_TYPE_EARNING"
                                 />
                             </tr>

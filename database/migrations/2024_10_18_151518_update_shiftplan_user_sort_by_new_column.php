@@ -16,12 +16,10 @@ return new class extends Migration
                 $table->dropColumn('shift_plan_user_sort_by');
             }
 
-            if (!Schema::hasColumn('users', 'shift_plan_user_sort_by')) {
-                $table->string('shift_plan_user_sort_by')
-                    ->after('show_crafts')
-                    ->default(null)
-                    ->nullable();
-            }
+            $table->string('shift_plan_user_sort_by_id')
+                ->after('show_crafts')
+                ->default(null)
+                ->nullable();
         });
     }
 
@@ -34,6 +32,8 @@ return new class extends Migration
             if (Schema::hasColumn('users', 'shift_plan_user_sort_by')) {
                 $table->dropColumn('shift_plan_user_sort_by');
             }
+
+            $table->dropColumn('shift_plan_user_sort_by_id');
         });
     }
 };

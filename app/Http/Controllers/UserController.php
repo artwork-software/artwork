@@ -791,7 +791,7 @@ class UserController extends Controller
 
 
         $user->updateOrFail([
-            'shift_plan_user_sort_by' => $request->enum(
+            'shift_plan_user_sort_by_id' => $request->enum(
                 'sortBy',
                 ShiftPlanWorkerSortEnum::class
             )

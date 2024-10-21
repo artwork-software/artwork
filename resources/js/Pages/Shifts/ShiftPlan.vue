@@ -17,6 +17,10 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
+            <pre>
+                {{ multiEditCellByDayAndUser }}
+            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -303,6 +307,7 @@
                                                                :color="craft.color"
                                                                :craft-id="craft.id"
                                                                :craft="craft"
+                                                               :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -381,6 +386,8 @@
                                                                :color="null"
                                                                :craft-id="0"
                                                                :craft="null"
+                                                               :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -394,11 +401,12 @@
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
                                             <div v-if="!day.is_extra_row"
                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
-                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '']"
+                                                    multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
+                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day) ? '!opacity-100' : '']"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <ShiftPlanCell :user="user" :day="day" />
+                                                <ShiftPlanCell :user="user" :day="day"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -619,6 +627,7 @@ export default {
                 usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING' ||
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
+            multiEditCellByDayAndUser: {},
         }
     },
     mounted() {
@@ -1002,7 +1011,40 @@ export default {
             })
             return users;
         },
+        handleMultiEdit(user, day) {
+            // Erstelle einen eindeutigen Schlüssel aus der User-ID und dem Typ
+            const userKey = `${user.element.id}_${user.type}`;
+
+            // Prüfen, ob der Eintrag für die Kombination aus User-ID und Typ existiert
+            if (!this.multiEditCellByDayAndUser[userKey]) {
+                this.multiEditCellByDayAndUser[userKey] = {
+                    days: [],
+                    type: user.type,
+                    id: user.element.id
+                };
+            }
+            const userData = this.multiEditCellByDayAndUser[userKey];
+
+            // Prüfen, ob der Tag bereits für diesen Benutzer vorhanden ist
+            if (userData.days.includes(day)) {
+                // Entferne den Tag (deselect)
+                userData.days = userData.days.filter((d) => d !== day);
+
+                // Wenn keine Tage mehr vorhanden sind, lösche das Benutzerobjekt
+                if (userData.days.length === 0) {
+                    delete this.multiEditCellByDayAndUser[userKey];
+                }
+            } else {
+                // Wenn der Tag nicht vorhanden ist, füge ihn hinzu (select)
+                userData.days.push(day);
+            }
+        },
         handleCellClick(user, day) {
+            if(this.multiEditMode && !this.userForMultiEdit) {
+                this.handleMultiEdit(user, day);
+                return;
+            }
+
             if (this.dayServiceMode) {
                 let type = null;
                 switch (user.type) {
@@ -1435,6 +1477,7 @@ export default {
 
             if (closeMultiEdit) {
                 this.multiEditMode = false;
+                this.multiEditCellByDayAndUser = {};
             }
         },
         changeCraftVisibility(id) {

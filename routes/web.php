@@ -1374,6 +1374,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');
 
+        Route::patch('/{user}/update/userOverviewHeight', [UserController::class, 'updateUserOverviewHeight'])
+            ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
         Route::post(

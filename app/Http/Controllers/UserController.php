@@ -819,4 +819,9 @@ class UserController extends Controller
             )
         ]);
     }
+
+    public function updateUserOverviewHeight(User $user, Request $request): void
+    {
+        $user->update($request->only('drawer_height'));
+    }
 }

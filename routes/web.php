@@ -33,6 +33,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndividualTimeController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
@@ -1557,6 +1558,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
     });
+
+    Route::resource('holidays', HolidayController::class)
+        ->only(['index', 'store', 'update', 'destroy', 'show']);
 });
 
 Route::get(

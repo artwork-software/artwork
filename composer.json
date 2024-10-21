@@ -35,6 +35,7 @@
         "laravel/tinker": "^v2.7.3",
         "maatwebsite/excel": "^3.1",
         "meilisearch/meilisearch-php": "^v1.8.0",
+        "noahnxt/laravel-open-holiday-api": "^1.0",
         "pestphp/pest": "^v2.0",
         "pestphp/pest-plugin-laravel": "^v2.0",
         "pusher/pusher-php-server": "7.0.2",

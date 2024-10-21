@@ -183,7 +183,8 @@ class User extends Model implements
         'show_notification_indicator',
         'shift_plan_user_sort_by_id',
         'is_freelancer',
-        'sort_type_shift_tab'
+        'sort_type_shift_tab',
+        'drawer_height',
     ];
 
     protected $casts = [

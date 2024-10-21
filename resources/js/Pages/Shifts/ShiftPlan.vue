@@ -17,6 +17,9 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+            <pre>
+                {{this.$page.props.user.drawer_height}}
+            </pre>
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -599,7 +602,7 @@ export default {
             userToMultiEditCheckedShiftsAndEvents: [],
             dropFeedback: null,
             closedCrafts: [],
-            userOverviewHeight: 570,
+            userOverviewHeight: usePage().props.user.drawer_height,
             startY: 0,
             startHeight: 0,
             windowHeight: window.innerHeight,
@@ -1490,6 +1493,12 @@ export default {
             if (this.userOverviewHeight < 100) {
                 this.userOverviewHeight = 100;
             }
+            router.patch(route('user.update.userOverviewHeight', {user: this.$page.props.user.id}), {
+                drawer_height: this.userOverviewHeight
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+            });
         },
         applySort(shiftPlanWorkerSortEnumName) {
             this.$page.props.user.shift_plan_user_sort_by_id = shiftPlanWorkerSortEnumName;

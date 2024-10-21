@@ -10,8 +10,7 @@ class ShowDto
 {
     public function __construct(
         public readonly Holiday $holiday,
-    )
-    {
+    ) {
     }
 
     public function toArray(): array

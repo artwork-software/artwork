@@ -16,8 +16,7 @@ class HolidayController extends Controller
     public function __construct(
         private readonly HolidayFrontendService $holidayFrontendService,
         private readonly HolidayService $holidayService
-    )
-    {
+    ) {
     }
 
     public function index(): JsonResponse
@@ -44,7 +43,7 @@ class HolidayController extends Controller
     public function store(HolidayRequest $request): JsonResponse
     {
         $subdivisions = [];
-        foreach($request->input('subdivisions') as $subdivision) {
+        foreach ($request->input('subdivisions') as $subdivision) {
             $subdivisions[] = Subdivision::find($subdivision);
         }
         $holiday = $this->holidayService->create(
@@ -55,13 +54,16 @@ class HolidayController extends Controller
             $request->input('rota')
         );
 
-        return response()->json($this->holidayFrontendService->createShowDto($holiday)->toArray(), Response::HTTP_CREATED);
+        return response()->json(
+            $this->holidayFrontendService->createShowDto($holiday)->toArray(),
+            Response::HTTP_CREATED
+        );
     }
 
     public function update(HolidayRequest $request, Holiday $holiday): JsonResponse
     {
         $subdivisions = [];
-        foreach($request->input('subdivisions') as $subdivision) {
+        foreach ($request->input('subdivisions') as $subdivision) {
             $subdivisions[] = Subdivision::find($subdivision);
         }
         $holiday->fill($request->only(['name', 'date', 'rota', 'country']));

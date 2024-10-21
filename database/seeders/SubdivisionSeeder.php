@@ -18,7 +18,7 @@ class SubdivisionSeeder extends Seeder
             return;
         }
 
-        foreach(Subdivision::codes() as $name => $code) {
+        foreach (Subdivision::codes() as $name => $code) {
             Subdivision::create([
                 'name' => $name,
                 'code' => $code,

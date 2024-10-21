@@ -21,8 +21,7 @@ class HolidayImport
         HolidayApi $api,
         HolidayService $holidayService
     ): void {
-
-        foreach($holidayService->getAllImported() as $holiday) {
+        foreach ($holidayService->getAllImported() as $holiday) {
             $holiday->delete();
         }
 

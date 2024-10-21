@@ -13,7 +13,8 @@ class MockHolidaysApi implements HolidayApi
         Subdivision $subdivision,
         ?string $languageCode = 'DE',
     ): array {
-        // TODO: Implement getHolidays() method.
+        //@todo tests
+        return [];
     }
 
 }

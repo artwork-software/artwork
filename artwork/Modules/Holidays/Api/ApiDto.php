@@ -14,7 +14,6 @@ class ApiDto
         public ?int $rota = 0,
         public ?string $remoteIdentifier = null,
         public ?bool $fromApi = false
-    )
-    {
+    ) {
     }
 }

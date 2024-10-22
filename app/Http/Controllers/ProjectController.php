@@ -278,7 +278,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = $projectService->getByName($request->get('query'));
+        $projects = $projectService->scoutSearch($request->get('query'))->get();
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
@@ -1903,9 +1903,6 @@ class ProjectController extends Controller
         CraftService $craftService,
         CalendarService $calendarService,
         FilterService $filterService,
-        FilterController $filterController,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
         EventService $eventService
@@ -2002,25 +1999,18 @@ class ProjectController extends Controller
                                 $roomService,
                                 $userService,
                                 $filterService,
-                                $filterController,
                                 $this->projectTabService,
                                 $eventTypeService,
-                                $roomCategoryService,
-                                $roomAttributeService,
                                 $areaService,
                                 $projectService,
                                 $project
                             ) :
                             $eventService->createEventManagementDto(
-                                $calendarService,
                                 $roomService,
                                 $userService,
                                 $filterService,
-                                $filterController,
                                 $this->projectTabService,
                                 $eventTypeService,
-                                $roomCategoryService,
-                                $roomAttributeService,
                                 $areaService,
                                 $projectService,
                                 $project

@@ -3,19 +3,29 @@
 namespace Artwork\Modules\Shift\Services;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
+use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Vacation\Services\VacationSeriesService;
+use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Routing\Redirector;
 use stdClass;
 
 readonly class ShiftService
@@ -23,7 +33,14 @@ readonly class ShiftService
     public function __construct(
         private ShiftRepository $shiftRepository,
         private CraftService $craftService,
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private readonly ChangeService $changeService,
+        private readonly AvailabilityConflictService $availabilityConflictService,
+        private readonly VacationConflictService $vacationConflictService,
+        private ShiftUserService $shiftUserService,
+        private ShiftFreelancerService $shiftFreelancerService,
+        private ShiftServiceProviderService $shiftServiceProviderService,
+        private ShiftCountService $shiftCountService,
     ) {
     }
 
@@ -262,6 +279,42 @@ readonly class ShiftService
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($authUser);
             $this->notificationService->createNotification();
+        }
+    }
+
+
+    public function detachFromShifts(
+        \Illuminate\Support\Collection $shifts,
+        string $modelClass,
+        Model $entityModel
+    ): void {
+        foreach ($shifts as $shift) {
+            match ($modelClass) {
+                User::class => $this->shiftUserService->removeFromShiftByUserIdAndShiftId(
+                    $entityModel->id,
+                    $shift->id,
+                    $this->notificationService,
+                    $this->shiftCountService,
+                    $this->vacationConflictService,
+                    $this->availabilityConflictService,
+                    $this->changeService
+                ),
+                Freelancer::class => $this->shiftFreelancerService->removeFromShiftByUserIdAndShiftId(
+                    $entityModel->id,
+                    $shift->id,
+                    $this->notificationService,
+                    $this->shiftCountService,
+                    $this->vacationConflictService,
+                    $this->availabilityConflictService,
+                    $this->changeService
+                ),
+                ServiceProvider::class => $this->shiftServiceProviderService->removeFromShiftByUserIdAndShiftId(
+                    $entityModel->id,
+                    $shift->id,
+                    $this->shiftCountService,
+                    $this->changeService
+                ),
+            };
         }
     }
 }

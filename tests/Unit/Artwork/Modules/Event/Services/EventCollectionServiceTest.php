@@ -26,7 +26,7 @@ class EventCollectionServiceTest extends TestCase
         $this->service = new EventCollectionService($this->roomRepository, $this->eventRepository);
     }
 
-    public function testCollectEventsForRoomsReturnsCorrectEvents()
+    public function testCollectEventsForRoomsReturnsCorrectEvents(): void
     {
         $roomsWithEvents = collect([new Room(['id' => 1]), new Room(['id' => 2])]);
         $calendarPeriod = CarbonPeriod::create('2023-01-01', '2023-01-31');
@@ -49,7 +49,7 @@ class EventCollectionServiceTest extends TestCase
         $this->assertCount(2, $result);
     }
 
-    public function testCollectEventsForRoomHandlesEmptyEvents()
+    public function testCollectEventsForRoomHandlesEmptyEvents(): void
     {
         $room = new Room(['id' => 1]);
         $calendarPeriod = CarbonPeriod::create('2023-01-01', '2023-01-31');
@@ -72,7 +72,7 @@ class EventCollectionServiceTest extends TestCase
         $this->assertEmpty($result);
     }
 
-    public function testGetEventsWithoutRoomReturnsEvents()
+    public function testGetEventsWithoutRoomReturnsEvents(): void
     {
         $project = null;
         $with = null;

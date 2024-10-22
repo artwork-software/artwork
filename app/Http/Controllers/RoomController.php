@@ -159,9 +159,7 @@ class RoomController extends Controller
 
     public function update(
         Request $request,
-        Room $room,
-        NotificationService $notificationService,
-        ChangeService $changeService
+        Room $room
     ): RedirectResponse {
 
         $roomReplicate = $room->replicate();

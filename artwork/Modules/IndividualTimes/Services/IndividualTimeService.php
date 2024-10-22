@@ -106,6 +106,18 @@ readonly class IndividualTimeService
         return $this->individualTimeRepository->createNewIndividualTime($modelInstance, $individualTimeObject);
     }
 
+    public function deleteForModel($modelInstance, string $date): void
+    {
+        if (!method_exists($modelInstance, 'individualTimes')) {
+            throw new ModelNotFoundException("Model does not support individual times");
+        }
+
+        $individualTime = $modelInstance->individualTimes()->where('start_date', $date)->get();
+        $individualTime->each(function ($individualTime): void {
+            $individualTime->delete();
+        });
+    }
+
     /**
      * @param Carbon $startDate
      * @param string|null $startTime

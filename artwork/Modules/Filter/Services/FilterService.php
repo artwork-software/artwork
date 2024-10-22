@@ -26,8 +26,7 @@ readonly class FilterService
         private EventTypeService $eventTypeService,
         private AreaRepository $areaRepository,
         private RoomCategoryRepository $categoryRepository,
-    )
-    {
+    ) {
     }
 
     public function getPersonalFilter(?User $user = null): \Illuminate\Support\Collection
@@ -42,8 +41,8 @@ readonly class FilterService
     /**
      * @return array<string, mixed>
      */
-    public function getCalendarFilterDefinitions(
-    ): array {
+    public function getCalendarFilterDefinitions(): array
+    {
         return [
             'roomCategories' => $this->map($this->categoryRepository->getAll()),
             'roomAttributes' => $this->map($this->roomAttributeRepository->getAll()),

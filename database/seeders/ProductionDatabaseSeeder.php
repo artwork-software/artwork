@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Artwork\Modules\Holidays\Models\Subdivision;
 use Database\Seeders\InventoryManagement\Production\InventoryManagementDefaultColumnsSeeder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
@@ -22,7 +23,8 @@ class ProductionDatabaseSeeder extends Seeder
             PermissionPresetSeeder::class,
             ShiftQualificationSeeder::class,
             DefaultComponentSeeder::class,
-            InventoryManagementDefaultColumnsSeeder::class
+            InventoryManagementDefaultColumnsSeeder::class,
+            SubdivisionSeeder::class,
         ]);
 
         DB::table('event_types')->insert([

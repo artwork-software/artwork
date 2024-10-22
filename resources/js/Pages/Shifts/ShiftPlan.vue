@@ -325,10 +325,10 @@
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                 @click="handleCellClick(user, day)">
-                                                <div class="text-[9px] flex items-center justify-center h-full" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    Selected for Multiedit
+                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
+                                                    {{ $t('Selected for Multi-Edit') }}
                                                 </div>
-                                                <ShiftPlanCell :user="user" :day="day" />
+                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -407,10 +407,10 @@
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <div class="text-[9px] flex items-center justify-center top-5 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    Selected for Multiedit
+                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
+                                                    {{ $t('Selected for Multi-Edit') }}
                                                 </div>
-                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-30' : '']"/>
+                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -494,12 +494,12 @@
                                 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
                                 'rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                             ]">
-                        Einträge bearbeiten
+                        {{ $t('Edit Entries') }}
                     </button>
                 </div>
                 <div>
                     <button type="button"
-                            @click="openCellMultiEditDelete"
+                            @click="openCellMultiEditDelete = true"
                             :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
                             class="pointer-events-auto"
                             :class="[
@@ -508,7 +508,7 @@
                                 'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
                                 'rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                             ]">
-                        Einträge löschen
+                        {{ $t('Delete Entries') }}
                     </button>
                 </div>
             </div>
@@ -523,8 +523,13 @@
     />
     <CellMultiEditModal v-if="showCellMultiEditModal"
                         :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
-                        @close="showCellMultiEditModal = false"
+                        @close="closeMultiEditCellModal"
                         />
+    <DeleteEntriesModal
+        v-if="openCellMultiEditDelete"
+        :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+        @close="closeCellMultiEditDelete"
+    />
 </template>
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -566,6 +571,7 @@ import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
 import debounce from "lodash.debounce";
 import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
+import DeleteEntriesModal from "@/Pages/Shifts/Components/DeleteEntriesModal.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -582,6 +588,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        DeleteEntriesModal,
         CellMultiEditModal,
         ShiftPlanCell,
         ToolTipComponent,
@@ -677,7 +684,8 @@ export default {
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
             multiEditCellByDayAndUser: {},
-            showCellMultiEditModal: false
+            showCellMultiEditModal: false,
+            openCellMultiEditDelete: false
         }
     },
     mounted() {
@@ -1337,7 +1345,6 @@ export default {
         },
         syncScrollUserOverview(event) {
             if (this.$refs.shiftPlan) {
-                // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
             }
         },
@@ -1361,6 +1368,19 @@ export default {
             if (!this.multiEditMode) {
                 this.userForMultiEdit = null;
                 this.multiEditCellByDayAndUser = {};
+            }
+        },
+        closeMultiEditCellModal(){
+            this.showCellMultiEditModal = false;
+            this.toggleMultiEditMode();
+        },
+        closeCellMultiEditDelete(boolean) {
+            this.openCellMultiEditDelete = false;
+
+            if(boolean) {
+                this.showCellMultiEditModal = true;
+            } else {
+                this.toggleMultiEditMode();
             }
         },
         toggleDayServiceMode() {

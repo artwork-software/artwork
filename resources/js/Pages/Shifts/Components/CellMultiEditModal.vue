@@ -6,6 +6,10 @@
 
         />
 
+        <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="showSaveSuccess">
+            {{ $t('Saved. The changes have been successfully applied.') }}
+        </div>
+
         <div>
             <h3 class="xsDark">Verfügbarkeit</h3>
             <div class="flex items-center mb-5">
@@ -128,14 +132,8 @@ const vacationTypes = ref([
     { name: 'Nicht Verfügbar', type: 'NOT_AVAILABLE'},
 ])
 
-const getIndividualTimesByDate = reactive([])
+const showSaveSuccess = ref(false)
 
-const selectedVacationType = ref(
-    {
-        name: 'Keine Änderung',
-        type: null
-    }
-)
 
 const multiEditCellForm = useForm({
     comment: '',
@@ -163,7 +161,18 @@ const deleteIndividualTimeByIndex = (index) => {
 }
 
 const submitForm = () => {
-    multiEditCellForm.post(route('shift.plan.user.cell.update'))
+    multiEditCellForm.post(route('shift.plan.user.cell.update'), {
+        preserveScroll: true,
+        preserveState: false,
+        onSuccess: () => {
+            showSaveSuccess.value = true
+            setTimeout(() => {
+                showSaveSuccess.value = false
+                emit('close')
+            }, 1000)
+
+        }
+    })
 }
 </script>
 

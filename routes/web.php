@@ -531,6 +531,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shiftplan/user/cell/update', [ShiftController::class, 'updateUserCell'])
         ->name('shift.plan.user.cell.update');
 
+    // multi-edit.cell.delete
+    Route::post('/shiftplan/multi/edit/cell/delete', [ShiftController::class, 'deleteMultiEditCell'])
+        ->name('multi-edit.cell.delete');
+
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])
         ->name('event_types.management')

@@ -527,6 +527,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/shifts/{shift}/qualifications/add', [ShiftQualificationController::class, 'updateValue'])
         ->name('shifts.qualifications.add');
 
+    // shift.plan.user.cell.update
+    Route::post('/shiftplan/user/cell/update', [ShiftController::class, 'updateUserCell'])
+        ->name('shift.plan.user.cell.update');
+
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])
         ->name('event_types.management')

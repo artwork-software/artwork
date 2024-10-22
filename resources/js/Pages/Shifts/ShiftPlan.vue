@@ -320,10 +320,14 @@
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
+                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
                                                  ]"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                 @click="handleCellClick(user, day)">
+                                                <div class="text-[9px] flex items-center justify-center h-full" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
+                                                    Selected for Multiedit
+                                                </div>
                                                 <ShiftPlanCell :user="user" :day="day" />
                                             </div>
                                             <div v-else
@@ -398,11 +402,15 @@
                                             <div v-if="!day.is_extra_row"
                                                 :class="[highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '', $page.props.user.compact_mode ? 'h-8' : 'h-12',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day) ? '!opacity-100' : '']"
+                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : '',
+                                                    multiEditMode ? '!overflow-hidden' : '']"
                                                 class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <ShiftPlanCell :user="user" :day="day"/>
+                                                <div class="text-[9px] flex items-center justify-center top-5 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
+                                                    Selected for Multiedit
+                                                </div>
+                                                <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-30' : '']"/>
                                             </div>
                                             <div v-else
                                                  class="p-2 bg-gray-50/10 flex items-center justify-center text-white text-[8.25px] rounded-lg shiftCell cursor-default overflow-hidden"
@@ -443,26 +451,64 @@
                                :history="history"
                                @closed="showHistoryModal = false"/>
         </ShiftHeader>
-        <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
-            <div class="flex items-center justify-center gap-4">
+        <div class="fixed bottom-6 w-full z-40 pointer-events-none" v-if="multiEditMode">
+            <div class="flex items-center justify-center gap-4" v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
                 <div>
                     <button type="button"
                             @click="resetMultiEditMode()"
-                            class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                        {{ $t('Cancel') }}
+                            class="pointer-events-auto rounded-md bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
+                        {{ $t('Close') }}
                     </button>
                 </div>
                 <div>
                     <button type="button"
                             @click="initializeMultiEditSave"
                             :disabled="this.userForMultiEdit === null"
+                            class="pointer-events-auto"
                             :class="[
                                 this.userForMultiEdit === null ?
                                 'bg-gray-600' :
                                 'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
-                                'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                'rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
                             ]">
                         {{ $t('Save') }}
+                    </button>
+                </div>
+            </div>
+            <div v-else class="flex items-center justify-center gap-4">
+                <div>
+                    <button type="button"
+                            @click="resetMultiEditMode()"
+                            class="pointer-events-auto rounded-md bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
+                        {{ $t('Close') }}
+                    </button>
+                </div>
+                <div>
+                    <button type="button"
+                            @click="showCellMultiEditModal = true"
+                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                            class="pointer-events-auto"
+                            :class="[
+                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                'bg-gray-600' :
+                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
+                                'rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                            ]">
+                        Einträge bearbeiten
+                    </button>
+                </div>
+                <div>
+                    <button type="button"
+                            @click="openCellMultiEditDelete"
+                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                            class="pointer-events-auto"
+                            :class="[
+                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                'bg-gray-600' :
+                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                'rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                            ]">
+                        Einträge löschen
                     </button>
                 </div>
             </div>
@@ -475,6 +521,10 @@
                                          :shifts="this.showShiftsQualificationsAssignmentModalShifts"
                                          @close="this.closeShiftsQualificationsAssignmentModal"
     />
+    <CellMultiEditModal v-if="showCellMultiEditModal"
+                        :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+                        @close="showCellMultiEditModal = false"
+                        />
 </template>
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -514,6 +564,8 @@ import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
 import dayjs from "dayjs";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
+import debounce from "lodash.debounce";
+import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -530,6 +582,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        CellMultiEditModal,
         ShiftPlanCell,
         ToolTipComponent,
         MenuItem,
@@ -624,6 +677,7 @@ export default {
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
             multiEditCellByDayAndUser: {},
+            showCellMultiEditModal: false
         }
     },
     mounted() {
@@ -1016,15 +1070,16 @@ export default {
                 this.multiEditCellByDayAndUser[userKey] = {
                     days: [],
                     type: user.type,
-                    id: user.element.id
+                    id: user.element.id,
+                    entity: user.element,
                 };
             }
             const userData = this.multiEditCellByDayAndUser[userKey];
 
             // Prüfen, ob der Tag bereits für diesen Benutzer vorhanden ist
-            if (userData.days.includes(day)) {
+            if (userData.days.includes(day.without_format)) {
                 // Entferne den Tag (deselect)
-                userData.days = userData.days.filter((d) => d !== day);
+                userData.days = userData.days.filter((d) => d !== day.without_format);
 
                 // Wenn keine Tage mehr vorhanden sind, lösche das Benutzerobjekt
                 if (userData.days.length === 0) {
@@ -1032,7 +1087,7 @@ export default {
                 }
             } else {
                 // Wenn der Tag nicht vorhanden ist, füge ihn hinzu (select)
-                userData.days.push(day);
+                userData.days.push(day.without_format);
             }
         },
         handleCellClick(user, day) {
@@ -1305,6 +1360,7 @@ export default {
 
             if (!this.multiEditMode) {
                 this.userForMultiEdit = null;
+                this.multiEditCellByDayAndUser = {};
             }
         },
         toggleDayServiceMode() {
@@ -1511,6 +1567,7 @@ export default {
         },
         stopResize(event) {
             event.preventDefault();
+            this.saveUserOverviewHeight();
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
         },
@@ -1525,11 +1582,15 @@ export default {
                 this.userOverviewHeight = window.innerHeight - 200;
             }
 
-            // check if userOverviewHeight is not smaller than 100
             if (this.userOverviewHeight < 100) {
                 this.userOverviewHeight = 100;
             }
-            router.patch(route('user.update.userOverviewHeight', {user: this.$page.props.user.id}), {
+        },
+        saveUserOverviewHeight: debounce(function () {
+            this.applyUserOverviewHeight();
+        }, 500),
+        applyUserOverviewHeight() {
+            router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
                 drawer_height: this.userOverviewHeight
             }, {
                 preserveState: true,

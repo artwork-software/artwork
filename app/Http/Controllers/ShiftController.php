@@ -6,9 +6,14 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
+use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Scheduling\Services\SchedulingService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -16,9 +21,14 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Enums\Vacation as VacationEnum;
+use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Vacation\Services\VacationSeriesService;
+use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +45,12 @@ class ShiftController extends Controller
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
         private readonly ShiftService $shiftService,
-        private readonly Redirector $redirector
+        private readonly Redirector $redirector,
+        private IndividualTimeService $individualTimeService,
+        private ShiftPlanCommentService $shiftPlanCommentService,
+        private VacationService $vacationService,
+        private VacationSeriesService $vacationSeriesService,
+        private SchedulingService $schedulingService,
     ) {
     }
 
@@ -888,5 +903,79 @@ class ShiftController extends Controller
         $shift->update($request->only(['description']));
 
         return $this->redirector->back();
+    }
+
+    public function updateUserCell(Request $request): void
+    {
+
+        $comment = $request->string('comment');
+        $vacationTyp = $request->get('vacation_type');
+        $entities = $request->get('entities');
+        $individualTimes = $request->get('individual_times');
+
+
+        //dd($vacationTyp);
+
+        foreach ($entities as $entity) {
+            $modelClass = match ($entity['type']) {
+                1 => Freelancer::class,
+                2 => ServiceProvider::class,
+                default => User::class,
+            };
+
+            $entityModel = $modelClass::findOrfail($entity['id']);
+
+            foreach ($entity['days'] as $day) {
+                foreach ($individualTimes as $individualTime) {
+                    $this->individualTimeService->createForModel(
+                        $entityModel,
+                        $individualTime['title'],
+                        $individualTime['start_time'],
+                        $individualTime['end_time'],
+                        $day,
+                    );
+                }
+
+                if ($comment !== null) {
+                    $this->shiftPlanCommentService->addOrUpdateShiftPlanCommentByModel(
+                        $entityModel,
+                        $comment,
+                        $day
+                    );
+                }
+
+
+                if (
+                    $vacationTyp['type'] !== null &&
+                    ($modelClass === User::class ||
+                    $modelClass === Freelancer::class)
+                ) {
+                    $vacations = $entityModel->vacations()->where('date', $day)->get();
+                    if ($vacations->count() > 0) {
+                        $this->vacationService->deleteVacationInterval($entityModel, $day);
+                    }
+
+                    if ($vacations->count() === 0) {
+                        $createVacationRequest = new CreateVacationRequest([
+                            'date' => $day,
+                            'type' => 'vacation',
+                            'full_day' => true,
+                            'is_series' => false,
+                            'comment' => $vacationTyp['type'],
+                        ]);
+                        $this->vacationService->create(
+                            $entityModel,
+                            $createVacationRequest,
+                            $this->vacationConflictService,
+                            $this->vacationSeriesService,
+                            $this->changeService,
+                            $this->schedulingService,
+                            $this->notificationService,
+                            $vacationTyp['type']
+                        );
+                    }
+                }
+            }
+        }
     }
 }

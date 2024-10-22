@@ -278,7 +278,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = $projectService->getByName($request->get('query'));
+        $projects = $projectService->scoutSearch($request->get('query'))->get();
         return ProjectIndexResource::collection($projects)->resolve();
     }
 

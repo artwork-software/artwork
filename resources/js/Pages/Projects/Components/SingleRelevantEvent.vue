@@ -107,7 +107,7 @@ export default defineComponent({
         'eventTypes',
         'currentUserCrafts',
         'shiftQualifications',
-        'shiftTimePresets'
+        'shiftTimePresets',
     ],
     emits: ['dropFeedback'],
     mixins: [IconLib, Permissions, ColorHelper],

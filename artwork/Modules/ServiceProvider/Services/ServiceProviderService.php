@@ -69,9 +69,9 @@ readonly class ServiceProviderService
             ];
         }
 
-        if ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+        if ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {
             usort($serviceProvidersWithPlannedWorkingHours, function ($a, $b) use ($currentUser) {
-                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+                return match ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {
                     'ALPHABETICALLY_ASCENDING_FIRST_NAME', 'ALPHABETICALLY_ASCENDING_LAST_NAME' =>
                     strcmp($a['service_provider']['provider_name'], $b['service_provider']['provider_name']),
                     'ALPHABETICALLY_DESCENDING_FIRST_NAME', 'ALPHABETICALLY_DESCENDING_LAST_NAME' =>

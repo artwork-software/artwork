@@ -1362,10 +1362,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 UserController::class, 'updateShiftPlanUserSortBy'
             ]
         )->name('user.update.shiftPlanUserSortBy');
+
+        Route::patch(
+            '/{user}/update/shift-tab-user-sort-by',
+            [
+                UserController::class, 'updateShiftTabUserSortBy'
+            ]
+        )->name('user.update.shift_tab_sort');
+
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');
 
+        Route::patch('/{user}/update/userOverviewHeight', [UserController::class, 'updateUserOverviewHeight'])
+            ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
         Route::post(

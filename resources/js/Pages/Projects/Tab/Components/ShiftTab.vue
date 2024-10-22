@@ -2,7 +2,7 @@
     <div class="bg-backgroundGray mt-6 pb-6">
         <div class="ml-14 pt-3 pr-14 ">
             <div class="flex justify-between items-center mt-4 stickyHeader p-4">
-                <div class="flex items-center gap-6">
+                <div class="flex items-center justify-between gap-6">
                     <div class="flex w-full justify-between">
                         <SwitchGroup as="div" class="flex items-center" v-if="checkCommitted && (this.$can('can commit shifts') || this.hasAdminRole())">
                             <Switch v-model="hasUncommittedShift"
@@ -31,14 +31,34 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-x-3">
+                        <BaseMenu show-sort-icon dots-size="w-6 h-6" menu-width="w-fit">
+                            <div class="flex items-center justify-end py-1">
+                                    <span class="pr-4 pt-0.5 xxsLight cursor-pointer text-right w-full" @click="this.resetSort()">
+                                        {{ $t('Reset') }}
+                                    </span>
+                            </div>
+                            <MenuItem v-slot="{ active }" v-for="(type, index) in loadedProjectInformation['ShiftTab'].shift_sort_types">
+                                <div @click="this.applySort(type)" :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
+                                    {{ getSortEnumTranslation(type) }}
+                                    <IconCheck class="w-5 h-5 ml-3" v-if="$page.props.user.sort_type_shift_tab === type"/>
+                                </div>
+                            </MenuItem>
+                        </BaseMenu>
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" ref="userWindowButton" @click="openUserWindow()">
-                            <IconUsers class="h-6 w-6"/>
+                            <ToolTipComponent
+                                icon="IconUsers"
+                                :tooltip-text="$t('Users')"
+                                direction="left"
+                                :stroke="1.5"
+                            />
                         </div>
                     </div>
                 </div>
             </div>
+
             <div class="mt-5">
+                <!-- user window -->
                 <transition
                     enter-active-class="transition ease-out duration-100"
                     enter-from-class="transform opacity-0 scale-95"
@@ -169,7 +189,7 @@
                                                  :expected-hours="user.expectedWorkingHours"
                                                  :type="user.type"
                                                  :color="null"
-                                                 :craft="craft"
+                                                 :craft="null"
                                                  class="mb-1"
                                     />
                                 </div>
@@ -177,6 +197,7 @@
                         </div>
                     </div>
                 </transition>
+                <!-- user window end -->
                 <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
                     {{ $t('So far, there are no shift-relevant dates for this project.') }}
                 </div>
@@ -191,6 +212,8 @@
                 />
             </div>
         </div>
+
+
     </div>
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
@@ -211,7 +234,10 @@ import IconLib from "@/Mixins/IconLib.vue";
 import {router} from "@inertiajs/vue3";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+const {getSortEnumTranslation} = useSortEnumTranslation();
 export default defineComponent({
     name: "ShiftTab",
     inheritAttrs: false,
@@ -222,6 +248,8 @@ export default defineComponent({
     ],
     mixins: [Permissions, IconLib],
     components: {
+        BaseMenu,
+        ToolTipComponent,
         BaseFilter,
         CraftFilter,
         SideNotification,
@@ -408,6 +436,31 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        applySort(sort_type_shift_tab) {
+            this.$page.props.user.sort_type_shift_tab = sort_type_shift_tab;
+            router.patch(
+                route('user.update.shift_tab_sort', {user: this.$page.props.user.id}),
+                {
+                    sortBy: sort_type_shift_tab
+                }, {
+                    preserveState: false,
+                    preserveScroll: true,
+                }
+            );
+        },
+        resetSort() {
+            this.$page.props.user.sort_type_shift_tab = null;
+            router.patch(
+                route('user.update.shift_tab_sort', {user: this.$page.props.user.id}),
+                {
+                    sortBy: null
+                }, {
+                    preserveState: false,
+                    preserveScroll: true,
+                }
+            );
+        },
+        getSortEnumTranslation,
         changeCraftVisibility(id) {
             if (this.closedCrafts.includes(id)) {
                 this.closedCrafts.splice(this.closedCrafts.indexOf(id), 1);

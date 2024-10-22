@@ -11,7 +11,8 @@ use Artwork\Modules\CostCenter\Models\CostCenter;
 
 class CostCenterServiceTest extends TestCase
 {
-    use WithFaker, WithoutMiddleware;
+    use WithFaker;
+    use WithoutMiddleware;
 
     private CostCenterRepository $costCenterRepository;
     private CostCenterService $costCenterService;

@@ -100,8 +100,7 @@ class EventController extends Controller
 
     public function getEventsForRoomsByDaysAndProject(
         Request $request,
-        ProjectService $projectService,
-        EventService $eventService
+        ProjectService $projectService
     ): JsonResponse {
         $desiredRoomIds = $request->collect('rooms')->all();
         $desiredDays = $request->collect('days')->all();
@@ -154,11 +153,8 @@ class EventController extends Controller
         RoomService $roomService,
         UserService $userService,
         FilterService $filterService,
-        FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService
     ): Response {
@@ -170,24 +166,17 @@ class EventController extends Controller
                     $roomService,
                     $userService,
                     $filterService,
-                    $filterController,
                     $projectTabService,
                     $eventTypeService,
-                    $roomCategoryService,
-                    $roomAttributeService,
                     $areaService,
                     $projectService
                 ) :
                 $eventService->createEventManagementDto(
-                    $calendarService,
                     $roomService,
                     $userService,
                     $filterService,
-                    $filterController,
                     $projectTabService,
                     $eventTypeService,
-                    $roomCategoryService,
-                    $roomAttributeService,
                     $areaService,
                     $projectService
                 )

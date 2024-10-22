@@ -748,11 +748,8 @@ readonly class EventService
         RoomService $roomService,
         UserService $userService,
         FilterService $filterService,
-        FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
         ?Project $project = null,
@@ -892,15 +889,11 @@ readonly class EventService
      */
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createEventManagementDto(
-        CalendarService $calendarService,
         RoomService $roomService,
         UserService $userService,
         FilterService $filterService,
-        FilterController $filterController,
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
-        RoomCategoryService $roomCategoryService,
-        RoomAttributeService $roomAttributeService,
         AreaService $areaService,
         ProjectService $projectService,
         ?Project $project = null,

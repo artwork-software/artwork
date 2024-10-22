@@ -9,16 +9,14 @@ readonly class RoomChangeService
 {
     public function __construct(
         private RoomChangeFactory $roomChangeFactory,
-    )
-    {
+    ) {
     }
 
     public function applyChanges(
         Room $room,
         Room $roomReplicate
-    ): void
-    {
-        foreach($this->roomChangeFactory->getRoomChangesAll() as $roomChange) {
+    ): void {
+        foreach ($this->roomChangeFactory->getRoomChangesAll() as $roomChange) {
             $roomChange->change($room, $roomReplicate);
         }
     }

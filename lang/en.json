@@ -2044,5 +2044,9 @@
     "Without intern external ascending": "Alphabetically without intern/external ascending",
     "Without intern external descending": "Alphabetically without intern/external descending",
     "Room name desc": "Room name alphabetically descending",
-    "Room name asc": "Room name alphabetically ascending"
+    "Room name asc": "Room name alphabetically ascending",
+    "Selected for Multi-Edit": "Selected for Multi-Edit",
+    "Edit Entries": "Edit Entries",
+    "Delete Entries": "Delete Entries",
+    "Delete Entries & new Entries": "Delete Entries & new Entries"
 }

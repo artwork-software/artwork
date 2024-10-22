@@ -157,9 +157,8 @@ class UserController extends Controller
                     null
             );
         $users = MinimalUserIndexResource::collection(
-            User::search($request->string('query')) // Meilisearch Integration
+            User::search($request->string('query'))
             ->query(function (Builder $builder) use ($sortEnum): void {
-                // Hinzufügen der Abfragen für die Sortierung, falls nötig
                 if (!is_null($sortEnum)) {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
@@ -175,8 +174,7 @@ class UserController extends Controller
                             break;
                     }
                 }
-            })
-                ->get() // Hole die Ergebnisse aus Meilisearch
+            })->get()
         )->resolve();
 
         if ($saveFilterAndSort) {
@@ -197,7 +195,7 @@ class UserController extends Controller
             'permission_presets' => $permissionPresetService->getPermissionPresets(),
             'invitedUsers' => Invitation::all(),
             'userSortEnumNames' => array_map(
-                function (UserSortEnum $enum): string {
+                static function (UserSortEnum $enum): string {
                     return $enum->name;
                 },
                 UserSortEnum::cases()

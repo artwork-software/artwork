@@ -22,6 +22,18 @@ readonly class CalendarDataService
     ) {
     }
 
+    /**
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @param UserShiftCalendarFilter|UserCalendarFilter|null $calendarFilter
+     * @param Project|null $project
+     * @param Room|null $room
+     * @param bool|null $desiresInventorySchedulingResource
+     * @return array<string, mixed>
+     */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarData(
         Carbon $startDate,
         Carbon $endDate,

@@ -18,8 +18,7 @@ class ShiftQualificationController extends Controller
 {
     public function __construct(
         private ShiftsQualificationsService $shiftsQualificationsService
-    )
-    {
+    ) {
         $this->authorizeResource(ShiftQualification::class, 'shift_qualification');
     }
 

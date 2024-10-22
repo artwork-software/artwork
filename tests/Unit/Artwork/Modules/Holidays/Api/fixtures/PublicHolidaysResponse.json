@@ -1,0 +1,142 @@
+[
+    {
+        "id": "58a1da08-fb96-4d9b-8d95-b1e06278c8f3",
+        "startDate": "2024-01-01",
+        "endDate": "2024-01-01",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Neujahr"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "c628bb86-927f-4086-8beb-061413603d99",
+        "startDate": "2024-03-08",
+        "endDate": "2024-03-08",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Internationaler Frauentag"
+            }
+        ],
+        "nationwide": false,
+        "subdivisions": [
+            {
+                "code": "DE-MV",
+                "shortName": "MV"
+            },
+            {
+                "code": "DE-BE",
+                "shortName": "BE"
+            }
+        ]
+    },
+    {
+        "id": "72299d8e-272c-44b6-8d50-86ff5cb01a9a",
+        "startDate": "2024-03-29",
+        "endDate": "2024-03-29",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Karfreitag"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "bd4e0c06-a2c5-4d2a-aa92-1fb7c59025e2",
+        "startDate": "2024-04-01",
+        "endDate": "2024-04-01",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Ostermontag"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "d849751c-921e-4be1-8b30-117a610c126c",
+        "startDate": "2024-05-01",
+        "endDate": "2024-05-01",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Tag der Arbeit"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "440aae4c-0d2b-45a4-9480-ae91b106c002",
+        "startDate": "2024-05-09",
+        "endDate": "2024-05-09",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Christi Himmelfahrt"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "2407e8d2-b6bc-4d5f-b19a-52d4eba5e498",
+        "startDate": "2024-05-20",
+        "endDate": "2024-05-20",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Pfingstmontag"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "a2454b44-b3d5-4681-a345-6eae46fb9f4b",
+        "startDate": "2024-10-03",
+        "endDate": "2024-10-03",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "Tag der Deutschen Einheit"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "332d7a5e-c693-4d2d-bdf5-957dd4409c91",
+        "startDate": "2024-12-25",
+        "endDate": "2024-12-25",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "1. Weihnachtsfeiertag"
+            }
+        ],
+        "nationwide": true
+    },
+    {
+        "id": "717b466d-05f3-4810-915b-96625ca2aebf",
+        "startDate": "2024-12-26",
+        "endDate": "2024-12-26",
+        "type": "Public",
+        "name": [
+            {
+                "language": "DE",
+                "text": "2. Weihnachtsfeiertag"
+            }
+        ],
+        "nationwide": true
+    }
+]

@@ -31,7 +31,7 @@ class VacationRepository
             });
             return;
         }
-        $vacations->first()->delete();
+        $vacations->first()?->delete();
     }
 
     public function save(Vacation $vacation): Vacation

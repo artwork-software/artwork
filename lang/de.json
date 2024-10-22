@@ -2044,6 +2044,9 @@
     "Without intern external ascending": "Alphabetisch ohne Intern/Extern aufsteigend",
     "Without intern external descending": "Alphabetisch ohne Intern/Extern absteigend",
     "Room name desc": "Raumname alphabetisch absteigend",
-    "Room name asc": "Raumname alphabetisch aufsteigend"
-
+    "Room name asc": "Raumname alphabetisch aufsteigend",
+    "Selected for Multi-Edit": "Ausgewählt für Multi-Edit",
+    "Edit Entries": "Einträge bearbeiten",
+    "Delete Entries": "Einträge löschen",
+    "Delete Entries & new Entries": "Einträge löschen & neue Einträge"
 }

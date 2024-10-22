@@ -131,31 +131,6 @@ class UserService
         return $this->userRepository->findUser($id);
     }
 
-    /**
-     * @return array<string, mixed>
-     * @deprecated use the WorkingHourService
-     */
-    public function getUsersWithPlannedWorkingHours(
-        Carbon $startDate,
-        Carbon $endDate,
-        string $desiredResourceClass,
-        bool $addVacationsAndAvailabilities = false,
-        User $currentUser = null
-    ): array {
-        trigger_deprecation('artwork', '0.x', 'This method is deprecated, use the WorkingHourService instead.');
-        throw new \Exception('This method is deprecated, use the WorkingHourService instead.');
-    }
-
-
-    /**
-     * @return array<string, float|int>
-     * @deprecated use the WorkingHourService
-     */
-    public function calculateWeeklyWorkingHours(User $user, Carbon $startDate, Carbon $endDate): array
-    {
-        return $this->workingHourService->calculateWeeklyWorkingHours($user, $startDate, $endDate);
-    }
-
     public function getAuthUserCrafts(): Collection
     {
         return $this->getAuthUser()->crafts;
@@ -242,7 +217,8 @@ class UserService
                                 return [
                                     'inRequestedTimeSpan' => in_array(
                                         $date->format('d.m.Y'),
-                                        $requestedPeriod
+                                        $requestedPeriod,
+                                        true
                                     ),
                                     'full_day' => $date->format('d.m.Y'),
                                     'day' => $date->format('d.m.'),

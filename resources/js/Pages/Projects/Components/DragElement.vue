@@ -26,14 +26,14 @@
                         <div class="truncate">{{ item.provider_name }}</div>
                     </div>
                 </div>
-                <div class="flex items-center justify-center w-20">
+                <div class="flex items-center justify-center w-26">
                     <div class="text-[9px] w-full " v-if="!$page.props.user.compact_mode && type === 0"> {{plannedHours}}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
                     <div class="text-[9px] w-full" v-if="!$page.props.user.compact_mode && type !== 0">{{ plannedHours }}</div>
                 </div>
             </div>
 
         </div>
-        <div class="flex items-center justify-end w-full gap-2">
+        <div class="flex items-center justify-end w-full gap-2 absolute right-2 top-2">
             <div v-if="type === 0 && item.is_freelancer || type === 1">
                 <ToolTipComponent
                     icon="IconId"

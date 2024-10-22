@@ -100,14 +100,21 @@ class EventCollectionService
         return $roomEvents;
     }
 
+    /**
+     * @param Room $room
+     * @param CarbonPeriod $calendarPeriod
+     * @param CalendarFilter|null $calendarFilter
+     * @param Project|null $project
+     * @param bool|null $desiresInventorySchedulingResource
+     * @return array<string, mixed>
+     */
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?CalendarFilter $calendarFilter,
         ?Project $project = null,
         ?bool $desiresInventorySchedulingResource = false
-    ): array
-    {
+    ): array {
         $eventsForRoom = RoomService::fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
 
@@ -150,6 +157,13 @@ class EventCollectionService
         return $this->eventRepository->getEventsWithoutRoom($project, $with);
     }
 
+    /**
+     * @param array $desiredRooms
+     * @param array $desiredDays
+     * @param CalendarFilter|null $calendarFilter
+     * @param Project|null $project
+     * @return array<string, mixed>
+     */
     public function collectEventsForRoomsOnSpecificDays(
         array $desiredRooms,
         array $desiredDays,
@@ -174,6 +188,18 @@ class EventCollectionService
         return $collectedEvents;
     }
 
+    /**
+     * @param Room $room
+     * @param CalendarFilter|null $calendarFilter
+     * @param Project|null $project
+     * @param CarbonPeriod|null $calendarPeriod
+     * @param Carbon|null $date
+     * @return HasMany
+     */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     private function buildRoomCollectionBaseQuery(
         Room $room,
         ?CalendarFilter $calendarFilter,

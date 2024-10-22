@@ -703,6 +703,10 @@ class ProjectService
         return $this->sortEventsWithRelevant($eventsWithRelevant);
     }
 
+    /**
+     * @param array $eventsWithRelevant
+     * @return array<string, mixed>
+     */
     private function sortEventsWithRelevant(array $eventsWithRelevant): array
     {
         $userSortType = $this->userService->getAuthUser()->sort_type_shift_tab;

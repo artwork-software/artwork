@@ -136,9 +136,9 @@ class WorkingHourService
             }
             $usersWithPlannedWorkingHours[] = $userData;
         }
-        if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by')) {
+        if ($currentUser && $currentUser->getAttribute('shift_plan_user_sort_by_id')) {
             usort($usersWithPlannedWorkingHours, static function ($a, $b) use ($currentUser) {
-                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+                return match ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {
                     'ALPHABETICALLY_ASCENDING_FIRST_NAME' =>
                     strcmp($a['user']['first_name'], $b['user']['first_name']),
                     'ALPHABETICALLY_DESCENDING_FIRST_NAME' =>

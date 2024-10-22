@@ -668,7 +668,7 @@ class ProjectService
             $project
                 ->events()
                 ->whereIn('event_type_id', $project->shiftRelevantEventTypes->pluck('id'))
-                ->with(['timelines', 'shifts', 'event_type', 'room'])
+                ->with(['timelines', 'shifts', 'event_type'])
                 ->orderBy('start_time', 'asc')
                 ->get() as $event
         ) {
@@ -697,9 +697,39 @@ class ProjectService
                 'timeline' => $timeline,
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
-                'room' => $event->room,
+                'room' => $event->room()->without(['creator', 'admins'])->first()
             ];
         }
+        return $this->sortEventsWithRelevant($eventsWithRelevant);
+    }
+
+    private function sortEventsWithRelevant(array $eventsWithRelevant): array
+    {
+        $userSortType = $this->userService->getAuthUser()->sort_type_shift_tab;
+
+        if ($userSortType === null) {
+            return $eventsWithRelevant;
+        }
+
+        usort($eventsWithRelevant, function ($a, $b) use ($userSortType) {
+            $roomNameA = $a['room']['name'] ?? '';
+            $roomNameB = $b['room']['name'] ?? '';
+            if ($userSortType === 'ROOM_NAME_DESC') {
+                $roomComparison = strcmp($roomNameB, $roomNameA);
+            } else {
+                $roomComparison = strcmp($roomNameA, $roomNameB);
+            }
+            if ($roomComparison !== 0) {
+                return $roomComparison;
+            }
+            $dateA = $a['event']['event_date_without_time']['start_clear'] ?? '';
+            $dateB = $b['event']['event_date_without_time']['start_clear'] ?? '';
+
+            $timestampA = strtotime($dateA);
+            $timestampB = strtotime($dateB);
+
+            return $timestampA <=> $timestampB;
+        });
 
         return $eventsWithRelevant;
     }

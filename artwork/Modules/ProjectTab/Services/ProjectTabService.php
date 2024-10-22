@@ -21,6 +21,7 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderDropResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
+use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftTimePreset\Services\ShiftTimePresetService;
 use Artwork\Modules\User\Http\Resources\UserDropResource;
@@ -123,7 +124,8 @@ class ProjectTabService implements ServiceWithArrayCache
             ->setCrafts($craftService->getAll())
             ->setCurrentUserCrafts($userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts()))
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
-            ->setShiftTimePresets($this->shiftTimePresetService->getAll());
+            ->setShiftTimePresets($this->shiftTimePresetService->getAll())
+            ->setShiftSortTypes(ShiftTabSort::cases());
     }
 
     public function getBudgetInformationDto(

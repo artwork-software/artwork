@@ -89,9 +89,9 @@ readonly class FreelancerService
             $freelancersWithPlannedWorkingHours[] = $freelancerData;
         }
 
-        if ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+        if ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {
             usort($freelancersWithPlannedWorkingHours, function ($a, $b) use ($currentUser) {
-                return match ($currentUser->getAttribute('shift_plan_user_sort_by')) {
+                return match ($currentUser->getAttribute('shift_plan_user_sort_by_id')) {
                     'ALPHABETICALLY_ASCENDING_FIRST_NAME' =>
                     strcmp($a['freelancer']['first_name'], $b['freelancer']['first_name']),
                     'ALPHABETICALLY_DESCENDING_FIRST_NAME' =>

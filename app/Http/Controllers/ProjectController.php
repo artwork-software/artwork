@@ -103,6 +103,7 @@ use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Sector\Services\SectorService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
+use Artwork\Modules\Shift\Enums\ShiftTabSort;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
@@ -2144,6 +2145,7 @@ class ProjectController extends Controller
     private function loadShiftTabData(&$headerObject, $project): void
     {
         $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+        $headerObject->shift_tab_available_sortings = ShiftTabSort::cases();
         $headerObject->project->shift_contacts = $project->shift_contact;
         $headerObject->project->project_managers = $project->managerUsers;
         $headerObject->project->shiftDescription = $project->shift_description;

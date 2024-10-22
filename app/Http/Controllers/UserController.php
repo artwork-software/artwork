@@ -46,6 +46,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
@@ -156,26 +157,52 @@ class UserController extends Controller
                     UserSortEnum::from($userUserManagementSetting['sort_by']) :
                     null
             );
+        $searchQuery = $request->get('query');
+
         $users = MinimalUserIndexResource::collection(
-            User::search($request->string('query'))
-            ->query(function (Builder $builder) use ($sortEnum): void {
-                if (!is_null($sortEnum)) {
+            !empty($searchQuery)
+                ? User::search($searchQuery)
+                ->query(function ($query) use ($sortEnum): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
+
+                    // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
+                    if (!is_null($sortEnum)) {
+                        switch ($sortEnum) {
+                            case UserSortEnum::ALPHABETICALLY_ASCENDING:
+                            case UserSortEnum::ALPHABETICALLY_DESCENDING:
+                                $columns = $sortEnum->mapToColumn();
+                                $dir = $sortEnum->mapToDirection();
+                                $query->orderBy($columns[0], $dir);
+                                $query->orderBy($columns[1], $dir);
+                                break;
+                            case UserSortEnum::CHRONOLOGICALLY_ASCENDING:
+                            case UserSortEnum::CHRONOLOGICALLY_DESCENDING:
+                                $query->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                                break;
+                        }
+                    }
+                })
+                ->get()
+                : User::query()
+                ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
                         case UserSortEnum::ALPHABETICALLY_DESCENDING:
                             $columns = $sortEnum->mapToColumn();
                             $dir = $sortEnum->mapToDirection();
-                            $builder->orderBy($columns[0], $dir);
-                            $builder->orderBy($columns[1], $dir);
+                            $query->orderBy($columns[0], $dir);
+                            $query->orderBy($columns[1], $dir);
                             break;
                         case UserSortEnum::CHRONOLOGICALLY_ASCENDING:
                         case UserSortEnum::CHRONOLOGICALLY_DESCENDING:
-                            $builder->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                            $query->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
                             break;
                     }
-                }
-            })->get()
+                })
+                ->get()
         )->resolve();
+
 
         if ($saveFilterAndSort) {
             $userUserManagementSettingService->updateOrCreateIfNecessary(
@@ -185,6 +212,7 @@ class UserController extends Controller
                 ]
             );
         }
+
         return inertia('Users/Index', [
             'users' => $users,
             'all_permissions' => Permission::all()->groupBy('group'),

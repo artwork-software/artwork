@@ -483,11 +483,6 @@ class User extends Model implements
         ];
     }
 
-    public function searchableAs(): string
-    {
-        return 'users_index';
-    }
-
     /** @deprecated user WorkhourService */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {

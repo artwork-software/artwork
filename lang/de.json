@@ -2044,6 +2044,10 @@
     "Without intern external ascending": "Alphabetisch ohne Intern/Extern aufsteigend",
     "Without intern external descending": "Alphabetisch ohne Intern/Extern absteigend",
     "Room name desc": "Raumname alphabetisch absteigend",
-    "Room name asc": "Raumname alphabetisch aufsteigend"
+    "Room name asc": "Raumname alphabetisch aufsteigend",
+    "Do you really want to delete the selected qualification?": "Möchtest du die ausgewählte Qualifikation wirklich löschen?",
+    "Delete qualification": "Qualifikation löschen",
+    "Delete time preset": "Schichtzeit-Preset löschen",
+    "Do you really want to delete the selected time preset?": "Möchtest du die ausgewählte Schichtzeit-Preset wirklich löschen?"
 
 }

@@ -2044,5 +2044,9 @@
     "Without intern external ascending": "Alphabetically without intern/external ascending",
     "Without intern external descending": "Alphabetically without intern/external descending",
     "Room name desc": "Room name alphabetically descending",
-    "Room name asc": "Room name alphabetically ascending"
+    "Room name asc": "Room name alphabetically ascending",
+    "Do you really want to delete the selected qualification?": "Do you really want to delete the selected qualification?",
+    "Delete qualification": "Delete qualification",
+    "Delete time preset": "Delete time preset",
+    "Do you really want to delete the selected time preset?": "Do you really want to delete the selected time preset?"
 }

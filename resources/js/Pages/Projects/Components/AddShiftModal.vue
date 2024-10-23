@@ -360,7 +360,7 @@ export default defineComponent({
                 end_date: this.shift ? this.shift.formatted_dates.frontend_end : null,
                 start: this.shift ? this.shift.start : null,
                 end: this.shift ? this.shift.end : null,
-                break_minutes: this.shift ? this.shift.break_minutes : null,
+                break_minutes: this.shift ? this.shift.break_minutes : 30,
                 craft_id: this.shift ? this.shift.craft.id : null,
                 description: this.shift ? this.shift.description : '',
                 event_id: this.event.id,

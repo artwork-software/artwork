@@ -418,7 +418,7 @@ const props = defineProps({
         required: true
     },
     firstProjectShiftTabId: {
-        type: Number,
+        type: [Number, String],
         required: false,
         default: null
     }

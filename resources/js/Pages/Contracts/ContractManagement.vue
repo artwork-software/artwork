@@ -113,8 +113,8 @@
             </div>
         </div>
 
-        <BaseSidenav :show="show" @toggle="this.show =! this.show">
-            <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
+        <BaseSidenav>
+            <ContractModuleSidenav :contractModules="contract_modules" />
         </BaseSidenav>
 
         <ContractUploadModal
@@ -177,7 +177,6 @@ export default {
     ],
     data() {
         return {
-            show: false,
             //filters: {},
             costNames: [],
             companyTypeNames: [],

@@ -8,7 +8,7 @@
             <div class="flex items-center justify-end col-span-3">
                 <div class="flex items-center mr-2">
                     <span class="ml-1 my-auto hind">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
-                    <SvgCollection svgName="smallArrowRight" class="h-6 w-6 ml-2 mr-2"/>
+                    <component is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 hind" stroke-width="1.7"/>
                 </div>
                 <RefreshIcon :class="[
                                 !this.sageInterfaceIsConfigured() || this.importProcessing ?

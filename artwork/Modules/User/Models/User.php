@@ -242,9 +242,9 @@ class User extends Model implements
             urlencode($this->first_name . ' ' . $this->last_name) . '&color=7F9CF5&background=EBF4FF';
     }
 
-    public function crafts(): BelongsToMany
+    public function crafts(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this->belongsToMany(Craft::class, 'craft_users');
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
     public function shifts(): BelongsToMany

@@ -1,11 +1,15 @@
 <template>
-    <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer"
+    <div class="flex items-center pl-1 py-1 hover:bg-gray-50/40 rounded cursor-pointer w-full"
          @dragover="onDragOver"
-         @drop="onDrop">
-        <div class="flex items-center">
-            <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-            <span class="ml-2 text-xs">{{ $t('Unoccupied') }}</span>
-            <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="ml-2 w-5 h-5" :icon-name="this.shiftQualification.icon"/>
+         @drop="onDrop"
+         @click="openReplaceUserModal"
+    >
+        <div class="flex items-center justify-between w-full">
+            <div class="flex items-center gap-2">
+                <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
+                <span class="text-xs">{{ $t('Unoccupied') }}</span>
+            </div>
+            <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="w-5 h-5" :icon-name="this.shiftQualification.icon"/>
         </div>
     </div>
     <ChooseUserSeriesShift
@@ -57,6 +61,9 @@ export default defineComponent({
         }
     },
     methods: {
+        openReplaceUserModal() {
+            console.log('openReplaceUserModal');
+        },
         onDragOver(event) {
             event.preventDefault();
         },

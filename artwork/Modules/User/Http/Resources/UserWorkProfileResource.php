@@ -31,7 +31,7 @@ class UserWorkProfileResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $assignedCrafts = $this->getAttribute('assignedCrafts');
+        $assignedCrafts = $this->getAttribute('crafts');
 
         return [
             'resource' => class_basename($this),

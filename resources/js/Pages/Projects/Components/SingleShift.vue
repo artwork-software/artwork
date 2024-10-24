@@ -1,5 +1,5 @@
 <template>
-    <div :class="[highlight, 'w-[175px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
+    <div :class="[highlight, 'w-[185px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
         <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
@@ -67,14 +67,16 @@
             </p>
             <ShiftNoteComponent :shift="shift" />
             <div v-for="user in shift.users">
-                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
-                    <div class="flex gap-2 items-center">
-                        <UserPopoverTooltip :user="user" height="4" width="4" class="flex items-center" />
-                        <span class="text-xs">
-                            {{ user.full_name }}
-                            <span v-if="user.pivot.craft_abbreviation !== shift.craft.abbreviation && user.pivot.craft_abbreviation !== null">[{{ user.pivot.craft_abbreviation}}]</span>
-                        </span>
-                        <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
+                <div class="flex items-center p-1 hover:bg-gray-50/40 rounded cursor-pointer group w-full h-full">
+                    <div class="flex gap-2 items-center justify-between w-full h-full">
+                        <div class="flex gap-2 items-center h-full">
+                            <UserPopoverTooltip :user="user" height="4" width="4" class="flex items-center" />
+                            <span class="text-xs flex items-center">
+                                {{ user.full_name }}
+                                <span v-if="user.pivot.craft_abbreviation !== shift.craft.abbreviation && user.pivot.craft_abbreviation !== null">[{{ user.pivot.craft_abbreviation}}]</span>
+                            </span>
+                            <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
+                        </div>
                         <ShiftQualificationIconCollection
                             :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
@@ -164,6 +166,9 @@
             </div>
         </div>
     </div>
+    <pre>
+        {{ getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable }}
+    </pre>
     <AddShiftModal v-if="openEditShiftModal"
                    :shift="shift"
                    :event="event"
@@ -262,6 +267,12 @@ export default defineComponent({
         }, 5000);
     },
     computed: {
+        getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable() {
+            // return craft from shift and return crafts where universally_applicable is true
+            return this.crafts.filter(
+                (craft) => craft.id === this.shift.craft.id || craft.universally_applicable
+            );
+        },
         computedMaxWorkerCount() {
             let maxWorkerCount = 0;
 

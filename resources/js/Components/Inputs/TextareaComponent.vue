@@ -37,7 +37,7 @@ export default defineComponent({
             required: true
         },
         modelValue: {
-            type: String,
+            type: [String, null],
             required: true
         },
         isSmall: {
@@ -49,7 +49,7 @@ export default defineComponent({
             default: false
         },
         rows: {
-            type: Number,
+            type: [Number, String],
             default: 3
         },
         cols: {

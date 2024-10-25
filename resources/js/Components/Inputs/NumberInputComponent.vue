@@ -32,7 +32,7 @@ export default defineComponent({
             required: true
         },
         modelValue: {
-            type: String,
+            type: [String, null, Number],
             required: true
         },
         isSmall: {

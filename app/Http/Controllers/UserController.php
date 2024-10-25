@@ -618,7 +618,9 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $craftToAssign = Craft::find($request->get('craftId'));
+        $user->assignedCrafts()->attach($request->get('craftId'));
+
+        /*$craftToAssign = Craft::find();
 
         if (is_null($craftToAssign)) {
             return Redirect::back();
@@ -626,7 +628,7 @@ class UserController extends Controller
 
         if (!$user->assignedCrafts->contains($craftToAssign)) {
             $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }
+        }*/
 
         return Redirect::back();
     }

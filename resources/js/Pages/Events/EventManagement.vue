@@ -9,7 +9,6 @@
                               :events-without-room="eventsWithoutRoom"
                               :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                               :first-project-shift-tab-id="first_project_shift_tab_id"
-                              :firstProjectCalendarTabId="first_project_calendar_tab_id"
                 />
 
                 <IndividualCalendarAtGlanceComponent v-else

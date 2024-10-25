@@ -466,9 +466,6 @@ export default defineComponent({
             if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
                 this.validationMessages.warnings.shift_start.push(this.$t('The shift is over 10 hours long!'));
             }
-            if (shiftEndDateTime > eventEndDateTime) {
-                this.validationMessages.warnings.shift_end.push(this.$t('The shift ends after the event ends!'));
-            }
             if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before it starts!'));
             }

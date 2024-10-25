@@ -214,7 +214,6 @@ const openDeleteUserModal = (usersPivotId, userType) => {
 }
 
 const deleteUserFromShift = (usersPivotId, userType, removeFromSingleShift = true, preserveState = false) => {
-    console.log('deleteUserFromShift');
     router.delete(
         route(
             'shift.removeUserByType',
@@ -438,7 +437,6 @@ const closeMultipleShiftQualificationSlotsAvailableModal = (droppedUser, selecte
     }
 }
 const assignUser = (droppedUser, shiftQualificationId) => {
-    //console.log('assignUser', droppedUser, shiftQualificationId);
     router.post(
         route('shift.assignUserByType', {shift: props.shiftId}),
         {

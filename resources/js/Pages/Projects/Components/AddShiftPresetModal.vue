@@ -7,6 +7,7 @@
             {{ $t('What kind of shift template would you like to create?') }}
         </p>
         <div class="mt-10">
+            <!--
             <Listbox as="div" class="flex h-12" v-model="selectedEventType" id="eventType">
                 <ListboxButton class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                     <div class="flex items-center my-auto">
@@ -41,6 +42,7 @@
                     </ListboxOptions>
                 </transition>
             </Listbox>
+            -->
             <div class="w-full mb-3 mt-3">
                 <input v-model="presetForm.name"
                        id="changeEndTime"

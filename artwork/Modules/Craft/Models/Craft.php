@@ -70,20 +70,22 @@ class Craft extends Model
     }
 
     // Falls du die unterschiedlichen Typen spezifisch ansprechen möchtest:
-    public function users()
+    public function users(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
         return $this->morphedByMany(User::class, 'craftable')->without([
             'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
-        ]);
+        ])->with(['shiftQualifications']);
     }
 
-    public function freelancers()
+    public function freelancers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this->morphedByMany(Freelancer::class, 'craftable');
+        return $this->morphedByMany(Freelancer::class, 'craftable')
+            ->with(['shiftQualifications']);
     }
 
-    public function serviceProviders()
+    public function serviceProviders(): \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
-        return $this->morphedByMany(ServiceProvider::class, 'craftable');
+        return $this->morphedByMany(ServiceProvider::class, 'craftable')
+            ->with(['shiftQualifications']);
     }
 }

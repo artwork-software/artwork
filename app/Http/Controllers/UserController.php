@@ -618,7 +618,7 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $user->crafts()->attach($request->get('craftId'));
+        $user->assignedCrafts()->attach($request->get('craftId'));
 
         /*$craftToAssign = Craft::find();
 
@@ -640,7 +640,7 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $user->crafts()->detach($craft);
+        $user->assignedCrafts()->detach($craft);
 
         return Redirect::back();
     }

@@ -31,7 +31,7 @@ class UserWorkProfileResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $assignedCrafts = $this->getAttribute('crafts');
+        $assignedCrafts = $this->getAttribute('assignedCrafts');
 
         return [
             'resource' => class_basename($this),
@@ -44,7 +44,7 @@ class UserWorkProfileResource extends JsonResource
             'can_work_shifts' => $this->getAttribute('can_work_shifts'),
             'accessibleCrafts' => $this->can('can plan shifts') ?
                 $this->crafts->filter(fn(Craft $craft) => $craft->getAttribute('assignable_by_all') === true)
-                    ->merge($this->getAttribute('crafts'))
+                    ->merge($this->getAttribute('assignedCrafts'))
                     ->toArray() :
                 [],
             'assignedCrafts' => $assignedCrafts,

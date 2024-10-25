@@ -100,6 +100,7 @@ export default {
                 console.error('containerRef is not a valid DOM element');
             }
         });
+        document.body.click();
     },
     emits: ['closed'],
     methods: {

@@ -163,14 +163,13 @@ const deleteIndividualTimeByIndex = (index) => {
 const submitForm = () => {
     multiEditCellForm.post(route('shift.plan.user.cell.update'), {
         preserveScroll: true,
-        preserveState: false,
+        preserveState: true,
         onSuccess: () => {
             showSaveSuccess.value = true
             setTimeout(() => {
                 showSaveSuccess.value = false
                 emit('close')
-            }, 1000)
-
+            }, 5000)
         }
     })
 }

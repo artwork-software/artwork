@@ -124,17 +124,6 @@
                                         {{ $t('Service provider') }}
                                     </div>
                                 </div>
-                                <div class="flex w-full mb-3" v-for="craft in crafts" :key="craft.id">
-                                    <input type="checkbox"
-                                           class="input-checklist-dark"
-                                           v-model="activeCraftFilters"
-                                           :id="'craft-' + craft.id"
-                                           :value="craft.id"
-                                    />
-                                    <div class="xsLight my-auto ml-2">
-                                        {{craft.name}}
-                                    </div>
-                                </div>
                                 <div>
                                     <div>
                                         <label for="account-number" class="block text-xs font-medium leading-6 text-white">

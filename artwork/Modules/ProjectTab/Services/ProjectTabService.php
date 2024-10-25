@@ -121,7 +121,7 @@ class ProjectTabService implements ServiceWithArrayCache
                 )
             )
             ->setEventsWithRelevant($projectService->getEventsWithRelevantShifts($project))
-            ->setCrafts($craftService->getAll())
+            ->setCrafts($craftService->getAll(['users', 'freelancers', 'serviceProviders']))
             ->setCurrentUserCrafts($userService->getAuthUserCrafts()->merge($craftService->getAssignableByAllCrafts()))
             ->setShiftQualifications($shiftQualificationService->getAllOrderedByCreationDateAscending())
             ->setShiftTimePresets($this->shiftTimePresetService->getAll())

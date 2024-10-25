@@ -33,7 +33,7 @@
             </div>
 
         </div>
-        <div class="flex items-center justify-end w-full gap-2 absolute right-2 top-2">
+        <div class="flex items-center justify-end w-fit gap-2 absolute right-2 top-2">
             <div v-if="type === 0 && item.is_freelancer || type === 1">
                 <ToolTipComponent
                     icon="IconId"

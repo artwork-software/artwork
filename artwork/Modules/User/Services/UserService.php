@@ -133,7 +133,7 @@ class UserService
 
     public function getAuthUserCrafts(): Collection
     {
-        return $this->getAuthUser()->crafts;
+        return $this->getAuthUser()->assignedCrafts;
     }
 
     /**

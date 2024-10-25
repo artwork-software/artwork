@@ -17,17 +17,17 @@ return new class extends Migration
     {
         DB::table('users_assigned_crafts')
             ->orderBy('id')->each(function (\stdClass $craftable): void {
-                $this->insertToCraftable($craftable, User::class);
+                $this->insertToCraftable($craftable, User::class, $craftable->user_id);
             });
 
         DB::table('freelancer_assigned_crafts')
             ->orderBy('id')->each(function (\stdClass $craftable): void {
-                $this->insertToCraftable($craftable, Freelancer::class);
+                $this->insertToCraftable($craftable, Freelancer::class, $craftable->freelancer_id);
             });
 
         DB::table('service_provider_assigned_crafts')
             ->orderBy('id')->each(function (\stdClass $craftable): void {
-                $this->insertToCraftable($craftable, ServiceProvider::class);
+                $this->insertToCraftable($craftable, ServiceProvider::class, $craftable->service_provider_id);
             });
     }
 
@@ -40,13 +40,13 @@ return new class extends Migration
     }
 
 
-    private function insertToCraftable(\stdClass $model, string $baseClass): void
+    private function insertToCraftable(\stdClass $model, string $baseClass, int $modelId): void
     {
         DB::table('craftables')
             ->insert([
                 'craft_id' => $model->craft_id,
                 'craftable_type' => $baseClass,
-                'craftable_id' => $model->service_provider_id,
+                'craftable_id' => $modelId,
             ]);
     }
 };

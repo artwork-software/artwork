@@ -707,7 +707,8 @@ class UserController extends Controller
             'work_shifts',
             'description',
             'event_name',
-            'high_contrast'
+            'high_contrast',
+            'expand_days'
         ]));
     }
 

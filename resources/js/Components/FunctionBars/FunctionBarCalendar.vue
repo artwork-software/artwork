@@ -209,6 +209,13 @@
                                         <p :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary">{{ $t('Event name') }}</p>
                                     </div>
+                                    <div class="flex items-center py-1">
+                                        <input v-model="userCalendarSettings.expand_days"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Expand days') }}</p>
+                                    </div>
                                 </div>
                                 <div class="flex justify-end">
                                     <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{
@@ -332,6 +339,7 @@ const userCalendarSettings = useForm({
     description: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.description : false,
     event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
     high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
+    expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
 });
 
 const projectSearch = ref('');

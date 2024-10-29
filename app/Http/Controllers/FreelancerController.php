@@ -172,7 +172,8 @@ class FreelancerController extends Controller
     {
         $this->authorize('updateWorkProfile', Freelancer::class);
 
-        $craftToAssign = Craft::find($request->get('craftId'));
+        $freelancer->assignedCrafts()->attach($request->get('craftId'));
+        /*$craftToAssign = Craft::find($request->get('craftId'));
 
         if (is_null($craftToAssign)) {
             return Redirect::back();
@@ -180,7 +181,7 @@ class FreelancerController extends Controller
 
         if (!$freelancer->assignedCrafts->contains($craftToAssign)) {
             $freelancer->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }
+        }*/
 
         return Redirect::back();
     }

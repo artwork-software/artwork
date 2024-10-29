@@ -89,19 +89,8 @@
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                 viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                   transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                          stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                          stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-0 mb-0.5'">
+                            <component is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
                         </div>
                     </div>
                     <div v-if="showUserOverview" @mousedown="startResize"
@@ -1101,6 +1090,10 @@ export default {
         handleCellClick(user, day) {
             if(this.multiEditMode && !this.userForMultiEdit) {
                 this.handleMultiEdit(user, day);
+                return;
+            }
+
+            if(this.multiEditMode && this.userForMultiEdit) {
                 return;
             }
 

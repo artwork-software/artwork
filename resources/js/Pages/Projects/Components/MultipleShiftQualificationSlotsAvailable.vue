@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="close" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
+    <BaseModal @closed="close(null, null, null, true)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
             <div class="mx-4">
                 <ModalHeader
                     :title="$t('Select qualification')"
@@ -42,8 +42,8 @@ export default defineComponent({
         'close'
     ],
     methods: {
-        close(event, droppedUser = null, shiftQualificationId = null) {
-            this.$emit('close', droppedUser, shiftQualificationId);
+        close(event, droppedUser = null, shiftQualificationId = null, closeOnButton = false) {
+            this.$emit('close', droppedUser, shiftQualificationId, closeOnButton);
         }
     }
 });

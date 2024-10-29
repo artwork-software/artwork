@@ -41,14 +41,14 @@
                 <div class="w-fit events-by-days-container" :class="[!project ? 'pt-8' : '', isFullscreen ? 'mt-4': '', computedFilteredEvents.length > 0 ? '-mt-7' : 'mt-4' ]" ref="calendarToCalculate">
                     <div v-for="day in days"
                          :key="day.full_day"
-                         :style="{ height: zoom_factor * 115 + 'px' }"
+                         :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                          class="flex gap-0.5 day-container"
                          :class="day.is_weekend ? 'bg-userBg/70' : ''"
                          :data-day="day.full_day">
-                        <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day" />
+                        <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day"/>
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
-                             :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: zoom_factor * 115 + 'px' }"
+                             :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                              :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
                              class="group/container border-b-2 border-gray-400 border-dashed">
                             <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="event in room[day.full_day].events">

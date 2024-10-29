@@ -44,7 +44,7 @@
                 {{ $t(form.errors?.bigLogo) }}
             </div>
             <label class="block mt-12 mb-4 xsDark">
-                {{ $t('Small Logo (Upload by click or drag & drop') }}
+                {{ $t('Small Logo (Upload by click or drag & drop)') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div

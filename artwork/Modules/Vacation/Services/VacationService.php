@@ -7,6 +7,7 @@ use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Models\User;
+use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Vacation\Repository\VacationRepository;
@@ -17,8 +18,14 @@ use Illuminate\Http\Request;
 
 readonly class VacationService
 {
-    public function __construct(private VacationRepository $vacationRepository)
-    {
+    public function __construct(
+        private VacationRepository $vacationRepository,
+        private VacationConflictService $vacationConflictService,
+        private VacationSeriesService $vacationSeriesService,
+        private ChangeService $changeService,
+        private SchedulingService $schedulingService,
+        private NotificationService $notificationService
+    ) {
     }
 
     public function create(
@@ -207,5 +214,41 @@ readonly class VacationService
             'USER_VACATIONS',
             $vacation->vacationer_id
         );
+    }
+
+    public function updateVacationOfEntity(
+        array $vacationType,
+        string $modelClass,
+        Vacationer $entityModel,
+        string $day
+    ): void {
+        if ($vacationType['type'] && in_array($modelClass, [User::class, Freelancer::class], true)) {
+            $vacations = $entityModel->vacations()->where('date', $day)->get();
+
+            if ($vacations->isNotEmpty()) {
+                $this->deleteVacationInterval($entityModel, $day);
+            }
+
+            if ($vacationType['type'] !== \Artwork\Modules\Vacation\Enums\Vacation::AVAILABLE->value) {
+                $createVacationRequest = new CreateVacationRequest([
+                    'date' => $day,
+                    'type' => 'vacation',
+                    'full_day' => true,
+                    'is_series' => false,
+                    'comment' => $vacationType['type'],
+                ]);
+
+                $this->create(
+                    $entityModel,
+                    $createVacationRequest,
+                    $this->vacationConflictService,
+                    $this->vacationSeriesService,
+                    $this->changeService,
+                    $this->schedulingService,
+                    $this->notificationService,
+                    $vacationType['type']
+                );
+            }
+        }
     }
 }

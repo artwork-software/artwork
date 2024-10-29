@@ -6,9 +6,12 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -16,9 +19,11 @@ use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
+use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
+use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +40,10 @@ class ShiftController extends Controller
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
         private readonly ShiftService $shiftService,
-        private readonly Redirector $redirector
+        private readonly Redirector $redirector,
+        private readonly IndividualTimeService $individualTimeService,
+        private readonly ShiftPlanCommentService $shiftPlanCommentService,
+        private readonly VacationService $vacationService,
     ) {
     }
 
@@ -888,5 +896,74 @@ class ShiftController extends Controller
         $shift->update($request->only(['description']));
 
         return $this->redirector->back();
+    }
+
+    public function updateUserCell(Request $request): void
+    {
+        $comment = $request->get('comment');
+        $vacationType = $request->get('vacation_type');
+        $entities = $request->get('entities');
+        $individualTimes = $request->get('individual_times');
+
+        foreach ($entities as $entity) {
+            $modelClass = match ($entity['type']) {
+                1 => Freelancer::class,
+                2 => ServiceProvider::class,
+                default => User::class,
+            };
+
+            $entityModel = $modelClass::findOrFail($entity['id']);
+            foreach ($entity['days'] as $day) {
+                foreach ($individualTimes as $time) {
+                    $this->individualTimeService->createForModel(
+                        $entityModel,
+                        $time['title'],
+                        $time['start_time'],
+                        $time['end_time'],
+                        $day
+                    );
+                }
+
+                if (!empty($comment)) {
+                    $this->shiftPlanCommentService->addOrUpdateShiftPlanCommentByModel(
+                        $entityModel,
+                        $comment,
+                        $day
+                    );
+                }
+                $this->vacationService->updateVacationOfEntity(
+                    $vacationType,
+                    $modelClass,
+                    $entityModel,
+                    $day
+                );
+            }
+        }
+    }
+
+    public function deleteMultiEditCell(Request $request): void
+    {
+        $entities = $request->get('entities');
+        foreach ($entities as $entity) {
+            $modelClass = match ($entity['type']) {
+                1 => Freelancer::class,
+                2 => ServiceProvider::class,
+                default => User::class,
+            };
+            $entityModel = $modelClass::findOrFail($entity['id']);
+            foreach ($entity['days'] as $day) {
+                $this->individualTimeService->deleteForModel($entityModel, $day);
+
+                $vacations = $entityModel->vacations()->where('date', $day)->get();
+
+                if ($vacations->isNotEmpty()) {
+                    $this->vacationService->deleteVacationInterval($entityModel, $day);
+                }
+
+                $entityModel->shiftPlanComments()->where('date', $day)->delete();
+                $shifts = $entityModel->shifts()->where('start_date', $day)->get();
+                $this->shiftService->detachFromShifts($shifts, $modelClass, $entityModel);
+            }
+        }
     }
 }

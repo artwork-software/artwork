@@ -46,6 +46,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
@@ -156,28 +157,52 @@ class UserController extends Controller
                     UserSortEnum::from($userUserManagementSetting['sort_by']) :
                     null
             );
+        $searchQuery = $request->get('query');
+
         $users = MinimalUserIndexResource::collection(
-            User::search($request->string('query')) // Meilisearch Integration
-            ->query(function (Builder $builder) use ($sortEnum): void {
-                // Hinzufügen der Abfragen für die Sortierung, falls nötig
-                if (!is_null($sortEnum)) {
+            !empty($searchQuery)
+                ? User::search($searchQuery)
+                ->query(function ($query) use ($sortEnum): void {
+                    $query->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo']);
+
+                    // Sortierung nur anwenden, wenn $sortEnum vorhanden ist
+                    if (!is_null($sortEnum)) {
+                        switch ($sortEnum) {
+                            case UserSortEnum::ALPHABETICALLY_ASCENDING:
+                            case UserSortEnum::ALPHABETICALLY_DESCENDING:
+                                $columns = $sortEnum->mapToColumn();
+                                $dir = $sortEnum->mapToDirection();
+                                $query->orderBy($columns[0], $dir);
+                                $query->orderBy($columns[1], $dir);
+                                break;
+                            case UserSortEnum::CHRONOLOGICALLY_ASCENDING:
+                            case UserSortEnum::CHRONOLOGICALLY_DESCENDING:
+                                $query->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                                break;
+                        }
+                    }
+                })
+                ->get()
+                : User::query()
+                ->without(['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                ->when(!is_null($sortEnum), function ($query) use ($sortEnum): void {
                     switch ($sortEnum) {
                         case UserSortEnum::ALPHABETICALLY_ASCENDING:
                         case UserSortEnum::ALPHABETICALLY_DESCENDING:
                             $columns = $sortEnum->mapToColumn();
                             $dir = $sortEnum->mapToDirection();
-                            $builder->orderBy($columns[0], $dir);
-                            $builder->orderBy($columns[1], $dir);
+                            $query->orderBy($columns[0], $dir);
+                            $query->orderBy($columns[1], $dir);
                             break;
                         case UserSortEnum::CHRONOLOGICALLY_ASCENDING:
                         case UserSortEnum::CHRONOLOGICALLY_DESCENDING:
-                            $builder->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
+                            $query->orderBy($sortEnum->mapToColumn(), $sortEnum->mapToDirection());
                             break;
                     }
-                }
-            })
-                ->get() // Hole die Ergebnisse aus Meilisearch
+                })
+                ->get()
         )->resolve();
+
 
         if ($saveFilterAndSort) {
             $userUserManagementSettingService->updateOrCreateIfNecessary(
@@ -187,6 +212,7 @@ class UserController extends Controller
                 ]
             );
         }
+
         return inertia('Users/Index', [
             'users' => $users,
             'all_permissions' => Permission::all()->groupBy('group'),
@@ -197,7 +223,7 @@ class UserController extends Controller
             'permission_presets' => $permissionPresetService->getPermissionPresets(),
             'invitedUsers' => Invitation::all(),
             'userSortEnumNames' => array_map(
-                function (UserSortEnum $enum): string {
+                static function (UserSortEnum $enum): string {
                     return $enum->name;
                 },
                 UserSortEnum::cases()
@@ -592,7 +618,9 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $craftToAssign = Craft::find($request->get('craftId'));
+        $user->assignedCrafts()->attach($request->get('craftId'));
+
+        /*$craftToAssign = Craft::find();
 
         if (is_null($craftToAssign)) {
             return Redirect::back();
@@ -600,7 +628,7 @@ class UserController extends Controller
 
         if (!$user->assignedCrafts->contains($craftToAssign)) {
             $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }
+        }*/
 
         return Redirect::back();
     }
@@ -679,7 +707,8 @@ class UserController extends Controller
             'work_shifts',
             'description',
             'event_name',
-            'high_contrast'
+            'high_contrast',
+            'expand_days'
         ]));
     }
 
@@ -818,5 +847,10 @@ class UserController extends Controller
                 ShiftTabSort::class
             )
         ]);
+    }
+
+    public function updateUserOverviewHeight(User $user, Request $request): void
+    {
+        $user->update($request->only('drawer_height'));
     }
 }

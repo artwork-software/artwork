@@ -7,7 +7,6 @@
 
             </TransitionChild>
             <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
-
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300"
                                      enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -41,7 +40,6 @@
                     </TransitionChild>
                 </div>
             </div>
-
         </Dialog>
     </TransitionRoot>
 </template>
@@ -91,8 +89,7 @@ export default {
         fullModal: {
             type: Boolean,
             default: false
-        },
-
+        }
     },
     mounted() {
         this.$nextTick(() => {
@@ -103,6 +100,7 @@ export default {
                 console.error('containerRef is not a valid DOM element');
             }
         });
+        document.body.click();
     },
     emits: ['closed'],
     methods: {

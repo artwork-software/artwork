@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ height: zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-calendarText text-right">
+    <div :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px', width: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px', minWidth: zoom_factor === 0.2 ? '50px' : zoom_factor * 90 + 'px' }" :class="isFullscreen ? 'stickyDaysNoMarginLeft' : 'stickyDays'" class="bg-userBg text-calendarText text-right">
         <div :style="textStyle" class="mt-3 mr-2">
             <div>
                 {{ zoom_factor >= 0.8 ? day.day_string : '' }}
@@ -45,7 +45,6 @@ const textStyle = computed(() => {
 <style scoped>
 .stickyDays {
     position: sticky;
-    align-self: flex-start;
     position: -webkit-sticky;
     left: 4rem;
     z-index: 22;
@@ -54,7 +53,6 @@ const textStyle = computed(() => {
 
 .stickyDaysNoMarginleft {
     position: sticky;
-    align-self: flex-start;
     position: -webkit-sticky;
     left: 0;
     z-index: 22;

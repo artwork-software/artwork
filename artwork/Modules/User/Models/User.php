@@ -57,6 +57,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
@@ -183,7 +184,8 @@ class User extends Model implements
         'show_notification_indicator',
         'shift_plan_user_sort_by_id',
         'is_freelancer',
-        'sort_type_shift_tab'
+        'sort_type_shift_tab',
+        'drawer_height',
     ];
 
     protected $casts = [
@@ -213,7 +215,8 @@ class User extends Model implements
     protected $appends = [
         'profile_photo_url',
         'full_name',
-        'type'
+        'type',
+        'assigned_craft_ids',
     ];
 
     protected $with = ['calendar_settings', 'calendarAbo', 'shiftCalendarAbo'];
@@ -241,10 +244,6 @@ class User extends Model implements
             urlencode($this->first_name . ' ' . $this->last_name) . '&color=7F9CF5&background=EBF4FF';
     }
 
-    public function crafts(): BelongsToMany
-    {
-        return $this->belongsToMany(Craft::class, 'craft_users');
-    }
 
     public function shifts(): BelongsToMany
     {
@@ -403,9 +402,9 @@ class User extends Model implements
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
-    public function assignedCrafts(): BelongsToMany
+    public function assignedCrafts(): morphToMany
     {
-        return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
     public function shiftQualifications(): BelongsToMany
@@ -480,11 +479,6 @@ class User extends Model implements
             'phone_number' => $this->phone_number,
             'email' => $this->email,
         ];
-    }
-
-    public function searchableAs(): string
-    {
-        return 'users_index';
     }
 
     /** @deprecated user WorkhourService */

@@ -39,7 +39,8 @@ class UserCalendarSettings extends Model
         'use_project_time_period',
         'time_period_project_id',
         'event_name',
-        'high_contrast'
+        'high_contrast',
+        'expand_days'
     ];
 
     protected $casts = [
@@ -51,7 +52,8 @@ class UserCalendarSettings extends Model
         'description' => 'boolean',
         'use_project_time_period' => 'boolean',
         'event_name' => 'boolean',
-        'high_contrast' => 'boolean'
+        'high_contrast' => 'boolean',
+        'expand_days' => 'boolean'
     ];
 
     public function user(): BelongsTo

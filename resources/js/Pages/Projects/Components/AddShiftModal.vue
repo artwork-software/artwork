@@ -360,7 +360,7 @@ export default defineComponent({
                 end_date: this.shift ? this.shift.formatted_dates.frontend_end : null,
                 start: this.shift ? this.shift.start : null,
                 end: this.shift ? this.shift.end : null,
-                break_minutes: this.shift ? this.shift.break_minutes : null,
+                break_minutes: this.shift ? this.shift.break_minutes : 30,
                 craft_id: this.shift ? this.shift.craft.id : null,
                 description: this.shift ? this.shift.description : '',
                 event_id: this.event.id,
@@ -465,9 +465,6 @@ export default defineComponent({
             }
             if (((shiftEndDateTime - shiftStartDateTime) / 60000) > 600) {
                 this.validationMessages.warnings.shift_start.push(this.$t('The shift is over 10 hours long!'));
-            }
-            if (shiftEndDateTime > eventEndDateTime) {
-                this.validationMessages.warnings.shift_end.push(this.$t('The shift ends after the event ends!'));
             }
             if (shiftStartDateTime > shiftEndDateTime) {
                 this.validationMessages.warnings.shift_end.push(this.$t('The shift ends before it starts!'));

@@ -33,6 +33,11 @@ export function useColorHelper() {
         }
     }
 
+    function backgroundColorWithOpacityOld(color, percent = 15) {
+        if (!color) return `rgba(255, 255, 255, ${percent / 100})`;
+        return `rgba(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, ${percent / 100})`;
+    }
+
     function getTextColorBasedOnBackground(color) {
         const isDark = isDarkColor(color);
         return isDark ? '#FFFFFF' : '#000000';
@@ -53,6 +58,7 @@ export function useColorHelper() {
         detectParentBackgroundColor,
         getTextColorBasedOnBackground,
         isDarkColor,
-        parentBackgroundColor
+        parentBackgroundColor,
+        backgroundColorWithOpacityOld
     };
 }

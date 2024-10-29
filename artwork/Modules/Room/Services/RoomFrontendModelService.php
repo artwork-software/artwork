@@ -35,7 +35,8 @@ readonly class RoomFrontendModelService
         private RoomRepository $roomRepository,
         private UserService $userService,
         private ProjectService $projectService
-    ) {}
+    ) {
+    }
     public function createShowDto(
         Room $room,
         User $user
@@ -75,10 +76,12 @@ readonly class RoomFrontendModelService
             ->setRoomCategories(CategoryIndexResource::collection($room->categories)->resolve())
             ->setRoomAttributes(AttributeIndexResource::collection($room->attributes)->resolve())
             ->setAdjoiningRooms(AdjoiningRoomIndexResource::collection($room->adjoining_rooms)->resolve())
-            ->setRooms(RoomIndexWithoutEventsResource::collection($this->roomRepository->allWithoutTrashed())->resolve())
+            ->setRooms(RoomIndexWithoutEventsResource::collection($this
+                ->roomRepository->allWithoutTrashed())->resolve())
             ->setEventTypes(EventTypeResource::collection($this->eventTypeService->getAll())->resolve())
             ->setProjects(
-                ProjectIndexAdminResource::collection($this->projectService->getProjectsWithAccessBudgetAndManagerUsers())
+                ProjectIndexAdminResource::collection($this->projectService
+                    ->getProjectsWithAccessBudgetAndManagerUsers())
                     ->resolve()
             );
     }

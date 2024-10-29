@@ -33,6 +33,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
 use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\IndividualTimeController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
@@ -526,6 +527,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // patch shifts.qualifications.add
     Route::patch('/shifts/{shift}/qualifications/add', [ShiftQualificationController::class, 'updateValue'])
         ->name('shifts.qualifications.add');
+
+    // shift.plan.user.cell.update
+    Route::post('/shiftplan/user/cell/update', [ShiftController::class, 'updateUserCell'])
+        ->name('shift.plan.user.cell.update');
+
+    // multi-edit.cell.delete
+    Route::post('/shiftplan/multi/edit/cell/delete', [ShiftController::class, 'deleteMultiEditCell'])
+        ->name('multi-edit.cell.delete');
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])
@@ -1374,6 +1383,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');
 
+        Route::patch('/{user}/update/userOverviewHeight', [UserController::class, 'updateUserOverviewHeight'])
+            ->name('user.update.userOverviewHeight');
 
         // save user shift calendar abo
         Route::post(
@@ -1569,6 +1580,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('/search/users', [UserController::class, 'scoutSearch'])->name('user.scoutSearch');
         Route::post('/search/projects', [ProjectController::class, 'scoutSearch'])->name('project.scoutSearch');
     });
+
+    Route::resource('holidays', HolidayController::class)
+        ->only(['index', 'store', 'update', 'destroy', 'show']);
 });
 
 Route::get(

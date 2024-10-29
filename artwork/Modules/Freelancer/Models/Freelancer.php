@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 
 /**
@@ -114,9 +115,9 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function assignedCrafts(): BelongsToMany
+    public function assignedCrafts(): morphToMany
     {
-        return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
     /**

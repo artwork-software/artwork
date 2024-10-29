@@ -1,12 +1,14 @@
 <template>
-    <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer"
-         @dragover="onDragOver"
-         @drop="onDrop">
-        <div class="flex items-center">
-            <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-            <span class="ml-2 text-xs">{{ $t('Unoccupied') }}</span>
-            <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="ml-2 w-5 h-5" :icon-name="this.shiftQualification.icon"/>
-        </div>
+    <div class="flex items-center pl-1 py-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-6" @dragover="onDragOver" @drop="onDrop">
+        <SelectUserForShiftMenu :crafts-with-entities="craftsWithAllEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-2">
+                    <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
+                    <span class="text-xs">{{ $t('Unoccupied') }}</span>
+                </div>
+                <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="w-5 h-5" :icon-name="this.shiftQualification.icon"/>
+            </div>
+        </SelectUserForShiftMenu>
     </div>
     <ChooseUserSeriesShift
         v-if="this.showChooseUserSeriesShiftModal"
@@ -23,19 +25,35 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue';
+import {defineComponent, nextTick} from 'vue';
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 import MultipleShiftQualificationSlotsAvailable
     from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import {router} from "@inertiajs/vue3";
+import SelectUserForShiftMenu from "@/Pages/Projects/Components/SelectUserForShiftMenu.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {IconChevronDown, IconChevronUp, IconDotsVertical, IconFilter, IconSearch, IconX} from "@tabler/icons-vue";
+import {Float} from "@headlessui-float/vue";
+import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
+import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import ColorHelper from "@/Mixins/ColorHelper.vue";
+import CraftFilter from "@/Components/Filter/CraftFilter.vue";
+import Input from "@/Jetstream/Input.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsDropElement',
+    mixins: [ColorHelper],
     components: {
+        IconFilter, Input, IconSearch, IconChevronUp, CraftFilter, IconX,
+        DragElement, IconChevronDown,
+        Float,
+        IconDotsVertical, ToolTipComponent,
+        SelectUserForShiftMenu,
         MultipleShiftQualificationSlotsAvailable,
         ShiftQualificationIconCollection,
-        ChooseUserSeriesShift
+        ChooseUserSeriesShift,
+        MenuButton, MenuItems, Menu
     },
     props: [
         'craftId',
@@ -43,7 +61,9 @@ export default defineComponent({
         'shiftUserIds',
         'eventIsSeries',
         'shiftQualification',
-        'allShiftQualificationDropElements'
+        'allShiftQualificationDropElements',
+        'shiftCraftsWithUsers',
+        'crafts'
     ],
     emits: ['dropFeedback'],
     data(){
@@ -53,8 +73,47 @@ export default defineComponent({
             droppedUser: null,
             showMultipleShiftQualificationSlotsAvailableModal: false,
             showMultipleShiftQualificationSlotsAvailableModalSlots: null,
-            showMultipleShiftQualificationSlotsAvailableModalDroppedUser: null
+            showMultipleShiftQualificationSlotsAvailableModalDroppedUser: null,
+            showSelectUserMenu: false,
+            openFilter: false,
+            showIntern: false,
+            showExtern: false,
+            showProvider: false,
+            userSearch: '',
+            isMenuOpen: false
         }
+    },
+    computed: {
+        craftsWithAllEntities() {
+            // return craft with all entities also users, freelancers, service providers in one array named entities
+            return this.shiftCraftsWithUsers.map((craft) => {
+                let users = craft.users.map((user) => {
+                    return {
+                        ...user,
+                        type: 0
+                    }
+                });
+
+                let freelancers = craft.freelancers.map((freelancer) => {
+                    return {
+                        ...freelancer,
+                        type: 1
+                    }
+                });
+
+                let serviceProviders = craft.service_providers.map((serviceProvider) => {
+                    return {
+                        ...serviceProvider,
+                        type: 2
+                    }
+                });
+
+                return {
+                    ...craft,
+                    users: users.concat(freelancers).concat(serviceProviders)
+                }
+            });
+        },
     },
     methods: {
         onDragOver(event) {
@@ -275,6 +334,25 @@ export default defineComponent({
                     preserveScroll: true
                 }
             )
+        },
+        createOnDropElementAndSave(user, craft) {
+
+            this.droppedUser = {
+                id: user.id,
+                type: user.type,
+                craft_ids: user.assigned_craft_ids,
+                shift_qualifications: user.shift_qualifications ?? [],
+                craft_universally_applicable: craft?.universally_applicable ?? false,
+                craft_abbreviation: craft.abbreviation ?? '',
+            };
+            this.isMenuOpen = false;
+
+            // click on page to close menu
+            nextTick(() => {
+                document.addEventListener('click', this.closeMenu);
+            });
+
+            this.saveUser();
         }
    }
 });

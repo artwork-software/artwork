@@ -66,7 +66,7 @@
                     leave-active-class="transition ease-in duration-75"
                     leave-from-class="transform opacity-100 scale-100"
                     leave-to-class="transform opacity-0 scale-95">
-                    <div class="z-50 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    <div class="z-50 origin-top-right absolute rounded-lg right-10 px-4 py-2 w-80 shadow-xl bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
@@ -85,7 +85,7 @@
                                 <Switch @click="toggleCompactMode"
                                         :class="[this.$page.props.user.compact_mode ?
                                         'bg-artwork-buttons-create' :
-                                        'bg-gray-300',
+                                        'bg-darkGrayBg',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true"
                                           :class="[this.$page.props.user.compact_mode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
@@ -103,7 +103,7 @@
                                 <div class="flex w-full mb-3">
                                     <input v-model="showIntern"
                                            type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                           class="input-checklist-dark"/>
                                     <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
                                         {{ $t('Internal employees') }}
                                     </div>
@@ -111,7 +111,7 @@
                                 <div class="flex w-full mb-3">
                                     <input v-model="showExtern"
                                            type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                           class="input-checklist-dark"/>
                                     <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
                                         {{ $t('External employees') }}
                                     </div>
@@ -119,20 +119,9 @@
                                 <div class="flex w-full mb-3">
                                     <input v-model="showProvider"
                                            type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                           class="input-checklist-dark"/>
                                     <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
                                         {{ $t('Service provider') }}
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-3" v-for="craft in crafts" :key="craft.id">
-                                    <input type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"
-                                           v-model="activeCraftFilters"
-                                           :id="'craft-' + craft.id"
-                                           :value="craft.id"
-                                    />
-                                    <div class="xsLight my-auto ml-2">
-                                        {{craft.name}}
                                     </div>
                                 </div>
                                 <div>
@@ -141,7 +130,7 @@
                                             {{ $t('Search') }}
                                         </label>
                                         <div class="relative mt-2 rounded-md shadow-sm">
-                                            <input v-model="userSearch" type="text" name="account-number" id="account-number" class="block w-full border-0 py-1.5 pr-10 text-gray-900 ring-0  placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6" />
+                                            <input v-model="userSearch" type="text" name="account-number" id="account-number" class="block w-full rounded-lg border border-gray-600 py-1.5 pr-10 text-white ring-0 bg-darkGrayBg placeholder:text-gray-400 focus:border-gray-500 focus:ring-0 sm:text-sm sm:leading-6" />
                                             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                                 <IconSearch class="h-5 w-5 text-gray-400" aria-hidden="true" v-if="userSearch.length === 0" />
                                                 <IconX class="h-5 w-5 text-gray-400 cursor-pointer" aria-hidden="true" v-if="userSearch.length > 0" @click="userSearch = ''"/>

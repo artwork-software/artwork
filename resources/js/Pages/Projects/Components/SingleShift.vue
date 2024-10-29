@@ -1,5 +1,5 @@
 <template>
-    <div :class="[highlight, 'w-[175px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
+    <div :class="[highlight, 'w-[190px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
         <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div class="mt-1 rounded-b-lg bg-gray-200 px-1 py-2 overflow-y-scroll h-full">
+        <div class="mt-1 rounded-b-lg bg-gray-200 px-1 py-2 overflow-y-scroll h-full w-full">
             <p class="text-xs mb-1">
                 <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
                     {{ shift.formatted_dates.start }} {{ shift.start }} - {{ shift.formatted_dates.end }} {{ shift.end }}
@@ -67,85 +67,55 @@
             </p>
             <ShiftNoteComponent :shift="shift" />
             <div v-for="user in shift.users">
-                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
-                    <div class="flex gap-2 items-center">
-                        <UserPopoverTooltip :user="user" height="4" width="4" class="flex items-center" />
-                        <span class="text-xs">
-                            {{ user.full_name }}
-                            <span v-if="user.pivot.craft_abbreviation !== shift.craft.abbreviation && user.pivot.craft_abbreviation !== null">[{{ user.pivot.craft_abbreviation}}]</span>
-                        </span>
-                        <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
-                        <ShiftQualificationIconCollection
-                            :classes="'w-4 h-4'"
-                            :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
-                    </div>
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
-                         @click="
-                            this.event.is_series ?
-                                openDeleteUserModal(user.pivot.id, 0) :
-                                deleteUserFromShift(user.pivot.id, 0)
-                         ">
-                        <span class="flex items-center justify-center">
-                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                                <IconX class="w-2 h-2 text-white" />
-                            </span>
-                        </span>
-                    </div>
-                </div>
+                <ShiftBookedElementComponent
+                    :user="user"
+                    :type="0"
+                    :shift="shift"
+                    :event="event"
+                    :shift-qualifications="shiftQualifications"
+                    :craft-id="this.shift.craft.id"
+                    :shift-id="shift.id"
+                    :shift-user-ids="shiftUserIds"
+                    :event-is-series="event.is_series"
+                    :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
+                    :crafts="crafts"
+                    @dropFeedback="dropFeedback"
+                    :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
+                />
             </div>
             <div v-for="freelancer in shift.freelancer">
-                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
-                    <div class="flex gap-2 items-center">
-                        <UserPopoverTooltip :user="freelancer" height="4" width="4" class="flex items-center" />
-                        <span class="text-xs">
-                            {{ freelancer.name }}
-                            <span v-if="freelancer.pivot.craft_abbreviation !== shift.craft.abbreviation && freelancer.pivot.craft_abbreviation !== null">[{{ freelancer.pivot.craft_abbreviation}}]</span>
-                        </span>
-                        <span v-if="freelancer.pivot.shift_count > 1" class="text-xs"> 1/{{ freelancer.pivot.shift_count }}</span>
-                        <ShiftQualificationIconCollection
-                            class="w-5 h-5"  :classes="'w-4 h-4'"
-                            :icon-name="this.getShiftQualificationById(freelancer.pivot.shift_qualification_id).icon"/>
-                    </div>
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
-                         @click="
-                            this.event.is_series ?
-                                openDeleteUserModal(freelancer.pivot.id, 1) :
-                                deleteUserFromShift(freelancer.pivot.id, 1)
-                         ">
-                        <span class="flex items-center justify-center">
-                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                                <IconX class="w-2 h-2 text-white" />
-                            </span>
-                        </span>
-                    </div>
-                </div>
+                <ShiftBookedElementComponent
+                    :user="freelancer"
+                    :type="1"
+                    :shift="shift"
+                    :event="event"
+                    :shift-qualifications="shiftQualifications"
+                    :craft-id="this.shift.craft.id"
+                    :shift-id="shift.id"
+                    :shift-user-ids="shiftUserIds"
+                    :event-is-series="event.is_series"
+                    :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
+                    :crafts="crafts"
+                    @dropFeedback="dropFeedback"
+                    :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
+                />
             </div>
             <div v-for="serviceProvider in shift.service_provider">
-                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
-                    <div class="flex gap-2 items-center">
-                        <img :src="serviceProvider.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover" alt="profile-photo">
-                        <span class="text-xs">
-                            {{ serviceProvider.name }}
-                            <span v-if="serviceProvider.pivot.craft_abbreviation !== shift.craft.abbreviation && serviceProvider.pivot.craft_abbreviation !== null">[{{ serviceProvider.pivot.craft_abbreviation}}]</span>
-                        </span>
-                        <span v-if="serviceProvider.pivot.shift_count > 1" class="text-xs">  1/{{ serviceProvider.pivot.shift_count }} </span>
-                        <ShiftQualificationIconCollection
-                            class="w-5 h-5"  :classes="'w-4 h-4'"
-                            :icon-name="this.getShiftQualificationById(serviceProvider.pivot.shift_qualification_id).icon"/>
-                    </div>
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="hidden group-hover:block"
-                         @click="
-                            this.event.is_series ?
-                                openDeleteUserModal(serviceProvider.pivot.id, 2) :
-                                deleteUserFromShift(serviceProvider.pivot.id, 2)
-                         ">
-                        <span class="flex items-center justify-center">
-                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                                <IconX class="w-2 h-2 text-white" />
-                            </span>
-                        </span>
-                    </div>
-                </div>
+                <ShiftBookedElementComponent
+                    :user="serviceProvider"
+                    :type="2"
+                    :shift="shift"
+                    :event="event"
+                    :shift-qualifications="shiftQualifications"
+                    :craft-id="this.shift.craft.id"
+                    :shift-id="shift.id"
+                    :shift-user-ids="shiftUserIds"
+                    :event-is-series="event.is_series"
+                    :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
+                    :crafts="crafts"
+                    @dropFeedback="dropFeedback"
+                    :craft-with-entities="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
+                />
             </div>
             <div v-for="dropElement in this.computedShiftQualificationDropElements">
                 <ShiftsQualificationsDropElement
@@ -156,6 +126,8 @@
                     :event-is-series="event.is_series"
                     :shift-qualification="this.getShiftQualificationById(dropElement.shift_qualification_id)"
                     :all-shift-qualification-drop-elements="this.computedShiftQualificationDropElements"
+                    :shift-crafts-with-users="getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable"
+                    :crafts="crafts"
                     @dropFeedback="dropFeedback"
                 />
             </div>
@@ -163,6 +135,8 @@
                 <component is="IconCirclePlus" @click="showAddShiftQualificationModal = true" class="h-5 w-5 xsLight cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" stroke-width="1.5" />
             </div>
         </div>
+
+
     </div>
     <AddShiftModal v-if="openEditShiftModal"
                    :shift="shift"
@@ -174,10 +148,7 @@
                    :shift-qualifications="shiftQualifications"
                    :shift-time-presets="shiftTimePresets"
     />
-    <ChooseDeleteUserShiftModal v-if="showDeleteUserModal"
-                                @close-modal="this.closeDeleteUserModal"
-                                @returnBuffer="deleteUserWithSeriesShiftData"
-    />
+
     <AddShiftQualificationToShiftModel
         v-if="showAddShiftQualificationModal"
         @close="showAddShiftQualificationModal = false"
@@ -204,10 +175,12 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ShiftNoteComponent from "@/Layouts/Components/ShiftNoteComponent.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import AddShiftQualificationToShiftModel from "@/Pages/Projects/Components/AddShiftQualificationToShiftModel.vue";
+import ShiftBookedElementComponent from "@/Pages/Projects/Components/ShiftBookedElementComponent.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        ShiftBookedElementComponent,
         AddShiftQualificationToShiftModel,
         ShiftNoteComponent,
         UserPopoverTooltip,
@@ -262,6 +235,12 @@ export default defineComponent({
         }, 5000);
     },
     computed: {
+        getUsersInCraftOfShiftAndUsersFromCraftsWhereUniversalApplicable() {
+            // return craft from shift and return crafts where universally_applicable is true
+            return this.crafts.filter(
+                (craft) => craft.id === this.shift.craft.id || craft.universally_applicable
+            );
+        },
         computedMaxWorkerCount() {
             let maxWorkerCount = 0;
 
@@ -377,39 +356,7 @@ export default defineComponent({
         editShift() {
             this.openEditShiftModal = true;
         },
-        openDeleteUserModal(usersPivotId, userType) {
-            this.showDeleteUserModal = true;
-            this.usersPivotIdToDelete = usersPivotId;
-            this.userTypeToDelete = userType;
-        },
-        closeDeleteUserModal() {
-            this.showDeleteUserModal = false;
-        },
-        deleteUserWithSeriesShiftData(removeFromSingleShift) {
-            this.closeDeleteUserModal();
-            this.deleteUserFromShift(this.usersPivotIdToDelete, this.userTypeToDelete, removeFromSingleShift);
 
-            this.usersPivotIdToDelete = null;
-            this.userTypeToDelete = null;
-        },
-        deleteUserFromShift(usersPivotId, userType, removeFromSingleShift = true) {
-            router.delete(
-                route(
-                    'shift.removeUserByType',
-                    {
-                        usersPivotId: usersPivotId,
-                        userType: userType,
-                        isShiftTab: true
-                    }
-                ),
-                {
-                    data: {
-                        removeFromSingleShift: removeFromSingleShift
-                    },
-                    preserveScroll: true
-                }
-            );
-        },
     },
 })
 </script>

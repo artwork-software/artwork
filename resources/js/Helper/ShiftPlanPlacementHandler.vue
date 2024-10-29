@@ -506,7 +506,9 @@ export default class {
             hintElement = existingHintElement;
         }
 
+        /*
         hintElement.innerText = '--- Ungenutzt: ' + innerTextTime + ' ---';
+        */
 
         if (!existingHintElement) {
             //if previous is a timeline and current too we need to add a margin top for diff hint placement

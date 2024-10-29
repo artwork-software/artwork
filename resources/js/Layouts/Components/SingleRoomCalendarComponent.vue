@@ -14,9 +14,6 @@
                 <ExclamationIcon class="h-6  mr-2"/>
                 {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
-            <pre>
-
-            </pre>
             <!-- Calendar -->
             <table class="w-full flex flex-wrap bg-white">
                 <tbody class="flex w-full flex-wrap">

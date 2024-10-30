@@ -45,9 +45,12 @@ class Craft extends Model
         'universally_applicable' => 'boolean',
     ];
 
-    protected $with = ['users'];
+    protected $with = ['craftShiftPlaner'];
 
-
+    public function craftShiftPlaner(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'craft_users', 'craft_id', 'user_id');
+    }
     public function scopeIsAssignableByAll(Builder $builder): Builder
     {
         return $builder->where('assignable_by_all', '=', true);

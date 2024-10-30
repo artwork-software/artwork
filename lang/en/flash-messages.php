@@ -30,11 +30,13 @@ return [
     'shift-qualification' => [
         'success' => [
             'create' => 'Qualification successfully saved',
-            'update' => 'Qualification successfully updated.'
+            'update' => 'Qualification successfully updated.',
+            'destroy' => 'Qualification successfully deleted.'
         ],
         'error' => [
             'create' => 'Qualification could not be saved, please try again',
-            'update' => 'Qualification could not be updated, please try again.'
+            'update' => 'Qualification could not be updated, please try again.',
+            'destroy' => 'Qualification could not be updated, please try again.'
         ]
     ],
     'budget-general-setting' => [

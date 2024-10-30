@@ -4,6 +4,7 @@ namespace Artwork\Modules\Shift\Repositories;
 
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
+use Illuminate\Database\Eloquent\Collection;
 
 class ShiftsQualificationsRepository extends BaseRepository
 {
@@ -14,5 +15,10 @@ class ShiftsQualificationsRepository extends BaseRepository
         return ShiftsQualifications::query()
             ->byShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)
             ->first();
+    }
+
+    public function findAllByShiftQualificationId(int $shiftQualificationId): Collection
+    {
+        return ShiftsQualifications::query()->where('shift_qualification_id', $shiftQualificationId)->get();
     }
 }

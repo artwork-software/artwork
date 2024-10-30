@@ -137,7 +137,7 @@
                     <ul v-else role="list" class="w-full">
                         <li v-for="(shiftQualification) in shiftQualifications"
                             :key="shiftQualification.id"
-                            @click="openShiftQualificationModal('edit', shiftQualification)"
+
                             class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b-2"
                         >
                             <span class="sDark cursor-pointer">
@@ -147,7 +147,10 @@
                                     {{$t('(Considered for new shifts)')}}
                                 </span>
                             </span>
-                            <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
+                            <div class="flex gap-x-2">
+                                <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true" @click="openShiftQualificationModal('edit', shiftQualification)"/>
+                                <IconTrash v-if="shiftQualification.id > 1" stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteQualificationModal(shiftQualification)"/>
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -185,7 +188,7 @@
                             <div class="flex items-center gap-x-3">
                                 <IconEdit stroke-width="1.5" class="h-5 w-5 cursor-pointer" aria-hidden="true" @click="openAddEditShiftPresetModal(shiftTimePreset)"/>
 
-                                <IconTrash stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="deleteShiftTimePreset(shiftTimePreset)"/>
+                                <IconTrash stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteShiftTimePresetModal(shiftTimePreset)"/>
                             </div>
                         </li>
                     </ul>
@@ -215,7 +218,7 @@
         />
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
-        <ConfirmDeleteModal :title="$t('Delete craft')" :description="$t('Are you sure you want to delete the selected craft?')" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
+        <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
 <script>
@@ -293,12 +296,17 @@ export default defineComponent({
             craftToEdit: null,
             openConfirmDeleteModal: false,
             craftToDelete: null,
+            shiftQualificationToDelete: null,
+            shiftTimePresetToDelete: null,
             showShiftQualificationModal: false,
             shiftQualificationModalMode: null,
             shiftQualificationModalShiftQualification: null,
             showAddShiftPresetModal: false,
             presetToEdit: null,
             dragging: false,
+            confirmDeleteTitle: '',
+            confirmDeleteDescription: '',
+            deleteType: '',
             tabs: [
                 {
                     name: this.$t('Shift Settings'),
@@ -382,11 +390,38 @@ export default defineComponent({
         },
         openDeleteCraftModal(craft){
             this.craftToDelete = craft;
+            this.confirmDeleteTitle = this.$t('Delete craft');
+            this.confirmDeleteDescription = this.$t('Are you sure you want to delete the selected craft?');
+            this.deleteType = 'craft';
             this.openConfirmDeleteModal = true;
         },
         closedDeleteCraftModal(){
             this.openConfirmDeleteModal = false;
             this.craftToDelete = null;
+        },
+        openDeleteQualificationModal(shiftQualificationToDelete){
+            this.shiftQualificationToDelete = shiftQualificationToDelete;
+            this.confirmDeleteTitle = this.$t('Delete qualification');
+            this.confirmDeleteDescription = this.$t('Do you really want to delete the selected qualification?');
+            this.deleteType = 'qualification';
+            this.openConfirmDeleteModal = true;
+        },
+        closedDeleteQualificationModal(){
+            this.openConfirmDeleteModal = false;
+            this.deleteType = '';
+            this.shiftQualificationToDelete = null;
+        },
+        openDeleteShiftTimePresetModal(preset){
+            this.confirmDeleteTitle = this.$t('Delete time preset');
+            this.confirmDeleteDescription = this.$t('Do you really want to delete the selected time preset?');
+            this.deleteType = 'preset';
+            this.shiftTimePresetToDelete = preset;
+            this.openConfirmDeleteModal = true;
+        },
+        closeDeleteShiftTimePresetModal(){
+            this.openConfirmDeleteModal = false;
+            this.deleteType = '';
+            this.shiftTimePresetToDelete = null;
         },
         submitDelete(){
             this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
@@ -405,6 +440,33 @@ export default defineComponent({
             router.post(route('craft.reorder'), {
                 crafts: crafts
             });
+            if (this.deleteType === 'craft') {
+                this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onFinish: () => {
+                        this.closedDeleteCraftModal();
+                    }
+                });
+            }
+            if (this.deleteType === 'qualification'){
+                this.$inertia.delete(
+                    route(
+                        'shift-qualifications.destroy',
+                        {
+                            shift_qualification: this.shiftQualificationToDelete.id
+                        }
+                    ),
+                    {
+                        preserveScroll: true,
+                        onSuccess: this.closedDeleteQualificationModal
+                    }
+                );
+            }
+            if (this.deleteType === 'preset') {
+                this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
+                this.closeDeleteShiftTimePresetModal();
+            }
         }
     }
 })

@@ -145,7 +145,7 @@
                             </span>
                             <div class="flex gap-x-2">
                                 <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true" @click="openShiftQualificationModal('edit', shiftQualification)"/>
-                                <IconTrash stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteQualificationModal(shiftQualification)"/>
+                                <IconTrash v-if="shiftQualification.id > 1" stroke-width="1.5" class="h-5 w-5 text-red-500 cursor-pointer" aria-hidden="true" @click="openDeleteQualificationModal(shiftQualification)"/>
                             </div>
                         </li>
                     </ul>
@@ -289,7 +289,7 @@ export default defineComponent({
             craftToEdit: null,
             openConfirmDeleteModal: false,
             craftToDelete: null,
-            qualificationToDelete: null,
+            shiftQualificationToDelete: null,
             shiftTimePresetToDelete: null,
             showShiftQualificationModal: false,
             shiftQualificationModalMode: null,
@@ -391,8 +391,8 @@ export default defineComponent({
             this.openConfirmDeleteModal = false;
             this.craftToDelete = null;
         },
-        openDeleteQualificationModal(qualification){
-            this.qualificationToDelete = qualification;
+        openDeleteQualificationModal(shiftQualificationToDelete){
+            this.shiftQualificationToDelete = shiftQualificationToDelete;
             this.confirmDeleteTitle = this.$t('Delete qualification');
             this.confirmDeleteDescription = this.$t('Do you really want to delete the selected qualification?');
             this.deleteType = 'qualification';
@@ -401,7 +401,7 @@ export default defineComponent({
         closedDeleteQualificationModal(){
             this.openConfirmDeleteModal = false;
             this.deleteType = '';
-            this.qualificationToDelete = null;
+            this.shiftQualificationToDelete = null;
         },
         openDeleteShiftTimePresetModal(preset){
             this.confirmDeleteTitle = this.$t('Delete time preset');
@@ -416,17 +416,28 @@ export default defineComponent({
             this.shiftTimePresetToDelete = null;
         },
         submitDelete(){
-            if(this.deleteType === 'craft'){
-            this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
-                preserveScroll: true,
-                preserveState: true,
-                onFinish: () => {
-                    this.closedDeleteCraftModal();
-                }
-            })}
-            if(this.deleteType === 'qualification'){
-                //TODO: Funktion schreiben, welche alle Schichten der Qualifikation durchgeht und auf die "Standard"-Qualifikation umstellt. Dann die gewählte Qualifikation löschen.
-                this.closedDeleteQualificationModal()
+            if (this.deleteType === 'craft') {
+                this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onFinish: () => {
+                        this.closedDeleteCraftModal();
+                    }
+                });
+            }
+            if (this.deleteType === 'qualification'){
+                this.$inertia.delete(
+                    route(
+                        'shift-qualifications.destroy',
+                        {
+                            shift_qualification: this.shiftQualificationToDelete.id
+                        }
+                    ),
+                    {
+                        preserveScroll: true,
+                        onSuccess: this.closedDeleteQualificationModal
+                    }
+                );
             }
             if (this.deleteType === 'preset') {
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);

@@ -45,7 +45,7 @@
                             <div v-else>
                                 <p class="mt-1 truncate xsLight">
                                     {{$t('Can only be assigned by:')}}
-                                    <span class="" v-for="(user, index) in craft.users">
+                                    <span class="" v-for="(user, index) in craft.craft_shift_planer">
                                         {{ user.full_name }}<span>, </span>
                                     </span>
                                 </p>

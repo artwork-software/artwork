@@ -2055,5 +2055,9 @@
     "Expand days": "Expand days",
     "Would you like to save the changes before you leave the page?": "Would you like to save the changes before you leave the page?",
     "Create events when creating a new project": "Create events when creating a new project",
-    "Create events when a new project is created": "Create events when a new project is created"
+    "Create events when a new project is created": "Create events when a new project is created",
+    "Do you really want to delete the selected qualification?": "Do you really want to delete the selected qualification?",
+    "Delete qualification": "Delete qualification",
+    "Delete time preset": "Delete time preset",
+    "Do you really want to delete the selected time preset?": "Do you really want to delete the selected time preset?"
 }

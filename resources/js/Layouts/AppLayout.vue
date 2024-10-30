@@ -44,7 +44,7 @@
                                     </div>
                                 </div>
                             </Link>
-                            <a v-else
+                            <Link v-else
                                @mouseover="showToolTipForItem(item)"
                                @mouseleave="hideToolTipForItem(item)"
                                :key="item.name"
@@ -61,7 +61,7 @@
                                         {{ item.name }}
                                     </div>
                                 </div>
-                            </a>
+                            </Link>
                         </template>
                         <Menu as="div" class="flex flex-col items-center" v-show="
                         $canAny([

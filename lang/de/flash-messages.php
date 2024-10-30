@@ -30,11 +30,13 @@ return [
     'shift-qualification' => [
         'success' => [
             'create' => 'Qualifikation erfolgreich gespeichert.',
-            'update' => 'Qualifikation erfolgreich aktualisiert.'
+            'update' => 'Qualifikation erfolgreich aktualisiert.',
+            'destroy' => 'Qualifikation erfolgreich gelöscht.'
         ],
         'error' => [
             'create' => 'Qualifikation konnte nicht gespeichert werden, bitte versuche es erneut.',
-            'update' => 'Qualifikation konnte nicht aktualisiert werden, bitte versuche es erneut.'
+            'update' => 'Qualifikation konnte nicht aktualisiert werden, bitte versuche es erneut.',
+            'destroy' => 'Qualifikation konnte nicht gelöscht werden, bitte versuche es erneut.'
         ]
     ],
     'budget-general-setting' => [

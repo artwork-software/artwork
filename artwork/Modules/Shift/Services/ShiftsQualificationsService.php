@@ -5,6 +5,7 @@ namespace Artwork\Modules\Shift\Services;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 readonly class ShiftsQualificationsService
 {
@@ -48,6 +49,11 @@ readonly class ShiftsQualificationsService
     public function delete(ShiftsQualifications $shiftsQualification): bool
     {
         return $this->shiftsQualificationsRepository->delete($shiftsQualification);
+    }
+
+    public function forceDelete(ShiftsQualifications $shiftsQualification): bool
+    {
+        return $this->shiftsQualificationsRepository->forceDelete($shiftsQualification);
     }
 
     public function restore(ShiftsQualifications $shiftsQualification): bool
@@ -126,5 +132,10 @@ readonly class ShiftsQualificationsService
             $existingShiftsQualifications,
             ['value' => $existingShiftsQualifications->getAttribute('value') + 1]
         );
+    }
+
+    public function findAllByShiftQualificationId(int $shiftQualificationId): Collection
+    {
+        return $this->shiftsQualificationsRepository->findAllByShiftQualificationId($shiftQualificationId);
     }
 }

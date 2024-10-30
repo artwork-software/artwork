@@ -2052,5 +2052,7 @@
     "h/week as per contract": "h/Woche lt. Vertrag",
     "Business": "Geschäftlich",
     "Updating...": "Aktualisiere...",
-    "Expand days": "Tage expandieren"
+    "Expand days": "Tage expandieren",
+    "Create events when a new project is created": "Termine erstellen, wenn ein neues Projekt erstellt wird",
+    "Create events when creating a new project": "Termine erstellen, wenn ein neues Projekt erstellt wird"
 }

@@ -2052,5 +2052,7 @@
     "h/week as per contract": "h/week as per contract",
     "Business": "Business",
     "Updating...": "Updating...",
-    "Expand days": "Expand days"
+    "Expand days": "Expand days",
+    "Create events when creating a new project": "Create events when creating a new project",
+    "Create events when a new project is created": "Create events when a new project is created"
 }

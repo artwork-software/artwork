@@ -9,6 +9,10 @@ use Artwork\Modules\Freelancer\Repositories\FreelancerRepository;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Repositories\ServiceProviderRepository;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
+use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
+use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\User\Http\Resources\UserShiftPlanResource;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Repositories\UserRepository;
@@ -24,7 +28,10 @@ class ShiftWorkerService
         private readonly UserRepository $userRepository,
         private readonly FreelancerRepository $freelancerRepository,
         private readonly ServiceProviderRepository $serviceProviderRepository,
-        private readonly WorkingHourService $workingHourService
+        private readonly WorkingHourService $workingHourService,
+        private readonly ShiftUserRepository $shiftUserRepository,
+        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
+        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository
     ) {
     }
 
@@ -33,7 +40,7 @@ class ShiftWorkerService
      * @throws Throwable
      */
     public function getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
-        array $workerIdsAndTypes
+        array $workerIdsAndTypes,
     ): array {
         $workerData = [];
 
@@ -53,7 +60,7 @@ class ShiftWorkerService
      */
     public function getResolvedWorkerShiftPlanResourceByIdAndTypeWithPlannedWorkingHours(
         int $workerId,
-        int $workerType
+        int $workerType,
     ): array {
         [$startDate, $endDate] = $this->userService->getUserShiftCalendarFilterDatesOrDefault(
             $this->userService->getAuthUser()
@@ -108,7 +115,7 @@ class ShiftWorkerService
                         $worker,
                         $startDate,
                         $endDate
-                    )
+                    ),
                 ],
                 $workerData
             ),
@@ -141,7 +148,7 @@ class ShiftWorkerService
      */
     public function getWorkerByIdAndType(
         int $workerId,
-        int $workerType
+        int $workerType,
     ): User|Freelancer|ServiceProvider {
         return match (true) {
             $workerType === 0 => $this->userRepository->findWorker($workerId),
@@ -151,5 +158,44 @@ class ShiftWorkerService
                 'Invalid worker type (should be user, freelancer or service_provider)'
             ),
         };
+    }
+
+    public function updateShiftWorkerQualificationToDefault(Shift $shift, int $oldShiftQualificationId): void
+    {
+        $shiftUsers = $shift
+            ->users()
+            ->wherePivot('shift_qualification_id', $oldShiftQualificationId)
+            ->get();
+
+        foreach ($shiftUsers as $shiftUser) {
+            $this->shiftUserRepository->update(
+                $shiftUser->pivot,
+                ['shift_qualification_id' => 1]
+            );
+        }
+
+        $shiftFreelancers = $shift
+            ->freelancer()
+            ->where('shift_qualification_id', $oldShiftQualificationId)
+            ->get();
+
+        foreach ($shiftFreelancers as $shiftFreelancer) {
+            $this->shiftFreelancerRepository->update(
+                $shiftFreelancer->pivot,
+                ['shift_qualification_id' => 1]
+            );
+        }
+
+        $shiftServiceProviders = $shift
+            ->serviceProvider()
+            ->where('shift_qualification_id', $oldShiftQualificationId)
+            ->get();
+
+        foreach ($shiftServiceProviders as $shiftServiceProvider) {
+            $this->shiftServiceProviderRepository->update(
+                $shiftServiceProvider->pivot,
+                ['shift_qualification_id' => 1]
+            );
+        }
     }
 }

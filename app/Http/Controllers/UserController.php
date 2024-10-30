@@ -618,17 +618,18 @@ class UserController extends Controller
     {
         $this->authorize('updateWorkProfile', User::class);
 
-        $user->assignedCrafts()->attach($request->get('craftId'));
-
-        /*$craftToAssign = Craft::find();
+        $craftToAssign = Craft::find($request->get('craftId'));
 
         if (is_null($craftToAssign)) {
             return Redirect::back();
         }
 
-        if (!$user->assignedCrafts->contains($craftToAssign)) {
-            $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }*/
+        // check if craft is already assigned
+        if ($user->assignedCrafts()->where('craft_id', $craftToAssign->id)->exists()) {
+            return Redirect::back();
+        }
+
+        $user->assignedCrafts()->attach($craftToAssign);
 
         return Redirect::back();
     }

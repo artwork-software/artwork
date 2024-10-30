@@ -692,6 +692,7 @@ class ProjectService
                 }
             }
 
+
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,

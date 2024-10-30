@@ -23,7 +23,7 @@ class CraftRepository extends BaseRepository
 
     public function getAll(array $with = [])
     {
-        return Craft::query()->with($with)->get();
+        return Craft::query()->with($with)->orderBy('position')->get();
         /*$crafts = new Collection();
         // use here chunk method to avoid memory issues
         Craft::query()->with($with)->chunk(100, function ($craftsChunk) use (&$crafts): void {

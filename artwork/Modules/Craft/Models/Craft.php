@@ -37,7 +37,8 @@ class Craft extends Model
         'assignable_by_all',
         'color',
         'notify_days',
-        'universally_applicable'
+        'universally_applicable',
+        'position'
     ];
 
     protected $casts = [

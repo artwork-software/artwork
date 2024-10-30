@@ -141,4 +141,11 @@ class CraftService
             ];
         });
     }
+
+    public function reorder(array $crafts): void
+    {
+        foreach ($crafts as $craft) {
+            $this->craftRepository->findById($craft['id'])->update(['position' => $craft['position']]);
+        }
+    }
 }

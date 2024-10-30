@@ -254,7 +254,7 @@
                         </div>
                         <div class="w-full flex items-center justify-end gap-x-4 pb-6 px-6">
                             <BaseButton
-                                v-if="!project"
+                                v-if="!project && $can('can create events when creating a project')"
                                 @click="addProject(true)"
                                 :text="$t('Set up events')"
                                 class="mt-8 inline-flex items-center"
@@ -493,10 +493,11 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: 'ProjectCreateModal',
-    mixins: [IconLib, ColorHelper],
+    mixins: [IconLib, ColorHelper, Permissions],
     components: {
         BaseButton,
         Switch,

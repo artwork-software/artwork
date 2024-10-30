@@ -52,4 +52,9 @@ readonly class ShiftQualificationService
 
         return false;
     }
+
+    public function delete(ShiftQualification $shiftQualification): bool
+    {
+        return $this->shiftQualificationRepository->delete($shiftQualification);
+    }
 }

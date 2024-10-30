@@ -3,41 +3,46 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
+use Artwork\Modules\Shift\Services\ShiftWorkerService;
 use Artwork\Modules\ShiftQualification\Http\Requests\StoreShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Routing\Redirector;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class ShiftQualificationController extends Controller
 {
     public function __construct(
-        private ShiftsQualificationsService $shiftsQualificationsService
+        private readonly ShiftsQualificationsService $shiftsQualificationsService,
+        private readonly ShiftQualificationService $shiftQualificationService,
+        private readonly ShiftWorkerService $shiftWorkerService,
+        private readonly Redirector $redirector,
+        private readonly LoggerInterface $logger
     ) {
         $this->authorizeResource(ShiftQualification::class, 'shift_qualification');
     }
 
     public function store(
         StoreShiftQualificationRequest $storeShiftQualificationRequest,
-        ShiftQualificationService $shiftQualificationService
     ): RedirectResponse {
         try {
-            $shiftQualificationService->createFromRequest($storeShiftQualificationRequest);
+            $this->shiftQualificationService->createFromRequest($storeShiftQualificationRequest);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
+            $this->logger->error($t->getMessage());
 
-            return Redirect::back()->with(
+            return $this->redirector->back()->with(
                 'error',
                 ['shift_qualification' => __('flash-messages.shift-qualification.error.create')]
             );
         }
 
-        return Redirect::back()->with(
+        return $this->redirector->back()->with(
             'success',
             ['shift_qualification' => __('flash-messages.shift-qualification.success.create')]
         );
@@ -46,20 +51,19 @@ class ShiftQualificationController extends Controller
     public function update(
         UpdateShiftQualificationRequest $updateShiftQualificationRequest,
         ShiftQualification $shiftQualification,
-        ShiftQualificationService $shiftQualificationService
     ): RedirectResponse {
         try {
-            $shiftQualificationService->updateFromRequest($updateShiftQualificationRequest, $shiftQualification);
+            $this->shiftQualificationService->updateFromRequest($updateShiftQualificationRequest, $shiftQualification);
         } catch (Throwable $t) {
-            Log::error($t->getMessage());
+            $this->logger->error($t->getMessage());
 
-            return Redirect::back()->with(
+            return $this->redirector->back()->with(
                 'error',
                 ['shift_qualification' => __('flash-messages.shift-qualification.error.update')]
             );
         }
 
-        return Redirect::back()->with(
+        return $this->redirector->back()->with(
             'success',
             ['shift_qualification' => __('flash-messages.shift-qualification.success.update')]
         );
@@ -69,5 +73,68 @@ class ShiftQualificationController extends Controller
     {
         $this->shiftsQualificationsService
             ->increaseValueOrCreateWithOneByQualification($shift->id, $request->integer('qualification_id'));
+    }
+
+    public function destroy(
+        ShiftQualification $shiftQualification,
+    ) {
+        if (($shiftQualificationIdToDelete = $shiftQualification->getAttribute('id')) === 1) {
+            return $this->redirector->back();
+        }
+
+        try {
+            $shiftsQualificationsToHandle = $this->shiftsQualificationsService->findAllByShiftQualificationId(
+                $shiftQualificationIdToDelete
+            );
+
+            /** @var ShiftsQualifications $shiftsQualification */
+            foreach ($shiftsQualificationsToHandle as $shiftsQualification) {
+                /** @var Shift $shiftByQualification */
+                $shiftByQualification = $shiftsQualification
+                    ->shift()
+                    ->first();
+
+                $shiftHasDefaultQualification = $shiftByQualification
+                        ->shiftsQualifications()
+                        ->where('shift_qualification_id', 1)
+                        ->count() > 0;
+
+                if (!$shiftHasDefaultQualification) {
+                    $this->shiftsQualificationsService->createShiftsQualificationForShift(
+                        $shiftByQualification->getAttribute('id'),
+                        [
+                            'shift_qualification_id' => 1,
+                            'value' => 1
+                        ]
+                    );
+                }
+
+                $this->shiftWorkerService->updateShiftWorkerQualificationToDefault(
+                    $shiftByQualification,
+                    $shiftQualificationIdToDelete,
+                );
+
+                $this->shiftsQualificationsService->increaseValueOrCreateWithOne(
+                    $shiftByQualification->getAttribute('id'),
+                    1
+                );
+
+                $this->shiftsQualificationsService->forceDelete($shiftsQualification);
+            }
+
+            $this->shiftQualificationService->delete($shiftQualification);
+        } catch (Throwable $t) {
+            $this->logger->error($t->getMessage());
+
+            return $this->redirector->back()->with(
+                'error',
+                ['shift_qualification' => __('flash-messages.shift-qualification.error.destroy')]
+            );
+        }
+
+        return $this->redirector->back()->with(
+            'success',
+            ['shift_qualification' => __('flash-messages.shift-qualification.success.destroy')]
+        );
     }
 }

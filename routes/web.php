@@ -1259,7 +1259,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:artwork admin');
 
-    Route::resource('shift-qualifications', ShiftQualificationController::class)->only(['store', 'update']);
+    Route::resource('shift-qualifications', ShiftQualificationController::class)->only(
+        [
+            'store',
+            'update',
+            'destroy'
+        ]
+    );
 
     Route::group(['prefix' => 'day-service'], function (): void {
         Route::get('index', [DayServiceController::class, 'index'])->name('day-service.index');

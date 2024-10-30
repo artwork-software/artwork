@@ -167,7 +167,7 @@ export default defineComponent({
                 universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
-            craftShiftPlaner: this.craftToEdit.craft_shift_planer ? this.craftToEdit.craft_shift_planer : []
+            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : []
         }
     },
     unmounted() {

@@ -43,7 +43,7 @@ export default {
     <div class="my-3">
         <div>
             <div class="h-9 flex items-center cursor-pointer" @click="showCraftFilter = !showCraftFilter">
-                <div class=""  :class="is_tiny ? 'flex items-center text-white text-xs' : 'flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500'">
+                <div class="" :class="is_tiny ? 'flex items-center text-white text-xs' : 'flex w-full py-2 justify-between rounded-lg text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500'">
                     {{ $t('Crafts') }}
 
                     <IconChevronDown v-if="!showCraftFilter" class="w-4 h-4 ml-2"/>
@@ -55,7 +55,7 @@ export default {
                 <div v-for="craft in crafts" :key="craft.id">
                     <div class="relative flex items-start mb-2">
                         <div class="flex h-6 items-center">
-                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts?.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
+                            <input @change="addCraftToUser(craft.id)" :id="'craft-' + craft.id" :checked="selectedCrafts?.includes(craft.id)" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist-dark" />
                         </div>
                         <div class="ml-2 text-sm leading-6">
                             <label :for="'craft-' + craft.id" class="font-medium text-white">{{ craft.name }}</label>

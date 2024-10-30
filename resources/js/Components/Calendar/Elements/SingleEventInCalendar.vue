@@ -191,35 +191,35 @@
             <div class="relative mr-3 mt-8 invisible group-hover:visible">
                 <BaseMenu menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
                     <MenuItem v-slot="{ active }">
-                        <a href="#" @click="$emit('editEvent', event)"
+                        <div @click="$emit('editEvent', event)"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                             {{ $t('edit')}}
-                        </a>
+                        </div>
                     </MenuItem>
                     <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1" v-slot="{ active }">
-                        <a href="#"
+                        <div
                                 @click="$emit('openAddSubEventModal', event, 'create', null)"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6 mr-2"/>
                             {{$t('Add Sub-Event')}}
-                        </a>
+                        </div>
                     </MenuItem>
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                        <a href="#"
+                        <div
                                 @click="$emit('showDeclineEventModal', event)"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconX stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Decline event')}}
-                        </a>
+                        </div>
                     </MenuItem>
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                        <a href="#"
+                        <div
                                 @click="$emit('openConfirmModal', event, 'main')"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                             <IconTrash stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Delete')}}
-                        </a>
+                        </div>
                     </MenuItem>
                 </BaseMenu>
             </div>
@@ -418,7 +418,7 @@ const props = defineProps({
         required: true
     },
     firstProjectShiftTabId: {
-        type: Number,
+        type: [Number, String],
         required: false,
         default: null
     }

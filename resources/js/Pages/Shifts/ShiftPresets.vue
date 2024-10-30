@@ -2,6 +2,10 @@
     <ShiftHeader>
         <div class="w-full flex my-auto items-center justify-between mb-3 mt-10">
             <div class="flex items-center justify-between">
+                <div class="flex ml-5 mr-4 headline1">
+                    {{$t('All shift templates')}}
+                </div>
+                <!-- Right now the templates are not divided in eventtypes so this is not needed
                 <Listbox as="div" class="flex w-72 ml-5" v-model="selectedFilter">
                     <ListboxButton
                         class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
@@ -31,6 +35,7 @@
                         </ListboxOptions>
                     </transition>
                 </Listbox>
+                -->
                 <button @click="showAddShiftPresetModal = true" type="button" class="rounded-full bg-artwork-buttons-create p-1 mr-1 text-white shadow-sm hover:bg-artwork-buttons-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-hover">
                     <PlusIcon class="h-4 w-4" aria-hidden="true" />
                 </button>

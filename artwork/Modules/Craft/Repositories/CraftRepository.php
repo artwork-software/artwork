@@ -13,12 +13,12 @@ class CraftRepository extends BaseRepository
      */
     public function syncUsers(Craft $craft, array $userIds): array
     {
-        return $craft->users()->withTimestamps()->sync($userIds);
+        return $craft->craftShiftPlaner()->withTimestamps()->sync($userIds);
     }
 
     public function detachUsers(Craft $craft): int
     {
-        return $craft->users()->detach();
+        return $craft->craftShiftPlaner()->detach();
     }
 
     public function getAll(array $with = [])

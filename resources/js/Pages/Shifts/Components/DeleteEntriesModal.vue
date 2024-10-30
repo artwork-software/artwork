@@ -1,25 +1,29 @@
 <template>
     <BaseModal @closed="$emit('close')">
-        <ModalHeader title="Löschen"
-        description="Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?"/>
-
+        <ModalHeader
+            title="Löschen"
+            description="Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?"
+        />
         <div class="flex items-center justify-center gap-4">
-            <div>
-                <button type="button" @click="submitForm(false)" class="cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                    {{ $t('Delete Entries') }}
-                </button>
-            </div>
-            <div>
-                <button type="button" @click="submitForm(true)" class="cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                    {{ $t('Delete Entries & new Entries') }}
-                </button>
-            </div>
+            <button
+                type="button"
+                @click="handleSubmit(false)"
+                class="bg-artwork-messages-error hover:bg-artwork-messages-error/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create"
+            >
+                {{ $t('Delete Entries') }}
+            </button>
+            <button
+                type="button"
+                @click="handleSubmit(true)"
+                class="bg-artwork-buttons-create hover:bg-artwork-buttons-create/90 rounded-md px-14 py-3 text-sm font-semibold text-white shadow-sm focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create"
+            >
+                {{ $t('Delete Entries & new Entries') }}
+            </button>
         </div>
     </BaseModal>
 </template>
 
 <script setup>
-
 import {useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
@@ -29,26 +33,22 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-})
+});
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(["close"]);
 
 const multiEditCellForm = useForm({
     entities: props.multiEditCellByDayAndUser,
-})
+});
 
-const submitForm = (boolean) => {
-    multiEditCellForm.post(route('multi-edit.cell.delete'), {
+const handleSubmit = (preserveState) => {
+    multiEditCellForm.post(route("multi-edit.cell.delete"), {
         preserveScroll: true,
-        preserveState: boolean,
-        onSuccess: () => {
-            emit('close', boolean)
-        }
-    })
-}
-
+        preserveState,
+        onSuccess: () => emit("close", preserveState),
+    });
+};
 </script>
 
 <style scoped>
-
 </style>

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 
 /**
@@ -87,9 +88,9 @@ class ServiceProvider extends Model implements DayServiceable
             ->withPivot('id', 'shift_qualification_id', 'craft_abbreviation');
     }
 
-    public function assignedCrafts(): BelongsToMany
+    public function assignedCrafts(): morphToMany
     {
-        return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
+        return $this->morphToMany(Craft::class, 'craftable');
     }
 
     public function shiftQualifications(): BelongsToMany

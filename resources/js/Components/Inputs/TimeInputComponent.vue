@@ -5,7 +5,7 @@
                :value="this.modelValue"
                @input="this.$emit('update:modelValue', $event.target.value)"
                :type="modelValue ? 'time' : 'text'"
-               onfocus="(this.type='time')"
+               onfocus="(this.type='time', this.value === '' ? this.value='00:00' : '')"
                :required="required"
                class="input peer"
                :class="[isSmall ? '' : 'h-12', classes]"
@@ -37,7 +37,7 @@ export default defineComponent({
             default: false
         },
         modelValue: {
-            type: String,
+            type: [String, null],
             required: true
         },
         isSmall: {

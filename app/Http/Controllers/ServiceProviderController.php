@@ -140,7 +140,9 @@ class ServiceProviderController extends Controller
     {
         $this->authorize('updateWorkProfile', ServiceProvider::class);
 
-        $craftToAssign = Craft::find($request->get('craftId'));
+        $serviceProvider->assignedCrafts()->attach($request->get('craftId'));
+
+        /*$craftToAssign = Craft::find($request->get('craftId'));
 
         if (is_null($craftToAssign)) {
             return Redirect::back();
@@ -148,7 +150,7 @@ class ServiceProviderController extends Controller
 
         if (!$serviceProvider->assignedCrafts->contains($craftToAssign)) {
             $serviceProvider->assignedCrafts()->attach(Craft::find($request->get('craftId')));
-        }
+        }*/
 
         return Redirect::back();
     }

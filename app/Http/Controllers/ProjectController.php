@@ -1909,6 +1909,7 @@ class ProjectController extends Controller
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
+        $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
         $loadedProjectInformation = [];
 
         $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
@@ -2045,7 +2046,7 @@ class ProjectController extends Controller
                     $headerObject->project->project_managers = $project->managerUsers;
                     break;
                 case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-                    $headerObject->project->cost_center = $project->costCenter;
+
                     $headerObject->project->collecting_society = $project->collectingSociety;
                     $loadedProjectInformation['BudgetInformation'] = $this->projectTabService
                         ->getBudgetInformationDto(

@@ -89,19 +89,8 @@
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                 viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                   transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                          stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                          stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-0 mb-0.5'">
+                            <component is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
                         </div>
                     </div>
                     <div v-if="showUserOverview" @mousedown="startResize"
@@ -685,7 +674,12 @@ export default {
                 usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
             multiEditCellByDayAndUser: {},
             showCellMultiEditModal: false,
-            openCellMultiEditDelete: false
+            openCellMultiEditDelete: false,
+            preventNextNavigation: false,
+            resolveModalClose: null,
+            waitForModalClose: false,
+            navigationGuardActive: true,
+            originalVisit: null,
         }
     },
     mounted() {
@@ -694,6 +688,8 @@ export default {
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
         window.addEventListener('resize', this.updateHeight);
         this.updateHeight();
+
+        this.setupInertiaNavigationGuard();
 
         /**
          * this code needs to be built in, when the observer is fixed and the observer is used
@@ -883,6 +879,32 @@ export default {
         },
     },
     methods: {
+        setupInertiaNavigationGuard() {
+            this.originalVisit = router.visit;
+            router.visit = async (url, options = {}) => {
+                if (this.multiEditMode && this.userForMultiEdit && !this.preventNextNavigation) {
+                    const confirmation = confirm(this.$t('Would you like to save the changes before you leave the page?'));
+
+                    if (confirmation) {
+                        this.preventNextNavigation = true;
+
+                        try {
+                            await this.initializeMultiEditSave();
+
+                            if (!this.waitForModalClose) {
+                                this.originalVisit.call(router, url, options);
+                            }
+                        } finally {
+                            this.preventNextNavigation = false;
+                        }
+                    } else {
+                        this.originalVisit.call(router, url, options);
+                    }
+                } else if (!this.waitForModalClose) {
+                    this.originalVisit.call(router, url, options);
+                }
+            };
+        },
         sortUsersByType(users, sortByInternExtern = false, isDescending = false) {
 
             if (!this.useFrontendFilter) {
@@ -1101,6 +1123,10 @@ export default {
         handleCellClick(user, day) {
             if(this.multiEditMode && !this.userForMultiEdit) {
                 this.handleMultiEdit(user, day);
+                return;
+            }
+
+            if(this.multiEditMode && this.userForMultiEdit) {
                 return;
             }
 
@@ -1407,11 +1433,12 @@ export default {
                 this.userToMultiEditCurrentShifts = this.userForMultiEdit.shift_ids;
             }
         },
-        initializeMultiEditSave() {
+        async initializeMultiEditSave() {
             this.shiftsToHandleOnMultiEdit.removeFromShift = this.userToMultiEditCurrentShifts.filter(
                 (shift_id) => !this.userForMultiEdit.shift_ids.includes(shift_id)
             );
 
+            // Prüfen, ob Qualifikationen erforderlich sind
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
                 this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
                     let desiredShift = shiftAndEvent.shift;
@@ -1457,21 +1484,31 @@ export default {
                         shift: desiredShift,
                         availableSlots: availableShiftQualificationSlots
                     });
-                })
+                });
             }
 
             if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
                 this.showShiftsQualificationsAssignmentModal = true;
-                return;
-            }
+                this.waitForModalClose = true;
 
-            this.saveMultiEdit();
+                // Rückgabe einer Promise, die aufgelöst wird, wenn das Modal geschlossen wurde
+                return new Promise((resolve) => {
+                    this.resolveModalClose = resolve;
+                });
+            }
+            await this.saveMultiEdit();
+            this.waitForModalClose = false;
         },
-        closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts) {
+        async closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts) {
             this.showShiftsQualificationsAssignmentModal = false;
             this.showShiftsQualificationsAssignmentModalShifts = [];
 
             if (!closedForAssignment) {
+                if (this.resolveModalClose) {
+                    this.resolveModalClose();
+                    this.resolveModalClose = null;
+                }
+                this.waitForModalClose = false;
                 return;
             }
 
@@ -1482,9 +1519,15 @@ export default {
                 });
             });
 
-            this.saveMultiEdit();
+            await this.saveMultiEdit();
+
+            if (this.resolveModalClose) {
+                this.resolveModalClose();
+                this.resolveModalClose = null;
+            }
+            this.waitForModalClose = false;
         },
-        saveMultiEdit() {
+        async saveMultiEdit() {
             if (
                 this.shiftsToHandleOnMultiEdit.assignToShift.length === 0 &&
                 this.shiftsToHandleOnMultiEdit.removeFromShift.length === 0
@@ -1705,6 +1748,9 @@ export default {
         window.removeEventListener('resize', this.updateHeight);
         document.removeEventListener('mousemove', this.resizing);
         document.removeEventListener('mouseup', this.stopResize);
+        if (this.originalVisit) {
+            router.visit = this.originalVisit;
+        }
     },
     beforeDestroy() {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);

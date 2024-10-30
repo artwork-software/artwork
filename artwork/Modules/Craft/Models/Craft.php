@@ -3,7 +3,9 @@
 namespace Artwork\Modules\Craft\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,13 +45,12 @@ class Craft extends Model
         'universally_applicable' => 'boolean',
     ];
 
-    protected $with = ['users'];
+    protected $with = ['craftShiftPlaner'];
 
-    public function users(): BelongsToMany
+    public function craftShiftPlaner(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'craft_users');
+        return $this->belongsToMany(User::class, 'craft_users', 'craft_id', 'user_id');
     }
-
     public function scopeIsAssignableByAll(Builder $builder): Builder
     {
         return $builder->where('assignable_by_all', '=', true);
@@ -69,5 +70,25 @@ class Craft extends Model
         )
             ->orderBy('order')
             ->select(['id', 'craft_id', 'name', 'order']);
+    }
+
+    // Falls du die unterschiedlichen Typen spezifisch ansprechen möchtest:
+    public function users(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(User::class, 'craftable')->without([
+            'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
+        ])->with(['shiftQualifications']);
+    }
+
+    public function freelancers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(Freelancer::class, 'craftable')
+            ->with(['shiftQualifications']);
+    }
+
+    public function serviceProviders(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    {
+        return $this->morphedByMany(ServiceProvider::class, 'craftable')
+            ->with(['shiftQualifications']);
     }
 }

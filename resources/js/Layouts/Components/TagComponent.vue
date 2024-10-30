@@ -32,7 +32,7 @@ export default {
     mixins: [ColorHelper],
     props: {
         property: {
-            type: Object,
+            type: [Object, String, Number],
             required: false,
             default: null
         },

@@ -337,6 +337,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Set the availability of the user",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CREATE_EVENTS_WHEN_CREATING_PROJECT->value,
+                'name_de' => "Termine einrichten bei neuem Projekt",
+                'translation_key' => "Create events when creating a new project",
+                'group' => 'Projects',
+                'tooltipText' => 'Erstelle Termine, wenn ein neues Projekt erstellt wird',
+                'tooltipKey' => "Create events when a new project is created",
+                'checked' => false
+            ],
         ];
     }
 

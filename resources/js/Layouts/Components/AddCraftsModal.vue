@@ -87,7 +87,7 @@
             </div>
         </Listbox>
         <div class="mt-3">
-            <div v-for="user in users" class="my-2">
+            <div v-for="user in craftShiftPlaner" class="my-2">
                 <div class="flex col-span-2">
                     <div class="flex items-center">
                         <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
@@ -167,7 +167,7 @@ export default defineComponent({
                 universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
-            users: this.craftToEdit ? this.craftToEdit.users : []
+            craftShiftPlaner: this.craftToEdit.craft_shift_planer ? this.craftToEdit.craft_shift_planer : []
         }
     },
     unmounted() {
@@ -180,11 +180,11 @@ export default defineComponent({
             this.$emit('closed', bool)
         },
         addOrRemoveFormUserList(user){
-            const userIds = this.users.map(user => user.id);
+            const userIds = this.craftShiftPlaner.map(user => user.id);
             if(userIds.includes(user.id)){
-                this.users = this.users.filter(u => u.id !== user.id)
+                this.craftShiftPlaner = this.craftShiftPlaner.filter(u => u.id !== user.id)
             } else {
-                this.users.push(user)
+                this.craftShiftPlaner.push(user)
             }
         },
         saveCraft(){
@@ -194,7 +194,7 @@ export default defineComponent({
 
             if(!this.enabled){
                 this.craft.assignable_by_all = false
-                this.users.forEach((user) => {
+                this.craftShiftPlaner.forEach((user) => {
                     this.craft.users.push(user.id);
                 })
             } else {

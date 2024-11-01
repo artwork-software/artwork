@@ -1438,7 +1438,6 @@ export default {
                 (shift_id) => !this.userForMultiEdit.shift_ids.includes(shift_id)
             );
 
-            // Prüfen, ob Qualifikationen erforderlich sind
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
                 this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
                     let desiredShift = shiftAndEvent.shift;
@@ -1491,7 +1490,6 @@ export default {
                 this.showShiftsQualificationsAssignmentModal = true;
                 this.waitForModalClose = true;
 
-                // Rückgabe einer Promise, die aufgelöst wird, wenn das Modal geschlossen wurde
                 return new Promise((resolve) => {
                     this.resolveModalClose = resolve;
                 });

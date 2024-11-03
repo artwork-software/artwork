@@ -1,4 +1,5 @@
 <script>
+
 export default class {
     eventId = null;
     timelinesAndShifts = null;
@@ -7,7 +8,10 @@ export default class {
     shiftIdentifier = null;
     elementsHeightInPixelsPerMinute = null;
     elementsHeaderHeight = null;
-    defaultMarginToAdd = 16;
+    //if hintElement.innerText is used again use 16px, otherwise 2px
+    //defaultMarginToAdd = 16;
+    defaultMarginToAdd = 2;
+    debug = true;
 
     constructor(
         eventId,
@@ -36,53 +40,40 @@ export default class {
         this.shiftIdentifier = shiftIdentifier;
         this.elementsHeightInPixelsPerMinute = elementsHeightInPixelsPerMinute;
         this.elementsHeaderHeight = elementsHeaderHeight;
+
+        if (this.debug) {
+            console.debug('eventId', eventId);
+            console.debug('elementsHeightInPixelsPerMinute', elementsHeightInPixelsPerMinute);
+            console.debug('elementsHeaderHeight', elementsHeaderHeight);
+        }
     }
 
     initialize() {
+        if (this.debug) {
+            console.debug('Run: initialize()');
+        }
+
         if (this.timelinesAndShifts.length === 0) {
             return;
         }
 
-        let overlayDiv = this.addOverlayDiv()
-
         this.calculateHeights();
         this.calculateMargins();
-
-        this.removeOverlayDiv(overlayDiv);
     }
 
     reinitialize() {
-        const eventContainer = this.getEventContainer(),
-            overlayDiv = this.addOverlayDiv();
+        if (this.debug) {
+            console.debug('Run: reinitialize()');
+        }
+
+        const eventContainer = this.getEventContainer();
 
         //remove height styles from containers causing the browser to recalculate the elements height
         eventContainer.querySelectorAll('[id^=' + this.shiftIdentifier + ']')
             .forEach((shiftContainer) => { shiftContainer.style.height = null; });
         eventContainer.querySelectorAll('[id^=' + this.timelineIdentifier + ']')
             .forEach((timelineContainer) => { timelineContainer.style.height = null; });
-
-        this.removeOverlayDiv(overlayDiv);
         this.initialize();
-    }
-
-    addOverlayDiv() {
-        //just in case the operation takes some time
-        const overlayDiv = document.createElement('div'),
-            overlayText = document.createElement('p');
-
-        overlayDiv.id = 'overlayDiv';
-        overlayDiv.className = 'fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50';
-        overlayText.className = 'text-white text-center';
-        overlayText.innerText = 'Ansicht wird aktualisiert...'; //translation
-
-        overlayDiv.appendChild(overlayText);
-        document.body.appendChild(overlayDiv);
-
-        return overlayDiv;
-    }
-
-    removeOverlayDiv(overlayDiv) {
-        document.body.removeChild(overlayDiv);
     }
 
     getSortedTimelinesAndShifts() {
@@ -101,6 +92,10 @@ export default class {
     }
 
     calculateHeights() {
+        if (this.debug) {
+            console.debug('Run: calculateHeights()');
+        }
+
         this.getSortedTimelinesAndShifts().forEach((element) => {
             let isShiftObject = this.isShiftObject(element),
                 domElement = this.getEventContainer().querySelector(
@@ -122,20 +117,63 @@ export default class {
     }
 
     calculateMargins() {
-        this.getSortedTimelinesAndShifts().forEach((currentTimelineOrShift, index) => {
+        let sortedTimelinesAndShifts = this.getSortedTimelinesAndShifts();
+
+        if (this.debug) {
+            console.debug('Run: calculateMargins()');
+            console.debug('sortedTimelinesAndShifts', sortedTimelinesAndShifts);
+        }
+
+        sortedTimelinesAndShifts.forEach((currentTimelineOrShift, index) => {
+            if (this.debug) {
+                console.debug('index: ' + index);
+            }
+
+            let element = this.getTimelineOrShiftElement(currentTimelineOrShift);
+
+            if (this.debug) {
+                element.classList.add('relative');
+                let debugInformationDiv = document.createElement('div');
+                debugInformationDiv.id = currentTimelineOrShift.id + '-event-' + this.eventId;
+                debugInformationDiv.innerHTML = 'Position: ' + index;
+                debugInformationDiv.classList.add(
+                    'text-xs',
+                    'absolute',
+                    'w-full',
+                    'border-2',
+                    'border-red-700',
+                    'p-1',
+                    'bottom-0'
+                );
+
+                element.appendChild(debugInformationDiv);
+            }
+
             if (index === 0) {
                 //no margin for first item
                 return;
             }
 
             let currentIsShiftObject = this.isShiftObject(currentTimelineOrShift);
-            let element = this.getTimelineOrShiftElement(currentTimelineOrShift);
             let previousTimelineOrShift = this.timelinesAndShifts[(index - 1)];
-            let previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShift);
             let previousIsShiftObject = this.isShiftObject(previousTimelineOrShift);
+            let previousTimelineOrShiftElement = this.getTimelineOrShiftElement(previousTimelineOrShift);
+
+            if (this.debug) {
+                console.debug('currentTimelineOrShift', currentTimelineOrShift);
+                console.debug('currentIsShiftObject', currentIsShiftObject);
+                console.debug('previousTimelineOrShift', previousTimelineOrShift);
+                console.debug('previousIsShiftObject', previousIsShiftObject);
+            }
 
             //handle timeline after timeline placement
             if (!currentIsShiftObject && !previousIsShiftObject) {
+                if (this.debug) {
+                    console.debug('Case: Handle timeline after timeline placement');
+                    document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                        ' - timeline after timeline - previous';
+                }
+
                 //if timeline after timeline is placed we just need to add 2 pixel margin top and calculate hint
                 let diff = this.getDiffToPreviousElementsEndDate(currentTimelineOrShift, previousTimelineOrShift);
 
@@ -151,9 +189,16 @@ export default class {
 
             //handle timeline after shift placement
             if (!currentIsShiftObject && previousIsShiftObject) {
+                if (this.debug) {
+                    console.debug('Case: Handle timeline after shift placement');
+                }
                 let marginTop = this.getElementMarginTop(previousTimelineOrShiftElement);
 
                 if (this.startsIdentical(previousTimelineOrShift, currentTimelineOrShift)) {
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - timeline after shift - previous timelines';
+                    }
                     this.getPreviousTimelines(index).forEach(
                         (previousTimeline) => {
                             let tmp = this.getTimelineOrShiftElement(previousTimeline);
@@ -167,6 +212,21 @@ export default class {
                     }
 
                     this.setElementMarginTop(element, marginTop);
+                    return;
+                }
+
+                //if there are previous timelines and previous timeline ends in previous shift and current timeline
+                //start in previous shift place it right after it
+                let previousTimelines = this.getPreviousTimelines(index);
+                if (
+                    previousTimelines.length > 0 &&
+                    this.endsInBetween(previousTimelines.pop(), previousTimelineOrShift)
+                ) {
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - timeline after shift - right after previous timeline';
+                    }
+                    this.setElementMarginTop(element, 2);
                     return;
                 }
 
@@ -226,11 +286,18 @@ export default class {
                 if (diffToPreviousHandling) {
                     this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
                 }
+                if (this.debug) {
+                    document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                        ' - timeline after shift - previous';
+                }
                 return;
             }
 
             //handle shift after timeline placement
             if (currentIsShiftObject && !previousIsShiftObject) {
+                if (this.debug) {
+                    console.debug('Case: Handle shift after timeline placement');
+                }
                 if ((index - 1) === 0) {
                     //previous element also was first element
                     let desiredHeightForCalculation = 0;
@@ -259,6 +326,11 @@ export default class {
                     if (diffToPreviousHandling) {
                         this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
                     }
+
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after timeline - previous first element';
+                    }
                     return;
                 }
 
@@ -277,6 +349,10 @@ export default class {
                     )
 
                     this.setElementMarginTop(element, marginTop);
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after timeline - previous timelines';
+                    }
                     return;
                 }
 
@@ -319,8 +395,16 @@ export default class {
                             element,
                             this.getElementMarginTop(previousTimelineOrShiftElement) + marginTop
                         );
-
+                        if (this.debug) {
+                            document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                                ' - shift after timeline, previous same starting - replaced by biggest previous';
+                        }
                         return;
+                    } else {
+                        if (this.debug) {
+                            document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                                ' - shift after timeline same starting - previous';
+                        }
                     }
 
                     if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
@@ -342,6 +426,10 @@ export default class {
                         ) + 8; //(+8px margin from event heading bar)
 
                         this.setElementMarginTop(element, marginTop);
+                        if (this.debug) {
+                            document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                                ' - shift after timeline same starting in between - previous';
+                        }
                         return;
                     }
 
@@ -358,21 +446,35 @@ export default class {
 
                     this.setElementMarginTop(element, marginTop);
                     this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
-
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after timeline same starting - previous';
+                    }
                     return;
                 }
 
                 let marginTop = this.elementsHeaderHeight;
 
                 if (this.startsInBetween(previousTimelineOrShift, currentTimelineOrShift)) {
-                    marginTop += this.getElementMarginTop(previousTimelineOrShiftElement);
+                    //get timelines except the previous one = index - 1
+                    this.getPreviousTimelines((index - 1)).forEach(
+                        (previousTimeline) => {
+                            let tmp = this.getTimelineOrShiftElement(previousTimeline);
+                            marginTop += this.getElementMarginTop(tmp);
+                            marginTop += this.getElementHeight(tmp);
+                        }
+                    );
                     marginTop += (
                         this.getDiffToPreviousElementsStartDate(
                             currentTimelineOrShift,
                             previousTimelineOrShift
                         ) * this.getElementsHeightInPixelPerMinuteDependantOnTimeline(previousTimelineOrShift)
-                    ) + 8; //(+8px margin from event heading bar)
+                    );
 
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after timeline in between - previous';
+                    }
                     this.setElementMarginTop(element, marginTop);
                     return;
                 }
@@ -389,12 +491,23 @@ export default class {
 
                 this.setElementMarginTop(element, marginTop);
                 this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+                if (this.debug) {
+                    document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                        ' - shift after timeline - previous';
+                }
                 return;
             }
 
             //handle shift after shift placement
             if (currentIsShiftObject && previousIsShiftObject) {
+                if (this.debug) {
+                    console.debug('Case: Handle shift after shift placement');
+                }
                 if (this.startsIdentical(previousTimelineOrShift, currentTimelineOrShift)) {
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after shift same starting - previous';
+                    }
                     this.setElementMarginTop(element, this.getElementMarginTop(previousTimelineOrShiftElement));
 
                     return;
@@ -439,6 +552,11 @@ export default class {
                         this.setElementMarginTop(element, marginTop);
                         this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
 
+                        if (this.debug) {
+                            document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                                ' - shift after shift - previous shift previous timeline';
+                        }
+
                         return;
                     }
                 }
@@ -471,6 +589,10 @@ export default class {
                         this.getElementMarginTop(previousTimelineOrShiftElement) +
                         desiredElementHeight
                     );
+                    if (this.debug) {
+                        document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                            ' - shift after shift in between - previous';
+                    }
                     return;
                 }
 
@@ -480,13 +602,17 @@ export default class {
                     desiredElementHeight
                 );
                 this.handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift);
+
+                if (this.debug) {
+                    document.getElementById(currentTimelineOrShift.id + '-event-' + this.eventId).innerHTML +=
+                        ' - shift after shift - previous';
+                }
             }
         });
     }
 
     handleDiffToPreviousElement(element, currentTimelineOrShift, previousTimelineOrShift) {
         let diff = this.getDiffToPreviousElementsEndDate(currentTimelineOrShift, previousTimelineOrShift);
-
         if (diff <= 0) {
             return;
         }
@@ -506,14 +632,14 @@ export default class {
             hintElement = existingHintElement;
         }
 
-        /*
-        hintElement.innerText = '--- Ungenutzt: ' + innerTextTime + ' ---';
-        */
+        //hintElement.innerText = '--- Ungenutzt: ' + innerTextTime + ' ---';
 
         if (!existingHintElement) {
             //if previous is a timeline and current too we need to add a margin top for diff hint placement
             if (!this.isShiftObject(currentTimelineOrShift) && !this.isShiftObject(previousTimelineOrShift)) {
-                element.style.marginTop = '16px';
+                //if "ungenutzt" is used again make sure to use 16px marginTop
+                element.style.marginTop = '2px';
+                //element.style.marginTop = '16px';
             }
 
             //hint element was just created, we need to insert it
@@ -618,6 +744,17 @@ export default class {
                 this.parseTimelineDateFromDateAndTime(current.start_date, current.start);
 
         return currentStartDate.getTime() < previousEndDate.getTime();
+    }
+
+    endsInBetween(previous, current) {
+        const previousEndDate = this.isShiftObject(previous) ?
+                this.parseShiftDateFromDateAndTime(previous.end_date, previous.end) :
+                this.parseTimelineDateFromDateAndTime(previous.end_date, previous.end),
+            currentEndDate = this.isShiftObject(current) ?
+                this.parseShiftDateFromDateAndTime(current.end_date, current.end) :
+                this.parseTimelineDateFromDateAndTime(current.end_date, current.end);
+
+        return previousEndDate.getTime() < currentEndDate.getTime();
     }
 
     getPreviousTimelines(index) {

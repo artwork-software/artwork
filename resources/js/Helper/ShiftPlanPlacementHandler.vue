@@ -11,7 +11,8 @@ export default class {
     //if hintElement.innerText is used again use 16px, otherwise 2px
     //defaultMarginToAdd = 16;
     defaultMarginToAdd = 2;
-    debug = true;
+    //set to true for debug information
+    debug = false;
 
     constructor(
         eventId,

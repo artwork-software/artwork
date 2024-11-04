@@ -3,22 +3,20 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "sockets": "soketi start"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.7",
         "@tailwindcss/typography": "^0.5.13",
         "@vitejs/plugin-vue": "^5.0.5",
         "autoprefixer": "^10.4.5",
-        "axios": "1.7.2",
         "laravel-echo": "^1.16.1",
         "laravel-vite-plugin": "^1.0.4",
         "postcss": "^8.4.38",
         "postcss-import": "^16.1.0",
-        "pusher-js": "^8.4.0-rc2",
         "tailwindcss": "^3.4.4",
-        "vite": "^5.3.1",
-        "vue": "^3.4.29"
+        "vite": "^5.3.1"
     },
     "dependencies": {
         "@headlessui-float/vue": "^0.15.0",
@@ -26,10 +24,14 @@
         "@heroicons/vue": "^1.0.6",
         "@inertiajs/vue3": "^1.2.0",
         "@sentry/vue": "^7.40.0",
+        "@soketi/soketi": "^1.6.1",
+        "axios": "1.7.2",
         "@tabler/icons": "^3.6.0",
         "@tabler/icons-vue": "^3.6.0",
         "@vuepic/vue-datepicker": "^8.8.0",
         "dayjs": "^1.11.11",
+        "pusher-js": "^8.4.0-rc2",
+        "vue": "^3.4.29",
         "linkify-it": "^5.0.0",
         "lodash.debounce": "^4.0.8",
         "mathjax": "4.0.0-beta.6",

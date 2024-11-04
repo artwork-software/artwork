@@ -2,16 +2,12 @@
 
 namespace Artwork\Modules\IndividualTimes\Services;
 
-use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Models\IndividualTime;
 use Artwork\Modules\IndividualTimes\Repositories\IndividualTimeRepository;
-use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
-use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use stdClass;
 
-readonly class IndividualTimeService
+class IndividualTimeService
 {
     public function __construct(
         private readonly IndividualTimeRepository $individualTimeRepository,
@@ -26,7 +22,7 @@ readonly class IndividualTimeService
     public function updateForModel(
         $modelInstance,
         $individualTime,
-        string $title,
+        ?string $title,
         ?string $startTime,
         ?string $endTime,
         string $date

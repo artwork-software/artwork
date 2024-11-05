@@ -3,7 +3,6 @@
 namespace Artwork\Modules\Event\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use App\Http\Controllers\FilterController;
 use App\Http\Controllers\ShiftFilterController;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
@@ -35,8 +34,6 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\ServiceProvider\Http\Resources\ServiceProviderShiftPlanResource;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -919,8 +916,9 @@ readonly class EventService
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
                         $firstEventInProject->getAttribute('start_time')->startOfDay() :
                         null,
-                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
-                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $firstEventInProject && (
+                        $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
+                    ) ? $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
                         null,
                 ];
             } else {
@@ -928,8 +926,10 @@ readonly class EventService
                     ($firstEventInProject = $projectService->getFirstEventInProject($project)) ?
                         $firstEventInProject->getAttribute('start_time')->startOfDay() :
                         $today->startOfDay(),
-                    $firstEventInProject && ($lastEventInProject = $projectService->getLastEventInProject($project)) ?
-                        $lastEventInProject->getAttribute('end_time')->endOfDay() :
+                    $firstEventInProject && (
+                        $latestEndingEventInProject = $projectService->getLatestEndingEventInProject($project)
+                    ) ?
+                        $latestEndingEventInProject->getAttribute('end_time')->endOfDay() :
                         $today->endOfDay(),
                 ];
             }

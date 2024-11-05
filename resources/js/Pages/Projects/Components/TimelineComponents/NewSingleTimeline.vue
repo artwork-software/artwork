@@ -66,8 +66,8 @@
 
 
             </div>
-            <div class="hidden group-hover:block" v-if="!time.clicked || editDescription">
-                <BaseMenu dots-size="h-6 w-6">
+            <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
+                <BaseMenu has-no-offset>
                     <MenuItem v-slot="{ active }">
                         <div @click="deleteTime"
                            :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">

@@ -1,6 +1,6 @@
 <template>
     <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
-        <Float auto-placement portal :offset="{ mainAxis: -10, crossAxis: 75}">
+        <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 0 : -10, crossAxis: hasNoOffset ? 0 : 75}">
             <div class="font-semibold text-artwork-buttons-context flex items-center justify-center" ref="menuButtonRef">
                 <MenuButton>
                     <IconDotsVertical
@@ -89,7 +89,12 @@ export default defineComponent({
             type: String,
             required: false,
             default: 'top',
-        }
+        },
+        hasNoOffset: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
     },
 
 });

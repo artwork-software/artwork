@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 
@@ -44,8 +44,19 @@ const multiEditCellForm = useForm({
 const handleSubmit = (preserveState) => {
     multiEditCellForm.post(route("multi-edit.cell.delete"), {
         preserveScroll: true,
-        preserveState,
-        onSuccess: () => emit("close", preserveState),
+        preserveState: true,
+        onSuccess: () => {
+            router.reload({
+                only: ['shiftPlan', 'events', 'rooms', 'shiftPlanRef'],
+                data: {
+                    preserveState: preserveState,
+                },
+                onSuccess: () => {
+                    emit("close", preserveState)
+                }
+            })
+
+        },
     });
 };
 </script>

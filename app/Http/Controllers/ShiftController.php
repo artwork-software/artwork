@@ -953,8 +953,10 @@ class ShiftController extends Controller
             $entityModel = $modelClass::findOrFail($entity['id']);
             foreach ($entity['days'] as $day) {
                 $this->individualTimeService->deleteForModel($entityModel, $day);
-
-                $vacations = $entityModel->vacations()->where('date', $day)->get();
+                $vacations = collect();
+                if (!$entityModel instanceof ServiceProvider) {
+                    $vacations = $entityModel->vacations()->where('date', $day)->get();
+                }
 
                 if ($vacations->isNotEmpty()) {
                     $this->vacationService->deleteVacationInterval($entityModel, $day);

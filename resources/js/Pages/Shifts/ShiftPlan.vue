@@ -1398,15 +1398,12 @@ export default {
         },
         closeMultiEditCellModal(){
             this.showCellMultiEditModal = false;
-            this.toggleMultiEditMode();
         },
         closeCellMultiEditDelete(boolean) {
             this.openCellMultiEditDelete = false;
 
             if(boolean) {
                 this.showCellMultiEditModal = true;
-            } else {
-                this.toggleMultiEditMode();
             }
         },
         toggleDayServiceMode() {

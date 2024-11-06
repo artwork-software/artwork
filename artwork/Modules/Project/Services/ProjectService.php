@@ -755,6 +755,14 @@ class ProjectService
         return $this->projectRepository->getLastEvent($project);
     }
 
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function getLatestEndingEventInProject(int|Project $project): Event|null
+    {
+        return $this->projectRepository->getLatestEndingEvent($project);
+    }
+
     public function getProjectsWithAccessBudgetAndManagerUsers(): Collection
     {
         return $this->projectRepository->getProjects(['access_budget', 'managerUsers']);

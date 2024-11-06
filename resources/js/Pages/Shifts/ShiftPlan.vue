@@ -89,7 +89,7 @@
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-0 mb-0.5'">
+                        <div :class="showUserOverview ? '' : ' rotate-180 fixed bottom-0 mb-0.5'">
                             <component is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
                         </div>
                     </div>

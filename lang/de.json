@@ -2059,6 +2059,8 @@
     "Do you really want to delete the selected qualification?": "Möchtest du die ausgewählte Qualifikation wirklich löschen?",
     "Delete qualification": "Qualifikation löschen",
     "Delete time preset": "Schichtzeit-Preset löschen",
-    "Do you really want to delete the selected time preset?": "Möchtest du die ausgewählte Schichtzeit-Preset wirklich löschen?"
+    "Do you really want to delete the selected time preset?": "Möchtest du die ausgewählte Schichtzeit-Preset wirklich löschen?",
+    "Aggregated": "Aggregiert",
+    "Detailed": "Detailliert"
 
 }

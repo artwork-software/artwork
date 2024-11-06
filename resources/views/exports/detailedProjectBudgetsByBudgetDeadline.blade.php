@@ -12,6 +12,7 @@
         <th>Sage</th>
         <th>Sage Erlöse</th>
         <th>Sage Ergebnis</th>
+        <th>Quelle (Name)</th>
     </tr>
     </thead>
     <tbody>
@@ -25,11 +26,10 @@
             <td>{{$row['forecast_costs']}}</td>
             <td>{{$row['forecast_earnings']}}</td>
             <td>{{$row['forecast_outcome']}}</td>
-            @if(isset($row['sage']))
-                <td>{{$row['sage']}}</td>
-                <td>{{$row['sage_revenue']}}</td>
-                <td>{{$row['sage_result']}}</td>
-            @endif
+            <td>{{$row['sage']}}</td>
+            <td>{{$row['sage_revenue']}}</td>
+            <td>{{$row['sage_result']}}</td>
+            <td>{{$row['source']}}</td>
         </tr>
     @endforeach
     </tbody>

@@ -4,7 +4,6 @@ namespace Artwork\Modules\Project\Exports;
 
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
-use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectState;
@@ -16,7 +15,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithStyles
+class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithStyles
 {
     use Exportable;
 
@@ -28,7 +27,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
 
     public function view(): View
     {
-        return view('exports.projectBudgetsByBudgetDeadline', ['rows' => $this->getRows()]);
+        return view('exports.detailedProjectBudgetsByBudgetDeadline', ['rows' => $this->getRows()]);
     }
 
     /**
@@ -45,7 +44,13 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                 ->get() as $project
         ) {
             /** @var Table $projectBudgetTable */
-            $projectBudgetTable = $project->table()->with(['columns'])->first();
+            $projectBudgetTable = $project->table()->with(
+                [
+                    'columns',
+                    'mainPositions.subPositions.subPositionRows.cells.column',
+                    'mainPositions.subPositions.subPositionRows.cells.sageAssignedData',
+                ]
+            )->first();
 
             $sageColumn = $projectBudgetTable->getAttribute('columns')->first(
                 function (Column $column) {
@@ -69,16 +74,19 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                     'sage' => 'Keine Daten vorhanden',
                     'sage_revenue' => 'Keine Daten vorhanden',
                     'sage_result' => 'Keine Daten vorhanden',
+                    'source' => 'Keine Daten vorhanden',
                 ];
 
                 continue;
             }
 
+            //aggregated project row (with forecasts, without sage values)
             $lastColumnId = $lastColumn->id;
             //get sums of last column which is not a sum or difference column
             $costSumOfLastColumn = $projectBudgetTable->costSums[$lastColumnId] ?? 0;
             $earningSumOfLastColumn = $projectBudgetTable->earningSums[$lastColumnId] ?? 0;
 
+            $premiere = Carbon::createFromFormat('Y-m-d', $project->budget_deadline)->format('d.m.Y');
             $row = [
                 'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)
                     ->format('d.m.Y'),
@@ -92,35 +100,73 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
                 'forecast_outcome' => ($earningSumOfLastColumn - $costSumOfLastColumn)
             ];
 
-            /** @var ColumnCell $sageCell */
-            if ($sageColumn !== null) {
-                $sage = $sageRevenue = 0.00;
+            $row = array_merge(
+                $row,
+                [
+                    'sage' => 0,
+                    'sage_revenue' => 0,
+                    'sage_result' => 0,
+                    'source' => explode('.', $premiere)[2]
+                ]
+            );
 
-                foreach ($sageColumn->getRelation('cells') as $sageCell) {
-                    /** @var SageAssignedData $sageAssignedData */
-                    foreach ($sageCell->getAttribute('sageAssignedData') as $sageAssignedData) {
-                        $value = $sageAssignedData->getAttribute('buchungsbetrag');
+            $rows[] = $row;
+            //detailed row by budget table subPositionRows (with sage values, without forecasts)
+            foreach ($projectBudgetTable->getAttribute('mainPositions') as $mainPosition) {
+                foreach ($mainPosition->getAttribute('subPositions') as $subPosition) {
+                    foreach ($subPosition->getAttribute('subPositionRows') as $subPositionRow) {
+                        $row = [
+                            'premiere' => $premiere,
+                            'project_name' => $project->name,
+                            'artist_or_group' => 'Noch nicht angegeben',
+                            'cost_center' => $project->costCenter?->getAttribute('name'),
+                            'project_state' => ProjectState::query()
+                                ->where('id', '=', $project->state)->first('name')?->name,
+                            'forecast_costs' => 0,
+                            'forecast_earnings' => 0,
+                            'forecast_outcome' => 0
+                        ];
 
-                        if ($value >= 0) {
-                            $sage += $value;
+                        if ($sageColumn === null) {
+                            $row = array_merge(
+                                $row,
+                                [
+                                    'sage' => 0,
+                                    'sage_revenue' => 0,
+                                    'sage_result' => 0,
+                                    'source' => 'Keine Sage-Daten vorhanden'
+                                ]
+                            );
+
+                            $rows[] = $row;
                             continue;
                         }
 
-                        $sageRevenue -= $value;
+                        /** @var ColumnCell $sageColumnCells */
+                        $sageColumnCell = $subPositionRow
+                            ->getAttribute('cells')
+                            ->first(
+                                fn(ColumnCell $cell) => (
+                                    $cell->getAttribute('column_id') === $sageColumn->getAttribute('id')
+                                )
+                            );
+
+                        $sum = $sageColumnCell->getAttribute('sageAssignedData')->sum('buchungsbetrag');
+
+                        $row = array_merge(
+                            $row,
+                            [
+                                'sage' => max($sum, 0),
+                                'sage_revenue' => 0,
+                                'sage_result' => min($sum, 0),
+                                'source' => $sageColumn->getAttribute('name')
+                            ]
+                        );
+
+                        $rows[] = $row;
                     }
                 }
-
-                $row = array_merge(
-                    $row,
-                    [
-                        'sage' => $sage,
-                        'sage_revenue' => $sageRevenue,
-                        'sage_result' => ($sageRevenue - $sage),
-                    ]
-                );
             }
-
-            $rows[] = $row;
         }
 
         return $rows;

@@ -47,15 +47,11 @@ const handleSubmit = (preserveState) => {
         preserveState: true,
         onSuccess: () => {
             router.reload({
-                only: ['shiftPlan', 'events', 'rooms', 'shiftPlanRef'],
-                data: {
-                    preserveState: preserveState,
-                },
+                only: ['shiftPlan', 'events', 'rooms', 'shiftPlanRef', 'days'],
                 onSuccess: () => {
                     emit("close", preserveState)
                 }
             })
-
         },
     });
 };

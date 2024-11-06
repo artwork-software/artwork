@@ -1398,6 +1398,16 @@ export default {
         },
         closeMultiEditCellModal(){
             this.showCellMultiEditModal = false;
+            handleReload(
+                this.rooms.map(room => room.id),
+                this.days.map(day => day.full_day),
+                Object.values(this.multiEditCellByDayAndUser).map(user => {
+                    return {
+                        id: user.id,
+                        type: user.type
+                    }
+                })
+            );
         },
         closeCellMultiEditDelete(boolean) {
             this.openCellMultiEditDelete = false;
@@ -1405,6 +1415,16 @@ export default {
             if(boolean) {
                 this.showCellMultiEditModal = true;
             }
+            handleReload(
+                this.rooms.map(room => room.id),
+                this.days.map(day => day.full_day),
+                Object.values(this.multiEditCellByDayAndUser).map(user => {
+                    return {
+                        id: user.id,
+                        type: user.type
+                    }
+                })
+            );
         },
         toggleDayServiceMode() {
             this.highlightMode = false;

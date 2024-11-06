@@ -931,12 +931,15 @@ class ShiftController extends Controller
                         $day
                     );
                 }
-                $this->vacationService->updateVacationOfEntity(
-                    $vacationType,
-                    $modelClass,
-                    $entityModel,
-                    $day
-                );
+
+                if (!$entityModel instanceof ServiceProvider) {
+                    $this->vacationService->updateVacationOfEntity(
+                        $vacationType,
+                        $modelClass,
+                        $entityModel,
+                        $day
+                    );
+                }
             }
         }
     }

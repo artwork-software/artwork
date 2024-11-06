@@ -10,7 +10,7 @@
                         <SwitchLabel as="span" class="mr-3 text-xs" :class="automaticMode ? 'font-bold' : 'text-gray-400'">
                             {{ $t('Automatic mode')}}
                         </SwitchLabel>
-                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', buffer?.cameFormBuffer ? 'bg-artwork-context-dark cursor-not-allowed' : ' cursor-pointer', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                        <Switch v-model="automaticMode" :class="[automaticMode ? 'bg-artwork-buttons-create' : 'bg-artwork-buttons-create', 'relative inline-flex h-3 w-6 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                             <span aria-hidden="true" :class="[!automaticMode  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-xs" :class="!automaticMode? 'font-bold' : 'text-gray-400'">
@@ -29,16 +29,16 @@
                     </div>
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div v-if="!automaticMode">
-                            <DateInputComponent id="start_date" v-model="timeLineForm.start_date" :label="$t('Start date')" is-dark is-small />
+                            <DateInputComponent :id="'start_date_' + timeLineForm.id" v-model="timeLineForm.start_date" :label="$t('Start date')" is-dark is-small />
                         </div>
                         <div v-if="!automaticMode">
-                            <DateInputComponent id="end_date" v-model="timeLineForm.end_date" :label="$t('End date')" is-dark is-small />
+                            <DateInputComponent :id="'end_date_' + timeLineForm.id" v-model="timeLineForm.end_date" :label="$t('End date')" is-dark is-small />
                         </div>
                         <div>
-                            <TimeInputComponent id="start" v-model="timeLineForm.start" :label="$t('Start-Time')" is-dark is-small />
+                            <TimeInputComponent :id="'start_' + timeLineForm.id" v-model="timeLineForm.start" :label="$t('Start-Time')" is-dark is-small />
                         </div>
                         <div>
-                            <TimeInputComponent id="start" v-model="timeLineForm.end" :label="$t('End-Time')" is-dark is-small />
+                            <TimeInputComponent :id="'start_' + timeLineForm.id" v-model="timeLineForm.end" :label="$t('End-Time')" is-dark is-small />
                         </div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                         </div>
                     </div>
                     <div v-else class="py-3">
-                        <TextareaComponent is-dark id="description" v-model="timeLineForm.description" :label="$t('Comment')" />
+                        <TextareaComponent is-dark :id="'editTimeLineDescription_' + timeLineForm.id" v-model="timeLineForm.description" :label="$t('Comment')" />
                     </div>
                 </div>
                 <div class="text-xs text-artwork-messages-error mt-2" v-if="helpText">
@@ -91,7 +91,7 @@ import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
 const {hasAdminRole, can} = usePermission(usePage().props)
 import {IconCircleCheck, IconNote, IconTrash} from '@tabler/icons-vue';
 import timeline from "@/Pages/Projects/Components/Timeline.vue";
-import {ref} from "vue";
+import {nextTick, ref, watch} from "vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
@@ -162,11 +162,21 @@ const saveTimeline = () => {
 
 const openCloseDescriptionEditor = (bool) => {
     editDescription.value = bool
+    nextTick(() => {
+        document.getElementById('editTimeLineDescription_' + timeLineForm.id).focus();
+    })
     addHeightToTimeline()
 }
 
 const openCloseTimeEditor = (bool) => {
     props.time.clicked = bool
+    nextTick(() => {
+        if (automaticMode.value){
+            document.getElementById('start_' + timeLineForm.id).focus();
+        } else {
+            document.getElementById('start_date_' + timeLineForm.id).focus();
+        }
+    })
     addHeightToTimeline()
 }
 
@@ -202,6 +212,17 @@ const deleteTime = () => {
         }
     )
 };
+
+// watch on automatic mode
+watch(automaticMode, () => {
+    nextTick(() => {
+        if(automaticMode.value){
+            document.getElementById('start_' + timeLineForm.id).focus();
+        } else {
+            document.getElementById('start_date_' + timeLineForm.id).focus();
+        }
+    })
+})
 
 </script>
 

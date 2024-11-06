@@ -21,10 +21,6 @@ class HolidayImport
         HolidayApi $api,
         HolidayService $holidayService
     ): void {
-        foreach ($holidayService->getAllImported() as $holiday) {
-            $holiday->delete();
-        }
-
         foreach (Subdivision::all() as $subdivision) {
             foreach (
                 $api->getHolidays(
@@ -33,6 +29,10 @@ class HolidayImport
                     $subdivision
                 ) as $holiday
             ) {
+                if ($holidayService->getBy('remote_identifier', $holiday->remoteIdentifier)) {
+                    continue;
+                }
+
                 $holidayService->createFromApi(
                     $holiday
                 );

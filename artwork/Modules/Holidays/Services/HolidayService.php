@@ -61,4 +61,9 @@ class HolidayService
     {
         return $this->holidayRepository->findAll($with);
     }
+    
+    public function getBy(string $column, mixed $value): ?Holiday
+    {
+        return $this->holidayRepository->findBy($column, $value);
+    }
 }

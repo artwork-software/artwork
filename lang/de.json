@@ -2060,7 +2060,7 @@
     "Delete qualification": "Qualifikation löschen",
     "Delete time preset": "Schichtzeit-Preset löschen",
     "Do you really want to delete the selected time preset?": "Möchtest du die ausgewählte Schichtzeit-Preset wirklich löschen?",
-    "Aggregated": "Aggregiert",
-    "Detailed": "Detailliert"
+    "Aggregated projects": "aggregierte Projekte",
+    "Itemised projects": "aufgeschlüsselte Projekte"
 
 }

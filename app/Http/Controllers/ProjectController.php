@@ -3368,7 +3368,7 @@ class ProjectController extends Controller
         string $startBudgetDeadline,
         string $endBudgetDeadline,
         Request $request
-    ): BinaryFileResponse {
+    ): BinaryFileResponse|null {
         if ($request->integer('type') === 0) {
             return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
                 ->download(
@@ -3394,6 +3394,8 @@ class ProjectController extends Controller
                 )
                 ->deleteFileAfterSend();
         }
+
+        return null;
     }
 
     public function pin(Project $project): RedirectResponse

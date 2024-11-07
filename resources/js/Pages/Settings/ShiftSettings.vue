@@ -28,62 +28,66 @@
                </div>
 
             </div>
-            <ul role="list" class="divide-y divide-gray-100">
-                <li v-for="craft in crafts" :key="craft" class="flex justify-between gap-x-6 py-5">
-                    <div class="flex gap-x-4">
-                        <div class="min-w-0 flex-auto">
-                            <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
-                                <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(craft.color), borderColor: TextColorWithDarken(craft.color, 90)}"/>
-                                {{ craft.name }} ({{ craft.abbreviation }})
-                            </p>
-                            <div v-if="craft.universally_applicable" class="mt-1 truncate xsLight">
-                                {{ $t('Universally applicable') }}
-                            </div>
-                            <div class="" v-if="craft.assignable_by_all">
-                                <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
-                            </div>
-                            <div v-else>
-                                <p class="mt-1 truncate xsLight">
-                                    {{$t('Can only be assigned by:')}}
-                                    <span class="" v-for="(user, index) in craft.craft_shift_planer">
-                                        {{ user.full_name }}<span>, </span>
-                                    </span>
-                                </p>
-                            </div>
-                            <div class="mt-1 truncate xsLight">
-                                <div v-if="craft.notify_days > 0">
-                                    {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [craft.notify_days]) }}
+                <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
+                    <template #item="{element}" :key="element.id">
+                        <div :key="element" class="flex justify-between gap-x-6 py-5" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                            <div class="flex gap-x-4">
+                                <div class="min-w-0 flex-auto">
+                                    <p class="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-x-2">
+                                        <span class="h-5 w-5 block rounded-full border" :style="{backgroundColor: backgroundColorWithOpacity(element.color), borderColor: TextColorWithDarken(element.color, 90)}"/>
+                                        {{ element.name }} ({{ element.abbreviation }})
+                                    </p>
+                                    <div v-if="element.universally_applicable" class="mt-1 truncate xsLight">
+                                        {{ $t('Universally applicable') }}
+                                    </div>
+                                    <div class="" v-if="element.assignable_by_all">
+                                        <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
+                                    </div>
+                                    <div v-else>
+                                        <p class="mt-1 truncate xsLight">
+                                            {{$t('Can only be assigned by:')}}
+                                            <span class="" v-for="(user, index) in element.craft_shift_planer">
+                                                {{ user.full_name }}<span>, </span>
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="mt-1 truncate xsLight">
+                                        <div v-if="element.notify_days > 0">
+                                            {{ $t('Notification of shifts with open demand is sent {0} day(s) before the start of the shift', [element.notify_days]) }}
+                                        </div>
+                                        <div v-else>
+                                            {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div v-else>
-                                    {{ $t('Notification of shifts that are not fully staffed takes place on the same day as the shift starts') }}
-                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <component is="IconGripVertical" class="h-5 w-5" />
+                                <BaseMenu>
+                                    <MenuItem @click="updateCraft(element)"
+                                              v-slot="{ active }">
+                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <IconEdit stroke-width="1.5"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      aria-hidden="true"/>
+                                            {{$t('Edit')}}
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem @click="openDeleteCraftModal(element)"
+                                              v-slot="{ active }">
+                                        <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <IconTrash stroke-width="1.5"
+                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                       aria-hidden="true"/>
+                                            {{$t('Delete')}}
+                                        </a>
+                                    </MenuItem>
+                                </BaseMenu>
                             </div>
                         </div>
-                    </div>
-                    <div class="hidden sm:flex sm:flex-col sm:items-end">
-                        <BaseMenu class="mt-3">
-                            <MenuItem @click="updateCraft(craft)"
-                                      v-slot="{ active }">
-                                <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconEdit stroke-width="1.5"
-                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                              aria-hidden="true"/>
-                                    {{$t('Edit')}}
-                                </a>
-                            </MenuItem>
-                            <MenuItem @click="openDeleteCraftModal(craft)"
-                                      v-slot="{ active }">
-                                <a :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <IconTrash stroke-width="1.5"
-                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                               aria-hidden="true"/>
-                                    {{$t('Delete')}}
-                                </a>
-                            </MenuItem>
-                        </BaseMenu>
-                    </div>
-                </li>
-            </ul>
+
+                    </template>
+                </draggable>
             <div class="mt-10">
                 <TinyPageHeadline
                     :title="$t('Shift-relevant Event Types')"
@@ -247,11 +251,14 @@ import ColorHelper from "@/Mixins/ColorHelper.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 import AddEditShiftTimePreset from "@/Pages/Settings/Components/AddEditShiftTimePreset.vue";
 import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
+import draggable from "vuedraggable";
+import {router} from "@inertiajs/vue3";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        draggable,
         AlertComponent,
         AddEditShiftTimePreset,
         TinyPageHeadline,
@@ -296,6 +303,7 @@ export default defineComponent({
             shiftQualificationModalShiftQualification: null,
             showAddShiftPresetModal: false,
             presetToEdit: null,
+            dragging: false,
             confirmDeleteTitle: '',
             confirmDeleteDescription: '',
             deleteType: '',
@@ -416,6 +424,22 @@ export default defineComponent({
             this.shiftTimePresetToDelete = null;
         },
         submitDelete(){
+            this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    this.closedDeleteCraftModal();
+                }
+            })
+        },
+        reorderCrafts(crafts) {
+            crafts.map((craft, index) => {
+                craft.position = index + 1
+            })
+
+            router.post(route('craft.reorder'), {
+                crafts: crafts
+            });
             if (this.deleteType === 'craft') {
                 this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
                     preserveScroll: true,

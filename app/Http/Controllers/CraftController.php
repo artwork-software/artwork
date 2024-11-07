@@ -7,6 +7,7 @@ use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
 class CraftController extends Controller
@@ -24,10 +25,17 @@ class CraftController extends Controller
             'notify_days',
             'universally_applicable'
         ]));
+
         if (!$craftStoreRequest->assignable_by_all) {
-            $craft->update(['assignable_by_all' => false]);
+            $craft->update([
+                'assignable_by_all' => false,
+            ]);
             $craft->users()->sync($craftStoreRequest->users);
         }
+
+        $craft->update([
+            'position' => Craft::max('position') + 1
+        ]);
 
         return Redirect::back();
     }
@@ -44,5 +52,11 @@ class CraftController extends Controller
         $this->craftService->delete($craft);
 
         return Redirect::back();
+    }
+
+    public function reorder(Request $request): void
+    {
+        $crafts = $request->get('crafts');
+        $this->craftService->reorder($crafts);
     }
 }

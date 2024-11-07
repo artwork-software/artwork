@@ -4,7 +4,7 @@
                   :event="event"
                   @wantsFreshPlacements="this.reinitializeEventContainerPlacements()"
         />
-        <template v-for="shift in event.shifts">
+        <template v-for="shift in orderedShiftsByCraftPosition">
             <SingleShift @dropFeedback="dropFeedback"
                          @wantsFreshPlacements="this.reinitializeEventContainerPlacements()"
                          :shift="shift"
@@ -87,6 +87,13 @@ export default defineComponent({
     emits: ['dropFeedback'],
     mounted() {
         this.getPlacementHandler().initialize();
+    },
+    computed: {
+        orderedShiftsByCraftPosition() {
+            return this.shifts.sort((a, b) => {
+                return a.craft.position - b.craft.position;
+            });
+        }
     },
     methods: {
         getPlacementHandler() {

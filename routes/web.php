@@ -1189,6 +1189,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
+        Route::post('/crafts/reorder', [CraftController::class, 'reorder'])->name('craft.reorder');
         Route::patch(
             'shift/update/relevant/event-type/{eventType}',
             [EventTypeController::class, 'updateRelevant']

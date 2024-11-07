@@ -204,7 +204,6 @@ import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import {useEvent} from "@/Composeables/Event.js";
 import {useDaysAndEventsIntersectionObserver} from "@/Composeables/IntersectionObserver.js";
-import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import MultiDuplicateModal from "@/Layouts/Components/MultiDuplicateModal.vue";
 
 const filterOptions = inject('filterOptions');
@@ -530,14 +529,31 @@ const props = defineProps({
     },
     eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload) => {
         if (closedOnPurpose) {
-            handleReload(
-                desiredRoomIdsToReload,
-                desiredDaysToReload
-            );
+            let calendar_settings = usePage().props.user.calendar_settings;
+
+            //@todo: temporary see ARTWORK-300
+            if (calendar_settings.use_project_time_period) {
+                router.patch(
+                    route('user.calendar_settings.toggle_calendar_settings_use_project_period'),
+                    {
+                        use_project_time_period: true,
+                        project_id: calendar_settings.time_period_project_id,
+                    },
+                    {
+                        preserveState: false,
+                        preserveScroll: true
+                    }
+                );
+                return;
+            } else {
+                handleReload(
+                    desiredRoomIdsToReload,
+                    desiredDaysToReload
+                );
+            }
         }
 
         showEventComponent.value = false;
-        return true;
     },
     eventDeclined = (desiredRoomIdToReload, startDate, endDate) => {
         handleReload(

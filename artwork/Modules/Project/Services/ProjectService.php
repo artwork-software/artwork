@@ -692,6 +692,7 @@ class ProjectService
                 }
             }
 
+
             $eventsWithRelevant[] = [
                 'event' => $event,
                 'timeline' => $timeline,
@@ -752,6 +753,14 @@ class ProjectService
     public function getLastEventInProject(int|Project $project): Event|null
     {
         return $this->projectRepository->getLastEvent($project);
+    }
+
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function getLatestEndingEventInProject(int|Project $project): Event|null
+    {
+        return $this->projectRepository->getLatestEndingEvent($project);
     }
 
     public function getProjectsWithAccessBudgetAndManagerUsers(): Collection

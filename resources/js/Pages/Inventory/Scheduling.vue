@@ -75,19 +75,19 @@
             <div id="userOverview" class="w-full fixed bottom-0 z-40">
                 <div class="flex justify-center overflow-y-scroll">
                     <div @click="showCloseUserOverview"
-                        :class="showUserOverview ? '' : 'fixed bottom-0'"
+                         :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                        <div :class="showUserOverview ? '' : 'fixed bottom-0 rotate-180 mb-0.5'">
                             <IconChevronsDown class="h-4 w-4 text-gray-400" />
                         </div>
                     </div>
                     <div v-if="showUserOverview"
                         @mousedown="startResize"
                         :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                        class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background"
+                        class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-artwork-navigation-background rounded-tr-lg"
                         :title="$t('Hold and drag to change the size')">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <IconCaretUpDown class="h-3 w-6 text-gray-400" />
+                            <SelectorIcon class="h-3 w-6 text-gray-400"/>
                         </div>
                     </div>
                 </div>
@@ -194,6 +194,7 @@ import MultiEditInventoryModal from "@/Pages/Inventory/Components/MultiEditInven
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
+import {SelectorIcon} from "@heroicons/vue/solid";
 
 const $t = useTranslation(),
     props = defineProps({

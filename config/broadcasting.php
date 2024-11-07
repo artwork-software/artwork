@@ -38,8 +38,8 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'encrypted' => env('PUSHER_ENCRYPT', true),
-                'host' => '127.0.0.1',
-                'port' => env('PUSHER_PORT', 3341),
+                'host' => env('PUSHER_HOST', 'soketi'),
+                'port' => env('PUSHER_PORT', 6001),
                 'scheme' => 'http',
                 'curl_options' => [
                     CURLOPT_SSL_VERIFYHOST => 0,

@@ -14,6 +14,8 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
+use Artwork\Modules\Event\Events\EventDeleted;
+use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -174,7 +176,14 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+        $deletedEvent = new EventDeleted($event->room_id, [
+            'start' => $event->start_time->format('Y-m-d'),
+            'end' => $event->is_series ?
+                $event->series->end_date->format('Y-m-d') :
+                $event->end_time->format('Y-m-d'),
+        ]);
         $this->eventRepository->delete($event);
+        broadcast($deletedEvent);
     }
 
     public function deleteAll(
@@ -1085,7 +1094,9 @@ readonly class EventService
 
     public function save(Event $event): Event|Model
     {
-        return $this->eventRepository->save($event);
+        $event = $this->eventRepository->save($event);
+        broadcast(new EventUpdated($event))->toOthers();
+        return $event;
     }
 
 

@@ -613,9 +613,7 @@ const props = defineProps({
         );
     };
 
-
 const dateValue = inject('dateValue');
-
 
 const activeFilters = computed(() => {
     let activeFiltersArray = []
@@ -779,6 +777,25 @@ onMounted(() => {
         }
     });
 
+  Echo.private('events')
+      .listen('.event.updated', (data) => {
+        handleReload(
+            data.roomId,
+            getDaysOfEvent(
+                data.dateData.start,
+                data.dateData.end
+            )
+        );
+      })
+      .listen('.event.deleted', (data) => {
+        handleReload(
+            data.roomId,
+            getDaysOfEvent(
+                data.dateData.start,
+                data.dateData.end
+            )
+        );
+      })
 });
 
 

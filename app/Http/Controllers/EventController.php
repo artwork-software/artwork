@@ -1034,7 +1034,7 @@ class EventController extends Controller
                     'message' => $notificationTitle
                 ];
 
-                $event->save();
+                $this->eventService->save($event);
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
@@ -1207,15 +1207,17 @@ class EventController extends Controller
         $oldEventEndDate = $event->end_time;
         $oldIsLoud = $event->is_loud;
         $oldAudience = $event->audience;
-
-        $event->update($request->data());
-
+        
+        $event->fill($request->data());
+        
+        $this->eventService->save($event);
+        
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
             $projectController->generateBasicBudgetValues($project);
             $event->project()->associate($project);
-            $event->save();
+            $this->eventService->save($event);
         }
 
         if (!empty($event->project_id)) {
@@ -1310,7 +1312,6 @@ class EventController extends Controller
             $endDay = Carbon::create($shift->end_date)
                 ->addDays($diffEndDays)
                 ->format('Y-m-d');
-
 
             $shift->update([
                 'start_date' => $startDay,
@@ -2074,8 +2075,6 @@ class EventController extends Controller
         $event->subEvents()->forceDelete();
         $event->forceDelete();
 
-        broadcast(new OccupancyUpdated())->toOthers();
-
         return Redirect::route('events.trashed');
     }
 
@@ -2090,7 +2089,6 @@ class EventController extends Controller
             $event->project_id = null;
             $event->save();
         }
-        broadcast(new OccupancyUpdated())->toOthers();
 
         return Redirect::route('events.trashed');
     }

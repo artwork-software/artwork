@@ -78,6 +78,18 @@ class ProjectRepository extends BaseRepository
         return $lastEvent;
     }
 
+    public function getLatestEndingEvent(int|Project $project): Event|null
+    {
+        if (!$project instanceof Project) {
+            $project = $this->findOrFail($project);
+        }
+
+        /** @var Event|null $latestEndingEvent */
+        $latestEndingEvent = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
+
+        return $latestEndingEvent;
+    }
+
     public function getProjects(array $with = []): Collection
     {
         $query = Project::query();

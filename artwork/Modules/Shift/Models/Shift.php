@@ -238,7 +238,9 @@ class Shift extends Model
     ): Builder {
         return $builder
             ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
-            ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay]);
+            ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay])
+            ->orWhereBetween('start_date', [$eventStartDay, $eventEndDay])
+            ->orWhereBetween('end_date', [$eventStartDay, $eventEndDay]);
     }
 
     public function scopeStartAndEndOverlap(Builder $builder, string $start, string $end): Builder

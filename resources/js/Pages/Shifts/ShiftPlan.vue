@@ -89,7 +89,7 @@
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-artwork-navigation-background pointer-events-auto">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-0 mb-0.5'">
+                        <div :class="showUserOverview ? '' : ' rotate-180 fixed bottom-0 mb-0.5'">
                             <component is="IconChevronsDown" class="h-4 w-4 text-gray-300"/>
                         </div>
                     </div>
@@ -1398,16 +1398,33 @@ export default {
         },
         closeMultiEditCellModal(){
             this.showCellMultiEditModal = false;
-            this.toggleMultiEditMode();
+            handleReload(
+                this.rooms.map(room => room.id),
+                this.days.map(day => day.full_day),
+                Object.values(this.multiEditCellByDayAndUser).map(user => {
+                    return {
+                        id: user.id,
+                        type: user.type
+                    }
+                })
+            );
         },
         closeCellMultiEditDelete(boolean) {
             this.openCellMultiEditDelete = false;
 
             if(boolean) {
                 this.showCellMultiEditModal = true;
-            } else {
-                this.toggleMultiEditMode();
             }
+            handleReload(
+                this.rooms.map(room => room.id),
+                this.days.map(day => day.full_day),
+                Object.values(this.multiEditCellByDayAndUser).map(user => {
+                    return {
+                        id: user.id,
+                        type: user.type
+                    }
+                })
+            );
         },
         toggleDayServiceMode() {
             this.highlightMode = false;
@@ -1438,7 +1455,6 @@ export default {
                 (shift_id) => !this.userForMultiEdit.shift_ids.includes(shift_id)
             );
 
-            // Prüfen, ob Qualifikationen erforderlich sind
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
                 this.userToMultiEditCheckedShiftsAndEvents.forEach((shiftAndEvent) => {
                     let desiredShift = shiftAndEvent.shift;
@@ -1491,7 +1507,6 @@ export default {
                 this.showShiftsQualificationsAssignmentModal = true;
                 this.waitForModalClose = true;
 
-                // Rückgabe einer Promise, die aufgelöst wird, wenn das Modal geschlossen wurde
                 return new Promise((resolve) => {
                     this.resolveModalClose = resolve;
                 });

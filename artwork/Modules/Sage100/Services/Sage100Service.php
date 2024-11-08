@@ -38,16 +38,22 @@ readonly class Sage100Service
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
-
         foreach (($data = $this->getData($count, $specificDay, $sageApiSettingsService)) as $item) {
-            if ($this->updateExistingSageAssignedDataIfExists($item, $sageAssignedDataService)) {
+            if (!$item['ID']) {
                 continue;
             }
 
+            if ($this->updateExistingSageAssignedDataIfExists($item, $sageAssignedDataService)) {
+                continue;
+            }
             $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item, $sageNotAssignedDataService);
 
             //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
+            if (!$item['KstTraeger']) {
+                continue;
+            }
             $project = $projectService->getProjectByCostCenter($item['KstTraeger']);
+
             if (is_null($project)) {
                 //create project unrelated SageNotAssignedData if no Project is found
                 $this->createSageNotAssignedData($item, $sageNotAssignedDataService);

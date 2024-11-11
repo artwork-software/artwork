@@ -7,10 +7,7 @@
                     {{$t('Define global settings for shift scheduling.')}}
                 </div>
             </div>
-
             <TabComponent :tabs="tabs" />
-
-
             <div class="mt-10">
                 <h3 class="headline2 mb-2">{{}}</h3>
                 <p class="xsLight">
@@ -22,11 +19,9 @@
                     :title="$t('Crafts')"
                     :description="$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')"
                 />
-
                <div class="w-72">
                    <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
                </div>
-
             </div>
                 <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="crafts" @start="dragging=true" @end="dragging=false" @change="reorderCrafts(crafts)">
                     <template #item="{element}" :key="element.id">
@@ -471,8 +466,3 @@ export default defineComponent({
     }
 })
 </script>
-
-
-<style scoped>
-
-</style>

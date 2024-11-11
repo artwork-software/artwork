@@ -412,6 +412,11 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craftable');
     }
 
+    public function managingCrafts(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
     public function shiftQualifications(): BelongsToMany
     {
         return $this

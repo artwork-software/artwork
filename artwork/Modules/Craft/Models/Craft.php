@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @property int $id
@@ -73,23 +74,37 @@ class Craft extends Model
             ->select(['id', 'craft_id', 'name', 'order']);
     }
 
-    // Falls du die unterschiedlichen Typen spezifisch ansprechen möchtest:
-    public function users(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    public function users(): MorphToMany
     {
         return $this->morphedByMany(User::class, 'craftable')->without([
             'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'
         ])->with(['shiftQualifications']);
     }
 
-    public function freelancers(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    public function freelancers(): MorphToMany
     {
         return $this->morphedByMany(Freelancer::class, 'craftable')
             ->with(['shiftQualifications']);
     }
 
-    public function serviceProviders(): \Illuminate\Database\Eloquent\Relations\MorphToMany
+    public function serviceProviders(): MorphToMany
     {
         return $this->morphedByMany(ServiceProvider::class, 'craftable')
             ->with(['shiftQualifications']);
+    }
+
+    public function managingUsers(): MorphToMany
+    {
+        return $this->morphedByMany(User::class, 'craft_manager');
+    }
+
+    public function managingFreelancers(): MorphToMany
+    {
+        return $this->morphedByMany(Freelancer::class, 'craft_manager');
+    }
+
+    public function managingServiceProviders(): MorphToMany
+    {
+        return $this->morphedByMany(ServiceProvider::class, 'craft_manager');
     }
 }

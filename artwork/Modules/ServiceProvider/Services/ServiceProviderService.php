@@ -20,6 +20,7 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 readonly class ServiceProviderService
 {
@@ -158,5 +159,10 @@ readonly class ServiceProviderService
     public function getShiftsWithEventOrderedByStartAscending(int|ServiceProvider $serviceProvider): Collection
     {
         return $this->serviceProviderRepository->getShiftsWithEventOrderedByStartAscending($serviceProvider);
+    }
+
+    public function searchServiceProviders(string $search): SupportCollection
+    {
+        return $this->serviceProviderRepository->scoutSearch($search);
     }
 }

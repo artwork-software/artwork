@@ -2,7 +2,11 @@
 
 namespace Artwork\Modules\Craft\Http\Requests;
 
+use Artwork\Modules\Freelancer\Models\Freelancer;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CraftUpdateRequest extends FormRequest
 {
@@ -19,6 +23,14 @@ class CraftUpdateRequest extends FormRequest
             'users' => 'array',
             'assignable_by_all' => 'required|boolean',
             'universally_applicable' => 'required|boolean',
+            'managersToBeAssigned' => 'sometimes|array',
+            'managersToBeAssigned.*' => 'array',
+            'managersToBeAssigned.*.manager_id' => 'required|integer',
+            'managersToBeAssigned.*.manager_type' => Rule::in(
+                User::class,
+                Freelancer::class,
+                ServiceProvider::class
+            )
         ];
     }
 }

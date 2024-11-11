@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
@@ -51,6 +52,7 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use Searchable;
 
     /**
      * @var string[]
@@ -118,6 +120,11 @@ class Freelancer extends Model implements Vacationer, Available, DayServiceable
     public function assignedCrafts(): morphToMany
     {
         return $this->morphToMany(Craft::class, 'craftable');
+    }
+
+    public function managingCrafts(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
     /**

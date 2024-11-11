@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection as SupportCollection;
 
 class UserRepository extends BaseRepository
 {
@@ -131,17 +132,20 @@ class UserRepository extends BaseRepository
         return User::role(RoleEnum::ARTWORK_ADMIN->value)->first();
     }
 
-    public function searchUsers(string $search): \Illuminate\Support\Collection
+    public function searchUsers(string $search): SupportCollection
     {
-        return User::search($search)->get()->map(fn(User $user) => [
-            'id' => $user->id,
-            'name' => $user->full_name,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            'email' => $user->email,
-            'project_manager_permission' => $user->getHasProjectManagerPermission(),
-            'profile_photo_url' => $user->profile_photo_url,
-        ]);
+        return User::search($search)
+            ->get()
+            ->map(fn(User $user) => [
+                'id' => $user->getAttribute('id'),
+                'name' => $user->getAttribute('full_name'),
+                'first_name' => $user->getAttribute('first_name'),
+                'last_name' => $user->getAttribute('last_name'),
+                'email' => $user->getAttribute('email'),
+                'project_manager_permission' => $user->getHasProjectManagerPermission(),
+                'profile_photo_url' => $user->getAttribute('profile_photo_url'),
+                'manager_type' => $user::class
+            ]);
     }
 
     public function atAGlanceEnabled(User $user): bool

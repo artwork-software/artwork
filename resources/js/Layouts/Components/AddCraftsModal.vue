@@ -38,7 +38,6 @@
                :min="0" :max="100"
         />
     </div>
-
     <div class="my-3">
         <div class="relative flex items-start mb-2">
             <div class="flex h-6 items-center">
@@ -49,7 +48,6 @@
             </div>
         </div>
     </div>
-
     <div class="mt-3">
         <SwitchGroup as="div" class="flex items-center gap-2">
             <SwitchLabel as="span" class="mr-3 text-sm">
@@ -74,7 +72,6 @@
                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </span>
                 </ListboxButton>
-
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
@@ -102,14 +99,33 @@
                 </div>
             </div>
         </div>
+        <UserSearch :label="$t('Add department management')"
+                    @user-selected="addSelectedToCraftManagers"
+                    :search-workers="true"
+                    :dont-close-on-select="true"/>
+        <div v-for="(user,index) in this.managers"
+             class="mt-4 font-bold text-primary flex"
+             :key="index">
+            <div class="flex items-center">
+                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                     :src="user.profile_photo_url"
+                     alt=""/>
+                <template v-if="user.provider_name">
+                    {{ user.provider_name }}
+                </template>
+                <template v-else>
+                    {{ user.first_name }} {{ user.last_name }}
+                </template>
+            </div>
+            <button type="button" @click="this.deleteDepartmentManager(user)">
+                <span class="sr-only">{{ $t('Delete department management') }}</span>
+                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>
+            </button>
+        </div>
     </div>
     <div class="flex items-center justify-center mt-5">
-        <FormButton
-            text="Speichern"
-            @click="saveCraft"
-        />
+        <FormButton :text="$t('Save')" @click="saveCraft"/>
     </div>
-
 </BaseModal>
 </template>
 
@@ -118,9 +134,13 @@ import {defineComponent} from 'vue'
 import {
     Dialog,
     DialogPanel,
-    Listbox, ListboxButton,
+    Listbox,
+    ListboxButton,
     ListboxOption,
-    ListboxOptions, Switch, SwitchGroup, SwitchLabel,
+    ListboxOptions,
+    Switch,
+    SwitchGroup,
+    SwitchLabel,
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
@@ -136,11 +156,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        UserSearch,
         NumberInputComponent,
         TextInputComponent,
         ModalHeader,
@@ -150,8 +172,20 @@ export default defineComponent({
         XCircleIcon,
         TagComponent,
         Input,
-        ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
-        Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
+        ChevronDownIcon,
+        CheckIcon,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        Listbox,
+        Dialog,
+        TransitionChild,
+        XIcon,
+        TransitionRoot,
+        DialogPanel,
+        SwitchGroup,
+        Switch,
+        SwitchLabel
     },
     props: ['craftToEdit', 'usersWithPermission'],
     data(){
@@ -165,9 +199,16 @@ export default defineComponent({
                 color: this.craftToEdit ? this.craftToEdit.color : '#ffffff',
                 notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0,
                 universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
+                managersToBeAssigned: []
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
-            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : []
+            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : [],
+            managers: this.craftToEdit ? this.craftToEdit.managing_freelancers.concat(
+                this.craftToEdit.managing_service_providers.concat(
+                    this.craftToEdit.managing_users
+                )
+            ) : [],
+            userSearchResult: [],
         }
     },
     unmounted() {
@@ -181,27 +222,35 @@ export default defineComponent({
         },
         addOrRemoveFormUserList(user){
             const userIds = this.craftShiftPlaner.map(user => user.id);
-            if(userIds.includes(user.id)){
+            if (userIds.includes(user.id)) {
                 this.craftShiftPlaner = this.craftShiftPlaner.filter(u => u.id !== user.id)
             } else {
                 this.craftShiftPlaner.push(user)
             }
         },
         saveCraft(){
+            this.managers.forEach((manager) => {
+                this.craft.managersToBeAssigned.push({
+                    manager_id: manager.id ?? manager.pivot.craft_manager_id,
+                    manager_type: manager.manager_type ?? manager.pivot.craft_manager_type
+                });
+            });
+
             if (this.craft.notify_days < 0) {
                 this.craft.notify_days = 0;
             }
 
-            if(!this.enabled){
+            if (!this.enabled) {
                 this.craft.assignable_by_all = false
                 this.craftShiftPlaner.forEach((user) => {
                     this.craft.users.push(user.id);
-                })
+                });
             } else {
                 this.craft.assignable_by_all = true;
                 this.craft.users = [];
             }
-            if(this.craftToEdit){
+
+            if (this.craftToEdit) {
                 this.craft.patch(route('craft.update', this.craftToEdit.id), {
                     preserveState: true,
                     preserveScroll: true,
@@ -221,15 +270,22 @@ export default defineComponent({
                 })
             }
         },
-        addColor(color){
-            this.craft.color = color
+        addColor(color) {
+            this.craft.color = color;
         },
-        updateCraft(){
+        addSelectedToCraftManagers(user) {
+            if (this.managers.findIndex((manager) => user.id === manager.id) > 0) {
+                return;
+            }
 
+            this.managers.push(user);
         },
+        deleteDepartmentManager(manager) {
+            this.managers.splice(
+                this.managers.findIndex((currentManager) => currentManager.id === manager.id),
+                1
+            );
+        }
     }
 })
 </script>
-<style scoped>
-
-</style>

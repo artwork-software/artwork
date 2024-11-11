@@ -17,7 +17,10 @@ class ShiftSettingsController extends Controller
     public function index(ShiftQualificationService $shiftQualificationService): Response
     {
         return Inertia::render('Settings/ShiftSettings', [
-            'crafts' => Craft::orderBy('position')->get(),
+            'crafts' => Craft::query()
+                ->with('managingUsers', 'managingFreelancers', 'managingServiceProviders')
+                ->orderBy('position')
+                ->get(),
             'eventTypes' => EventType::all(),
             'usersWithPermission' => User::permission(PermissionEnum::SHIFT_PLANNER->value)->get(),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),

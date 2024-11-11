@@ -56,9 +56,9 @@
                                     );
                             @endphp
                             @if($columnCell->column->type === "empty")
-                                {{ $columnCell->value }}
+                                {{ (float) $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
-                                {{ $columnCell->sage_value ?: 0 }}
+                                {{ (float) $columnCell->sage_value ?: 0 }}
                             @else
                                 {{
                                     $formulaService->createFormula(
@@ -176,9 +176,9 @@
                                     );
                             @endphp
                             @if($columnCell->column->type === "empty")
-                                {{ $columnCell->value }}
+                                {{ (float) $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
-                                {{ $columnCell->sage_value ?: 0 }}
+                                {{ (float) $columnCell->sage_value ?: 0 }}
                             @else
                                 {{
                                     $formulaService->createFormula(

@@ -14,6 +14,8 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
+use Artwork\Modules\Event\Events\EventDeleted;
+use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -175,7 +177,22 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+
+        $deletedEvent = new EventDeleted($event->room_id, [
+            'start' => $event->start_time->format('Y-m-d'),
+            'end' => $event->is_series ?
+                $event->series->end_date->format('Y-m-d') :
+                $event->end_time->format('Y-m-d'),
+        ]);
+        $deletedEvent = new EventDeleted(
+            $event->room_id,
+            $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+                $event->end_time
+        );
         $this->eventRepository->delete($event);
+        broadcast($deletedEvent);
     }
 
     public function deleteAll(
@@ -965,8 +982,7 @@ readonly class EventService
                 'calendarType' => 'individual',
                 'selectedDate' => '',
                 'eventsWithoutRoom' => [],
-                'filterOptions' => $filterService->getCalendarFilterDefinitions(
-                ),
+                'filterOptions' => $filterService->getCalendarFilterDefinitions(),
                 'personalFilters' => $filterService->getPersonalFilter(),
                 'user_filters' => $userService->getAuthUser()->calendar_filter,
             ];
@@ -1107,7 +1123,19 @@ readonly class EventService
 
     public function save(Event $event): Event|Model
     {
-        return $this->eventRepository->save($event);
+        $originalStartTime = $event->getOriginal('start_time');
+        $originalEndTime = $event->getOriginal('end_time');
+        $originalRoomId = $event->getOriginal('room_id');
+
+        $event = $this->eventRepository->save($event);
+        if ($originalStartTime && $originalEndTime) {
+            broadcast(new EventUpdated($originalRoomId, $originalStartTime, $originalEndTime))->toOthers();
+        }
+        broadcast(new EventUpdated($event->room_id, $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+                $event->end_time))->toOthers();
+        return $event;
     }
 
 

@@ -508,6 +508,10 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
+            if (!this.events) {
+                return;
+            }
+            
             let events = Object.values(this.events)[0].events;
 
             events.map(

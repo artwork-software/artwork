@@ -28,7 +28,6 @@ class WorkingHourService
         Carbon $startDate,
         Carbon $endDate
     ): int {
-        // Filtere die Schichten nach dem angegebenen Zeitraum
         $shiftsInDateRange = array_filter(
             $entity->getAttribute('shifts')->all(),
             static function (Shift $shift) use ($startDate, $endDate): bool {
@@ -42,24 +41,40 @@ class WorkingHourService
             }
         );
 
-        $plannedWorkingHours = 0;
+        $intervals = [];
 
-        $individualTimeInMinutes = $entity->individualTimes()
-            ->individualByDateRange($startDate, $endDate)->sum('working_time_minutes');
-
-        // Berechne die tatsächliche Arbeitszeit für jede Schicht
         foreach ($shiftsInDateRange as $shift) {
             $shiftStart = Carbon::parse($shift->start_date->format('Y-m-d') . ' ' . $shift->start);
             $shiftEnd = Carbon::parse($shift->end_date->format('Y-m-d') . ' ' . $shift->end);
 
-            // Berechne die Dauer der Schicht in Minuten, ziehe die Pausenzeiten ab
-            $shiftDuration = $shiftEnd->diffInMinutes($shiftStart);
-            $plannedWorkingHours += $shiftDuration - $shift->break_minutes;
+            // Add the shift interval to the list
+            $intervals[] = [$shiftStart, $shiftEnd];
         }
 
-        return $plannedWorkingHours + $individualTimeInMinutes; // Rückgabe in Minuten
-    }
+        // Merge overlapping intervals
+        usort($intervals, fn($a, $b) => $a[0]->lt($b[0]) ? -1 : 1);
+        $mergedIntervals = [];
+        foreach ($intervals as $interval) {
+            if (empty($mergedIntervals) || $mergedIntervals[count($mergedIntervals) - 1][1]->lt($interval[0])) {
+                $mergedIntervals[] = $interval;
+            } else {
+                $mergedIntervals[count($mergedIntervals) - 1][1] = $mergedIntervals[count($mergedIntervals) - 1][1]->max($interval[1]);
+            }
+        }
 
+        // Calculate total working time
+        $totalWorkingMinutes = 0;
+        foreach ($mergedIntervals as $interval) {
+            $totalWorkingMinutes += $interval[1]->diffInMinutes($interval[0]);
+        }
+
+        // Subtract break times
+        foreach ($shiftsInDateRange as $shift) {
+            $totalWorkingMinutes -= $shift->break_minutes;
+        }
+
+        return $totalWorkingMinutes;
+    }
 
     public function convertMinutesInHours(int $minutes): string
     {

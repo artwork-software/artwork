@@ -73,6 +73,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Permission\Enums\PermissionEnum;
 use Artwork\Modules\Project\Enum\ProjectSortEnum;
 use Artwork\Modules\Project\Exports\BudgetsByBudgetDeadlineExport;
+use Artwork\Modules\Project\Exports\DetailedBudgetsByBudgetDeadlineExport;
 use Artwork\Modules\Project\Http\Requests\ProjectCreateSettingsUpdateRequest;
 use Artwork\Modules\Project\Http\Requests\ProjectIndexPaginateRequest;
 use Artwork\Modules\Project\Http\Requests\StoreProjectRequest;
@@ -94,8 +95,6 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -3367,18 +3366,36 @@ class ProjectController extends Controller
 
     public function projectsBudgetByBudgetDeadlineExport(
         string $startBudgetDeadline,
-        string $endBudgetDeadline
-    ): BinaryFileResponse {
-        return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
-            ->download(
-                sprintf(
-                    'budgets_export_%s-%s_stand_%s.xlsx',
-                    $startBudgetDeadline,
-                    $endBudgetDeadline,
-                    Carbon::now()->format('d-m-Y_H_i_s')
+        string $endBudgetDeadline,
+        Request $request
+    ): BinaryFileResponse|null {
+        if ($request->integer('type') === 0) {
+            return (new BudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+                ->download(
+                    sprintf(
+                        'budgets_export_%s-%s_stand_%s.xlsx',
+                        $startBudgetDeadline,
+                        $endBudgetDeadline,
+                        Carbon::now()->format('d-m-Y_H_i_s')
+                    )
                 )
-            )
-            ->deleteFileAfterSend();
+                ->deleteFileAfterSend();
+        }
+
+        if ($request->integer('type') === 1) {
+            return (new DetailedBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+                ->download(
+                    sprintf(
+                        'detaillierter_budget_export_%s-%s_stand_%s.xlsx',
+                        $startBudgetDeadline,
+                        $endBudgetDeadline,
+                        Carbon::now()->format('d-m-Y_H_i_s')
+                    )
+                )
+                ->deleteFileAfterSend();
+        }
+
+        return null;
     }
 
     public function pin(Project $project): RedirectResponse

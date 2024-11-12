@@ -6,13 +6,13 @@ webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames: []
 additional_fqdns: []
-nodejs_version: "18"
 database:
     type: mariadb
     version: "10.11"
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
+nodejs_version: "18"
 corepack_enable: false
 web_extra_exposed_ports:
     - name: node-vite
@@ -49,7 +49,7 @@ web_extra_exposed_ports:
 #   version: <version> # database version, like "10.11" or "8.0"
 #   MariaDB versions can be 5.5-10.8, 10.11, and 11.4.
 #   MySQL versions can be 5.5-8.0.
-#   PostgreSQL versions can be 9-16.
+#   PostgreSQL versions can be 9-17.
 
 # router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
 # router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
@@ -67,6 +67,8 @@ web_extra_exposed_ports:
 # webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn
 
 # timezone: Europe/Berlin
+# If timezone is unset, DDEV will attempt to derive it from the host system timezone
+# using the $TZ environment variable or the /etc/localtime symlink.
 # This is the timezone used in the containers and by PHP;
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
@@ -86,7 +88,7 @@ web_extra_exposed_ports:
 #   - preview
 #   - snapshot
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
-# To reinstall Composer after the image was built, run "ddev debug refresh".
+# To reinstall Composer after the image was built, run "ddev debug rebuild".
 
 # nodejs_version: "20"
 # change from the default system Node.js version to any other version.
@@ -214,8 +216,8 @@ web_extra_exposed_ports:
 
 # You can inject environment variables into the web container with:
 # web_environment:
-# - SOMEENV=somevalue
-# - SOMEOTHERENV=someothervalue
+#     - SOMEENV=somevalue
+#     - SOMEOTHERENV=someothervalue
 
 # no_project_mount: false
 # (Experimental) If true, DDEV will not mount the project into the web container;

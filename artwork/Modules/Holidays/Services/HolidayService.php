@@ -93,7 +93,7 @@ class HolidayService
                     $subdivisionModel->country_code,
                     'DE',
                     now()->startOfYear()->format('Y-m-d'),
-                    now()->endOfYear()->format('Y-m-d'),
+                    now()->addYear()->endOfYear()->format('Y-m-d'),
                     $subdivisionModel->country_code . '-' . $subdivisionModel->code
                 )->array();
             }

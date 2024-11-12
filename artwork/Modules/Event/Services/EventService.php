@@ -176,6 +176,13 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+
+        $deletedEvent = new EventDeleted($event->room_id, [
+            'start' => $event->start_time->format('Y-m-d'),
+            'end' => $event->is_series ?
+                $event->series->end_date->format('Y-m-d') :
+                $event->end_time->format('Y-m-d'),
+        ]);
         $deletedEvent = new EventDeleted(
             $event->room_id,
             $event->start_time,

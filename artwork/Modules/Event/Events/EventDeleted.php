@@ -28,5 +28,11 @@ class EventDeleted implements ShouldBroadcast
         return 'event.deleted';
     }
 
-    
+    public function broadcastWith(): array
+    {
+        return [
+            'roomId' => $this->roomId,
+            'dateData' => $this->dates
+        ];
+    }
 }

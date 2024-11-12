@@ -27,6 +27,7 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -176,6 +177,13 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+
+        $deletedEvent = new EventDeleted($event->room_id, [
+            'start' => $event->start_time->format('Y-m-d'),
+            'end' => $event->is_series ?
+                $event->series->end_date->format('Y-m-d') :
+                $event->end_time->format('Y-m-d'),
+        ]);
         $deletedEvent = new EventDeleted(
             $event->room_id,
             $event->start_time,
@@ -633,6 +641,17 @@ readonly class EventService
                     'week_number' => $period->weekOfYear,
                 ];
             }
+
+            $holidays = Holiday::where(function ($query) use ($period): void {
+                $query->where(function ($q) use ($period): void {
+                    $q->whereDate('date', '<=', $period->format('Y-m-d'))
+                        ->whereDate('end_date', '>=', $period->format('Y-m-d'));
+                })->orWhere(function ($q) use ($period): void {
+                    $q->where('yearly', true)
+                        ->whereMonth('date', $period->month)
+                        ->whereDay('end_date', $period->day);
+                });
+            })->with('subdivisions')->get();
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -646,6 +665,16 @@ readonly class EventService
                 'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
                 'add_week_separator' => $period->isSunday(),
+                'holidays' => $holidays->map(function ($holiday) {
+                    return [
+                        'name' => $holiday->name,
+                        'type' => $holiday->type,
+                        'start_date' => $holiday->startDate,
+                        'end_date' => $holiday->endDate,
+                        'color' => $holiday->color,
+                        'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
+                    ];
+                }),
             ];
         }
 

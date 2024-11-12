@@ -14,31 +14,32 @@ class HolidayRepository extends BaseRepository
         string $name,
         Subdivision|array $subdivision,
         Carbon $date,
+        Carbon $endDate,
         string $countryCode,
+        bool $yearly,
         ?int $rota = 0,
         ?string $remote_identifier = null,
-        ?bool $from_api = false
-    ): Holiday
-    {
+        ?bool $from_api = false,
+        ?string $color = null
+    ): Holiday {
         $holiday = new Holiday();
         $holiday->fill([
             'name' => $name,
             'date' => $date,
+            'end_date' => $endDate,
+            'yearly' => $yearly,
             'rota' => $rota,
             'country' => $countryCode,
             'remote_identifier' => $remote_identifier,
             'from_api' => $from_api,
+            'color' => $color,
         ]);
 
         $holiday->save();
-
-        if(!is_array($subdivision)) {
+        if (!is_array($subdivision)) {
             $subdivision = [$subdivision];
         }
-
-        foreach($subdivision as $sub) {
-            $holiday->subdivisions()->attach($sub->id);
-        }
+        $holiday->subdivisions()->attach($subdivision);
 
         return $holiday;
     }
@@ -53,8 +54,8 @@ class HolidayRepository extends BaseRepository
         return Holiday::where($column, $value)->get();
     }
 
-    public function findAll(array $with = []): Collection
+    public function findAll(int $paginate, array $with = []): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return Holiday::query()->with($with)->get();
+        return Holiday::query()->with($with)->orderBy('date', 'ASC')->paginate($paginate);
     }
 }

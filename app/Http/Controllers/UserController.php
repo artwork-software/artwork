@@ -140,6 +140,7 @@ class UserController extends Controller
         ]);
     }
 
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         PermissionPresetService $permissionPresetService,
         UserUserManagementSettingService $userUserManagementSettingService,

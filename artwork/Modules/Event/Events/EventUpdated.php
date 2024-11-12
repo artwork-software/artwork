@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Events;
 
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
+
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

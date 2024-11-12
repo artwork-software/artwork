@@ -12,10 +12,12 @@ class HolidayRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'date' => ['required', 'date'],
+            'end_date' => ['nullable', 'date'],
             'rota' => ['nullable', 'integer'],
-            'subdivisions' => ['required', 'array'],
-            'subdivisions.*' => ['integer', 'exists:subdivisions,id'],
-            'country' => ['required', 'string', 'size:2'],
+            'selectedSubdivisions' => ['nullable', 'array'],
+            'selectedSubdivisions.*.id' => ['integer', 'exists:subdivisions,id'],
+            'color' => ['nullable', 'string'],
+            'yearly' => ['required', 'boolean'],
         ];
     }
 }

@@ -17,6 +17,8 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
+
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -30,8 +32,27 @@
                                         <div v-if="day.is_extra_row" style="width:37px">
                                             <span class="text-[9px] font-bold">KW{{day.week_number }}</span>
                                         </div>
-                                        <div v-else :style="{width:  '200px'}" class="flex items-center calendarRoomHeaderBold ml-2">
-                                            {{ day.day_string }} {{ day.full_day }}
+                                        <div v-else :style="{width:  '200px'}" class="flex items-center h-full justify-between calendarRoomHeaderBold ml-2">
+                                            <div>
+                                                {{ day.day_string }} {{ day.full_day }}
+                                            </div>
+                                            <div class="mr-5" v-if="day.holidays.length > 0">
+                                                <HolidayToolTip>
+                                                    <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                                                        <div v-for="holiday in day.holidays" class="pt-1">
+                                                            <div :style="{ color: holiday.color}">
+                                                                <div>{{ holiday.name }}</div>
+                                                                <div v-if="holiday.subdivisions.length > 0">
+                                                                    {{ holiday.subdivisions.map((person) => person).join(', ') }}
+                                                                </div>
+                                                                <div v-else>
+                                                                    {{ $t('Germany-wide') }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </HolidayToolTip>
+                                            </div>
                                         </div>
                                     </th>
                                 </TableHead>
@@ -561,6 +582,7 @@ import ShiftPlanCell from "@/Pages/Shifts/Components/ShiftPlanCell.vue";
 import debounce from "lodash.debounce";
 import CellMultiEditModal from "@/Pages/Shifts/Components/CellMultiEditModal.vue";
 import DeleteEntriesModal from "@/Pages/Shifts/Components/DeleteEntriesModal.vue";
+import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
 
@@ -577,6 +599,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions, IconLib],
     components: {
+        HolidayToolTip,
         DeleteEntriesModal,
         CellMultiEditModal,
         ShiftPlanCell,

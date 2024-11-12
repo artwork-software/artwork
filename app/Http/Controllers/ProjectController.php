@@ -94,8 +94,6 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Role\Enums\RoleEnum;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
@@ -2046,7 +2044,6 @@ class ProjectController extends Controller
                     $headerObject->project->project_managers = $project->managerUsers;
                     break;
                 case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-
                     $headerObject->project->collecting_society = $project->collectingSociety;
                     $loadedProjectInformation['BudgetInformation'] = $this->projectTabService
                         ->getBudgetInformationDto(

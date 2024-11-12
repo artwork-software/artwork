@@ -2,11 +2,13 @@
 
 namespace Artwork\Modules\Holidays\Requests;
 
-
 use Illuminate\Foundation\Http\FormRequest;
 
 class HolidayRequest extends FormRequest
 {
+    /**
+     * @return string[]
+     */
     public function rules(): array
     {
         return [

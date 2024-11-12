@@ -13,6 +13,9 @@ class ShowDto
     ) {
     }
 
+    /**
+     * @return string[]
+     */
     public function toArray(): array
     {
         return [

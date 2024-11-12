@@ -538,7 +538,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
 
-    Route::group(['prefix' => 'settings'], function() {
+    Route::group(['prefix' => 'settings'], function (): void {
         Route::get('/event_types', [EventTypeController::class, 'index'])
             ->name('event_types.management')
             ->can('change event settings');

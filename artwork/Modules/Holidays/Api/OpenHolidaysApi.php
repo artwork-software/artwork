@@ -7,10 +7,10 @@ use Carbon\Carbon;
 use Exception;
 use NoahNxT\LaravelOpenHolidaysApi\OpenHolidaysApi as VendorApi;
 
-class OpenHolidaysApi implements HolidayApi
+readonly class OpenHolidaysApi implements HolidayApi
 {
     public function __construct(
-        private readonly VendorApi $vendorApi
+        private VendorApi $vendorApi
     ) {
     }
 
@@ -99,7 +99,4 @@ class OpenHolidaysApi implements HolidayApi
 
         return $return;
     }
-
-
-
 }

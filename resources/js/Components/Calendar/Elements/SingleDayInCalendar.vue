@@ -8,7 +8,23 @@
                 {{ zoom_factor >= 0.8 ? day.full_day_display : day.short_day }}
             </div>
             <div v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</div>
+            <HolidayToolTip v-if="day.holidays.length > 0" class="mt-2">
+                <div class="space-y-1 divide-dashed divide-gray-500 divide-y">
+                    <div v-for="holiday in day.holidays" class="pt-1">
+                        <div :style="{ color: holiday.color}">
+                            <div>{{ holiday.name }}</div>
+                            <div v-if="holiday.subdivisions.length > 0">
+                                {{ holiday.subdivisions.map((person) => person).join(', ') }}
+                            </div>
+                            <div v-else>
+                                {{ $t('Germany-wide') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </HolidayToolTip>
         </div>
+
     </div>
 </template>
 
@@ -16,6 +32,7 @@
 
 import {computed, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
+import HolidayToolTip from "@/Components/ToolTips/HolidayToolTip.vue";
 
 const props = defineProps({
     day: {

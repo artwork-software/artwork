@@ -12,7 +12,7 @@ export default {
 </script>
 
 <template>
-    <AddButtonBase :text="text" horizontalPadding="px-16"/>
+    <AddButtonBase :disabled="disabled" :text="text" horizontalPadding="px-16"/>
 </template>
 
 <style scoped>

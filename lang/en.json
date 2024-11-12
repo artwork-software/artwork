@@ -2090,5 +2090,7 @@
     "Delete holiday": "Delete holiday",
     "Do you really want to delete the holiday?": "Do you really want to delete the holiday?",
     "Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.": "Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.",
-    "Please select a date": "Please select a date"
+    "Please select a date": "Please select a date",
+    "Aggregated projects": "Aggregated projects",
+    "Itemised projects": "Itemised projects"
 }

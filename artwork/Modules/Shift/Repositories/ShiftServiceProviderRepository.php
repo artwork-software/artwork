@@ -24,7 +24,7 @@ class ShiftServiceProviderRepository extends BaseRepository
         return $shiftServiceProvider;
     }
 
-    public function getById(int $modelId): ShiftServiceProvider
+    public function getById(int $modelId): ?ShiftServiceProvider
     {
         return ShiftServiceProvider::find($modelId);
     }

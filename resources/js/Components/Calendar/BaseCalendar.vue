@@ -527,7 +527,7 @@ const props = defineProps({
             resetMultiEdit();
         }
     },
-    eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload) => {
+    eventComponentClosed = (closedOnPurpose, desiredRoomIdsToReload, desiredDaysToReload, oldDaysToReload) => {
         if (closedOnPurpose) {
             let calendar_settings = usePage().props.user.calendar_settings;
 
@@ -549,6 +549,10 @@ const props = defineProps({
                 handleReload(
                     desiredRoomIdsToReload,
                     desiredDaysToReload
+                );
+                handleReload(
+                    desiredRoomIdsToReload,
+                    oldDaysToReload
                 );
             }
         }

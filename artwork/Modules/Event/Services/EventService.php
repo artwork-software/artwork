@@ -177,13 +177,6 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
-
-        $deletedEvent = new EventDeleted($event->room_id, [
-            'start' => $event->start_time->format('Y-m-d'),
-            'end' => $event->is_series ?
-                $event->series->end_date->format('Y-m-d') :
-                $event->end_time->format('Y-m-d'),
-        ]);
         $deletedEvent = new EventDeleted(
             $event->room_id,
             $event->start_time,
@@ -192,7 +185,7 @@ readonly class EventService
                 $event->end_time
         );
         $this->eventRepository->delete($event);
-        broadcast($deletedEvent);
+        broadcast($deletedEvent)->toOthers();
     }
 
     public function deleteAll(
@@ -1131,10 +1124,13 @@ readonly class EventService
         if ($originalStartTime && $originalEndTime) {
             broadcast(new EventUpdated($originalRoomId, $originalStartTime, $originalEndTime))->toOthers();
         }
-        broadcast(new EventUpdated($event->room_id, $event->start_time,
+        broadcast(new EventUpdated(
+            $event->room_id,
+            $event->start_time,
             $event->is_series ?
                 $event->series->end_date :
-                $event->end_time))->toOthers();
+            $event->end_time
+        ))->toOthers();
         return $event;
     }
 

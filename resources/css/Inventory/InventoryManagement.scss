@@ -169,7 +169,7 @@
         }
 
         .inventory-top-bar-container {
-            @apply flex flex-row w-[60%] pr-5 h-10 items-center gap-x-2 absolute justify-end right-0 -top-12 z-30 rounded-t-md subpixel-antialiased;
+            @apply flex items-center gap-x-2 justify-end rounded-t-md subpixel-antialiased;
 
             .inventory-top-bar-filter-container {
                 @apply flex flex-col w-full gap-y-2;
@@ -220,13 +220,13 @@
             @apply sticky z-20 top-0 transition-all duration-300 text-white;
 
             .inventory-th-container {
-                @apply w-full h-full flex flex-row items-center relative text-xs;
+                @apply w-full h-full flex flex-row items-center relative text-xs justify-between;
 
                 .inventory-th-edit-container {
                     @apply flex flex-row w-full h-full py-2 text-left items-center cursor-pointer;
 
                     .column-name {
-                        @apply w-[99%] px-2 overflow-hidden overflow-ellipsis whitespace-nowrap;
+                        @apply w-[99%] px-2 overflow-hidden overflow-ellipsis whitespace-nowrap flex items-center justify-between;
                     }
 
                     .column-input-container {
@@ -239,7 +239,7 @@
                 }
 
                 .inventory-th-menu-container {
-                    @apply absolute z-50 right-0 cursor-pointer flex flex-row items-center bg-transparent;
+                    @apply cursor-pointer flex flex-row items-center bg-transparent;
 
                     .menu-button {
                         @apply w-5 h-5 flex-shrink-0 z-50;

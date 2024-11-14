@@ -1402,6 +1402,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ]
         )->name('user.update.shift_tab_sort');
 
+
+        Route::patch('/user/{user}/inventory/sort', [UserController::class, 'updateInventorySortColumn'])
+            ->name('user.update.inventory.sort');
+
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])
             ->name('user.calendar.go.to.stepper');

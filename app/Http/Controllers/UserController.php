@@ -855,4 +855,10 @@ class UserController extends Controller
     {
         $user->update($request->only('drawer_height'));
     }
+
+    public function updateInventorySortColumn(User $user, Request $request): void
+    {
+        $user->update($request->only('inventory_sort_column_id', 'inventory_sort_direction'));
+        //return \response()->json(['success' => $request->all()]);
+    }
 }

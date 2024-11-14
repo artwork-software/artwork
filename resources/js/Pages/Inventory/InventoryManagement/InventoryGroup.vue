@@ -65,28 +65,29 @@
     <tr v-if="group.items.length > 0 && groupShown">
         <td class="empty-row-xxs-td"></td>
     </tr>
-    <DropItem v-if="showFirstDropItem"
+    <!--<DropItem v-if="showFirstDropItem"
               :colspan="colspan"
               :destination-index="0"
               @item-requests-drag-move="moveItemToDestination"
-              :max-index="1"/>
+              :max-index="1"/>-->
     <template v-if="groupShown"
               v-for="(item, index) in group.items"
               :key="item.id">
         <InventoryItem :index="index"
                        :item="item"
                        :colspan="colspan"
-                       :tr-cls="getItemOnDragCls(index)"
-                       @item-dragging="handleItemDragging"
-                       @item-drag-end="handleItemDragEnd"/>
+                       :tr-cls="getItemOnDragCls(index)"/>
+                       <!--@item-dragging="handleItemDragging"
+                       @item-drag-end="handleItemDragEnd" -->
+
         <tr v-if="(index + 1) < group.items.length">
             <td class="empty-row-xxs-td"></td>
         </tr>
-        <DropItem v-if="showTemplateDropItem(index)"
+        <!--<DropItem v-if="showTemplateDropItem(index)"
                   :colspan="colspan"
                   :destination-index="(index + 1)"
                   @item-requests-drag-move="moveItemToDestination"
-                  :max-index="group.items.length"/>
+                  :max-index="group.items.length"/>-->
     </template>
     <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
                         :title="$t('Delete group?')"

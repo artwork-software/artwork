@@ -703,6 +703,10 @@ export default {
             startTime: null,
             endDate: null,
             endTime: null,
+            oldStartDate: null,
+            oldStartTime: null,
+            oldEndDate: null,
+            oldEndTime: null,
             isLoud: false,
             audience: false,
             showSeriesEdit: false,
@@ -861,6 +865,10 @@ export default {
             this.startTime = start.format('HH:mm');
             this.endDate = end.format('YYYY-MM-DD');
             this.endTime = end.format('HH:mm');
+            this.oldStartDate = this.startDate;
+            this.oldStartTime = this.startTime;
+            this.oldEndDate = this.endDate;
+            this.oldEndTime = this.endTime;
             this.isLoud = this.event.isLoud;
             this.audience = this.event.audience;
             this.title = this.event.title;
@@ -916,6 +924,9 @@ export default {
                     getDaysOfEvent(
                         this.startDate,
                         this.series === true ? this.seriesEndDate : this.endDate
+                    ), getDaysOfEvent(
+                        this.oldStartDate,
+                        this.oldEndDate
                     )
                 );
             } else {

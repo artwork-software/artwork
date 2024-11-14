@@ -24,7 +24,7 @@ class ShiftUserRepository extends BaseRepository
         return $shiftUser;
     }
 
-    public function getById(int $modelId): ShiftUser
+    public function getById(int $modelId): ?ShiftUser
     {
         return ShiftUser::find($modelId);
     }

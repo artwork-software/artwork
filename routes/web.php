@@ -536,10 +536,26 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/shiftplan/multi/edit/cell/delete', [ShiftController::class, 'deleteMultiEditCell'])
         ->name('multi-edit.cell.delete');
 
+
+
+    Route::group(['prefix' => 'settings'], function (): void {
+        Route::get('/event_types', [EventTypeController::class, 'index'])
+            ->name('event_types.management')
+            ->can('change event settings');
+        Route::get('/holiday', [HolidayController::class, 'index'])
+            ->name('holiday.management');
+        Route::post('/holiday/api', [HolidayController::class, 'create'])
+            ->name('holiday.api.call');
+        Route::post('/holiday/store', [HolidayController::class, 'store'])
+            ->name('holiday.store');
+        Route::delete('/holiday/{holiday}', [HolidayController::class, 'destroy'])
+            ->name('holiday.delete');
+        Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
+            ->name('holiday.update');
+    });
+
     //EventTypes
-    Route::get('/event_types', [EventTypeController::class, 'index'])
-        ->name('event_types.management')
-        ->can('change event settings');
+
     Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
@@ -1385,6 +1401,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 UserController::class, 'updateShiftTabUserSortBy'
             ]
         )->name('user.update.shift_tab_sort');
+
+
+        Route::patch('/user/{user}/inventory/sort', [UserController::class, 'updateInventorySortColumn'])
+            ->name('user.update.inventory.sort');
 
         //user.calendar.go.to.stepper
         Route::patch('/{user}/calendar/go/to/stepper', [UserController::class, 'calendarGoToStepper'])

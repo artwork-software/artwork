@@ -8,7 +8,7 @@
                         stroke-width="1.5"
                         class="flex-shrink-0"
                         aria-hidden="true"
-                        :class="[dotsColor, dotsSize]"
+                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                     />
                     <ToolTipComponent
                         v-else

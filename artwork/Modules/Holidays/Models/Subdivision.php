@@ -24,6 +24,8 @@ class Subdivision extends Model
     public const HESSEN = 'HE';
     public const HAMBURG = 'HH';
     public const MECKLENBURG_VORPOMMERN = 'MV';
+    public const MECKLENBURG_VORPOMMERN_ABS = 'MV-ABS';
+    public const MECKLENBURG_VORPOMMERN_BBS = 'MV-BBS';
     public const NIEDERSACHSEN = 'NI';
     public const NORDRHEIN_WESTFALEN = 'NW';
     public const RHEINLAND_PFALZ = 'RP';
@@ -47,6 +49,9 @@ class Subdivision extends Model
         );
     }
 
+    /**
+     * @return string[]
+     */
     public static function codes(): array
     {
         return [
@@ -58,6 +63,8 @@ class Subdivision extends Model
             'Hessen' => static::HESSEN,
             'Hamburg' => static::HAMBURG,
             'Mecklenburg-Vorpommern' => static::MECKLENBURG_VORPOMMERN,
+            'Mecklenburg-Vorpommern Allgemeinbildende Schulen' => static::MECKLENBURG_VORPOMMERN_ABS,
+            'Mecklenburg-Vorpommern Berufsbildende Schulen' => static::MECKLENBURG_VORPOMMERN_BBS,
             'Niedersachsen' => static::NIEDERSACHSEN,
             'Nordrhein-Westfalen' => static::NORDRHEIN_WESTFALEN,
             'Rheinland-Pfalz' => static::RHEINLAND_PFALZ,

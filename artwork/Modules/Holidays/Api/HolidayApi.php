@@ -14,4 +14,12 @@ interface HolidayApi
         Subdivision $subdivision,
         ?string $languageCode = 'DE',
     ): array;
+
+    /** @return ApiDto[] */
+    public function getSchoolHolidays(
+        Carbon $from,
+        Carbon $to,
+        Subdivision $subdivision,
+        ?string $languageCode = 'DE',
+    ): array;
 }

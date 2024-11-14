@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $id
  * @property string $name
  * @property Carbon $date
+ * @property Carbon $end_date
  * @property int|null $rota
  * @property string|null $country
  * @property Subdivision[]|Collection $subdivisions
@@ -23,11 +24,29 @@ class Holiday extends Model
 {
     protected $table = 'holidays';
 
+    protected $fillable = [
+        'name',
+        'date',
+        'end_date',
+        'rota',
+        'country',
+        'remote_identifier',
+        'from_api',
+        'yearly',
+        'color',
+    ];
+
     protected $guarded = [];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
+        'end_date' => 'date:Y-m-d',
         'from_api' => 'boolean',
+        'yearly' => 'boolean',
+    ];
+
+    protected $appends = [
+        'casted_date',
     ];
 
     public function subdivisions(): BelongsToMany
@@ -38,5 +57,16 @@ class Holiday extends Model
             'holiday_id',
             'subdivision_id'
         );
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCastedDateAttribute(): array
+    {
+        return [
+            'date' => $this->date->translatedFormat('l, jS F Y'),
+            'end_date' => $this->end_date->translatedFormat('l, jS F Y'),
+        ];
     }
 }

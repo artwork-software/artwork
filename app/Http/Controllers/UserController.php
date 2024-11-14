@@ -140,6 +140,7 @@ class UserController extends Controller
         ]);
     }
 
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(
         PermissionPresetService $permissionPresetService,
         UserUserManagementSettingService $userUserManagementSettingService,
@@ -853,5 +854,11 @@ class UserController extends Controller
     public function updateUserOverviewHeight(User $user, Request $request): void
     {
         $user->update($request->only('drawer_height'));
+    }
+
+    public function updateInventorySortColumn(User $user, Request $request): void
+    {
+        $user->update($request->only('inventory_sort_column_id', 'inventory_sort_direction'));
+        //return \response()->json(['success' => $request->all()]);
     }
 }

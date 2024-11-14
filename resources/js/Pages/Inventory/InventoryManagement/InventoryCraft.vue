@@ -1,7 +1,7 @@
 <template>
     <tr>
         <td :colspan="colspan" class="craft-td">
-            <div class="craft-container">
+            <div class="craft-container my-3">
                 <div class="title"
                      @click="toggleCraft()">
                     <span>{{ craft.value.name }}</span>

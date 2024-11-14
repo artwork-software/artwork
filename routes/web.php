@@ -1381,6 +1381,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['prefix' => 'user'], function (): void {
+        Route::patch('/{user}/update/checklist/filter', [UserController::class, 'updateChecklistFilter'])
+            ->name('user.update.checklist.filter');
         Route::get('/{user}/own/operation/plan', [UserController::class, 'operationPlan'])
             ->name('user.operationPlan');
         Route::post('/{user}/toggle/compactMode', [UserController::class, 'compactMode'])

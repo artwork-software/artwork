@@ -2094,5 +2094,7 @@
     "Aggregated projects": "Aggregated projects",
     "Itemised projects": "Itemised projects",
     "ascending": "ascending",
-    "descending": "descending"
+    "descending": "descending",
+    "The filter settings have been saved.": "The filter settings have been saved.",
+    "The filter settings will be saved in 3 seconds.": "The filter settings will be saved in 3 seconds."
 }

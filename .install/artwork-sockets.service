@@ -7,7 +7,7 @@ User=www-data
 Group=www-data
 Restart=always
 WorkingDirectory=/var/www/html
-ExecStart=/usr/bin/npm npm run sockets
+ExecStart=/usr/bin/npm run sockets
 
 [Install]
 WantedBy=multi-user.target

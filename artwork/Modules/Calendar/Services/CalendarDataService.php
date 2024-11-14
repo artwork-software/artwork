@@ -5,6 +5,7 @@ namespace Artwork\Modules\Calendar\Services;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Services\EventCollectionService;
 use Artwork\Modules\Filter\Services\FilterService;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
@@ -44,6 +45,16 @@ readonly class CalendarDataService
     ): array {
         $periodArray = [];
         foreach (($calendarPeriod = CarbonPeriod::create($startDate, $endDate)) as $period) {
+            $holidays = Holiday::where(function ($query) use ($period): void {
+                $query->where(function ($q) use ($period): void {
+                    $q->whereDate('date', '<=', $period->format('Y-m-d'))
+                        ->whereDate('end_date', '>=', $period->format('Y-m-d'));
+                })->orWhere(function ($q) use ($period): void {
+                    $q->where('yearly', true)
+                        ->whereMonth('date', $period->month)
+                        ->whereDay('end_date', $period->day);
+                });
+            })->with('subdivisions')->get();
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -54,7 +65,17 @@ readonly class CalendarDataService
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
                 'month_number' => $period->month,
-                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth())
+                'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
+                'holidays' => $holidays->map(function ($holiday) {
+                    return [
+                        'name' => $holiday->name,
+                        'type' => $holiday->type,
+                        'start_date' => $holiday->startDate,
+                        'end_date' => $holiday->endDate,
+                        'color' => $holiday->color,
+                        'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
+                    ];
+                }),
             ];
         }
 

@@ -14,16 +14,19 @@ use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Carbon\Carbon;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Log;
 
 class CraftService
 {
     public function __construct(
         private readonly CraftRepository $craftRepository,
         private readonly CraftInventoryItemCellService $craftInventoryItemCellService,
-        private readonly CraftInventoryItemEventService $craftInventoryItemEventService
+        private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
+        private readonly AuthManager $authManager
     ) {
     }
 
@@ -32,15 +35,38 @@ class CraftService
         return $this->craftRepository->getAll($with);
     }
 
-    public function getAllWithInventoryCategoriesRelations(): Collection
+    public function getAllWithInventoryCategoriesRelations(): SupportCollection
     {
-        return $this->getAll([
+        $columnIdForSort = $this->authManager->user()->inventory_sort_column_id;
+        $directionForSort = $this->authManager->user()->inventory_sort_direction;
+
+        $allInventories = $this->getAll([
             'inventoryCategories',
             'inventoryCategories.groups',
             'inventoryCategories.groups.items',
-            'inventoryCategories.groups.items.cells',
             'inventoryCategories.groups.items.cells.column'
         ]);
+
+        return $allInventories->map(function ($inventory) use ($columnIdForSort, $directionForSort) {
+            $inventory->inventoryCategories = $inventory->inventoryCategories
+                ->map(function ($category) use ($columnIdForSort, $directionForSort) {
+                    $category->groups = $category->groups
+                    ->map(function ($group) use ($columnIdForSort, $directionForSort) {
+                        $sortedItems = $directionForSort === 'asc'
+                        ? $group->items->sortBy(function ($item) use ($columnIdForSort) {
+                            $cell = $item->cells->firstWhere('crafts_inventory_column_id', $columnIdForSort);
+                            return $cell ? $cell->cell_value : '';
+                        })->values()
+                        : $group->items->sortByDesc(function ($item) use ($columnIdForSort) {
+                            $cell = $item->cells->firstWhere('crafts_inventory_column_id', $columnIdForSort);
+                            return $cell ? $cell->cell_value : '';
+                        })->values();
+                        return $group->setRelation('items', $sortedItems);
+                    });
+                    return $category;
+                });
+            return $inventory;
+        });
     }
 
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void

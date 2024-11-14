@@ -1,79 +1,74 @@
 <template>
     <app-layout :title="$t('Event Settings')">
-        <div class="max-w-screen-lg ml-14 mt-5 mr-40">
-            <div class="">
-                <h2 class="headline1">{{$t('Event Settings')}}</h2>
-                <div class="xsLight mt-2">
-                    {{ $t('Set global event settings.')}}
-                </div>
-            </div>
-            <div class="mt-4 max-w-7xl">
-                <div class="flex items-center justify-between">
-                    <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                    <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
-                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
-                        <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                        <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
-                    </div>
-                </div>
-                <div class="xsLight mt-2">
-                    {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
-                </div>
-            </div>
-            <ul role="list" class="mt-4 mb-20 w-full">
-                <li v-for="(eventType,index) in event_types" :key="eventType.id"
-                    class="flex justify-between">
-                    <div class="flex my-4">
-                        <div>
-                            <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />
-                        </div>
-                        <div class="ml-5 my-auto w-full justify-start mr-6">
-                            <div class="flex my-auto">
-                                <p class="mDark">{{ eventType.name }}</p>
-                                <div class="ml-2 mDark">({{eventType.abbreviation}})</div>
-                            </div>
-                            <div class="flex mt-2">
-                                <div class="xsLight mr-2">
-                                    {{
-                                        eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
-                                    }}
-                                </div>
-                                <div class="xsLight">
-                                    |
-                                </div>
-                                <div class="xsLight ml-2">
-                                    {{
-                                        eventType.individual_name ? $t('individual event name mandatory') : $t('individual event name optional')
-                                    }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <BaseMenu>
-                            <MenuItem v-slot="{ active }">
-                                <a href="#" @click="openEditEventTypeModal(eventType)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <PencilAltIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    {{$t('Edit event type')}}
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-if="index !== 0" v-slot="{ active }">
-                                <a href="#" @click="openDeleteEventTypeModal(eventType)"
-                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    {{$t('Delete event type')}}
-                                </a>
-                            </MenuItem>
-                        </BaseMenu>
-                    </div>
-                </li>
-            </ul>
-        </div>
+
+           <EventSettingHeader>
+               <div class="mt-4 max-w-3xl">
+                   <div class="flex items-center justify-between mb-5">
+                       <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
+                       <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
+                       <div v-if="this.$page.props.show_hints" class="flex mt-1">
+                           <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                           <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
+                       </div>
+                   </div>
+                   <div class="xsLight mt-2">
+                       {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
+                   </div>
+               </div>
+               <ul role="list" class="mt-4 mb-20 w-full max-w-3xl">
+                   <li v-for="(eventType,index) in event_types" :key="eventType.id"
+                       class="flex justify-between">
+                       <div class="flex my-4">
+                           <div>
+                               <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />
+                           </div>
+                           <div class="ml-5 my-auto w-full justify-start mr-6">
+                               <div class="flex my-auto">
+                                   <p class="mDark">{{ eventType.name }}</p>
+                                   <div class="ml-2 mDark">({{eventType.abbreviation}})</div>
+                               </div>
+                               <div class="flex mt-2">
+                                   <div class="xsLight mr-2">
+                                       {{
+                                           eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
+                                       }}
+                                   </div>
+                                   <div class="xsLight">
+                                       |
+                                   </div>
+                                   <div class="xsLight ml-2">
+                                       {{
+                                           eventType.individual_name ? $t('individual event name mandatory') : $t('individual event name optional')
+                                       }}
+                                   </div>
+                               </div>
+                           </div>
+                       </div>
+                       <div class="flex items-center">
+                           <BaseMenu>
+                               <MenuItem v-slot="{ active }">
+                                   <a href="#" @click="openEditEventTypeModal(eventType)"
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       <PencilAltIcon
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           aria-hidden="true"/>
+                                       {{$t('Edit event type')}}
+                                   </a>
+                               </MenuItem>
+                               <MenuItem v-if="index !== 0" v-slot="{ active }">
+                                   <a href="#" @click="openDeleteEventTypeModal(eventType)"
+                                      :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       <TrashIcon
+                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                           aria-hidden="true"/>
+                                       {{$t('Delete event type')}}
+                                   </a>
+                               </MenuItem>
+                           </BaseMenu>
+                       </div>
+                   </li>
+               </ul>
+           </EventSettingHeader>
         <!-- Termintyp erstellen Modal-->
         <BaseModal @closed="closeAddEventTypeModal" v-if="addingEventType" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
                 <div class="mx-4">
@@ -225,6 +220,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
 
 export default {
     mixins: [Permissions],
@@ -265,6 +261,7 @@ export default {
         }
     },
     components: {
+        EventSettingHeader,
         TextInputComponent,
         ModalHeader,
         BaseModal,

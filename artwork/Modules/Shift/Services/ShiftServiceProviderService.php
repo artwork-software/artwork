@@ -34,6 +34,16 @@ readonly class ShiftServiceProviderService
         ChangeService $changeService,
         array|null $seriesShiftData = null
     ): void {
+        // check if user is already assigned to shift
+        if (
+            $shift->serviceProvider()
+                ->get(['service_providers.id'])
+                ->pluck('id')
+                ->contains($serviceProviderId)
+        ) {
+            return;
+        }
+
         $shiftServiceProviderPivot = $this->shiftServiceProviderRepository->createForShift(
             $shift->id,
             $serviceProviderId,

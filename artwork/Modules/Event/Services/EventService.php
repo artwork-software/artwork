@@ -14,6 +14,8 @@ use Artwork\Modules\DayService\Services\DayServicesService;
 use Artwork\Modules\Event\DTOs\EventManagementDto;
 use Artwork\Modules\Event\DTOs\ShiftPlanDto;
 use Artwork\Modules\Event\Enum\ShiftPlanWorkerSortEnum;
+use Artwork\Modules\Event\Events\EventDeleted;
+use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
@@ -25,6 +27,7 @@ use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Freelancer\Http\Resources\FreelancerShiftPlanResource;
 use Artwork\Modules\Freelancer\Services\FreelancerService;
+use Artwork\Modules\Holidays\Models\Holiday;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
@@ -174,7 +177,15 @@ readonly class EventService
 
         $notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
 
+        $deletedEvent = new EventDeleted(
+            $event->room_id,
+            $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+                $event->end_time
+        );
         $this->eventRepository->delete($event);
+        broadcast($deletedEvent)->toOthers();
     }
 
     public function deleteAll(
@@ -623,6 +634,17 @@ readonly class EventService
                     'week_number' => $period->weekOfYear,
                 ];
             }
+
+            $holidays = Holiday::where(function ($query) use ($period): void {
+                $query->where(function ($q) use ($period): void {
+                    $q->whereDate('date', '<=', $period->format('Y-m-d'))
+                        ->whereDate('end_date', '>=', $period->format('Y-m-d'));
+                })->orWhere(function ($q) use ($period): void {
+                    $q->where('yearly', true)
+                        ->whereMonth('date', $period->month)
+                        ->whereDay('end_date', $period->day);
+                });
+            })->with('subdivisions')->get();
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
@@ -636,6 +658,16 @@ readonly class EventService
                 'is_sunday' => $period->isSunday(),
                 'is_first_day_of_month' => $period->isSameDay($period->copy()->startOfMonth()),
                 'add_week_separator' => $period->isSunday(),
+                'holidays' => $holidays->map(function ($holiday) {
+                    return [
+                        'name' => $holiday->name,
+                        'type' => $holiday->type,
+                        'start_date' => $holiday->startDate,
+                        'end_date' => $holiday->endDate,
+                        'color' => $holiday->color,
+                        'subdivisions' => $holiday->subdivisions->pluck('name'), // Subdivision-Namen sammeln
+                    ];
+                }),
             ];
         }
 
@@ -943,8 +975,7 @@ readonly class EventService
                 'calendarType' => 'individual',
                 'selectedDate' => '',
                 'eventsWithoutRoom' => [],
-                'filterOptions' => $filterService->getCalendarFilterDefinitions(
-                ),
+                'filterOptions' => $filterService->getCalendarFilterDefinitions(),
                 'personalFilters' => $filterService->getPersonalFilter(),
                 'user_filters' => $userService->getAuthUser()->calendar_filter,
             ];
@@ -1085,7 +1116,22 @@ readonly class EventService
 
     public function save(Event $event): Event|Model
     {
-        return $this->eventRepository->save($event);
+        $originalStartTime = $event->getOriginal('start_time');
+        $originalEndTime = $event->getOriginal('end_time');
+        $originalRoomId = $event->getOriginal('room_id');
+
+        $event = $this->eventRepository->save($event);
+        if ($originalStartTime && $originalEndTime) {
+            broadcast(new EventUpdated($originalRoomId, $originalStartTime, $originalEndTime))->toOthers();
+        }
+        broadcast(new EventUpdated(
+            $event->room_id,
+            $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+            $event->end_time
+        ))->toOthers();
+        return $event;
     }
 
 

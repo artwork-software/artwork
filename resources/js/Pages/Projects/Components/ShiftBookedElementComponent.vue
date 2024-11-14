@@ -1,6 +1,6 @@
 <template>
     <SelectUserForShiftMenu :crafts-with-entities="sortedCraftsWithEntities" @create-on-drop-element-and-save="createOnDropElementAndSave">
-        <div class="flex items-center p-1 hover:bg-gray-50/40 rounded cursor-pointer group w-full h-full"  @dragover="onDragOver" @drop="onDrop">
+        <div class="flex items-center p-1 hover:bg-gray-50/40 rounded cursor-pointer w-full h-full"  @dragover="onDragOver" @drop="onDrop">
             <div class="flex gap-1 items-center justify-between w-full h-full">
                 <div class="h-full">
                     <div class="flex items-center gap-1" v-if="type === 0 || type === 1">
@@ -25,7 +25,9 @@
                     class=" block group-hover:hidden"
                     :icon-name="getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
             </div>
-            <div v-if="can('can plan shifts') || hasAdminRole()" class="hidden group-hover:block"
+        </div>
+        <template #xButton>
+            <div v-if="can('can plan shifts') || hasAdminRole()" class="hidden group-hover:block ml-1"
                  @click="event.is_series ? openDeleteUserModal(user.pivot.id, type) : deleteUserFromShift(user.pivot.id, type)">
                 <span class="flex items-center justify-center">
                     <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
@@ -33,7 +35,7 @@
                     </span>
                 </span>
             </div>
-        </div>
+        </template>
 
     </SelectUserForShiftMenu>
 
@@ -148,6 +150,7 @@ const showMultipleShiftQualificationSlotsAvailableModalSlots = ref(null);
 const showMultipleShiftQualificationSlotsAvailableModalDroppedUser = ref(null);
 
 const emits = defineEmits(['dropFeedback']);
+const assigningInProgress = ref(false);
 
 const sortedCraftsWithEntities = computed(() => {
     return props.craftWithEntities.map((craft) => {
@@ -248,6 +251,7 @@ const saveUser = () => {
         if (droppedUserCannotBeAssignedToCraft(droppedUser.value)) {
             dropFeedbackUserCannotBeAssignedToCraft(droppedUser.value.type);
             isUpdateContainer.value = false;
+            assigningInProgress.value = false;
             return;
         }
     }
@@ -255,12 +259,14 @@ const saveUser = () => {
     if (droppedUserAlreadyWorksOnShift(droppedUser.value)) {
         dropFeedbackUserAlreadyWorksOnShift(droppedUser.value.type);
         isUpdateContainer.value = false;
+        assigningInProgress.value = false;
         return;
     }
 
     if (droppedUserHasNoQualifications(droppedUser.value)) {
         dropFeedbackUserHasNoQualifications(droppedUser.value.type);
         isUpdateContainer.value = false;
+        assigningInProgress.value = false;
         return;
     }
 
@@ -272,6 +278,7 @@ const saveUser = () => {
         if (typeof availableSlot === 'undefined') {
             dropFeedbackNoSlotsForQualification(droppedUser.value.type);
             isUpdateContainer.value = false;
+            assigningInProgress.value = false;
             return;
         }
 
@@ -290,6 +297,7 @@ const saveUser = () => {
         if (availableShiftQualificationSlots.length === 0) {
             dropFeedbackNoSlotsForQualification(droppedUser.value.type);
             isUpdateContainer.value = false;
+            assigningInProgress.value = false;
             return;
         }
 
@@ -434,6 +442,7 @@ const closeMultipleShiftQualificationSlotsAvailableModal = (droppedUser, selecte
 
     if(closeOnButton) {
         isUpdateContainer.value = false;
+        assigningInProgress.value = false;
     }
 }
 const assignUser = (droppedUser, shiftQualificationId) => {
@@ -450,12 +459,20 @@ const assignUser = (droppedUser, shiftQualificationId) => {
         {
             preserveScroll: true,
             onSuccess: () => {
+                assigningInProgress.value = false;
                 deleteUserFromShift(props.user.pivot.id, props.type, true, false);
             }
         },
     )
 }
 const createOnDropElementAndSave = (user, craft) => {
+
+    if (assigningInProgress.value) {
+        return;
+    }
+
+    assigningInProgress.value = true;
+
     isUpdateContainer.value = true;
     droppedUser.value = {
         id: user.id,

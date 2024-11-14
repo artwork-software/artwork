@@ -2092,5 +2092,7 @@
     "Edit the holiday by filling in the fields. You can rename the holiday, change the date and adjust the federal states and color.": "Bearbeite den Feiertag, indem du die Felder ausfüllst. Du kannst den Feiertag umbenennen, das Datum ändern und die Bundesländer und Farbe anpassen.",
     "Please select a date": "Bitte wähle ein Datum",
     "Aggregated projects": "aggregierte Projekte",
-    "Itemised projects": "aufgeschlüsselte Projekte"
+    "Itemised projects": "aufgeschlüsselte Projekte",
+    "ascending": "aufsteigend",
+    "descending": "absteigend"
 }

@@ -6,6 +6,7 @@ use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -135,6 +136,11 @@ class CraftsInventoryColumnService
         if (!$craftsInventoryColumn instanceof CraftsInventoryColumn) {
             $craftsInventoryColumn = $this->craftsInventoryColumnRepository->find($craftsInventoryColumn);
         }
+
+        $users = User::where('inventory_sort_column_id', $craftsInventoryColumn->id)->get();
+        $users->each(function (User $user): void {
+            $user->update(['inventory_sort_column_id' => null, 'inventory_sort_direction' => null]);
+        });
 
         return $this->craftsInventoryColumnRepository->forceDelete($craftsInventoryColumn);
     }

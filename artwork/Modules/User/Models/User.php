@@ -195,6 +195,12 @@ class User extends Model implements
         'drawer_height',
         'inventory_sort_column_id',
         'inventory_sort_direction',
+        'checklist_has_projects',
+        'checklist_no_projects',
+        'checklist_private_checklists',
+        'checklist_no_private_checklists',
+        'checklist_completed_tasks',
+        'checklist_show_without_tasks',
     ];
 
     protected $casts = [
@@ -212,6 +218,12 @@ class User extends Model implements
         'notification_enums_last_sent_dates' => 'array',
         'show_notification_indicator' => 'boolean',
         'is_freelancer' => 'boolean',
+        'checklist_has_projects' => 'boolean',
+        'checklist_no_projects' => 'boolean',
+        'checklist_private_checklists' => 'boolean',
+        'checklist_no_private_checklists' => 'boolean',
+        'checklist_completed_tasks' => 'boolean',
+        'checklist_show_without_tasks' => 'boolean',
     ];
 
     protected $hidden = [

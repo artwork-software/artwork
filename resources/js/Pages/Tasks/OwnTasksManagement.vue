@@ -37,7 +37,7 @@
                                     </span>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="hasProjects"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_has_projects"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -45,7 +45,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="noProjects"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_no_projects"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -53,7 +53,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="privateChecklists"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_private_checklists"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -61,7 +61,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="noPrivateChecklists"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_no_private_checklists"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -69,7 +69,7 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="showDoneTasks"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_completed_tasks"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
@@ -77,13 +77,23 @@
                                     </p>
                                 </div>
                                 <div class="flex max-h-8 mb-3 mt-3">
-                                    <input v-model="showChecklistWithoutTasks"
+                                    <input @change="updateUserFilter" v-model="usePage().props.user.checklist_show_without_tasks"
                                            type="checkbox"
                                            class="input-checklist-dark"/>
                                     <p class=" ml-4 my-auto text-sm text-secondary">
                                         {{ $t('Show to-do lists without tasks') }}
                                     </p>
                                 </div>
+                                <transition enter-active-class="duration-300 ease-out" enter-from-class="transform opacity-0" enter-to-class="opacity-100" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="transform opacity-0">
+                                    <div class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg" v-show="filterWasSaved">
+                                        {{ $t('The filter settings have been saved.') }}
+                                    </div>
+                                </transition>
+                                <transition enter-active-class="duration-300 ease-out" enter-from-class="transform opacity-0" enter-to-class="opacity-100" leave-active-class="duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="transform opacity-0">
+                                    <div class="my-3 text-xs bg-orange-600 px-3 py-1.5 text-white rounded-lg" v-show="willSaved">
+                                        {{$t('The filter settings will be saved in 3 seconds.') }}
+                                    </div>
+                                </transition>
                             </div>
                         </BaseFilter>
                     </template>
@@ -176,7 +186,7 @@
 </template>
 
 <script setup>
-import {computed, nextTick, ref} from 'vue';
+import {computed, nextTick, ref, watch} from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SingleMoneySourceTask from "@/Pages/Tasks/Components/SingleMoneySourceTask.vue";
 import ChecklistListView from "@/Components/Checklist/ChecklistListView.vue";
@@ -191,6 +201,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem} from "@headlessui/vue";
 import {router, usePage} from "@inertiajs/vue3";
 import { IconCheck } from "@tabler/icons-vue";
+import debounce from "lodash.debounce";
 
 const $t = useTranslation();
 
@@ -205,14 +216,9 @@ const props = defineProps({
 
 const search = ref('');
 const showSearch = ref(false);
-
-// filter options
-const hasProjects = ref(false);
-const noProjects = ref(false);
-const privateChecklists = ref(false);
-const noPrivateChecklists = ref(false);
-const showDoneTasks = ref(false);
-const showChecklistWithoutTasks = ref(true);
+const filterWasSaved = ref(false);
+const willSaveInSec = ref(3000);
+const willSaved = ref(false);
 
 const currentSort = ref(usePage().props.urlParameters?.filter > 0 ? parseInt(usePage().props.urlParameters?.filter) : 0);
 
@@ -229,13 +235,13 @@ const filteredChecklists = computed(() => {
         if (search.value) {
             include = checklist.name.toLowerCase().includes(search.value.toLowerCase()) || checklist.tasks.some(task => task.name.toLowerCase().includes(search.value.toLowerCase()));
         }
-        if (hasProjects.value) include = include && checklist.hasProject === true;
-        if (noProjects.value) include = include && checklist.hasProject === false;
-        if (privateChecklists.value) include = include && checklist.private === true;
-        if (noPrivateChecklists.value) include = include && checklist.private === false;
+        if (usePage().props.user.checklist_has_projects) include = include && checklist.hasProject === true;
+        if (usePage().props.user.checklist_no_projects) include = include && checklist.hasProject === false;
+        if (usePage().props.user.checklist_private_checklists) include = include && checklist.private === true;
+        if (usePage().props.user.checklist_no_private_checklists) include = include && checklist.private === false;
 
         // entferne checklisten die nur erledigt aufgaben haben oder keine aufgaben
-        if (showChecklistWithoutTasks.value) {
+        if (usePage().props.user.checklist_show_without_tasks) {
             include = include && checklist.tasks.length >= 0;
         } else {
             include = include && checklist.tasks.length > 0 && checklist.tasks.some(task => !task.done);
@@ -251,7 +257,7 @@ const filteredChecklists = computed(() => {
 const checklistsComputed = computed(() => {
     const checklists = filteredChecklists.value.map(checklist => {
         let tasks = checklist.tasks;
-        if (!showDoneTasks.value) {
+        if (!usePage().props.user.checklist_completed_tasks) {
             tasks = tasks.filter(task => !task.done);
         }
 
@@ -289,11 +295,14 @@ const removeSearch = () => {
 }
 
 const removeFilter = () => {
-    hasProjects.value = false;
-    noProjects.value = false;
-    privateChecklists.value = false;
-    noPrivateChecklists.value = false;
-    showDoneTasks.value = false;
+    usePage().props.user.checklist_has_projects = false;
+    usePage().props.user.checklist_no_projects = false;
+    usePage().props.user.checklist_private_checklists = false;
+    usePage().props.user.checklist_no_private_checklists = false;
+    usePage().props.user.checklist_completed_tasks = false;
+    usePage().props.user.checklist_show_without_tasks = true;
+
+    updateUserFilter();
 }
 
 const openSearchbar = () => {
@@ -302,6 +311,31 @@ const openSearchbar = () => {
         document.getElementById('userSearch').focus();
     });
 }
+
+const updateUserFilter = () => {
+    willSaved.value = true;
+    debounce(() => {
+        router.patch(route('user.update.checklist.filter', usePage().props.user.id), {
+            checklist_has_projects: usePage().props.user.checklist_has_projects,
+            checklist_no_projects: usePage().props.user.checklist_no_projects,
+            checklist_private_checklists: usePage().props.user.checklist_private_checklists,
+            checklist_no_private_checklists: usePage().props.user.checklist_no_private_checklists,
+            checklist_completed_tasks: usePage().props.user.checklist_completed_tasks,
+            checklist_show_without_tasks: usePage().props.user.checklist_show_without_tasks,
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                willSaved.value = false;
+                filterWasSaved.value = true;
+                setTimeout(() => {
+                    filterWasSaved.value = false;
+                }, 3000);
+            }
+        });
+    }, willSaveInSec.value)();
+}
+
 
 </script>
 

@@ -1,20 +1,17 @@
 <template>
-    <tr
-        @mouseover="showItemMenu()"
-        @mouseout="closeItemMenu()"
-        >
+    <tr @mouseover="showItemMenu()" @mouseout="closeItemMenu()" class="group">
         <template v-for="(cell) in item.cells"
                   :key="cell.id">
             <InventoryCell :cell="cell"
                            @is-editing-cell-value="handleCellIsEditing"/>
         </template>
         <td class="relative">
-            <BaseMenu v-show="itemMenuShown && !itemDragged" class="absolute right-0">
+            <BaseMenu v-show="!itemDragged" class="absolute right-0 group-hover:visible invisible" has-no-offset>
                 <MenuItem v-slot="{ active }"
                           as="div">
                     <a @click="showItemDeleteConfirmModal()"
-                       :class="[active ? 'active' : 'not-active', 'default group']">
-                        <IconTrash class="icon group-hover:text-white"/>
+                       :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
+                        <IconTrash class="h-5 w-5 mr-3 group-hover:text-white"/>
                         {{ $t('Delete') }}
                     </a>
                 </MenuItem>

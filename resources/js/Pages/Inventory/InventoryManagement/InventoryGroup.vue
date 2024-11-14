@@ -3,7 +3,7 @@
         @dragstart="groupDragStart"
         @dragend="groupDragEnd"
         @mouseover="showGroupMenu()"
-        @mouseout="closeGroupMenu()"
+        @mouseout="closeGroupMenu()" class="group"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan" class="group-td">
             <div class="group-td-container">
@@ -32,34 +32,16 @@
             </div>
         </td>
         <td class="relative">
-            <Menu v-show="groupMenuShown && !groupDragged"
-                  as="div"
-                  class="inventory-menu-container">
-                <MenuButton as="div">
-                    <IconDotsVertical class="menu-button"
-                                      stroke-width="1.5"
-                                      aria-hidden="true"/>
-                </MenuButton>
-                <div class="inventory-menu">
-                    <transition enter-active-class="transition-enter-active"
-                                enter-from-class="transition-enter-from"
-                                enter-to-class="transition-enter-to"
-                                leave-active-class="transition-leave-active"
-                                leave-from-class="transition-leave-from"
-                                leave-to-class="transition-leave-to">
-                        <MenuItems class="menu-items">
-                            <MenuItem v-slot="{ active }"
-                                      as="div">
-                                <a @click="showGroupDeleteConfirmModal()"
-                                   :class="[active ? 'active' : 'not-active', 'default group']">
-                                    <IconTrash class="icon group-hover:text-white"/>
-                                    {{ $t('Delete') }}
-                                </a>
-                            </MenuItem>
-                        </MenuItems>
-                    </transition>
-                </div>
-            </Menu>
+            <BaseMenu has-no-offset class="invisible group-hover:visible">
+                <MenuItem v-slot="{ active }"
+                          as="div">
+                    <a @click="showGroupDeleteConfirmModal()"
+                       :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
+                        <IconTrash class="h-5 w-5 mr-3 group-hover:text-white"/>
+                        {{ $t('Delete') }}
+                    </a>
+                </MenuItem>
+            </BaseMenu>
         </td>
     </tr>
     <tr v-if="group.items.length > 0 && groupShown">
@@ -106,6 +88,7 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 
 const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     props = defineProps({

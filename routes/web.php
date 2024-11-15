@@ -1555,6 +1555,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     '/{craftInventoryItemCell}/cell-value',
                     [CraftInventoryItemCellController::class, 'updateCellValue']
                 )->name('inventory-management.inventory.item-cell.update.cell-value');
+                Route::post(
+                    '/{craftInventoryItemCell}/cell-value/upload',
+                    [CraftInventoryItemCellController::class, 'updateCellValueUpload']
+                )->name('inventory-management.inventory.item-cell.update.cell-value.upload');
+                Route::get(
+                    '/{craftInventoryItemCell}/cell-value/download',
+                    [CraftInventoryItemCellController::class, 'getDownloadCellValueUpload']
+                )->name('inventory-management.inventory.item-cell.download');
+                Route::delete(
+                    '/{craftInventoryItemCell}/cell-value/delete',
+                    [CraftInventoryItemCellController::class, 'removeUploadedFile']
+                )->name('inventory-management.inventory.item-cell.update.cell-value.delete.file');
             });
             Route::group(['prefix' => 'export'], function (): void {
                 Route::post(

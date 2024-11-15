@@ -8,4 +8,6 @@ enum CraftsInventoryColumnTypeEnum: int
     case DATE = 1;
     case CHECKBOX = 2;
     case SELECT = 3;
+    case NUMBER = 4;
+    case UPLOAD = 5;
 }

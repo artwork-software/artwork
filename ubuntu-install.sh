@@ -89,6 +89,7 @@ sudo sed -i "s/# master_key = \"YOUR_MASTER_KEY_VALUE\"/master_key = \"$MEILI_KE
 sudo sed -i "s/db_path = \".\/data.ms\"/db_path =\"\/var\/lib\/meilisearch\/data\"/g" /etc/meilisearch.toml
 sudo sed -i "s/dump_dir = \"dumps\/\"/dump_dir = \"\/var\/lib\/meilisearch\/dumps\"/g" /etc/meilisearch.toml
 sudo sed -i "s/snapshot_dir = \"snapshots\/\"/snapshot_dir  = \"\/var\/lib\/meilisearch\/snapshots\"/g" /etc/meilisearch.toml
+
 sudo cp /var/www/html/.install/meilisearch.service /etc/systemd/system/meilisearch.service
 sudo systemctl enable meilisearch
 sudo systemctl start meilisearch
@@ -97,9 +98,19 @@ sudo systemctl start meilisearch
 sudo chown -R www-data:www-data /var/www/html
 
 #Setup Soketi (pusher)
-sudo npm install -g @soketi/soketi
-sudo npm install -g pm2
-sudo pm2 start soketi -- start
+PUSHER_KEY=$(openssl rand -hex 16)
+PUSHER_SECRET=$(openssl rand -hex 16)
+PUSHER_ID=$(openssl rand -hex 16)
+sudo cp /var/www/html/.install/artwork-sockets.service /etc/systemd/system/artwork-sockets.service
+sudo echo "PUSHER_APP_KEY=$PUSHER_KEY" >> /var/www/html/.env
+sudo echo "PUSHER_APP_ID=$PUSHER_SECRET" >> /var/www/html/.env
+sudo echo "PUSHER_APP_SECRET=$PUSHER_ID" >> /var/www/html/.env
+sudo echo "VITE_PUSHER_APP_KEY=$PUSHER_KEY" >> /var/www/html/.env
+sudo echo "VITE_PUSHER_APP_ID=$PUSHER_SECRET" >> /var/www/html/.env
+sudo echo "VITE_PUSHER_APP_SECRET=$PUSHER_ID" >> /var/www/html/.env
+sudo sed -i "s/__ID/$PUSHER_ID/g" /var/www/html/soketi.config.json
+sudo sed -i "s/__KEY/$PUSHER_KEY/g" /var/www/html/soketi.config.json
+sudo sed -i "s/__SECRET/$PUSHER_SECRET/g" /var/www/html/soketi.config.json
 
 ## Setup laravel
 sudo php /var/www/html/artisan key:generate --force
@@ -118,6 +129,7 @@ sudo chown -R www-data:www-data /var/www/html
 sudo cp /var/www/html/.install/artwork-worker.service /etc/systemd/system/artwork-worker.service
 sudo systemctl daemon-reload
 sudo systemctl enable artwork-worker
+sudo systemctl enable artwork-sockets
 sudo php /var/www/html/artisan scout:index departments
 sudo php /var/www/html/artisan scout:index moneysources
 sudo php /var/www/html/artisan scout:index shifpresets

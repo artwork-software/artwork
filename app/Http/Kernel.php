@@ -28,6 +28,7 @@ use Illuminate\Routing\Middleware\ValidateSignature;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Jetstream\Http\Middleware\AuthenticateSession;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Spatie\Permission\Middlewares\PermissionMiddleware;
 use Spatie\Permission\Middlewares\RoleMiddleware;
 use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
@@ -58,6 +59,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             SubstituteBindings::class,
         ],

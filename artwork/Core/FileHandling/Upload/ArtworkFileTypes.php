@@ -2,9 +2,9 @@
 
 namespace Artwork\Core\FileHandling\Upload;
 
-enum ArtworkFileTypes
+enum ArtworkFileTypes: string
 {
-    case PROJECT;
-    case ROOM;
-    case BRANDING;
+    case PROJECT = 'project';
+    case ROOM = 'room';
+    case BRANDING = 'branding';
 }

@@ -31,6 +31,10 @@ class GeneralSettings extends Settings
     public string $business_email;
 
     public bool $budget_account_management_global;
+    
+    public array $allowed_project_file_mimetypes;
+    public array $allowed_room_file_mimetypes;
+    public array $allowed_branding_file_mimetypes;
 
     public static function group(): string
     {

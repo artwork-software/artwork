@@ -14,7 +14,7 @@
                                <div class="block w-5 h-5 rounded-full"
                                     :style="{'backgroundColor' : event.type?.hex_code }"/>
                            </div>
-                           <div>
+                           <div class="truncate w-16">
                                {{ event.type?.name }}
                            </div>
                        </div>

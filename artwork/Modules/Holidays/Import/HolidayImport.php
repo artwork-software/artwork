@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Holidays\Import;
 
+use App\Settings\HolidaySettings;
 use Artwork\Modules\Holidays\Api\ApiDto;
 use Artwork\Modules\Holidays\Api\HolidayApi;
 use Artwork\Modules\Holidays\Models\Subdivision;
@@ -18,26 +19,37 @@ class HolidayImport
     }
 
     public function handle(
-        HolidayApi $api,
         HolidayService $holidayService
     ): void {
-        foreach ($holidayService->getAllImported() as $holiday) {
-            $holiday->delete();
-        }
+        $holidayService->deleteAllFormApi();
 
-        foreach (Subdivision::all() as $subdivision) {
-            foreach (
-                $api->getHolidays(
-                    Carbon::now()->startOf('year'),
-                    Carbon::now()->endOf('year'),
-                    $subdivision
-                ) as $holiday
-            ) {
-                $holidayService->createFromApi(
-                    $holiday
-                );
-            }
+
+        $settings = app(HolidaySettings::class);
+        $subdivisions = Subdivision::whereIn('id', $settings->subdivisions)->get();
+        $responses = $holidayService->getHolidaysFormAPI(
+            selectedSubdivisions: $subdivisions,
+            publicHolidays: $settings->public_holidays,
+            schoolHolidays: $settings->school_holidays,
+        );
+
+        $mergedHolidays = $holidayService->mergeHolidays(
+            responses: $responses,
+            selectedSubdivisions: $subdivisions,
+        );
+
+        foreach ($mergedHolidays as $holiday) {
+            $holidayService->create(
+                $holiday['name'],
+                collect($holiday['subdivisions'])->pluck('id')->toArray(),
+                Carbon::parse($holiday['startDate']),
+                Carbon::parse($holiday['endDate']),
+                $holiday['nationwide'] ? 'DE' : 'DE',
+                false,
+                0,
+                $holiday['id'],
+                true,
+                '#333'
+            );
         }
     }
-
 }

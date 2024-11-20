@@ -4,6 +4,7 @@ namespace Artwork\Core\Console\Commands;
 
 use Artwork\Modules\Holidays\Import\HolidayImport;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Bus\Dispatcher;
 
 class ImportHolidaysCommand extends Command
 {
@@ -12,8 +13,8 @@ class ImportHolidaysCommand extends Command
 
     protected $description = 'Imports holidays of current year';
 
-    public function handle(): void
+    public function handle(Dispatcher $dispatcher): void
     {
-        $this->call(HolidayImport::class);
+        $dispatcher->dispatch(new HolidayImport());
     }
 }

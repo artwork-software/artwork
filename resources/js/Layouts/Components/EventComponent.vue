@@ -52,7 +52,7 @@
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
-                                               v-for="eventType in eventTypes"
+                                               v-for="eventType in sortedEventTypes"
                                                :key="eventType.name"
                                                :value="eventType"
                                                v-slot="{ active, selected }">
@@ -703,6 +703,10 @@ export default {
             startTime: null,
             endDate: null,
             endTime: null,
+            oldStartDate: null,
+            oldStartTime: null,
+            oldEndDate: null,
+            oldEndTime: null,
             isLoud: false,
             audience: false,
             showSeriesEdit: false,
@@ -826,6 +830,9 @@ export default {
         isCreator() {
             return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
         },
+        sortedEventTypes() {
+            return this.eventTypes.sort((a, b) => a.name.localeCompare(b.name));
+        },
     },
     methods: {
         convertDateFormat(dateString) {
@@ -861,6 +868,10 @@ export default {
             this.startTime = start.format('HH:mm');
             this.endDate = end.format('YYYY-MM-DD');
             this.endTime = end.format('HH:mm');
+            this.oldStartDate = this.startDate;
+            this.oldStartTime = this.startTime;
+            this.oldEndDate = this.endDate;
+            this.oldEndTime = this.endTime;
             this.isLoud = this.event.isLoud;
             this.audience = this.event.audience;
             this.title = this.event.title;
@@ -916,6 +927,9 @@ export default {
                     getDaysOfEvent(
                         this.startDate,
                         this.series === true ? this.seriesEndDate : this.endDate
+                    ), getDaysOfEvent(
+                        this.oldStartDate,
+                        this.oldEndDate
                     )
                 );
             } else {

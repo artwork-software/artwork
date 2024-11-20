@@ -2045,7 +2045,6 @@ class ProjectController extends Controller
                     $headerObject->project->project_managers = $project->managerUsers;
                     break;
                 case ProjectTabComponentEnum::BUDGET_INFORMATIONS->value:
-
                     $headerObject->project->collecting_society = $project->collectingSociety;
                     $loadedProjectInformation['BudgetInformation'] = $this->projectTabService
                         ->getBudgetInformationDto(

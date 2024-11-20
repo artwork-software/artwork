@@ -24,10 +24,9 @@ window.Pusher = pusher;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.MIX_PUSHER_APP_KEY ?? '12345',
-    cluster: import.meta.env.MIX_PUSHER_APP_CLUSTER ?? 'eu',
+    key: import.meta.env.VITE_PUSHER_APP_KEY ?? 'app-key',
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'eu',
     forceTLS: false,
-    wsHost: import.meta.env.MIX_PUSHER_HOST,
-    wsPort: import.meta.env.MIX_PUSHER_PORT,
+    wsHost: import.meta.env.VITE_PUSHER_HOST ?? 'artwork.ddev.site',
+    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 6001,
 });
-

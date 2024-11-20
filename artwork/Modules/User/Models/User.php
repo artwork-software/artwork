@@ -123,6 +123,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<string> $allPermissions
  * @property array $notification_enums_last_sent_dates
  * @property int $bulk_sort_id
+ * @property boolean $show_notification_indicator
+ * @property int $shift_plan_user_sort_by_id
+ * @property boolean $is_freelancer
+ * @property string $sort_type_shift_tab
+ * @property int $drawer_height
+ * @property int $inventory_sort_column_id
+ * @property int $inventory_sort_direction
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -186,6 +193,14 @@ class User extends Model implements
         'is_freelancer',
         'sort_type_shift_tab',
         'drawer_height',
+        'inventory_sort_column_id',
+        'inventory_sort_direction',
+        'checklist_has_projects',
+        'checklist_no_projects',
+        'checklist_private_checklists',
+        'checklist_no_private_checklists',
+        'checklist_completed_tasks',
+        'checklist_show_without_tasks',
     ];
 
     protected $casts = [
@@ -203,6 +218,12 @@ class User extends Model implements
         'notification_enums_last_sent_dates' => 'array',
         'show_notification_indicator' => 'boolean',
         'is_freelancer' => 'boolean',
+        'checklist_has_projects' => 'boolean',
+        'checklist_no_projects' => 'boolean',
+        'checklist_private_checklists' => 'boolean',
+        'checklist_no_private_checklists' => 'boolean',
+        'checklist_completed_tasks' => 'boolean',
+        'checklist_show_without_tasks' => 'boolean',
     ];
 
     protected $hidden = [

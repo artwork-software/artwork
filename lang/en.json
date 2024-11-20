@@ -2118,5 +2118,7 @@
     "Inventory can be planned by all planners": "Inventory can be planned by all planners",
     "Inventory can only be planned by:": "Inventory can only be planned by:",
     "Explicitly selected persons": "Explicitly selected persons",
-    "From all planners": "From all planners"
+    "From all planners": "From all planners",
+    "Inventory settings": "Inventory settings",
+    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory."
 }

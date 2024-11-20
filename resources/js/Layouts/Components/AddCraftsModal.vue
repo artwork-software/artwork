@@ -107,8 +107,8 @@
     <div class="mt-3">
         <div class="my-5">
             <TinyPageHeadline
-                title="Inventar Einstellungen"
-                description="Hier kann festgelegt werden, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht 'Inventar planen' haben."
+                :title="$t('Inventory settings')"
+                :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
             />
         </div>
 

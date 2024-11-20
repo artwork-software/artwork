@@ -2116,5 +2116,7 @@
     "Column Order": "Column Order",
     "Define the order of the columns in the inventory overview.": "Define the order of the columns in the inventory overview.",
     "Inventory can be planned by all planners": "Inventory can be planned by all planners",
-    "Inventory can only be planned by:": "Inventory can only be planned by:"
+    "Inventory can only be planned by:": "Inventory can only be planned by:",
+    "Explicitly selected persons": "Explicitly selected persons",
+    "From all planners": "From all planners"
 }

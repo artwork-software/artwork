@@ -2116,5 +2116,7 @@
     "Column Order": "Spaltenreihenfolge",
     "Define the order of the columns in the inventory overview.": "Definiere die Reihenfolge der Spalten in der Inventarübersicht.",
     "Inventory can be planned by all planners": "Inventar planbar von allen Planer*innen",
-    "Inventory can only be planned by:": "Inventar kann nur geplant werden von:"
+    "Inventory can only be planned by:": "Inventar kann nur geplant werden von:",
+    "Explicitly selected persons": "Explizit ausgewählten Personen",
+    "From all planners": "Von allen Planer*innen"
 }

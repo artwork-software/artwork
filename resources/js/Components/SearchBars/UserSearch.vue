@@ -11,7 +11,7 @@
                 <IconX class="h-6 w-6 text-gray-400" v-if="user_search_query.length > 0" @click="closeSearch"/>
             </div>
         </div>
-        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <transition leave-active-class="transition ease-in duration-100" leave-fromÏ-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="users?.length > 0" class="absolute rounded-lg z-10 w-full max-h-60 bg-artwork-navigation-background shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                 <div class="border-gray-200">
                     <div v-for="(user, index) in users" :key="index" class="flex items-center cursor-pointer">
@@ -63,7 +63,7 @@ export default {
         return {
             user_search_query: '',
             users: [],
-            blockSearch: false,
+            blockSearchWorkers: false,
         }
     },
     props: {
@@ -79,7 +79,11 @@ export default {
         onlyManager: booleanDefaultFalseCfg,
         onlyTeam: booleanDefaultFalseCfg,
         searchWorkers: booleanDefaultFalseCfg,
-        dontCloseOnSelect: booleanDefaultFalseCfg
+        dontCloseOnSelect: booleanDefaultFalseCfg,
+        currentCraft: {
+            type: Object,
+            required: false
+        }
     },
     computed: {
         projectManagementText() {
@@ -110,6 +114,7 @@ export default {
             this.user_search_query = '';
 
             if (this.searchWorkers) {
+                this.blockSearchWorkers = true;
                 this.users = [];
             }
         }
@@ -117,8 +122,8 @@ export default {
     watch: {
         user_search_query: {
             handler() {
-                if (this.blockSearch) {
-                    this.blockSearch = false;
+                if (this.blockSearchWorkers) {
+                    this.blockSearchWorkers = false;
                     return;
                 }
                 let desiredRoute = this.searchWorkers ? route('worker.scoutSearch') : route('user.scoutSearch');
@@ -132,6 +137,17 @@ export default {
                 ).then(
                     response => {
                         this.users = response.data;
+                        if (this.searchWorkers) {
+                            this.users = response.data.filter(user => {
+                                return this.currentCraft.managersToBeAssigned.find(
+                                    (currentManagingWorker) => {
+                                        currentManagingWorker.id === user.id && user.manager_type === currentManagingWorker
+                                    }
+                                );
+                            });
+                        }
+
+                        return this.users;
                     }
                 );
             },

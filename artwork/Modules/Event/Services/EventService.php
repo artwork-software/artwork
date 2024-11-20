@@ -691,7 +691,15 @@ readonly class EventService
 
         return ShiftPlanDto::newInstance()
             ->setHistory($this->getEventShiftsHistoryChanges())
-            ->setCrafts($craftService->getAll())
+            ->setCrafts(
+                $craftService->getAll(
+                    [
+                        'managingUsers',
+                        'managingFreelancers',
+                        'managingServiceProviders'
+                    ]
+                )
+            )
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,

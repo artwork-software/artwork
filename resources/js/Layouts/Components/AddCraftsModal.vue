@@ -3,12 +3,11 @@
     <ModalHeader
         :title="$t('Craft')"
         :description="$t('Define the specifications of your trade.')"
-        />
+    />
     <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mb-10">
         <div class="col-span-1 mt-5">
-            <ColorPickerComponent :color="craft.color"  @updateColor="addColor" />
+            <ColorPickerComponent :color="craft.color" @updateColor="addColor"/>
         </div>
-
         <div class="col-span-3">
             <TextInputComponent
                 :label="$t('Name of the craft') + '*'"
@@ -27,7 +26,6 @@
             />
         </div>
     </div>
-
     <div class="">
         <NumberInputComponent
                v-model="craft.notify_days"
@@ -102,6 +100,7 @@
         <UserSearch :label="$t('Add department management')"
                     @user-selected="addSelectedToCraftManagers"
                     :search-workers="true"
+                    :current-craft="craft"
                     :dont-close-on-select="true"/>
         <div v-for="(user,index) in this.managers"
              class="mt-4 font-bold text-primary flex"
@@ -204,11 +203,10 @@ export default defineComponent({
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
             craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : [],
             managers: this.craftToEdit ? this.craftToEdit.managing_freelancers.concat(
-                this.craftToEdit.managing_service_providers.concat(
-                    this.craftToEdit.managing_users
-                )
-            ) : [],
-            userSearchResult: [],
+                    this.craftToEdit.managing_service_providers.concat(
+                        this.craftToEdit.managing_users
+                    )
+                ) : []
         }
     },
     unmounted() {

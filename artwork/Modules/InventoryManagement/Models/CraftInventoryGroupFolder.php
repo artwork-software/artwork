@@ -35,6 +35,4 @@ class CraftInventoryGroupFolder extends Model
             'id'
         )->select(['id', 'craft_inventory_group_folder_id', 'order']);
     }
-
-
 }

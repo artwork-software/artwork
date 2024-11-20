@@ -60,10 +60,12 @@ class CraftService
                             $sortedItems = $this->sortItems($group->items, $columnIdForSort, $directionForSort);
 
                             // Sortiere die Items in den Folders des Groups
-                            $group->folders = $group->folders->map(function ($folder) use ($columnIdForSort, $directionForSort) {
-                                $sortedFolderItems = $this->sortItems($folder->items, $columnIdForSort, $directionForSort);
-                                return $folder->setRelation('items', $sortedFolderItems);
-                            });
+                            $group->folders = $group->folders
+                                ->map(function ($folder) use ($columnIdForSort, $directionForSort) {
+                                    $sortedFolderItems = $this
+                                    ->sortItems($folder->items, $columnIdForSort, $directionForSort);
+                                    return $folder->setRelation('items', $sortedFolderItems);
+                                });
 
                             return $group->setRelation('items', $sortedItems);
                         });

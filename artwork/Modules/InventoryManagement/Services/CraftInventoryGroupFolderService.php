@@ -5,10 +5,10 @@ namespace Artwork\Modules\InventoryManagement\Services;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroupFolder;
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryGroupFolderRepository;
 
-class CraftInventoryGroupFolderService
+readonly class CraftInventoryGroupFolderService
 {
     public function __construct(
-        private readonly CraftsInventoryGroupFolderRepository $craftsInventoryGroupFolderRepository
+        private CraftsInventoryGroupFolderRepository $craftsInventoryGroupFolderRepository
     ) {
     }
 

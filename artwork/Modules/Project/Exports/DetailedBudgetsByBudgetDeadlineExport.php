@@ -123,6 +123,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
     /**
      * @return array<int, array<int, string>>
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getProjectRows(
         string $premiere,
         Table $projectBudgetTable,

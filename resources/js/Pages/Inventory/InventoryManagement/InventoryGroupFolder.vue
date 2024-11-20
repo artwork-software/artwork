@@ -1,56 +1,32 @@
 <template>
-    <tr :draggable="groupIsDraggable()"
-        @dragstart="groupDragStart"
-        @dragend="groupDragEnd"
-        @mouseover="showGroupMenu()"
+    <tr @mouseover="showGroupMenu()"
         @mouseout="closeGroupMenu()" class="group"
         @dragover="onDragOver" @drop="onDrop"
-        :class="'cursor-grab ' + trCls">
-        <td :colspan="colspan" class="group-td">
+        :class="trCls">
+        <td :colspan="colspan" class="group-td-folder">
             <div class="group-td-container">
                 <div
-                    class="name"
-                    @click="toggleGroupEdit()">
-                    <component is="IconCornerDownRight" class="icon"/>
-                    {{ group.name }}
+                    class="name flex items-center gap-x-1"
+                    @click="toggleFolderEdit()">
+                    <component is="IconFolderSymlink" class="icon"/>
+                    {{ folder.name }}
                 </div>
                 <div @click="toggleGroup()">
                     <IconChevronUp v-if="groupShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
-                <div class="flex items-center w-full gap-x-4" v-if="can('can manage inventory stock') || hasAdminRole()">
-                    <ToolTipComponent
-                        :tooltip-text="$t('Add new item')"
-                        direction="bottom"
-                        icon="IconCirclePlus"
-                        icon-size="h-5 w-5"
-                        stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
-                        @click="addNewItem()"
-                        v-if="!groupClicked"
-                    />
-                    <ToolTipComponent
-                        :tooltip-text="$t('New folder')"
-                        direction="bottom"
-                        icon="IconFolderPlus"
-                        icon-size="h-5 w-5"
-                        stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
-                        @click="showAddCategoryOrGroupModal = true"
-                        v-if="!groupClicked"
-                    />
-                    <ToolTipComponent
-                        :tooltip-text="$t('Change the order of the folders')"
-                        direction="bottom"
-                        icon="IconFolderCog"
-                        icon-size="h-5 w-5"
-                        stroke="1.5"
-                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
-                        @click="showReorderFoldersModal = true"
-                        v-if="!groupClicked && group.folders.length > 1"
-                    />
-                </div>
-                <div :class="[groupClicked ? '' : '!hidden', 'group-input-container']">
+                <ToolTipComponent
+                    :tooltip-text="$t('Add new item')"
+                    direction="bottom"
+                    icon="IconCirclePlus"
+                    icon-size="h-5 w-5"
+                    stroke="1.5"
+                    classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                    @click="addNewItem(folder.id)"
+                    v-if="!folderClicked && can('can manage inventory stock') || hasAdminRole()"
+                />
+                <div
+                    :class="[folderClicked ? '' : '!hidden', 'group-input-container']">
                     <input
                         type="text"
                         ref="groupInputRef"
@@ -74,69 +50,37 @@
             </BaseMenu>
         </td>
     </tr>
-    <tr v-if="group.items.length > 0 && groupShown">
+    <tr v-if="folder.items.length > 0 && groupShown">
         <td class="empty-row-xxs-td"></td>
     </tr>
     <template v-if="groupShown"
-              v-for="(item, index) in group.items"
+              v-for="(item, index) in folder.items"
               :key="item.id">
         <InventoryItem :index="index"
                        :item="item"
                        :colspan="colspan"
                        :tr-cls="getItemOnDragCls(index)"/>
-        <!--@item-dragging="handleItemDragging"
-        @item-drag-end="handleItemDragEnd" -->
 
-        <tr v-if="(index + 1) < group.items.length">
+        <tr v-if="(index + 1) < folder.items.length">
             <td class="empty-row-xxs-td"></td>
         </tr>
-        <!--<DropItem v-if="showTemplateDropItem(index)"
-                  :colspan="colspan"
-                  :destination-index="(index + 1)"
-                  @item-requests-drag-move="moveItemToDestination"
-                  :max-index="group.items.length"/>-->
     </template>
-    <tr v-if="group.items.length > 0 && groupShown">
+    <tr v-if="folder.items.length > 0 && groupShown">
         <td class="empty-row-xxs-td"></td>
     </tr>
-    <template v-if="groupShown"
-              v-for="(folder, index) in group.folders"
-              :key="folder.id">
-        <InventoryGroupFolder
-            :index="index"
-            :folder="folder"
-            :colspan="colspan"
-            :tr-cls="getItemOnDragCls(index)"
-            :ref="`folder-${folder.id}`"
-            :trCls="getItemOnDragCls(index)"
-        />
-    </template>
-    <!--<DropItem v-if="showFirstDropItem"
-              :colspan="colspan"
-              :destination-index="0"
-              @item-requests-drag-move="moveItemToDestination"
-              :max-index="1"/>-->
 
-    <ConfirmDeleteModal v-if="groupConfirmDeleteModalShown"
-                        :title="$t('Delete group?')"
-                        :button="$t('Yes')"
-                        :description="$t('Really delete this group? This cannot be undone.')"
-                        @delete="deleteGroup()"
-                        @closed="closeGroupDeleteConfirmModal()"/>
+    <ConfirmDeleteModal
+        v-if="groupConfirmDeleteModalShown"
+        :title="$t('Delete Folder?')"
+        :button="$t('Yes')"
+        :description="$t('Really delete this Folder? This cannot be undone.')"
+        @delete="deleteFolder()"
+        @closed="closeGroupDeleteConfirmModal()"/>
 
-    <AddCategoryOrGroupModal :resource-id="props.group.id"
-                             :show="showAddCategoryOrGroupModal"
-                             type="folder"
-                             @closed="closeAddCategoryOrGroupModal"/>
-
-    <ReorderFolderModal
-        :folders="group.folders"
-        v-if="showReorderFoldersModal"
-        @closed="showReorderFoldersModal = false"
-    />
 </template>
 
 <script setup>
+
 import InventoryItem from "@/Pages/Inventory/InventoryManagement/InventoryItem.vue";
 import {computed, ref} from "vue";
 import {IconChevronDown, IconChevronUp, IconTrash} from "@tabler/icons-vue";
@@ -146,31 +90,26 @@ import { MenuItem } from "@headlessui/vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import InventoryGroupFolder from "@/Pages/Inventory/InventoryManagement/InventoryGroupFolder.vue";
-import DropGroup from "@/Pages/Inventory/InventoryManagement/DropGroup.vue";
-import AddCategoryOrGroupModal from "@/Pages/Inventory/InventoryManagement/AddCategoryOrGroupModal.vue";
-import ReorderFolderModal from "@/Pages/Inventory/Components/ReorderFolderModal.vue";
+import {presets} from "@soketi/soketi/babel.config.js";
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
-
 const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     props = defineProps({
         index: Number,
         colspan: Number,
-        group: Object,
+        folder: Object,
         trCls: String
     }),
     groupMenuShown = ref(false),
-    showAddCategoryOrGroupModal = ref(false),
     groupInputRef = ref(null),
     groupShown = ref(true),
     groupDragged = ref(false),
-    groupClicked = ref(false),
+    folderClicked = ref(false),
+    groupValue = ref(props.folder.name),
     droppedItem = ref(null),
-    groupValue = ref(props.group.name),
     groupConfirmDeleteModalShown = ref(false),
     itemDragging = ref(false),
-    showReorderFoldersModal = ref(false),
     draggedItemIndex = ref(null),
     showFirstDropItem = computed(() => {
         return itemDragging.value && draggedItemIndex.value > 0;
@@ -183,28 +122,28 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     toggleGroup = () => {
         groupShown.value = !groupShown.value;
     },
-    toggleGroupEdit = () => {
+    toggleFolderEdit = () => {
         if(!can('can manage inventory stock') || !hasAdminRole()){
             return;
         }
-        groupClicked.value = !groupClicked.value;
+        folderClicked.value = !folderClicked.value;
 
-        if (groupClicked.value) {
+        if (folderClicked.value) {
             setTimeout(() => {
                 groupInputRef.value.select();
             }, 5);
         }
     },
     applyGroupValueChange = () => {
-        if (props.group.name === groupValue.value || groupValue.value.length === 0) {
-            toggleGroupEdit();
+        if (props.folder.name === groupValue.value || groupValue.value.length === 0) {
+            toggleFolderEdit();
             return;
         }
         router.patch(
             route(
-                'inventory-management.inventory.group.update.name',
+                'inventory-management.inventory.folder.update.name',
                 {
-                    craftInventoryGroup: props.group.id
+                    craftInventoryGroupFolder: props.folder.id
                 }
             ),
             {
@@ -212,7 +151,7 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
             },
             {
                 preserveScroll: true,
-                onSuccess: toggleGroupEdit
+                onSuccess: toggleFolderEdit
             }
         );
     },
@@ -225,12 +164,12 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
     showGroupDeleteConfirmModal = () => {
         groupConfirmDeleteModalShown.value = true;
     },
-    deleteGroup = () => {
+    deleteFolder = () => {
         router.delete(
             route(
-                'inventory-management.inventory.group.delete',
+                'inventory-management.inventory.folder.delete',
                 {
-                    craftInventoryGroup: props.group.id
+                    craftInventoryGroupFolder: props.folder.id
                 }
             ),
             {
@@ -243,10 +182,10 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         router.post(
             route('inventory-management.inventory.item.create'),
             {
-                groupId: folder ? null : props.group.id,
+                groupId: folder ? null : props.folder.id,
                 folderId: folder,
                 //as length is already the "next" index cause it counts from 1, no need to add 1
-                order: props.group.items.length
+                order: props.folder.items.length
             },
             {
                 preserveScroll: true
@@ -257,7 +196,7 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         groupConfirmDeleteModalShown.value = false;
     },
     groupIsDraggable = () => {
-        return !groupClicked.value;
+        return !folderClicked.value;
     },
     groupDragStart = (e) => {
         groupDragged.value = true;
@@ -267,7 +206,7 @@ const emits = defineEmits(['groupDragging', 'groupDragEnd']),
         //@see: https://stackoverflow.com/a/36617714
         setTimeout(() => emits.call(this, 'groupDragging', props.index), 1);
 
-        e.dataTransfer.setData('groupId', props.group.id);
+        e.dataTransfer.setData('groupId', props.folder.id);
         e.dataTransfer.setData('currentGroupIndex', props.index.toString());
     },
     groupDragEnd = () => {
@@ -307,18 +246,23 @@ const onDragOver = (e) => {
 };
 
 const onDrop = (e) => {
+    if(!can('can manage inventory stock') || !hasAdminRole()){
+        return;
+    }
     e.preventDefault();
     const jsonObject = e.dataTransfer.getData('application/json');
     if(jsonObject) {
+        droppedItem.value = JSON.parse(jsonObject);
+
         router.patch(
             route(
-                'inventory-management.inventory.item.add.to.group',
+                'inventory-management.inventory.item.add.to.folder',
                 {
                     craftInventoryItem: droppedItem.value.id
                 }
             ),
             {
-                groupId: props.group.id
+                folderId: props.folder.id
             },
             {
                 preserveScroll: true
@@ -326,10 +270,10 @@ const onDrop = (e) => {
         );
     }
 
-};
-
-const closeAddCategoryOrGroupModal = () => {
-    showAddCategoryOrGroupModal.value = false;
+    return;
 };
 </script>
 
+<style scoped>
+
+</style>

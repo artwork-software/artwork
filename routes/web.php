@@ -88,6 +88,7 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
@@ -1471,6 +1472,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
                 ->name('inventory-management.settings');
+
+            // inventory.columns.reorder
+            Route::post('/columns/reorder', [InventorySettingsController::class, 'reorderColumns'])
+                ->name('inventory-management.settings.columns.reorder');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {
@@ -1536,11 +1541,39 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftInventoryGroupController::class, 'forceDelete']
                 )->name('inventory-management.inventory.group.delete');
             });
+            Route::group(['prefix' => 'folder'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftInventoryGroupFolderController::class, 'create']
+                )->name('inventory-management.inventory.folder.create');
+                Route::delete(
+                    '/{craftInventoryGroupFolder}',
+                    [CraftInventoryGroupFolderController::class, 'destroy']
+                )->name('inventory-management.inventory.folder.delete');
+                // update name of folder
+                Route::patch(
+                    '/{craftInventoryGroupFolder}/name',
+                    [CraftInventoryGroupFolderController::class, 'update']
+                )->name('inventory-management.inventory.folder.update.name');
+                // PATCH inventory-management.inventory.folder.update.order
+                Route::patch(
+                    '/inventory/folder/update/order',
+                    [CraftInventoryGroupFolderController::class, 'updateOrder']
+                )->name('inventory-management.inventory.folder.update.order');
+            });
             Route::group(['prefix' => 'item'], function (): void {
                 Route::post(
                     '/create',
                     [CraftInventoryItemController::class, 'create']
                 )->name('inventory-management.inventory.item.create');
+                Route::patch(
+                    '/{craftInventoryItem}/add/folder',
+                    [CraftInventoryItemController::class, 'addItemToFolder']
+                )->name('inventory-management.inventory.item.add.to.folder');
+                Route::patch(
+                    '/{craftInventoryItem}/add/group',
+                    [CraftInventoryItemController::class, 'addItemToGroup']
+                )->name('inventory-management.inventory.item.add.to.group');
                 Route::patch(
                     '/{craftInventoryItem}/order',
                     [CraftInventoryItemController::class, 'updateOrder']

@@ -1,11 +1,9 @@
 <template>
-    <td :class="getCellCls()">
-        <span v-if="hasCellValue()"
-              :class="getCellValueCls()"
-              @click="toggleCellEdit()">
+    <td :class="getCellCls()" class="relative">
+
+        <span v-if="hasCellValue()" :class="getCellValueCls()" @click="toggleCellEdit()">
             <template v-if="isTextColumn() || isSelectColumn() || isNumberColumn()">
-                <span v-if="isTextColumn()"
-                      :title="cell.cell_value">
+                <span v-if="isTextColumn()" :title="cell.cell_value">
                     {{ cell.cell_value }}
                 </span>
                 <template v-else>
@@ -19,13 +17,13 @@
                 {{ cell.cell_value === 'true' ? $t('Yes') : $t('No') }}
             </template>
             <template v-else-if="isUploadColumn()">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between gap-4">
                     <div @click="getDownloadLink">
-                        <div class="text-blue-400 underline-offset-2 underline cursor-pointer">
-                            {{ cell.cell_value }} {{ $t('View') }}
+                        <div class="text-blue-400 underline-offset-2 underline cursor-pointer flex items-center gap-1">
+                            <div class="truncate max-w-52">{{ cell.cell_value }}</div>
+                             {{ $t('View') }}
                         </div>
                     </div>
-
                     <div>
                         <div class="text-red-500 underline-offset-2 underline cursor-pointer"
                              @click="isDeleteModalOpen = true">
@@ -34,10 +32,19 @@
                     </div>
                 </div>
             </template>
+            <template v-else-if="isLastEditField()">
+                <div class="flex items-center gap-1">
+                    {{ computedJsonValue.date }}
+                    <div class="flex items-center gap-1">
+                        <UserPopoverTooltip :user="computedJsonValue.editor" height="5" width="5"/>
+                        <div>
+                            {{  computedJsonValue.editor.full_name  }}
+                        </div>
+                    </div>
+                </div>
+            </template>
         </span>
-        <div v-else-if="isCheckboxColumn()"
-             class="checkbox-container"
-             @click="toggleCellEdit()">
+        <div v-else-if="isCheckboxColumn()" class="checkbox-container" @click="toggleCellEdit()">
             {{ $t('No') }}
         </div>
         <div v-else-if="isUploadColumn() && !hasCellValue()" class="checkbox-container">
@@ -57,51 +64,45 @@
         </div>
         <div v-else class="empty-cell-container" @click="toggleCellEdit()"/>
         <template v-if="cellClicked">
-            <div v-if="isTextColumn()"
-                 :class="getInputCls()">
+            <div v-if="isTextColumn()" :class="getInputCls()">
                 <input ref="cellValueInputRef"
                        type="text"
                        class="text-input"
                        v-model="cellValue"
                        @focusout="applyCellValueChange()"/>
             </div>
-            <div v-else-if="isDateColumn()"
-                 :class="getInputCls()">
+            <div v-else-if="isDateColumn()" :class="getInputCls()">
                 <input ref="cellValueInputRef"
                        type="date"
                        class="date-input"
                        v-model="cellValue"
                        @focusout="applyCellValueChange()"/>
             </div>
-            <div v-else-if="isCheckboxColumn()"
-                 :class="getInputCls()">
+            <div v-else-if="isCheckboxColumn()" :class="getInputCls()">
                 <input ref="cellValueInputRef"
                        type="checkbox"
                        class="checkbox-input"
                        v-model="cellValue"
                        @focusout="applyCellValueChange()"/>
             </div>
-            <div v-else-if="isNumberColumn()"
-                 :class="getInputCls()">
+            <div v-else-if="isNumberColumn()" :class="getInputCls()">
                 <input ref="cellValueInputRef"
                        type="number"
                        class="text-input"
                        v-model="cellValue"
+                       step="0.01"
+                       inputmode="numeric"
+                       pattern="^\d*(\.\d{0,2})?$"
                        @focusout="applyCellValueChange()"/>
             </div>
-            <div v-else-if="isSelectColumn()"
-                 :class="getInputCls()">
-                <select ref="cellValueInputRef"
-                        class="select-input"
-                        v-model="cellValue"
-                        @focusout="applyCellValueChange()">
+            <div v-else-if="isSelectColumn()" :class="getInputCls()">
+                <select ref="cellValueInputRef" class="select-input" v-model="cellValue" @focusout="applyCellValueChange()">
                     <option v-for="(option) in cell.column.type_options">
                         {{ option }}
                     </option>
                 </select>
             </div>
         </template>
-
     </td>
     <ConfirmDeleteModal
         v-if="isDeleteModalOpen"
@@ -113,11 +114,15 @@
 </template>
 
 <script setup>
-import {ref} from "vue";
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
+import {computed, onMounted, ref} from "vue";
 import {router} from "@inertiajs/vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 const $t = useTranslation()
 const emits = defineEmits(['isEditingCellValue']),
     props = defineProps({
@@ -133,9 +138,15 @@ const emits = defineEmits(['isEditingCellValue']),
     isDeleteModalOpen = ref(false),
     uploadFeedback = ref(''),
     getCellCls = () => {
+        let addedClasses = '';
+
+        if (isLastEditField()){
+            addedClasses = '!cursor-default';
+        }
+
         return [
             getBackgroundCls(),
-            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap'
+            'max-w-40 h-10 px-3 border subpixel-antialiased relative text-xs overflow-ellipsis overflow-hidden whitespace-nowrap ' + addedClasses
         ].join(' ');
     },
     getBackgroundCls = () => {
@@ -163,6 +174,7 @@ const emits = defineEmits(['isEditingCellValue']),
         return props.cell.cell_value.length > 0;
     },
     getCellValueCls = () => {
+
         return isDateColumn() || isCheckboxColumn() ? 'text-center block cursor-text' : 'cursor-text';
     },
     isTextColumn = () => {
@@ -183,8 +195,16 @@ const emits = defineEmits(['isEditingCellValue']),
     isUploadColumn = () => {
         return props.cell.column.type === 5;
     },
+    isLastEditField = () => {
+        return props.cell.column.type === 99;
+    },
     toggleCellEdit = () => {
-        if(isUploadColumn()){
+
+        if(!can('can manage inventory stock') || !hasAdminRole()){
+            return;
+        }
+
+        if(isUploadColumn() || isLastEditField()) {
             return;
         }
         cellClicked.value = !cellClicked.value;
@@ -205,6 +225,10 @@ const emits = defineEmits(['isEditingCellValue']),
         }
     },
     applyCellValueChange = () => {
+        if (isNumberColumn() && cellValue.value !== '' && !isNaN(cellValue.value)) {
+            cellValue.value = parseFloat(cellValue.value).toFixed(2);
+        }
+
         //compare as strings in case of checkbox which are preserved as string in database
         if (props.cell.cell_value.toString() === cellValue.value.toString()) {
             toggleCellEdit();
@@ -278,6 +302,10 @@ const uploadFileToColumn = () => {
     );
 };
 
+const computedJsonValue = computed( () => {
+    return JSON.parse(props.cell.cell_value);
+})
+
 const getDownloadLink = () => {
     let link = document.createElement('a');
     link.href = route('inventory-management.inventory.item-cell.download', {craftInventoryItemCell: props.cell.id});
@@ -300,6 +328,7 @@ const deleteFile = () => {
         }
     );
 };
+
 </script>
 
 <style scoped>

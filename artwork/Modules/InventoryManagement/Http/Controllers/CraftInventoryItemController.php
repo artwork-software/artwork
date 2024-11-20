@@ -8,6 +8,7 @@ use Artwork\Modules\InventoryManagement\Http\Requests\Item\UpdateCraftInventoryI
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
 use Illuminate\Translation\Translator;
 use Psr\Log\LoggerInterface;
@@ -25,10 +26,13 @@ class CraftInventoryItemController extends Controller
 
     public function create(CreateCraftInventoryItemRequest $request): RedirectResponse
     {
+        $groupId = $request->integer('groupId') ?: null;
+        $folderId = $request->integer('folderId') ?: null;
         try {
             $this->craftInventoryItemService->create(
-                $request->integer('groupId'),
                 $request->integer('order'),
+                $groupId,
+                $folderId,
             );
         } catch (Throwable $t) {
             $this->logger->error(
@@ -80,5 +84,25 @@ class CraftInventoryItemController extends Controller
         }
 
         return $this->redirector->back();
+    }
+
+    public function addItemToFolder(CraftInventoryItem $craftInventoryItem, Request $request): void
+    {
+        $craftInventoryItem->update(
+            [
+                'craft_inventory_group_folder_id' => $request->integer('folderId'),
+                'craft_inventory_group_id' => null,
+            ]
+        );
+    }
+
+    public function addItemToGroup(CraftInventoryItem $craftInventoryItem, Request $request): void
+    {
+        $craftInventoryItem->update(
+            [
+                'craft_inventory_group_id' => $request->integer('groupId'),
+                'craft_inventory_group_folder_id' => null,
+            ]
+        );
     }
 }

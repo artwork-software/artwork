@@ -2102,5 +2102,19 @@
     "Are you sure you want to delete this file?": "Möchtest du diese Datei wirklich löschen?",
     "No file selected": "Keine Datei ausgewählt",
     "File type not allowed": "Dateityp nicht erlaubt",
-    "File size too large": "Dateigröße zu groß"
+    "File size too large": "Dateigröße zu groß",
+    "Folder name*": "Ordnername*",
+    "Add Folder": "Ordner hinzufügen",
+    "Delete Folder?": "Ordner löschen?",
+    "Really delete this Folder? This cannot be undone.": "Ordner wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+    "Reorder Folders": "Ordner neu anordnen",
+    "Drag and drop folders to reorder them.": "Ordner per Drag & Drop neu anordnen.",
+    "Change the order of the folders": "Ändere die Reihenfolge der Ordner",
+    "New folder": "Neuer Ordner",
+    "Manage inventory stock": "Inventar-Bestand verwalten",
+    "Inventory planner": "Inventar-Planer",
+    "Column Order": "Spaltenreihenfolge",
+    "Define the order of the columns in the inventory overview.": "Definiere die Reihenfolge der Spalten in der Inventarübersicht.",
+    "Inventory can be planned by all planners": "Inventar planbar von allen Planer*innen",
+    "Inventory can only be planned by:": "Inventar kann nur geplant werden von:"
 }

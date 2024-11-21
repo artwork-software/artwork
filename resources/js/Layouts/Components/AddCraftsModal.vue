@@ -78,7 +78,7 @@
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
-                            <li @click="addOrRemoveFormUserList(user)" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
+                            <li @click="addOrRemoveFormUserList(user, 'shift_planer')" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
                                 <span>{{ user.full_name }}</span>
                             </li>
                         </ListboxOption>
@@ -95,7 +95,70 @@
                             {{ user.first_name }} {{ user.last_name }}
                         </span>
                     </div>
-                    <button type="button" @click="addOrRemoveFormUserList(user)">
+                    <button type="button" @click="addOrRemoveFormUserList(user, 'shift_planer')">
+                        <span class="sr-only">{{ $t('Remove user from team')}}</span>
+                        <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="my-5">
+            <TinyPageHeadline
+                :title="$t('Inventory settings')"
+                :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
+            />
+        </div>
+
+        <SwitchGroup as="div" class="flex items-center gap-2">
+            <SwitchLabel as="span" class="mr-3 text-sm">
+                <span class="font-medium text-gray-900" :class="inventoryPlannedByAll ? '!text-gray-400' : ''">{{ $t('Explicitly selected persons') }}</span>
+            </SwitchLabel>
+            <Switch v-model="inventoryPlannedByAll" :class="[inventoryPlannedByAll ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                <span aria-hidden="true" :class="[inventoryPlannedByAll ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+            </Switch>
+            <SwitchLabel as="span" class="ml-3 text-sm">
+                <span class="font-medium text-gray-900" :class="!inventoryPlannedByAll ? '!text-gray-400' : ''">
+                    {{ $t('From all planners') }}
+                </span>
+            </SwitchLabel>
+        </SwitchGroup>
+    </div>
+    <div v-if="!inventoryPlannedByAll" class="">
+        <Listbox as="div">
+            <div class="relative mt-2">
+                <ListboxButton class="menu-button">
+                    <span class="block truncate text-left pl-3">
+                        {{ $t('Select users')}}
+                    </span>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                    </span>
+                </ListboxButton>
+
+                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                        <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
+                            <li @click="addOrRemoveFormUserList(user, 'inventory')" :class="'relative cursor-default select-none py-2 pl-3 pr-9'">
+                                <span>{{ user.full_name }}</span>
+                            </li>
+                        </ListboxOption>
+                    </ListboxOptions>
+                </transition>
+            </div>
+        </Listbox>
+        <div class="mt-3">
+            <div v-for="user in craftInventoryPlaner" class="my-2">
+                <div class="flex col-span-2">
+                    <div class="flex items-center">
+                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
+                        <span class="flex ml-4">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                    </div>
+                    <button type="button" @click="addOrRemoveFormUserList(user, 'inventory')">
                         <span class="sr-only">{{ $t('Remove user from team')}}</span>
                         <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
                     </button>
@@ -136,11 +199,13 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
+import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        TinyPageHeadline,
         NumberInputComponent,
         TextInputComponent,
         ModalHeader,
@@ -153,7 +218,7 @@ export default defineComponent({
         ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
         Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
     },
-    props: ['craftToEdit', 'usersWithPermission'],
+    props: ['craftToEdit', 'usersWithPermission', 'usersWithInventoryPermission'],
     data(){
         return {
             open: true,
@@ -162,29 +227,44 @@ export default defineComponent({
                 abbreviation: this.craftToEdit ? this.craftToEdit.abbreviation : '',
                 users: [],
                 assignable_by_all: true,
+                inventory_planned_by_all: true,
                 color: this.craftToEdit ? this.craftToEdit.color : '#ffffff',
                 notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0,
                 universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
+                users_for_inventory: [],
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
+            craftInventoryPlaner: this.craftToEdit ? this.craftToEdit.craft_inventory_planer : [],
+            inventoryPlannedByAll: this.craftToEdit ? this.craftToEdit.inventory_planned_by_all : true,
             craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : []
         }
     },
     unmounted() {
-        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
+        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
     },
     emits: ['closed'],
     methods: {
         closeModal(bool){
-            this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
+            this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all', 'users_for_inventory', 'inventory_planned_by_all')
             this.$emit('closed', bool)
         },
-        addOrRemoveFormUserList(user){
-            const userIds = this.craftShiftPlaner.map(user => user.id);
-            if(userIds.includes(user.id)){
-                this.craftShiftPlaner = this.craftShiftPlaner.filter(u => u.id !== user.id)
-            } else {
-                this.craftShiftPlaner.push(user)
+        addOrRemoveFormUserList(user, type = 'shift_planer'){
+            if(type === 'shift_planer') {
+                const userIds = this.craftShiftPlaner.map(user => user.id);
+                if(userIds.includes(user.id)){
+                    this.craftShiftPlaner = this.craftShiftPlaner.filter(u => u.id !== user.id)
+                } else {
+                    this.craftShiftPlaner.push(user)
+                }
+            }
+
+            if (type === 'inventory') {
+                const userIds = this.craftInventoryPlaner.map(user => user.id);
+                if(userIds.includes(user.id)){
+                    this.craftInventoryPlaner = this.craftInventoryPlaner.filter(u => u.id !== user.id)
+                } else {
+                    this.craftInventoryPlaner.push(user)
+                }
             }
         },
         saveCraft(){
@@ -201,6 +281,17 @@ export default defineComponent({
                 this.craft.assignable_by_all = true;
                 this.craft.users = [];
             }
+
+            if(!this.inventoryPlannedByAll){
+                this.craft.inventory_planned_by_all = false
+                this.craftInventoryPlaner.forEach((user) => {
+                    this.craft.users_for_inventory.push(user.id);
+                })
+            } else {
+                this.craft.inventory_planned_by_all = true;
+                this.craft.users_for_inventory = [];
+            }
+
             if(this.craftToEdit){
                 this.craft.patch(route('craft.update', this.craftToEdit.id), {
                     preserveState: true,

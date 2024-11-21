@@ -92,6 +92,14 @@ const $t = useTranslation(),
             id: 3,
             translation: $t('Select box')
         },
+        NUMBER: {
+            id: 4,
+            translation: $t('Number field')
+        },
+        UPLOAD: {
+            id: 5,
+            translation: $t('File Upload')
+        },
     },
     props = defineProps({
         show: Boolean
@@ -116,12 +124,20 @@ const $t = useTranslation(),
                 value: NEW_COLUMN_TYPE.DATE.translation
             },
             {
+                id: NEW_COLUMN_TYPE.NUMBER.id,
+                value: NEW_COLUMN_TYPE.NUMBER.translation
+            },
+            {
                 id: NEW_COLUMN_TYPE.CHECKBOX.id,
                 value: NEW_COLUMN_TYPE.CHECKBOX.translation
             },
             {
                 id: NEW_COLUMN_TYPE.SELECT.id,
                 value: NEW_COLUMN_TYPE.SELECT.translation
+            },
+            {
+                id: NEW_COLUMN_TYPE.UPLOAD.id,
+                value: NEW_COLUMN_TYPE.UPLOAD.translation
             }
         ];
     },

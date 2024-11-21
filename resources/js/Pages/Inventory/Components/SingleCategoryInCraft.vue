@@ -1,8 +1,9 @@
 <template>
-    <tr class="pl-2 cursor-pointer xsLight pb-1" @click="category.closed = !category.closed">
+    <tr class="cursor-pointer xsLight pb-1" @click="category.closed = !category.closed">
        <td>
-           <div class="px-2 py-1.5 bg-gray-50/20 w-full" :class="category.closed ? 'rounded-b-lg' : ''">
-               <div class="ml-3 stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
+           <div class="py-1.5 bg-gray-50/20 w-full" :class="category.closed ? 'rounded-b-lg' : ''">
+               <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
+                   <component is="IconCategory" class="h-4 w-4" />
                    {{ category.name }}
                    <ChevronDownIcon
                        :class="category.closed ? '' : 'rotate-180 transform'"
@@ -12,7 +13,7 @@
            </div>
        </td>
     </tr>
-    <SingleGroupInCategory :multi-edit="multiEdit" v-for="group in category.groups" :days="days" :group="group" v-if="!category.closed"/>
+    <SingleGroupInCategory :inventory_planned_by_all="inventory_planned_by_all" :multi-edit="multiEdit" v-for="group in category.groups" :days="days" :group="group" :inventory_planer_ids="inventory_planer_ids" v-if="!category.closed"/>
 </template>
 
 <script setup>
@@ -30,6 +31,15 @@ const props = defineProps({
         required: true
     },
     multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    inventory_planer_ids: {
+        type: Array,
+        required: true,
+    },
+    inventory_planned_by_all: {
         type: Boolean,
         required: false,
         default: false

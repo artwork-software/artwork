@@ -55,6 +55,24 @@ class UpdatePermissionsCommand extends Command
                 'tooltipKey' => "Create events when a new project is created",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::INVENTORY_STOCK_MANAGE->value,
+                'name_de' => "Inventar-Bestand verwalten",
+                'translation_key' => "Manage inventory stock",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt das Anlegen, Bearbeiten und Löschen von Inventar-Beständen',
+                'tooltipKey' => "Allows the creation, editing and deletion of inventory stocks",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVENTORY_PLANER->value,
+                'name_de' => "Inventarplaner",
+                'translation_key' => "Inventory planner",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt die Planung von Inventar',
+                'tooltipKey' => "Allows the planning of inventory",
+                'checked' => false
+            ],
         ];
 
         foreach ($permissions as $permission) {

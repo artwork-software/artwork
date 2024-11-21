@@ -38,6 +38,6 @@ class CraftInventoryItemCell extends Model
             'crafts_inventory_column_id',
             'id',
             'crafts_inventory_columns'
-        )->select(['id', 'name', 'type', 'type_options', 'background_color']);
+        )->orderBy('order')->select(['id', 'name', 'type', 'type_options', 'background_color', 'order']);
     }
 }

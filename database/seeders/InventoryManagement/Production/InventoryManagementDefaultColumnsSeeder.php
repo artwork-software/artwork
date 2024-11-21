@@ -25,23 +25,26 @@ class InventoryManagementDefaultColumnsSeeder extends Seeder
             CraftsInventoryColumnTypeEnum::TEXT,
             '',
             [],
-            ''
+            '',
+            false,
         );
 
         $craftsInventoryColumnService->create(
             'Anzahl',
-            CraftsInventoryColumnTypeEnum::TEXT,
+            CraftsInventoryColumnTypeEnum::NUMBER,
             '',
             [],
-            ''
+            '',
+            false
         );
 
         $craftsInventoryColumnService->create(
-            'Kommentar',
-            CraftsInventoryColumnTypeEnum::TEXT,
+            'Letzte Änderung',
+            CraftsInventoryColumnTypeEnum::LAST_EDIT_AND_EDITOR,
             '',
             [],
-            ''
+            '',
+            false
         );
     }
 }

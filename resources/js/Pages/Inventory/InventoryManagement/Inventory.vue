@@ -36,7 +36,7 @@
                         @mouseout="showMenu = null"
                         :class="getColumnCls(index, column) + ' bg-secondary'" class="group">
                         <div class="inventory-th-container">
-                            <div class="inventory-th-edit-container">
+                            <div class="inventory-th-edit-container" :class="!column.deletable ? '!cursor-default' : ''">
                                 <div class="column-name" @click="toggleColumnEdit(column)">
                                     {{ column.name }}
                                 </div>
@@ -57,7 +57,7 @@
                                     <component is="IconArrowsSort" class="h-4 w-4 invisible group-hover:visible cursor-pointer" v-if="usePage().props.user.inventory_sort_column_id !== column.id"/>
                                 </div>
                                 <div class="inventory-th-menu-container invisible group-hover:visible">
-                                    <BaseMenu white-icon>
+                                    <BaseMenu white-icon v-if="can('can manage inventory stock') || hasAdminRole()">
                                         <MenuItem v-slot="{ active }" as="div">
                                             <a @click="column.showColorMenu = true"
                                                :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
@@ -78,7 +78,7 @@
                                                 {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>
-                                        <MenuItem v-if="index > 2"
+                                        <MenuItem v-if="column.deletable"
                                                   v-slot="{ active }"
                                                   as="div">
                                             <a @click="openConfirmDeleteColumnModal(column.id)"
@@ -143,7 +143,6 @@
                 </tbody>
             </table>
         </div>
-
     </InventoryHeader>
     <EditColumnSelectOptionsModal v-if="showEditColumnSelectOptionsModal"
                                   :show="showEditColumnSelectOptionsModal"
@@ -174,6 +173,8 @@ import EditColumnSelectOptionsModal from "@/Pages/Inventory/InventoryManagement/
 import InventoryTopBar from "@/Pages/Inventory/InventoryManagement/InventoryTopBar.vue";
 import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
         columns: Array,
@@ -218,6 +219,15 @@ const props = defineProps({
     isSelectColumn = (column) => {
         return column.type === 3;
     },
+    isNumberColumn = (column) => {
+        return column.type === 4;
+    },
+    isLastEditColumn = (column) => {
+        return column.type === 99;
+    },
+    isUploadColumn = (column) => {
+        return column.type === 5;
+    },
     getCraftFilters = () => {
         return props.crafts.map((craft) => {
             return {
@@ -231,11 +241,12 @@ const props = defineProps({
         return getColumnWidthCls(index, column);
     },
     getColumnWidthCls = (index, column) => {
-        return index === 0 ? 'w-[3%] min-w-[3%]' :
-            index === 1 ? 'w-[5%] min-w-[5%]' :
-            index === 2 ? 'w-auto' :
-            isTextColumn(column) ? 'w-[15%] min-w-[15%]' :
+        return isLastEditColumn(column) ? '!w-auto min-w-72' :
+            isTextColumn(column) ? 'w-[10%] min-w-[10%]' :
+            isNumberColumn(column) ? 'w-[8%] min-w-[8%]' :
+            isTextColumn(column) ? 'w-[10%] min-w-[10%]' :
             isDateColumn(column) ? 'w-[9%] min-w-[9%]' :
+            isUploadColumn(column) ? 'w-auto min-w-44' :
             isSelectColumn(column) ? 'w-[10%] min-w-[10%]' :
             isCheckboxColumn(column) ? 'w-[5%] min-w-[5%]' : '';
     },
@@ -251,6 +262,14 @@ const props = defineProps({
         dynamicColumnNameInputRefs[columnId] = ref(element);
     },
     toggleColumnEdit = (column) => {
+        if(!can('can manage inventory stock') || !hasAdminRole()){
+            return;
+        }
+
+        if (!column.deletable){
+            return;
+        }
+
         column.clicked = !column.clicked;
 
         if (column.clicked) {

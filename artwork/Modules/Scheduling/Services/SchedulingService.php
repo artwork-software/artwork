@@ -157,7 +157,10 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'EVENT_CHANGES':
-                    $event = Event::find($schedulings->model_id);
+                    $event = Event::query()->firstOrFail($schedulings->model_id);
+                    if (!$event instanceof Event) {
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_event',
                         [],

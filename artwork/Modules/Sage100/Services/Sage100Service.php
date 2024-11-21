@@ -510,13 +510,14 @@ readonly class Sage100Service
 //            ),
 //            true
 //        )['$resources'];
+        dd(app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService)));
         return app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
     }
 
     /**
      * @return array<string, string>
      */
-    private function buildQuery(
+    private function  buildQuery(
         int|null $count,
         string|null $specificDay,
         SageApiSettingsService $sageApiSettingsService

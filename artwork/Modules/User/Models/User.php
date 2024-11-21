@@ -130,6 +130,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $drawer_height
  * @property int $inventory_sort_column_id
  * @property int $inventory_sort_direction
+ * @property boolean $checklist_has_projects
+ * @property boolean $checklist_no_projects
+ * @property boolean $checklist_private_checklists
+ * @property boolean $checklist_no_private_checklists
+ * @property boolean $checklist_completed_tasks
+ * @property boolean $checklist_show_without_tasks
+ * @property boolean $is_developer
  */
 class User extends Model implements
     AuthenticatableContract,
@@ -201,6 +208,7 @@ class User extends Model implements
         'checklist_no_private_checklists',
         'checklist_completed_tasks',
         'checklist_show_without_tasks',
+        'is_developer'
     ];
 
     protected $casts = [
@@ -224,6 +232,7 @@ class User extends Model implements
         'checklist_no_private_checklists' => 'boolean',
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
+        'is_developer' => 'boolean',
     ];
 
     protected $hidden = [

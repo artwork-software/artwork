@@ -1,6 +1,6 @@
 <template>
     <BaseModal v-if="true" full-modal @closed="$emit('closed')">
-        <div class="mb-5 px-6">
+        <div class="mb-5 px-6 mt-14">
             <h1 class="headline1 mb-4">
                 <!-- Headline Text für MultiEdit -->
                 {{ $t('Book inventory for multiple events') }}

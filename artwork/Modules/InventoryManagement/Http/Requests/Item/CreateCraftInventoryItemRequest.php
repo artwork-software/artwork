@@ -12,7 +12,8 @@ class CreateCraftInventoryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'groupId' => 'required|integer|exists:craft_inventory_groups,id',
+            'groupId' => 'nullable|integer|exists:craft_inventory_groups,id',
+            'folderId' => 'nullable|integer|exists:craft_inventory_group_folders,id',
             'order' => 'required|integer',
         ];
     }

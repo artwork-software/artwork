@@ -497,6 +497,19 @@ readonly class Sage100Service
 
     private function getData(int|null $count, string|null $specificDay, SageApiSettingsService $sageApiSettingsService)
     {
+//        if u want to import from local json use this return and start artisan artwork:import-sage100-api-data
+//        return json_decode(
+//            file_get_contents(
+//                implode(
+//                    DIRECTORY_SEPARATOR,
+//                    [
+//                        base_path(),
+//                        'xxx.json'
+//                    ]
+//                )
+//            ),
+//            true
+//        )['$resources'];
         return app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
     }
 

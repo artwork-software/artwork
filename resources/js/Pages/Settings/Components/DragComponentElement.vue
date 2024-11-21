@@ -32,7 +32,7 @@ export default {
             </div>
             <div class="text-sm font-bold">
                 <div class="w-full">
-                    {{ component.name }}
+                    {{ $t(component.name) }}
                     <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
                         {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
                     </div>

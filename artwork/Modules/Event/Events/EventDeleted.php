@@ -19,8 +19,7 @@ class EventDeleted implements ShouldBroadcast
         public readonly int $roomId,
         public readonly Carbon $start,
         public readonly Carbon $end,
-    )
-    {
+    ) {
     }
 
     public function broadcastAs()

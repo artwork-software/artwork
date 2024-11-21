@@ -2707,6 +2707,14 @@ class EventController extends Controller
     {
         $event->update($request->only(['description']));
 
+        broadcast(new EventUpdated(
+            $event->room_id,
+            $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+                $event->end_time
+        ))->toOthers();
+
         return $this->redirector->back();
     }
 }

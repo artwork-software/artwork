@@ -35,7 +35,7 @@
                         @click="openSelectExportTypeModal()"/>
         <button type="button"
                 class="inventory-top-bar-new-column-btn"
-                @click="openAddColumnModal()">
+                @click="openAddColumnModal()" v-if="can('can manage inventory stock') || hasAdminRole()">
             <PlusIcon stroke-width="2" class="h-4 w-4 mr-2"/>
             <p class="text-sm">{{ $t('New column') }}</p>
         </button>
@@ -58,6 +58,9 @@ import {nextTick, ref} from "vue";
 import AddColumnModal from "@/Pages/Inventory/InventoryManagement/AddColumnModal.vue";
 import Button from "@/Jetstream/Button.vue";
 import SelectExportTypeModal from "@/Pages/Inventory/InventoryManagement/SelectExportTypeModal.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const emits = defineEmits(['updatesSearchValue', 'updatesCraftFilters']),
     props = defineProps({

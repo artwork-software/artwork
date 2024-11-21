@@ -3,6 +3,7 @@
         <div class="mb-3">
             <InventoryFunctionBar :date-value="dateValue" @scroll-to-next="scrollToNext" @scroll-to-previous="scrollToPrevious" />
         </div>
+
         <div class="-ml-5">
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div @scroll="syncScrollShiftPlan"
@@ -127,7 +128,7 @@
                         </Switch>
                         <div class="mr-20 flex items-center">
                             <input v-if="searchOpened"
-                                   class="w-60 h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border border-gray-300"
+                                   class="w-60 h-10 bg-artwork-navigation-background border text-white border-gray-500 rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary"
                                    type="text"
                                    aria-label="ajax search text input"
                                    :placeholder="$t('Search')"
@@ -137,11 +138,11 @@
                                         class="h-7 w-7 cursor-pointer hover:text-blue-500 text-white"
                                         @click="toggleSearch()"/>
                             <IconX v-else
-                                   class="h-7 w-7 cursor-pointer hover:text-blue-500 text-white"
+                                   class="h-7 w-7 ml-3 cursor-pointer hover:text-blue-500 text-white"
                                    @click="toggleSearch(true)"/>
                         </div>
                     </div>
-                    <div class="pt-16">
+                    <div class="pt-20">
                         <table class="w-full text-white overflow-y-scroll">
                             <div class="w-full">
                                 <tbody class="w-full pt-3" v-for="craft in filteredCrafts">
@@ -178,7 +179,7 @@
 
 <script setup>
 import {onMounted, onUpdated, ref, watch} from "vue";
-import {Link, usePage} from "@inertiajs/vue3";
+import {Link} from "@inertiajs/vue3";
 import {IconCaretUpDown, IconChevronsDown, IconPencil, IconSearch, IconX} from "@tabler/icons-vue";
 import {Switch} from "@headlessui/vue";
 
@@ -195,7 +196,9 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 import {useTranslation} from "@/Composeables/Translation.js";
 import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilterAndSearch.js";
 import {SelectorIcon} from "@heroicons/vue/solid";
-
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 const $t = useTranslation(),
     props = defineProps({
         dateValue: {

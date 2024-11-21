@@ -14,6 +14,8 @@
     </tr>
     <SingleCategoryInCraft v-for="category in craft.value.filtered_inventory_categories"
                            :multi-edit="multiEdit"
+                           :inventory_planer_ids="craft.value.inventory_planer_ids"
+                           :inventory_planned_by_all="craft.value.inventory_planned_by_all"
                            :category="category" :days="days" v-if="!craft.value.closed"/>
 </template>
 

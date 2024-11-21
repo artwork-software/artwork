@@ -14,6 +14,7 @@ use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\DayService\Services\DayServicesService;
+use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Requests\EventBulkCreateRequest;
 use Artwork\Modules\Event\Http\Requests\EventStoreRequest;
@@ -486,6 +487,11 @@ class EventController extends Controller
         }
 
         broadcast(new OccupancyUpdated())->toOthers();
+        broadcast(new EventUpdated(
+            $firstEvent->room_id,
+            $firstEvent->start_time,
+            $firstEvent->is_series ? $firstEvent->series->end_date : $firstEvent->end_time
+        ))->toOthers();
 
         if ($request->boolean('showProjectPeriodInCalendar')) {
             return $this->redirector->back();
@@ -1207,11 +1213,11 @@ class EventController extends Controller
         $oldEventEndDate = $event->end_time;
         $oldIsLoud = $event->is_loud;
         $oldAudience = $event->audience;
-        
+
         $event->fill($request->data());
-        
+
         $this->eventService->save($event);
-        
+
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
@@ -2700,6 +2706,14 @@ class EventController extends Controller
     public function updateDescription(Request $request, Event $event): RedirectResponse
     {
         $event->update($request->only(['description']));
+
+        broadcast(new EventUpdated(
+            $event->room_id,
+            $event->start_time,
+            $event->is_series ?
+                $event->series->end_date :
+                $event->end_time
+        ))->toOthers();
 
         return $this->redirector->back();
     }

@@ -1,7 +1,7 @@
 <template>
     <tr class="w-full flex">
         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right w-48">
-            <ItemDragElement :multi-edit="multiEdit" :item="item" />
+            <ItemDragElement :inventory_planer_ids="inventory_planer_ids" :inventory_planned_by_all="inventory_planned_by_all" :multi-edit="multiEdit" :item="item" />
         </th>
         <td v-for="day in days" class="flex gap-x-0.5 relative">
             <div class="p-2 bg-gray-50/10 text-white text-xs max-h-[48px] rounded-lg shiftCell cursor-pointer relative overflow-y-scroll" @click="showItemDetailModal(day)" :style="{width: '198px'}" >
@@ -41,6 +41,15 @@ const props = defineProps({
         required: true
     },
     multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    inventory_planer_ids: {
+        type: Array,
+        required: true,
+    },
+    inventory_planned_by_all: {
         type: Boolean,
         required: false,
         default: false

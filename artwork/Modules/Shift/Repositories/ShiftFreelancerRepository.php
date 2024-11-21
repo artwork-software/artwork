@@ -24,7 +24,7 @@ class ShiftFreelancerRepository extends BaseRepository
         return $shiftFreelancer;
     }
 
-    public function getById(int $modelId): ShiftFreelancer
+    public function getById(int $modelId): ?ShiftFreelancer
     {
         return ShiftFreelancer::find($modelId);
     }

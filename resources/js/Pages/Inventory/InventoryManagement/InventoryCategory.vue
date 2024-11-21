@@ -4,12 +4,14 @@
         @dragend="categoryDragEnd"
         @mouseover="showCategoryMenu()"
         @mouseout="closeCategoryMenu()"
+        class="group"
         :class="'cursor-grab ' + trCls">
         <td :colspan="colspan"
             :class="[categoryShown ? 'rounded-t-xl' : 'rounded-xl', 'category-td']">
             <div class="category-td-container">
-                <div class="name"
+                <div class="name flex items-center gap-x-1"
                     @click="toggleCategoryEdit()">
+                    <component is="IconCategory" class="icon" />
                     {{ category.name }}
                 </div>
                 <div @click="toggleCategory()"
@@ -17,8 +19,16 @@
                     <IconChevronUp v-if="categoryShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
-                <AddNewResource @click="openAddCategoryOrGroupModal()"
-                                :text="$t('Add new group')"/>
+                <ToolTipComponent
+                    :tooltip-text="$t('Add new group')"
+                    direction="bottom"
+                    icon="IconCirclePlus"
+                    icon-size="h-5 w-5"
+                    stroke="1.5"
+                    white-icon
+                    classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                    @click="openAddCategoryOrGroupModal()"
+                    v-if="!categoryClicked && can('can manage inventory stock') || hasAdminRole()" />
                 <div :class="[categoryClicked ? '' : '!hidden', 'category-input-container']">
                     <input
                         type="text"
@@ -31,34 +41,16 @@
             </div>
         </td>
         <td class="relative">
-            <Menu v-show="categoryMenuShown && !categoryDragged"
-                  as="div"
-                  class="inventory-menu-container">
-                <MenuButton as="div">
-                    <IconDotsVertical class="menu-button"
-                                      stroke-width="1.5"
-                                      aria-hidden="true"/>
-                </MenuButton>
-                <div class="inventory-menu">
-                    <transition enter-active-class="transition-enter-active"
-                                enter-from-class="transition-enter-from"
-                                enter-to-class="transition-enter-to"
-                                leave-active-class="transition-leave-active"
-                                leave-from-class="transition-leave-from"
-                                leave-to-class="transition-leave-to">
-                        <MenuItems class="menu-items">
-                            <MenuItem v-slot="{ active }"
-                                      as="div">
-                                <a @click="showCategoryDeleteConfirmModal()"
-                                   :class="[active ? 'active' : 'not-active', 'default group']">
-                                    <IconTrash class="icon group-hover:text-white"/>
-                                    {{ $t('Delete') }}
-                                </a>
-                            </MenuItem>
-                        </MenuItems>
-                    </transition>
-                </div>
-            </Menu>
+            <BaseMenu has-no-offset class="invisible group-hover:visible" v-if="can('can manage inventory stock') || hasAdminRole()">
+                <MenuItem v-slot="{ active }"
+                          as="div">
+                    <a @click="showCategoryDeleteConfirmModal()"
+                       :class="[active ? 'active' : 'not-active', 'default group cursor-pointer text-white flex items-center px-4 py-2 subpixel-antialiased text-sm']">
+                        <IconTrash class="h-5 w-5 group-hover:text-white"/>
+                        {{ $t('Delete') }}
+                    </a>
+                </MenuItem>
+            </BaseMenu>
         </td>
     </tr>
     <DropGroup v-if="showFirstDropGroup"
@@ -111,6 +103,11 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {router} from "@inertiajs/vue3";
 import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNewGroup']),
     props = defineProps({
@@ -140,6 +137,11 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         categoryShown.value = !categoryShown.value;
     },
     toggleCategoryEdit = () => {
+
+        if(!can('can manage inventory stock') || !hasAdminRole()){
+            return;
+        }
+
         categoryClicked.value = !categoryClicked.value;
 
         if (categoryClicked.value) {
@@ -199,6 +201,9 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         return !categoryClicked.value;
     },
     categoryDragStart = (e) => {
+        if(!can('can manage inventory stock') || !hasAdminRole()){
+            return;
+        }
         categoryDragged.value = true;
 
         //fix for chrome engine, timeout 1ms before emit otherwise dragend is called immediately
@@ -210,6 +215,9 @@ const emits = defineEmits(['categoryDragging', 'categoryDragEnd', 'wantsToAddNew
         e.dataTransfer.setData('currentCategoryIndex', props.index.toString());
     },
     categoryDragEnd = () => {
+        if(!can('can manage inventory stock') || !hasAdminRole()){
+            return;
+        }
         categoryDragged.value = false;
         emits.call(this, 'categoryDragEnd')
     },

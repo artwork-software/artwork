@@ -855,4 +855,21 @@ class UserController extends Controller
     {
         $user->update($request->only('drawer_height'));
     }
+
+    public function updateInventorySortColumn(User $user, Request $request): void
+    {
+        $user->update($request->only('inventory_sort_column_id', 'inventory_sort_direction'));
+    }
+
+    public function updateChecklistFilter(User $user, Request $request): void
+    {
+        $user->update($request->only([
+            'checklist_has_projects',
+            'checklist_no_projects',
+            'checklist_private_checklists',
+            'checklist_no_private_checklists',
+            'checklist_completed_tasks',
+            'checklist_show_without_tasks'
+        ]));
+    }
 }

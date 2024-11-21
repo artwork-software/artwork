@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="close(null, null, null, true)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg">
+    <BaseModal @closed="close(null, null, null, true)" v-if="show" modal-image="/Svgs/Overlays/illu_user_invite.svg" is-in-shift-plan>
             <div class="mx-4">
                 <ModalHeader
                     :title="$t('Select qualification')"

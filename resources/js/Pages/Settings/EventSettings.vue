@@ -69,6 +69,8 @@
                    </li>
                </ul>
            </EventSettingHeader>
+
+
         <!-- Termintyp erstellen Modal-->
         <BaseModal @closed="closeAddEventTypeModal" v-if="addingEventType" modal-image="/Svgs/Overlays/illu_appointment_new.svg">
                 <div class="mx-4">
@@ -78,7 +80,7 @@
                     <form @submit.prevent="addEventType" class="grid grid-cols-1 gap-4">
                         <div class="flex items-center">
                             <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
-                                <ColorPickerComponent @updateColor="addColor" />
+                                <ColorPickerComponent @updateColor="addColor" color="#ccc" />
                             </div>
 
                             <div class="relative my-auto w-full ml-8">
@@ -221,6 +223,7 @@ import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import EventSettingHeader from "@/Pages/Settings/EventSettingComponents/EventSettingHeader.vue";
+import {ColorPicker} from "vue3-colorpicker";
 
 export default {
     mixins: [Permissions],
@@ -261,6 +264,7 @@ export default {
         }
     },
     components: {
+        ColorPicker,
         EventSettingHeader,
         TextInputComponent,
         ModalHeader,

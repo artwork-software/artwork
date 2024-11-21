@@ -41,6 +41,11 @@ readonly class ShiftFreelancerService
         ChangeService $changeService,
         array|null $seriesShiftData = null,
     ): void {
+        // check if user is already assigned to shift
+        if ($shift->freelancer()->get(['freelancers.id'])->pluck('id')->contains($freelancerId)) {
+            return;
+        }
+
         $shiftFreelancerPivot = $this->shiftFreelancerRepository->createForShift(
             $shift->id,
             $freelancerId,

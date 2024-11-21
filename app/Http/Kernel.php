@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\SetDeveloperEnvironment;
 use Artwork\Core\Http\Middleware\Authenticate;
 use Artwork\Core\Http\Middleware\EncryptCookies;
 use Artwork\Core\Http\Middleware\HandleInertiaRequests;
@@ -28,6 +29,7 @@ use Illuminate\Routing\Middleware\ValidateSignature;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Jetstream\Http\Middleware\AuthenticateSession;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Spatie\Permission\Middlewares\PermissionMiddleware;
 use Spatie\Permission\Middlewares\RoleMiddleware;
 use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
@@ -55,9 +57,11 @@ class Kernel extends HttpKernel
             ModuleSettingsMiddleware::class,
             HandleInertiaRequests::class,
             Localization::class,
+            SetDeveloperEnvironment::class
         ],
 
         'api' => [
+            EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             SubstituteBindings::class,
         ],

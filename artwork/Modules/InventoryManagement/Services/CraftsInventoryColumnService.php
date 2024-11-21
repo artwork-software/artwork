@@ -6,6 +6,7 @@ use Artwork\Modules\InventoryManagement\Enums\CraftsInventoryColumnTypeEnum;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Models\CraftsInventoryColumn;
 use Artwork\Modules\InventoryManagement\Repositories\CraftsInventoryColumnRepository;
+use Artwork\Modules\User\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
@@ -31,13 +32,16 @@ class CraftsInventoryColumnService
         CraftsInventoryColumnTypeEnum $type,
         string $defaultOption,
         array $typeOptions,
-        string $background_color
+        string $background_color,
+        ?bool $deletable = true
     ): CraftsInventoryColumn {
         $craftsInventoryColumn = $this->craftsInventoryColumnRepository->getNewModelInstance([
             'name' => $name,
             'type' => $type,
             'type_options' => $typeOptions,
-            'background_color' => $background_color
+            'background_color' => $background_color,
+            'deletable' => $deletable,
+            'order' => $this->craftsInventoryColumnRepository->getMaxOrder() + 1
         ]);
         $this->craftsInventoryColumnRepository->saveOrFail($craftsInventoryColumn);
 
@@ -68,6 +72,8 @@ class CraftsInventoryColumnService
                 $this->craftsInventoryColumnRepository->find($columnId)
             )
         );
+
+        $duplicatedColumn->update(['order' => $this->craftsInventoryColumnRepository->getMaxOrder() + 1]);
 
         $this->craftInventoryItemService->createCellsInItemsForColumn($duplicatedColumn);
 
@@ -136,6 +142,19 @@ class CraftsInventoryColumnService
             $craftsInventoryColumn = $this->craftsInventoryColumnRepository->find($craftsInventoryColumn);
         }
 
+        $users = User::where('inventory_sort_column_id', $craftsInventoryColumn->id)->get();
+        $users->each(function (User $user): void {
+            $user->update(['inventory_sort_column_id' => null, 'inventory_sort_direction' => null]);
+        });
+
         return $this->craftsInventoryColumnRepository->forceDelete($craftsInventoryColumn);
+    }
+
+    public function reorder(\Illuminate\Support\Collection $columns): void
+    {
+        foreach ($columns as $column) {
+            $columnFound = $this->craftsInventoryColumnRepository->find($column['id']);
+            $this->craftsInventoryColumnRepository->update($columnFound, ['order' => $column['order']]);
+        }
     }
 }

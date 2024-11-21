@@ -4,7 +4,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "sockets": "soketi start"
+        "sockets": "soketi start --config=./soketi.config.js"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.7",

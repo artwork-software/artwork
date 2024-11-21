@@ -1,16 +1,31 @@
 <template>
     <tr>
         <td :colspan="colspan" class="craft-td">
-            <div class="craft-container">
+            <div class="craft-container my-3">
                 <div class="title"
                      @click="toggleCraft()">
                     <span>{{ craft.value.name }}</span>
                     <IconChevronUp v-if="craftShown" class="icon"/>
                     <IconChevronDown v-else class="icon"/>
                 </div>
-                <IconLink class="icon" @click="openShiftSettingsInNewTab()"/>
-                <AddNewResource @click="openAddCategoryOrGroupModal('category', craft.value.id)"
-                                :text="$t('Add new category')"/>
+                <div class="flex items-center gap-x-1" v-if="can('can manage inventory stock') || hasAdminRole()">
+                    <ToolTipComponent
+                        :tooltip-text="$t('Craft settings')"
+                        direction="bottom"
+                        icon="IconLink"
+                        icon-size="h-5 w-5"
+                        stroke="1.5"
+                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        @click="openShiftSettingsInNewTab()"/>
+                    <ToolTipComponent
+                        :tooltip-text="$t('Add new category')"
+                        direction="bottom"
+                        icon="IconCirclePlus"
+                        icon-size="h-5 w-5"
+                        stroke="1.5"
+                        classes="text-black cursor-pointer hover:text-artwork-buttons-create duration-150 ease-in-out transition-colors"
+                        @click="openAddCategoryOrGroupModal('category', craft.value.id)" />
+                </div>
             </div>
         </td>
     </tr>
@@ -48,6 +63,10 @@ import DropCategory from "@/Pages/Inventory/InventoryManagement/DropCategory.vue
 import AddCategoryOrGroupModal from "@/Pages/Inventory/InventoryManagement/AddCategoryOrGroupModal.vue";
 import {router} from "@inertiajs/vue3";
 import AddNewResource from "@/Pages/Inventory/InventoryManagement/AddNewResource.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
 const props = defineProps({
         colspan: Number,

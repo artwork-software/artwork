@@ -34,6 +34,7 @@ class BudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, WithSty
     /**
      * @return array<string, mixed>
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getRows(): array
     {
         $rows = [];

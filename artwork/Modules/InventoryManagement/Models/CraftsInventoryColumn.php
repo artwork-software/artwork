@@ -22,11 +22,14 @@ class CraftsInventoryColumn extends Model
         'name',
         'type',
         'type_options',
-        'background_color'
+        'background_color',
+        'deletable',
+        'order'
     ];
 
     protected $casts = [
-        'type_options' => 'array'
+        'type_options' => 'array',
+        'deletable' => 'boolean'
     ];
 
     public function cells(): HasMany

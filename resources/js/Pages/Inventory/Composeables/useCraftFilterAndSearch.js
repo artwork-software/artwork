@@ -1,4 +1,4 @@
-import {computed, ref} from "vue";
+import { computed, ref } from "vue";
 
 const crafts = ref([]),
     searchValue = ref(''),
@@ -9,97 +9,79 @@ const crafts = ref([]),
 
         if (isDateColumn) {
             let parts = value.split('-');
-
             tmpValue = parts[2] + '.' + parts[1] + '.' + parts[0];
         }
 
         return (
-            tmpValue.indexOf(tmpSearchValue) > -1 ||
-            tmpValue.indexOf(tmpSearchValue.replace('o', 'ö')) > -1 ||
-            tmpValue.indexOf(tmpSearchValue.replace('u', 'ü')) > -1 ||
-            tmpValue.indexOf(tmpSearchValue.replace('a', 'ä')) > -1
+            tmpValue.includes(tmpSearchValue) ||
+            tmpValue.includes(tmpSearchValue.replace('o', 'ö')) ||
+            tmpValue.includes(tmpSearchValue.replace('u', 'ü')) ||
+            tmpValue.includes(tmpSearchValue.replace('a', 'ä'))
         );
     };
 
 export default function useCraftFilterAndSearch() {
     const filteredCrafts = computed(() => {
-        //clone object is important for replaceState after any updates from backend
-        //(change craft filter for example)
         let filteringCrafts = JSON.parse(JSON.stringify(crafts.value));
 
+        // Filter basierend auf craftFilters
         if (craftFilters.value.length > 0) {
-            filteringCrafts = filteringCrafts.filter(
-                (craft) => {
-                    return craftFilters.value.length === 0 || craftFilters.value.includes(craft.id);
-                }
+            filteringCrafts = filteringCrafts.filter(craft =>
+                craftFilters.value.includes(craft.id)
             );
         }
 
+        // Wenn kein Suchwert vorhanden ist, gib alle zurück
         if (searchValue.value.length === 0) {
-            filteringCrafts.forEach(
-                (craft) => craft.filtered_inventory_categories = craft.inventory_categories
-            )
-            return filteringCrafts.map(
-                (craft) => ref(craft)
-            );
+            filteringCrafts.forEach(craft => {
+                craft.filtered_inventory_categories = craft.inventory_categories;
+            });
+            return filteringCrafts.map(craft => ref(craft));
         }
 
-        filteringCrafts.forEach((craft) => {
+        // Filterlogik für Suchwert
+        filteringCrafts.forEach(craft => {
             let filteredCategories = [];
 
-            craft.inventory_categories.forEach((category) => {
-                let categoryMatches = false,
-                    matchedGroups = [];
+            craft.inventory_categories.forEach(category => {
+                // Prüfen, ob Kategorie den Suchwert enthält
+                let categoryMatches = valueIncludesSearchValueWithUmlauts(category.name);
 
-                if (valueIncludesSearchValueWithUmlauts(category.name)) {
-                    categoryMatches = true;
+                // Wenn die Kategorie passt, alle Gruppen und Ordner übernehmen
+                if (categoryMatches) {
+                    filteredCategories.push(category);
+                    return;
                 }
 
-                category.groups.forEach((group) => {
-                    let currentGroupMatched = false,
-                        matchedItems = [];
+                // Ansonsten nur passende Gruppen und Ordner filtern
+                let matchedGroups = category.groups.filter(group => {
+                    let groupMatches = valueIncludesSearchValueWithUmlauts(group.name),
+                        matchedFolders = group.folders.filter(folder =>
+                            valueIncludesSearchValueWithUmlauts(folder.name) ||
+                            folder.items.some(item =>
+                                item.cells.some(cell =>
+                                    valueIncludesSearchValueWithUmlauts(cell.cell_value, cell.column.type === 1)
+                                )
+                            )
+                        );
 
-                    if (valueIncludesSearchValueWithUmlauts(group.name)) {
-                        currentGroupMatched = true;
+                    // Wenn Gruppe oder Ordner passt, zeige alle Inhalte
+                    if (groupMatches || matchedFolders.length > 0) {
+                        group.folders = matchedFolders;
+                        return true;
                     }
 
-                    //even if group is not matched we need to filter the items
-                    //if group is matched we show all items if no item matches, if at least one item
-                    //matches we show only matching items
-                    group.items.forEach((item) => {
-                        let matchingCells = item.cells.filter((cell) => {
-                            return valueIncludesSearchValueWithUmlauts(cell.cell_value, (cell.column.type === 1));
-                        });
+                    // Filtere Gruppen basierend auf Items
+                    group.items = group.items.filter(item =>
+                        item.cells.some(cell =>
+                            valueIncludesSearchValueWithUmlauts(cell.cell_value, cell.column.type === 1)
+                        )
+                    );
 
-                        if (matchingCells.length > 0) {
-                            matchedItems.push(item);
-                        }
-                    });
-
-                    //no items found and group not matching, just push if category matched
-                    if (matchedItems.length === 0 && !currentGroupMatched) {
-                        if (!categoryMatches) {
-                            return;
-                        }
-                        matchedGroups.push(group);
-                        return;
-                    }
-
-                    //no items found but group is matching, push it
-                    if (matchedItems.length === 0 && currentGroupMatched) {
-                        matchedGroups.push(group);
-                        return;
-                    }
-
-                    //group matched and items too, replace with matched item and push it
-                    group.items = matchedItems;
-                    matchedGroups.push(group);
+                    return group.items.length > 0;
                 });
 
-                if (
-                    categoryMatches ||
-                    !categoryMatches && matchedGroups.length > 0
-                ) {
+                if (matchedGroups.length > 0) {
                     category.groups = matchedGroups;
                     filteredCategories.push(category);
                 }
@@ -108,11 +90,8 @@ export default function useCraftFilterAndSearch() {
             craft.filtered_inventory_categories = filteredCategories;
         });
 
-        return filteringCrafts.map(
-            (craft) => ref(craft)
-        );
+        return filteringCrafts.map(craft => ref(craft));
     });
 
-    return {searchValue, craftFilters, crafts, filteredCrafts};
+    return { searchValue, craftFilters, crafts, filteredCrafts };
 }
-

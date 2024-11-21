@@ -32,13 +32,16 @@ class CraftsInventoryColumnService
         CraftsInventoryColumnTypeEnum $type,
         string $defaultOption,
         array $typeOptions,
-        string $background_color
+        string $background_color,
+        ?bool $deletable = true
     ): CraftsInventoryColumn {
         $craftsInventoryColumn = $this->craftsInventoryColumnRepository->getNewModelInstance([
             'name' => $name,
             'type' => $type,
             'type_options' => $typeOptions,
-            'background_color' => $background_color
+            'background_color' => $background_color,
+            'deletable' => $deletable,
+            'order' => $this->craftsInventoryColumnRepository->getMaxOrder() + 1
         ]);
         $this->craftsInventoryColumnRepository->saveOrFail($craftsInventoryColumn);
 
@@ -69,6 +72,8 @@ class CraftsInventoryColumnService
                 $this->craftsInventoryColumnRepository->find($columnId)
             )
         );
+
+        $duplicatedColumn->update(['order' => $this->craftsInventoryColumnRepository->getMaxOrder() + 1]);
 
         $this->craftInventoryItemService->createCellsInItemsForColumn($duplicatedColumn);
 
@@ -143,5 +148,13 @@ class CraftsInventoryColumnService
         });
 
         return $this->craftsInventoryColumnRepository->forceDelete($craftsInventoryColumn);
+    }
+
+    public function reorder(\Illuminate\Support\Collection $columns): void
+    {
+        foreach ($columns as $column) {
+            $columnFound = $this->craftsInventoryColumnRepository->find($column['id']);
+            $this->craftsInventoryColumnRepository->update($columnFound, ['order' => $column['order']]);
+        }
     }
 }

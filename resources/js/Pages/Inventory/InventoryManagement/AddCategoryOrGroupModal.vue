@@ -9,6 +9,10 @@
                 class="headline1">
                 {{ $t('Add group') }}
             </h1>
+            <h1 v-if="typeIsFolder()"
+                class="headline1">
+                {{ $t('Add Folder') }}
+            </h1>
             <div class="new-category-or-group-form">
                 <TextInputComponent v-if="typeIsCategory()"
                                     id="new-category-name"
@@ -19,6 +23,11 @@
                                     id="new-group-name"
                                     v-model="newCategoryOrGroupForm.name"
                                     :label="$t('Group name*')"
+                />
+                <TextInputComponent v-if="typeIsFolder()"
+                                    id="new-group-name"
+                                    v-model="newCategoryOrGroupForm.name"
+                                    :label="$t('Folder name*')"
                 />
                 <span v-if="showInvalidNameErrorText"
                       class="new-category-or-group-error-text">
@@ -58,6 +67,7 @@ const emits = defineEmits(['closed']),
     newCategoryOrGroupForm = useForm({
         craftId: null,
         categoryId: null,
+        groupId: null,
         name: ''
     }),
     typeIsCategory = () => {
@@ -65,6 +75,9 @@ const emits = defineEmits(['closed']),
     },
     typeIsGroup = () => {
         return props.type === 'group';
+    },
+    typeIsFolder = () => {
+        return props.type === 'folder';
     },
     validateNewCategoryOrGroupForm = () => {
         showInvalidNameErrorText.value = !newCategoryOrGroupForm.name.length > 0;
@@ -93,6 +106,19 @@ const emits = defineEmits(['closed']),
             newCategoryOrGroupForm.categoryId = props.resourceId;
             newCategoryOrGroupForm.post(
                 route('inventory-management.inventory.group.create'),
+                {
+                    preserveScroll: true,
+                    onSuccess: close
+                }
+            );
+
+            return ;
+        }
+
+        if (typeIsFolder()) {
+            newCategoryOrGroupForm.groupId = props.resourceId;
+            newCategoryOrGroupForm.post(
+                route('inventory-management.inventory.folder.create'),
                 {
                     preserveScroll: true,
                     onSuccess: close

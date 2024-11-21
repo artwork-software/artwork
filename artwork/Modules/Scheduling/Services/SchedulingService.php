@@ -222,6 +222,9 @@ readonly class SchedulingService
                     break;
                 case 'PUBLIC_CHANGES':
                     $project = Project::find($schedulings->model_id);
+                    if (!$project instanceof Project) {
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.public_changes_project',
                         ['project' => $project?->name],

@@ -310,6 +310,7 @@ const onDrop = (e) => {
     e.preventDefault();
     const jsonObject = e.dataTransfer.getData('application/json');
     if(jsonObject) {
+        droppedItem.value = JSON.parse(jsonObject);
         router.patch(
             route(
                 'inventory-management.inventory.item.add.to.group',

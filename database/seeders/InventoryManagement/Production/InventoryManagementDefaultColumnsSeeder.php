@@ -31,7 +31,7 @@ class InventoryManagementDefaultColumnsSeeder extends Seeder
 
         $craftsInventoryColumnService->create(
             'Anzahl',
-            CraftsInventoryColumnTypeEnum::NUMBER,
+            CraftsInventoryColumnTypeEnum::TEXT,
             '',
             [],
             '',

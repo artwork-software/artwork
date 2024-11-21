@@ -30,5 +30,4 @@ class EventStatusRepository extends BaseRepository
 
         return $builder;
     }
-
 }

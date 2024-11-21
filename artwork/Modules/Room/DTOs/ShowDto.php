@@ -442,5 +442,4 @@ class ShowDto extends BaseDto
             'eventStatuses' => $this->getEventStatuses(),
         ];
     }
-
 }

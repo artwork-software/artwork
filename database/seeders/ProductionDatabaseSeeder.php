@@ -2,11 +2,7 @@
 
 namespace Database\Seeders;
 
-
-use Artwork\Modules\Event\Models\EventStatus;
-use Artwork\Modules\Holidays\Models\Subdivision;
 use Database\Seeders\InventoryManagement\Production\InventoryManagementDefaultColumnsSeeder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +32,5 @@ class ProductionDatabaseSeeder extends Seeder
             'individual_name' => true,
             'abbreviation' => 'BL'
         ]);
-
-
     }
 }

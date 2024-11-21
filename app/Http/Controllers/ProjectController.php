@@ -1828,7 +1828,7 @@ class ProjectController extends Controller
                 ->where('column_id', $column->id)
                 ->first();
 
-            if ($column->type == 'sum') {
+            if ($column->type === 'sum') {
                 $sum = (float)$firstRowValue + (float)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
@@ -1886,6 +1886,7 @@ class ProjectController extends Controller
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
         Request $request,
         Project $project,
@@ -2092,7 +2093,8 @@ class ProjectController extends Controller
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
         $headerObject->project->project_managers = $project->managerUsers;
-        $headerObject->eventStatuses = app(EventSettings::class)->enable_status ? EventStatus::orderBy('order')->get() : [];
+        $headerObject->eventStatuses = app(EventSettings::class)
+            ->enable_status ? EventStatus::orderBy('order')->get() : [];
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab' => $projectTab,

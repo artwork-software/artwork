@@ -32,8 +32,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen –
                 dadurch ist er/sie automatisch ' .
                     'Projektadmin des neu angelegten Projekts.',
-                'tooltipKey' => "User can create, edit, and delete projects, automatically
-                becoming project admin of the created project.",
+                'tooltipKey' => 'User can create, edit, and delete projects, automatically ' .
+                'becoming project admin of the created project.',
                 'checked' => false
             ],
             [
@@ -71,8 +71,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Room bookings',
                 'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die ' .
                     'eigenen Anfragen editieren & löschen.',
-                'tooltipKey' => "User can request room bookings for their own
-                projects and edit or delete their own requests.",
+                'tooltipKey' => 'User can request room bookings for their own ' .
+                'projects and edit or delete their own requests.',
                 'checked' => false
             ],
             [
@@ -100,8 +100,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung ' .
                     'von Finanzierungsquellen eingeladen werden.',
-                'tooltipKey' => "User is allowed to create their own funding sources
-                and be invited for viewing & managing funding sources.",
+                'tooltipKey' => 'User is allowed to create their own funding sources ' .
+                'and be invited for viewing & managing funding sources.',
                 'checked' => false
             ],
             [
@@ -117,13 +117,13 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'name' => PermissionEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value,
                 'name_de' => "Darf alle Budget-Dokumente & Verträge von allen
                 Projekten einsehen, bearbeiten und löschen",
-                'translation_key' => "Allowed to view, edit, and delete all
-                budget documents & contracts from all projects",
+                'translation_key' => 'Allowed to view, edit, and delete all ' .
+                'budget documents & contracts from all projects',
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Nutzer*in darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, ' .
                     'bearbeiten und löschen.',
-                'tooltipKey' => "User is allowed to view, edit, and delete all
-                budget documents & contracts from all projects.",
+                'tooltipKey' => 'User is allowed to view, edit, and delete all ' .
+                'budget documents & contracts from all projects.',
                 'checked' => false
             ],
             [
@@ -134,8 +134,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Nutzer*in darf zusätzlich sämtliche verifizierungs-, oder festgeschriebenen Status ' .
                     'aufheben oder gesperrte Spalten entsperren.',
-                'tooltipKey' => "User is allowed to remove any verification
-                or fixed statuses and unlock locked columns.",
+                'tooltipKey' => 'User is allowed to remove any verification ' .
+                    'or fixed statuses and unlock locked columns.',
                 'checked' => false
             ],
             [
@@ -146,8 +146,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des
                 Tools editieren und z.B. Logos austauschen, ' .
                     'Impressum definieren etc.',
-                'tooltipKey' => "User is allowed to edit the basic settings
-                of the tool, such as replacing logos, defining legal notice, etc.",
+                'tooltipKey' => 'User is allowed to edit the basic settings ' .
+                'of the tool, such as replacing logos, defining legal notice, etc.',
                 'checked' => false
             ],
             [
@@ -158,8 +158,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im
                 System anlegen, editieren & löschen. Diese Teams ' .
                     'können anschließend z.B. Projekten zugeordnet werden.',
-                'tooltipKey' => "User can create, edit, and delete teams
-                (departments) in the system. These teams can then be assigned to projects, for example.",
+                'tooltipKey' => 'User can create, edit, and delete teams ' .
+                '(departments) in the system. These teams can then be assigned to projects, for example.',
                 'checked' => false
             ],
             [
@@ -178,8 +178,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche ' .
                     'definieren, bearbeiten & löschen.',
-                'tooltipKey' => "User can define, edit, and delete project
-                categories, genres, and areas in the system settings.",
+                'tooltipKey' => 'User can define, edit, and delete project ' .
+                'categories, genres, and areas in the system settings.',
                 'checked' => false
             ],
             [
@@ -199,8 +199,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen ' .
                     'können anschließend von allen anderen Usern verwendet werden.',
-                'tooltipKey' => "User can create, edit, and delete checklist
-                templates. All templates can then be used by all other users.",
+                'tooltipKey' => 'User can create, edit, and delete checklist ' .
+                    'templates. All templates can then be used by all other users.',
                 'checked' => false
             ],
             [
@@ -210,8 +210,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'System settings',
                 'tooltipText' => 'Nutzer*in darf Systemnachrichten anlegen, editieren und löschen. Diese ' .
                     'Benachrichtigungen werden allen Usern angezeigt.',
-                'tooltipKey' => "User can create, edit, and delete system
-                notifications. These notifications are displayed to all users.",
+                'tooltipKey' => 'User can create, edit, and delete system ' .
+                    'notifications. These notifications are displayed to all users.',
                 'checked' => false
             ],
             [
@@ -257,8 +257,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
                     'Projekten einsehen ohne dabei die Dokumente sehen zu können.',
-                'tooltipKey' => "User has budget access to all projects,
-                meaning they can view budget planning of all projects without accessing the documents.",
+                'tooltipKey' => 'User has budget access to all projects, ' .
+                'meaning they can view budget planning of all projects without accessing the documents.',
                 'checked' => false
             ],
             [
@@ -268,8 +268,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'group' => 'Documents & Budget',
                 'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
                     'Projekten einsehen und kann auch alle Dokumente der Projekte sehen.',
-                'tooltipKey' => "User has budget access to all projects,
-                meaning they can view both budget planning and documents of all projects.",
+                'tooltipKey' => 'User has budget access to all projects, ' .
+                'meaning they can view both budget planning and documents of all projects.',
                 'checked' => false
             ],
             [
@@ -346,6 +346,24 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Create events when a new project is created",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::INVENTORY_STOCK_MANAGE->value,
+                'name_de' => "Inventar-Bestand verwalten",
+                'translation_key' => "Manage inventory stock",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt das Anlegen, Bearbeiten und Löschen von Inventar-Beständen',
+                'tooltipKey' => "Allows the creation, editing and deletion of inventory stocks",
+                'checked' => false
+            ],
+            [
+                'name' => PermissionEnum::INVENTORY_PLANER->value,
+                'name_de' => "Inventarplaner",
+                'translation_key' => "Inventory planner",
+                'group' => 'Inventory',
+                'tooltipText' => 'Erlaubt die Planung von Inventar',
+                'tooltipKey' => "Allows the planning of inventory",
+                'checked' => false
+            ],
         ];
     }
 
@@ -361,8 +379,8 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'translation_key' => "artwork admin",
                 'tooltipText' => 'Der Admin hat alle Berechtigungen im System
                 und kann somit alles sehen und bearbeiten.',
-                'tooltipKey' => "The admin has all permissions in the system
-                 and can therefore see and edit everything.",
+                'tooltipKey' => 'The admin has all permissions in the system and ' .
+                 'can therefore see and edit everything.',
             ],
         ];
     }

@@ -21,6 +21,19 @@ class CraftRepository extends BaseRepository
         return $craft->craftShiftPlaner()->detach();
     }
 
+    /**
+     * @return array<int, mixed>
+     */
+    public function syncUsersInventory(Craft $craft, array $userIds): array
+    {
+        return $craft->craftInventoryPlaner()->withTimestamps()->sync($userIds);
+    }
+
+    public function detachUsersInventory(Craft $craft): int
+    {
+        return $craft->craftInventoryPlaner()->detach();
+    }
+
     public function getAll(array $with = [])
     {
         return Craft::query()->with($with)->orderBy('position')->get();

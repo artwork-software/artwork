@@ -58,7 +58,8 @@ class WorkingHourService
             if (empty($mergedIntervals) || $mergedIntervals[count($mergedIntervals) - 1][1]->lt($interval[0])) {
                 $mergedIntervals[] = $interval;
             } else {
-                $mergedIntervals[count($mergedIntervals) - 1][1] = $mergedIntervals[count($mergedIntervals) - 1][1]->max($interval[1]);
+                $mergedIntervals[count($mergedIntervals) - 1][1]
+                    = $mergedIntervals[count($mergedIntervals) - 1][1]->max($interval[1]);
             }
         }
 

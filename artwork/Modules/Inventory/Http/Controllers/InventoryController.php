@@ -33,7 +33,6 @@ class InventoryController extends Controller
         private readonly CraftService $craftService,
         private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
         private readonly InventoryManagementUserFilterService $inventoryManagementUserFilterService,
-        private readonly CalendarService $calendarService,
         private readonly CraftInventoryItemEventService $craftInventoryItemEventService,
         private readonly ResponseFactory $responseFactory,
         private readonly CalendarDataService $calendarDataService

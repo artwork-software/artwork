@@ -28,15 +28,20 @@ class CraftsInventoryColumnRepository extends BaseRepository
         return $builder;
     }
 
-    public function getAllOrdered($orderBy = 'id', $orderByDirection = 'asc'): Collection
+    public function getAllOrdered(): Collection
     {
         return $this->getNewModelQuery()
-            ->orderBy($orderBy, $orderByDirection)
-            ->get(['id', 'name', 'type', 'type_options', 'background_color']);
+            ->orderBy('order')
+            ->get(['id', 'name', 'type', 'type_options', 'background_color', 'deletable', 'order']);
     }
 
     public function getAllItemCells(CraftsInventoryColumn $craftsInventoryColumn): Collection
     {
         return $craftsInventoryColumn->cells()->get();
+    }
+
+    public function getMaxOrder(): int
+    {
+        return $this->getNewModelQuery()->max('order') ?? 0;
     }
 }

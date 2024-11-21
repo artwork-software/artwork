@@ -33,7 +33,9 @@ import {ref, watch} from "vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 const $t = useTranslation()
-
+import {usePermission} from "@/Composeables/Permission.js";
+import {usePage} from "@inertiajs/vue3";
+const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 const props = defineProps({
     event: {
         type: Object,

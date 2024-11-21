@@ -52,7 +52,7 @@
                         <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
-                                               v-for="eventType in eventTypes"
+                                               v-for="eventType in sortedEventTypes"
                                                :key="eventType.name"
                                                :value="eventType"
                                                v-slot="{ active, selected }">
@@ -829,6 +829,9 @@ export default {
         },
         isCreator() {
             return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
+        },
+        sortedEventTypes() {
+            return this.eventTypes.sort((a, b) => a.name.localeCompare(b.name));
         },
     },
     methods: {

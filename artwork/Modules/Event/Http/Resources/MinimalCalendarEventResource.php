@@ -61,6 +61,8 @@ class MinimalCalendarEventResource extends JsonResource
             'eventName' => $eventName,
             'title' => $projectName ?: $eventName ?: $eventType->getAttribute('name'),
             'eventTypeId' => $eventType->getAttribute('id'),
+            'eventStatusId' => $this->getAttribute('event_status_id'),
+            'eventStatusColor' => $this->getAttribute('eventStatus')?->getAttribute('color'),
             'event_type_color' => $eventType->getAttribute('hex_code'),
             'eventTypeColorBackground' => $eventType->getAttribute('hex_code') . '33',
             'eventTypeName' => $eventType->getAttribute('name'),

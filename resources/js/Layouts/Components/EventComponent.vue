@@ -34,8 +34,9 @@
                             {{ selectedEventType?.name }}
                         </p>
                     </div>
-                    <Listbox as="div" class="" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector" id="eventType">
-                        <ListboxButton class="menu-button mt-5">
+                    <Listbox as="div" class="-mt-1" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector" id="eventType">
+                        <ListboxLabel class="xsLight mb-0">{{ $t('Event type') }}</ListboxLabel>
+                        <ListboxButton class="menu-button">
                             <div class="flex w-full justify-between">
                                 <div class="flex items-center gap-x-2">
                                     <div>
@@ -99,6 +100,60 @@
                     <div v-else class="flex w-1/2 ml-12 items-center">
                         {{ this.eventName }}
                     </div>
+                </div>
+            </div>
+            <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4" v-if="usePage().props.event_status_module">
+                <div class="h-full">
+                    <Listbox as="div" class="" v-model="selectedEventStatus" id="eventType">
+                        <ListboxLabel class="xsLight mb-0">{{ $t('Event Status') }}</ListboxLabel>
+                        <ListboxButton class="menu-button">
+                            <div class="flex w-full justify-between">
+                                <div class="flex items-center gap-x-2">
+                                    <div>
+                                        <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
+                                    </div>
+                                    <div>
+                                        {{ selectedEventStatus?.name }}
+                                    </div>
+                                </div>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </div>
+                        </ListboxButton>
+
+                        <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions class="absolute w-72 z-10 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8"
+                                               v-for="status in eventStatuses"
+                                               :key="status.name"
+                                               :value="status"
+                                               v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <div class="flex">
+                                            <div>
+                                                <div class="block w-3 h-3 rounded-full"
+                                                     :style="{'backgroundColor' : status?.color }"/>
+                                            </div>
+                                            <span
+                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                {{ status.name }}
+                                            </span>
+                                        </div>
+                                        <span
+                                            :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <IconCheck stroke-width="1.5" v-if="selected"
+                                                                 class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                    <p class="text-xs text-red-800"
+                       v-html="Array.isArray(error?.eventType) ? error.eventType.join('.<br> ') : error?.eventType">
+                    </p>
+                </div>
+                <div>
                 </div>
             </div>
 
@@ -616,7 +671,7 @@ import Input from "@/Jetstream/Input.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
@@ -739,8 +794,10 @@ export default {
             title: null,
             isOption: null,
             eventName: null,
+            eventStatus: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
+            selectedEventStatus: this.eventStatuses[0],
             showProjectInfo: this.project ? true : this.calendarProjectPeriod && this.$page.props.user.calendar_settings.time_period_project_id ? true :false,
             allDayEvent: false,
             selectedProject: null,
@@ -785,7 +842,8 @@ export default {
         'first_project_calendar_tab_id',
         'usedInBulkComponent',
         'requiresAxiosRequests',
-        'calendarProjectPeriod'
+        'calendarProjectPeriod',
+        'eventStatuses'
     ],
     emits: ['closed'],
     watch: {
@@ -835,6 +893,7 @@ export default {
         },
     },
     methods: {
+        usePage,
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
             return parts[2] + "." + parts[1] + "." + parts[0];
@@ -876,6 +935,7 @@ export default {
             this.audience = this.event.audience;
             this.title = this.event.title;
             this.eventName = this.event.eventName;
+            this.selectedEventStatus = this.eventStatuses.find(status => status.id === this.event.eventStatusId);
             this.allDayEvent = this.event.allDay ? this.event.allDay : false;
             if (!this.event.eventTypeName) {
                 this.selectedEventType = this.eventTypes[0];
@@ -1226,6 +1286,7 @@ export default {
             return {
                 title: this.title,
                 eventName: this.eventName,
+                eventStatusId: this.selectedEventStatus?.id,
                 start: this.formatDate(this.startDate, this.startTime),
                 end: this.formatDate(this.endDate, this.endTime),
                 roomId: this.selectedRoom?.id,

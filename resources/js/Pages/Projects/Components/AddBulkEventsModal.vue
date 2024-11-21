@@ -18,6 +18,7 @@
                 :can-edit-component="true"
                 is-in-modal
                 @closed="$emit('closed')"
+                :event-statuses="eventStatuses"
             />
         </div>
     </BaseModal>
@@ -37,6 +38,10 @@ const props = defineProps({
         required: true
     },
     rooms: {
+        type: Object,
+        required: true
+    },
+    eventStatuses: {
         type: Object,
         required: true
     }

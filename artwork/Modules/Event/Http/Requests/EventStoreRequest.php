@@ -20,6 +20,7 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'is_loud' => $this->get('isLoud'),
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
+            'event_status_id' => $this->get('eventStatusId'),
             'project_id_mandatory' => $this->get('projectIdMandatory'),
             'event_name_mandatory' => $this->get('eventNameMandatory'),
             'creating_project' => $this->get('creatingProject'),

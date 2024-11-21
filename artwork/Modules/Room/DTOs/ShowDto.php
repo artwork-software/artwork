@@ -21,6 +21,9 @@ class ShowDto extends BaseDto
     public ?array $projects = null;
 
     public ?Collection $availableCategories = null;
+    public ?Collection $eventStatuses = null;
+
+
 
     public ?SupportCollection $roomCategoryIds = null;
 
@@ -235,6 +238,18 @@ class ShowDto extends BaseDto
         return $this;
     }
 
+    public function getEventStatuses(): ?Collection
+    {
+        return $this->eventStatuses;
+    }
+
+    public function setEventStatuses(?Collection $eventStatuses): self
+    {
+        $this->eventStatuses = $eventStatuses;
+
+        return $this;
+    }
+
     public function getRoom(): ?RoomCalendarResource
     {
         return $this->room;
@@ -424,6 +439,8 @@ class ShowDto extends BaseDto
             'user_filters' => $this->getUserFilters(),
             'first_project_tab_id' => $this->getFirstProjectTabId(),
             'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
+            'eventStatuses' => $this->getEventStatuses(),
         ];
     }
+
 }

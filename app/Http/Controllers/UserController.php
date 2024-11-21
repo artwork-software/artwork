@@ -710,7 +710,8 @@ class UserController extends Controller
             'description',
             'event_name',
             'high_contrast',
-            'expand_days'
+            'expand_days',
+            'use_event_status_color',
         ]));
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Settings\EventSettings;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
@@ -56,6 +57,7 @@ use Artwork\Modules\Department\Http\Resources\DepartmentIndexResource;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\EventType\Models\EventType;
@@ -240,7 +242,8 @@ class ProjectController extends Controller
             ),
             'userProjectManagementSetting' => $this->userProjectManagementSettingService
                 ->getFromUser($this->userService->getAuthUser())
-                ->getAttribute('settings')
+                ->getAttribute('settings'),
+            'eventStatuses' => EventStatus::orderBy('order')->get(),
         ]);
     }
 
@@ -2089,7 +2092,7 @@ class ProjectController extends Controller
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
         $headerObject->project->project_managers = $project->managerUsers;
-
+        $headerObject->eventStatuses = app(EventSettings::class)->enable_status ? EventStatus::orderBy('order')->get() : [];
 
         return inertia('Projects/Tab/TabContent', [
             'currentTab' => $projectTab,

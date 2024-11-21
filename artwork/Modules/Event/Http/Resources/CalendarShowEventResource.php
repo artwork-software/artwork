@@ -49,6 +49,7 @@ class CalendarShowEventResource extends JsonResource
         $roomName = $room?->name;
         $declinedRoomId = $this->declined_room_id;
         $eventTypeId = $this->event_type_id;
+        $eventStatusId = $this->event_status_id;
         $eventTypeName = $eventType->name;
         $eventTypeAbbreviation = $eventType->abbreviation;
         $event_type_color = $eventType->hex_code;
@@ -85,6 +86,8 @@ class CalendarShowEventResource extends JsonResource
             'roomName' => $roomName,
             'declinedRoomId' => $declinedRoomId,
             'eventTypeId' => $eventTypeId,
+            'eventStatusId' => $eventStatusId,
+            'eventStatusColor' => $this->getAttribute('eventStatus')?->getAttribute('color'),
             'eventTypeName' => $eventTypeName,
             'eventTypeAbbreviation' => $eventTypeAbbreviation,
             'event_type_color' => $event_type_color,

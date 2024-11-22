@@ -27,6 +27,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
@@ -553,6 +554,32 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.delete');
         Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
             ->name('holiday.update');
+
+
+        Route::group(['prefix' => 'event-status'], function (): void {
+            Route::get('/', [EventStatusController::class, 'index'])
+                ->name('event_status.management');
+
+            // event_status.update_settings
+            Route::patch('/update/settings', [EventStatusController::class, 'updateSettings'])
+                ->name('event_status.update_settings');
+
+            // event_status.reorder
+            Route::patch('/reorder', [EventStatusController::class, 'reorder'])
+                ->name('event_status.reorder');
+
+            // event_status.store
+            Route::post('/create', [EventStatusController::class, 'store'])
+                ->name('event_status.store');
+
+            //event_status.update
+            Route::patch('/{eventStatus}', [EventStatusController::class, 'update'])
+                ->name('event_status.update');
+
+            //event_status.delete
+            Route::delete('/{eventStatus}', [EventStatusController::class, 'destroy'])
+                ->name('event_status.delete');
+        });
     });
 
     //EventTypes

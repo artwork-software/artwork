@@ -19,6 +19,7 @@ use Artwork\Modules\Event\Events\EventUpdated;
 use Artwork\Modules\Event\Events\OccupancyUpdated;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -832,6 +833,7 @@ readonly class EventService
                         $endDate->format('Y-m-d'),
                     ]
             )
+            ->setEventStatuses(EventStatus::orderBy('order')->get())
             ->setCalendarType(
                 $desiredProjectHasNoEvents ? 'individual' :
                     (
@@ -989,6 +991,7 @@ readonly class EventService
         }
 
         $eventManagementDto = EventManagementDto::newInstance()
+            ->setEventStatuses(EventStatus::orderBy('order')->get())
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
@@ -1196,6 +1199,7 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
+            'event_status_id' => $event['status']['id'],
         ]);
     }
 
@@ -1218,6 +1222,7 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
+            'event_status_id' => $data['status']['id'],
         ]);
     }
 

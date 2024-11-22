@@ -2120,5 +2120,11 @@
     "Explicitly selected persons": "Explicitly selected persons",
     "From all planners": "From all planners",
     "Inventory settings": "Inventory settings",
-    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory."
+    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.",
+    "Event Status": "Event Status",
+    "Would you like to use the ‘Event Status’ module in {0}?": "Would you like to use the ‘Event Status’ module in {0}?",
+    "Default": "Default",
+    "Edit event status": "Edit event status",
+    "Create event status": "Create event status",
+    "Use event status colour": "Use event status colour"
 }

@@ -101,7 +101,6 @@
                         icon="IconZoomOut"
                         icon-size="h-7 w-7"
                         :disabled="zoom_factor <= 0.2"
-
                         @click="decrementZoomFactor"
                         v-if="!atAGlance"
                     />
@@ -215,6 +214,13 @@
                                                class="input-checklist"/>
                                         <p :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                            class="ml-4 my-auto text-secondary">{{ $t('Expand days') }}</p>
+                                    </div>
+                                    <div class="flex items-center py-1" v-if="usePage().props.event_status_module">
+                                        <input v-model="userCalendarSettings.use_event_status_color"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <p :class="userCalendarSettings.use_event_status_color ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                           class="ml-4 my-auto text-secondary">{{ $t('Use event status colour') }}</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-end">
@@ -340,6 +346,7 @@ const userCalendarSettings = useForm({
     event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
     high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
     expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
+    use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
 });
 
 const projectSearch = ref('');

@@ -34,6 +34,8 @@ class ProjectCalendarShowEventResource extends JsonResource
             'roomName' => $this->room?->name,
             'declinedRoomId' => $this->declined_room_id,
             'eventTypeId' => $this->event_type_id,
+            'eventStatusId' => $this->event_status_id,
+            'eventStatusColor' => $this->getAttribute('eventStatus')?->getAttribute('color'),
             'eventTypeName' => $this->event_type->name,
             'eventTypeAbbreviation' => $this->event_type->abbreviation,
             'event_type_color' => $this->event_type->hex_code,

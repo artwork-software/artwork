@@ -35,7 +35,7 @@ readonly class SchedulingService
         );
 
         if ($scheduling instanceof Scheduling) {
-            $scheduling->increment('count');
+            $scheduling->__call('increment', ['count']);
 
             return true;
         }
@@ -56,7 +56,7 @@ readonly class SchedulingService
     }
 
     //@todo: fix phpcs error - refactor function because nesting level and complexity is too high
-    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function sendNotification(
         NotificationService $notificationService,
         ProjectTabService $projectTabService
@@ -157,7 +157,10 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'EVENT_CHANGES':
-                    $event = Event::find($schedulings->model_id);
+                    $event = Event::query()->firstOrFail($schedulings->model_id);
+                    if (!$event instanceof Event) {
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_event',
                         [],
@@ -218,7 +221,10 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'PUBLIC_CHANGES':
-                    $project = Project::find($schedulings->model_id);
+                    $project = Project::query()->find($schedulings->model_id);
+                    if (!$project instanceof Project) {
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.public_changes_project',
                         ['project' => $project?->name],

@@ -23,6 +23,7 @@ class CraftInventoryItem extends Model
 
     protected $fillable = [
         'craft_inventory_group_id',
+        'craft_inventory_group_folder_id',
         'order',
     ];
 
@@ -43,9 +44,22 @@ class CraftInventoryItem extends Model
             'craft_inventory_item_id',
             'id'
         )
-            ->orderBy('id')
-            ->select(['id', 'crafts_inventory_column_id', 'craft_inventory_item_id', 'cell_value']);
+            ->select([
+                'craft_inventory_item_cells.id', // Voll qualifizierter Spaltenname
+                'craft_inventory_item_cells.crafts_inventory_column_id',
+                'craft_inventory_item_cells.craft_inventory_item_id',
+                'craft_inventory_item_cells.cell_value',
+                'crafts_inventory_columns.order as column_order' // Optional: Falls `order` benötigt wird
+            ])
+            ->join(
+                'crafts_inventory_columns',
+                'crafts_inventory_columns.id',
+                '=',
+                'craft_inventory_item_cells.crafts_inventory_column_id'
+            )
+            ->orderBy('crafts_inventory_columns.order', 'asc');
     }
+
 
     public function events(): HasMany
     {

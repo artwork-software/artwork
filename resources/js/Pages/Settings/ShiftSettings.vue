@@ -41,9 +41,18 @@
                                     <div v-else>
                                         <p class="mt-1 truncate xsLight">
                                             {{$t('Can only be assigned by:')}}
-                                            <span class="" v-for="(user, index) in element.craft_shift_planer">
-                                                {{ user.full_name }}<span>, </span>
-                                            </span>
+                                            {{ element.craft_shift_planer.map((user) => user.full_name).join(', ') }}
+                                        </p>
+                                    </div>
+                                    <div class="" v-if="element.inventory_planned_by_all">
+                                        <p class="mt-1 truncate xsLight">
+                                            {{$t('Inventory can be planned by all planners')}}
+                                        </p>
+                                    </div>
+                                    <div v-else>
+                                        <p class="mt-1 truncate xsLight">
+                                            {{$t('Inventory can only be planned by:')}}
+                                            {{ element.craft_inventory_planer.map((user) => user.full_name).join(', ') }}
                                         </p>
                                     </div>
                                     <div class="mt-1 truncate xsLight">
@@ -212,7 +221,7 @@
             :confirm="$t('Close message')"
         />
         <AddEditShiftTimePreset :time-preset="presetToEdit" @closed="closeShiftPresetModal" v-if="showAddShiftPresetModal" />
-        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
+        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" :users-with-inventory-permission="usersWithInventoryPermission" />
         <ConfirmDeleteModal :title="confirmDeleteTitle" :description="confirmDeleteDescription" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
@@ -283,7 +292,7 @@ export default defineComponent({
         DotsVerticalIcon,
         AppLayout
     },
-    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications', 'shiftTimePresets'],
+    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications', 'shiftTimePresets', 'usersWithInventoryPermission'],
     data(){
         return {
             selectedEventType: null,

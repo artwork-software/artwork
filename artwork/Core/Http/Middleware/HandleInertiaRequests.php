@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Http\Middleware;
 
+use App\Settings\EventSettings;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\ModuleSettings\Services\ModuleSettingsService;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -30,6 +31,7 @@ class HandleInertiaRequests extends Middleware
     {
         /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
+        $eventSettings = app(EventSettings::class);
         $calendarSettings = Auth::user()?->calendar_settings;
 
         return array_merge(
@@ -68,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                     'success' => fn() => $request->session()->get('success'),
                     'error' => fn() => $request->session()->get('error'),
                 ],
+                'event_status_module' => $eventSettings->enable_status,
                 'default_language' => config('app.fallback_locale'),
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
                 'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false,

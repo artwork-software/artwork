@@ -89,6 +89,7 @@
                 :isAdmin="this.hasAdminRole()"
                 :roomCollisions="roomCollisions"
                 :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                :event-statuses="eventStatuses"
             />
 
         </div>
@@ -192,7 +193,8 @@ export default {
         'personalFilters',
         'user_filters',
         'first_project_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

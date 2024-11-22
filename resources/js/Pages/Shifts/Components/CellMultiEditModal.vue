@@ -85,6 +85,8 @@ const props = defineProps({
     },
 })
 
+const emit = defineEmits(['close']);
+
 const vacationTypes = ref([
     { name: 'Verfügbar', type: 'AVAILABLE' },
     { name: 'Arbeitsfreier Tag', type: 'OFF_WORK' },
@@ -121,7 +123,11 @@ const submitForm = () => {
         preserveState: true,
         onSuccess: () => {
             showSaveSuccess.value = true;
-            setTimeout(() => (showSaveSuccess.value = false), 2500)
+            setTimeout(() => {
+                showSaveSuccess.value = false;
+                emit('close');
+            }, 2500)
+
         }
     })
 }

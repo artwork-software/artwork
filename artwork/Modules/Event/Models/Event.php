@@ -96,7 +96,8 @@ class Event extends Model
         'declined_room_id',
         'allDay',
         'latest_end_datetime',
-        'earliest_start_datetime'
+        'earliest_start_datetime',
+        'event_status_id'
     ];
 
     protected $guarded = [
@@ -146,6 +147,16 @@ class Event extends Model
     public function timelines(): HasMany
     {
         return $this->hasMany(Timeline::class);
+    }
+
+    public function eventStatus(): BelongsTo
+    {
+        return $this->belongsTo(
+            EventStatus::class,
+            'event_status_id',
+            'id',
+            'event_statuses'
+        );
     }
 
     public function shifts(): HasMany

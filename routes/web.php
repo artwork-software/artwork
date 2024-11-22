@@ -27,6 +27,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DayServiceController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventStatusController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
@@ -89,6 +90,7 @@ use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryFilterController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupController;
+use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryGroupFolderController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemCellController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryItemController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftsInventoryColumnController;
@@ -553,6 +555,32 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('holiday.delete');
         Route::patch('/holiday/{holiday}', [HolidayController::class, 'update'])
             ->name('holiday.update');
+
+
+        Route::group(['prefix' => 'event-status'], function (): void {
+            Route::get('/', [EventStatusController::class, 'index'])
+                ->name('event_status.management');
+
+            // event_status.update_settings
+            Route::patch('/update/settings', [EventStatusController::class, 'updateSettings'])
+                ->name('event_status.update_settings');
+
+            // event_status.reorder
+            Route::patch('/reorder', [EventStatusController::class, 'reorder'])
+                ->name('event_status.reorder');
+
+            // event_status.store
+            Route::post('/create', [EventStatusController::class, 'store'])
+                ->name('event_status.store');
+
+            //event_status.update
+            Route::patch('/{eventStatus}', [EventStatusController::class, 'update'])
+                ->name('event_status.update');
+
+            //event_status.delete
+            Route::delete('/{eventStatus}', [EventStatusController::class, 'destroy'])
+                ->name('event_status.delete');
+        });
     });
 
     //EventTypes
@@ -1472,6 +1500,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['prefix' => 'settings'], function (): void {
             Route::get('/index', [InventorySettingsController::class, 'index'])
                 ->name('inventory-management.settings');
+
+            // inventory.columns.reorder
+            Route::post('/columns/reorder', [InventorySettingsController::class, 'reorderColumns'])
+                ->name('inventory-management.settings.columns.reorder');
         });
 
         Route::group(['prefix' => 'inventory'], function (): void {
@@ -1537,11 +1569,39 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     [CraftInventoryGroupController::class, 'forceDelete']
                 )->name('inventory-management.inventory.group.delete');
             });
+            Route::group(['prefix' => 'folder'], function (): void {
+                Route::post(
+                    '/create',
+                    [CraftInventoryGroupFolderController::class, 'create']
+                )->name('inventory-management.inventory.folder.create');
+                Route::delete(
+                    '/{craftInventoryGroupFolder}',
+                    [CraftInventoryGroupFolderController::class, 'destroy']
+                )->name('inventory-management.inventory.folder.delete');
+                // update name of folder
+                Route::patch(
+                    '/{craftInventoryGroupFolder}/name',
+                    [CraftInventoryGroupFolderController::class, 'update']
+                )->name('inventory-management.inventory.folder.update.name');
+                // PATCH inventory-management.inventory.folder.update.order
+                Route::patch(
+                    '/inventory/folder/update/order',
+                    [CraftInventoryGroupFolderController::class, 'updateOrder']
+                )->name('inventory-management.inventory.folder.update.order');
+            });
             Route::group(['prefix' => 'item'], function (): void {
                 Route::post(
                     '/create',
                     [CraftInventoryItemController::class, 'create']
                 )->name('inventory-management.inventory.item.create');
+                Route::patch(
+                    '/{craftInventoryItem}/add/folder',
+                    [CraftInventoryItemController::class, 'addItemToFolder']
+                )->name('inventory-management.inventory.item.add.to.folder');
+                Route::patch(
+                    '/{craftInventoryItem}/add/group',
+                    [CraftInventoryItemController::class, 'addItemToGroup']
+                )->name('inventory-management.inventory.item.add.to.group');
                 Route::patch(
                     '/{craftInventoryItem}/order',
                     [CraftInventoryItemController::class, 'updateOrder']
@@ -1556,6 +1616,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                     '/{craftInventoryItemCell}/cell-value',
                     [CraftInventoryItemCellController::class, 'updateCellValue']
                 )->name('inventory-management.inventory.item-cell.update.cell-value');
+                Route::post(
+                    '/{craftInventoryItemCell}/cell-value/upload',
+                    [CraftInventoryItemCellController::class, 'updateCellValueUpload']
+                )->name('inventory-management.inventory.item-cell.update.cell-value.upload');
+                Route::get(
+                    '/{craftInventoryItemCell}/cell-value/download',
+                    [CraftInventoryItemCellController::class, 'getDownloadCellValueUpload']
+                )->name('inventory-management.inventory.item-cell.download');
+                Route::delete(
+                    '/{craftInventoryItemCell}/cell-value/delete',
+                    [CraftInventoryItemCellController::class, 'removeUploadedFile']
+                )->name('inventory-management.inventory.item-cell.update.cell-value.delete.file');
             });
             Route::group(['prefix' => 'export'], function (): void {
                 Route::post(

@@ -6,11 +6,14 @@ use Illuminate\Broadcasting\PrivateChannel;
 
 trait PushesEventModification
 {
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
         return new PrivateChannel('events');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         return [

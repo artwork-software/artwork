@@ -3,8 +3,8 @@
   "port": 6001,
   "appManager.array.apps": [
     {
-      "id":"__ID",
-      "key": "__KEY",
-      "secret":"__SECRET"
+      "id":"app-id",
+      "key": "app-key",
+      "secret":"app-secret"
     }]
 }

@@ -6,6 +6,7 @@ use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\DatabaseNotification\Services\DatabaseNotificationService;
 use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Models\EventType;
 use Artwork\Modules\GlobalNotification\Services\GlobalNotificationService;
@@ -145,7 +146,8 @@ class NotificationController extends Controller
             'first_project_budget_tab_id' => $projectTabService
                 ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::BUDGET),
             'first_project_calendar_tab_id' => $projectTabService
-                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR)
+                ->getFirstProjectTabWithTypeIdOrFirstProjectTabId(ProjectTabComponentEnum::CALENDAR),
+            'eventStatuses' => EventStatus::orderBy('order')->get()
         ]);
     }
 

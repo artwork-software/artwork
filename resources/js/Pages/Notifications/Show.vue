@@ -48,6 +48,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
@@ -62,6 +63,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                         <!-- Aufgaben -->
                         <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
@@ -75,6 +77,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
@@ -89,6 +92,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
                                                       :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
@@ -102,6 +106,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                         <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
                                                       :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
@@ -115,6 +120,7 @@
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
                                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                      :event-statuses="eventStatuses"
                         />
                     </div>
                     <div  class="col-span-4 pr-8">
@@ -268,7 +274,8 @@ export default defineComponent({
         'globalNotification',
         'first_project_shift_tab_id',
         'first_project_budget_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses'
     ],
     data() {
         return {

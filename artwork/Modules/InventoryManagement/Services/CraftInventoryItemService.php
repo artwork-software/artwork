@@ -22,12 +22,14 @@ class CraftInventoryItemService
      * @throws Throwable
      */
     public function create(
-        int $groupId,
-        int $order
+        int $order,
+        ?int $groupId,
+        ?int $folderId
     ): CraftInventoryItem {
         $craftInventoryItem = $this->craftInventoryItemRepository->getNewModelInstance(
             [
                 'craft_inventory_group_id' => $groupId,
+                'craft_inventory_group_folder_id' => $folderId,
                 'order' => $order
             ]
         );

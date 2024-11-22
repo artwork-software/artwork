@@ -94,6 +94,7 @@
                                            :user_filters="user_filters"
                                            :selected-date="selectedDate"
                                            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                                           :event-statuses="eventStatuses"
                         />
                     </div>
                 </div>
@@ -109,6 +110,7 @@
                                                   :user_filters="user_filters"
                                                   :first_project_tab_id="this.first_project_tab_id"
                                                   :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                                                  :event-statuses="eventStatuses"
                     />
                 </div>
             </div>
@@ -493,7 +495,8 @@ export default {
         'personalFilters',
         'user_filters',
         'first_project_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses'
     ],
     components: {
         DateInputComponent,

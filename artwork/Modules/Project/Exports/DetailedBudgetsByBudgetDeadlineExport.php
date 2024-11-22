@@ -123,6 +123,7 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
     /**
      * @return array<int, array<int, string>>
      */
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getProjectRows(
         string $premiere,
         Table $projectBudgetTable,
@@ -182,15 +183,12 @@ class DetailedBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize,
                     'forecast_outcome' => $isCostsMainPosition ?
                         (0 - $forecastCellValue) :
                         $forecastCellValue,
+                    'sage' => 0,
+                    'sage_revenue' => 0,
+                    'sage_result' => 0,
+                    'source' => Carbon::now()->format('Y')
                 ];
 
-                if ($sageColumn !== null) {
-                    $row['sage'] = 0;
-                    $row['sage_revenue'] = 0;
-                    $row['sage_result'] = 0;
-                }
-
-                $row['source'] = Carbon::now()->format('Y');
                 $rows[] = $row;
 
                 if (!$sageColumn) {

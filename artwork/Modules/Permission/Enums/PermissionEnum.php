@@ -41,4 +41,8 @@ enum PermissionEnum : string
     case AVAILABILITY_MANAGEMENT = 'can manage availability';
 
     case CREATE_EVENTS_WHEN_CREATING_PROJECT = 'can create events when creating a project';
+
+    case INVENTORY_STOCK_MANAGE = 'can manage inventory stock';
+
+    case INVENTORY_PLANER = 'can plan inventory';
 }

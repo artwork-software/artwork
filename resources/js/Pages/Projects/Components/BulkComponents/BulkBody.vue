@@ -56,6 +56,7 @@
                     @open-event-component="onOpenEventComponent"
                     @delete-current-event="deleteCurrentEvent"
                     @create-copy-by-event-with-data="createCopyByEventWithData"
+                    :event-statuses="eventStatuses"
                 />
             </div>
             <div v-else class="flex items-center h-24">
@@ -84,18 +85,21 @@
             </div>
         </div>
     </div>
-    <event-component v-if="eventComponentIsVisible"
-                     :showHints="$page.props?.can?.show_hints"
-                     :eventTypes="eventTypes"
-                     :rooms="rooms"
-                     :project="project"
-                     :event="eventToEdit"
-                     :wantedRoomId="null"
-                     :isAdmin="hasAdminRole()"
-                     :roomCollisions="roomCollisions"
-                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                     :used-in-bulk-component="true"
-                     @closed="onEventComponentClosed"/>
+    <event-component
+        v-if="eventComponentIsVisible"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :event="eventToEdit"
+        :wantedRoomId="null"
+        :isAdmin="hasAdminRole()"
+        :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="first_project_calendar_tab_id"
+        :used-in-bulk-component="true"
+        @closed="onEventComponentClosed"
+        :event-statuses="eventStatuses"
+    />
 
 </template>
 
@@ -144,6 +148,10 @@ const {hasAdminRole} = usePermission(usePage().props),
         },
         first_project_calendar_tab_id: {
             type: Number,
+            required: false
+        },
+        eventStatuses: {
+            type: Object,
             required: false
         }
     }),
@@ -196,6 +204,7 @@ const {hasAdminRole} = usePermission(usePage().props),
         if (props.isInModal) {
             events.push({
                 index: events.length + 1,
+                status: props.eventStatuses ? props.eventStatuses[0] : null,
                 type: props.eventTypes ? props.eventTypes[0] : null,
                 name: props.isInModal ? '' : 'Blocker',
                 room: props.rooms ? props.rooms[0] : null,
@@ -215,6 +224,7 @@ const {hasAdminRole} = usePermission(usePage().props),
 
                 router.post(route('event.store.bulk.single', {project: props.project}), {
                     event: {
+                        status: lastEvent.status,
                         type: lastEvent.type,
                         name: lastEvent.name,
                         room: lastEvent.room,
@@ -235,6 +245,7 @@ const {hasAdminRole} = usePermission(usePage().props),
             } else {
                 router.post(route('event.store.bulk.single', {project: props.project}), {
                     event: {
+                        status: props.eventStatuses ? props.eventStatuses[0] : null,
                         type: props.eventTypes ? props.eventTypes[0] : null,
                         name: props.isInModal ? '' : 'Blocker',
                         room: props.rooms ? props.rooms[0] : null,
@@ -286,6 +297,7 @@ const {hasAdminRole} = usePermission(usePage().props),
 
             events.push({
                 index: events.length + 1,
+                status: event.status,
                 type: event.type,
                 name: event.name,
                 room: event.room,
@@ -298,6 +310,7 @@ const {hasAdminRole} = usePermission(usePage().props),
             });
 
             createdEvents.push({
+                status: event.status,
                 type: event.type,
                 name: event.name,
                 room: event.room,
@@ -386,6 +399,7 @@ onMounted(() => {
                 id: event.id,
                 project_id: event.projectId,
                 type: props.eventTypes.find(type => type.id === event.event_type_id),
+                status: props.eventStatuses.find(status => status.id === event.event_status_id),
                 name: event.eventName,
                 room: props.rooms.find(room => room.id === event.room_id),
                 day: event.event_date_without_time.start_clear,

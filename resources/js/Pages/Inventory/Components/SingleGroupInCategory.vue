@@ -1,8 +1,9 @@
 <template>
-    <tr class="pl-2 cursor-pointer w-full xsLight pb-1" @click="group.closed = !group.closed">
+    <tr class="cursor-pointer w-full xsLight pb-1" @click="group.closed = !group.closed">
         <td>
             <div class="px-2 py-1.5 bg-gray-50/10 w-full" :class="group.closed ? 'rounded-b-lg' : ''">
-                <div class="ml-5 stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
+                <div class="stickyYAxisNoMarginLeft w-48 flex items-center gap-x-1">
+                    <component is="IconCornerDownRight" class="h-4 w-4"/>
                     {{ group.name }}
                     <ChevronDownIcon
                         :class="group.closed ? '' : 'rotate-180 transform'"
@@ -12,13 +13,15 @@
             </div>
         </td>
     </tr>
-    <SingleItemInGroup :multi-edit="multiEdit" v-for="item in group.items" :days="days" :item="item" v-if="!group.closed"/>
+    <SingleItemInGroup :inventory_planned_by_all="inventory_planned_by_all" :inventory_planer_ids="inventory_planer_ids" :multi-edit="multiEdit" v-for="item in group.items" :days="days" :item="item" v-if="!group.closed"/>
+    <SingleFolderInGroup :inventory_planned_by_all="inventory_planned_by_all" :inventory_planer_ids="inventory_planer_ids" v-for="folder in group.folders" :days="days" :folder="folder" v-if="!group.closed" :multi-edit="multiEdit" />
 </template>
 
 <script setup>
 
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import SingleItemInGroup from "@/Pages/Inventory/Components/SingleItemInGroup.vue";
+import SingleFolderInGroup from "@/Pages/Inventory/Components/SingleFolderInGroup.vue";
 
 const props = defineProps({
     group: {
@@ -30,6 +33,15 @@ const props = defineProps({
         required: true
     },
     multiEdit: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+    inventory_planer_ids: {
+        type: Array,
+        required: true,
+    },
+    inventory_planned_by_all: {
         type: Boolean,
         required: false,
         default: false

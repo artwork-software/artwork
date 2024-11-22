@@ -40,6 +40,7 @@
                     :first_project_shift_tab_id="first_project_shift_tab_id"
                     :first_project_budget_tab_id="first_project_budget_tab_id"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                    :event-statuses="eventStatuses"
                 />
             </div>
             <div @click="showReadSection = true" v-if="showSection && !showReadSection"
@@ -193,7 +194,8 @@ export default  {
         'roomCollisions',
         'first_project_shift_tab_id',
         'first_project_budget_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses'
     ],
     methods: {
         formatDate(isoDate) {

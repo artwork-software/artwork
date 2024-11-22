@@ -39,20 +39,28 @@ class Craft extends Model
         'color',
         'notify_days',
         'universally_applicable',
-        'position'
+        'position',
+        'inventory_planned_by_all'
     ];
 
     protected $casts = [
         'assignable_by_all' => 'boolean',
         'universally_applicable' => 'boolean',
+        'inventory_planned_by_all' => 'boolean'
     ];
 
-    protected $with = ['craftShiftPlaner'];
+    protected $with = ['craftShiftPlaner', 'craftInventoryPlaner'];
 
     public function craftShiftPlaner(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'craft_users', 'craft_id', 'user_id');
     }
+
+    public function craftInventoryPlaner(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'craft_users_inventory', 'craft_id', 'user_id');
+    }
+
     public function scopeIsAssignableByAll(Builder $builder): Builder
     {
         return $builder->where('assignable_by_all', '=', true);

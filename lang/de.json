@@ -2126,5 +2126,6 @@
     "Default": "Standard",
     "Edit event status": "Terminstatus bearbeiten",
     "Create event status": "Terminstatus erstellen",
-    "Use event status colour": "Terminfarbe nach Status"
+    "Use event status colour": "Terminfarbe nach Status",
+    "Add Sub-Event": "Unter-Termin hinzufügen"
 }

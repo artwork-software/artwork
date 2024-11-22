@@ -26,7 +26,7 @@
             <!--    Type and Title    -->
             <div class="grid gird-cols-1 md:grid-cols-2 gap-x-4 mb-4">
                 <div class="h-full">
-                    <div class="w-full flex items-center truncate h-full" v-if="!canEdit || this.disableEventTypeSelector">
+                    <div class="w-full flex items-center truncate h-full" v-if="!canEdit">
                         <div>
                             <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }"/>
                         </div>
@@ -34,7 +34,7 @@
                             {{ selectedEventType?.name }}
                         </p>
                     </div>
-                    <Listbox as="div" class="-mt-1" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector" id="eventType">
+                    <Listbox as="div" class="-mt-1" v-model="selectedEventType" v-if="canEdit" id="eventType">
                         <ListboxLabel class="xsLight mb-0">{{ $t('Event type') }}</ListboxLabel>
                         <ListboxButton class="menu-button">
                             <div class="flex w-full justify-between">
@@ -112,7 +112,7 @@
                                     <div>
                                         <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventStatus?.color }"/>
                                     </div>
-                                    <div>
+                                    <div class="truncate w-56">
                                         {{ selectedEventStatus?.name }}
                                     </div>
                                 </div>
@@ -134,7 +134,7 @@
                                                      :style="{'backgroundColor' : status?.color }"/>
                                             </div>
                                             <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate w-52']">
                                                 {{ status.name }}
                                             </span>
                                         </div>
@@ -813,7 +813,6 @@ export default {
             optionString: null,
             accept: true,
             optionAccept: false,
-            disableEventTypeSelector: false,
             selectedOption: options[0].name,
             roomCollisionArray: this.roomCollisions,
             answerRequestForm: useForm({
@@ -941,9 +940,6 @@ export default {
                 this.selectedEventType = this.eventTypes[0];
             } else {
                 this.selectedEventType = this.eventTypes.find(type => type.name === this.event.eventTypeName);
-                if (this.selectedEventType.id === 1) {
-                    this.disableEventTypeSelector = true;
-                }
             }
             this.series = this.event.is_series;
             if (this.series) {

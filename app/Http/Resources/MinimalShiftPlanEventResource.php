@@ -34,6 +34,8 @@ class MinimalShiftPlanEventResource extends JsonResource
             'roomName' => $this->getAttribute('room')?->getAttribute('name'),
             'declinedRoomId' => $this->getAttribute('declined_room_id'),
             'eventTypeId' => $this->getAttribute('event_type_id'),
+            'eventStatusId' => $this->getAttribute('event_status_id'),
+            'eventStatusColor' => $this->getAttribute('eventStatus')->getAttribute('color'),
             'eventTypeName' => $eventType->getAttribute('name'),
             'eventTypeAbbreviation' => $eventType->getAttribute('abbreviation'),
             'eventTypeColor' => $eventType->getAttribute('hex_code'),

@@ -1,5 +1,8 @@
 <template>
     <div class="grid gird-cols-1 md:grid-cols-8 gap-4 mb-3 text-gray-400 text-sm">
+        <div class="font-bold" v-if="usePage().props.event_status_module">
+            {{ $t('Event Status') }}
+        </div>
         <div class="font-bold">
             {{ $t('Event type') }}
         </div>
@@ -12,7 +15,7 @@
         <div class="font-bold">
             {{ $t('Day') }}
         </div>
-        <div class="font-bold col-span-2">
+        <div class="font-bold col-span-1">
             <SwitchGroup as="div" class="flex items-center" v-if="isInModal">
                 <Switch v-model="localValue"
                         @change="$emit('update:modelValue', localValue)"
@@ -40,6 +43,7 @@
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ref, watch} from "vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
+import {usePage} from "@inertiajs/vue3";
 
 // Emit Event
 const emit = defineEmits(['update:modelValue']);

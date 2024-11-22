@@ -238,6 +238,7 @@
             :project="myLastProject"
             :event_types="eventTypes"
             :rooms="rooms"
+            :eventStatuses="eventStatuses"
         />
 
         <!-- Success Modal - Delete project -->
@@ -420,6 +421,7 @@ export default defineComponent({
         'rooms',
         'projectSortEnumNames',
         'userProjectManagementSetting',
+        'eventStatuses'
     ],
     mixins: [Permissions, IconLib],
     data() {

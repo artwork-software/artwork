@@ -50,6 +50,12 @@ const tabs = [
         href: route('holiday.management'),
         current: route().current('holiday.management'),
         show: true
+    },
+    {
+        name: 'Event Status',
+        href: route('event_status.management'),
+        current: route().current('event_status.management'),
+        show: true
     }
 ];
 </script>

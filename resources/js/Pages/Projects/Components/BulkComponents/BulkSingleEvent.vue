@@ -1,6 +1,44 @@
 <template>
    <div>
        <div class="grid gird-cols-1 md:grid-cols-8 gap-4">
+           <div class="" v-if="usePage().props.event_status_module">
+               <Listbox v-model="event.status"
+                        @update:model-value="updateEventInDatabase"
+                        id="type"
+                        as="div"
+                        class="relative"
+                        :disabled="canEditComponent === false">
+                   <ListboxButton :class="[canEditComponent ? '' : 'bg-gray-100', 'menu-button']">
+                       <div class="flex items-center gap-x-2">
+                           <div>
+                               <div class="block w-5 h-5 rounded-full"
+                                    :style="{'backgroundColor' : event.status?.color }"/>
+                           </div>
+                           <div class="truncate w-16">
+                               {{ event.status?.name }}
+                           </div>
+                       </div>
+                       <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
+                   </ListboxButton>
+                   <ListboxOptions class="w-full rounded-lg bg-primary max-h-56 overflow-y-auto text-sm absolute z-30">
+                       <ListboxOption class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
+                                      v-for="status in eventStatuses"
+                                      :key="status.name"
+                                      :value="status"
+                                      v-slot="{ active, selected }">
+                           <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']" class="flex items-center gap-x-2">
+                               <div>
+                                   <div class="block w-3 h-3 rounded-full"
+                                        :style="{'backgroundColor' : status?.color }"/>
+                               </div>
+                               {{ status.name }}
+                           </div>
+                           <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
+                                      aria-hidden="true"/>
+                       </ListboxOption>
+                   </ListboxOptions>
+               </Listbox>
+           </div>
            <div class="">
                <Listbox v-model="event.type"
                         @update:model-value="updateEventInDatabase"
@@ -117,7 +155,7 @@
                    />
                </div>
            </div>
-           <div v-if="canEditComponent" class="flex items-center">
+           <div v-if="canEditComponent" class="flex items-center col-span-1">
                <div class="flex items-center gap-x-3">
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
@@ -238,7 +276,7 @@ import {
     MenuItems
 } from "@headlessui/vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import {router} from "@inertiajs/vue3";
+import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {computed, onMounted, ref} from "vue";
@@ -275,6 +313,10 @@ const props = defineProps({
     },
     canEditComponent: {
         type: Boolean,
+        required: true
+    },
+    eventStatuses: {
+        type: Object,
         required: true
     }
 });

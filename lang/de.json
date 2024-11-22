@@ -2120,5 +2120,11 @@
     "Explicitly selected persons": "Explizit ausgewählten Personen",
     "From all planners": "Von allen Planer*innen",
     "Inventory settings": "Inventar-Einstellungen",
-    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen."
+    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this craft. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen.",
+    "Event Status": "Terminstatus",
+    "Would you like to use the ‘Event Status’ module in {0}?": "Möchtest du das Modul „Terminstatus“ in {0} nutzen?",
+    "Default": "Standard",
+    "Edit event status": "Terminstatus bearbeiten",
+    "Create event status": "Terminstatus erstellen",
+    "Use event status colour": "Terminfarbe nach Status"
 }

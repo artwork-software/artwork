@@ -62,6 +62,7 @@
         :isAdmin="hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="props.first_project_calendar_tab_id"
+        :event-statuses="eventStatuses"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -120,7 +121,8 @@ const {hasAdminRole} = usePermission(usePage().props),
         'user_filters',
         'first_project_tab_id',
         'first_project_calendar_tab_id',
-        'projectNameUsedForProjectTimePeriod'
+        'projectNameUsedForProjectTimePeriod',
+        'eventStatuses'
     ]),
     showEventsWithoutRoomComponent = ref(false),
     eventsWithoutRoom = ref([]),

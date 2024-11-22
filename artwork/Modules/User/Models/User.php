@@ -576,4 +576,17 @@ class User extends Model implements
             'id'
         );
     }
+
+    public function craftsToManage(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getManagingCraftIds(): array
+    {
+        return $this->craftsToManage()->pluck('id')->toArray();
+    }
 }

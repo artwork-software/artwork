@@ -168,4 +168,17 @@ class ServiceProvider extends Model implements DayServiceable
     {
         return $builder->where('can_work_shifts', true);
     }
+
+    public function craftsToManage(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getManagingCraftIds(): array
+    {
+        return $this->craftsToManage()->pluck('id')->toArray();
+    }
 }

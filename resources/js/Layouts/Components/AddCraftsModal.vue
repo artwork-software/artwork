@@ -98,7 +98,6 @@
             </div>
         </div>
     </div>
-
     <div class="mt-3">
         <div class="my-5">
             <TinyPageHeadline
@@ -106,7 +105,6 @@
                 :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
             />
         </div>
-
         <SwitchGroup as="div" class="flex items-center gap-2">
             <SwitchLabel as="span" class="mr-3 text-sm">
                 <span class="font-medium text-gray-900" :class="inventoryPlannedByAll ? '!text-gray-400' : ''">{{ $t('Explicitly selected persons') }}</span>
@@ -121,7 +119,7 @@
             </SwitchLabel>
         </SwitchGroup>
     </div>
-    <div v-if="!inventoryPlannedByAll" class="">
+    <div v-if="!inventoryPlannedByAll">
         <Listbox as="div">
             <div class="relative mt-2">
                 <ListboxButton class="menu-button">
@@ -160,6 +158,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="pt-5">
         <UserSearch :label="$t('Add department management')"
                     @user-selected="addSelectedToCraftManagers"
                     :search-workers="true"
@@ -219,11 +219,13 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        UserSearch,
         TinyPageHeadline,
         NumberInputComponent,
         TextInputComponent,

@@ -125,7 +125,7 @@ const submitForm = () => {
             showSaveSuccess.value = true;
             setTimeout(() => {
                 showSaveSuccess.value = false;
-                emit('close');
+                emit('close', true);
             }, 2500)
 
         }

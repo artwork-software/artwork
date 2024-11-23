@@ -208,7 +208,8 @@ class User extends Model implements
         'checklist_no_private_checklists',
         'checklist_completed_tasks',
         'checklist_show_without_tasks',
-        'is_developer'
+        'is_developer',
+        'show_qualifications'
     ];
 
     protected $casts = [
@@ -233,6 +234,7 @@ class User extends Model implements
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
+        'show_qualifications' => 'array',
     ];
 
     protected $hidden = [

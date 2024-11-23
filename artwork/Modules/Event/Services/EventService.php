@@ -4,6 +4,7 @@ namespace Artwork\Modules\Event\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\ShiftFilterController;
+use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
@@ -755,7 +756,9 @@ readonly class EventService
                     },
                     ShiftPlanWorkerSortEnum::cases()
                 ),
-            );
+            )
+            ->setUseFirstNameForSort((new ShiftSettings())->use_first_name_for_sort)
+            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'));
     }
 
     /**

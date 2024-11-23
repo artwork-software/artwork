@@ -198,6 +198,28 @@
                     </ul>
                 </div>
             </div>
+            <div class="flex flex-col my-10 gap-2">
+                <TinyPageHeadline :title="$t('Sort settings')"
+                                  :description="$t('Configure the behaviour of shift plans sort opportunity.')"/>
+                <SwitchGroup as="div" class="flex flex-row items-center gap-x-2 cursor-pointer">
+                    <SwitchLabel as="span" class='text-sm'>
+                        <span :class="[!shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-gray-900']">{{ $t('Sort by first name')}}</span>
+                    </SwitchLabel>
+                    <Switch v-model="shiftSettings.use_first_name_for_sort"
+                            @update:model-value="this.updateShiftSettingUseFirstNameSort"
+                            :class="[
+                                shiftSettings.use_first_name_for_sort ?
+                                    'bg-artwork-buttons-create' :
+                                    'bg-gray-200',
+                                'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                            ]">
+                        <span aria-hidden="true" :class="[shiftSettings.use_first_name_for_sort ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="text-sm">
+                        <span :class="[shiftSettings.use_first_name_for_sort ? 'font-bold' : 'font-medium', 'text-gray-900']">{{ $t('Sort by last name')}}</span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
         </div>
         <ShiftQualificationModal
             v-if="this.showShiftQualificationModal"
@@ -238,7 +260,10 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AddCraftsModal from "@/Layouts/Components/AddCraftsModal.vue";
@@ -262,6 +287,9 @@ export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib, ColorHelper],
     components: {
+        SwitchLabel,
+        Switch,
+        SwitchGroup,
         draggable,
         AlertComponent,
         AddEditShiftTimePreset,
@@ -292,7 +320,15 @@ export default defineComponent({
         DotsVerticalIcon,
         AppLayout
     },
-    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications', 'shiftTimePresets', 'usersWithInventoryPermission'],
+    props: [
+        'crafts',
+        'eventTypes',
+        'usersWithPermission',
+        'shiftQualifications',
+        'shiftTimePresets',
+        'usersWithInventoryPermission',
+        'shiftSettings'
+    ],
     data(){
         return {
             selectedEventType: null,
@@ -471,6 +507,17 @@ export default defineComponent({
                 this.deleteShiftTimePreset(this.shiftTimePresetToDelete);
                 this.closeDeleteShiftTimePresetModal();
             }
+        },
+        updateShiftSettingUseFirstNameSort(useFirstNameForSort) {
+            router.patch(
+                route('shift.settings.update.shift-settings.use-first-name-for-sort'),
+                {
+                    use_first_name_for_sort: useFirstNameForSort
+                },
+                {
+                    preserveScroll: true
+                }
+            )
         }
     }
 })

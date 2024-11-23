@@ -17,8 +17,6 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
-
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -64,14 +62,12 @@
                                     <th :id="'roomNameContainer_' + index" class="xsDark flex items-center h-28 w-48" :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
                                             {{ renderRoomName(room) }}
-                                            <!--{{ room[days[0].full_day].roomName }}-->
                                         </div>
                                     </th>
                                     <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
                                         class="border-r-2 border-gray-400 day-container h-28"
                                         v-for="day in days" :data-day="day.full_day">
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
-
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="max-h-28 h-28 overflow-y-auto cell ">
@@ -135,26 +131,26 @@
                                         :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                     <span class="sr-only">Use setting</span>
                                     <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
+                                    <span
+                                      :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                      aria-hidden="true">
+                                      <ToolTipComponent
+                                          icon="IconPencil"
+                                          icon-size="h-4 w-4"
+                                          :tooltip-text="$t('Edit')"
+                                          direction="right"
+                                      />
+                                    </span>
+                                    <span
+                                      :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                      aria-hidden="true">
+                                      <ToolTipComponent
+                                          icon="IconPencil"
+                                          icon-size="h-4 w-4"
+                                          :tooltip-text="$t('Edit')"
+                                          direction="right"
+                                      />
+                                    </span>
                                 </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
@@ -320,6 +316,29 @@
                                             </div>
                                         </div>
                                         <CraftFilter :crafts="crafts" is_tiny/>
+                                        <div class="my-3">
+                                            <div>
+                                                <div class="h-9 flex items-center cursor-pointer" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
+                                                    <div class="flex items-center text-white text-xs">
+                                                        {{ $t('Shift qualifications') }}
+                                                        <IconChevronDown v-if="!showShiftQualificationFilter" class="w-4 h-4 ml-2"/>
+                                                        <IconChevronUp v-if="showShiftQualificationFilter" class="w-4 h-4 ml-2"/>
+                                                    </div>
+                                                </div>
+                                                <div v-if="showShiftQualificationFilter">
+                                                    <div v-for="shiftQualification in this.shiftQualifications">
+                                                        <div class="relative flex items-start mb-2">
+                                                            <div class="flex h-6 items-center">
+                                                                <input :checked="this.userShiftPlanShiftQualificationFilters.includes(shiftQualification.id)" @change="this.saveShiftQualificationFilter" :value="shiftQualification.id" type="checkbox" class="input-checklist-dark" />
+                                                            </div>
+                                                            <div class="ml-2 text-sm leading-6">
+                                                                <label :for="'shiftQualification-' + shiftQualification.id" class="font-medium text-white">{{ shiftQualification.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </BaseFilter>
                                 <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right>
@@ -328,12 +347,34 @@
                                         {{ $t('Reset') }}
                                     </span>
                                     </div>
-                                    <MenuItem v-for="shiftPlanWorkerSortEnumName in shiftPlanWorkerSortEnums"
+                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                               v-slot="{ active }">
-                                        <div @click="this.applySort(shiftPlanWorkerSortEnumName)"
+                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                            {{ getSortEnumTranslation(shiftPlanWorkerSortEnumName) }}
-                                            <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === shiftPlanWorkerSortEnumName" class="w-5 h-5"/>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
+                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                        {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
+                                                    </span>
+                                                    <IconArrowUp class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
+                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                        {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
+                                                    </span>
+                                                    <IconArrowDown class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
+                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                    <IconArrowUp class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
+                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                    <IconArrowDown class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
+                                                </template>
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
@@ -571,7 +612,7 @@ import {SelectorIcon} from "@heroicons/vue/solid";
 import ShiftsQualificationsAssignmentModal
     from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
+import {IconArrowDown, IconArrowUp, IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -614,7 +655,10 @@ export default {
         IconPencil,
         SingleEventInShiftPlan,
         CraftFilter,
-        IconChevronDown, IconX, IconFileText, BaseFilter,
+        IconChevronDown,
+        IconX,
+        IconFileText,
+        BaseFilter,
         ShiftsQualificationsAssignmentModal,
         TableBody,
         TableHead,
@@ -637,7 +681,9 @@ export default {
         AppLayout,
         ShiftPlanFunctionBar,
         HighlightUserCell,
-        SelectorIcon
+        SelectorIcon,
+        IconArrowDown,
+        IconArrowUp
     },
     props: [
         'events',
@@ -658,7 +704,9 @@ export default {
         'shiftQualifications',
         'dayServices',
         'firstProjectShiftTabId',
-        'shiftPlanWorkerSortEnums'
+        'shiftPlanWorkerSortEnums',
+        'useFirstNameForSort',
+        'userShiftPlanShiftQualificationFilters'
     ],
     data() {
         return {
@@ -707,6 +755,7 @@ export default {
             waitForModalClose: false,
             navigationGuardActive: true,
             originalVisit: null,
+            showShiftQualificationFilter: false
         }
     },
     mounted() {
@@ -908,6 +957,35 @@ export default {
             }
             return { sortByInternExtern: false, isDescending: false }
         },
+        computedShiftPlanWorkerSortEnums() {
+            let nameSortEnums = [
+                    'ALPHABETICALLY_NAME_ASCENDING',
+                    'ALPHABETICALLY_NAME_DESCENDING'
+                ],
+                sortConfig = [];
+
+            if (nameSortEnums.includes(this.$page.props.user.shift_plan_user_sort_by_id)) {
+                sortConfig.push('INTERN_EXTERN_ASCENDING');
+
+                if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                    sortConfig.push('ALPHABETICALLY_NAME_DESCENDING');
+                } else {
+                    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+                }
+
+                return sortConfig;
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+                sortConfig.push('INTERN_EXTERN_DESCENDING');
+            } else {
+                sortConfig.push('INTERN_EXTERN_ASCENDING');
+            }
+
+            sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+
+            return sortConfig;
+        }
     },
     methods: {
         setupInertiaNavigationGuard() {
@@ -1799,7 +1877,36 @@ export default {
                 shift: shift,
                 event: event
             });
-        }
+        },
+        saveShiftQualificationFilter(event) {
+            let isChecked = event.target.checked,
+                shiftQualificationId = Number.parseInt(event.target.value);
+
+            if (!isChecked) {
+                this.userShiftPlanShiftQualificationFilters.splice(
+                    this.userShiftPlanShiftQualificationFilters.findIndex((id) => id === shiftQualificationId),
+                    1
+                );
+            } else {
+                this.userShiftPlanShiftQualificationFilters.push(shiftQualificationId);
+            }
+
+            router.patch(
+                route(
+                    'user.update.show_shift-qualifications',
+                    {
+                        user: this.$page.props.user.id
+                    }
+                ),
+                {
+                    show_qualifications: this.userShiftPlanShiftQualificationFilters
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true
+                }
+            );
+        },
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.updateHeight);

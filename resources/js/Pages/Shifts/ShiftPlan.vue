@@ -480,7 +480,7 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes('noCraft')"
-                                        v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                        v-for="(user,index) in workersWithoutCraft" class="w-full flex">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -743,10 +743,6 @@ export default {
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height,
             showFreelancers: true,
-            useFrontendFilter: usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
             multiEditCellByDayAndUser: {},
             showCellMultiEditModal: false,
             openCellMultiEditDelete: false,
@@ -902,21 +898,14 @@ export default {
             return this.shiftPlanRef;
         },
         craftsToDisplay() {
-            const users = this.getDropUsers(),
-                crafts = this.crafts
+            const crafts = this.crafts
                     .map(
                         (craft) => {
                             return {
                                 id: craft.id,
                                 name: craft.name,
                                 abbreviation: craft.abbreviation,
-                                users: this.sortUsersByType(
-                                    users.filter(
-                                        user => user.assigned_craft_ids.includes(craft.id)
-                                    ),
-                                    this.returnFilteredFunctionValues.sortByInternExtern,
-                                    this.returnFilteredFunctionValues.isDescending
-                                ),
+                                users: this.filterAndSortWorkersOfCraft(craft),
                                 color: craft?.color,
                                 universally_applicable: craft.universally_applicable,
                             };
@@ -932,30 +921,13 @@ export default {
                 return crafts.filter((craft) => this.$page.props.user.show_crafts.includes(craft.id));
             }
         },
-        usersWithNoCrafts() {
-            const users = this.getDropUsers().filter(user =>
-                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+        workersWithoutCraft() {
+            //@todo: implement sort logic for users without crafts
+            return this.filterNonManagingWorkersByShiftQualificationFilter(
+                this.getDropWorkers().filter(user =>
+                    !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+                )
             );
-            return this.sortUsersByType(
-                users,
-                this.returnFilteredFunctionValues.sortByInternExtern,
-                this.returnFilteredFunctionValues.isDescending
-            );
-        },
-        returnFilteredFunctionValues(){
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING'){
-                return { sortByInternExtern: true, isDescending: false }
-            }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING'){
-                return { sortByInternExtern: true, isDescending: true }
-            }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING'){
-                return { sortByInternExtern: false, isDescending: true }
-            }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING'){
-                return { sortByInternExtern: false, isDescending: false }
-            }
-            return { sortByInternExtern: false, isDescending: false }
         },
         computedShiftPlanWorkerSortEnums() {
             let nameSortEnums = [
@@ -1014,76 +986,87 @@ export default {
                 }
             };
         },
-        sortUsersByType(users, sortByInternExtern = false, isDescending = false) {
-            if (!this.useFrontendFilter) {
-                return this.preSortManagingUsers(users);
-            }
-            const classifyUserType = (user) => {
-                if (user.type === 0 && user.element.is_freelancer) {
-                    return 1;
-                }
-                return user.type;
-            };
-
-            return this.preSortManagingUsers(users).sort((a, b) => {
-                if (a.element.managing_craft_ids.length > 0 || b.element.managing_craft_ids.length > 0) {
-                    return 1;
-                }
-                const typeA = classifyUserType(a);
-                const typeB = classifyUserType(b);
-
-                const lastNameA = a.element.last_name || '';
-                const lastNameB = b.element.last_name || '';
-                const providerNameA = a.element.provider_name || '';
-                const providerNameB = b.element.provider_name || '';
-
-                if (sortByInternExtern) {
-                    if (isDescending) {
-                        if (typeA === typeB) {
-                            if (typeA === 0 || typeA === 1) {
-                                return lastNameB.localeCompare(lastNameA);
-                            } else if (typeA === 2) {
-                                return providerNameB.localeCompare(providerNameA);
-                            }
-                        } else {
-                            return typeB - typeA;
-                        }
-                    } else {
-                        if (typeA === typeB) {
-                            if (typeA === 0 || typeA === 1) {
-                                return lastNameA.localeCompare(lastNameB);
-                            } else if (typeA === 2) {
-                                return providerNameA.localeCompare(providerNameB);
-                            }
-                        } else {
-                            return typeA - typeB;
-                        }
-                    }
-                } else {
-                    if (isDescending) {
-                        if (typeA === 0 || typeA === 1) {
-                            return lastNameB.localeCompare(lastNameA);
-                        } else if (typeA === 2) {
-                            return providerNameB.localeCompare(providerNameA);
-                        }
-                    } else {
-                        if (typeA === 0 || typeA === 1) {
-                            return lastNameA.localeCompare(lastNameB);
-                        } else if (typeA === 2) {
-                            return providerNameA.localeCompare(providerNameB);
-                        }
-                    }
-                }
-            });
+        isWorkerUser(worker) {
+            return worker.type === 0;
         },
-        preSortManagingUsers(users) {
-            return users.sort((a, b) => {
-                const aHasIds = Array.isArray(a.element.managing_craft_ids) && a.element.managing_craft_ids.length > 0;
-                const bHasIds = Array.isArray(b.element.managing_craft_ids) && b.element.managing_craft_ids.length > 0;
+        isWorkerFreelancer(worker) {
+            return worker.type === 1;
+        },
+        isWorkerServiceProvider(worker) {
+            return worker.type === 2;
+        },
+        isManagingWorker(craft, worker) {
+            if (this.isWorkerUser(worker)) {
+                return craft.managing_users.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
+            }
 
-                if (aHasIds && !bHasIds) return -1;
-                if (!aHasIds && bHasIds) return 1;
-            });
+            if (this.isWorkerFreelancer(worker)) {
+                return craft.managing_freelancers.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
+            }
+
+            if (this.isWorkerServiceProvider(worker)) {
+                return craft.managing_service_providers.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
+            }
+        },
+        getAssignedWorkerOfCraft(craftId, dropWorkers) {
+            return dropWorkers.filter((dropWorker) => dropWorker.assigned_craft_ids.includes(craftId))
+        },
+        filterAndSortWorkersOfCraft(craft) {
+            let dropWorkers = this.getDropWorkers(),
+                //all assigned workers of given craft contained
+                assignedWorkersOfCraft = this.getAssignedWorkerOfCraft(craft.id, dropWorkers),
+                //all managing worker of given craft filtered from assignedWorkersOfCraft
+                assignedManagingWorkers = assignedWorkersOfCraft.filter(
+                    (assignedWorkerOfCraft) => this.isManagingWorker(craft, assignedWorkerOfCraft)
+                ),
+                //all non managing worker of given craft filtered from assignedWorkersOfCraft
+                assignedNonManagingWorkers = assignedWorkersOfCraft.filter(
+                    (assignedWorkerOfCraft) => !this.isManagingWorker(craft, assignedWorkerOfCraft)
+                );
+
+            console.debug(
+                'assignedWorkerOfCraft',
+                assignedWorkersOfCraft,
+                'assignedManagingWorker',
+                assignedManagingWorkers,
+                'assignedNonManagingWorker',
+                assignedNonManagingWorkers
+            );
+
+            let assignedNonManagingWorkersFiltered = this.filterNonManagingWorkersByShiftQualificationFilter(
+                assignedNonManagingWorkers
+            );
+
+            //sort assignedManagingWorker by default or by sort setting
+            //console.debug('craftManagingWorkers', craftManagingWorkers);
+            //return assignedWorkerOfCraft;
+
+            return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+        },
+        filterNonManagingWorkersByShiftQualificationFilter(workers) {
+            console.debug('filterNonManagingWorkers', workers);
+
+            if (this.userShiftPlanShiftQualificationFilters.length === 0) {
+                return workers;
+            }
+
+            let workersWithShiftQualifications = workers.filter(
+                (worker) => worker.element.shift_qualifications.length > 0
+            );
+
+            return workersWithShiftQualifications.filter(
+                (worker) => worker.element.shift_qualifications.some(
+                    (shift_qualification) => this.userShiftPlanShiftQualificationFilters.includes(
+                        shift_qualification.id
+                    )
+                )
+            );
         },
         renderRoomName(room){
             const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
@@ -1162,7 +1145,7 @@ export default {
                 ]
             );
         },
-        getDropUsers() {
+        getDropWorkers() {
             const users = [];
             this.usersForShifts.forEach((user) => {
                 if(!this.showFreelancers && user.user.is_freelancer) {

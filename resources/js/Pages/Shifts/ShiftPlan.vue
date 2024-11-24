@@ -911,6 +911,7 @@ export default {
                             };
                         }
                     );
+
                 crafts.forEach((craft) => {
                     crafts.users = craft.users;
                 });
@@ -923,11 +924,76 @@ export default {
         },
         workersWithoutCraft() {
             //@todo: implement sort logic for users without crafts
-            return this.filterNonManagingWorkersByShiftQualificationFilter(
+            let workersWithoutCraft = this.filterNonManagingWorkersByShiftQualificationFilter(
                 this.getDropWorkers().filter(user =>
                     !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
                 )
             );
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                if (!this.useFirstNameForSort) {
+                    return workersWithoutCraft.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+                } else {
+                    return workersWithoutCraft.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+                }
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+                if (!this.useFirstNameForSort) {
+                    return workersWithoutCraft.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+                } else {
+                    return workersWithoutCraft.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+                }
+            }
+
         },
         computedShiftPlanWorkerSortEnums() {
             let nameSortEnums = [
@@ -1030,28 +1096,152 @@ export default {
                     (assignedWorkerOfCraft) => !this.isManagingWorker(craft, assignedWorkerOfCraft)
                 );
 
-            console.debug(
-                'assignedWorkerOfCraft',
-                assignedWorkersOfCraft,
-                'assignedManagingWorker',
-                assignedManagingWorkers,
-                'assignedNonManagingWorker',
-                assignedNonManagingWorkers
-            );
-
             let assignedNonManagingWorkersFiltered = this.filterNonManagingWorkersByShiftQualificationFilter(
                 assignedNonManagingWorkers
             );
 
-            //sort assignedManagingWorker by default or by sort setting
-            //console.debug('craftManagingWorkers', craftManagingWorkers);
-            //return assignedWorkerOfCraft;
+            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
+                return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+            }
 
-            return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+            //alphabetically by name -> managing workers first, other users then
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                if (!this.useFirstNameForSort) {
+                    assignedManagingWorkers = assignedManagingWorkers.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+
+                    assignedNonManagingWorkersFiltered = assignedNonManagingWorkersFiltered.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+
+                    return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+                } else {
+                    assignedManagingWorkers = assignedManagingWorkers.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+
+                    assignedNonManagingWorkersFiltered = assignedNonManagingWorkersFiltered.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA < compareNameB) return -1;
+                        if (compareNameA > compareNameB) return 1;
+                        return 0;
+                    });
+
+                    return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+                }
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+                if (!this.useFirstNameForSort) {
+                    assignedManagingWorkers = assignedManagingWorkers.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+
+                    assignedNonManagingWorkersFiltered = assignedNonManagingWorkersFiltered.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.first_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.first_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+
+                    return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+                } else {
+                    assignedManagingWorkers = assignedManagingWorkers.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+
+                    assignedNonManagingWorkersFiltered = assignedNonManagingWorkersFiltered.sort((a, b) => {
+                        let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                            a.element.provider_name :
+                            a.element.last_name;
+
+                        let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                            b.element.provider_name :
+                            b.element.last_name;
+
+                        if (compareNameA > compareNameB) return -1;
+                        if (compareNameA < compareNameB) return 1;
+                        return 0;
+                    });
+
+                    return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+                }
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+
+            }
         },
         filterNonManagingWorkersByShiftQualificationFilter(workers) {
-            console.debug('filterNonManagingWorkers', workers);
-
             if (this.userShiftPlanShiftQualificationFilters.length === 0) {
                 return workers;
             }
@@ -1785,7 +1975,7 @@ export default {
                 {
                     sortBy: shiftPlanWorkerSortEnumName
                 }, {
-                    preserveState: false,
+                    preserveState: true,
                     preserveScroll: true,
                 }
             );
@@ -1801,41 +1991,6 @@ export default {
                     preserveScroll: true,
                 }
             );
-        },
-        sortCraftUsers(users) {
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
-                return users.sort((a, b) => a.element.id > b.element.id ? 1 : a.element.id < b.element.id ? -1 : 0);
-            }
-
-            return users.sort((workerA, workerB) => {
-                let shiftPlanUserSortBy = this.$page.props.user.shift_plan_user_sort_by_id;
-
-                let getCompareName = (worker) => {
-                    let workerIsUserOrFreelancer = worker.type === 0 || worker.type === 1;
-                    let sortByFirstName = shiftPlanUserSortBy === 'ALPHABETICALLY_ASCENDING_FIRST_NAME' ||
-                        shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME';
-                    return sortByFirstName ?
-                        (
-                            workerIsUserOrFreelancer ?
-                                worker.element.first_name :
-                                worker.element.provider_name
-                        ) :
-                        (
-                            workerIsUserOrFreelancer ?
-                                worker.element.last_name :
-                                worker.element.provider_name
-                        );
-                };
-
-                if (
-                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME' ||
-                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_LAST_NAME'
-                ) {
-                    return getCompareName(workerB).localeCompare(getCompareName(workerA));
-                }
-
-                return getCompareName(workerA).localeCompare(getCompareName(workerB));
-            });
         },
         handleShiftAndEventForMultiEdit(checked, shift, event) {
             if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {

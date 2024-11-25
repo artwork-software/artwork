@@ -1231,6 +1231,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
+        Route::patch(
+            'shift-settings/updateShiftSettingsUseFirstNameForSort',
+            [
+                ShiftSettingsController::class,
+                'updateShiftSettingsUseFirstNameForSort'
+            ]
+        )->name('shift.settings.update.shift-settings.use-first-name-for-sort');
         Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
         Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
@@ -1419,6 +1426,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         // user.update.show_crafts
         Route::patch('/{user}/update/show/crafts', [UserController::class, 'updateShowCrafts'])
             ->name('user.update.show_crafts');
+        Route::patch(
+            '/{user}/update/show/shift-qualifications',
+            [
+                UserController::class,
+                'updateShowShiftQualifications'
+            ]
+        )->name('user.update.show_shift-qualifications');
         Route::patch(
             '/{user}/update/shift-plan-user-sort-by',
             [

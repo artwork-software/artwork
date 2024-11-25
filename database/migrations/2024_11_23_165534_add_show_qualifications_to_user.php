@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->json('show_qualifications')->after('show_crafts')->default(json_encode([]));
+            $table->longtext('show_qualifications')->after('show_crafts')->default(json_encode([]));
         });
     }
 

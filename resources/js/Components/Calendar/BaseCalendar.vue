@@ -128,6 +128,7 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
+        :event-statuses="eventStatuses"
     />
 
     <ConfirmDeleteModal
@@ -186,6 +187,7 @@
             {{ $t('Your view is being processed, please wait a moment.') }}
         </div>
     </div>
+
 </template>
 
 <script setup>
@@ -242,6 +244,11 @@ const props = defineProps({
             required: false,
             default: null
         },
+        eventStatuses: {
+            type: Object,
+            required: false,
+            default: null
+        }
     }),
     $t = useTranslation(),
     {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),

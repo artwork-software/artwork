@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use Artwork\Modules\Holidays\Models\Subdivision;
 use Database\Seeders\InventoryManagement\Production\InventoryManagementDefaultColumnsSeeder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 

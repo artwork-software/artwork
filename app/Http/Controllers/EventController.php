@@ -511,6 +511,7 @@ class EventController extends Controller
             'audience' => $request->audience,
             'is_loud' => $request->isLoud,
             'event_type_id' => $request->eventTypeId,
+            'event_status_id' => $request->eventStatusId,
             'room_id' => $request->roomId,
             'user_id' => Auth::id(),
             'project_id' => $projectId ?: null,

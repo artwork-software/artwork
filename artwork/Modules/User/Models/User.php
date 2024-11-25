@@ -208,7 +208,8 @@ class User extends Model implements
         'checklist_no_private_checklists',
         'checklist_completed_tasks',
         'checklist_show_without_tasks',
-        'is_developer'
+        'is_developer',
+        'show_qualifications'
     ];
 
     protected $casts = [
@@ -233,6 +234,7 @@ class User extends Model implements
         'checklist_completed_tasks' => 'boolean',
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
+        'show_qualifications' => 'array',
     ];
 
     protected $hidden = [
@@ -442,6 +444,11 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craftable');
     }
 
+    public function managingCrafts(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
     public function shiftQualifications(): BelongsToMany
     {
         return $this
@@ -570,5 +577,18 @@ class User extends Model implements
             'user_id',
             'id'
         );
+    }
+
+    public function craftsToManage(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getManagingCraftIds(): array
+    {
+        return $this->craftsToManage()->pluck('id')->toArray();
     }
 }

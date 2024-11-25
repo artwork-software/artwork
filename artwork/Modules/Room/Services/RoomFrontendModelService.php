@@ -4,6 +4,7 @@ namespace Artwork\Modules\Room\Services;
 
 use Artwork\Modules\Calendar\Services\CalendarDataService;
 use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
+use Artwork\Modules\Event\Models\EventStatus;
 use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
 use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\Filter\Services\FilterService;
@@ -51,6 +52,7 @@ readonly class RoomFrontendModelService
         );
 
         return ShowDto::newInstance()
+            ->setEventStatuses(EventStatus::orderBy('order')->get())
             ->setCalendar($calendarData['roomsWithEvents'])
             ->setDays($calendarData['days'])
             ->setEventsWithoutRoom($calendarData['eventsWithoutRoom'])

@@ -21,7 +21,7 @@ class ShiftPlanDto extends BaseDto
 
     public ?Collection $rooms = null;
 
-    public ?array $days  = null;
+    public ?array $days = null;
 
     public ?array $filterOptions = null;
 
@@ -45,7 +45,11 @@ class ShiftPlanDto extends BaseDto
 
     public ?int $firstProjectShiftTabId = null;
 
+    public ?bool $useFirstNameForSort = null;
+
     public ?array $shiftPlanWorkerSortEnumNames = null;
+
+    public ?array $userShiftPlanShiftQualificationFilters = null;
 
     public function setDayServices(?Collection $dayServices): self
     {
@@ -180,6 +184,20 @@ class ShiftPlanDto extends BaseDto
         return $this;
     }
 
+    public function setUseFirstNameForSort(?bool $useFirstNameForSort): self
+    {
+        $this->useFirstNameForSort = $useFirstNameForSort;
+
+        return $this;
+    }
+
+    public function setUserShiftPlanShiftQualificationFilters(?array $userShiftPlanShiftQualificationFilters): self
+    {
+        $this->userShiftPlanShiftQualificationFilters = $userShiftPlanShiftQualificationFilters;
+
+        return $this;
+    }
+
     public function getEvents(): ?Collection
     {
         return $this->events;
@@ -299,6 +317,19 @@ class ShiftPlanDto extends BaseDto
         return $this->shiftPlanWorkerSortEnumNames;
     }
 
+    public function getUseFirstNameForSort(): ?bool
+    {
+        return $this->useFirstNameForSort;
+    }
+
+    /**
+     * @return array<int, int>|null
+     */
+    public function getUserShiftPlanShiftQualificationFilters(): ?array
+    {
+        return $this->userShiftPlanShiftQualificationFilters;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -324,6 +355,8 @@ class ShiftPlanDto extends BaseDto
             'dayServices' => $this->getDayServices(),
             'firstProjectShiftTabId' => $this->getFirstProjectShiftTabId(),
             'shiftPlanWorkerSortEnums' => $this->getShiftPlanWorkerSortEnumNames(),
+            'useFirstNameForSort' => $this->getUseFirstNameForSort(),
+            'userShiftPlanShiftQualificationFilters' => $this->getUserShiftPlanShiftQualificationFilters()
         ];
     }
 }

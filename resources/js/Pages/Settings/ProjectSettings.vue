@@ -11,7 +11,6 @@
             <ProjectTabs />
 
             <div class="flex flex-wrap pb-8">
-
                 <ProjectSettingsItem
                     :title="$t('Genres')"
                     :description="$t('Define genres that projects can be assigned to later.')"
@@ -177,11 +176,21 @@
                         </p>
                     </div>
                 </div>
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input @change="updateCreateSettings" v-model="createSettingsForm.show_artists" id="show_artists" aria-describedby="show_artists-description" name="show_artists" type="checkbox" class="input-checklist"/>
+                    </div>
+                    <div class="ml-3 text-sm leading-6">
+                        <label for="budget_deadline" class="font-medium text-gray-900">
+                            {{ $t('Artists') }}
+                        </label>
+                        <p id="budget_deadline-description" class="text-gray-500 text-xs">
+                            {{ $t('Would you like to add artists on project creation?') }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-
-
-
 
         <ProjectSettingsDeleteModal
             :show="deletingGenre"
@@ -251,7 +260,7 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import {DotsVerticalIcon, TrashIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline"
+import {DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -262,7 +271,7 @@ import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {useForm} from "@inertiajs/vue3";
 
 export default {
     mixins: [Permissions],
@@ -322,7 +331,8 @@ export default {
                 state: this.createSettings.state,
                 managers: this.createSettings.managers,
                 cost_center: this.createSettings.cost_center,
-                budget_deadline: this.createSettings.budget_deadline
+                budget_deadline: this.createSettings.budget_deadline,
+                show_artists: this.createSettings.show_artists
             }),
             showSaveSuccess: false
         }

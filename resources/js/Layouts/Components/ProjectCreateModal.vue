@@ -36,11 +36,18 @@
                                         :label="$t('Project name*')"
                                         />
                                 </div>
+                                <div class="pt-1" v-if="createSettings.show_artists">
+                                    <TextInputComponent
+                                        id="create-settings.show-artists"
+                                        v-model="createProjectForm.artists"
+                                        :label="$t('Artists')"
+                                    />
+                                </div>
                                 <div v-if="showInvalidProjectNameHelpText" class="text-error text-xs mt-1">
                                     {{ $t('Project name is a required field.')}}
                                 </div>
                             </div>
-                            <div class="px-6 py-2" v-if="createSettings.attributes">
+                            <div class="px-6 pt-4" v-if="createSettings.attributes">
                                 <Menu as="div" class="inline-block text-left w-full">
                                     <div>
                                         <MenuButton class="menu-button">
@@ -185,7 +192,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex px-6 pb-5 pt-2 w-full" v-if="createSettings.state">
+                            <div class="flex px-6 pb-5 pt-4 w-full" v-if="createSettings.state">
                                 <ProjectStateListbox :projectStates="states"
                                                      :selectedProjectState="selectedState"
                                                      @update:selectedProjectState="selectedState = $event"/>
@@ -494,11 +501,13 @@ import BaseTabs from "@/Components/Tabs/BaseTabs.vue";
 import ProjectSearch from "@/Components/SearchBars/ProjectSearch.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import Permissions from "@/Mixins/Permissions.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 
 export default {
     name: 'ProjectCreateModal',
     mixins: [IconLib, ColorHelper, Permissions],
     components: {
+        TextareaComponent,
         BaseButton,
         Switch,
         SwitchLabel,
@@ -551,6 +560,7 @@ export default {
             addToProjectGroup: false,
             createProjectForm: useForm({
                 name: this.project ? this.project.name : '',
+                artists: this.project ? this.project.artists : '',
                 assignedSectorIds: this.project ? this.project?.sectors?.map(sector => sector.id) : [],
                 assignedCategoryIds: this.project ? this.project?.categories?.map(category => category.id) : [],
                 assignedGenreIds: this.project ? this.project?.genres?.map(genre => genre.id) : [],

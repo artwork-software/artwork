@@ -38,6 +38,13 @@
                             {{ event.projectName }}
                         </a>
                     </div>
+                    <div v-if="usePage().props.user.calendar_settings.project_artists"
+                         class="flex items-center w-full">
+                        <div v-if="event.projectArtists" :style="{ width: width - (64 * zoom_factor) + 'px'}"
+                             class=" truncate">
+                            {{ event.projectArtists }}
+                        </div>
+                    </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
                          class="flex items-center w-full">
                         <div v-if="event.eventName" :style="{ width: width - (64 * zoom_factor) + 'px'}"
@@ -347,7 +354,7 @@
 <script setup>
 import {computed, onMounted, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
-import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";

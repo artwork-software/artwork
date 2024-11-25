@@ -702,6 +702,7 @@ class UserController extends Controller
     {
         $user->calendar_settings()->update($request->only([
             'project_status',
+            'project_artists',
             'options',
             'project_management',
             'repeating_events',

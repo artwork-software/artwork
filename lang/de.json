@@ -1848,6 +1848,7 @@
     "Should it be possible to add the project management when creating a project?": "Soll es möglich sein, die Projektleitung beim Erstellen eines Projekts hinzuzufügen?",
     "Do you want to add the cost unit of the project when creating it?": "Möchtest du die Kostenträger des Projekts beim Erstellen hinzufügen?",
     "Would you like to enter the project budget deadline when you create a project?": "Möchtest du den Projekt-Budget-Stichtag beim Erstellen eines Projekts eingeben?",
+    "Would you like to add artists on project creation?": "Möchtest du Künstler*innen beim Erstellen eines Projekts hinzufügen?",
     "Saved. The changes have been successfully applied.": "Gespeichert. Die Änderungen wurden erfolgreich übernommen.",
     "Settings for project creation": "Einstellungen für Projekt-Erstellung",
     "Here you have the option of making settings for the creation of projects.": "Hier hast du die Möglichkeit, Einstellungen für die Erstellung von Projekten vorzunehmen.",
@@ -2132,5 +2133,6 @@
     "Add Sub-Event": "Unter-Termin hinzufügen",
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Hier kannst du die Abteilungsleitung für dieses Gewerk festlegen. Sie wird in der Übersicht hervorgehoben.",
-    "Craft manager": "Gewerkleitung"
+    "Craft manager": "Gewerkleitung",
+    "Artists": "Künstler*innen"
 }

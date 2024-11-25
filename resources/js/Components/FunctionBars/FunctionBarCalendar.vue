@@ -158,6 +158,15 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center py-1" v-if="!project">
+                                        <input v-model="userCalendarSettings.project_artists"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <div
+                                            :class="userCalendarSettings.project_artists ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                            class=" ml-4 my-auto text-secondary">{{ $t('Artists') }}
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center py-1" v-if="!project">
                                         <input v-model="userCalendarSettings.project_status"
                                                type="checkbox"
                                                class="input-checklist"/>
@@ -284,18 +293,7 @@
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, inject, nextTick, ref, watch} from "vue";
-import {
-    IconArrowsDiagonal,
-    IconCalendarStar,
-    IconChevronLeft,
-    IconChevronRight,
-    IconFileExport,
-    IconGeometry,
-    IconList,
-    IconSettings,
-    IconZoomIn,
-    IconZoomOut
-} from "@tabler/icons-vue";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
@@ -338,6 +336,7 @@ const showCalendarAboInfoModal = ref(false);
 const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
+    project_artists: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_artists : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,

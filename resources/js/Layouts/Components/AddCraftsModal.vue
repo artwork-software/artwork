@@ -92,7 +92,7 @@
                     </div>
                     <button type="button" @click="addOrRemoveFormUserList(user, 'shift_planer')">
                         <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                        <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
+                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                     </button>
                 </div>
             </div>
@@ -130,7 +130,6 @@
                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </span>
                 </ListboxButton>
-
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
@@ -159,31 +158,50 @@
             </div>
         </div>
     </div>
-    <div class="pt-5">
-        <UserSearch :label="$t('Add department management')"
+    <div class="my-5">
+        <TinyPageHeadline
+            :title="$t('Craft manager')"
+            :description="$t('Here you can specify the department management for this craft. It will be highlighted in the overview.')"
+        />
+    </div>
+    <div class="mt-8">
+        <UserSearch :label="'Add department management'"
                     @user-selected="addSelectedToCraftManagers"
-                    :search-workers="true"
+                    :search-workers="false"
                     :current-craft="craft"
-                    :dont-close-on-select="true"/>
-        <div v-for="(user,index) in this.managers"
-             class="mt-4 font-bold text-primary flex"
-             :key="index">
-            <div class="flex items-center">
-                <img class="h-5 w-5 mr-2 object-cover rounded-full"
-                     :src="user.profile_photo_url"
-                     alt=""/>
-                <template v-if="user.provider_name">
-                    {{ user.provider_name }}
-                </template>
-                <template v-else>
-                    {{ user.first_name }} {{ user.last_name }}
-                </template>
+                    :dont-close-on-select="false"/>
+        <div class="mt-3">
+            <div v-for="(user,index) in this.managers" class="my-2">
+                <div class="flex col-span-2">
+                    <div class="flex items-center">
+                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
+                        <span class="flex ml-4">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                    </div>
+                    <button type="button" @click="this.deleteDepartmentManager(user)">
+                        <span class="sr-only">{{ $t('Delete department management') }}</span>
+                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                    </button>
+                </div>
             </div>
-            <button type="button" @click="this.deleteDepartmentManager(user)">
-                <span class="sr-only">{{ $t('Delete department management') }}</span>
-                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>
-            </button>
         </div>
+<!--            <div class="flex items-center">-->
+<!--                <img class="h-5 w-5 mr-2 object-cover rounded-full"-->
+<!--                     :src="user.profile_photo_url"-->
+<!--                     alt=""/>-->
+<!--                <template v-if="user.provider_name">-->
+<!--                    {{ user.provider_name }}-->
+<!--                </template>-->
+<!--                <template v-else>-->
+<!--                    {{ user.first_name }} {{ user.last_name }}-->
+<!--                </template>-->
+<!--            </div>-->
+<!--            <button type="button" @click="this.deleteDepartmentManager(user)">-->
+<!--                <span class="sr-only">{{ $t('Delete department management') }}</span>-->
+<!--                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>-->
+<!--            </button>-->
+<!--        </div>-->
     </div>
     <div class="flex items-center justify-center mt-5">
         <FormButton :text="$t('Save')" @click="saveCraft"/>
@@ -362,7 +380,7 @@ export default defineComponent({
             this.craft.color = color;
         },
         addSelectedToCraftManagers(user) {
-            if (this.managers.findIndex((manager) => user.id === manager.id) > 0) {
+            if (this.managers.findIndex((manager) => user.id === manager.id) > -1) {
                 return;
             }
 

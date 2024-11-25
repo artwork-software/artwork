@@ -2129,5 +2129,8 @@
     "Edit event status": "Terminstatus bearbeiten",
     "Create event status": "Terminstatus erstellen",
     "Use event status colour": "Terminfarbe nach Status",
-    "Add Sub-Event": "Unter-Termin hinzufügen"
+    "Add Sub-Event": "Unter-Termin hinzufügen",
+    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen.",
+    "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Hier kannst du die Abteilungsleitung für dieses Gewerk festlegen. Sie wird in der Übersicht hervorgehoben.",
+    "Craft manager": "Gewerkleitung"
 }

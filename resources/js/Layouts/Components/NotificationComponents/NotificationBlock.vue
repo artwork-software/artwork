@@ -97,6 +97,7 @@
         :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+        :event-statuses="eventStatuses"
     />
     <room-request-dialog-component
         v-if="showRoomRequestDialogComponent"
@@ -176,7 +177,8 @@ export default {
         'isArchive',
         'first_project_shift_tab_id',
         'first_project_budget_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'eventStatuses'
     ],
     data() {
         return {

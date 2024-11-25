@@ -235,6 +235,7 @@
         :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
         :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+        :event-statuses="eventStatuses"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -364,6 +365,7 @@ export default {
         'user_filters',
         'first_project_calendar_tab_id',
         'projectNameUsedForProjectTimePeriod',
+        'eventStatuses'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

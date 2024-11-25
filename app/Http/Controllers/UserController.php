@@ -46,7 +46,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\SessionManager;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
@@ -154,9 +153,9 @@ class UserController extends Controller
         $sortEnum = $saveFilterAndSort ?
             $request->enum('sort', UserSortEnum::class) :
             (
-                $userUserManagementSetting['sort_by'] ?
-                    UserSortEnum::from($userUserManagementSetting['sort_by']) :
-                    null
+            $userUserManagementSetting['sort_by'] ?
+                UserSortEnum::from($userUserManagementSetting['sort_by']) :
+                null
             );
         $searchQuery = $request->get('query');
 
@@ -710,7 +709,8 @@ class UserController extends Controller
             'description',
             'event_name',
             'high_contrast',
-            'expand_days'
+            'expand_days',
+            'use_event_status_color',
         ]));
     }
 
@@ -797,6 +797,11 @@ class UserController extends Controller
     public function updateShowCrafts(User $user, Request $request): void
     {
         $user->update($request->only('show_crafts'));
+    }
+
+    public function updateShowShiftQualifications(User $user, Request $request): void
+    {
+        $user->update($request->only('show_qualifications'));
     }
 
     public function calendarGoToStepper(User $user, Request $request): void

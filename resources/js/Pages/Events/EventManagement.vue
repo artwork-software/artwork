@@ -9,6 +9,7 @@
                               :events-without-room="eventsWithoutRoom"
                               :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                               :first-project-shift-tab-id="first_project_shift_tab_id"
+                              :event-statuses="eventStatuses"
                 />
 
                 <IndividualCalendarAtGlanceComponent v-else
@@ -24,7 +25,8 @@
                                                      :first_project_tab_id="first_project_tab_id"
                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                      :first-project-shift-tab-id="first_project_shift_tab_id"
-                                                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"/>
+                                                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                :event-statuses="eventStatuses"/>
             </div>
             <div v-else>
                 <div class="mr-4">
@@ -40,7 +42,8 @@
                                        :personal-filters="personalFilters"
                                        :user_filters="user_filters"
                                        :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                       :first-project-shift-tab-id="firstProjectShiftTabId"/>
+                                       :first-project-shift-tab-id="firstProjectShiftTabId"
+                    :event-statuses="eventStatuses"/>
                 </div>
             </div>
 
@@ -75,6 +78,7 @@ const props = defineProps(
         areas: Object,
         projectNameUsedForProjectTimePeriod: String,
         first_project_shift_tab_id: Number,
+        eventStatuses: Object
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
@@ -87,4 +91,5 @@ provide('personalFilters', props.personalFilters);
 provide('filterOptions', props.filterOptions);
 provide('rooms', props.rooms);
 provide('areas', props.areas);
+provide('eventStatuses', props.eventStatuses);
 </script>

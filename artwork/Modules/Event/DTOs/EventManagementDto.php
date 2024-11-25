@@ -28,6 +28,9 @@ class EventManagementDto extends BaseDto
     public ?array $eventsAtAGlance = null;
 
     public ?Collection $rooms = null;
+    public ?Collection $eventStatuses = null;
+
+
 
     public ?CalendarEventDto $events = null;
 
@@ -46,6 +49,18 @@ class EventManagementDto extends BaseDto
     public Collection $areas;
 
     public ?string $projectNameUsedForProjectTimePeriod = null;
+
+    public function getEventStatuses(): ?Collection
+    {
+        return $this->eventStatuses;
+    }
+
+    public function setEventStatuses(?Collection $eventStatuses): self
+    {
+        $this->eventStatuses = $eventStatuses;
+
+        return $this;
+    }
 
     public function getAreas(): Collection
     {
@@ -301,7 +316,8 @@ class EventManagementDto extends BaseDto
             'first_project_calendar_tab_id' => $this->getFirstProjectCalendarTabId(),
             'first_project_shift_tab_id' => $this->getFirstProjectShiftTabId(),
             'areas' => $this->getAreas(),
-            'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod()
+            'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod(),
+            'eventStatuses' => $this->getEventStatuses(),
         ];
     }
 }

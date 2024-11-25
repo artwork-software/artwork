@@ -1,5 +1,5 @@
 <template>
-    <BaseModal @closed="$emit('close')">
+    <BaseModal @closed="$emit('close', {closing: true})">
         <ModalHeader
             title="Löschen"
             description="Alle Einträge (inklusive Schichten) für die ausgewählten Termine löschen?"

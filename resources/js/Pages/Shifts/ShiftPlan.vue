@@ -127,44 +127,35 @@
                     <div v-show="showUserOverview" ref="userOverview"
                          class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-20 overflow-y-scroll"
                          :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                        <div
-                            class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3"
-                            :style="{top: calculateTopPositionOfUserOverView}">
+                        <div class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
-                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
-                                        :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span class="sr-only">Use setting</span>
-                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
-                                </span>
+                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                        <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                    </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
                                     <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
                                             :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-20 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
+                                        <span :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                         <span
-                                            :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span
-                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
                                             <ToolTipComponent
                                                 :icon="selectedDayService?.icon"
@@ -175,7 +166,7 @@
                                             />
                                         </span>
                                         <span
-                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
                                             <ToolTipComponent
                                                 :icon="selectedDayService?.icon"
@@ -261,7 +252,7 @@
                                     <span
                                         :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
-                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconBulb"
@@ -271,7 +262,7 @@
                                           />
                                       </span>
                                       <span
-                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconBulb"
@@ -288,7 +279,7 @@
                                     <span
                                         :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -298,7 +289,7 @@
                                           />
                                       </span>
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -1423,8 +1414,11 @@ export default {
                 this.multiEditCellByDayAndUser = {};
             }
         },
-        closeMultiEditCellModal(){
+        closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
+
+
+
             handleReload(
                 this.rooms.map(room => room.id),
                 this.days.map(day => day.full_day),
@@ -1435,13 +1429,25 @@ export default {
                     }
                 })
             );
+
+            if (bool) {
+                this.multiEditCellByDayAndUser = {};
+            }
         },
         closeCellMultiEditDelete(boolean) {
+
+
+            if(boolean.closing) {
+                this.openCellMultiEditDelete = false;
+                return;
+            }
+
             this.openCellMultiEditDelete = false;
 
             if(boolean) {
                 this.showCellMultiEditModal = true;
             }
+
             handleReload(
                 this.rooms.map(room => room.id),
                 this.days.map(day => day.full_day),
@@ -1452,6 +1458,10 @@ export default {
                     }
                 })
             );
+
+            if (!boolean) {
+                this.multiEditCellByDayAndUser = {};
+            }
         },
         toggleDayServiceMode() {
             this.highlightMode = false;

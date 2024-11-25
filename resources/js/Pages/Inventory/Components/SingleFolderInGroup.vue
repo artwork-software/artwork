@@ -13,7 +13,7 @@
             </div>
         </td>
     </tr>
-    <SingleItemInGroup :inventory_planned_by_all="inventory_planned_by_all" :craft="craft" :multi-edit="multiEdit" v-for="item in folder.items" :days="days" :item="item" v-if="!folder.closed"/>
+    <SingleItemInGroup :inventory_planned_by_all="inventory_planned_by_all" :inventory_planer_ids="inventory_planer_ids" :multi-edit="multiEdit" v-for="item in folder.items" :days="days" :item="item" v-if="!folder.closed"/>
 </template>
 
 <script setup>
@@ -37,7 +37,8 @@ const props = defineProps({
     },
     inventory_planer_ids: {
         type: Array,
-        required: true,
+        required: false,
+        default: []
     },
     inventory_planned_by_all: {
         type: Boolean,

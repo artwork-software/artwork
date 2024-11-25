@@ -11,8 +11,8 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  build-essential \
  ca-certificates \
  gnupg \
- mysql-server \
- mysql-client \
+ mariadb-server \
+ mariadb-client \
  redis \
  nginx \
  openssl \
@@ -136,10 +136,14 @@ sudo php /var/www/html/artisan scout:index shifpresets
 sudo php /var/www/html/artisan scout:index shiftpresets
 sudo php /var/www/html/artisan scout:index projects
 sudo php /var/www/html/artisan scout:index users
+sudo php /var/www/html/artisan scout:index freelancers
+sudo php /var/www/html/artisan scout:index serviceproviders
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\User\\Models\\User
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\ShiftPreset\\Models\\ShiftPreset
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Project\\Models\\Project
 sudo php /var/www/html/artisan scout:import Artwork\\Modules\\MoneySource\\Models\\MoneySource
+sudo php /var/www/html/artisan scout:import Artwork\\Modules\\Freelancer\\Models\\Freelancer
+sudo php /var/www/html/artisan scout:import Artwork\\Modules\\ServiceProvider\\Models\\ServiceProvider
 
 ## Scheduler (cron)
 (sudo crontab -l 2>/dev/null; echo "* * * * * php /var/www/html/artisan schedule:run") | sudo crontab -

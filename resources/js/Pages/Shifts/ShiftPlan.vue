@@ -354,6 +354,7 @@
                                                          :type="user.type"
                                                          :color="craft.color"
                                                          :craft="craft"
+                                                         :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
@@ -367,6 +368,7 @@
                                                                :craft-id="craft.id"
                                                                :craft="craft"
                                                                :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+                                                               :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -376,6 +378,7 @@
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="craft.color"
+                                                               :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
@@ -848,18 +851,19 @@ export default {
                             return {
                                 id: craft.id,
                                 name: craft.name,
-                                users: this.sortUsersByType(users.filter(
-                                    user => user.assigned_craft_ids.includes(craft.id)),
+                                abbreviation: craft.abbreviation,
+                                users: this.sortUsersByType(
+                                    users.filter(
+                                        user => user.assigned_craft_ids.includes(craft.id)
+                                    ),
                                     this.returnFilteredFunctionValues.sortByInternExtern,
                                     this.returnFilteredFunctionValues.isDescending
                                 ),
                                 color: craft?.color,
                                 universally_applicable: craft.universally_applicable,
-                                abbreviation: craft.abbreviation,
                             };
                         }
                     );
-
                 crafts.forEach((craft) => {
                     crafts.users = craft.users;
                 });
@@ -924,9 +928,8 @@ export default {
             };
         },
         sortUsersByType(users, sortByInternExtern = false, isDescending = false) {
-
             if (!this.useFrontendFilter) {
-                return users;
+                return this.preSortManagingUsers(users);
             }
             const classifyUserType = (user) => {
                 if (user.type === 0 && user.element.is_freelancer) {
@@ -935,7 +938,10 @@ export default {
                 return user.type;
             };
 
-            return users.sort((a, b) => {
+            return this.preSortManagingUsers(users).sort((a, b) => {
+                if (a.element.managing_craft_ids.length > 0 || b.element.managing_craft_ids.length > 0) {
+                    return 1;
+                }
                 const typeA = classifyUserType(a);
                 const typeB = classifyUserType(b);
 
@@ -981,6 +987,15 @@ export default {
                         }
                     }
                 }
+            });
+        },
+        preSortManagingUsers(users) {
+            return users.sort((a, b) => {
+                const aHasIds = Array.isArray(a.element.managing_craft_ids) && a.element.managing_craft_ids.length > 0;
+                const bHasIds = Array.isArray(b.element.managing_craft_ids) && b.element.managing_craft_ids.length > 0;
+
+                if (aHasIds && !bHasIds) return -1;
+                if (!aHasIds && bHasIds) return 1;
             });
         },
         renderRoomName(room){

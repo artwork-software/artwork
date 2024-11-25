@@ -442,6 +442,11 @@ class User extends Model implements
         return $this->morphToMany(Craft::class, 'craftable');
     }
 
+    public function managingCrafts(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
     public function shiftQualifications(): BelongsToMany
     {
         return $this
@@ -570,5 +575,18 @@ class User extends Model implements
             'user_id',
             'id'
         );
+    }
+
+    public function craftsToManage(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getManagingCraftIds(): array
+    {
+        return $this->craftsToManage()->pluck('id')->toArray();
     }
 }

@@ -159,12 +159,18 @@
             </div>
         </div>
     </div>
-    <div class="pt-5">
-        <UserSearch :label="$t('Add department management')"
+    <div class="my-5">
+        <TinyPageHeadline
+            :title="$t('Craft manager')"
+            :description="$t('Here you can specify the department management for this craft. It will be highlighted in the overview.')"
+        />
+    </div>
+    <div class="mt-8">
+        <UserSearch :label="'Add department management'"
                     @user-selected="addSelectedToCraftManagers"
-                    :search-workers="true"
+                    :search-workers="false"
                     :current-craft="craft"
-                    :dont-close-on-select="true"/>
+                    :dont-close-on-select="false"/>
         <div v-for="(user,index) in this.managers"
              class="mt-4 font-bold text-primary flex"
              :key="index">

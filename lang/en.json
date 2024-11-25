@@ -2128,5 +2128,8 @@
     "Default": "Default",
     "Edit event status": "Edit event status",
     "Create event status": "Create event status",
-    "Use event status colour": "Use event status colour"
+    "Use event status colour": "Use event status colour",
+    "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.",
+    "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Here you can specify the department management for this craft. It will be highlighted in the overview.",
+    "Craft manager": "Craft manager"
 }

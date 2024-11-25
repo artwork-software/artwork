@@ -33,7 +33,7 @@
                 </div>
             </template>
             <template v-else-if="isLastEditField()">
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 cursor-grab">
                     {{ computedJsonValue.date }}
                     <div class="flex items-center gap-1">
                         <UserPopoverTooltip :user="computedJsonValue.editor" height="5" width="5"/>
@@ -215,7 +215,7 @@ const emits = defineEmits(['isEditingCellValue']),
 
         if (cellClicked.value) {
             setTimeout(() => {
-                if (isTextColumn()) {
+                if (isTextColumn() || isNumberColumn()) {
                     cellValueInputRef.value.select();
                     return;
                 }

@@ -39,7 +39,8 @@ const props = defineProps({
     },
     inventory_planer_ids: {
         type: Array,
-        required: true,
+        required: false,
+        default: []
     },
     inventory_planned_by_all: {
         type: Boolean,

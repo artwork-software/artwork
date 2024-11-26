@@ -22,6 +22,7 @@ use Artwork\Modules\User\Services\WorkingHourService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -230,5 +231,10 @@ readonly class FreelancerService
     public function getShiftsWithEventsOrderedByStart(int|Freelancer $freelancer): Collection
     {
         return $this->freelancerRepository->getShiftsWithEventsOrderedByStart($freelancer);
+    }
+
+    public function searchFreelancers(string $search): SupportCollection
+    {
+        return $this->freelancerRepository->scoutSearch($search);
     }
 }

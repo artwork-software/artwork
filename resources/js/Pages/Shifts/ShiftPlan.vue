@@ -17,8 +17,6 @@
                                       @select-go-to-previous-mode="selectGoToPreviousMode"
                 />
             </div>
-
-
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
                      :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
@@ -64,14 +62,12 @@
                                     <th :id="'roomNameContainer_' + index" class="xsDark flex items-center h-28 w-48" :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <div class="flex font-semibold items-center ml-4">
                                             {{ renderRoomName(room) }}
-                                            <!--{{ room[days[0].full_day].roomName }}-->
                                         </div>
                                     </th>
                                     <td :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', day.is_sunday ? '' : 'border-dashed' ]"
                                         class="border-r-2 border-gray-400 day-container h-28"
                                         v-for="day in days" :data-day="day.full_day">
                                         <div class="bg-backgroundGray2 h-full mb-3" style="width: 37px;" v-if="day.is_extra_row">
-
                                         </div>
                                         <!-- Build in v-if="this.currentDaysInView.has(day.full_day)" when observer fixed -->
                                         <div v-else style="width: 200px" class="max-h-28 h-28 overflow-y-auto cell ">
@@ -127,44 +123,35 @@
                     <div v-show="showUserOverview" ref="userOverview"
                          class="relative w-[97%] bg-artwork-navigation-background overflow-x-scroll z-20 overflow-y-scroll"
                          :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
-                        <div
-                            class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3"
-                            :style="{top: calculateTopPositionOfUserOverView}">
+                        <div class="flex items-center justify-between w-full fixed py-3 z-20 bg-artwork-navigation-background px-3" :style="{top: calculateTopPositionOfUserOverView}">
                             <div class="flex items-center justify-end gap-x-3">
-                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode"
-                                        :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
-                                    <span class="sr-only">Use setting</span>
-                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
-                                      <span
-                                          :class="[multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
-                                          aria-hidden="true">
-                                          <ToolTipComponent
-                                              icon="IconPencil"
-                                              icon-size="h-4 w-4"
-                                              :tooltip-text="$t('Edit')"
-                                              direction="right"
-                                          />
-                                      </span>
-                                </span>
+                                <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                        <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                    </span>
                                 </Switch>
                                 <div class="flex items-center gap-x-2" v-if="dayServices && selectedDayService">
                                     <Switch @click="toggleDayServiceMode" v-model="dayServiceMode"
                                             :class="[dayServiceMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative z-20 inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
                                         <span class="sr-only">Use setting</span>
+                                        <span :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                         <span
-                                            :class="[dayServiceMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
-                                        <span
-                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            :class="[dayServiceMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
                                             <ToolTipComponent
                                                 :icon="selectedDayService?.icon"
@@ -175,7 +162,7 @@
                                             />
                                         </span>
                                         <span
-                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                            :class="[dayServiceMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                             aria-hidden="true">
                                             <ToolTipComponent
                                                 :icon="selectedDayService?.icon"
@@ -261,7 +248,7 @@
                                     <span
                                         :class="[highlightMode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
-                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[highlightMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconBulb"
@@ -271,7 +258,7 @@
                                           />
                                       </span>
                                       <span
-                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[highlightMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconBulb"
@@ -288,7 +275,7 @@
                                     <span
                                         :class="[$page.props.user.compact_mode ? 'translate-x-5' : 'translate-x-0', 'relative inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.user.compact_mode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -298,7 +285,7 @@
                                           />
                                       </span>
                                       <span
-                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
+                                          :class="[$page.props.user.compact_mode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']"
                                           aria-hidden="true">
                                           <ToolTipComponent
                                               icon="IconList"
@@ -320,6 +307,29 @@
                                             </div>
                                         </div>
                                         <CraftFilter :crafts="crafts" is_tiny/>
+                                        <div class="my-3">
+                                            <div>
+                                                <div class="h-9 flex items-center cursor-pointer" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
+                                                    <div class="flex items-center text-white text-xs">
+                                                        {{ $t('Shift qualifications') }}
+                                                        <IconChevronDown v-if="!showShiftQualificationFilter" class="w-4 h-4 ml-2"/>
+                                                        <IconChevronUp v-if="showShiftQualificationFilter" class="w-4 h-4 ml-2"/>
+                                                    </div>
+                                                </div>
+                                                <div v-if="showShiftQualificationFilter">
+                                                    <div v-for="shiftQualification in this.shiftQualifications">
+                                                        <div class="relative flex items-start mb-2">
+                                                            <div class="flex h-6 items-center">
+                                                                <input :checked="this.userShiftPlanShiftQualificationFilters.includes(shiftQualification.id)" @change="this.saveShiftQualificationFilter" :value="shiftQualification.id" type="checkbox" class="input-checklist-dark" />
+                                                            </div>
+                                                            <div class="ml-2 text-sm leading-6">
+                                                                <label :for="'shiftQualification-' + shiftQualification.id" class="font-medium text-white">{{ shiftQualification.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </BaseFilter>
                                 <BaseMenu :white-icon="true" show-sort-icon dots-size="h-7 w-7" menu-width="w-fit" right>
@@ -328,12 +338,34 @@
                                         {{ $t('Reset') }}
                                     </span>
                                     </div>
-                                    <MenuItem v-for="shiftPlanWorkerSortEnumName in shiftPlanWorkerSortEnums"
+                                    <MenuItem v-for="computedShiftPlanWorkerSortEnum in computedShiftPlanWorkerSortEnums"
                                               v-slot="{ active }">
-                                        <div @click="this.applySort(shiftPlanWorkerSortEnumName)"
+                                        <div @click="this.applySort(computedShiftPlanWorkerSortEnum)"
                                              :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center justify-between px-4 py-2 text-sm subpixel-antialiased']">
-                                            {{ getSortEnumTranslation(shiftPlanWorkerSortEnumName) }}
-                                            <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === shiftPlanWorkerSortEnumName" class="w-5 h-5"/>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_ASCENDING'">
+                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                        {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
+                                                    </span>
+                                                    <IconArrowUp class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'INTERN_EXTERN_DESCENDING'">
+                                                    <span :class="this.$page.props.user.shift_plan_user_sort_by_id === computedShiftPlanWorkerSortEnum ? 'text-white' : ''">
+                                                        {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum) }}
+                                                    </span>
+                                                    <IconArrowDown class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_ASCENDING'">
+                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                    <IconArrowUp class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING'" class="w-5 h-5"/>
+                                                </template>
+                                                <template v-if="computedShiftPlanWorkerSortEnum === 'ALPHABETICALLY_NAME_DESCENDING'">
+                                                    {{ getSortEnumTranslation(computedShiftPlanWorkerSortEnum, [!this.useFirstNameForSort ? $t('First name') : $t('Last name')]) }}
+                                                    <IconArrowDown class="w-5 h-5"/>
+                                                    <IconCheck v-if="this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING'" class="w-5 h-5"/>
+                                                </template>
                                         </div>
                                     </MenuItem>
                                 </BaseMenu>
@@ -363,6 +395,7 @@
                                                          :type="user.type"
                                                          :color="craft.color"
                                                          :craft="craft"
+                                                         :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                             <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
                                                                :item="user.element"
@@ -376,6 +409,7 @@
                                                                :craft-id="craft.id"
                                                                :craft="craft"
                                                                :multi-edit-cell-by-day-and-user="multiEditCellByDayAndUser"
+                                                               :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                             <HighlightUserCell v-else
                                                                :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
@@ -385,6 +419,7 @@
                                                                :type="user.type"
                                                                @highlightShiftsOfUser="highlightShiftsOfUser"
                                                                :color="craft.color"
+                                                               :is-managing-craft="user.element.managing_craft_ids.includes(craft.id)"
                                             />
                                         </th>
                                         <td v-for="day in days" class="flex gap-x-0.5 relative">
@@ -436,7 +471,7 @@
                                         />
                                     </tr>
                                     <tr v-if="!closedCrafts.includes('noCraft')"
-                                        v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                        v-for="(user,index) in workersWithoutCraft" class="w-full flex">
                                         <th class="stickyYAxisNoMarginLeft bg-artwork-navigation-background flex items-center text-right"
                                             :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                             <DragElement v-if="!highlightMode && !multiEditMode"
@@ -568,7 +603,7 @@ import {SelectorIcon} from "@heroicons/vue/solid";
 import ShiftsQualificationsAssignmentModal
     from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import {IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
+import {IconArrowDown, IconArrowUp, IconChevronDown, IconFileText, IconPencil, IconX} from "@tabler/icons-vue";
 import CraftFilter from "@/Components/Filter/CraftFilter.vue";
 import SingleEventInShiftPlan from "@/Pages/Shifts/Components/SingleEventInShiftPlan.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -611,7 +646,10 @@ export default {
         IconPencil,
         SingleEventInShiftPlan,
         CraftFilter,
-        IconChevronDown, IconX, IconFileText, BaseFilter,
+        IconChevronDown,
+        IconX,
+        IconFileText,
+        BaseFilter,
         ShiftsQualificationsAssignmentModal,
         TableBody,
         TableHead,
@@ -634,7 +672,9 @@ export default {
         AppLayout,
         ShiftPlanFunctionBar,
         HighlightUserCell,
-        SelectorIcon
+        SelectorIcon,
+        IconArrowDown,
+        IconArrowUp
     },
     props: [
         'events',
@@ -655,7 +695,9 @@ export default {
         'shiftQualifications',
         'dayServices',
         'firstProjectShiftTabId',
-        'shiftPlanWorkerSortEnums'
+        'shiftPlanWorkerSortEnums',
+        'useFirstNameForSort',
+        'userShiftPlanShiftQualificationFilters'
     ],
     data() {
         return {
@@ -692,10 +734,6 @@ export default {
             shiftPlanRef: ref(JSON.parse(JSON.stringify(this.shiftPlan))),
             screenHeight: screen.height,
             showFreelancers: true,
-            useFrontendFilter: usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING' ||
-                usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING',
             multiEditCellByDayAndUser: {},
             showCellMultiEditModal: false,
             openCellMultiEditDelete: false,
@@ -704,6 +742,7 @@ export default {
             waitForModalClose: false,
             navigationGuardActive: true,
             originalVisit: null,
+            showShiftQualificationFilter: false
         }
     },
     mounted() {
@@ -850,21 +889,16 @@ export default {
             return this.shiftPlanRef;
         },
         craftsToDisplay() {
-            const users = this.getDropUsers(),
-                crafts = this.crafts
+            const crafts = this.crafts
                     .map(
                         (craft) => {
                             return {
                                 id: craft.id,
                                 name: craft.name,
-                                users: this.sortUsersByType(users.filter(
-                                    user => user.assigned_craft_ids.includes(craft.id)),
-                                    this.returnFilteredFunctionValues.sortByInternExtern,
-                                    this.returnFilteredFunctionValues.isDescending
-                                ),
+                                abbreviation: craft.abbreviation,
+                                users: this.filterAndSortWorkersOfCraft(craft),
                                 color: craft?.color,
                                 universally_applicable: craft.universally_applicable,
-                                abbreviation: craft.abbreviation,
                             };
                         }
                     );
@@ -879,31 +913,77 @@ export default {
                 return crafts.filter((craft) => this.$page.props.user.show_crafts.includes(craft.id));
             }
         },
-        usersWithNoCrafts() {
-            const users = this.getDropUsers().filter(user =>
-                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+        workersWithoutCraft() {
+            let workersWithoutCraft = this.filterNonManagingWorkersByShiftQualificationFilter(
+                this.getDropWorkers().filter(user => user.assigned_craft_ids.length === 0)
             );
-            return this.sortUsersByType(
-                users,
-                this.returnFilteredFunctionValues.sortByInternExtern,
-                this.returnFilteredFunctionValues.isDescending
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
+                return workersWithoutCraft;
+            }
+
+            //simple sort by first/last name ascending or descending
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                return this.sortAscendingByUseFirstNameForSort(workersWithoutCraft);
+            }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+                return this.sortDescendingByUseFirstNameForSort(workersWithoutCraft);
+            }
+
+            //prepare intern/extern sort
+            let assignedInternWorkers = workersWithoutCraft.filter(
+                (workerWithoutCraft) => this.isWorkerUser(workerWithoutCraft)
+            ), assignedExternWorkers = workersWithoutCraft.filter(
+                (assignedNonManagingWorker) => this.isWorkerFreelancer(assignedNonManagingWorker) ||
+                    this.isWorkerServiceProvider(assignedNonManagingWorker)
             );
+
+            //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+                return this
+                    .sortAscendingByUseFirstNameForSort(assignedInternWorkers)
+                    .concat(this.sortAscendingByUseFirstNameForSort(assignedExternWorkers));
+            }
+
+            //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+                return this
+                    .sortDescendingByUseFirstNameForSort(assignedExternWorkers)
+                    .concat(this.sortDescendingByUseFirstNameForSort(assignedInternWorkers));
+            }
+
+            return workersWithoutCraft;
         },
-        returnFilteredFunctionValues(){
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_ASCENDING'){
-                return { sortByInternExtern: true, isDescending: false }
+        computedShiftPlanWorkerSortEnums() {
+            let nameSortEnums = [
+                    'ALPHABETICALLY_NAME_ASCENDING',
+                    'ALPHABETICALLY_NAME_DESCENDING'
+                ],
+                sortConfig = [];
+
+            if (nameSortEnums.includes(this.$page.props.user.shift_plan_user_sort_by_id)) {
+                sortConfig.push('INTERN_EXTERN_ASCENDING');
+
+                if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                    sortConfig.push('ALPHABETICALLY_NAME_DESCENDING');
+                } else {
+                    sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+                }
+
+                return sortConfig;
             }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERNAL_DESCENDING'){
-                return { sortByInternExtern: true, isDescending: true }
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+                sortConfig.push('INTERN_EXTERN_DESCENDING');
+            } else {
+                sortConfig.push('INTERN_EXTERN_ASCENDING');
             }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_ASCENDING'){
-                return { sortByInternExtern: false, isDescending: true }
-            }
-            if (usePage().props.user.shift_plan_user_sort_by_id === 'WITHOUT_INTERN_EXTERNAL_DESCENDING'){
-                return { sortByInternExtern: false, isDescending: false }
-            }
-            return { sortByInternExtern: false, isDescending: false }
-        },
+
+            sortConfig.push('ALPHABETICALLY_NAME_ASCENDING');
+
+            return sortConfig;
+        }
     },
     methods: {
         setupInertiaNavigationGuard() {
@@ -932,65 +1012,173 @@ export default {
                 }
             };
         },
-        sortUsersByType(users, sortByInternExtern = false, isDescending = false) {
-
-            if (!this.useFrontendFilter) {
-                return users;
+        isWorkerUser(worker) {
+            return worker.type === 0;
+        },
+        isWorkerFreelancer(worker) {
+            return worker.type === 1;
+        },
+        isWorkerServiceProvider(worker) {
+            return worker.type === 2;
+        },
+        isManagingWorker(craft, worker) {
+            if (this.isWorkerUser(worker)) {
+                return craft.managing_users.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
             }
-            const classifyUserType = (user) => {
-                if (user.type === 0 && user.element.is_freelancer) {
-                    return 1;
-                }
-                return user.type;
-            };
 
-            return users.sort((a, b) => {
-                const typeA = classifyUserType(a);
-                const typeB = classifyUserType(b);
+            if (this.isWorkerFreelancer(worker)) {
+                return craft.managing_freelancers.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
+            }
 
-                const lastNameA = a.element.last_name || '';
-                const lastNameB = b.element.last_name || '';
-                const providerNameA = a.element.provider_name || '';
-                const providerNameB = b.element.provider_name || '';
+            if (this.isWorkerServiceProvider(worker)) {
+                return craft.managing_service_providers.findIndex(
+                    (managingUser) => managingUser.id === worker.element.id
+                ) > -1;
+            }
+        },
+        getAssignedWorkerOfCraft(craftId, dropWorkers) {
+            return dropWorkers.filter((dropWorker) => dropWorker.assigned_craft_ids.includes(craftId))
+        },
+        sortAscendingByUseFirstNameForSort(workers) {
+            if (!this.useFirstNameForSort) {
+                return workers.sort((a, b) => {
+                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                        a.element.provider_name :
+                        a.element.first_name;
 
-                if (sortByInternExtern) {
-                    if (isDescending) {
-                        if (typeA === typeB) {
-                            if (typeA === 0 || typeA === 1) {
-                                return lastNameB.localeCompare(lastNameA);
-                            } else if (typeA === 2) {
-                                return providerNameB.localeCompare(providerNameA);
-                            }
-                        } else {
-                            return typeB - typeA;
-                        }
-                    } else {
-                        if (typeA === typeB) {
-                            if (typeA === 0 || typeA === 1) {
-                                return lastNameA.localeCompare(lastNameB);
-                            } else if (typeA === 2) {
-                                return providerNameA.localeCompare(providerNameB);
-                            }
-                        } else {
-                            return typeA - typeB;
-                        }
-                    }
-                } else {
-                    if (isDescending) {
-                        if (typeA === 0 || typeA === 1) {
-                            return lastNameB.localeCompare(lastNameA);
-                        } else if (typeA === 2) {
-                            return providerNameB.localeCompare(providerNameA);
-                        }
-                    } else {
-                        if (typeA === 0 || typeA === 1) {
-                            return lastNameA.localeCompare(lastNameB);
-                        } else if (typeA === 2) {
-                            return providerNameA.localeCompare(providerNameB);
-                        }
-                    }
-                }
-            });
+                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                        b.element.provider_name :
+                        b.element.first_name;
+
+                    if (compareNameA < compareNameB) return -1;
+                    if (compareNameA > compareNameB) return 1;
+                    return 0;
+                });
+            } else {
+                return workers.sort((a, b) => {
+                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                        a.element.provider_name :
+                        a.element.last_name;
+
+                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                        b.element.provider_name :
+                        b.element.last_name;
+
+                    if (compareNameA < compareNameB) return -1;
+                    if (compareNameA > compareNameB) return 1;
+                    return 0;
+                });
+            }
+        },
+        sortDescendingByUseFirstNameForSort(workers) {
+            if (!this.useFirstNameForSort) {
+                return workers.sort((a, b) => {
+                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                        a.element.provider_name :
+                        a.element.first_name;
+
+                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                        b.element.provider_name :
+                        b.element.first_name;
+
+                    if (compareNameA > compareNameB) return -1;
+                    if (compareNameA < compareNameB) return 1;
+                    return 0;
+                });
+            } else {
+                return workers.sort((a, b) => {
+                    let compareNameA = (this.isWorkerServiceProvider(a)) ?
+                        a.element.provider_name :
+                        a.element.last_name;
+
+                    let compareNameB = (this.isWorkerServiceProvider(b)) ?
+                        b.element.provider_name :
+                        b.element.last_name;
+
+                    if (compareNameA > compareNameB) return -1;
+                    if (compareNameA < compareNameB) return 1;
+                    return 0;
+                });
+            }
+        },
+        filterAndSortWorkersOfCraft(craft) {
+            let dropWorkers = this.getDropWorkers(),
+                //all assigned workers of given craft contained
+                assignedWorkersOfCraft = this.getAssignedWorkerOfCraft(craft.id, dropWorkers),
+                //all managing worker of given craft filtered from assignedWorkersOfCraft
+                assignedManagingWorkers = assignedWorkersOfCraft.filter(
+                    (assignedWorkerOfCraft) => this.isManagingWorker(craft, assignedWorkerOfCraft)
+                ),
+                //all non managing worker of given craft filtered from assignedWorkersOfCraft
+                assignedNonManagingWorkers = assignedWorkersOfCraft.filter(
+                    (assignedWorkerOfCraft) => !this.isManagingWorker(craft, assignedWorkerOfCraft)
+                ),
+                assignedNonManagingWorkersFiltered = this.filterNonManagingWorkersByShiftQualificationFilter(
+                    assignedNonManagingWorkers
+                );
+
+            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
+                return assignedManagingWorkers.concat(assignedNonManagingWorkersFiltered);
+            }
+
+            //alphabetically by name ascending -> managing workers first, other users afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_ASCENDING') {
+                return this
+                    .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
+                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
+            }
+
+            //alphabetically by name descending -> managing workers first, other users afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'ALPHABETICALLY_NAME_DESCENDING') {
+                return this
+                    .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
+                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingWorkersFiltered));
+            }
+
+            //prepare intern/extern sort
+            let assignedNonManagingInternWorkers = assignedNonManagingWorkers.filter(
+                (assignedNonManagingWorker) => this.isWorkerUser(assignedNonManagingWorker)
+            ), assignedNonManagingExternWorkers = assignedNonManagingWorkers.filter(
+                (assignedNonManagingWorker) => this.isWorkerFreelancer(assignedNonManagingWorker) ||
+                    this.isWorkerServiceProvider(assignedNonManagingWorker)
+            );
+
+            //intern/extern alphabetically by name ascending -> managing workers first, intern, extern afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_ASCENDING') {
+                return this
+                    .sortAscendingByUseFirstNameForSort(assignedManagingWorkers)
+                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingInternWorkers))
+                    .concat(this.sortAscendingByUseFirstNameForSort(assignedNonManagingExternWorkers));
+            }
+
+            //intern/extern alphabetically by name descending -> managing workers first, extern, intern afterward
+            if (this.$page.props.user.shift_plan_user_sort_by_id === 'INTERN_EXTERN_DESCENDING') {
+                return this
+                    .sortDescendingByUseFirstNameForSort(assignedManagingWorkers)
+                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingExternWorkers))
+                    .concat(this.sortDescendingByUseFirstNameForSort(assignedNonManagingInternWorkers));
+            }
+        },
+        filterNonManagingWorkersByShiftQualificationFilter(workers) {
+            if (this.userShiftPlanShiftQualificationFilters.length === 0) {
+                return workers;
+            }
+
+            let workersWithShiftQualifications = workers.filter(
+                (worker) => worker.element.shift_qualifications.length > 0
+            );
+
+            return workersWithShiftQualifications.filter(
+                (worker) => worker.element.shift_qualifications.some(
+                    (shift_qualification) => this.userShiftPlanShiftQualificationFilters.includes(
+                        shift_qualification.id
+                    )
+                )
+            );
         },
         renderRoomName(room){
             const firstDayWhereAreNotExtraRows = this.days.find(day => !day.is_extra_row);
@@ -1069,7 +1257,7 @@ export default {
                 ]
             );
         },
-        getDropUsers() {
+        getDropWorkers() {
             const users = [];
             this.usersForShifts.forEach((user) => {
                 if(!this.showFreelancers && user.user.is_freelancer) {
@@ -1423,8 +1611,11 @@ export default {
                 this.multiEditCellByDayAndUser = {};
             }
         },
-        closeMultiEditCellModal(){
+        closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
+
+
+
             handleReload(
                 this.rooms.map(room => room.id),
                 this.days.map(day => day.full_day),
@@ -1435,13 +1626,25 @@ export default {
                     }
                 })
             );
+
+            if (bool) {
+                this.multiEditCellByDayAndUser = {};
+            }
         },
         closeCellMultiEditDelete(boolean) {
+
+
+            if(boolean.closing) {
+                this.openCellMultiEditDelete = false;
+                return;
+            }
+
             this.openCellMultiEditDelete = false;
 
             if(boolean) {
                 this.showCellMultiEditModal = true;
             }
+
             handleReload(
                 this.rooms.map(room => room.id),
                 this.days.map(day => day.full_day),
@@ -1452,6 +1655,10 @@ export default {
                     }
                 })
             );
+
+            if (!boolean) {
+                this.multiEditCellByDayAndUser = {};
+            }
         },
         toggleDayServiceMode() {
             this.highlightMode = false;
@@ -1709,7 +1916,7 @@ export default {
                 {
                     sortBy: shiftPlanWorkerSortEnumName
                 }, {
-                    preserveState: false,
+                    preserveState: true,
                     preserveScroll: true,
                 }
             );
@@ -1725,41 +1932,6 @@ export default {
                     preserveScroll: true,
                 }
             );
-        },
-        sortCraftUsers(users) {
-            if (this.$page.props.user.shift_plan_user_sort_by_id === null) {
-                return users.sort((a, b) => a.element.id > b.element.id ? 1 : a.element.id < b.element.id ? -1 : 0);
-            }
-
-            return users.sort((workerA, workerB) => {
-                let shiftPlanUserSortBy = this.$page.props.user.shift_plan_user_sort_by_id;
-
-                let getCompareName = (worker) => {
-                    let workerIsUserOrFreelancer = worker.type === 0 || worker.type === 1;
-                    let sortByFirstName = shiftPlanUserSortBy === 'ALPHABETICALLY_ASCENDING_FIRST_NAME' ||
-                        shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME';
-                    return sortByFirstName ?
-                        (
-                            workerIsUserOrFreelancer ?
-                                worker.element.first_name :
-                                worker.element.provider_name
-                        ) :
-                        (
-                            workerIsUserOrFreelancer ?
-                                worker.element.last_name :
-                                worker.element.provider_name
-                        );
-                };
-
-                if (
-                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_FIRST_NAME' ||
-                    shiftPlanUserSortBy === 'ALPHABETICALLY_DESCENDING_LAST_NAME'
-                ) {
-                    return getCompareName(workerB).localeCompare(getCompareName(workerA));
-                }
-
-                return getCompareName(workerA).localeCompare(getCompareName(workerB));
-            });
         },
         handleShiftAndEventForMultiEdit(checked, shift, event) {
             if (checked && this.userToMultiEditCurrentShifts.includes(shift.id)) {
@@ -1784,7 +1956,36 @@ export default {
                 shift: shift,
                 event: event
             });
-        }
+        },
+        saveShiftQualificationFilter(event) {
+            let isChecked = event.target.checked,
+                shiftQualificationId = Number.parseInt(event.target.value);
+
+            if (!isChecked) {
+                this.userShiftPlanShiftQualificationFilters.splice(
+                    this.userShiftPlanShiftQualificationFilters.findIndex((id) => id === shiftQualificationId),
+                    1
+                );
+            } else {
+                this.userShiftPlanShiftQualificationFilters.push(shiftQualificationId);
+            }
+
+            router.patch(
+                route(
+                    'user.update.show_shift-qualifications',
+                    {
+                        user: this.$page.props.user.id
+                    }
+                ),
+                {
+                    show_qualifications: this.userShiftPlanShiftQualificationFilters
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true
+                }
+            );
+        },
     },
     beforeUnmount() {
         window.removeEventListener('resize', this.updateHeight);

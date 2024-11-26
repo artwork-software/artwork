@@ -1,7 +1,7 @@
 <template>
     <tr class="pl-2 h-full cursor-pointer w-full xsLight pb-1" @click="craft.value.closed = !craft.value.closed">
         <td>
-            <div class="py-2.5 px-2 bg-gray-50/30 w-full" :class="craft.value.closed ? 'rounded-lg' : 'rounded-t-lg'">
+            <div class="py-2.5 px-2  w-full" :class="craft.value.closed ? 'rounded-lg' : 'rounded-t-lg'">
                 <div class="flex stickyYAxisNoMarginLeft w-48 items-center gap-x-2">
                     {{craft.value.name}}
                     <ChevronDownIcon

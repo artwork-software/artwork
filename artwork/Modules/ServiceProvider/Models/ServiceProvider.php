@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
+use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
@@ -45,6 +46,7 @@ class ServiceProvider extends Model implements DayServiceable
     use CanHasDayServices;
     use HasIndividualTimes;
     use HasShiftPlanComments;
+    use Searchable;
 
     protected $fillable = [
         'profile_image',
@@ -92,6 +94,11 @@ class ServiceProvider extends Model implements DayServiceable
     public function assignedCrafts(): morphToMany
     {
         return $this->morphToMany(Craft::class, 'craftable');
+    }
+
+    public function managingCrafts(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
     }
 
     public function shiftQualifications(): BelongsToMany
@@ -161,5 +168,18 @@ class ServiceProvider extends Model implements DayServiceable
     public function scopeCanWorkShifts(Builder $builder): Builder
     {
         return $builder->where('can_work_shifts', true);
+    }
+
+    public function craftsToManage(): MorphToMany
+    {
+        return $this->morphToMany(Craft::class, 'craft_manager');
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getManagingCraftIds(): array
+    {
+        return $this->craftsToManage()->pluck('id')->toArray();
     }
 }

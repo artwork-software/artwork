@@ -1,9 +1,8 @@
 <template>
-    <tr @mouseover="showItemMenu()" @mouseout="closeItemMenu()" class="cursor-grab group" :id="'item_' + item.id"  draggable="true" @dragstart="onDragStart">
+    <tr @mouseover="showItemMenu()" @mouseout="closeItemMenu()" class="cursor-grab group" :id="'item_' + item.id"  :draggable="canDraggable" @dragstart="onDragStart">
         <template v-for="(cell) in item.cells"
                   :key="cell.id">
-            <InventoryCell :cell="cell"
-                           @is-editing-cell-value="handleCellIsEditing"/>
+            <InventoryCell :cell="cell" @is-editing-cell-value="handleCellIsEditing"/>
         </template>
         <td class="relative">
             <div class="absolute right-0 group-hover:visible invisible top-2" v-if="can('can manage inventory stock') || hasAdminRole()">
@@ -41,8 +40,15 @@ import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 
+const canDraggable = computed(() => {
+    return inventoryCellsEditing.value.length === 0;
+});
 const onDragStart = (event) => {
     if(!can('can manage inventory stock') || !hasAdminRole()){
+        return;
+    }
+
+    if (inventoryCellsEditing.value.length > 0) {
         return;
     }
 

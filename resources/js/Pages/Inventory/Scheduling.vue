@@ -1,7 +1,7 @@
 <template>
     <InventoryHeader :title="$t('Inventory Scheduling')">
         <div class="mb-3">
-            <InventoryFunctionBar :date-value="dateValue" @scroll-to-next="scrollToNext" @scroll-to-previous="scrollToPrevious" />
+            <InventoryFunctionBar :date-value="dateValue" @scroll-to-next="scrollToNext" @scroll-to-previous="scrollToPrevious" @nextTimeRange="nextTimeRange" @previousTimeRange="previousTimeRange" />
         </div>
 
         <div class="-ml-5">
@@ -43,7 +43,7 @@
                                             isFullscreen || showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft'
                                         ]">
                                         <Link href="#" class="flex font-semibold items-center ml-4">
-                                            {{ room[days[0].full_day].roomName }}
+                                            {{ foundedRoomName(room) }}
                                         </Link>
                                     </th>
                                     <td v-for="day in days"
@@ -99,33 +99,43 @@
                     :style="showUserOverview ? { height: userOverviewHeight + 'px' } : { height: '20px' }">
                     <div class="flex items-center justify-between w-full fixed py-5 z-50 bg-artwork-navigation-background px-3"
                         :style="{ top: calculateTopPositionOfUserOverView }">
-                        <Switch @click="toggleMultiEditMode"
-                            v-model="multiEditMode"
-                            :class="[
-                                multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200',
-                                'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none'
-                            ]">
-                            <span class="sr-only">Use setting</span>
-                            <span :class="[
-                                    multiEditMode ? 'translate-x-7' : 'translate-x-0',
-                                    'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
-                                ]">
-                                <span :class="[
-                                        multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in',
-                                        'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity'
-                                    ]"
-                                    aria-hidden="true">
-                                    <IconPencil stroke-width="1.5" class="w-5 h-5" />
-                                </span>
-                                <span :class="[
-                                        multiEditMode ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out',
-                                        'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity'
-                                    ]"
-                                    aria-hidden="true">
-                                    <IconPencil stroke-width="1.5" class="w-5 h-5" />
-                                </span>
-                            </span>
+                        <Switch @click="toggleMultiEditMode" v-model="multiEditMode" :class="[multiEditMode ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-5 w-10 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                                    <span :class="[multiEditMode ? 'translate-x-5' : 'translate-x-0', 'inline-block h-6 w-6 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                        <span :class="[multiEditMode ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in z-20', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                        <span :class="[multiEditMode ? 'opacity-100 duration-200 ease-in z-20' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                            <ToolTipComponent
+                                                icon="IconPencil"
+                                                icon-size="h-4 w-4"
+                                                :tooltip-text="$t('Edit')"
+                                                direction="right"
+                                            />
+                                        </span>
+                                    </span>
                         </Switch>
+                        <div v-if="multiEditMode" class="pointer-events-none">
+                            <div class="w-full -mt-2.5">
+                                <div class="flex items-center justify-center h-full gap-x-2">
+                                    <div>
+                                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" text="Abbrechen" class="text-xs pointer-events-auto" />
+                                    </div>
+                                    <div>
+                                        <AddButtonSmall
+                                            @click="openMultiEditModal"
+                                            :disabled="!itemIsSelectedForMultiEdit"
+                                            :text="$t('{0} Element(s) Book', [checkedItems.length])"
+                                            class="text-xs pointer-events-auto"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="mr-20 flex items-center">
                             <input v-if="searchOpened"
                                    class="w-60 h-10 bg-artwork-navigation-background border text-white border-gray-500 rounded-lg placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary"
@@ -134,9 +144,15 @@
                                    :placeholder="$t('Search')"
                                    v-model="searchValue"
                             />
-                            <IconSearch v-if="!searchOpened"
-                                        class="h-7 w-7 cursor-pointer hover:text-blue-500 text-white"
-                                        @click="toggleSearch()"/>
+                            <ToolTipComponent
+                                v-if="!searchOpened"
+                                icon="IconSearch"
+                                icon-size="h-5 w-5"
+                                classes="text-white"
+                                :tooltip-text="$t('Search')"
+                                direction="left"
+                                @click="toggleSearch"
+                            />
                             <IconX v-else
                                    class="h-7 w-7 ml-3 cursor-pointer hover:text-blue-500 text-white"
                                    @click="toggleSearch(true)"/>
@@ -154,23 +170,7 @@
                 </div>
             </div>
         </div>
-        <div v-if="multiEditMode" class="pointer-events-none">
-            <div class="fixed w-full h-24 z-50 bottom-0 -ml-9">
-                <div class="flex items-center justify-center h-full gap-x-2">
-                    <div>
-                        <AddButtonSmall type="cancel" no-icon @click="toggleMultiEditMode" text="Abbrechen" class="text-xs pointer-events-auto" />
-                    </div>
-                    <div>
-                        <AddButtonSmall
-                            @click="openMultiEditModal"
-                            :disabled="!itemIsSelectedForMultiEdit"
-                            :text="$t('{0} Element(s) Book', [checkedItems.length])"
-                            class="text-xs pointer-events-auto"
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
+
         <MultiEditInventoryModal :selected-items="checkedItems" :events="selectedEventsForMultiEdit" v-if="showMultiEditModal" @closed="closeMultiEditModal" />
 
         <SideNotification v-if="errorMessagesMultiEdit" :text="errorMessagesMultiEdit" @close="errorMessagesMultiEdit = ''" />
@@ -179,7 +179,7 @@
 
 <script setup>
 import {onMounted, onUpdated, ref, watch} from "vue";
-import {Link} from "@inertiajs/vue3";
+import {Link, router} from "@inertiajs/vue3";
 import {IconCaretUpDown, IconChevronsDown, IconPencil, IconSearch, IconX} from "@tabler/icons-vue";
 import {Switch} from "@headlessui/vue";
 
@@ -198,6 +198,9 @@ import useCraftFilterAndSearch from "@/Pages/Inventory/Composeables/useCraftFilt
 import {SelectorIcon} from "@heroicons/vue/solid";
 import {usePermission} from "@/Composeables/Permission.js";
 import {usePage} from "@inertiajs/vue3";
+import debounce from "lodash.debounce";
+import dayjs from "dayjs";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 const { can, canAny, hasAdminRole } = usePermission(usePage().props);
 const $t = useTranslation(),
     props = defineProps({
@@ -222,8 +225,9 @@ const $t = useTranslation(),
 const isFullscreen = ref(false);
 const showUserOverview = ref(true);
 const windowHeight = ref(window.innerHeight);
-const userOverviewHeight = ref(570);
+const userOverviewHeight = ref(usePage().props.user.drawer_height);
 const userOverview = ref(null);
+const dateValueCopy = ref(props.dateValue);
 const shiftPlan = ref(null);
 const currentDayOnView = ref(props.days ? props.days[0] : null);
 const startY = ref(0);
@@ -294,6 +298,12 @@ const toggleMultiEditMode = () => {
     }
 };
 
+const foundedRoomName = (room) => {
+    const roomArray = Object.values(room);
+    const foundRoom = roomArray.find((room) => room.roomName);
+    return foundRoom ? foundRoom.roomName : null;
+};
+
 const openMultiEditModal = () => {
     if (checkedItems.value.length === 0) {
         errorMessagesMultiEdit.value = $t('Please select at least one inventory item.')
@@ -320,6 +330,39 @@ const openMultiEditModal = () => {
     errorMessagesMultiEdit.value = '';
     showMultiEditModal.value = true;
 };
+
+const nextTimeRange = () => {
+    const dateDifference = calculateDateDifference();
+    dateValueCopy.value[0] = dayjs(dateValueCopy.value[0]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
+    dateValueCopy.value[1] = dayjs(dateValueCopy.value[1]).add(dateDifference + 1, 'day').format('YYYY-MM-DD');
+    updateTimes();
+}
+
+const previousTimeRange = () => {
+    const dateDifference = calculateDateDifference();
+    dateValueCopy.value[0] = dayjs(dateValueCopy.value[0]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
+    dateValueCopy.value[1] = dayjs(dateValueCopy.value[1]).subtract(dateDifference + 1, 'day').format('YYYY-MM-DD');
+    updateTimes();
+}
+
+const calculateDateDifference = () => {
+    const date1 = new Date(dateValueCopy.value[0]);
+    const date2 = new Date(dateValueCopy.value[1]);
+    const timeDifference = date2.getTime() - date1.getTime();
+    return timeDifference / (1000 * 3600 * 24);
+}
+
+const updateTimes = () => {
+    console.log('updateTimes', dateValueCopy.value[0], dateValueCopy.value[1]);
+    router.patch(route('update.user.calendar.filter.dates', usePage().props.user.id), {
+        start_date: dateValueCopy.value[0],
+        end_date: dateValueCopy.value[1],
+    }, {
+        preserveScroll: true,
+        preserveState: true
+    });
+}
+
 
 const checkIfLastEventInEventData = (event, eventData) => {
     return eventData.indexOf(event) === eventData.length - 1;
@@ -365,6 +408,7 @@ const resizing = (event) => {
 
 const stopResize = (event) => {
     event.preventDefault();
+    debounceApplyUserOverviewHeight();
     document.removeEventListener('mousemove', resizing);
     document.removeEventListener('mouseup', stopResize);
 };
@@ -480,6 +524,19 @@ const goToPeriod = (period, type) => {
     }
 };
 
+
+
+const applyUserOverviewHeight = () => {
+    router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
+        drawer_height: userOverviewHeight.value
+    }, {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
+
+
+const debounceApplyUserOverviewHeight = debounce(applyUserOverviewHeight, 500);
 watch(
     () => filteredCrafts,
     (newCrafts) => {

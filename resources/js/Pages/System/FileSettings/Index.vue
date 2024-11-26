@@ -25,7 +25,7 @@
             <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
               <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                 <ListboxOption as="template" v-for="fileType in imageFileTypes" :key="fileType" :value="fileType" v-slot="{ active, selected }">
-                  <li @click="addfileTypeToArea(area, fileType)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                  <li @click="addFileTypeToArea(area, fileType)" :class="[active ? 'bg-artwork-buttons-create text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ fileType }}</span>
                     <span v-if="selected" :class="[active ? 'text-white' : 'text-artwork-buttons-create', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
@@ -36,12 +36,27 @@
             </transition>
           </div>
         </Listbox>
-        <div class="flex flex-col space-y-4">
-          <TagComponent v-for="fileType in area.fileTypes"
-                        :key="fileType.name"
-                        :displayed-text="fileType.name"
-                        hide-x="true"/>
+        <div class="flex">
+          <div class="mt-2">
+            <SliderInput
+                v-model="sliderValue"
+                :min="1"
+                :max="150"
+                :step="1"
+                :show-value="true"
+                :label="$t('Max file size in MB')"
+                
+            />
+          </div>
         </div>
+      </div>
+      <div class="flex flex-col pace-y-4 mt-4">
+        <TagComponent v-for="fileType in area.fileTypes"
+                      :key="fileType.name"
+                      :method="removeFileTypeFromArea"
+                      :property="{area: area, fileType: fileType}"
+                      :displayed-text="fileType.name"
+                      />
       </div>
     </div>
   </ToolSettingsHeader>
@@ -55,6 +70,7 @@ import {useTranslation} from "@/Composeables/Translation.js";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import SliderInput from "@/Components/Form/SliderInput.vue";
 
 const $t = useTranslation(),
     props = defineProps({
@@ -72,9 +88,16 @@ const $t = useTranslation(),
       },
     })
 
-const addfileTypeToArea = (area, fileType) => {
+const addFileTypeToArea = (area, fileType) => {
   if (!area.fileTypes.find((m) => m.name === fileType)) {
     area.fileTypes.push({name: fileType})
   }
+}
+
+const removeFileTypeFromArea = (data) => {
+  const area = data.area;
+  const fileType = data.fileType;
+  
+  console.log(area, fileType)
 }
 </script>

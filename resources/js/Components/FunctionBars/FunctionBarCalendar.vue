@@ -101,7 +101,6 @@
                         icon="IconZoomOut"
                         icon-size="h-7 w-7"
                         :disabled="zoom_factor <= 0.2"
-
                         @click="decrementZoomFactor"
                         v-if="!atAGlance"
                     />
@@ -150,77 +149,130 @@
                                 class="w-80 absolute right-0 top-12 origin-top-right shadow-lg bg-artwork-navigation-background rounded-lg ring-1 ring-black p-2 text-white opacity-100 z-50">
                                 <div class="w-76 p-6">
                                     <div class="flex items-center py-1">
-                                        <input v-model="userCalendarSettings.high_contrast"
+                                        <input id="cb-high-contrast"
+                                               v-model="userCalendarSettings.high_contrast"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <div
-                                            :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                            class=" ml-4 my-auto text-secondary">{{ $t('High contrast') }}
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="!project">
-                                        <input v-model="userCalendarSettings.project_status"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <div
-                                            :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                            class=" ml-4 my-auto text-secondary">{{ $t('Project Status') }}
-                                        </div>
-                                    </div>
-                                    <div class="hidden items-center py-1">
-                                        <input v-model="userCalendarSettings.options"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class=" ml-4 my-auto text-secondary">{{ $t('Option prioritization') }}</p>
-                                    </div>
-                                    <div class="flex items-center py-1" v-if="!project">
-                                        <input v-model="userCalendarSettings.project_management"
-                                               type="checkbox"
-                                               class="input-checklist"/>
-                                        <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class=" ml-4 my-auto text-secondary">{{ $t('Project managers') }}</p>
+                                        <label for="cb-high-contrast"
+                                               :class="userCalendarSettings.high_contrast ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('High contrast') }}
+                                        </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input v-model="userCalendarSettings.repeating_events"
+                                        <input id="cb-project-artists"
+                                               v-model="userCalendarSettings.project_artists"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class=" ml-4 my-auto text-secondary">{{ $t('Repeat event') }}</p>
+                                        <label for="cb-project-artists"
+                                               :class="userCalendarSettings.project_artists ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Artists') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-project-status"
+                                               v-model="userCalendarSettings.project_status"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-project-status"
+                                               :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Project Status') }}
+                                        </label>
+                                    </div>
+                                    <!-- hidden on purpose: @todo: to clarify -->
+                                    <div class="hidden items-center py-1">
+                                        <input id="cb-options"
+                                               v-model="userCalendarSettings.options"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-options"
+                                               :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Option prioritization') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-project-management"
+                                               v-model="userCalendarSettings.project_management"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-project-management"
+                                               :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Project managers') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1">
+                                        <input id="cb-repeating-events"
+                                               v-model="userCalendarSettings.repeating_events"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-repeating-events"
+                                               :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Repeat event') }}
+                                        </label>
                                     </div>
                                     <div class="flex items-center py-1" v-if="canAny(['can manage workers', 'can plan shifts'])">
-                                        <input v-model="userCalendarSettings.work_shifts"
+                                        <input id="cb-work-shifts"
+                                               v-model="userCalendarSettings.work_shifts"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class=" ml-4 my-auto text-secondary">{{ $t('Shifts') }}</p>
+                                        <label for="cb-work-shifts"
+                                               :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Shifts') }}
+                                        </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input v-model="userCalendarSettings.description"
+                                        <input id="cb-description"
+                                               v-model="userCalendarSettings.description"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <p :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary">{{ $t('Description') }}</p>
+                                        <label for="cb-description"
+                                               :class="userCalendarSettings.description ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Description') }}
+                                        </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input v-model="userCalendarSettings.event_name"
+                                        <input id="cb-event-name"
+                                               v-model="userCalendarSettings.event_name"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <p :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary">{{ $t('Event name') }}</p>
+                                        <label for="cb-event-name"
+                                               :class="userCalendarSettings.event_name ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Event name') }}
+                                        </label>
                                     </div>
                                     <div class="flex items-center py-1">
-                                        <input v-model="userCalendarSettings.expand_days"
+                                        <input id="cb-expand-days" v-model="userCalendarSettings.expand_days"
                                                type="checkbox"
                                                class="input-checklist"/>
-                                        <p :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                           class="ml-4 my-auto text-secondary">{{ $t('Expand days') }}</p>
+                                        <label for="cb-expand-days"
+                                               :class="userCalendarSettings.expand_days ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Expand days') }}
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center py-1" v-if="usePage().props.event_status_module">
+                                        <input id="cb-use-event-status-color"
+                                               v-model="userCalendarSettings.use_event_status_color"
+                                               type="checkbox"
+                                               class="input-checklist"/>
+                                        <label for="cb-use-event-status-color"
+                                               :class="userCalendarSettings.use_event_status_color ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                               class="ml-4 my-auto text-secondary cursor-pointer">
+                                            {{ $t('Use event status colour') }}
+                                        </label>
                                     </div>
                                 </div>
                                 <div class="flex justify-end">
-                                    <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{
-                                            $t('Save')
-                                        }}
+                                    <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">
+                                        {{ $t('Save') }}
                                     </button>
                                 </div>
                             </MenuItems>
@@ -278,18 +330,7 @@
 <script setup>
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import {computed, inject, nextTick, ref, watch} from "vue";
-import {
-    IconArrowsDiagonal,
-    IconCalendarStar,
-    IconChevronLeft,
-    IconChevronRight,
-    IconFileExport,
-    IconGeometry,
-    IconList,
-    IconSettings,
-    IconZoomIn,
-    IconZoomOut
-} from "@tabler/icons-vue";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
@@ -332,6 +373,7 @@ const showCalendarAboInfoModal = ref(false);
 const projectSearchInput = ref(null);
 const userCalendarSettings = useForm({
     project_status: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_status : false,
+    project_artists: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_artists : false,
     options: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.options : false,
     project_management: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.project_management : false,
     repeating_events: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.repeating_events : false,
@@ -340,6 +382,7 @@ const userCalendarSettings = useForm({
     event_name: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.event_name : false,
     high_contrast: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.high_contrast : false,
     expand_days: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.expand_days : false,
+    use_event_status_color: usePage().props.user.calendar_settings ? usePage().props.user.calendar_settings.use_event_status_color : false,
 });
 
 const projectSearch = ref('');

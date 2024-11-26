@@ -23,14 +23,6 @@
                     }}
                 </div>
             </div>
-
-            <!--<div class="w-full overflow-y-scroll hidden" >
-                <div class="mb-1 ml-4 max-w-7xl">
-                    <div class="flex">
-                        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
-                    </div>
-                </div>
-            </div>-->
         </div>
         <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
             {{ $t('The selected project has no dates') }}
@@ -128,6 +120,7 @@
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
         :requires-axios-requests="true"
         @closed="eventComponentClosed"
+        :event-statuses="eventStatuses"
     />
 
     <ConfirmDeleteModal
@@ -186,6 +179,7 @@
             {{ $t('Your view is being processed, please wait a moment.') }}
         </div>
     </div>
+
 </template>
 
 <script setup>
@@ -242,6 +236,11 @@ const props = defineProps({
             required: false,
             default: null
         },
+        eventStatuses: {
+            type: Object,
+            required: false,
+            default: null
+        }
     }),
     $t = useTranslation(),
     {getDaysOfEvent, formatEventDateByDayJs, useCalendarReload} = useEvent(),
@@ -314,7 +313,10 @@ const props = defineProps({
                 let projectLeaders = event.projectLeaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
-                    if (createdBy.id === usePage().props.user.id || projectLeaders.some((leader) => leader.id === usePage().props.user.id)) {
+                    if (
+                        createdBy.id === usePage().props.user.id ||
+                        projectLeaders.some((leader) => leader.id === usePage().props.user.id)
+                    ) {
                         return true;
                     }
                 } else if (createdBy.id === usePage().props.user.id) {

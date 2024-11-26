@@ -32,6 +32,7 @@
                     :first_project_budget_tab_id="first_project_budget_tab_id"
                     :rooms="headerObject.rooms"
                     :eventsInProject="headerObject.project.events"
+                    :eventStatuses="headerObject.eventStatuses"
                 />
             </div>
         </div>
@@ -74,6 +75,7 @@
                             :projectSectorIds="headerObject.projectSectorIds"
                             :eventTypes="headerObject.eventTypes"
                             :rooms="headerObject.rooms"
+                            :eventStatuses="headerObject.eventStatuses"
                         />
                     </div>
                 </div>

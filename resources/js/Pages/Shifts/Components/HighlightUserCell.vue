@@ -7,16 +7,16 @@
         <div class="text-left cursor-pointer" :class="[$page.props.user.compact_mode ? 'h-4' : 'h-8']">
             <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
-                <div class="truncate">
-                    {{ item.first_name }} {{ item.last_name }}
-                </div>
-                <div class="ml-1">(i)</div>
+                    <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
+                        {{ item.first_name }} {{ item.last_name }}
+                    </div>
+                    <div class="ml-1">(i)</div>
                 </div>
                 <div class="text-xs w-full flex" v-if="!$page.props.user.compact_mode"> {{plannedHours }}  {{expectedHours ? ' | ' + expectedHours : ''}}</div>
             </div>
             <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
-                    <div class="truncate">
+                    <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
                         {{ item.first_name }} {{ item.last_name }}
                     </div>
                     <div class="ml-1"> (e) </div>
@@ -25,7 +25,7 @@
             </div>
             <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-28'">
                 <div class="flex">
-                    <div class="truncate">
+                    <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
                         {{ item.provider_name }}
                     </div>
                     <div class="ml-1"> (DL) </div>
@@ -41,7 +41,15 @@ import ColorHelper from "@/Mixins/ColorHelper.vue";
 
 export default defineComponent({
     name: "HighlightUserCell",
-    props: ['item', 'type','plannedHours','expectedHours','highlightedUser', 'color'],
+    props: [
+        'item',
+        'type',
+        'plannedHours',
+        'expectedHours',
+        'highlightedUser',
+        'color',
+        'isManagingCraft'
+    ],
     emits: ['highlightShiftsOfUser'],
     mixins: [ColorHelper],
     methods: {

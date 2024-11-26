@@ -1,9 +1,9 @@
 <template>
-    <div class="flex items-center relative">
-        <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes" :disabled="disabled">
+    <div class="flex items-center group relative">
+        <button class="focus:outline-none" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
-        <div v-if="show">
+        <div class="hidden group-hover:block">
             <div v-if="direction === 'top'" class="absolute z-50 -top-3 text-center w-fit text-nowrap p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg transform -translate-x-1/2 -translate-y-full left-1/2">
                 {{ tooltipText }}
                 <div class="absolute bg-black h-3 w-3 transform rounded-sm rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5"></div>

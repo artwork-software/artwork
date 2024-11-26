@@ -1,6 +1,6 @@
 <template>
     <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(event.event_type_color, percentage), fontsize: fontSize, lineHeight: lineHeight }"
+        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group event-item relative"
         :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
@@ -28,7 +28,7 @@
         <div class="flex">
             <div class="px-1 py-1">
                 <div
-                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
+                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                     class="flex justify-between flex-wrap">
                     <div class="truncate max-w-40">
@@ -37,6 +37,13 @@
                            class="text-ellipsis items-center w-full">
                             {{ event.projectName }}
                         </a>
+                    </div>
+                    <div v-if="usePage().props.user.calendar_settings.project_artists"
+                         class="flex items-center w-full">
+                        <div v-if="event.projectArtists" :style="{ width: width - (64 * zoom_factor) + 'px'}"
+                             class=" truncate">
+                            {{ event.projectArtists }}
+                        </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
                          class="flex items-center w-full">
@@ -347,7 +354,7 @@
 <script setup>
 import {computed, onMounted, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
-import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
@@ -451,9 +458,13 @@ const {
 
 const textColorWithDarken = computed(() => {
     const percent = 75;
-    const color = props.event.event_type_color;
+    const color = getColorBasedOnUserSettings.value;
     if (!color) return 'rgb(180, 180, 180)';
     return `rgb(${parseInt(color.slice(-6, -4), 16) - percent}, ${parseInt(color.slice(-4, -2), 16) - percent}, ${parseInt(color.slice(-2), 16) - percent})`;
+});
+
+const getColorBasedOnUserSettings = computed(() => {
+    return usePage().props.user.calendar_settings.use_event_status_color ? props.event.eventStatusColor : props.event.event_type_color;
 });
 
 const totalHeight = computed(() => {

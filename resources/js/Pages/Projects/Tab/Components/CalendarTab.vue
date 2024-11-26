@@ -15,6 +15,7 @@
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab'].personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab'].user_filters"
                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                    :event-statuses="eventStatuses"
                 />
             </div>
 
@@ -24,8 +25,11 @@
                               :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
                               :days="days ?? loadedProjectInformation['CalendarTab'].days"
                               :calendar-data="calendar ?? loadedProjectInformation['CalendarTab'].calendar"
-                              :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"/>
+                                :event-statuses="eventStatuses"
+                              :events-without-room="eventsWithoutRoom ?? loadedProjectInformation['CalendarTab'].eventsWithoutRoom"
+                />
                 <IndividualCalendarAtGlanceComponent v-else
+                                                     :event-statuses="eventStatuses"
                                                      :atAGlance="atAGlance"
                                                      :project="project ?? headerObject.project"
                                                      :rooms="rooms ?? loadedProjectInformation['CalendarTab'].rooms"
@@ -70,7 +74,8 @@ const props = defineProps([
     'loadedProjectInformation',
     'headerObject',
     'first_project_tab_id',
-    'first_project_calendar_tab_id'
+    'first_project_calendar_tab_id',
+    'eventStatuses'
 ]),
 atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
@@ -81,4 +86,5 @@ provide('first_project_calendar_tab_id', props.first_project_calendar_tab_id ?? 
 provide('user_filters', props.user_filters ?? props.loadedProjectInformation['CalendarTab'].user_filters);
 provide('personalFilters', props.personalFilters ?? props.loadedProjectInformation['CalendarTab'].personalFilters);
 provide('filterOptions', props.filterOptions ?? props.loadedProjectInformation['CalendarTab'].filterOptions);
+provide('eventStatuses', props.eventStatuses ?? props.loadedProjectInformation['CalendarTab'].eventStatuses);
 </script>

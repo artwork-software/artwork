@@ -1,7 +1,7 @@
 import {useTranslation} from "@/Composeables/Translation.js";
 
 export function useSortEnumTranslation () {
-    const getSortEnumTranslation = (sortEnum) => {
+    const getSortEnumTranslation = (sortEnum, placeholders) => {
         let parts = sortEnum.split('_');
         let translationKey = parts[0].slice(0,1) +
             parts[0].substring(1).toLowerCase() +
@@ -15,7 +15,7 @@ export function useSortEnumTranslation () {
             translationKey += leftover.join(' ');
         }
 
-        return useTranslation()(translationKey);
+        return useTranslation()(translationKey, placeholders);
     }
 
     return {

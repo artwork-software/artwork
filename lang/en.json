@@ -2133,5 +2133,9 @@
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Here you can specify the department management for this craft. It will be highlighted in the overview.",
     "Craft manager": "Craft manager",
-    "Artists": "Artists"
+    "Artists": "Artists",
+    "PDF_CALENDAR_EXPORT": "PDF Calendar Export",
+    "EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT": "Budget Deadline Export",
+    "EXCEL_EVENT_LIST_EXPORT": "Excel Event List Export",
+    "EXCEL_CALENDAR_EXPORT": "Excel Calendar Export"
 }

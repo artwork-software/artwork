@@ -2134,5 +2134,9 @@
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Hier kannst du die Abteilungsleitung für dieses Gewerk festlegen. Sie wird in der Übersicht hervorgehoben.",
     "Craft manager": "Gewerkleitung",
-    "Artists": "Künstler*innen"
+    "Artists": "Künstler*innen",
+    "PDF_CALENDAR_EXPORT": "PDF Kalender Export",
+    "EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT": "Budget-Stichtag Export",
+    "EXCEL_EVENT_LIST_EXPORT": "Excel Terminliste Export",
+    "EXCEL_CALENDAR_EXPORT": "Excel Kalender Export"
 }

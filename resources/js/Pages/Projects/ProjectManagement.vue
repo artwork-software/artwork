@@ -272,11 +272,14 @@
             :access_budget="projectBudgetAccess"
             @closed="closeProjectHistoryModal"
         />
-        <project-export-budgets-by-budget-deadline-modal
-            v-if="showProjectExportBudgetsByBudgetDeadlineModal"
-            :show="showProjectExportBudgetsByBudgetDeadlineModal"
-            @closeProjectExportBudgetsByBudgetDeadlineModal="closeProjectExportBudgetsByBudgetDeadlineModal"
-        />
+        <export-modal v-if="showProjectExportBudgetsByBudgetDeadlineModal"
+                      @close="showProjectExportBudgetsByBudgetDeadlineModal = false"
+                      :export-tab-enums="[
+                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT,
+                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
+                          exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                          exportTabEnums.PDF_CALENDAR_EXPORT,
+                      ]"/>
     </app-layout>
 </template>
 
@@ -318,8 +321,6 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import {IconCheck, IconPin} from "@tabler/icons-vue";
-import ProjectExportBudgetsByBudgetDeadlineModal
-    from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -343,11 +344,14 @@ import debounce from 'lodash.debounce'
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
-
+const exportTabEnums = useExportTabEnums();
 export default defineComponent({
     components: {
+        ExportModal,
         ToolTipComponent,
         SideNotification,
         IconCheck,
@@ -362,7 +366,6 @@ export default defineComponent({
         BaseButton,
         SuccessModal,
         IconPin,
-        ProjectExportBudgetsByBudgetDeadlineModal,
         DocumentReportIcon,
         ProjectCreateModal,
         ProjectDataEditModal,
@@ -464,7 +467,8 @@ export default defineComponent({
             page: route().params.page ?? 1,
             perPage: route().params.entitiesPerPage ?? 10,
             showAddBulkEventModal: false,
-            dropFeedbackShown: null
+            dropFeedbackShown: null,
+            exportTabEnums: exportTabEnums
         }
     },
     computed: {
@@ -564,9 +568,6 @@ export default defineComponent({
         },
         openProjectExportBudgetsByBudgetDeadlineModal() {
             this.showProjectExportBudgetsByBudgetDeadlineModal = true;
-        },
-        closeProjectExportBudgetsByBudgetDeadlineModal() {
-            this.showProjectExportBudgetsByBudgetDeadlineModal = false;
         },
         openSearchbar(){
             this.showSearchbar = !this.showSearchbar;

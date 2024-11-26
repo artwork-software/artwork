@@ -14,7 +14,7 @@
                                      leave-from="opacity-100 translate-y-0 sm:scale-100"
                                      leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel class="modal" :class="[modalSize, fullModal ? '' : 'sm:p-6 px-4 pt-5 pb-4', showBackdrop ? '' : 'border border-gray-300']"  ref="containerRef">
-                            <div class="absolute top-0 right-0 pt-4 pr-4 hidden sm:block z-50">
+                            <div class="absolute top-3 right-3 hidden sm:block z-50">
                                 <div class="flex items-center gap-x-3">
                                     <div class="text-gray-400 hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out cursor-pointer">
                                         <div @click="showBackdrop = !showBackdrop">
@@ -150,57 +150,6 @@ export default {
                 // Remove no-select class when dragging stops
                 document.body.classList.remove('select-none');
             });
-            /*const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
-            const dragHandle = this.$refs.dragHandle;
-
-            if (!container || !(container instanceof HTMLElement) || !dragHandle) {
-                console.error('containerRef or dragHandle is not a valid DOM element');
-                return;
-            }
-
-            this.isDragging = false;
-            let offsetX, offsetY;
-
-            const onMouseDown = (event) => {
-                event.preventDefault();
-                this.isDragging = true;
-
-                // Berechne den Offset zwischen Mausposition und der aktuellen Position des Modals
-                const rect = container.getBoundingClientRect();
-                offsetX = event.clientX - rect.left;
-                offsetY = event.clientY - rect.top;
-
-                // Füge Event-Listener für Mousemove und Mouseup hinzu
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-            };
-
-            const onMouseMove = (event) => {
-                if (!this.isDragging) return;
-
-                // Berechne die neue Position basierend auf der aktuellen Mausposition minus dem Offset
-                const newX = event.clientX - offsetX;
-                const newY = event.clientY - offsetY;
-
-                // Setze die neue Position des Modals sofort
-                container.style.position = 'absolute';
-                container.style.left = `${newX}px`;
-                container.style.top = `${newY}px`;
-            };
-
-            const onMouseUp = () => {
-                if (!this.isDragging) return;
-
-                this.isDragging = false;
-
-                // Entferne die Event-Listener
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            };
-
-            // Füge den mousedown Event-Listener nur am Drag-Handle hinzu
-            dragHandle.addEventListener('mousedown', onMouseDown);
-             */
         },
     }
 }

@@ -17,6 +17,7 @@ class ProjectSettingsService
         $projectCreateSettings->managers = $request->boolean('managers');
         $projectCreateSettings->cost_center = $request->boolean('cost_center');
         $projectCreateSettings->budget_deadline = $request->boolean('budget_deadline');
+        $projectCreateSettings->show_artists = $request->boolean('show_artists');
         $projectCreateSettings->save();
     }
 }

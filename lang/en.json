@@ -1848,6 +1848,7 @@
     "Should it be possible to add the project management when creating a project?": "Should it be possible to add the project management when creating a project?",
     "Do you want to add the cost unit of the project when creating it?": "Do you want to add the cost unit of the project when creating it?",
     "Would you like to enter the project budget deadline when you create a project?": "Would you like to enter the project budget deadline when you create a project?",
+    "Would you like to add artists on project creation?": "Would you like to add artists on project creation?",
     "Saved. The changes have been successfully applied.": "Saved. The changes have been successfully applied.",
     "Settings for project creation": "Settings for project creation",
     "Here you have the option of making settings for the creation of projects.": "Here you have the option of making settings for the creation of projects.",
@@ -2131,5 +2132,6 @@
     "Use event status colour": "Use event status colour",
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Here you can specify the department management for this craft. It will be highlighted in the overview.",
-    "Craft manager": "Craft manager"
+    "Craft manager": "Craft manager",
+    "Artists": "Artists"
 }

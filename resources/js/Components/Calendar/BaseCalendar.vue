@@ -23,14 +23,6 @@
                     }}
                 </div>
             </div>
-
-            <!--<div class="w-full overflow-y-scroll hidden" >
-                <div class="mb-1 ml-4 max-w-7xl">
-                    <div class="flex">
-                        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
-                    </div>
-                </div>
-            </div>-->
         </div>
         <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
             {{ $t('The selected project has no dates') }}
@@ -321,7 +313,10 @@ const props = defineProps({
                 let projectLeaders = event.projectLeaders;
 
                 if (projectLeaders && projectLeaders.length > 0) {
-                    if (createdBy.id === usePage().props.user.id || projectLeaders.some((leader) => leader.id === usePage().props.user.id)) {
+                    if (
+                        createdBy.id === usePage().props.user.id ||
+                        projectLeaders.some((leader) => leader.id === usePage().props.user.id)
+                    ) {
                         return true;
                     }
                 } else if (createdBy.id === usePage().props.user.id) {

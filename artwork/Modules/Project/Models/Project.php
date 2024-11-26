@@ -33,6 +33,7 @@ use Laravel\Scout\Searchable;
 /**
  * @property int $id
  * @property string $name
+ * @property string $artists
  * @property string $description
  * @property string $shift_description
  * @property int $number_of_participants
@@ -73,6 +74,7 @@ class Project extends Model
 
     protected $fillable = [
         'name',
+        'artists',
         'shift_description',
         'number_of_participants',
         'cost_center_id',

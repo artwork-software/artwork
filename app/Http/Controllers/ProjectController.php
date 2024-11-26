@@ -345,6 +345,7 @@ class ProjectController extends Controller
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
+            'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?
@@ -2265,6 +2266,7 @@ class ProjectController extends Controller
 
         $this->projectService->updateProject($project, [
             'name' => $request->string('name'),
+            'artists' => $request->string('artists'),
             'budget_deadline' => $request->get('budget_deadline'),
             'state' => $request->integer('state'),
             'cost_center_id' => $request->string('cost_center') !== null ?

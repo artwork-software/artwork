@@ -19,7 +19,7 @@ Either `root` account or a user with `sudo` rights. The installation is fully au
 
 ### Installation
 
-Login to your server and run ``sudo curl -fsSL https://raw.githubusercontent.com/artwork-software/artwork/dev/ubuntu-install.sh | sh``
+Login to your server and run ``sudo curl -fsSL https://raw.githubusercontent.com/artwork-software/artwork/main/ubuntu-install.sh | sh``
 
 Alternatively copy the ``ubuntu-install.sh`` script to your server. No other files, like the rest of the repository, or software installations needed.
 

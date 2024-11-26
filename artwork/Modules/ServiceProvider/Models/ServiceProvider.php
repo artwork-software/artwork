@@ -59,7 +59,8 @@ class ServiceProvider extends Model implements DayServiceable
         'salary_description',
         'work_name',
         'work_description',
-        'can_work_shifts'
+        'can_work_shifts',
+        'type_of_provider'
     ];
 
     protected $with = ['contacts'];

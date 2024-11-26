@@ -76,8 +76,32 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                    <div class="col-span-1">
-                        <TextInputComponent readonly  label="Dienstleister" disabled v-model="providerData.input" id="serverProvider_name" />
+                    <div class="col-span-1 -mt-1">
+                        <Listbox as="div" @focusout="saveProvider" v-model="providerData.type_of_provider">
+                            <ListboxLabel class="xsLight">Typ</ListboxLabel>
+                            <div class="relative mt-0.5">
+                                <ListboxButton class="relative h-12 w-full cursor-default rounded-lg bg-white min-h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 ring-2 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-artwork-buttons-create sm:text-sm sm:leading-6">
+                                    <span class="block truncate">{{ $t(providerData.type_of_provider) }}</span>
+                                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                              <component is="IconCaretUpDown" stroke-width="1.5" class="size-5 text-gray-400" aria-hidden="true" />
+                            </span>
+                                </ListboxButton>
+
+                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" v-for="roomType in types" :key="roomType" :value="roomType" v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ $t(roomType) }}</span>
+
+                                                <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                    <component is="IconCheck" class="size-5" aria-hidden="true" />
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </div>
+                        </Listbox>
                     </div>
                     <div class="col-span-1">
                         <TextInputComponent type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" :class="checkCanEdit ? 'bg-gray-200' : ''" :label="$t('Street')" />
@@ -148,8 +172,17 @@
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption, ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import Permissions from "@/Mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
@@ -166,6 +199,7 @@ export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        ListboxOptions, ListboxOption, Listbox, ListboxLabel, ListboxButton,
         TextareaComponent,
         TextInputComponent,
         BaseMenu,
@@ -224,7 +258,9 @@ export default defineComponent({
                 zip_code: this.serviceProvider.zip_code,
                 location: this.serviceProvider.location,
                 note: this.serviceProvider.note,
+                type_of_provider: this.serviceProvider.type_of_provider,
             }),
+            types: ['work', 'housing'],
             photoPreview: null,
             showSidebar: false,
         }
@@ -235,6 +271,7 @@ export default defineComponent({
         },
     },
     methods: {
+        usePage,
         addContact(){
             router.post(route('service-provider.contact.store', this.serviceProvider.id), {
             }, {

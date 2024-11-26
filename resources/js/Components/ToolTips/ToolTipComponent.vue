@@ -1,6 +1,6 @@
 <template>
     <div class="flex items-center relative">
-        <button @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes" :disabled="disabled">
+        <button type="button" @mouseover="show = true" @mouseleave="show = false" class="focus:outline-none" :class="classes" :disabled="disabled">
             <component :is="icon" class=" cursor-pointer" :class="[iconSize, classes, whiteIcon ? 'text-white' : 'text-artwork-buttons-context']" :stroke-width="stroke"/>
         </button>
         <div v-if="show">

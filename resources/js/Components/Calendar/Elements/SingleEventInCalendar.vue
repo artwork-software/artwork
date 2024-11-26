@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div class="flex">
+        <div class="flex items-center justify-between">
             <div class="px-1 py-1">
                 <div
                     :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage))}"
@@ -195,11 +195,11 @@
                     </div>
                 </div>
             </div>
-            <div class="relative mr-3 mt-8 invisible group-hover:visible">
+            <div class="relative invisible group-hover:visible">
                 <BaseMenu menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
                     <MenuItem v-slot="{ active }">
                         <div @click="$emit('editEvent', event)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                             {{ $t('edit')}}
                         </div>
@@ -207,7 +207,7 @@
                     <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1" v-slot="{ active }">
                         <div
                                 @click="$emit('openAddSubEventModal', event, 'create', null)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6 mr-2"/>
                             {{$t('Add Sub-Event')}}
                         </div>
@@ -215,15 +215,14 @@
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
                         <div
                                 @click="$emit('showDeclineEventModal', event)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconX stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Decline event')}}
                         </div>
                     </MenuItem>
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                        <div
-                                @click="$emit('openConfirmModal', event, 'main')"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                        <div @click="$emit('openConfirmModal', event, 'main')"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconTrash stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Delete')}}
                         </div>

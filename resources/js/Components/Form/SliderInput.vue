@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col items-center">
+  <div class="w-full flex flex-col">
     <label class="text-gray-700 text-sm mb-2" v-if="label">{{ label }}</label>
 
     <div class="relative w-full flex items-center">

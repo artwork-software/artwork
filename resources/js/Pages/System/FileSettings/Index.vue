@@ -50,13 +50,15 @@
           </div>
         </div>
       </div>
-      <div class="flex flex-col pace-y-4 mt-4">
-        <TagComponent v-for="fileType in area.fileTypes"
-                      :key="fileType.name"
-                      :method="removeFileTypeFromArea"
-                      :property="{area: area, fileType: fileType}"
-                      :displayed-text="fileType.name"
-                      />
+      <div class="flex items-center gap-x-5">
+        <div class="flex mt-4">
+          <TagComponent v-for="fileType in area.fileTypes"
+                        :key="fileType.name"
+                        :method="removeFileTypeFromArea"
+                        :property="{area: area, fileType: fileType}"
+                        :displayed-text="fileType.name"
+          />
+        </div>
       </div>
     </div>
   </ToolSettingsHeader>

@@ -4,6 +4,9 @@ namespace App\Settings;
 
 use Spatie\LaravelSettings\Settings;
 
+/**
+ * @property bool $enable_status
+ */
 class EventSettings extends Settings
 {
 

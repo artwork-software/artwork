@@ -40,30 +40,36 @@
                         <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day"/>
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
-                             :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
-                             :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
-                             class="group/container border-b-2 border-gray-400 border-dashed">
-                            <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="event in room[day.full_day].events">
-                                <div class="py-0.5" :key="event.id">
-                                    <AsyncSingleEventInCalendar
-                                        :event="event"
-                                        :multi-edit="multiEdit"
-                                        :font-size="textStyle.fontSize"
-                                        :line-height="textStyle.lineHeight"
-                                        :rooms="rooms"
-                                        :has-admin-role="hasAdminRole()"
-                                        :width="zoom_factor * 196"
-                                        :first_project_tab_id="first_project_tab_id"
-                                        :firstProjectShiftTabId="firstProjectShiftTabId"
-                                        @edit-event="showEditEventModel"
-                                        @edit-sub-event="openAddSubEventModal"
-                                        @open-add-sub-event-modal="openAddSubEventModal"
-                                        @open-confirm-modal="openDeleteEventModal"
-                                        @show-decline-event-modal="openDeclineEventModal"
-                                        @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
-                                    />
+                             class="relative">
+                            <div v-if="room[day.full_day].events.length > 1" class="absolute bottom-2 right-4 z-50">
+                                <component is="IconChevronDown" @click="scrollToNextEventInDay(day.without_format, room[day.full_day].events.length)" class="h-6 w-6 text-gray-400 text-hover cursor-pointer" stroke-width="2"/>
+                            </div>
+                            <div :style="{ minWidth: zoom_factor * 212 + 'px', maxWidth: zoom_factor * 212 + 'px', height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
+                                 :class="[zoom_factor > 0.4 ? 'cell' : 'overflow-hidden']"
+                                 class="group/container border-b-2 border-gray-400 border-dashed" :id="'scroll_container-' + day.without_format">
+                                <div v-if="composedCurrentDaysInViewRef.has(day.full_day)" v-for="(event, index) in room[day.full_day].events">
+                                    <div class="py-0.5" :key="event.id" :id="'event_scroll-' + index + '-day-' + day.without_format">
+                                        <AsyncSingleEventInCalendar
+                                            :event="event"
+                                            :multi-edit="multiEdit"
+                                            :font-size="textStyle.fontSize"
+                                            :line-height="textStyle.lineHeight"
+                                            :rooms="rooms"
+                                            :has-admin-role="hasAdminRole()"
+                                            :width="zoom_factor * 196"
+                                            :first_project_tab_id="first_project_tab_id"
+                                            :firstProjectShiftTabId="firstProjectShiftTabId"
+                                            @edit-event="showEditEventModel"
+                                            @edit-sub-event="openAddSubEventModal"
+                                            @open-add-sub-event-modal="openAddSubEventModal"
+                                            @open-confirm-modal="openDeleteEventModal"
+                                            @show-decline-event-modal="openDeclineEventModal"
+                                            @changed-multi-edit-checkbox="handleMultiEditEventCheckboxChange"
+                                        />
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -280,6 +286,17 @@ const props = defineProps({
             lineHeight,
         };
     }),
+    scrollToNextEventInDay = (day, length) => {
+        let eventScroll = document.getElementById('event_scroll-' + (length - 1) + '-day-' + day);
+        if (eventScroll) {
+            eventScroll.scrollIntoView({
+                behavior: 'smooth', // Optionale Animation für weiches Scrollen
+                block: 'nearest',  // Scrolle nur so weit wie nötig
+                inline: 'nearest' // Stelle sicher, dass es nicht die ganze Seite beeinflusst
+            });
+        }
+
+    },
     computedCalendarData = computed(() => {
         if (!hasReceivedNewCalendarData.value) {
             return calendarDataRef;

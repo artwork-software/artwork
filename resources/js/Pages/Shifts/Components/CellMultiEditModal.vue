@@ -1,6 +1,6 @@
 <template>
     <BaseModal @closed="$emit('close')">
-        <ModalHeader title="Mehrfacheintrag" />
+        <ModalHeader title="Mehrfacheintrag"  />
 
         <div v-show="showSaveSuccess" class="my-3 text-xs bg-green-600 px-3 py-1.5 text-white rounded-lg">
             {{ $t('Saved. The changes have been successfully applied.') }}

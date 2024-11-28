@@ -1,6 +1,6 @@
 <template>
     <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': '9999' }" @close="closeModal">
+        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                              leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-opacity-75 transition-opacity" :class="showBackdrop ? 'bg-gray-500' : ''"/>
@@ -72,16 +72,6 @@ export default {
         }
     },
     props: {
-        //@todo: deprecated, remove
-        modalImage: {
-            type: String,
-            default: '/Svgs/Overlays/illu_appointment_edit.svg'
-        },
-        //@todo: deprecated, remove
-        showImage: {
-            type: Boolean,
-            default: true
-        },
         modalSize: {
             type: String,
             default: 'sm:max-w-2xl'
@@ -93,6 +83,10 @@ export default {
         isInShiftPlan: {
             type: Boolean,
             default: false
+        },
+        zIndex: {
+            type: Number,
+            default: 150
         }
     },
     mounted() {

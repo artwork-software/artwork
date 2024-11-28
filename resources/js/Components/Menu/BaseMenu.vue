@@ -16,7 +16,7 @@
                         :tooltip-text="$t('Sorting')"
                         icon="IconSortDescending"
                         icon-size="h-8 w-8"
-                        :white-icon="whiteIcon"
+                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                     />
                 </MenuButton>
             </div>
@@ -64,10 +64,6 @@ export default defineComponent({
             type: String,
             default: 'h-6 w-6',
         },
-        right: {
-            type: Boolean,
-            default: false,
-        },
         noRelative: {
             type: Boolean,
             default: false,
@@ -84,11 +80,6 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: false
-        },
-        placement: {
-            type: String,
-            required: false,
-            default: 'top',
         },
         hasNoOffset: {
             type: Boolean,

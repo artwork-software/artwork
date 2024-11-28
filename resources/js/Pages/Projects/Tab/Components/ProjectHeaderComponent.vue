@@ -121,7 +121,7 @@ export default {
         <div class="ml-14 pr-14 mt-5">
             <div class="flex flex-col">
                 <!-- if in group -->
-                <div v-if="headerObject.currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
+                <div v-if="headerObject.currentGroup" class="bg-secondaryHover text-sm shadow-sm border border-gray-200 px-3 py-1 rounded-lg -mb-2 z-20 w-fit pr-6 pb-0.5">
                     <div class="flex items-center">
                         <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
@@ -216,8 +216,8 @@ export default {
                     <div>
                         {{ $t('last modified') }}:
                     </div>
-                    <UserPopoverTooltip :user="headerObject.project_history[0]?.changes[0]?.changed_by"
-                                        :id="headerObject.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4"
+                    <UserPopoverTooltip :user="headerObject.project_history[0]?.changer"
+                                        :id="headerObject.project_history[0]?.changer.id" height="4" width="4"
                                         class="ml-2"/>
                     <span class="ml-2 subpixel-antialiased">
                     {{ headerObject.project_history[0]?.created_at }}
@@ -250,6 +250,7 @@ export default {
                 </div>
             </div>
         </div>
+
         <!-- Tab Content -->
         <div class="ml-14">
             <slot />

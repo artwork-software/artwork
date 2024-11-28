@@ -2119,8 +2119,11 @@ class ProjectController extends Controller
             'profile_photo_url' => $user->profile_photo_url,
             'email' => $user->email,
             'departments' => $user->departments,
+            'description' => $user->description,
             'position' => $user->position,
-            'business' => $user->business,
+            'pronouns' => $user->pronouns,
+            'email_private' => (bool)$user->email_private,
+            'phone_private' => (bool)$user->phone_private,
             'phone_number' => $user->phone_number,
             'project_management' => $user->can(PermissionEnum::PROJECT_MANAGEMENT->value),
             'pivot_access_budget' => (bool)$user->pivot?->access_budget,
@@ -2181,6 +2184,9 @@ class ProjectController extends Controller
             'changes' => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
             'created_at' => $history->created_at->diffInHours() < 24 ? $history->created_at
                 ->diffForHumans() : $history->created_at->format('d.m.Y, H:i'),
+            'changer' => $history->changer()
+                ->without(['roles', 'departments', 'calendar_settings', 'calendarAbo', 'shiftCalendarAbo'])
+                ->first(),
         ], $historyComplete);
     }
 

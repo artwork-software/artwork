@@ -25,36 +25,36 @@
                         leave-to-class="transition-leave-to">
                 <PopoverPanel
                     :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '']"
-                    class="absolute left-1/2 z-50 transform sm:px-0 bg-artwork-navigation-background ring-0 py-3 px-5"
+                    class="absolute left-1/2 z-50 transform  bg-artwork-navigation-background rounded-lg shadow-xl px-4 py-4"
                     :style="popoverStyle">
-                    <div v-if="user" class="shadow-lg ring-1 ring-black ring-opacity-5">
-                        <div class="grid grid-cols-4 w-96">
-                            <div class="col-span-1 shrink-0 ml-3 flex items-center justify-center">
-                                <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full"
-                                     :src="user.profile_photo_url" alt=""/>
-                            </div>
-                            <div class="col-span-3">
-                                <div class="font-black font-lexend text-white text-lg">
+                    <div v-if="user" class="">
+                        <div class="flex items-center gap-4">
+                            <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
+                            <div class="">
+                                <div class="font-black font-lexend text-white text-lg flex items-start gap-x-4 mb-2 border-b border-dashed border-gray-600">
                                     {{ user.first_name }} {{ user.last_name }}
+                                    <div class="text-gray-300 text-xs my-1">
+                                        {{ user.pronouns }}
+                                    </div>
                                 </div>
-                                <div class="-mt-1 text-white">
-                                    <span v-if="user.business">
-                                        {{ user.business }},
-                                    </span>
-                                    <span v-if="user.position">
-                                        {{ user.position }}
-                                    </span>
+
+                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.position">
+                                    <component is="IconMapPin" class="h-4 w-4" v-if="user.position"/>
+                                    {{ user.position }}
                                 </div>
-                                <div class="mt-2 text-white" v-if="user.email">
+                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.email && !user.email_private || $can('can view private user info') || hasAdminRole()">
+                                    <component is="IconMail" class="h-4 w-4" v-if="user.email"/>
                                     {{ user.email }}
                                 </div>
-                                <div class="text-white" v-if="user.phone_number">
+                                <div class="text-gray-300 text-sm font-bold flex items-center gap-x-2" v-if="user.phone_number && !user.phone_private || $can('can view private user info') || hasAdminRole()">
+                                    <component is="IconDeviceMobile" class="h-4 w-4" v-if="user.phone_number"/>
                                     {{ user.phone_number }}
                                 </div>
+                                <div class="col-span-4 mt-2 text-white break-all text-xs italic" v-if="user.description">
+                                    &bdquo;{{ user.description }}&rdquo;
+                                </div>
                             </div>
-                            <div class="col-span-4 mt-2 text-white max-w-96 break-all">
-                                {{ user.description }}
-                            </div>
+
                         </div>
                     </div>
                     <div v-else class="flex flex-row items-center ring-1 ring-black ring-opacity-5 text-white shadow-lg gap-x-3 py-3 px-5">
@@ -72,10 +72,11 @@
 <script>
 import {Popover, PopoverButton, PopoverPanel} from '@headlessui/vue'
 import IconLib from "@/Mixins/IconLib.vue";
+import Permissions from "@/Mixins/Permissions.vue";
 
 export default {
     name: "UserPopoverTooltip",
-    mixins: [IconLib],
+    mixins: [IconLib, Permissions],
     components: {
         Popover,
         PopoverButton,

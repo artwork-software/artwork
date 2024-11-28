@@ -171,7 +171,7 @@ class User extends Model implements
         'phone_number',
         'password',
         'position',
-        'business',
+        'pronouns',
         'description',
         'toggle_hints',
         'opened_checklists',
@@ -209,7 +209,9 @@ class User extends Model implements
         'checklist_completed_tasks',
         'checklist_show_without_tasks',
         'is_developer',
-        'show_qualifications'
+        'show_qualifications',
+        'email_private',
+        'phone_private'
     ];
 
     protected $casts = [
@@ -235,6 +237,8 @@ class User extends Model implements
         'checklist_show_without_tasks' => 'boolean',
         'is_developer' => 'boolean',
         'show_qualifications' => 'array',
+        'email_private' => 'boolean',
+        'phone_private' => 'boolean'
     ];
 
     protected $hidden = [

@@ -2134,5 +2134,13 @@
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Hier kannst du festlegen, wer für die Planung des Inventars zuständig ist. Nur Nutzer*innen, die hier eingetragen sind, können das Inventar für dieses Gewerk planen. Die Nutzer*innen müssen das Recht haben, das Inventar zu planen.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Hier kannst du die Abteilungsleitung für dieses Gewerk festlegen. Sie wird in der Übersicht hervorgehoben.",
     "Craft manager": "Gewerkleitung",
-    "Artists": "Künstler*innen"
+    "Artists": "Künstler*innen",
+    "Tool Settings": "Tool-Einstellungen",
+    "Pronouns": "Pronomen",
+    "Email private": "E-Mail privat",
+    "Hide your email address from other users.": "Verberge deine E-Mail-Adresse vor anderen Nutzer*innen.",
+    "Phone private": "Telefon privat",
+    "Hide your phone number from other users.": "Verberge deine Telefonnummer vor anderen Nutzer*innen.",
+    "View private contact details": "Private Kontakt Daten anzeigen",
+    "Can view private contact details of users": "Kann private Kontakt Daten von Nutzer*innen einsehen"
 }

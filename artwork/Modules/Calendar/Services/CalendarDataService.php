@@ -60,6 +60,7 @@ readonly class CalendarDataService
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
+                'without_format' => $period->format('Y-m-d'),
                 'full_day_display' => $period->format('d.m.y'),
                 'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,

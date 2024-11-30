@@ -85,6 +85,7 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Event\Http\Controllers\EventListExportController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
@@ -1700,6 +1701,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::resource('holidays', HolidayController::class)
         ->only(['index', 'store', 'update', 'destroy', 'show']);
+
+    Route::group(['prefix' => 'export'], function (): void {
+        Route::post(
+            '/event-list-xlsx-cache-filter',
+            [EventListExportController::class, 'saveExportDataInCache']
+        )->name('export.download-event-list-xlsx.cache-filter');
+        Route::get(
+            '/event-list-xlsx/{cacheToken}',
+            [EventListExportController::class, 'downloadXlsx']
+        )->name('export.download-event-list-xlsx');
+    });
 });
 
 Route::get(

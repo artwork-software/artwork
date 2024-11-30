@@ -1,10 +1,11 @@
 <template>
     <div class="flex flex-col gap-y-1.5">
+        <h1 class="headline1 -my-2" style="font-size:18px;">{{ $t('EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT')}}</h1>
         <h2 class="text-sm text-gray-500">
             {{ $t('All project budgets whose budget key date is between the following dates are exported.') }}
         </h2>
-        <SwitchGroup as="div" class="mt-2.5 flex items-center gap-x-2 justify-center">
-            <SwitchLabel as="span" class="text-sm">
+        <SwitchGroup as="div" class="mt-2.5 flex items-center gap-x-2">
+            <SwitchLabel as="span" class="text-sm cursor-pointer">
                 <span :class="!generateDetailedExport ? 'text-black font-bold' : 'xsLight'">
                     {{ $t('Aggregated projects') }}
                 </span>
@@ -12,7 +13,7 @@
             <Switch v-model="generateDetailedExport" :class="[generateDetailedExport ? 'bg-artwork-buttons-create' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span aria-hidden="true" :class="[generateDetailedExport ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
             </Switch>
-            <SwitchLabel as="span" class="text-sm">
+            <SwitchLabel as="span" class="text-sm cursor-pointer">
                 <span :class="generateDetailedExport ? 'text-black font-bold' : 'xsLight'">
                     {{ $t('Itemised projects') }}
                 </span>

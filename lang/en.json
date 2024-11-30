@@ -2137,5 +2137,11 @@
     "PDF_CALENDAR_EXPORT": "PDF Calendar Export",
     "EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT": "Budget Deadline Export",
     "EXCEL_EVENT_LIST_EXPORT": "Excel Event List Export",
-    "EXCEL_CALENDAR_EXPORT": "Excel Calendar Export"
+    "EXCEL_CALENDAR_EXPORT": "Excel Calendar Export",
+    "Export by project": "Export by project",
+    "Export by period": "Export by period",
+    "Columns": "Columns",
+    "Event ID": "Event ID",
+    "Project name": "Project name",
+    "All Events are exported by given settings": "All Events are exported by given settings"
 }

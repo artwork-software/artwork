@@ -36,6 +36,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -793,6 +794,7 @@ readonly class EventService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ProjectCreateSettings $projectCreateSettings,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -917,7 +919,8 @@ readonly class EventService
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
-            );
+            )
+            ->setShowArtists($projectCreateSettings->show_artists);
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -938,6 +941,7 @@ readonly class EventService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ProjectCreateSettings $projectCreateSettings,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1029,7 +1033,8 @@ readonly class EventService
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
-            );
+            )
+            ->setShowArtists($projectCreateSettings->show_artists);
 
 
         if ($useProjectTimePeriod) {

@@ -2,11 +2,13 @@
 
 namespace Artwork\Modules\Event\Repositories;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -15,10 +17,11 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection as SupportCollection;
 
 class EventRepository extends BaseRepository
 {
-    public function __construct(private readonly Event $event)
+    public function __construct(private readonly Event $event, private readonly CarbonService $carbonService)
     {
     }
 
@@ -213,5 +216,119 @@ class EventRepository extends BaseRepository
     public function getOrderBySubQueryBuilder(string $column, string $direction): Builder
     {
         return $this->getNewModelQuery()->getOrderBySubQueryBuilder($column, $direction);
+    }
+
+    public function getEventsForEventListExportByFilters(SupportCollection $exportConfiguration): Collection
+    {
+        $query = $this->getNewModelQuery();
+
+        $desiresTimespanExport = $exportConfiguration->get('desiresTimespanExport', false);
+        $conditional = $exportConfiguration->get('conditional', []);
+        $filter = $exportConfiguration->get('filter', []);
+
+        $query
+            ->with(
+                [
+                    'eventStatus',
+                    'project',
+                    'project.users',
+                    'project.categories',
+                    'project.genres',
+                    'project.sectors',
+                ]
+            )
+            //handle conditionals
+            ->when(
+                $desiresTimespanExport,
+                function (Builder $query) use ($conditional): void {
+                    $startAndEndTime = [
+                        $this->carbonService->create($conditional['dateStart'])->startOfDay(),
+                        $this->carbonService->create($conditional['dateEnd'])->endOfDay(),
+                    ];
+
+                    $query->whereBetween('start_time', $startAndEndTime);
+                    $query->whereBetween('end_time', $startAndEndTime);
+                }
+            )
+            ->when(
+                !$desiresTimespanExport,
+                function (Builder $query) use ($conditional): void {
+                    $query->whereIn('project_id', $conditional['projects']);
+                }
+            )
+            //handle rooms
+            ->when(
+                count(($rooms = $filter['rooms'])) > 0,
+                function (Builder $query) use ($rooms): void {
+                    $query->whereIn('room_id', $rooms);
+                }
+            )
+            //handle room categories
+            ->when(
+                count(($roomCategories = $filter['roomCategories'])) > 0,
+                function (Builder $query) use ($roomCategories): void {
+                    $query->whereRelation(
+                        'room.categories',
+                        function (Builder $query) use ($roomCategories): void {
+                            $query->whereIn('room_category_id', $roomCategories);
+                        }
+                    );
+                }
+            )
+            //handle room attributes
+            ->when(
+                count(($roomAttributes = $filter['roomAttributes'])) > 0,
+                function (Builder $query) use ($roomAttributes): void {
+                    $query->whereRelation(
+                        'room.attributes',
+                        function (Builder $query) use ($roomAttributes): void {
+                            $query->whereIn('room_attribute_id', $roomAttributes);
+                        }
+                    );
+                }
+            )
+            //handle areas
+            ->when(
+                count(($areas = $filter['areas'])) > 0,
+                function (Builder $query) use ($areas): void {
+                    $query->whereRelation(
+                        'room',
+                        function (Builder $query) use ($areas): void {
+                            $query->whereIn('area_id', $areas);
+                        }
+                    );
+                }
+            )
+            //handle event types
+            ->when(
+                count(($eventTypes = $filter['eventTypes'])) > 0,
+                function (Builder $query) use ($eventTypes): void {
+                    $query->whereIn('event_type_id', $eventTypes);
+                }
+            )
+            //handle event attributes
+            ->when(
+                count(($eventAttributes = $filter['eventAttributes'])) > 0,
+                function (Builder $query) use ($eventAttributes): void {
+                    foreach ($eventAttributes as $eventAttribute) {
+                        $query->when(
+                            $eventAttribute === FilterService::LOUD ||
+                            $eventAttribute === FilterService::NOT_LOUD,
+                            function (Builder $query) use ($eventAttribute): void {
+                                $query->where('is_loud', ($eventAttribute === FilterService::LOUD));
+                            }
+                        );
+                        $query->when(
+                            $eventAttribute === FilterService::WITH_AUDIENCE ||
+                            $eventAttribute === FilterService::WITHOUT_AUDIENCE,
+                            function (Builder $query) use ($eventAttribute): void {
+                                $query->where('audience', ($eventAttribute === FilterService::WITH_AUDIENCE));
+                            }
+                        );
+                    }
+                }
+            );
+
+        return $query->get();
     }
 }

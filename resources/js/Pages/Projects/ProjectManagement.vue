@@ -123,8 +123,11 @@
                                     </div>
                                 </MenuItem>
                             </BaseMenu>
-                            <ToolTipComponent icon="IconFileExport" icon-size="h-7 w-7" :tooltip-text="$t('Export project list')"
-                                              direction="bottom" @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
+                            <ToolTipComponent icon="IconFileExport"
+                                              icon-size="h-7 w-7"
+                                              :tooltip-text="$t('Export project list')"
+                                              direction="bottom"
+                                              @click="openExportModal"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
@@ -272,14 +275,13 @@
             :access_budget="projectBudgetAccess"
             @closed="closeProjectHistoryModal"
         />
-        <export-modal v-if="showProjectExportBudgetsByBudgetDeadlineModal"
-                      @close="showProjectExportBudgetsByBudgetDeadlineModal = false"
-                      :export-tab-enums="[
-                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT,
-                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
+        <export-modal v-if="showExportModal"
+                      @close="showExportModal = false"
+                      :enums="[
                           exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
-                          exportTabEnums.PDF_CALENDAR_EXPORT,
-                      ]"/>
+                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+                      ]"
+                      :configuration="getExportModalConfiguration()"/>
     </app-layout>
 </template>
 
@@ -330,7 +332,6 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
@@ -462,7 +463,7 @@ export default defineComponent({
             editingProject: false,
             projectToEdit: null,
             createProject: false,
-            showProjectExportBudgetsByBudgetDeadlineModal: false,
+            showExportModal: false,
             entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
             page: route().params.page ?? 1,
             perPage: route().params.entitiesPerPage ?? 10,
@@ -566,8 +567,8 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-        openProjectExportBudgetsByBudgetDeadlineModal() {
-            this.showProjectExportBudgetsByBudgetDeadlineModal = true;
+        openExportModal() {
+            this.showExportModal = true;
         },
         openSearchbar(){
             this.showSearchbar = !this.showSearchbar;
@@ -660,6 +661,15 @@ export default defineComponent({
                 this.dropFeedbackShown = false;
             }, 3000)
         },
+        getExportModalConfiguration() {
+            const cfg = {};
+
+            cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+                show_artists: this.createSettings.show_artists,
+            };
+
+            return cfg;
+        }
     },
     watch: {
         project_search: {
@@ -668,7 +678,7 @@ export default defineComponent({
             }
         }
     }
-})
+});
 </script>
 
 <style scoped>

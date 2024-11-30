@@ -1909,7 +1909,8 @@ class ProjectController extends Controller
         FilterService $filterService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        EventService $eventService
+        EventService $eventService,
+        ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
@@ -2008,6 +2009,7 @@ class ProjectController extends Controller
                                 $eventTypeService,
                                 $areaService,
                                 $projectService,
+                                $projectCreateSettings,
                                 $project
                             ) :
                             $eventService->createEventManagementDto(
@@ -2018,6 +2020,7 @@ class ProjectController extends Controller
                                 $eventTypeService,
                                 $areaService,
                                 $projectService,
+                                $projectCreateSettings,
                                 $project
                             );
 

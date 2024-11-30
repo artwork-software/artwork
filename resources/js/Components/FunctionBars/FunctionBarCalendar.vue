@@ -289,8 +289,7 @@
                             />
                         </div>
                     </div>
-
-                    <div @click="showPDFConfigModal = true">
+                    <div @click="showExportModal = true">
                         <ToolTipComponent
                             direction="left"
                             :tooltip-text="$t('Export calendar')"
@@ -298,33 +297,25 @@
                             icon-size="h-7 w-7"
                         />
                     </div>
-
                     <PlusButton @click="$emit('wantsToAddNewEvent');"/>
-                    <!--<AddButtonSmall
-                        @click="createEventComponentIsVisible = true"
-                        :text="$t('New occupancy')"
-                        class="hidden"
-                    />-->
                 </div>
-
             </div>
         </div>
-
     </div>
-
-    <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project"
-                    :pdf-title="project ? project.name : 'Raumbelegung'"/>
-
+    <export-modal v-if="showExportModal"
+                  @close="showExportModal = false"
+                  :enums="[
+                      exportTabEnums.PDF_CALENDAR_EXPORT,
+                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT
+                  ]"
+                  :configuration="getExportModalConfiguration()"/>
     <GeneralCalendarAboSettingModal
         :event-types="eventTypes"
         :rooms="rooms"
         :areas="areas"
         v-if="showCalendarAboSettingModal"
-        @close="closeCalendarAboSettingModal"
-    />
-
+        @close="closeCalendarAboSettingModal"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
-
 </template>
 
 <script setup>
@@ -338,12 +329,13 @@ import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
-import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -365,7 +357,7 @@ const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
-const showPDFConfigModal = ref(false);
+const showExportModal = ref(false);
 const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
@@ -400,6 +392,23 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
     );
 };
 
+const exportTabEnums = useExportTabEnums();
+const getExportModalConfiguration = () => {
+    const cfg = {};
+
+    cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
+        project: props.project
+    };
+
+    cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+        project: props.project,
+        show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
+            (usePage().props.show_artists ?? false),
+    };
+
+    return cfg;
+};
+
 const handleUseTimePeriodChange = (enabled) => {
     if (!enabled && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0) {
         toggleProjectTimePeriodAndRedirect(0, false);
@@ -407,7 +416,6 @@ const handleUseTimePeriodChange = (enabled) => {
 };
 
 const {hasAdminRole, canAny} = usePermission(usePage().props);
-
 
 const props = defineProps({
     project: {

@@ -2,23 +2,34 @@
     <BaseModal @closed="close()">
         <div class="export-modal-container">
             <ul class="tab-container">
-                <li v-for="(tab) in props.exportTabEnums"
+                <li v-if="props.enums.length > 1"
+                    v-for="(tab) in props.enums"
                     @click="activeTab = tab"
                     :class="[activeTab === tab ? 'active' : '', 'tab']">
-                    {{ t(tab) }}
+                    {{ $t(tab) }}
                 </li>
             </ul>
-            <template v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT">
-
-            </template>
-            <template v-if="activeTab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT">
-                <BudgetByBudgetDeadlineExport @close="close()"/>
-            </template>
-            <template v-if="activeTab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT">
-
-            </template>
-            <template v-if="activeTab === exportTabEnums.EXCEL_CALENDAR_EXPORT">
-
+            <template v-for="(tab) in props.enums">
+                <template v-if="tab === exportTabEnums.PDF_CALENDAR_EXPORT">
+                    <PdfCalendarExport v-if="activeTab === exportTabEnums.PDF_CALENDAR_EXPORT"
+                                       @close="close()"
+                                       :project="configuration[exportTabEnums.PDF_CALENDAR_EXPORT].project"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT">
+                    <ExcelBudgetByBudgetDeadlineExport v-if="activeTab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT" @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT">
+                    <ExcelEventListExport v-if="activeTab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT"
+                                          :show-artists="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT].show_artists"
+                                          :project-preselect="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.project ?? null"
+                                          @close="close()"/>
+                </template>
+                <template v-else-if="tab === exportTabEnums.EXCEL_CALENDAR_EXPORT">
+                    <ExcelCalendarExport v-if="activeTab === exportTabEnums.EXCEL_CALENDAR_EXPORT" @close="close()"/>
+                </template>
+                <template v-else>
+                    {{ throwUndefinedEnumUsed() }}
+                </template>
             </template>
         </div>
     </BaseModal>
@@ -31,13 +42,22 @@ import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum
 import {useTranslation} from "@/Composeables/Translation.js";
 
 const exportTabEnums = useExportTabEnums(),
-    BudgetByBudgetDeadlineExport = defineAsyncComponent(() =>
-        import("@/Layouts/Components/Export/Tabs/BudgetByBudgetDeadlineExport.vue")
-    ),
-    t = useTranslation(),
+    $t = useTranslation(),
     emits = defineEmits(['close']),
+    PdfCalendarExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/PdfCalendarExport.vue")
+    ),
+    ExcelBudgetByBudgetDeadlineExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelBudgetByBudgetDeadlineExport.vue")
+    ),
+    ExcelEventListExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelEventListExport.vue")
+    ),
+    ExcelCalendarExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelCalendarExport.vue")
+    ),
     props = defineProps({
-        exportTabEnums: {
+        enums: {
             type: Array,
             required: true,
             validator(tabConstants) {
@@ -50,10 +70,18 @@ const exportTabEnums = useExportTabEnums(),
 
                 throw new Error('Please provide at least one ExportTabEnum');
             }
+        },
+        configuration: {
+            type: Object,
+            required: false,
+            default: {}
         }
     }),
-    activeTab = ref(props.exportTabEnums[0]),
+    activeTab = ref(props.enums[0]),
     close = () => {
         emits.call(this, 'close');
+    },
+    throwUndefinedEnumUsed = () => {
+        throw new Error('Undefined enum used in ExportModal.');
     };
 </script>

@@ -1,5 +1,4 @@
 <template>
-
     <Head>
         <link rel="icon" type="image/png" :href="$page.props.small_logo" />
         <title>{{ $t('Login') }} - {{ $page.props.page_title }}</title>
@@ -83,7 +82,6 @@ import Permissions from "@/Mixins/Permissions.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
-
 export default defineComponent({
     mixins: [Permissions],
     components: {
@@ -112,6 +110,7 @@ export default defineComponent({
         }
     },
     data() {
+        this.$i18n.locale = this.$page.props.locale;
         return {
             form: this.$inertia.form({
                 email: '',

@@ -328,14 +328,6 @@ export default {
         'departments',
         'calendar_settings'
     ],
-    watch: {
-        selectedLanguage: {
-            handler() {
-                document.documentElement.lang = this.selectedLanguage.id;
-            },
-            deep: true
-        }
-    },
     data() {
         return {
             showChangeTeamsModal: false,
@@ -402,7 +394,6 @@ export default {
         },
         editUser() {
             this.userForm.language = this.selectedLanguage.id;
-            this.$updateLocale(this.selectedLanguage.id);
             if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }
@@ -411,14 +402,22 @@ export default {
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
+
+            let changedLocale = this.$page.props.user.language === this.userForm.language;
             this.userForm.patch(
                 route('user.update', {user: this.user_to_edit.id}),
                 {
                     preserveScroll: true,
-                    preserveState: false,
-                    onSuccess: () => this.openSuccessModal()
+                    onSuccess: () => {
+                        if (changedLocale) {
+                            this.openSuccessModal();
+                            return;
+                        }
+                        window.location.reload();
+                    }
                 }
             );
+
             this.nameError = false;
             this.hasNameError = false;
         },

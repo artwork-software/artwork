@@ -3,12 +3,11 @@
     <ModalHeader
         :title="$t('Craft')"
         :description="$t('Define the specifications of your trade.')"
-        />
+    />
     <div class="grid grid-cols-1 sm:grid-cols-7 gap-2 mb-10">
         <div class="col-span-1 mt-5">
-            <ColorPickerComponent :color="craft.color"  @updateColor="addColor" />
+            <ColorPickerComponent :color="craft.color" @updateColor="addColor"/>
         </div>
-
         <div class="col-span-3">
             <TextInputComponent
                 :label="$t('Name of the craft') + '*'"
@@ -27,7 +26,6 @@
             />
         </div>
     </div>
-
     <div class="">
         <NumberInputComponent
                v-model="craft.notify_days"
@@ -38,7 +36,6 @@
                :min="0" :max="100"
         />
     </div>
-
     <div class="my-3">
         <div class="relative flex items-start mb-2">
             <div class="flex h-6 items-center">
@@ -49,7 +46,6 @@
             </div>
         </div>
     </div>
-
     <div class="mt-3">
         <SwitchGroup as="div" class="flex items-center gap-2">
             <SwitchLabel as="span" class="mr-3 text-sm">
@@ -74,7 +70,6 @@
                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </span>
                 </ListboxButton>
-
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="user in usersWithPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
@@ -97,13 +92,12 @@
                     </div>
                     <button type="button" @click="addOrRemoveFormUserList(user, 'shift_planer')">
                         <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                        <IconCircleX stroke-width="1.5" class="ml-3 text-primary h-5 w-5 hover:text-error "/>
+                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
     <div class="mt-3">
         <div class="my-5">
             <TinyPageHeadline
@@ -111,7 +105,6 @@
                 :description="$t('Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.')"
             />
         </div>
-
         <SwitchGroup as="div" class="flex items-center gap-2">
             <SwitchLabel as="span" class="mr-3 text-sm">
                 <span class="font-medium text-gray-900" :class="inventoryPlannedByAll ? '!text-gray-400' : ''">{{ $t('Explicitly selected persons') }}</span>
@@ -126,7 +119,7 @@
             </SwitchLabel>
         </SwitchGroup>
     </div>
-    <div v-if="!inventoryPlannedByAll" class="">
+    <div v-if="!inventoryPlannedByAll">
         <Listbox as="div">
             <div class="relative mt-2">
                 <ListboxButton class="menu-button">
@@ -137,7 +130,6 @@
                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                     </span>
                 </ListboxButton>
-
                 <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                         <ListboxOption as="template" v-for="user in usersWithInventoryPermission" :key="user.id" :value="user" v-slot="{ active, selected }">
@@ -166,13 +158,54 @@
             </div>
         </div>
     </div>
-    <div class="flex items-center justify-center mt-5">
-        <FormButton
-            text="Speichern"
-            @click="saveCraft"
+    <div class="my-5">
+        <TinyPageHeadline
+            :title="$t('Craft manager')"
+            :description="$t('Here you can specify the department management for this craft. It will be highlighted in the overview.')"
         />
     </div>
-
+    <div class="mt-8">
+        <UserSearch :label="'Add department management'"
+                    @user-selected="addSelectedToCraftManagers"
+                    :search-workers="false"
+                    :current-craft="craft"
+                    :dont-close-on-select="false"/>
+        <div class="mt-3">
+            <div v-for="(user,index) in this.managers" class="my-2">
+                <div class="flex col-span-2">
+                    <div class="flex items-center">
+                        <img class="flex h-11 w-11 rounded-full" :src="user.profile_photo_url" alt=""/>
+                        <span class="flex ml-4">
+                            {{ user.first_name }} {{ user.last_name }}
+                        </span>
+                    </div>
+                    <button type="button" @click="this.deleteDepartmentManager(user)">
+                        <span class="sr-only">{{ $t('Delete department management') }}</span>
+                        <XCircleIcon class="ml-3 text-artwork-buttons-create h-5 w-5 hover:text-error "/>
+                    </button>
+                </div>
+            </div>
+        </div>
+<!--            <div class="flex items-center">-->
+<!--                <img class="h-5 w-5 mr-2 object-cover rounded-full"-->
+<!--                     :src="user.profile_photo_url"-->
+<!--                     alt=""/>-->
+<!--                <template v-if="user.provider_name">-->
+<!--                    {{ user.provider_name }}-->
+<!--                </template>-->
+<!--                <template v-else>-->
+<!--                    {{ user.first_name }} {{ user.last_name }}-->
+<!--                </template>-->
+<!--            </div>-->
+<!--            <button type="button" @click="this.deleteDepartmentManager(user)">-->
+<!--                <span class="sr-only">{{ $t('Delete department management') }}</span>-->
+<!--                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-artwork-navigation-background rounded-full"/>-->
+<!--            </button>-->
+<!--        </div>-->
+    </div>
+    <div class="flex items-center justify-center mt-5">
+        <FormButton :text="$t('Save')" @click="saveCraft"/>
+    </div>
 </BaseModal>
 </template>
 
@@ -181,9 +214,13 @@ import {defineComponent} from 'vue'
 import {
     Dialog,
     DialogPanel,
-    Listbox, ListboxButton,
+    Listbox,
+    ListboxButton,
     ListboxOption,
-    ListboxOptions, Switch, SwitchGroup, SwitchLabel,
+    ListboxOptions,
+    Switch,
+    SwitchGroup,
+    SwitchLabel,
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
@@ -200,11 +237,13 @@ import ModalHeader from "@/Components/Modals/ModalHeader.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TinyPageHeadline from "@/Components/Headlines/TinyPageHeadline.vue";
+import UserSearch from "@/Components/SearchBars/UserSearch.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     mixins: [IconLib],
     components: {
+        UserSearch,
         TinyPageHeadline,
         NumberInputComponent,
         TextInputComponent,
@@ -215,8 +254,20 @@ export default defineComponent({
         XCircleIcon,
         TagComponent,
         Input,
-        ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
-        Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
+        ChevronDownIcon,
+        CheckIcon,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        Listbox,
+        Dialog,
+        TransitionChild,
+        XIcon,
+        TransitionRoot,
+        DialogPanel,
+        SwitchGroup,
+        Switch,
+        SwitchLabel
     },
     props: ['craftToEdit', 'usersWithPermission', 'usersWithInventoryPermission'],
     data(){
@@ -232,11 +283,17 @@ export default defineComponent({
                 notify_days: this.craftToEdit ? this.craftToEdit.notify_days : 0,
                 universally_applicable: this.craftToEdit ? this.craftToEdit.universally_applicable : false,
                 users_for_inventory: [],
+                managersToBeAssigned: []
             }),
             enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
             craftInventoryPlaner: this.craftToEdit ? this.craftToEdit.craft_inventory_planer : [],
             inventoryPlannedByAll: this.craftToEdit ? this.craftToEdit.inventory_planned_by_all : true,
-            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : []
+            craftShiftPlaner: this.craftToEdit ? this.craftToEdit.craft_shift_planer : [],
+            managers: this.craftToEdit ? this.craftToEdit.managing_freelancers.concat(
+                    this.craftToEdit.managing_service_providers.concat(
+                        this.craftToEdit.managing_users
+                    )
+                ) : []
         }
     },
     unmounted() {
@@ -268,15 +325,22 @@ export default defineComponent({
             }
         },
         saveCraft(){
+            this.managers.forEach((manager) => {
+                this.craft.managersToBeAssigned.push({
+                    manager_id: manager.id ?? manager.pivot.craft_manager_id,
+                    manager_type: manager.manager_type ?? manager.pivot.craft_manager_type
+                });
+            });
+
             if (this.craft.notify_days < 0) {
                 this.craft.notify_days = 0;
             }
 
-            if(!this.enabled){
+            if (!this.enabled) {
                 this.craft.assignable_by_all = false
                 this.craftShiftPlaner.forEach((user) => {
                     this.craft.users.push(user.id);
-                })
+                });
             } else {
                 this.craft.assignable_by_all = true;
                 this.craft.users = [];
@@ -312,15 +376,22 @@ export default defineComponent({
                 })
             }
         },
-        addColor(color){
-            this.craft.color = color
+        addColor(color) {
+            this.craft.color = color;
         },
-        updateCraft(){
+        addSelectedToCraftManagers(user) {
+            if (this.managers.findIndex((manager) => user.id === manager.id) > -1) {
+                return;
+            }
 
+            this.managers.push(user);
         },
+        deleteDepartmentManager(manager) {
+            this.managers.splice(
+                this.managers.findIndex((currentManager) => currentManager.id === manager.id),
+                1
+            );
+        }
     }
 })
 </script>
-<style scoped>
-
-</style>

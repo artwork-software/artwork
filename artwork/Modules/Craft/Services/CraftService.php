@@ -6,14 +6,15 @@ use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
+use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryCategory;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroup;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryGroupFolder;
 use Artwork\Modules\InventoryManagement\Models\CraftInventoryItem;
-use Artwork\Modules\InventoryManagement\Models\CraftInventoryItemCell;
 use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemCellService;
-use Artwork\Modules\InventoryManagement\Services\CraftInventoryItemService;
 use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
+use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Database\Eloquent\Collection;
@@ -119,6 +120,33 @@ class CraftService
                 'universally_applicable',
                 'inventory_planned_by_all'
             ]));
+
+        $managersToBeAssigned = $craftUpdateRequest->collect('managersToBeAssigned')->groupBy(
+            function ($managerToBeAssigned) {
+                return $managerToBeAssigned['manager_type'];
+            }
+        );
+
+        if ($managersToBeAssigned->empty()) {
+            $craft->managingUsers()->sync([]);
+            $craft->managingFreelancers()->sync([]);
+            $craft->managingServiceProviders()->sync([]);
+        }
+
+        foreach ($managersToBeAssigned as $managerType => $managers) {
+            switch ($managerType) {
+                case User::class:
+                    $craft->managingUsers()->sync($managers->pluck('manager_id'));
+                    break;
+                case Freelancer::class:
+                    $craft->managingFreelancers()->sync($managers->pluck('manager_id'));
+                    break;
+                case ServiceProvider::class:
+                    $craft->managingServiceProviders()->sync($managers->pluck('manager_id'));
+                    break;
+            }
+        }
+
         if (!$craftUpdateRequest->boolean('assignable_by_all')) {
             $this->craftRepository->syncUsers($craft, $craftUpdateRequest->get('users'));
         } else {

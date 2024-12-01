@@ -55,7 +55,6 @@ class CraftInventoryItemCellService
         // update last edit column with current date and user
 
         $column = CraftsInventoryColumn::where('type', CraftsInventoryColumnTypeEnum::LAST_EDIT_AND_EDITOR)->first();
-        //dd($column);
 
         $cell = CraftInventoryItemCell::where(
             'craft_inventory_item_id',

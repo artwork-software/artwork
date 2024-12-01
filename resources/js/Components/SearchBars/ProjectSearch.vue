@@ -40,8 +40,8 @@ export default {
             this.project_search_query = '';
         },
         checkIfMustListed(project) {
-            if (this.noProjectGroups && project.is_group) {
-                return false;
+            if (this.noProjectGroups && !project.is_group) {
+                return true;
             }
             if (this.onlyProjectGroups && project.is_group) {
                 return true;

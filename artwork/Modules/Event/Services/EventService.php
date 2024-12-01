@@ -4,6 +4,8 @@ namespace Artwork\Modules\Event\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
 use App\Http\Controllers\ShiftFilterController;
+use App\Settings\EventSettings;
+use App\Settings\ShiftSettings;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Services\CalendarDataService;
@@ -692,7 +694,15 @@ readonly class EventService
 
         return ShiftPlanDto::newInstance()
             ->setHistory($this->getEventShiftsHistoryChanges())
-            ->setCrafts($craftService->getAll())
+            ->setCrafts(
+                $craftService->getAll(
+                    [
+                        'managingUsers',
+                        'managingFreelancers',
+                        'managingServiceProviders'
+                    ]
+                )
+            )
             ->setShiftPlan(
                 $roomService->collectEventsForRoomsShift(
                     $filteredRooms,
@@ -713,8 +723,7 @@ readonly class EventService
                     $startDate,
                     $endDate,
                     UserShiftPlanResource::class,
-                    true,
-                    null
+                    true
                 )
             )
             ->setFreelancersForShifts(
@@ -748,7 +757,9 @@ readonly class EventService
                     },
                     ShiftPlanWorkerSortEnum::cases()
                 ),
-            );
+            )
+            ->setUseFirstNameForSort((new ShiftSettings())->use_first_name_for_sort)
+            ->setUserShiftPlanShiftQualificationFilters($user->getAttribute('show_qualifications'));
     }
 
     /**
@@ -1191,7 +1202,7 @@ readonly class EventService
             $event['end_time'] ?? null
         );
 
-        $project->events()->create([
+        $createdEvent  = $project->events()->create([
             'eventName' => $event['name'] ?? '',
             'user_id' => $userId,
             'start_time' => $startTime,
@@ -1199,8 +1210,15 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $event['type']['id'],
             'room_id' => $event['room']['id'],
-            'event_status_id' => $event['status']['id'],
         ]);
+
+        $eventStatusSetting = app(EventSettings::class);
+
+        if ($eventStatusSetting->enable_status) {
+            $createdEvent->update([
+                'event_status_id' => $event['status']['id']
+            ]);
+        }
     }
 
     public function updateBulkEvent(
@@ -1222,8 +1240,15 @@ readonly class EventService
             'allDay' => $allDay,
             'event_type_id' => $data['type']['id'],
             'room_id' => $data['room']['id'],
-            'event_status_id' => $data['status']['id'],
         ]);
+
+        $eventStatusSetting = app(EventSettings::class);
+
+        if ($eventStatusSetting->enable_status) {
+            $this->eventRepository->update($event, [
+                'event_status_id' => $event['status']['id']
+            ]);
+        }
     }
 
     public function getOrderBySubQueryBuilder(string $column, string $direction): Builder

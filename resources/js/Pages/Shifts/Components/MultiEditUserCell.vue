@@ -12,7 +12,7 @@
                 <div>
                     <div v-if="type === 0" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-20'">
                         <div class="flex">
-                            <div class="truncate">
+                            <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
                                 {{ item.first_name }} {{ item.last_name }}
                             </div>
                         </div>
@@ -20,14 +20,14 @@
                     </div>
                     <div v-else-if="type === 1" class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-32' : 'w-20'">
                         <div class="flex">
-                            <div class="truncate">
+                            <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">
                                 {{ item.first_name }} {{ item.last_name }}
                             </div>
                         </div>
                     </div>
                     <div v-else class="text-ellipsis" :class="$page.props.user.compact_mode ? 'w-36' : 'w-24'">
                         <div class="flex">
-                            <div class="truncate">{{ item.provider_name }}</div>
+                            <div :class="this.isManagingCraft ? 'underline truncate' : 'truncate'">{{ item.provider_name }}</div>
                         </div>
                     </div>
                     <div class="flex items-center justify-center w-26">
@@ -77,7 +77,8 @@ export default defineComponent({
         'color',
         'craftId',
         'craft',
-        'multiEditCellByDayAndUser'
+        'multiEditCellByDayAndUser',
+        'isManagingCraft'
     ],
     watch: {
         multiEditMode: {

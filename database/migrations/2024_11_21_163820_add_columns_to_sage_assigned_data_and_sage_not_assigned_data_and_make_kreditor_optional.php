@@ -6,50 +6,48 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table(
             'sage_assigned_data',
             function (Blueprint $table) {
-                $table->double('periode')->after('tan');
-                $table->double('kto_haben')->after('periode');
-                $table->double('kto_soll')->after('belegdatum');
+                $table->unsignedBigInteger('periode')->after('tan');
+                $table->string('kto_haben')->after('periode');
+                $table->string('kto_soll')->after('belegdatum');
+                $table->decimal('buchungsbetrag', 12)->change();
             }
         );
 
         Schema::table(
             'sage_not_assigned_data',
             function (Blueprint $table) {
-                $table->double('periode')->after('tan');
-                $table->double('kto_haben')->after('periode');
-                $table->double('kto_soll')->after('belegdatum');
+                $table->unsignedBigInteger('periode')->after('tan');
+                $table->string('kto_haben')->after('periode');
+                $table->string('kto_soll')->after('belegdatum');
+                $table->decimal('buchungsbetrag', 12)->change();
             }
         );
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table(
             'sage_assigned_data',
             function (Blueprint $table) {
-                $table->float('periode')->after('tan');
-                $table->float('kto_haben')->after('periode');
-                $table->float('kto_soll')->after('belegdatum');
+                $table->dropColumn('periode');
+                $table->dropColumn('kto_haben');
+                $table->dropColumn('kto_soll');
+                $table->decimal('buchungsbetrag', 8)->change();
             }
         );
 
         Schema::table(
             'sage_not_assigned_data',
             function (Blueprint $table) {
-                $table->float('periode')->after('tan');
-                $table->float('kto_haben')->after('periode');
-                $table->float('kto_soll')->after('belegdatum');
+                $table->dropColumn('periode');
+                $table->dropColumn('kto_haben');
+                $table->dropColumn('kto_soll');
+                $table->decimal('buchungsbetrag', 8)->change();
             }
         );
     }

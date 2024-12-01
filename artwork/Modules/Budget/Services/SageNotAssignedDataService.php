@@ -45,7 +45,7 @@ readonly class SageNotAssignedDataService
             'belegnummer' => $data['Belegnummer'],
             'belegdatum' => $data['Belegdatum'],
             'kto_soll' => $data['KtoSoll'],
-            'sa_kto' => $data['SaKto'],
+            'sa_kto' => $data['SaKto'] ?? '',
             'kst_traeger' => $data['KstTraeger'],
             'kst_stelle' => $data['KstStelle'],
             'buchungsdatum' => $data['Buchungsdatum'],

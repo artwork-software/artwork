@@ -23,9 +23,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
-readonly class Sage100Service
+class Sage100Service
 {
     private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
+
+    public function __construct(private readonly Sage100Client $sage100Client)
+    {
+    }
 
     public function importDataToBudget(
         ?int $count,
@@ -497,7 +501,7 @@ readonly class Sage100Service
 
     private function getData(int|null $count, string|null $specificDay, SageApiSettingsService $sageApiSettingsService)
     {
-//        if u want to import from local json use this return and start artisan artwork:import-sage100-api-data
+//      if u want to import from local json use this return and start artisan artwork:import-sage100-api-data
 //        return json_decode(
 //            file_get_contents(
 //                implode(
@@ -510,14 +514,13 @@ readonly class Sage100Service
 //            ),
 //            true
 //        )['$resources'];
-        dd(app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService)));
-        return app(Sage100Client::class)->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
+        return $this->sage100Client->getData($this->buildQuery($count, $specificDay, $sageApiSettingsService));
     }
 
     /**
      * @return array<string, string>
      */
-    private function  buildQuery(
+    private function buildQuery(
         int|null $count,
         string|null $specificDay,
         SageApiSettingsService $sageApiSettingsService

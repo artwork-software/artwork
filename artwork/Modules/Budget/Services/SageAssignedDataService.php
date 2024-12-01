@@ -44,7 +44,7 @@ readonly class SageAssignedDataService
             'belegnummer' => $sageApiData['Belegnummer'],
             'belegdatum' => $sageApiData['Belegdatum'],
             'kto_soll' => $sageApiData['KtoSoll'],
-            'sa_kto' => $sageApiData['SaKto'],
+            'sa_kto' => $sageApiData['SaKto'] ?? '',
             'kst_traeger' => $sageApiData['KstTraeger'],
             'kst_stelle' => $sageApiData['KstStelle'],
             'buchungsdatum' => $sageApiData['Buchungsdatum'],

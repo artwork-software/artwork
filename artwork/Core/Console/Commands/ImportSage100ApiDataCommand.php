@@ -29,6 +29,11 @@ class ImportSage100ApiDataCommand extends Command
         SageAssignedDataService $sageAssignedDataService,
         SageNotAssignedDataService $sageNotAssignedDataService
     ): int {
+        if ($sageApiSettingsService->getFirst() === null) {
+            $this->error('Sage API settings not found. Please configure settings in artworks Tool-Settings.');
+            return 1;
+        }
+
         return $this->sage100Service->importDataToBudget(
             $this->argument('count'),
             $this->argument('specificDay'),

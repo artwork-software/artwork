@@ -64,5 +64,3 @@ class MimeTypeList
         'svgz' => 'image/svg+xml',
     ];
 }
-
-?>

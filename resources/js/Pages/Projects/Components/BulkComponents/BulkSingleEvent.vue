@@ -157,6 +157,7 @@
            </div>
            <div v-if="canEditComponent" class="flex items-center col-span-1">
                <div class="flex items-center gap-x-3">
+                   <ToolTipComponent icon="IconNote" v-if="!isInModal" :tooltip-text="$t('Edit the description')" stroke="1.5" @click="openNoteModal = true" />
                    <ToolTipDefault :tooltip-text="$t('Set the event to all-day')" left show24-h-icon icon-classes="w-6 h-6" v-if="event.start_time && event.end_time && !event.copy && !isInModal" @click="removeTime"/>
                    <IconCopy @click="event.copy = true" v-if="!event.copy"
                              class="w-6 h-6 text-artwork-buttons-context cursor-pointer hover:text-artwork-buttons-hover transition-all duration-150 ease-in-out"
@@ -250,6 +251,8 @@
            :titel="$t('Delete event')"
            :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"
            @closed="onCloseDeleteEventConfirmModal"/>
+
+       <AddEditEventNoteModal :event="event" v-if="openNoteModal" @close="openNoteModal = false"/>
    </div>
 </template>
 
@@ -280,6 +283,8 @@ import {router, usePage} from "@inertiajs/vue3";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {computed, onMounted, ref} from "vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import AddEditEventNoteModal from "@/Pages/Projects/Components/BulkComponents/AddEditEventNoteModal.vue";
 
 const props = defineProps({
     event: {
@@ -323,6 +328,7 @@ const props = defineProps({
 
 const showMenu = ref(false);
 const dayString = ref(null);
+const openNoteModal = ref(false);
 
 const emit = defineEmits(['deleteCurrentEvent', 'createCopyByEventWithData', 'openEventComponent']);
 const openEventComponent = (eventId) => {

@@ -2141,5 +2141,9 @@
     "Phone private": "Phone private",
     "Hide your phone number from other users.": "Hide your phone number from other users.",
     "View private contact details": "View private contact details",
-    "Can view private contact details of users": "Can view private contact details of users"
+    "Can view private contact details of users": "Can view private contact details of users",
+    "Update": "Update",
+    "Edit Event description": "Edit Event description",
+    "Edit the event description below.": "Edit the event description below.",
+    "Edit the description": "Edit the description"
 }

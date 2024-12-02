@@ -1,32 +1,17 @@
 <template>
     <Popover v-slot="{ open }" class="!ring-0">
-        <PopoverButton :class="open ? '' : 'text-opacity-90'"
-                       class="group inline-flex !ring-0 outline-0"
-                       @click="calculatePopoverPosition">
+        <PopoverButton :class="open ? '' : 'text-opacity-90'" class="group inline-flex !ring-0 outline-0" @click="calculatePopoverPosition">
             <template v-if="useSlotInsteadOfIcon">
                 <slot/>
             </template>
             <template v-else>
-                <img v-if="user" :src="user.profile_photo_url" alt=""
-                     class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 "
-                     :class="['h-' + this.height, 'w-' + this.width, classes]">
-                <IconUserExclamation v-else
-                                     stroke-width="2"
-                                     class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300"
-                                     :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
+                <img v-if="user" :src="user.profile_photo_url" alt="" class="shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 " :class="['h-' + this.height, 'w-' + this.width, classes]">
+                <IconUserExclamation v-else stroke-width="2" class="p-1 text-black shrink-0 flex object-cover rounded-full !ring-0 focus:ring-0 bg-gray-300" :class="['h-' + this.height, 'w-' + this.width, 'min-h-' + this.height, 'min-w-' + this.width, classes]"/>
             </template>
         </PopoverButton>
         <Teleport to="body">
-            <transition enter-active-class="transition-enter-active"
-                        enter-from-class="transition-enter-from"
-                        enter-to-class="transition-enter-to"
-                        leave-active-class="transition-leave-active"
-                        leave-from-class="transition-leave-from"
-                        leave-to-class="transition-leave-to">
-                <PopoverPanel
-                    :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '']"
-                    class="absolute left-1/2 z-50 transform  bg-artwork-navigation-background rounded-lg shadow-xl px-4 py-4"
-                    :style="popoverStyle">
+            <transition enter-active-class="transition-enter-active" enter-from-class="transition-enter-from" enter-to-class="transition-enter-to" leave-active-class="transition-leave-active" leave-from-class="transition-leave-from" leave-to-class="transition-leave-to">
+                <PopoverPanel :class="[!dontTranslatePopoverPosition ? '-translate-x-1/2' : '']" class="absolute left-1/2 z-50 transform  bg-artwork-navigation-background rounded-lg shadow-xl px-4 py-4" :style="popoverStyle">
                     <div v-if="user" class="">
                         <div class="flex items-center gap-4">
                             <img class="min-h-14 min-w-14 h-14 w-14 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>

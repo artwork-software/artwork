@@ -111,18 +111,20 @@ class ChangeBuilder implements Builder
             'type' => $this->type ?? 'project',
             'translationKey' => $this->translationKey,
             'translationKeyPlaceholderValues' => $this->translationKeyPlaceholderValues,
-            'changed_by' => [
+            /*'changed_by' => [
                 'id' => $user->id,
                 'email' => $user->email,
-                'business' => $user->business,
+                'pronouns' => $user->pronouns,
                 'position' => $user->position,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,
                 'profile_photo_url' => $user->profile_photo_url,
                 'profile_photo_path' => $user->profile_photo_path,
                 'phone_number' => $user->phone_number,
+                'email_private' => $user->email_private,
+                'phone_private' => $user->phone_private,
                 'description' => $user->description
-            ]
+            ]*/
         ];
 
         if (!empty($this->type) && $this->type === 'shift') {

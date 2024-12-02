@@ -60,10 +60,6 @@ const props = defineProps({
         type: [String, Number],
         default: '1'
     },
-    relative: {
-        type: Boolean,
-        default: true
-    },
     whiteIcon: {
         type: Boolean,
         default: false

@@ -2133,5 +2133,13 @@
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Here you can specify the department management for this craft. It will be highlighted in the overview.",
     "Craft manager": "Craft manager",
-    "Artists": "Artists"
+    "Artists": "Artists",
+    "Tool Settings": "Tool Settings",
+    "Pronouns": "Pronouns",
+    "Email private": "Email private",
+    "Hide your email address from other users.": "Hide your email address from other users.",
+    "Phone private": "Phone private",
+    "Hide your phone number from other users.": "Hide your phone number from other users.",
+    "View private contact details": "View private contact details",
+    "Can view private contact details of users": "Can view private contact details of users"
 }

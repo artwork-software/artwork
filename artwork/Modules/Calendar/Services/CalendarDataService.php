@@ -92,8 +92,6 @@ readonly class CalendarDataService
             }
         }
 
-
-
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
         $calendarType = $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ? 'daily' : 'individual';
         $selectedDate = $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?

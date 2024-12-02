@@ -2,7 +2,7 @@
     <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
+                <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
@@ -17,8 +17,13 @@
                         <button v-else class="ml-2 text-black nextTimeRange" @click="nextDay">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
+
                     </div>
+                    <BaseMenu show-custom-icon icon="IconReorder" class="mx-2" translation-key="Jump to month" has-no-offset>
+                        <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
+                    </BaseMenu>
                 </div>
+
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
                         id="calendarProjectSearch"
@@ -344,6 +349,8 @@ import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal
 import Input from "@/Jetstream/Input.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -359,7 +366,8 @@ const emits = defineEmits([
     'wantsToAddNewEvent',
     'previousDay',
     'nextDay',
-    'searchingForProject'
+    'searchingForProject',
+    'jumpToDayOfMonth'
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
@@ -408,6 +416,7 @@ const handleUseTimePeriodChange = (enabled) => {
 
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
+const months = inject('months');
 
 const props = defineProps({
     project: {
@@ -557,6 +566,10 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
     })
+}
+
+const jumpToDayOfMonth = (day) => {
+    emits('jumpToDayOfMonth', day);
 }
 
 

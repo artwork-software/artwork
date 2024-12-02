@@ -117,6 +117,7 @@ import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
 import BudgetInformations from "@/Pages/Projects/Tab/Components/BudgetInformations.vue";
 import {usePermission} from "@/Composeables/Permission.js";
 import BulkBody from "@/Pages/Projects/Components/BulkComponents/BulkBody.vue";
+import ArtistResidenciesComponent from "@/Pages/Projects/Tab/Components/ArtistResidenciesComponent.vue";
 
 const pageProps = usePage().props;
 provide('pageProps', pageProps);
@@ -149,7 +150,8 @@ const componentMapping = {
     ChecklistAllComponent,
     CommentAllTab,
     BudgetInformations,
-    BulkBody
+    BulkBody,
+    ArtistResidenciesComponent
 };
 
 const props = defineProps({

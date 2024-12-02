@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Settings\EventSettings;
 use Artwork\Core\Http\Requests\SearchRequest;
 use Artwork\Modules\Area\Services\AreaService;
+use Artwork\Modules\ArtistResidency\Enums\TypOfRoom;
 use Artwork\Modules\Budget\Enums\BudgetTypeEnum;
 use Artwork\Modules\Budget\Exports\BudgetExport;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -102,6 +103,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\Sector\Models\Sector;
 use Artwork\Modules\Sector\Services\SectorService;
+use Artwork\Modules\ServiceProvider\Enums\ServiceProviderTypes;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
 use Artwork\Modules\ServiceProvider\Services\ServiceProviderService;
 use Artwork\Modules\Shift\Enums\ShiftTabSort;
@@ -136,6 +138,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
@@ -1911,6 +1914,9 @@ class ProjectController extends Controller
         AreaService $areaService,
         EventService $eventService
     ): Response|ResponseFactory {
+
+
+
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
@@ -1958,6 +1964,16 @@ class ProjectController extends Controller
                     break;
                 case ProjectTabComponentEnum::PROJECT_TEAM->value:
                     $this->loadProjectTeamData($headerObject, $project);
+                    break;
+                case ProjectTabComponentEnum::ARTIST_RESIDENCIES->value:
+                    Inertia::share([
+                        'roomTypes' => TypOfRoom::cases(),
+                        'serviceProviders' => ServiceProvider
+                            ::where('type_of_provider', ServiceProviderTypes::HOUSING->value)
+                            ->without(['contacts'])->get(),
+                        'artist_residencies' => $project->artistResidencies()
+                            ->with(['serviceProvider'])->get(),
+                    ]);
                     break;
                 case ProjectTabComponentEnum::BULK_EDIT->value:
                     $eventsUnSorted = $project->events()->without([

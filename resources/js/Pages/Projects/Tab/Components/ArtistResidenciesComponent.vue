@@ -14,7 +14,7 @@
                 text="Saved. The Artist Residency has been successfully applied."
             />
         </div>
-        <div class="mt-8 flow-root">
+        <div class="mt-8 flow-root border-b border-dashed border-gray-400">
             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                     <table class="min-w-full divide-y divide-gray-300">
@@ -34,6 +34,16 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+        <div class="flex items-center justify-end mt-3 gap-x-3">
+            <div class="flex items-center gap-x-1">
+                <component is="IconBuildingSkyscraper" class="h-4 w-4"/>
+                <span class="text-xs">{{ $t('Costs for overnight stays') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalCostOfArtistResidencies }} €</span></span>
+            </div>
+            <div class="flex items-center gap-x-1">
+                <component is="IconMoneybag" class="h-4 w-4"/>
+                <span class="text-xs">{{ $t('Costs of daily allowances') }}: <span class="underline decoration-double decoration-slate-300 underline-offset-2">{{ totalAllowanceOfArtistResidencies }} €</span></span>
             </div>
         </div>
     </div>
@@ -56,7 +66,7 @@ import {IconEdit} from "@tabler/icons-vue";
 import {MenuItem} from "@headlessui/vue";
 import AddEditArtistResidenciesModal
     from "@/Pages/Projects/Components/ArtistResidenciesComponents/AddEditArtistResidenciesModal.vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import SingleArtistResidency from "@/Pages/Projects/Components/ArtistResidenciesComponents/SingleArtistResidency.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
@@ -99,6 +109,24 @@ const editResidency = (artist_residency) => {
     artistResidencyToEdit.value = artist_residency;
     showAddEditArtistResidenciesModal.value = true;
 }
+
+const totalCostOfArtistResidencies = computed(() => {
+    // foreach artist_residency in artist_residencies calculate cost_per_night * days
+    let totalCost = 0;
+    usePage().props.artist_residencies.forEach((artist_residency) => {
+        totalCost += artist_residency.cost_per_night * artist_residency.days;
+    });
+    return totalCost.toFixed(2);
+})
+
+const totalAllowanceOfArtistResidencies = computed(() => {
+    // foreach artist_residency in artist_residencies calculate allowance_per_night * days
+    let totalAllowance = 0;
+    usePage().props.artist_residencies.forEach((artist_residency) => {
+        totalAllowance += (artist_residency.daily_allowance * artist_residency.days) + artist_residency.additional_daily_allowance;
+    });
+    return totalAllowance.toFixed(2);
+})
 </script>
 
 <style scoped>

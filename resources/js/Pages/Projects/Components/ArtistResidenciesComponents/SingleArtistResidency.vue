@@ -3,8 +3,8 @@
         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">{{ artist_residency.name }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.position }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.phone_number }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }}</td>
-        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.arrival_date }} {{ artist_residency.formatted_dates.arrival_time }}</td>
+        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.formatted_dates.departure_date }} {{ artist_residency.formatted_dates.departure_time }}</td>
         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ artist_residency.service_provider.name }}</td>
         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
             <BaseMenu dots-size="h-5 w-5" has-no-offset>

@@ -2195,5 +2195,9 @@
     "Update": "Update",
     "Edit Event description": "Edit Event description",
     "Edit the event description below.": "Edit the event description below.",
-    "Edit the description": "Edit the description"
+    "Edit the description": "Edit the description",
+    "Jump to month": "Jump to month",
+    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency",
+    "Attention": "Attention",
+    "Costs of daily allowances": "Costs of daily allowances"
 }

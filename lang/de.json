@@ -2196,5 +2196,9 @@
     "Update": "Aktualisieren",
     "Edit Event description": "Terminbeschreibung bearbeiten",
     "Edit the event description below.": "Bearbeite die Terminbeschreibung unten.",
-    "Edit the description": "Beschreibung bearbeiten"
+    "Edit the description": "Beschreibung bearbeiten",
+    "Jump to month": "Springe zu Monat",
+    "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "Du musst zuerst mindestens eine Unterkunft in der Benutzerverwaltung unter „Adressen“ anlegen, bevor du einen Künstleraufenthalt pflegen kannst",
+    "Attention": "Achtung",
+    "Costs of daily allowances": "Kosten Tagegelder"
 }

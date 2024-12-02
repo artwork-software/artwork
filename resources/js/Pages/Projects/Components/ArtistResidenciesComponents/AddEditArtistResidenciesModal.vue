@@ -7,7 +7,7 @@
            />
        </div>
 
-        <form @submit.prevent="createOrUpdateArtistResidency">
+        <form @submit.prevent="createOrUpdateArtistResidency" v-if="usePage().props.serviceProviders.length > 0">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 px-6">
                 <div class="col-span-2">
                     <!-- Name -->
@@ -140,6 +140,7 @@
                         :label="$t('Cost per night')"
                         id="cost_per_night"
                         :step="0.01"
+                        :max="50000"
                     />
                 </div>
                 <div>
@@ -174,6 +175,7 @@
                         :label="$t('Daily allowance')"
                         id="daily_allowance"
                         :step="0.01"
+                        :max="50000"
                     />
                 </div>
                 <div>
@@ -183,6 +185,7 @@
                         :label="$t('Additional daily allowance')"
                         id="additional_daily_allowance"
                         :step="0.01"
+                        :max="50000"
                     />
                 </div>
                 <div class="col-span-1">
@@ -223,6 +226,13 @@
             </div>
         </form>
 
+        <div v-else class="bg-red-500/10 mx-10 my-10 px-4 py-5 rounded-lg border border-red-200 -mt-5">
+            <div>
+                <h4 class="font-bold text-sm text-red-500 mb-1">{{ $t('Attention')}}</h4>
+            </div>
+            <AlertComponent  :text="$t('You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency')" type="error" />
+        </div>
+
 
     </BaseModal>
 </template>
@@ -242,6 +252,7 @@ import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 
 
 const props = defineProps({
@@ -306,6 +317,10 @@ const calculateTotalDailyAllowance = computed(() => {
 
 
 const createOrUpdateArtistResidency = () => {
+
+    if(!selectedServiceProvider.value || !selectedRoomType.value){
+        return
+    }
 
     artistResidency.days = calculateTotalNights();
     artistResidency.type_of_room = selectedRoomType.value;

@@ -68,7 +68,9 @@ class ArtistResidency extends Model
     {
         return [
             'arrival_date' => Date::parse($this->arrival_date)->translatedFormat('d.m.Y'),
+            'arrival_time' => $this->arrival_time ? Date::parse($this->arrival_time)->translatedFormat('H:i') : null,
             'departure_date' => Date::parse($this->departure_date)->translatedFormat('d.m.Y'),
+            'departure_time' => $this->departure_time ? Date::parse($this->departure_time)->translatedFormat('H:i') : null,
         ];
     }
 }

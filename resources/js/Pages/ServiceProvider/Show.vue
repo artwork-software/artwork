@@ -75,6 +75,10 @@
                     </div>
                 </div>
 
+                <div class="max-w-lg">
+                    <VisualFeedback :show-save-success="showSavedSuccess"/>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1 -mt-1">
                         <Listbox as="div" @focusout="saveProvider" v-model="providerData.type_of_provider">
@@ -194,11 +198,13 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        VisualFeedback,
         ListboxOptions, ListboxOption, Listbox, ListboxLabel, ListboxButton,
         TextareaComponent,
         TextInputComponent,
@@ -263,6 +269,7 @@ export default defineComponent({
             types: ['work', 'housing'],
             photoPreview: null,
             showSidebar: false,
+            showSavedSuccess: false,
         }
     },
     computed: {
@@ -290,7 +297,10 @@ export default defineComponent({
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        this.openSuccessModal()
+                        this.showSavedSuccess = true
+                        setTimeout(() => {
+                            this.showSavedSuccess = false
+                        }, 3000)
                     }
                 })
             }
@@ -327,7 +337,10 @@ export default defineComponent({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    this.openSuccessModal()
+                    this.showSavedSuccess = true
+                    setTimeout(() => {
+                        this.showSavedSuccess = false
+                    }, 3000)
                 }
             })
         },

@@ -527,7 +527,7 @@ export default {
             this.windowInnerHeight = window.innerHeight;
         });
     },
-  data() {
+    data() {
         this.$i18n.locale = this.$page.props.user.language;
         return {
             showSystemSettings: false,

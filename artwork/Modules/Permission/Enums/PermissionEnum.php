@@ -45,4 +45,6 @@ enum PermissionEnum : string
     case INVENTORY_STOCK_MANAGE = 'can manage inventory stock';
 
     case INVENTORY_PLANER = 'can plan inventory';
+
+    case CAN_VIEW_PRIVATE_USER_INFO = 'can view private user info';
 }

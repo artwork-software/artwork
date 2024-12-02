@@ -24,7 +24,7 @@ class UserShowResource extends JsonResource
             'description' => $this->description,
             'departments' => $this->departments,
             'position' => $this->position,
-            'business' => $this->business,
+            'pronouns' => $this->pronouns,
             'phone_number' => $this->phone_number,
             'roles' => $this->getRoleNames(),
             'permissions' => $this->getAllPermissions()->pluck('name'),
@@ -38,7 +38,9 @@ class UserShowResource extends JsonResource
             'salary_per_hour' => $this->salary_per_hour,
             'salary_description' => $this->salary_description,
             'crafts' => $this->crafts,
-            'language' => $this->language
+            'language' => $this->language,
+            'email_private' => $this->email_private,
+            'phone_private' => $this->phone_private,
         ];
     }
 }

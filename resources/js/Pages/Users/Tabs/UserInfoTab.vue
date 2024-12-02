@@ -1,8 +1,9 @@
 <template>
     <div>
+
         <div v-if="this.isSignedInUser() || this.hasAdminRole()" class="mb-8">
             <div>
-                <div class="col-span-6 sm:col-span-4">
+                <div class="col-span-6 sm:col-span-4 mb-4">
                     <!-- Profile Photo File Input -->
                     <input type="file" class="hidden"
                            ref="photo"
@@ -45,63 +46,71 @@
                 </div>
             </div>
         </div>
-        <div>
-            <input disabled="disabled"
-                   type="text"
-                   :value="$page.props.businessName"
-                   class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 mb-6"
-                   @focusout="this.editUser()"
+        <div class="mt-20">
+            <TextInputComponent
+                disabled="disabled"
+                type="text"
+                v-model="$page.props.businessName"
+                :label="$page.props.businessName"
+                @focusout="this.editUser()"
+                id="business"
             />
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-4">
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
-                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                               type="text"
-                               v-model="userForm.business"
-                               :placeholder="this.$t('Business')"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
-                               @focusout="this.editUser()"
+                        <TextInputComponent
+                            :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                            :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                            type="text"
+                            v-model="userForm.pronouns"
+                            :label="this.$t('Pronouns')"
+                            @focusout="this.editUser()"
+                            id="pronouns"
                         />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
-                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                               type="text"
-                               v-model="userForm.position"
-                               :placeholder="this.$t('Position')"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
-                               @focusout="this.editUser()"
+                        <TextInputComponent
+                            :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                            :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                            type="text"
+                            v-model="userForm.position"
+                            :label="this.$t('Position')"
+                            @focusout="this.editUser()"
+                            id="position"
                         />
                     </div>
                 </div>
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input type="text" v-model="this.user_to_edit.email"
-                               :disabled="!this.hasAdminRole()"
-                               :class="this.hasAdminRole() ? '' : 'bg-gray-100'"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
-                               @focusout="this.editUser()"
+                        <TextInputComponent
+                            type="text"
+                            v-model="this.user_to_edit.email"
+                            :disabled="!this.hasAdminRole()"
+                            :class="this.hasAdminRole() ? '' : 'bg-gray-100'"
+                            @focusout="this.editUser()"
+                            :label="$t('Email')"
+                            id="email"
                         />
                         <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
-                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                               type="text"
-                               v-model="userForm.phone_number"
-                               :placeholder="$t('Phone number')"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
-                               @focusout="this.editUser()"
+                        <TextInputComponent
+                            :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                            :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                            type="text"
+                            v-model="userForm.phone_number"
+                            :label="$t('Phone number')"
+                            @focusout="this.editUser()"
+                            id="phone_number"
                         />
                     </div>
                 </div>
-                <div class="col-span-1" v-if="this.isSignedInUser() || hasAdminRole">
-                    <Listbox as="div" class="w-44" v-model="selectedLanguage" @update:modelValue="this.editUser()">
+                <div class="col-span-2" v-if="this.isSignedInUser() || hasAdminRole">
+                    <Listbox as="div" class="w-52" v-model="selectedLanguage" @update:modelValue="this.editUser()">
                         <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
                             <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary rounded-lg focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
@@ -127,60 +136,77 @@
                         </div>
                     </Listbox>
                 </div>
-                <div class="col-span-4">
+                <div class="col-span-1">
                     <div class="relative flex items-start">
                         <div class="flex h-6 items-center">
-                            <input id="comments" v-model="userForm.high_contrast" @change="editUser" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
+                            <input id="high_contrast" v-model="userForm.high_contrast" @change="editUser" aria-describedby="high_contrast-description" name="high_contrast" type="checkbox" class="input-checklist" />
                         </div>
                         <div class="ml-3 text-sm leading-6">
-                            <label for="comments" class="font-medium text-gray-900">{{ $t('High contrast')}}</label>
-                            <p id="comments-description" class="text-gray-500">
+                            <label for="high_contrast" class="font-medium text-gray-900">{{ $t('High contrast')}}</label>
+                            <p id="high_contrast-description" class="text-gray-500">
                                 {{ $t('Enable high contrast mode in the application for the event type colors.')}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-1">
+                    <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input id="email_private" v-model="userForm.email_private" @change="editUser" aria-describedby="email_private-description" name="email_private" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="email_private" class="font-medium text-gray-900">
+                                {{ $t('Email private')}}
+                            </label>
+                            <p id="email_private-description" class="text-gray-500">
+                                {{ $t('Hide your email address from other users.')}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-1">
+                    <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                            <input id="phone_private" v-model="userForm.phone_private" @change="editUser" aria-describedby="phone_private-description" name="phone_private" type="checkbox" class="input-checklist" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="phone_private" class="font-medium text-gray-900">
+                                {{ $t('Phone private')}}
+                            </label>
+                            <p id="phone_private-description" class="text-gray-500">
+                                {{ $t('Hide your phone number from other users.')}}
                             </p>
                         </div>
                     </div>
                 </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
-                        <textarea :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
-                                  :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                                  :placeholder="$t('What should other artwork users know?')"
-                                  v-model="userForm.description"
-                                  rows="5"
-                                  class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
-                                  @focusout="this.editUser()"
+                        <TextareaComponent
+                            :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                            :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                            :label="$t('What should other artwork users know?')"
+                            v-model="userForm.description"
+                            rows="5"
+                            @focusout="this.editUser()"
+                            id="description"
                         />
                     </div>
                 </div>
-                <div class="sm:col-span-6 mt-4 flex">
-                    <span v-if="userForm.departments.length === 0"
-                          class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</span>
-                    <span v-else class="flex -mr-3"
-                          v-for="(team,index) in userForm.departments">
-                        <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
-                                            :iconName="team.svg_name"
-                        />
-                    </span>
-                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true">
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="openChangeTeamsModal"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <PencilAltIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Edit team membership')}}
-                            </a>
-                        </MenuItem>
-                        <MenuItem v-slot="{ active }">
-                            <a href="#" @click="deleteFromAllDepartments"
-                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                <TrashIcon
-                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                                {{ $t('Remove user from all teams') }}
-                            </a>
-                        </MenuItem>
+
+            </div>
+            <div class="mt-8 flex items-center justify-between">
+                <div class="flex items-center">
+                    <div v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</div>
+                    <div class="flex -space-x-4 overflow-hidden" v-else>
+                        <img v-for="( team, index ) in userForm.departments" class="inline-block size-10 rounded-full ring-2 ring-white" :src="'/Svgs/TeamIconSvgs/' + team.svg_name + '.svg'" alt="" />
+                    </div>
+                    <BaseMenu v-show="this.$can('teammanagement')" class="ml-5 mt-2" :right="true" menu-width="w-88">
+                        <BaseMenuItem icon="IconEdit" @click="openChangeTeamsModal" title="Edit team membership" />
+                        <BaseMenuItem icon="IconTrash" @click="deleteFromAllDepartments" title="Remove user from all teams" />
                     </BaseMenu>
+                </div>
+                <div class="max-w-xl">
+                    <VisualFeedback :show-save-success="successSaved" />
                 </div>
             </div>
         </div>
@@ -209,7 +235,7 @@
                             <input :key="team.name" type="checkbox" :value="team" :id="team.id"
                                    v-model="team.checked"
                                    @change="teamChecked(team)"
-                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
+                                   class="mr-3 input-checklist"/>
                             <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
                                                 :iconName="team.svg_name"/>
                             <span :class="[team.checked ? 'xsDark' : 'xsLight']"
@@ -242,7 +268,7 @@
                             </span>
                     </div>
                 </div>
-                <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
+                <div class="flex mt-4 gap-3" :class="photoPreview ? 'ml-3' : ''">
                     <BaseButton :text="$t('Select file')" @click.prevent="selectNewPhoto" />
                     <BaseButton @click.prevent="deletePhoto"
                                 :text="$t('Delete current profile picture')"
@@ -294,9 +320,18 @@ import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
+import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import debounce from "lodash.debounce";
+import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 export default {
     components: {
+        BaseMenuItem,
+        VisualFeedback,
+        TextareaComponent,
+        TextInputComponent,
         BaseModal,
         BaseMenu,
         BaseButton,
@@ -330,6 +365,7 @@ export default {
     ],
     data() {
         return {
+            successSaved: false,
             showChangeTeamsModal: false,
             showSuccessModal: false,
             nameError: false,
@@ -343,11 +379,13 @@ export default {
                 email: this.user_to_edit.email,
                 photo:this.user_to_edit.profile_photo_path,
                 position: this.user_to_edit.position,
-                business: this.user_to_edit.business,
+                pronouns: this.user_to_edit.pronouns,
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
                 language: this.user_to_edit.language,
+                email_private: this.user_to_edit.email_private,
+                phone_private: this.user_to_edit.phone_private,
                 high_contrast: this.calendar_settings.high_contrast,
             }),
             resetPasswordForm: this.$inertia.form({
@@ -408,12 +446,11 @@ export default {
                 route('user.update', {user: this.user_to_edit.id}),
                 {
                     preserveScroll: true,
+                    preserveState: true,
                     onSuccess: () => {
-                        if (changedLocale) {
-                            this.openSuccessModal();
-                            return;
-                        }
-                        window.location.reload();
+                        this.successSaved = true;
+                        setTimeout(() => this.successSaved = false, 2000);
+                        //this.openSuccessModal()
                     }
                 }
             );

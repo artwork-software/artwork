@@ -36,11 +36,11 @@
                                   :class="[isCurrent(item.route) ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full h-12 rounded-md flex flex-row justify-center items-center transition-all duration-300 ease-in-out hover:font-bold text-xs', item.has_permission ? 'block': 'hidden']">
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
-                                    {{ item.name }}
+                                    {{ $t(item.name) }}
                                 </div>
                                 <div :style="[{ display: item.showToolTipForItem ? 'block' : 'none' }]" class="absolute left-14">
                                     <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
-                                        {{ item.name }}
+                                        {{ $t(item.name) }}
                                     </div>
                                 </div>
                             </Link>
@@ -54,11 +54,11 @@
                                 <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <!--<ToolTipNavigationComponent v-else :tooltip-text="item.name" :icon="item.icon" :icon-size="'h-7 w-7'" :stroke="isCurrent(item.route) ? 2 : 1" direction="right" :classes="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white group-hover:font-bold', 'h-7 w-7 shrink-0']"/>-->
                                 <div class="ml-4 w-32" v-if="fullSidenav">
-                                    {{ item.name }}
+                                    {{ $t(item.name) }}
                                 </div>
                                 <div :style="[{ display: item.showToolTipForItem ? 'block' : 'none' }]" class="absolute left-14">
                                     <div class="p-2 text-sm leading-tight text-white bg-black rounded-md shadow-lg break-keep min-w-16 w-fit">
-                                        {{ item.name }}
+                                        {{ $t(item.name) }}
                                     </div>
                                 </div>
                             </Link>
@@ -110,7 +110,7 @@
                                         <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                             <Link :href="item.href"
                                                   :class="[item.isCurrent ? 'font-bold' : ' hover:bg-artwork-navigation-color/10', 'text-artwork-navigation-color group w-full py-3 rounded-md flex flex-col items-center transition-all duration-300 ease-in-out hover:font-bold text-xs']">
-                                                {{ item.name }}
+                                                {{ $t(item.name) }}
                                             </Link>
                                         </MenuItem>
                                     </div>
@@ -440,7 +440,7 @@ export default {
             return [
                 {
                     has_permission: this.$can('change tool settings'),
-                    name: 'Tool',
+                    name: 'Tool Settings',
                     href: route('tool.branding'),
                     isCurrent: route().current('tool.branding') ||
                         route().current('tool.communication-and-legal') ||
@@ -448,48 +448,48 @@ export default {
                 },
                 {
                     has_permission: this.hasAdminRole(),
-                    name: this.$t('Shift settings'),
+                    name: 'Shift settings',
                     href: route('shift.settings'),
                     isCurrent: route().current('shift.settings')
                 },
                 {
                     has_permission: this.hasAdminRole(),
-                    name: this.$t('Inventory'),
+                    name: 'Inventory',
                     href: route('inventory-management.settings'),
                     isCurrent: route().current('inventory-management.settings')
                 },
                 {
-                    name: this.$t('Rooms'),
+                    name: 'Rooms',
                     has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
                     isCurrent: route().current('areas.management')
                 },
                 {
-                    name: this.$t('Projects'),
+                    name: 'Projects',
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),
                     href: route('project.settings'),
                     isCurrent: route().current('project.settings')
                 },
                 {
-                    name: this.$t('Events'),
+                    name: 'Events',
                     has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),
                     isCurrent: route().current('event_types.management')
                 },
                 {
-                    name: this.$t('Checklists'),
+                    name: 'Checklists',
                     has_permission: this.$can('admin checklistTemplates') || this.hasAdminRole(),
                     href: route('checklist_templates.management'),
                     isCurrent: route().current('checklist_templates.management')
                 },
                 {
-                    name: this.$t('Sources of funding'),
+                    name: 'Sources of funding',
                     has_permission: this.hasAdminRole(),
                     href: route('money_sources.settings'),
                     isCurrent: route().current('money_sources.settings')
                 },
                 {
-                    name: this.$t('Budget'),
+                    name: 'Budget',
                     has_permission: this.$canAny(
                         [
                             'can manage global project budgets',
@@ -550,7 +550,7 @@ export default {
                 showToolTipForItem: false
             },
                 {
-                    name: this.$t('Projects'),
+                    name: 'Projects',
                     href: route('projects'),
                     route: ['/projects'],
                     has_permission: this.moduleIsVisible('projects'),
@@ -558,7 +558,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Calendar'),
+                    name: 'Calendar',
                     href: route('events'),
                     route: ['/calendar/view'],
                     desiredClickHandler: this.useProjectTimePeriodAndRedirect,
@@ -567,7 +567,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Shift plan'),
+                    name: 'Shift plan',
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
                     has_permission: this.moduleIsVisible('shift_plan') &&
@@ -576,7 +576,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Inventory'),
+                    name: 'Inventory',
                     href: route('inventory-management.inventory'),
                     route: ['/inventory-management', '/inventory-management/scheduling'],
                     has_permission: this.moduleIsVisible('inventory'),
@@ -584,7 +584,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('To-dos'),
+                    name: 'To-dos',
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
                     has_permission: this.moduleIsVisible('tasks'),
@@ -592,7 +592,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Sources of funding'),
+                    name: 'Sources of funding',
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
                     has_permission: this.moduleIsVisible('sources_of_funding') && this.$canAny(
@@ -602,7 +602,7 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Users'),
+                    name: 'Users',
                     href: route('users'),
                     route: ['/users'],
                     has_permission: this.moduleIsVisible('users'),
@@ -610,10 +610,11 @@ export default {
                     showToolTipForItem: false
                 },
                 {
-                    name: this.$t('Contracts'),
+                    name: 'Contracts',
                     href: route('contracts.index'),
                     route: ['/contracts/view'],
-                    has_permission: this.moduleIsVisible('contracts'),
+                    has_permission: this.moduleIsVisible('contracts') &&
+                        this.$canAny(['view edit upload contracts', 'can see and download contract modules']),
                     icon: IconFileText,
                     showToolTipForItem: false
                 }],

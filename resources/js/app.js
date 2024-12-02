@@ -6,7 +6,7 @@ import {createApp, h} from 'vue';
 import {createInertiaApp} from '@inertiajs/vue3';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker';
 import VueMathjax from 'vue-mathjax-next';
-import {createI18n} from "vue-i18n";
+import * as VueI18n from 'vue-i18n';
 
 import en from '../../lang/en.json';
 import de from '../../lang/de.json';
@@ -31,6 +31,13 @@ const messages = {
     de: de
 };
 
+const i18n = VueI18n.createI18n({
+    legacy: false,
+    locale: document.documentElement.lang,
+    fallbackLocale: 'en',
+    messages,
+});
+
 const pages = import.meta.glob('./Pages/**/*.vue');
 
 createInertiaApp({
@@ -48,9 +55,14 @@ createInertiaApp({
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax);
-        app.use(createI18n({messages}));
+        app.use(i18n);
         app.use(Icons);
         app.mount(el);
+
+        app.config.globalProperties.$updateLocale = function (newLocale) {
+            this.$i18n.locale = newLocale;
+            document.documentElement.lang = newLocale;
+        };
     },
     progress: {
         color: '#3017AD',

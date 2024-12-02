@@ -53,7 +53,6 @@
         },
 
         data() {
-            this.$i18n.locale = this.$page.props.locale;
             return {
                 form: this.$inertia.form()
             }

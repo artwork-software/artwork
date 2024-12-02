@@ -145,7 +145,6 @@ export default defineComponent({
         XIcon
     },
     data() {
-        this.$i18n.locale = this.$page.props.locale;
         return {
             logoPreview: null,
             bannerPreview: null,

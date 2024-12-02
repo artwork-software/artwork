@@ -99,12 +99,13 @@
             JetLabel,
             JetValidationErrors
         },
+
         props: {
             email: String,
             token: String,
         },
+
         data() {
-            this.$i18n.locale = this.$page.props.locale;
             return {
                 form: this.$inertia.form({
                     token: this.token,

@@ -1,39 +1,41 @@
 <template>
     <app-layout :title="title">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-            <div class="max-w-screen-lg pl-14 mt-5 pr-4">
-                <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
-                    {{ $t('My account')}}
-                </div>
-                <div class="flex">
-                    <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
-                         :src="user_to_edit.profile_photo_url"
-                         alt=""/>
-                    <div class="flex flex-grow w-full">
-                        <div class="headline1 flex my-auto ml-6">
-                            {{ user_to_edit.first_name }}
+            <div>
+                <div class="max-w-screen-lg pl-14 mt-5 pr-4">
+                    <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
+                        {{ $t('My account')}}
+                    </div>
+                    <div class="flex">
+                        <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
+                             :src="user_to_edit.profile_photo_url"
+                             alt=""/>
+                        <div class="flex flex-grow w-full">
+                            <div class="headline1 flex my-auto ml-6">
+                                {{ user_to_edit.first_name }}
+                            </div>
+                            <div class="headline1 flex my-auto ml-2">
+                                {{ user_to_edit.last_name }}
+                            </div>
                         </div>
-                        <div class="headline1 flex my-auto ml-2">
-                            {{ user_to_edit.last_name }}
+                    </div>
+                    <div class="my-10">
+                        <div class="hidden sm:block">
+                            <div class="">
+                                <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
+                                    <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
+                                         :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
+                                         :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
+                                    </div>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="my-10">
-                    <div class="hidden sm:block">
-                        <div class="">
-                            <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
-                                     :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
-                                     :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
-                                </div>
-                            </nav>
-                        </div>
+                <div class="">
+                    <div class="w-full pl-14 pr-4">
+                        <slot></slot>
                     </div>
-                </div>
-            </div>
-            <div class="">
-                <div class="w-full pl-14 pr-4">
-                    <slot></slot>
                 </div>
             </div>
         </div>
@@ -64,7 +66,6 @@ export default {
         'currentTab',
     ],
     data() {
-        this.$i18n.locale = this.$page.props.user.language;
         return {
             show: false,
             tabs: [

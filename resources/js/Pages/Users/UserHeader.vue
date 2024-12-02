@@ -21,3 +21,7 @@ export default defineComponent({
     components: {UserTabs, AppLayout}
 })
 </script>
+
+<style scoped>
+
+</style>

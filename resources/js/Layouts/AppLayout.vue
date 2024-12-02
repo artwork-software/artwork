@@ -341,6 +341,8 @@ export default {
             this.$inertia.post(route('toggle.hints'))
         },
         logout() {
+            this.$i18n.locale = this.$page.props.default_language;
+            document.documentElement.lang = this.$page.props.default_language;
             this.$inertia.post(route('logout'))
         },
         openSideBarOnMobile() {
@@ -515,6 +517,8 @@ export default {
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
         window.document.dispatchEvent(ev);
+        this.$i18n.locale = this.$page.props.selected_language;
+        document.documentElement.lang = this.$page.props.selected_language;
         Echo.private('App.Models.User.' + this.$page.props.user.id)
             .notification((notification) => {
                 this.pushNotifications.push(notification.message);
@@ -528,7 +532,6 @@ export default {
         });
     },
   data() {
-        this.$i18n.locale = this.$page.props.user.language;
         return {
             showSystemSettings: false,
             showUserMenu: false,

@@ -1,9 +1,8 @@
 <template>
     <div>
-
         <div v-if="this.isSignedInUser() || this.hasAdminRole()" class="mb-8">
             <div>
-                <div class="col-span-6 sm:col-span-4 mb-4">
+                <div class="col-span-6 sm:col-span-4">
                     <!-- Profile Photo File Input -->
                     <input type="file" class="hidden"
                            ref="photo"
@@ -322,7 +321,6 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import debounce from "lodash.debounce";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
@@ -363,6 +361,14 @@ export default {
         'departments',
         'calendar_settings'
     ],
+    watch: {
+        selectedLanguage: {
+            handler() {
+                document.documentElement.lang = this.selectedLanguage.id;
+            },
+            deep: true
+        }
+    },
     data() {
         return {
             successSaved: false,
@@ -432,6 +438,7 @@ export default {
         },
         editUser() {
             this.userForm.language = this.selectedLanguage.id;
+            this.$updateLocale(this.selectedLanguage.id);
             if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }
@@ -440,8 +447,6 @@ export default {
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
-
-            let changedLocale = this.$page.props.user.language === this.userForm.language;
             this.userForm.patch(
                 route('user.update', {user: this.user_to_edit.id}),
                 {
@@ -454,7 +459,6 @@ export default {
                     }
                 }
             );
-
             this.nameError = false;
             this.hasNameError = false;
         },

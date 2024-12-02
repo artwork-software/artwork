@@ -137,7 +137,6 @@ export default defineComponent({
     },
     props: ['email', 'token'],
     data() {
-        this.$i18n.locale = this.$page.props.locale;
         return {
             pw_feedback: 0,
             error: null,
@@ -157,6 +156,9 @@ export default defineComponent({
                 token: this.token
             })
         }
+    },
+    mounted() {
+        this.$i18n.locale = this.$page.props.selected_language;
     },
     methods: {
         getRequiredFieldLabel(label) {

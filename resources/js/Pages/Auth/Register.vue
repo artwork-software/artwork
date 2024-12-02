@@ -6,7 +6,7 @@
     <div class="py-8 px-8 md:px-64">
         <form class="space-y-6" @submit.prevent="submit">
             <div class="text-2xl font-bold text-black">
-                <img src="/Svgs/Logos/artwork_logo_big.svg" alt="artwork_logo_big"/>
+                <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
                 <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Create administrator')}}</h2>
@@ -145,7 +145,6 @@ export default defineComponent({
         XIcon
     },
     data() {
-        console.debug(this.$page);
         this.$i18n.locale = this.$page.props.locale;
         return {
             logoPreview: null,

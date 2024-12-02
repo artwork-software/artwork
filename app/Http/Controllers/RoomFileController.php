@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Room\Models\Room;
@@ -15,6 +17,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RoomFileController extends Controller
 {
+    use HandlesFileUpload;
+    
     public function __construct(private readonly ChangeService $changeService)
     {
     }
@@ -31,6 +35,7 @@ class RoomFileController extends Controller
         }
 
         $file = $request->file('file');
+        $this->handleFile(ArtworkFileTypes::ROOM, $file);
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
 

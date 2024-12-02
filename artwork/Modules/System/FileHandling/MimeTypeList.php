@@ -50,6 +50,7 @@ class MimeTypeList
     ];
 
     public const IMAGE_MIME_TYPES = [
+        '*' => '*',
         'png' => 'image/png',
         'jpe' => 'image/jpeg',
         'jpeg' => 'image/jpeg',

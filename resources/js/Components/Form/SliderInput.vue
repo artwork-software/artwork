@@ -19,6 +19,8 @@
 </template>
 
 <script>
+import debounce from "lodash.debounce";
+
 export default {
   name: "SliderInput",
   props: {
@@ -26,6 +28,12 @@ export default {
       type: Number,
       required: true,
     },
+    property: {
+      type: [Object, String, Number],
+      required: false,
+      default: null
+    },
+    method: {type: Function},
     min: {
       type: Number,
       default: 0,
@@ -47,14 +55,13 @@ export default {
       default: true,
     },
   },
-  emits: ["update:modelValue"],
   computed: {
     value: {
       get() {
         return this.modelValue;
       },
       set(val) {
-        this.$emit("update:modelValue", val);
+        this.method(this.property, val);
       },
     },
   },

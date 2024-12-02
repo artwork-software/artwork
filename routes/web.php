@@ -161,6 +161,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::group(['namespace' => 'System', 'prefix' => 'system'], function() {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');
+            Route::put('/file-settings', [FileSettingsController::class, 'store'])
+                ->name('tool.file-settings.store');
         });
     });
 

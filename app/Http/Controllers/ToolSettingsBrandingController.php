@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\GeneralSettings\Http\Requests\UploadBrandingGraphicRequest;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -12,6 +14,8 @@ use Inertia\Response;
 
 class ToolSettingsBrandingController extends Controller
 {
+    use HandlesFileUpload;
+    
     /**
      * @throws AuthorizationException
      */
@@ -32,16 +36,18 @@ class ToolSettingsBrandingController extends Controller
         $smallLogo = $request->file('smallLogo');
         $bigLogo = $request->file('bigLogo');
         $banner = $request->file('banner');
-
         if ($smallLogo) {
+            $this->handleFile(ArtworkFileTypes::BRANDING, $smallLogo);
             $generalSettings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
         }
 
         if ($bigLogo) {
+            $this->handleFile(ArtworkFileTypes::BRANDING, $bigLogo);
             $generalSettings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
         }
 
         if ($banner) {
+            $this->handleFile(ArtworkFileTypes::BRANDING, $banner);
             $generalSettings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
         }
 

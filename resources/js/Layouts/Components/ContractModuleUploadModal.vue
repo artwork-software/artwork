@@ -103,22 +103,8 @@ export default {
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
-            const forbiddenTypes = [
-                "application/vnd.microsoft.portable-executable",
-                "application/x-apple-diskimage",
-            ]
             for (let file of files) {
-                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
-                } else {
-                    const fileSize = file.size;
-                    if (fileSize > 2097152) {
-                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
-                    } else {
-                        this.files.push(file)
-                    }
-
-                }
+              this.files.push(file)
             }
         },
         storeFiles() {

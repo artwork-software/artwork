@@ -39,13 +39,14 @@
         <div class="flex">
           <div class="mt-2">
             <SliderInput
-                v-model="sliderValue"
+                v-model="area.fileSize"
                 :min="1"
                 :max="150"
                 :step="1"
+                :property="{area: area, fileSize: area.fileSize}"
                 :show-value="true"
                 :label="$t('Max file size in MB')"
-                
+                :method="handleSlideValueUpdate"
             />
           </div>
         </div>
@@ -55,7 +56,8 @@
           <TagComponent v-for="fileType in area.fileTypes"
                         :key="fileType.name"
                         :method="removeFileTypeFromArea"
-                        :property="{area: area, fileType: fileType}"
+                        :hide-x="false"
+                        :property="{area: area, fileType: fileType, fileSize: area.fileSize}"
                         :displayed-text="fileType.name"
           />
         </div>
@@ -73,6 +75,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {IconCheck, IconChevronDown} from "@tabler/icons-vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import SliderInput from "@/Components/Form/SliderInput.vue";
+import debounce from "lodash.debounce";
 
 const $t = useTranslation(),
     props = defineProps({
@@ -88,18 +91,34 @@ const $t = useTranslation(),
         type: Object,
         required: true
       },
-    })
+    });
+
+const areas = ref(props.areas);
 
 const addFileTypeToArea = (area, fileType) => {
-  if (!area.fileTypes.find((m) => m.name === fileType)) {
-    area.fileTypes.push({name: fileType})
+  const targetArea = areas.value.find(a => a.name === area.name);
+  if (!targetArea.fileTypes.find((m) => m.name === fileType)) {
+    targetArea.fileTypes.push({ name: fileType });
   }
+  updateArea(area);
 }
 
 const removeFileTypeFromArea = (data) => {
-  const area = data.area;
+  const targetArea = areas.value.find(area => area.name === data.area.name);
   const fileType = data.fileType;
-  
-  console.log(area, fileType)
+  targetArea.fileTypes = targetArea.fileTypes.filter((m) => m.name !== fileType.name);
+  updateArea(targetArea);
 }
+
+const handleSlideValueUpdate = (property, value) => {
+  const targetArea = areas.value.find(area => area.name === property.area.name);
+  targetArea.fileSize = parseInt(value);
+  updateArea(targetArea);
+}
+
+const updateArea = debounce((area) => {
+  router.put(route('tool.file-settings.store', {}), {
+    data: area
+  })
+}, 500);
 </script>

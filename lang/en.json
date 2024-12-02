@@ -533,7 +533,6 @@
     "Click here to add text": "Click here to add text",
     "Drag your key visual here": "Drag your <br/> key visual here",
     "Videos, .exe and .dmg files are not supported.": "Videos, .exe and .dmg files are not supported.",
-    "Files larger than 2MB cannot be uploaded.": "Files larger than 2MB cannot be uploaded.",
     "Key Visual": "Key Visual",
     "Documents": "Documents",
     "Drag document here to upload or click in the field": "Drag document here to upload <br> or click in the field",
@@ -2133,5 +2132,9 @@
     "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.": "Here you can specify who is responsible for planning the inventory. Only users who are entered here can plan the inventory for this trade. The users must have the right to plan inventory.",
     "Here you can specify the department management for this craft. It will be highlighted in the overview.": "Here you can specify the department management for this craft. It will be highlighted in the overview.",
     "Craft manager": "Craft manager",
-    "Artists": "Artists"
+    "Artists": "Artists",
+    "Max file size in MB": "Max file size in MB",
+    "Select file types": "Select file types",
+    "File settings": "File settings",
+    "Here you can define the allowed file types for file uploads": "Here you can define the allowed file types for file uploads."
 }

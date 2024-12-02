@@ -2,8 +2,6 @@
 
 namespace Artwork\Modules\GeneralSettings\Services;
 
-use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
-use Artwork\Modules\GeneralSettings\Dto\FileHandlingDto;
 use Artwork\Modules\GeneralSettings\Http\Requests\UpdateBudgetAccountManagementGlobalRequest;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Http\Request;
@@ -22,26 +20,58 @@ class GeneralSettingsService
         $this->generalSettings->save();
     }
     
-    public function updateAllowedProjectFileMimeTypesFromRequest(
+    public function updateAllowedFileMimeTypesFromRequest(
         Request $request
     ): void {
-        $this->generalSettings->allowed_project_file_mimetypes = $request->get('mime_types');
-
+        $fileTypes = $this->extractFileTypes($request);
+        $mimeProperty = $this->assembleMimetypePropertyName($request->input('data')['name']);
+        $fileSizeProperty = $this->assembleFilesizePropertyName($request->input('data')['name']);
+        $this->generalSettings->$mimeProperty = $fileTypes;
+        $this->generalSettings->$fileSizeProperty = $request->input('data')['fileSize'];
         $this->generalSettings->save();
+    }
+    
+    private function extractFileTypes(Request $request): array
+    {
+        $fileTypes = [];
+        foreach ($request->input('data')['fileTypes'] as $fileType) {
+            $fileTypes[] = $fileType['name'];
+        }
+        
+        return $fileTypes;
+    }
+    
+    private function assembleMimetypePropertyName($name): string
+    {
+        return sprintf("allowed_%s_file_mimetypes", $name);
+    }
+        
+    private function assembleFilesizePropertyName($name): string
+    {
+        return sprintf("allowed_%s_file_size", $name);
     }
     
     public function getAllowedProjectFileMimeTypes(): array
     {
-        return $this->generalSettings->allowed_project_file_mimetypes;
+        return [
+            'mime_types' => $this->generalSettings->allowed_project_file_mimetypes, 
+            'file_size' => $this->generalSettings->allowed_project_file_size
+        ];
     }
     
     public function getAllowedRoomFileMimeTypes(): array
     {
-        return $this->generalSettings->allowed_room_file_mimetypes;
+        return [
+            'mime_types' => $this->generalSettings->allowed_room_file_mimetypes,
+            'file_size' => $this->generalSettings->allowed_room_file_size
+        ];
     }
     
     public function getAllowedBrandingFileMimeTypes(): array
     {
-        return $this->generalSettings->allowed_branding_file_mimetypes;
+        return [
+            'mime_types' => $this->generalSettings->allowed_branding_file_mimetypes,
+            'file_size' => $this->generalSettings->allowed_branding_file_size
+        ];
     }
 }

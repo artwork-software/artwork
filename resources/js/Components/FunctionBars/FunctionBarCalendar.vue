@@ -19,7 +19,7 @@
                         </button>
 
                     </div>
-                    <BaseMenu show-custom-icon icon="IconReorder" class="mx-2" translation-key="Jump to month" has-no-offset>
+                    <BaseMenu show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>

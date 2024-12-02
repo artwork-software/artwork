@@ -48,7 +48,7 @@ createInertiaApp({
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax);
-        app.use(createI18n({legacy: false, messages: messages}));
+        app.use(createI18n({messages}));
         app.use(Icons);
         app.mount(el);
     },

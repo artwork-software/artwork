@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -18,9 +19,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class RoomFileController extends Controller
 {
     use HandlesFileUpload;
-    
-    public function __construct(private readonly ChangeService $changeService)
-    {
+
+    public function __construct(
+        private readonly ChangeService $changeService,
+        private readonly GeneralSettingsService $generalSettingsService
+    ) {
     }
 
     /**

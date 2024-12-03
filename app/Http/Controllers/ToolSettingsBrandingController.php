@@ -6,6 +6,7 @@ use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
 use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Modules\GeneralSettings\Http\Requests\UploadBrandingGraphicRequest;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -15,7 +16,11 @@ use Inertia\Response;
 class ToolSettingsBrandingController extends Controller
 {
     use HandlesFileUpload;
-    
+
+    public function __construct(protected readonly GeneralSettingsService $generalSettingsService)
+    {
+    }
+
     /**
      * @throws AuthorizationException
      */

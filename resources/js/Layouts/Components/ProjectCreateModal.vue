@@ -48,7 +48,7 @@
                                 </div>
                             </div>
                             <div class="px-6 pt-4" v-if="createSettings.attributes">
-                                <Menu as="div" class="inline-block text-left w-full">
+                                <Menu as="div" class="inline-block text-left w-full relative">
                                     <div>
                                         <MenuButton class="menu-button">
                                             <span>{{ $t('Select properties') }}</span>
@@ -63,8 +63,8 @@
                                         leave-active-class="transition duration-75 ease-in"
                                         leave-from-class="transform scale-100 opacity-100"
                                         leave-to-class="transform scale-95 opacity-0">
-                                        <MenuItems class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                        <MenuItems class="absolute overflow-y-auto h-48 w-full origin-top-left divide-y divide-gray-200 bg-primary ring-1 ring-black text-white opacity-100 z-50 rounded-lg">
+                                            <div class="mx-auto w-full p-3 bg-primary border-none mt-2">
                                                 <Disclosure v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -86,7 +86,7 @@
                                                             <input type="checkbox"
                                                                    v-model="createProjectForm.assignedCategoryIds"
                                                                    :value="category.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                                   class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedCategoryIds.includes(category.id)
                                                             ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -120,7 +120,7 @@
                                                             <input type="checkbox"
                                                                    v-model="createProjectForm.assignedGenreIds"
                                                                    :value="genre.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                                   class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedGenreIds.includes(genre.id)
                                                             ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -154,7 +154,7 @@
                                                             <input type="checkbox"
                                                                    v-model="createProjectForm.assignedSectorIds"
                                                                    :value="sector.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                                   class="input-checklist-dark"/>
                                                             <p :class="[createProjectForm.assignedSectorIds.includes(sector.id)
                                                             ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -170,25 +170,19 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
-                                <div class="flex" :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
-                                    <div v-for="categoryId in createProjectForm.assignedCategoryIds">
-                                        <TagComponent hide-x="true"
-                                                      :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                                      :property="this.categories.find(category => category.id === categoryId)"
-                                        />
-                                    </div>
-                                    <div v-for="genreId in createProjectForm.assignedGenreIds">
-                                        <TagComponent hide-x="true"
-                                                      :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                                      :property="this.genres.find(genre => genre.id === genreId)"
-                                        />
-                                    </div>
-                                    <div v-for="sectorId in createProjectForm.assignedSectorIds">
-                                        <TagComponent hide-x="true"
+                                <div :class="createProjectForm.assignedCategoryIds || createProjectForm.assignedGenreIds || createProjectForm.assignedSectorIds ? 'mt-2' : ''">
+                                    <TagComponent v-for="categoryId in createProjectForm.assignedCategoryIds" hide-x="true"
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
+                                                  :property="this.categories.find(category => category.id === categoryId)"
+                                    />
+                                    <TagComponent v-for="genreId in createProjectForm.assignedGenreIds" hide-x="true"
+                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
+                                                  :property="this.genres.find(genre => genre.id === genreId)"
+                                    />
+                                    <TagComponent hide-x="true" v-for="sectorId in createProjectForm.assignedSectorIds"
                                                       :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
                                                       :property="this.sectors.find(sector => sector.id === sectorId)"
-                                        />
-                                    </div>
+                                    />
                                 </div>
                             </div>
 

@@ -35,9 +35,11 @@ class GeneralSettings extends Settings
     public array $allowed_project_file_mimetypes;
     public array $allowed_room_file_mimetypes;
     public array $allowed_branding_file_mimetypes;
+    public array $allowed_contract_file_mimetypes;
     public int $allowed_project_file_size;
     public int $allowed_room_file_size;
     public int $allowed_branding_file_size;
+    public int $allowed_contract_file_size;
 
     public static function group(): string
     {

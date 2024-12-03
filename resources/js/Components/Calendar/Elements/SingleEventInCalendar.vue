@@ -1,6 +1,6 @@
 <template>
     <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage), fontsize: fontSize, lineHeight: lineHeight }"
+        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group event-item relative"
         :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
@@ -28,7 +28,7 @@
         <div class="flex items-center justify-between">
             <div class="px-1 py-1">
                 <div
-                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage))}"
+                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                     class="flex justify-between flex-wrap">
                     <div class="truncate max-w-40">
@@ -72,7 +72,7 @@
                 <div class="flex">
                     <!-- Time -->
                     <div class="flex"
-                         :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
+                         :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
                          :class="[zoom_factor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                         <div
                             v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
@@ -239,7 +239,7 @@
             </a>
         </div>
         <div v-if="usePage().props.user.calendar_settings.description"
-             :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
+             :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
              class="p-0.5 ml-0.5">
             <EventNoteComponent :event="event"/>
         </div>
@@ -332,7 +332,7 @@
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs"
-                         :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}">
+                         :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
                             (
@@ -431,7 +431,6 @@ const props = defineProps({
 });
 
 const element = ref(null);
-const percentage = usePage().props.high_contrast_percent;
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits.call(this, 'changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd);
 };

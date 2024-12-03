@@ -7,4 +7,6 @@ enum ArtworkFileTypes: string
     case PROJECT = 'project';
     case ROOM = 'room';
     case BRANDING = 'branding';
+
+    case CONTRACT = 'contract';
 }

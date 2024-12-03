@@ -286,4 +286,8 @@ return [
             'sometimes' => 'The role field is not required',
         ],
     ],
+    'file_upload' => [
+        'max_size' => 'The maximum shared file size is currently :size MB, either have an admin increase it or try a smaller file',
+        'invalid_file_type' => 'This file format is not released :format, please ask an admin to release it or use another format',
+    ]
 ];

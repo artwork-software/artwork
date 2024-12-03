@@ -9,21 +9,25 @@
                 </div>
                 <div>
                     <input
-                        @change="upload"
+                        @change="validateType"
                         class="hidden"
                         ref="module_files"
                         id="file"
                         type="file"
                     />
                     <div @click="selectNewFiles" @dragover.prevent
-                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
+                         @drop.stop.prevent="validateType($event)" class="mb-4 w-full flex rounded-lg justify-center items-center
                         border-artwork-buttons-create border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
                         <p class="text-artwork-buttons-create font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
+                <div class="mb-3">
+                    <MultiAlertComponent :errors="contractForm.errors" v-show="Object.keys(contractForm.errors).length > 0"  :error-count="Object.keys(contractForm.errors).length" />
+                </div>
                 <div class="mb-2">
-                    <div class="group flex" v-if="this.file">{{ this.file.name }}
+                    <div class="group flex" v-if="file">
+                        {{ file.name }}
                         <IconCircleX
                             stroke-width="1.5" @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
@@ -320,6 +324,7 @@ import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import NumberInputComponent from "@/Components/Inputs/NumberInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
 import UserSearch from "@/Components/SearchBars/UserSearch.vue";
+import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -335,6 +340,7 @@ export default {
         'first_project_calendar_tab_id'
     ],
     components: {
+        MultiAlertComponent,
         UserSearch,
         TextareaComponent,
         NumberInputComponent,
@@ -450,15 +456,8 @@ export default {
         selectNewFiles() {
             this.$refs.module_files.click();
         },
-        uploadDraggedDocuments(event) {
-            this.validateType([...event.dataTransfer.files])
-        },
-        upload(event) {
-            this.validateType([...event.target.files])
-        },
-        validateType(files) {
-            this.uploadDocumentFeedback = "";
-            this.file = file
+        validateType(file) {
+            this.file = file.target.files[0]
         },
         closeModal(){
             this.contractForm.reset();

@@ -12,6 +12,7 @@ trait RetrievesSettingsForFileType
             ArtworkFileTypes::PROJECT => $this->generalSettingsService->getAllowedProjectFileMimeTypes(),
             ArtworkFileTypes::ROOM => $this->generalSettingsService->getAllowedRoomFileMimeTypes(),
             ArtworkFileTypes::BRANDING => $this->generalSettingsService->getAllowedBrandingFileMimeTypes(),
+            ArtworkFileTypes::CONTRACT => $this->generalSettingsService->getAllowedContractFileMimeTypes(),
         };
     }
 }

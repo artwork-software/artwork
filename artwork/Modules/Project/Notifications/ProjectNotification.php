@@ -2,60 +2,15 @@
 
 namespace Artwork\Modules\Project\Notifications;
 
+use Artwork\Core\Notifications\BaseNotification;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
-use Illuminate\Bus\Queueable;
 use Illuminate\Config\Repository;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use stdClass;
 
-class ProjectNotification extends Notification implements ShouldBroadcast
+class ProjectNotification extends BaseNotification
 {
-    use Queueable;
-
-    protected ?stdClass $notificationData = null;
-
-    protected array $broadcastMessage = [];
-
-    public function __construct($notificationData, $broadcastMessage = [])
-    {
-        $this->notificationData = $notificationData;
-        $this->broadcastMessage = $broadcastMessage;
-    }
-
-    public function toBroadcast(): BroadcastMessage
-    {
-        return new BroadcastMessage([
-            'message' => $this->broadcastMessage
-        ]);
-    }
-
-    /**
-     * @return string[]
-     */
-    public function via($user): array
-    {
-        $channels = ['database'];
-
-        $typeSettings = $user->notificationSettings()
-            ->where('type', $this->notificationData->type)
-            ->first();
-
-//        if ($typeSettings?->enabled_email) {
-//            $channels[] = 'mail';
-//        }
-
-        if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
-            $channels[] = 'broadcast';
-        }
-
-        return $channels;
-    }
-
     /**
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
@@ -79,10 +34,5 @@ class ProjectNotification extends Notification implements ShouldBroadcast
                     'pageTitle' => $pageTitle,
                 ]
             );
-    }
-
-    public function toArray(): stdClass
-    {
-        return $this->notificationData;
     }
 }

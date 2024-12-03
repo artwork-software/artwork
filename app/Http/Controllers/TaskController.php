@@ -81,8 +81,6 @@ class TaskController extends Controller
         /** @var Checklist $checklist */
         $checklist = $this->checklistService->getById($request->integer('checklist_id'));
 
-        //dd($request);
-
         $this->taskService->createTaskByRequest(
             $checklist,
             $request->string('name'),

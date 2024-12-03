@@ -213,7 +213,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 end_time: '',
                 copy: false,
                 copyCount: 1,
-                copyType: copyTypes.value[0]
+                copyType: copyTypes.value[0],
+                description: ''
             });
             isLoading.value = false;
         } else {
@@ -233,7 +234,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                         end_time: lastEvent.end_time,
                         copy: false,
                         copyCount: 1,
-                        copyType: copyTypes.value[0]
+                        copyType: copyTypes.value[0],
+                        description: ''
                     }
                 }, {
                     preserveState: false,
@@ -254,7 +256,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                         end_time: '',
                         copy: false,
                         copyCount: 1,
-                        copyType: copyTypes.value[0]
+                        copyType: copyTypes.value[0],
+                        description: ''
                     }
                 }, {
                     preserveState: false,
@@ -306,7 +309,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 end_time: event.end_time,
                 copy: false,
                 copyCount: 1,
-                copyType: copyTypes.value[0]
+                copyType: copyTypes.value[0],
+                description: event.description
             });
 
             createdEvents.push({
@@ -319,7 +323,8 @@ const {hasAdminRole} = usePermission(usePage().props),
                 end_time: event.end_time,
                 copy: false,
                 copyCount: 1,
-                copyType: copyTypes.value[0]
+                copyType: copyTypes.value[0],
+                description: event.description
             });
         }
 
@@ -408,7 +413,8 @@ onMounted(() => {
                 copy: false,
                 copyCount: 1,
                 copyType: copyTypes.value[0],
-                index: events.length + 1
+                index: events.length + 1,
+                description: event.description
             });
         });
         isLoading.value = false;

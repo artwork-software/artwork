@@ -25,10 +25,11 @@ class MinimalCalendarEventResource extends JsonResource
         /** @var string|null $projectName */
         /** @var string|null $projectStateColor */
         /** @var array<string, string>|null $projectLeaders */
-        $projectName = $projectStateColor = $projectLeaders = null;
+        $projectName = $projectArtists = $projectStateColor = $projectLeaders = null;
         if ($eventProjectId = $this->getAttribute('project_id')) {
             [
                 $projectName,
+                $projectArtists,
                 $projectStateColor,
                 $projectLeaders
             ] = $this->aggregateProjectRelevantData();
@@ -43,6 +44,7 @@ class MinimalCalendarEventResource extends JsonResource
             'id' => $this->getAttribute('id'),
             'description' => $this->getAttribute('description'),
             'projectId' => $eventProjectId,
+            'projectArtists' => $projectArtists,
             'roomId' => $this->getAttribute('room_id'),
             'roomName' => $this->getAttribute('room')?->getAttribute('name'),
             'created_by' => [
@@ -88,6 +90,7 @@ class MinimalCalendarEventResource extends JsonResource
             return [
                 null,
                 null,
+                null,
                 null
             ];
         }
@@ -98,6 +101,7 @@ class MinimalCalendarEventResource extends JsonResource
 
         return [
             $project->getAttribute('name'),
+            $project->getAttribute('artists'),
             $projectStateColor,
             $this->determineProjectLeaders($project->getAttribute('managerUsers')->all())
         ];

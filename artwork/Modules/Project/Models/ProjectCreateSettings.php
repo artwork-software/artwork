@@ -12,6 +12,7 @@ class ProjectCreateSettings extends Settings
     public bool $managers;
     public bool $cost_center;
     public bool $budget_deadline;
+    public bool $show_artists;
 
     public static function group(): string
     {

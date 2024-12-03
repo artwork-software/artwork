@@ -16,6 +16,7 @@ class EventManagementDto extends BaseDto
     public ?SupportCollection $calendar = null;
 
     public ?array $days = null;
+    public ?array $months = null;
 
     public ?array $dateValue = null;
 
@@ -91,6 +92,13 @@ class EventManagementDto extends BaseDto
     public function setDays(?array $days): self
     {
         $this->days = $days;
+
+        return $this;
+    }
+
+    public function setMonths(?array $months): self
+    {
+        $this->months = $months;
 
         return $this;
     }
@@ -215,6 +223,14 @@ class EventManagementDto extends BaseDto
     /**
      * @return array<string, mixed>|null
      */
+    public function getMonths(): ?array
+    {
+        return $this->months;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getDateValue(): ?array
     {
         return $this->dateValue;
@@ -302,6 +318,7 @@ class EventManagementDto extends BaseDto
             'eventTypes' => $this->getEventTypes(),
             'calendar' => $this->getCalendar(),
             'days' => $this->getDays(),
+            'months' => $this->getMonths(),
             'dateValue' => $this->getDateValue(),
             'calendarType' => $this->getCalendarType(),
             'selectedDate' => $this->getSelectedDate(),

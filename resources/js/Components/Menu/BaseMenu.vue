@@ -1,22 +1,31 @@
 <template>
     <Menu as="div" class="inline-block" :class="!noRelative ? 'relative' : ''">
-        <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 0 : -10, crossAxis: hasNoOffset ? 0 : 75}">
+        <Float auto-placement portal :offset="{ mainAxis: hasNoOffset ? 5 : -10, crossAxis: hasNoOffset ? 25 : 75}">
             <div class="font-semibold text-artwork-buttons-context flex items-center justify-center" ref="menuButtonRef">
                 <MenuButton>
                     <IconDotsVertical
-                        v-if="!showSortIcon"
+                        v-if="!showSortIcon && !showCustomIcon"
                         stroke-width="1.5"
                         class="flex-shrink-0"
                         aria-hidden="true"
                         :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                     />
                     <ToolTipComponent
-                        v-else
+                        v-else-if="!showCustomIcon"
                         direction="bottom"
                         :tooltip-text="$t('Sorting')"
                         icon="IconSortDescending"
                         icon-size="h-8 w-8"
-                        :white-icon="whiteIcon"
+                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
+                    />
+
+                    <ToolTipComponent
+                        v-if="showCustomIcon"
+                        direction="bottom"
+                        :tooltip-text="$t(translationKey)"
+                        :icon="icon"
+                        :icon-size="dotsSize"
+                        :class="[dotsColor, dotsSize, whiteIcon ? 'text-white' : '']"
                     />
                 </MenuButton>
             </div>
@@ -64,10 +73,6 @@ export default defineComponent({
             type: String,
             default: 'h-6 w-6',
         },
-        right: {
-            type: Boolean,
-            default: false,
-        },
         noRelative: {
             type: Boolean,
             default: false,
@@ -85,15 +90,25 @@ export default defineComponent({
             required: false,
             default: false
         },
-        placement: {
-            type: String,
-            required: false,
-            default: 'top',
-        },
         hasNoOffset: {
             type: Boolean,
             required: false,
             default: false,
+        },
+        showCustomIcon: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        icon: {
+            type: String,
+            required: false,
+            default: 'IconEdit',
+        },
+        translationKey: {
+            type: String,
+            required: false,
+            default: 'Sorting',
         },
     },
 

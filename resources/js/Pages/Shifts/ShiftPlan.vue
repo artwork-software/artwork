@@ -101,7 +101,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-100">
+            <div id="userOverview" class="w-full fixed bottom-0 z-40">
                 <div class="flex justify-center overflow-y-scroll pointer-events-none">
                     <div v-if="this.$can('can plan shifts') || this.$can('can view shift plan') || this.hasAdminRole()" @click="showCloseUserOverview"
                          :class="showUserOverview ? 'rounded-tl-lg' : 'fixed bottom-0 rounded-t-lg'"

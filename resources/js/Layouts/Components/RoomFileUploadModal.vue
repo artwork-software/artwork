@@ -5,6 +5,7 @@
                     :title="$t('Upload document')"
                     :description="$t('Upload documents to this room.')"
                 />
+
                 <div>
                     <input
                         @change="upload"
@@ -23,8 +24,20 @@
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
+                <div class="mb-3">
+                    <MultiAlertComponent :errors="roomFileForm.errors" v-show="Object.keys(roomFileForm.errors).length > 0"  :error-count="Object.keys(roomFileForm.errors).length" />
+                </div>
                 <div class="mb-6">
-                    <div v-for="file of files">{{ file.name }}</div>
+                    <div v-for="file in files">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                {{ file.name }}
+                            </div>
+                            <div>
+                                <component is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="justify-center flex w-full my-6">
                     <FormButton
@@ -38,14 +51,13 @@
 </template>
 
 <script setup>
-import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import ModalHeader from "@/Components/Modals/ModalHeader.vue";
+import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 
 const props = defineProps({
     show: Boolean,
@@ -56,6 +68,9 @@ const props = defineProps({
 const uploadDocumentFeedback = ref("")
 const files = ref([])
 const room_files = ref(null)
+
+const closeModalIfUploaded = ref(false)
+
 const roomFileForm = useForm({
     file: null
 })
@@ -74,28 +89,24 @@ const upload = (event) => {
 
 const storeFile = (file) => {
     roomFileForm.file = file
-    roomFileForm.post(route('room_files.store', props.roomId))
-    roomFileForm.file = null
-    files.value = []
+    roomFileForm.post(route('room_files.store', props.roomId), {
+        preserveState: true,
+        onSuccess: () => {
+            roomFileForm.file = null
+            files.value = []
+            closeModalIfUploaded.value = true;
+        },
+        onError: () => {
+            closeModalIfUploaded.value = false;
+        }
+    })
+
 }
 
 const validateType = (newFiles) => {
     uploadDocumentFeedback.value = "";
-    const forbiddenTypes = [
-        "application/vnd.microsoft.portable-executable",
-        "application/x-apple-diskimage",
-    ]
     for (let file of newFiles) {
-        if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-            uploadDocumentFeedback.value = this.$t('Videos, .exe and .dmg files are not supported')
-        } else {
-            const fileSize = file.size;
-            if (fileSize > 2097152) {
-                uploadDocumentFeedback.value = this.$t('Files larger than 2MB cannot be uploaded.')
-            } else {
-                files.value.push(file)
-            }
-        }
+      files.value.push(file)
     }
 }
 
@@ -103,7 +114,11 @@ const storeFiles = () => {
     for (let file of files.value) {
         storeFile(file)
     }
-    props.closeModal()
+
+    if(closeModalIfUploaded.value) {
+        closeModalIfUploaded.value = false;
+        props.closeModal();
+    }
 }
 
 </script>

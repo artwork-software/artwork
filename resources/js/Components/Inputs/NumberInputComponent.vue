@@ -10,6 +10,7 @@
                :min="min"
                 :max="max"
                 :maxlength="maxlength"
+               :step="step"
         :required="required"/>
         <PlaceholderLabel :for="this.id" :label="this.label" :is-small="isSmall"/>
     </PlaceholderInputLabelContainer>
@@ -54,6 +55,10 @@ export default defineComponent({
         maxlength: {
             type: Number,
             default: 200
+        },
+        step: {
+            type: Number,
+            default: 1
         }
     },
     emits: [

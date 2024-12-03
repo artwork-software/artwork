@@ -1196,6 +1196,7 @@ readonly class EventService
         Project $project,
         int $userId,
     ): void {
+
         $day = Carbon::parse($event['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
@@ -1247,7 +1248,7 @@ readonly class EventService
 
         if ($eventStatusSetting->enable_status) {
             $this->eventRepository->update($event, [
-                'event_status_id' => $event['status']['id']
+                'event_status_id' => $data['status']['id']
             ]);
         }
     }

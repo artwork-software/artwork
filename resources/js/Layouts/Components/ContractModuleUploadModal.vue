@@ -7,6 +7,9 @@
                 <div class="text-secondary text-sm my-6">
                     {{ $t('Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design.')}}
                 </div>
+                <div class="mb-3">
+                    <MultiAlertComponent :errors="contractModuleForm.errors" v-show="Object.keys(contractModuleForm.errors).length > 0"  :error-count="Object.keys(contractModuleForm.errors).length" />
+                </div>
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <input
@@ -30,13 +33,22 @@
                         <TextareaComponent
                             :label="$t('Comment / Note')"
                             id="description"
-                            v-model="description"
+                            v-model="contractModuleForm.description"
                             rows="4"
                         />
                     </div>
                 </div>
                 <div class="mb-6">
-                    <div v-for="file of files">{{ file.name }}</div>
+                    <div v-for="file of files">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                {{ file.name }}
+                            </div>
+                            <div>
+                                <component is="IconCircleX" class="size-5 text-error cursor-pointer hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out" @click="files.splice(files.indexOf(file), 1)"/>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="justify-center flex w-full my-6">
                     <FormButton
@@ -58,6 +70,8 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
+import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
+import {useForm} from "@inertiajs/vue3";
 
 export default {
     name: "ContractModuleUploadModal",
@@ -67,6 +81,7 @@ export default {
         closeModal: Function
     },
     components: {
+        MultiAlertComponent,
         TextareaComponent,
         BaseModal,
         FormButton,
@@ -78,7 +93,13 @@ export default {
         return {
             uploadDocumentFeedback: "",
             files: [],
-            description: ""
+            description: "",
+            contractModuleForm: useForm({
+                file: null,
+                description: ""
+            }),
+            errorsAtUpload: [],
+            closeModalIfUploaded: false
         }
     },
     methods: {
@@ -92,14 +113,18 @@ export default {
             this.validateType([...event.target.files])
         },
         storeFile(file) {
-            this.$inertia.post('/contract_modules', {module: file}, {
-                preserveState: true,
-                preserveScroll: true,
+            this.contractModuleForm.file = file;
+            this.contractModuleForm.post(route('contracts.module.store'), {
                 onSuccess: () => {
-                    this.$emit('upload')
+                    this.contractModuleForm.file = null;
+                    this.files.splice(this.files.indexOf(file), 1);
+                },
+                onError: () => {
+                    this.errorsAtUpload.push(this.contractModuleForm.errors);
                 }
-
             })
+
+
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -108,10 +133,15 @@ export default {
             }
         },
         storeFiles() {
+            this.errorsAtUpload = [];
             for (let file of this.files) {
                 this.storeFile(file)
             }
-            this.closeModal()
+
+            if(!this.errorsAtUpload) {
+                this.closeModalIfUploaded = true;
+                this.closeModal();
+            }
         }
     }
 }

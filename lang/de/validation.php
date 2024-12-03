@@ -286,4 +286,8 @@ return [
             'sometimes' => 'Das Rollenfeld ist nicht erforderlich.',
         ],
     ],
+    'file_upload' => [
+        'max_size' => 'Die maximal freigegebene Dateigröße ist aktuell :size MB, lasse es entweder von einem Admin hochsetzen oder versuche es mit einer kleineren Datei',
+        'invalid_file_type' => 'Dieses Dateiformat :format ist nicht freigegeben, bitte einen Admin es freizugeben oder nutze ein anderes Format',
+    ]
 ];

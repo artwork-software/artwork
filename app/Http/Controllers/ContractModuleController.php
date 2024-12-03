@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\ContractModule\Models\ContractModule;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -12,6 +16,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractModuleController extends Controller
 {
+    use HandlesFileUpload;
+
+    public function __construct(
+        private readonly ChangeService $changeService,
+        private readonly GeneralSettingsService $generalSettingsService
+    ) {
+    }
+
     public function store(Request $request): RedirectResponse
     {
 
@@ -19,9 +31,9 @@ class ContractModuleController extends Controller
             Storage::makeDirectory("contract_modules");
         }
 
-        $file = $request->file('module');
-
+        $file = $request->file('file');
         if ($file) {
+            $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
             $original_name = $file->getClientOriginalName();
             $basename = Str::random(20) . $original_name;
 
@@ -33,9 +45,9 @@ class ContractModuleController extends Controller
             ]);
 
             return Redirect::back();
-        } else {
-            abort(400, "File missing");
         }
+
+        abort(400, "File missing");
     }
 
     public function download(ContractModule $module): StreamedResponse

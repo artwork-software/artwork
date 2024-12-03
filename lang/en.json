@@ -2202,5 +2202,9 @@
     "Jump to month": "Jump to month",
     "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency": "You must first create at least one accommodation in the user administration under “Addresses” before you can maintain an artist residency",
     "Attention": "Attention",
-    "Costs of daily allowances": "Costs of daily allowances"
+    "Costs of daily allowances": "Costs of daily allowances",
+    "Invalid URL (Example: https://google.com)": "Invalid URL (Example: https://google.com)",
+    "Unfortunately there were {0} errors during transmission.": "Unfortunately there were {0} errors during transmission.",
+    "This file format is not released, please ask an admin to release it or use another format": "This file format is not released, please ask an admin to release it or use another format",
+    "The maximum shared file size is currently {0} MB, either have an admin increase it or try a smaller file": "The maximum shared file size is currently {0} MB, either have an admin increase it or try a smaller file"
 }

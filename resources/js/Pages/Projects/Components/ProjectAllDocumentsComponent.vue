@@ -3,6 +3,9 @@
         <div class="flex w-full items-center my-4">
             <h3 class="sDark">{{ $t('All Documents') }}</h3>
         </div>
+        <div class="mb-3">
+            <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
+        </div>
         <div
             v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id))">
             <input
@@ -67,6 +70,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useForm} from "@inertiajs/vue3";
+import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 
 export default defineComponent({
     mixins: [
@@ -74,6 +78,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        MultiAlertComponent,
         ConfirmDeleteModal,
         JetInputError
     },

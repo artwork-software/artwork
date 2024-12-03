@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\CompanyType\Models\CompanyType;
 use Artwork\Modules\Contract\Http\Requests\ContractUpdateRequest;
 use Artwork\Modules\Contract\Http\Resources\ContractResource;
@@ -10,6 +13,7 @@ use Artwork\Modules\ContractModule\Http\Resources\ContractModuleResource;
 use Artwork\Modules\ContractModule\Models\ContractModule;
 use Artwork\Modules\ContractType\Models\ContractType;
 use Artwork\Modules\Currency\Models\Currency;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
@@ -25,15 +29,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractController extends Controller
 {
+    use HandlesFileUpload;
+
     public function __construct(
         private readonly NotificationService $notificationService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        private readonly ChangeService $changeService,
+        private readonly GeneralSettingsService $generalSettingsService
     ) {
     }
 
@@ -64,12 +73,16 @@ class ContractController extends Controller
         ]);
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function store(Request $request, Project $project): RedirectResponse
     {
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
         $file = $request->file;
+        $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
 
@@ -165,6 +178,7 @@ class ContractController extends Controller
         if ($request->file('file')) {
             Storage::delete('contracts/' . $contract->basename);
             $file = $request->file('file');
+            $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
             $original_name = $file->getClientOriginalName();
             $basename = Str::random(20) . $original_name;
 
@@ -240,6 +254,7 @@ class ContractController extends Controller
         }
 
         $file = $request->file;
+        $this->handleFile(ArtworkFileTypes::CONTRACT, $file);
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
 

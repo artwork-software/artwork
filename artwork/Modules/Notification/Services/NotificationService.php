@@ -333,6 +333,7 @@ class NotificationService
         if (!$this->getNotificationTo()) {
             return;
         }
+
         $body = new stdClass();
         $body->icon = 'gray';
         $body->priority = $this->getPriority();

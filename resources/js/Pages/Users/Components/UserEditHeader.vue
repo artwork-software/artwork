@@ -1,5 +1,5 @@
 <template>
-    <app-layout :title="title">
+    <app-layout :title="$t(title)">
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
                 <div class="max-w-screen-lg pl-14 mt-5 pr-4">
@@ -25,7 +25,7 @@
                                 <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
                                     <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
                                          :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
-                                         :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
+                                         :aria-current="tab.current ? 'page' : undefined">{{ $t(tab.name) }}
                                     </div>
                                 </nav>
                             </div>
@@ -69,13 +69,13 @@ export default {
         return {
             show: false,
             tabs: [
-                {id: 1, name: this.$t('Operational plan'), href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
-                {id: 2, name: this.$t('Conditions'), href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
-                {id: 3, name: this.$t('Personal data'), href: '#', current: this.currentTab === 'info', has_permission: true},
-                {id: 4, name: this.$t('User permissions'), href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
-                {id: 5, name: this.$t('Work profile'), href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                {id: 1, name: 'Operational plan', href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
+                {id: 2, name: 'Conditions', href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                {id: 3, name: 'Personal data', href: '#', current: this.currentTab === 'info', has_permission: true},
+                {id: 4, name: 'User permissions', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
+                {id: 5, name: 'Work profile', href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
             ],
-            title: null
+            title: this.user_to_edit.id === this.$page.props.user.id ? 'My account' : 'User account' + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
         }
     },
     methods: {
@@ -95,13 +95,6 @@ export default {
             }
         },
     },
-    mounted() {
-        if(this.user_to_edit.id === this.$page.props.user.id){
-            this.title = this.$t('My account')
-        } else {
-            this.title = this.$t('User account') + ' - ' + this.user_to_edit.first_name + ' ' + this.user_to_edit.last_name
-        }
-    }
 }
 </script>
 

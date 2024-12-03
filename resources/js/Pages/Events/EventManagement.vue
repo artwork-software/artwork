@@ -78,7 +78,8 @@ const props = defineProps(
         areas: Object,
         projectNameUsedForProjectTimePeriod: String,
         first_project_shift_tab_id: Number,
-        eventStatuses: Object
+        eventStatuses: Object,
+        months: Object,
     }),
     atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 
@@ -92,4 +93,5 @@ provide('filterOptions', props.filterOptions);
 provide('rooms', props.rooms);
 provide('areas', props.areas);
 provide('eventStatuses', props.eventStatuses);
+provide('months', props.months);
 </script>

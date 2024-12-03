@@ -138,7 +138,7 @@ export default {
                 this.storeFile(file)
             }
 
-            if(!this.errorsAtUpload) {
+            if(!this.errorsAtUpload.length > 0) {
                 this.closeModalIfUploaded = true;
                 this.closeModal();
             }

@@ -47,7 +47,13 @@ export default defineComponent({
                     href: route('tool.module-settings.index'),
                     current: route().current('tool.module-settings.index'),
                     hasPermission: this.$can('change tool settings')
-                }
+                },
+                {
+                    name: this.$t('File settings'),
+                    href: route('tool.file-settings.index'),
+                    current: route().current('tool.file-settings.index'),
+                    hasPermission: this.$can('change tool settings')
+                },
             ]
         }
     }

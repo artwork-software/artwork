@@ -364,6 +364,15 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
                 'tooltipKey' => "Allows the planning of inventory",
                 'checked' => false
             ],
+            [
+                'name' => PermissionEnum::CAN_VIEW_PRIVATE_USER_INFO->value,
+                'name_de' => "Private Kontaktdaten einsehen",
+                'translation_key' => "View private contact details",
+                'group' => 'Employee settings',
+                'tooltipText' => 'Darf private Kontaktdaten von Nutzer*innen einsehen',
+                'tooltipKey' => "Can view private contact details of users",
+                'checked' => false
+            ],
         ];
     }
 

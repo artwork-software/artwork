@@ -332,7 +332,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="!this.isComponentQualifiedForPermissions() && !(this.componentToEdit.type === 'Title')"
+            <div v-else-if="!this.isComponentQualifiedForPermissions() && !(this.componentToEdit?.type === 'Title')"
                  class="xsLight">
                 {{ $t('The permissions for this component are administered via the user settings and the project.') }}
             </div>

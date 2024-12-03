@@ -67,6 +67,7 @@ class ServiceProviderController extends Controller
             'zip_code',
             'location',
             'note',
+            'type_of_provider'
         ]));
     }
 

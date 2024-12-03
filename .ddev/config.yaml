@@ -1,14 +1,14 @@
 name: artwork
 type: laravel
 docroot: public
-php_version: "8.3"
+php_version: "8.2"
 webserver_type: nginx-fpm
 xdebug_enabled: false
 additional_hostnames: []
 additional_fqdns: []
 database:
     type: mariadb
-    version: "10.11"
+    version: "10.6"
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []
@@ -23,6 +23,17 @@ web_extra_exposed_ports:
       container_port: 6001
       http_port: 6000
       https_port: 6001
+web_extra_daemons:
+    - name: queue-1
+      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
+      directory: /var/www/html
+    - name: sockets
+      command: npm run sockets
+      directory: /var/www/html
+    - name: vite
+      command: npm run dev
+      directory: /var/www/html
+ddev_version_constraint: '>=v1.23.0'
 
 # Key features of DDEV's config.yaml:
 

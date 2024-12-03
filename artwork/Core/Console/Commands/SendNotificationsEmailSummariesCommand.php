@@ -8,6 +8,7 @@ use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Artwork\Modules\Notification\Enums\NotificationFrequencyEnum;
 use Artwork\Modules\Notification\Enums\NotificationGroupEnum;
 use Artwork\Modules\Notification\Mail\NotificationSummary;
+use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Notification\Services\NotificationSettingService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
@@ -36,7 +37,7 @@ class SendNotificationsEmailSummariesCommand extends Command
         private readonly NotificationSettingService $notificationSettingService,
         private readonly CarbonService $carbonService,
         private readonly MailManager $mailManager,
-        private readonly Translator $translator
+        private readonly Translator $translator,
     ) {
         parent::__construct();
     }
@@ -85,7 +86,7 @@ class SendNotificationsEmailSummariesCommand extends Command
                                 'de'
                             ),
                             'count' => 0,
-                            'notifications' => []
+                            'notifications' => [],
                         ];
                     }
 
@@ -138,7 +139,7 @@ class SendNotificationsEmailSummariesCommand extends Command
             $this->userService->update(
                 $user,
                 [
-                    'notification_enums_last_sent_dates' => $notificationEnumsLastSentDates
+                    'notification_enums_last_sent_dates' => $notificationEnumsLastSentDates,
                 ]
             );
         }
@@ -158,13 +159,20 @@ class SendNotificationsEmailSummariesCommand extends Command
                 ->values() as $notificationSettings
         ) {
             $notificationEnumsLastSentDates = $user->getAttribute('notification_enums_last_sent_dates');
+            /** @var NotificationSetting $notificationSetting */
             foreach ($notificationSettings as $notificationSetting) {
+                $notificationSettingFrequency = $notificationSetting->getAttribute('frequency');
+                //skip immediately frequency
+                if ($notificationSettingFrequency === NotificationFrequencyEnum::IMMEDIATELY) {
+                    continue;
+                }
                 $notificationSettingTypeValue = $notificationSetting->getAttribute('type')->value;
                 $lastDate = $notificationEnumsLastSentDates[$notificationSettingTypeValue] ?? null;
+
                 $sendSummary = is_null($notificationEnumsLastSentDates) || !$lastDate;
 
                 if (!$sendSummary) {
-                    $lastDate = match ($notificationSetting->getAttribute('frequency')) {
+                    $lastDate = match ($notificationSettingFrequency) {
                         NotificationFrequencyEnum::DAILY => $this->carbonService->parseAndAddDay($lastDate),
                         NotificationFrequencyEnum::WEEKLY_TWICE => $this->carbonService->parseAndAddThreeDays(
                             $lastDate

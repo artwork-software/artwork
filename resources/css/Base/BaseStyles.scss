@@ -1,5 +1,9 @@
 @layer components {
 
+    .text-hover {
+        @apply hover:text-artwork-buttons-hover cursor-pointer transition-all ease-in-out duration-300 hover:bg-white hover:rounded-full p-0.5
+    }
+
     .base-menu-link {
         @apply cursor-pointer flex items-center px-4 py-2 text-sm subpixel-antialiased;
 

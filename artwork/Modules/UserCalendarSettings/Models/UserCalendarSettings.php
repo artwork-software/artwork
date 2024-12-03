@@ -30,6 +30,7 @@ class UserCalendarSettings extends Model
     ];
 
     protected $fillable = [
+        'project_artists',
         'project_status',
         'options',
         'project_management',
@@ -45,6 +46,7 @@ class UserCalendarSettings extends Model
     ];
 
     protected $casts = [
+        'project_artists' => 'boolean',
         'project_status' => 'boolean',
         'options' => 'boolean',
         'project_management' => 'boolean',

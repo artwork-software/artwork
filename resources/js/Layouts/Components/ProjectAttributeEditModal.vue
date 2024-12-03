@@ -7,7 +7,7 @@
                 <Menu class="relative">
                     <div>
                     <MenuButton @click="attributesOpened = true" class="w-full">
-                        <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4">
+                        <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4 rounded-lg">
                             <div class="flex-grow xsLight text-left subpixel-antialiased">
                                 {{ $t('Select project properties') }}
                             </div>
@@ -23,8 +23,8 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="rounded-2xl max-h-56 overflow-y-auto bg-artwork-navigation-background border-none mt-2">
+                            class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 bg-artwork-navigation-background ring-1 ring-black text-white opacity-100 z-50 rounded-lg">
+                            <div class="p-2 max-h-64 overflow-scroll">
                                 <BaseFilterDisclosure :title="$t('Category')">
                                     <div v-if="categories?.length > 0"
                                          v-for="category in categories"
@@ -33,7 +33,7 @@
                                         <input type="checkbox"
                                                v-model="projectCategoryIds"
                                                :value="category.id"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist-dark"/>
                                         <p :class="[projectCategoryIds.includes(category.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -51,7 +51,7 @@
                                         <input type="checkbox"
                                                v-model="projectGenreIds"
                                                :value="genre.id"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist-dark"/>
                                         <p :class="[projectGenreIds.includes(genre.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -71,7 +71,7 @@
                                         <input type="checkbox"
                                                v-model="projectSectorIds"
                                                :value="sector.id"
-                                               class="checkBoxOnDark"/>
+                                               class="input-checklist-dark"/>
                                         <p :class="[projectSectorIds.includes(sector.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -111,7 +111,7 @@
                     </div>
                 </div>
             </div>
-            <div class="justify-center flex w-full my-6 mt-32">
+            <div class="justify-center flex w-full my-6">
                 <FormButton :text="$t('Save')"
                            @click="updateProjectData"/>
             </div>

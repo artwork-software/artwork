@@ -36,6 +36,7 @@ class ServiceProviderShowResource extends JsonResource
             )->toArray(),
             'shiftQualifications' => $this->shiftQualifications,
             'contacts' => $this->contacts,
+            'type_of_provider' => $this->getAttribute('type_of_provider'),
         ];
     }
 }

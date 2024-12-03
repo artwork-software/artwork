@@ -481,16 +481,20 @@ class UserController extends Controller
         if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionEnum::TEAM_UPDATE->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
+
+
         $user->update(
             $request->only(
                 'first_name',
                 'last_name',
                 'phone_number',
                 'position',
-                'business',
+                'pronouns',
                 'description',
                 'email',
-                'language'
+                'language',
+                'email_private',
+                'phone_private'
             )
         );
 
@@ -702,6 +706,7 @@ class UserController extends Controller
     {
         $user->calendar_settings()->update($request->only([
             'project_status',
+            'project_artists',
             'options',
             'project_management',
             'repeating_events',

@@ -20,9 +20,6 @@ class UploadBrandingGraphicRequest extends FormRequest
 
          */
         return [
-            'smallLogo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'bigLogo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ];
     }
 }

@@ -1,6 +1,6 @@
 <template>
     <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': '9999' }" @close="closeModal">
+        <Dialog as="div" class="relative" :style="{ 'z-index': isInShiftPlan ? '999999': zIndex }" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100"
                              leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-opacity-75 transition-opacity" :class="showBackdrop ? 'bg-gray-500' : ''"/>
@@ -72,16 +72,6 @@ export default {
         }
     },
     props: {
-        //@todo: deprecated, remove
-        modalImage: {
-            type: String,
-            default: '/Svgs/Overlays/illu_appointment_edit.svg'
-        },
-        //@todo: deprecated, remove
-        showImage: {
-            type: Boolean,
-            default: true
-        },
         modalSize: {
             type: String,
             default: 'sm:max-w-2xl'
@@ -93,18 +83,21 @@ export default {
         isInShiftPlan: {
             type: Boolean,
             default: false
+        },
+        zIndex: {
+            type: Number,
+            default: 150
         }
     },
     mounted() {
         this.$nextTick(() => {
-            const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
-            if (container && container instanceof HTMLElement) {
+            const container = this.$refs.containerRef?.$el || this.$refs.containerRef || null;
+            if (container instanceof HTMLElement) {
                 this.makeContainerDraggable();
             } else {
                 console.error('containerRef is not a valid DOM element');
             }
         });
-        document.body.click();
     },
     emits: ['closed'],
     methods: {
@@ -150,57 +143,6 @@ export default {
                 // Remove no-select class when dragging stops
                 document.body.classList.remove('select-none');
             });
-            /*const container = this.$refs.containerRef?.$el || this.$refs.containerRef;
-            const dragHandle = this.$refs.dragHandle;
-
-            if (!container || !(container instanceof HTMLElement) || !dragHandle) {
-                console.error('containerRef or dragHandle is not a valid DOM element');
-                return;
-            }
-
-            this.isDragging = false;
-            let offsetX, offsetY;
-
-            const onMouseDown = (event) => {
-                event.preventDefault();
-                this.isDragging = true;
-
-                // Berechne den Offset zwischen Mausposition und der aktuellen Position des Modals
-                const rect = container.getBoundingClientRect();
-                offsetX = event.clientX - rect.left;
-                offsetY = event.clientY - rect.top;
-
-                // Füge Event-Listener für Mousemove und Mouseup hinzu
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
-            };
-
-            const onMouseMove = (event) => {
-                if (!this.isDragging) return;
-
-                // Berechne die neue Position basierend auf der aktuellen Mausposition minus dem Offset
-                const newX = event.clientX - offsetX;
-                const newY = event.clientY - offsetY;
-
-                // Setze die neue Position des Modals sofort
-                container.style.position = 'absolute';
-                container.style.left = `${newX}px`;
-                container.style.top = `${newY}px`;
-            };
-
-            const onMouseUp = () => {
-                if (!this.isDragging) return;
-
-                this.isDragging = false;
-
-                // Entferne die Event-Listener
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            };
-
-            // Füge den mousedown Event-Listener nur am Drag-Handle hinzu
-            dragHandle.addEventListener('mousedown', onMouseDown);
-             */
         },
     }
 }

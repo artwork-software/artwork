@@ -1,6 +1,6 @@
 <template>
     <div
-        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage), fontsize: fontSize, lineHeight: lineHeight }"
+        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoom_factor + 'px', backgroundColor: backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent), fontsize: fontSize, lineHeight: lineHeight }"
         class="rounded-lg group event-item relative"
         :class="[event.occupancy_option ? 'event-disabled' : '', usePage().props.user.calendar_settings.time_period_project_id === event.projectId ? 'border-[3px] border-pink-500' : '']">
         <div v-if="zoom_factor > 0.4 && multiEdit"
@@ -25,10 +25,10 @@
                 </div>
             </div>
         </div>
-        <div class="flex">
+        <div class="flex items-center justify-between">
             <div class="px-1 py-1">
                 <div
-                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, percentage))}"
+                    :style="{lineHeight: lineHeight,fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(getColorBasedOnUserSettings, usePage().props.high_contrast_percent))}"
                     :class="[zoom_factor === 1 ? 'eventHeader' : '', 'font-bold']"
                     class="flex justify-between flex-wrap">
                     <div class="truncate max-w-40">
@@ -37,6 +37,13 @@
                            class="text-ellipsis items-center w-full">
                             {{ event.projectName }}
                         </a>
+                    </div>
+                    <div v-if="usePage().props.user.calendar_settings.project_artists"
+                         class="flex items-center w-full">
+                        <div v-if="event.projectArtists" :style="{ width: width - (64 * zoom_factor) + 'px'}"
+                             class=" truncate">
+                            {{ event.projectArtists }}
+                        </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.event_name"
                          class="flex items-center w-full">
@@ -65,7 +72,7 @@
                 <div class="flex">
                     <!-- Time -->
                     <div class="flex"
-                         :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
+                         :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
                          :class="[zoom_factor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                         <div
                             v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
@@ -188,11 +195,11 @@
                     </div>
                 </div>
             </div>
-            <div class="relative mr-3 mt-8 invisible group-hover:visible">
+            <div class="relative invisible group-hover:visible">
                 <BaseMenu menuWidth="w-fit" :dots-color="$page.props.user.calendar_settings.high_contrast ? 'text-white' : ''">
                     <MenuItem v-slot="{ active }">
                         <div @click="$emit('editEvent', event)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconEdit class="inline h-4 w-4 mr-2" stroke-width="1.5"/>
                             {{ $t('edit')}}
                         </div>
@@ -200,7 +207,7 @@
                     <MenuItem v-if="(isRoomAdmin || isCreator || hasAdminRole) && event.eventTypeId === 1" v-slot="{ active }">
                         <div
                                 @click="$emit('openAddSubEventModal', event, 'create', null)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6 mr-2"/>
                             {{$t('Add Sub-Event')}}
                         </div>
@@ -208,15 +215,14 @@
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
                         <div
                                 @click="$emit('showDeclineEventModal', event)"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconX stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Decline event')}}
                         </div>
                     </MenuItem>
                     <MenuItem v-if="isRoomAdmin || isCreator || hasAdminRole" v-slot="{ active }">
-                        <div
-                                @click="$emit('openConfirmModal', event, 'main')"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                        <div @click="$emit('openConfirmModal', event, 'main')"
+                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                             <IconTrash stroke-width="1.5" stroke="currentColor" class="inline w-4 h-4 mr-2"/>
                             {{$t('Delete')}}
                         </div>
@@ -233,7 +239,7 @@
             </a>
         </div>
         <div v-if="usePage().props.user.calendar_settings.description"
-             :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}"
+             :style="{lineHeight: lineHeight, fontSize: fontSize, color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}"
              class="p-0.5 ml-0.5">
             <EventNoteComponent :event="event"/>
         </div>
@@ -326,7 +332,7 @@
                         </div>
                     </div>
                     <div v-if="usePage().props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs"
-                         :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, percentage))}">
+                         :style="{color: getTextColorBasedOnBackground(backgroundColorWithOpacity(event.event_type_color, usePage().props.high_contrast_percent))}">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
                             (
@@ -347,7 +353,7 @@
 <script setup>
 import {computed, onMounted, ref} from "vue";
 import {Link, usePage} from "@inertiajs/vue3";
-import {IconCirclePlus, IconEdit, IconLink, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
+import {IconCirclePlus, IconEdit, IconRepeat, IconTrash, IconUsersGroup, IconX} from "@tabler/icons-vue";
 import Button from "@/Jetstream/Button.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import VueMathjax from "vue-mathjax-next";
@@ -425,7 +431,6 @@ const props = defineProps({
 });
 
 const element = ref(null);
-const percentage = usePage().props.high_contrast_percent;
 const changeMultiEditCheckbox = (eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd) => {
     emits.call(this, 'changedMultiEditCheckbox', eventId, considerOnMultiEdit, eventRoomId, eventStart, eventEnd);
 };

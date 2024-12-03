@@ -3,6 +3,9 @@
         <div class="flex w-full items-center my-4">
             <h3 class="sDark">{{ $t('All Documents') }}</h3>
         </div>
+        <div class="mb-3">
+            <MultiAlertComponent :errors="documentForm.errors" v-show="Object.keys(documentForm.errors).length > 0" :error-count="Object.keys(documentForm.errors).length" />
+        </div>
         <div
             v-if="this.canEditComponent || ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id))">
             <input
@@ -67,6 +70,7 @@ import IconLib from "@/Mixins/IconLib.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {useForm} from "@inertiajs/vue3";
+import MultiAlertComponent from "@/Components/Alerts/MultiAlertComponent.vue";
 
 export default defineComponent({
     mixins: [
@@ -74,6 +78,7 @@ export default defineComponent({
         IconLib
     ],
     components: {
+        MultiAlertComponent,
         ConfirmDeleteModal,
         JetInputError
     },
@@ -114,21 +119,8 @@ export default defineComponent({
         },
         validateTypeAndUpload(files) {
             this.uploadDocumentFeedback = "";
-            const forbiddenTypes = [
-                "application/vnd.microsoft.portable-executable",
-                "application/x-apple-diskimage",
-            ]
             for (let file of files) {
-                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = this.$t('Videos, .exe and .dmg files are not supported.');
-                } else {
-                    const fileSize = file.size;
-                    if (fileSize > 2097152) {
-                        this.uploadDocumentFeedback = this.$t('Files larger than 2MB cannot be uploaded.');
-                    } else {
-                        this.uploadDocumentToProject(file)
-                    }
-                }
+              this.uploadDocumentToProject(file)
             }
         },
         selectNewFiles() {

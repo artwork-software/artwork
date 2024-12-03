@@ -12,8 +12,6 @@ class FileUpload extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['max:2000'],
-            'tabId' => ['integer', 'nullable'],
         ];
     }
 }

@@ -105,6 +105,7 @@ use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\System\FileSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +159,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
             ->name('tool.module-settings.update');
+        Route::group(['namespace' => 'System', 'prefix' => 'system'], function() {
+            Route::get('/file-settings', [FileSettingsController::class, 'index'])
+                ->name('tool.file-settings.index');
+            Route::put('/file-settings', [FileSettingsController::class, 'store'])
+                ->name('tool.file-settings.store');
+        });
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {

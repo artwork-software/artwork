@@ -264,24 +264,6 @@ const uploadFileToColumn = () => {
     formData.append('file', file);
     formData.append('cell_value', String(file.name));
 
-
-    const forbiddenTypes = [
-        "application/vnd.microsoft.portable-executable",
-        "application/x-apple-diskimage",
-    ]
-
-
-    if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-        uploadFeedback.value = $t('File type not allowed');
-        return;
-    } else {
-        // max file size 2097152 bytes = 2MB
-        if (file.size > 2097152) {
-            uploadFeedback.value = $t('File size too large');
-            return;
-        }
-    }
-
     router.post(
         route(
             'inventory-management.inventory.item-cell.update.cell-value.upload',

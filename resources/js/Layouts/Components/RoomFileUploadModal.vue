@@ -81,21 +81,8 @@ const storeFile = (file) => {
 
 const validateType = (newFiles) => {
     uploadDocumentFeedback.value = "";
-    const forbiddenTypes = [
-        "application/vnd.microsoft.portable-executable",
-        "application/x-apple-diskimage",
-    ]
     for (let file of newFiles) {
-        if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-            uploadDocumentFeedback.value = this.$t('Videos, .exe and .dmg files are not supported')
-        } else {
-            const fileSize = file.size;
-            if (fileSize > 2097152) {
-                uploadDocumentFeedback.value = this.$t('Files larger than 2MB cannot be uploaded.')
-            } else {
-                files.value.push(file)
-            }
-        }
+      files.value.push(file)
     }
 }
 

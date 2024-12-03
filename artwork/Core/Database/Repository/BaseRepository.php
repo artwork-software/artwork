@@ -133,4 +133,9 @@ abstract class BaseRepository
     ): Model|Pivot|CanSubstituteBaseModel {
         return $model->replicate($except);
     }
+    public function findByKey(
+        string $key,
+    ): Model|Pivot|CanSubstituteBaseModel|null {
+        return static::getNewModelQuery()->where('key', $key)->first();
+    }
 }

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Core\FileHandling\Upload\ArtworkFileTypes;
+use Artwork\Core\FileHandling\Upload\HandlesFileUpload;
 use Artwork\Core\Http\Requests\FileUpload;
 use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\GeneralSettings\Services\GeneralSettingsService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Comment;
@@ -22,10 +25,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectFileController extends Controller
 {
+    use HandlesFileUpload;
+    
     public function __construct(
         private readonly ChangeService $changeService,
         private readonly NotificationService $notificationService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        protected readonly GeneralSettingsService $generalSettingsService
     ) {
     }
 
@@ -41,6 +47,7 @@ class ProjectFileController extends Controller
         }
 
         $file = $request->file('file');
+        $this->handleFile(ArtworkFileTypes::PROJECT, $file);
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
 

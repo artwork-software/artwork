@@ -4,6 +4,7 @@ namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\ArtistResidency\Models\ArtistResidency;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Category\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -115,6 +116,11 @@ class Project extends Model
                 ['time_period_project_id' => 0, 'use_project_time_period' => 0]
             );
         });
+    }
+
+    public function artistResidencies(): HasMany
+    {
+        return $this->hasMany(ArtistResidency::class, 'project_id', 'id');
     }
 
     public function costCenter(): BelongsTo

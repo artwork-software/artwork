@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\ArtistResidencyController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BudgetAccountManagementController;
 use App\Http\Controllers\BudgetGeneralController;
@@ -105,6 +106,7 @@ use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\System\FileSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +160,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
             ->name('tool.module-settings.update');
+        Route::group(['namespace' => 'System', 'prefix' => 'system'], function() {
+            Route::get('/file-settings', [FileSettingsController::class, 'index'])
+                ->name('tool.file-settings.index');
+            Route::put('/file-settings', [FileSettingsController::class, 'store'])
+                ->name('tool.file-settings.store');
+        });
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -707,6 +715,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Project Routes
     Route::group(['prefix' => 'project'], function (): void {
+
+        Route::group(['prefix' => 'artist-residencies'], function (): void {
+            // store
+            Route::post('/{project}/artist-residencies', [ArtistResidencyController::class, 'store'])
+                ->name('artist-residencies.store');
+
+            // patch
+            Route::patch('/{artistResidency}', [ArtistResidencyController::class, 'update'])
+                ->name('artist-residencies.update');
+
+            // artist_residencies.duplicate
+            Route::post('/{artistResidency}/duplicate', [ArtistResidencyController::class, 'duplicate'])
+                ->name('artist_residencies.duplicate');
+            //artist_residencies.destroy
+            Route::delete('/{artistResidency}', [ArtistResidencyController::class, 'destroy'])
+                ->name('artist-residency.destroy');
+        });
+
+
         // GET
         Route::get('/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
         Route::get('/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])

@@ -1010,6 +1010,7 @@ readonly class EventService
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
+            ->setMonths($showCalendar['months'])
             ->setDateValue($showCalendar['dateValue'])
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])

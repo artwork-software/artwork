@@ -159,7 +159,7 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(user,index) in department.users"
+                        <span v-for="(user,index) in teamForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full object-cover"
@@ -309,7 +309,7 @@ export default {
             this.showChangeTeamMemberModal = false;
         },
         deleteUserFromTeam(user) {
-            this.department.users.splice(this.department.users.indexOf(user), 1);
+            this.teamForm.users.splice(this.teamForm.users.indexOf(user), 1);
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -318,6 +318,7 @@ export default {
             }, 1000)
         },
         editTeam() {
+
             this.teamForm.patch(route('departments.edit', {department: this.department.id}));
             this.showSuccessButton();
             this.closeChangeTeamMembersModal();

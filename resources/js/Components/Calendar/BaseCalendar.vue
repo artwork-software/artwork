@@ -10,6 +10,7 @@
                 @open-fullscreen-mode="openFullscreen"
                 @wants-to-add-new-event="showEditEventModel(null)"
                 @update-multi-edit="toggleMultiEdit"
+                @jump-to-day-of-month="jumpToDayOfMonth"
             />
         </div>
         <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
@@ -36,7 +37,8 @@
                          :style="{ height: usePage().props.user.calendar_settings.expand_days ? '' : zoom_factor * 115 + 'px' }"
                          class="flex gap-0.5 day-container"
                          :class="day.is_weekend ? 'bg-userBg/70' : ''"
-                         :data-day="day.full_day">
+                         :data-day="day.full_day"
+                         :data-day-to-jump="day.without_format">
                         <SingleDayInCalendar :isFullscreen="isFullscreen" :day="day"/>
                         <div v-for="room in computedCalendarData.value"
                              :key="room.id"
@@ -821,6 +823,17 @@ onMounted(() => {
       })
 });
 
+
+const jumpToDayOfMonth = (day) => {
+    const dayElement = document.querySelector(`.day-container[data-day-to-jump="${day}"]`);
+    if (dayElement) {
+        // scroll to the day with puffer for the header
+        window.scrollTo({
+            top: dayElement.offsetTop - 130,
+            behavior: 'smooth',
+        });
+    }
+}
 
 </script>
 

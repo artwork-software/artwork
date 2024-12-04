@@ -1,5 +1,5 @@
 <template>
-    <h1 class="headline1 -my-4" style="font-size:18px;">{{ $t('EXCEL_EVENT_LIST_EXPORT')}}</h1>
+    <h1 class="headline1 -my-4" style="font-size:18px;">{{ $t(exportTabEnum)}}</h1>
     <h2 class="text-sm text-gray-500 -mb-2">
         {{ $t('All Events are exported by given settings') }}
     </h2>
@@ -138,30 +138,32 @@
             </div>
         </template>
     </div>
-    <div class="flex flex-row items-center">
-        <h2 class="headline2 !text-sm">{{ $t('Columns') }}</h2>
-        <ChevronDownIcon v-if="!showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = true"/>
-        <ChevronUpIcon v-if="showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = false"/>
-    </div>
-    <div v-if="showColumns" class="flex flex-col gap-y-0.5">
-        <template v-for="(translationKey, column) in availableColumns">
-            <div v-if="column !== 'artists' || showArtists" class="flex flex-row items-center gap-x-1">
-                <input :id="'cb-' + column"
-                       v-model="exportForm.desiredColumns"
-                       :value="column"
-                       type="checkbox"
-                       class="input-checklist p-0"/>
-                <label :for="'cb-' + column"
-                       :class="[exportForm.desiredColumns.includes(column) ? '' : '', 'text-xs']"
-                       class="text-secondary cursor-pointer hover:text-green-500">
-                    {{ $t(translationKey) }}
-                </label>
-            </div>
-        </template>
-    </div>
+    <template v-if="isExcelEventListExport()">
+        <div class="flex flex-row items-center">
+            <h2 class="headline2 !text-sm">{{ $t('Columns') }}</h2>
+            <ChevronDownIcon v-if="!showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = true"/>
+            <ChevronUpIcon v-if="showColumns" class="w-5 h-5 cursor-pointer" @click="showColumns = false"/>
+        </div>
+        <div v-if="showColumns" class="flex flex-col gap-y-0.5">
+            <template v-for="(translationKey, column) in availableColumns">
+                <div v-if="column !== 'artists' || showArtists" class="flex flex-row items-center gap-x-1">
+                    <input :id="'cb-' + column"
+                           v-model="exportForm.desiredColumns"
+                           :value="column"
+                           type="checkbox"
+                           class="input-checklist p-0"/>
+                    <label :for="'cb-' + column"
+                           :class="[exportForm.desiredColumns.includes(column) ? '' : '', 'text-xs']"
+                           class="text-secondary cursor-pointer hover:text-green-500">
+                        {{ $t(translationKey) }}
+                    </label>
+                </div>
+            </template>
+        </div>
+    </template>
     <BaseButton :disabled="computedValidation"
                 class="mt-4 w-40 gap-x-2 self-center justify-center"
-                @click="downloadExcelEventListExport()"
+                @click="initializeDownload()"
                 :text="$t('Export')">
         <DocumentReportIcon class="h-4 w-4"/>
     </BaseButton>
@@ -178,19 +180,27 @@ import {computed, ref} from "vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
+
+const receivedFilters = ref([]);
+axios.get(route('calendar.filters')).then((response) => receivedFilters.value = response.data);
 
 const props = defineProps({
-        showArtists: {
-            type: Boolean,
-            default: false,
-            required: true
-        },
         projectPreselect: {
             type: Object,
             default: null,
             required: false
-        }
+        },
+        exportTabEnum: {
+            type: String,
+            required: true
+        },
+        showArtists: {
+            type: Boolean,
+            default: false,
+        },
     }),
+    exportTabEnums = useExportTabEnums(),
     $t = useTranslation(),
     emits = defineEmits(['close']),
     availableColumns = ref({
@@ -208,6 +218,9 @@ const props = defineProps({
         project_team: 'Project team',
         project_properties: 'Project properties'
     }),
+    isExcelEventListExport = () => {
+        return props.exportTabEnum === exportTabEnums.EXCEL_EVENT_LIST_EXPORT;
+    },
     exportForm = useForm({
         desiresTimespanExport: false,
         conditional: {},
@@ -219,16 +232,25 @@ const props = defineProps({
             areas: [],
             rooms: []
         },
+        desiresEventListExport: isExcelEventListExport(),
         desiredColumns: Object.keys(availableColumns.value).filter(
             (column) => column !== 'artists' || props.showArtists
         )
     }),
     conditionalDateStart = ref(''),
     conditionalDateEnd = ref(''),
-    conditionalProjects = ref(props.projectPreselect ? [{id: props.projectPreselect.id, name: props.projectPreselect.name}] : []),
-    receivedFilters = ref([]),
-    showFilters = ref(true),
-    showColumns = ref(true),
+    conditionalProjects = ref(
+        props.projectPreselect ?
+            [
+                {
+                    id: props.projectPreselect.id,
+                    name: props.projectPreselect.name
+                }
+            ] :
+            []
+    ),
+    showFilters = ref(false),
+    showColumns = ref(false),
     computedValidation = computed(() => {
         if (exportForm.desiresTimespanExport) {
             return conditionalDateStart.value.length !== 10 ||
@@ -260,7 +282,7 @@ const props = defineProps({
                 Date.parse(conditionalDateStart.value) > Date.parse(conditionalDateEnd.value)
             );
     },
-    downloadExcelEventListExport = () => {
+    initializeDownload = () => {
         if (exportForm.desiresTimespanExport) {
             exportForm.conditional.dateStart = conditionalDateStart;
             exportForm.conditional.dateEnd = conditionalDateEnd;
@@ -273,21 +295,22 @@ const props = defineProps({
             delete exportForm.conditional.dateEnd;
         }
 
+        if (!isExcelEventListExport()) {
+            delete exportForm.desiredColumns;
+        }
 
-        axios.post(route('export.download-event-list-xlsx.cache-filter'), exportForm.data())
+        axios.post(route('export.cache-filter'), exportForm.data())
             .then((response) => {
                 window.open(
                     route(
-                        'export.download-event-list-xlsx',
+                        isExcelEventListExport() ?
+                            'export.download-event-list-xlsx' :
+                            'export.download-calendar-xlsx',
                         {
                             cacheToken: response.data
                         }
                     )
                 );
-            }).catch(
-            () => console.error($t('Export could not be created. Please try again.'))
-        );
+            }).catch(() => console.error($t('Export could not be created. Please try again.')));
 };
-
-axios.get(route('calendar.filters')).then((response) => receivedFilters.value = response.data);
 </script>

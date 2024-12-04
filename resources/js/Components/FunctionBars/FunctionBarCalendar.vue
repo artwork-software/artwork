@@ -311,7 +311,8 @@
                   @close="showExportModal = false"
                   :enums="[
                       exportTabEnums.PDF_CALENDAR_EXPORT,
-                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT
+                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                      exportTabEnums.EXCEL_CALENDAR_EXPORT
                   ]"
                   :configuration="getExportModalConfiguration()"/>
     <GeneralCalendarAboSettingModal
@@ -412,6 +413,10 @@ const getExportModalConfiguration = () => {
         project: props.project,
         show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
             (usePage().props.show_artists ?? false),
+    };
+
+    cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
+        project: props.project
     };
 
     return cfg;

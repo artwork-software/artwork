@@ -109,6 +109,7 @@
                   @close="showExportModal = false"
                   :enums="[
                       exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                      exportTabEnums.EXCEL_CALENDAR_EXPORT,
                       exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
                   ]"
                   :configuration="getExportModalConfiguration()"/>
@@ -202,6 +203,10 @@ const {hasAdminRole} = usePermission(usePage().props),
 
         cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
             show_artists: usePage().props.createSettings.show_artists,
+            project: props.project,
+        };
+
+        cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
             project: props.project,
         };
 

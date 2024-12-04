@@ -19,13 +19,17 @@
                     <ExcelBudgetByBudgetDeadlineExport v-if="activeTab === exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT" @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT">
-                    <ExcelEventListExport v-if="activeTab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT"
-                                          :show-artists="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT].show_artists"
-                                          :project-preselect="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.project ?? null"
-                                          @close="close()"/>
+                    <ExcelEventListOrCalendarExport v-if="activeTab === exportTabEnums.EXCEL_EVENT_LIST_EXPORT"
+                                                    :export-tab-enum="exportTabEnums.EXCEL_EVENT_LIST_EXPORT"
+                                                    :show-artists="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT].show_artists"
+                                                    :project-preselect="configuration[exportTabEnums.EXCEL_EVENT_LIST_EXPORT]?.project ?? null"
+                                                    @close="close()"/>
                 </template>
                 <template v-else-if="tab === exportTabEnums.EXCEL_CALENDAR_EXPORT">
-                    <ExcelCalendarExport v-if="activeTab === exportTabEnums.EXCEL_CALENDAR_EXPORT" @close="close()"/>
+                    <ExcelEventListOrCalendarExport v-if="activeTab === exportTabEnums.EXCEL_CALENDAR_EXPORT"
+                                                    :export-tab-enum="exportTabEnums.EXCEL_CALENDAR_EXPORT"
+                                                    :project-preselect="configuration[exportTabEnums.EXCEL_CALENDAR_EXPORT]?.project ?? null"
+                                                    @close="close()"/>
                 </template>
                 <template v-else>
                     {{ throwUndefinedEnumUsed() }}
@@ -50,11 +54,8 @@ const exportTabEnums = useExportTabEnums(),
     ExcelBudgetByBudgetDeadlineExport = defineAsyncComponent(
         () => import("@/Layouts/Components/Export/Tabs/ExcelBudgetByBudgetDeadlineExport.vue")
     ),
-    ExcelEventListExport = defineAsyncComponent(
-        () => import("@/Layouts/Components/Export/Tabs/ExcelEventListExport.vue")
-    ),
-    ExcelCalendarExport = defineAsyncComponent(
-        () => import("@/Layouts/Components/Export/Tabs/ExcelCalendarExport.vue")
+    ExcelEventListOrCalendarExport = defineAsyncComponent(
+        () => import("@/Layouts/Components/Export/Tabs/ExcelEventListOrCalendarExport.vue")
     ),
     props = defineProps({
         enums: {

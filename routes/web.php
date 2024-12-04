@@ -73,6 +73,7 @@ use App\Http\Controllers\SidebarTabComponentController;
 use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
+use App\Http\Controllers\System\FileSettingsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\ToolSettingsBrandingController;
@@ -86,7 +87,7 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
-use Artwork\Modules\Event\Http\Controllers\EventListExportController;
+use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
 use Artwork\Modules\InventoryManagement\Http\Controllers\CraftInventoryCategoryController;
@@ -106,7 +107,6 @@ use Artwork\Modules\Project\Http\Middleware\CanViewProject;
 use Artwork\Modules\Room\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\System\FileSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -1731,13 +1731,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::group(['prefix' => 'export'], function (): void {
         Route::post(
-            '/event-list-xlsx-cache-filter',
-            [EventListExportController::class, 'saveExportDataInCache']
-        )->name('export.download-event-list-xlsx.cache-filter');
+            '/event-list-or-calendar',
+            [EventListOrCalendarExportController::class, 'cacheExportConfiguration']
+        )->name('export.cache-filter');
         Route::get(
             '/event-list-xlsx/{cacheToken}',
-            [EventListExportController::class, 'downloadXlsx']
+            [EventListOrCalendarExportController::class, 'downloadEventListXlsx']
         )->name('export.download-event-list-xlsx');
+        Route::get(
+            '/calendar-xlsx/{cacheToken}',
+            [EventListOrCalendarExportController::class, 'downloadCalendarXlsx']
+        )->name('export.download-calendar-xlsx');
     });
 });
 

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class CacheEventListXlsxExportRequest extends FormRequest
+class EventListOrCalendarExportFilterCacheRequest extends FormRequest
 {
     /**
      * @return array<string, ValidationRule|array|string>
@@ -15,8 +15,12 @@ class CacheEventListXlsxExportRequest extends FormRequest
     public function rules(): array
     {
         $desiresTimespanExport = $this->boolean('desiresTimespanExport');
+        $desiresEventListExport = $this->boolean('desiresEventListExport');
+
         return [
             'desiresTimespanExport' => 'boolean',
+            'desiresEventListExport' => 'boolean',
+            'desiredColumns' => [Rule::requiredIf($desiresEventListExport), 'array'],
             'conditional' => 'required|array',
             'conditional.projects' => [Rule::requiredIf($desiresTimespanExport === false), 'array'],
             'conditional.projects.*' => 'exists:projects,id',
@@ -40,8 +44,7 @@ class CacheEventListXlsxExportRequest extends FormRequest
             'filter.areas' => 'array',
             'filter.areas.*' => 'exists:areas,id',
             'filter.rooms' => 'array',
-            'filter.rooms.*' => 'exists:rooms,id',
-            'filter.columns' => 'array'
+            'filter.rooms.*' => 'exists:rooms,id'
         ];
     }
 }

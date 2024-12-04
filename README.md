@@ -19,6 +19,14 @@ Command to add new components to the project-tab-library:
 
 Try these after major updates to be sure, that you are not missing new features.
 
+# Frequent Setup Bugs
+
+If you have problems migrating after doing the newest upgrade and get this migration to fail:
+
+2024_11_23_165534_add_show_qualifications_to_user
+
+Then it is a compatibility issue between MySql and MariaDB, for the ongoing development we decided to use MariaDB, so you will need to swap to MariaDB. To help with the switch we built a script in the .install folder to do this for you. Important: Do a backup of your db before using this script, then run the script .install/db-install.sh, after that the migration will work.
+
 # Installation
 
 Artwork supports to be installed as a standalone application for dedicated servers or as a multi container app powered by docker

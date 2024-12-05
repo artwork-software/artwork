@@ -2211,5 +2211,12 @@
     "project": "Projekt",
     "room": "Raum",
     "branding": "Branding",
-    "contract": "Vertrag"
+    "contract": "Vertrag",
+    "Export artist residencies": "Künstleraufenthalte exportieren",
+    "Export the artist residencies for this project.": "Exportiere die Künstleraufenthalte für dieses Projekt.",
+    "PDF-Export": "PDF-Export",
+    "Select the language for the export.": "Wähle die Sprache für den Export.",
+    "Language": "Sprache",
+    "Export Type": "Export-Typ",
+    "Select the export type for the artist residencies.": "Wähle den Export-Typ für die Künstleraufenthalte."
 }

@@ -18,7 +18,7 @@ class EventCalendarXlsxExport implements FromView, WithStyles
 
     private string $createdBy;
 
-    private array $rooms;
+    private Collection $rooms;
 
     private Collection $events;
 
@@ -62,7 +62,7 @@ class EventCalendarXlsxExport implements FromView, WithStyles
         return $this;
     }
 
-    public function setRooms(array $rooms): self
+    public function setRooms(Collection $rooms): self
     {
         $this->rooms = $rooms;
 

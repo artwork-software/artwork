@@ -4,7 +4,9 @@ namespace Artwork\Modules\Event\Services;
 
 use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Log\Logger;
 use Illuminate\Translation\Translator;
@@ -15,7 +17,10 @@ class EventCalendarExportBladeTemplateService
 
     private string $createdBy;
 
-    private array $rooms;
+    /**
+     * @var Collection<Room>
+     */
+    private Collection $rooms;
 
     private Collection $events;
 
@@ -35,7 +40,7 @@ class EventCalendarExportBladeTemplateService
     public function initialize(
         bool $desiresTimespanExport,
         string $createdBy,
-        array $rooms,
+        Collection $rooms,
         Collection $events,
         ?array $projects,
         ?string $dateStart,
@@ -81,7 +86,7 @@ class EventCalendarExportBladeTemplateService
         $output .= '</table>';
 
         $this->logger->info('Render output...');
-        $this->logger->debug($output);
+        //$this->logger->debug($output);
 
         echo $output;
     }
@@ -174,20 +179,112 @@ class EventCalendarExportBladeTemplateService
     {
         $this->logger->info('-> Create date and room header...');
 
-        $roomMarkup = '';
-        /** @var  $room */
+        $markup = '';
         foreach ($this->rooms as $room) {
-            $roomMarkup .= sprintf(
+            $markup .= sprintf(
                 '<td colspan="2" style="text-align:center; border: 1px solid black;">%s</td>',
-                $room
+                $room->getAttribute('name')
             );
         }
 
         return sprintf(
             '<tr><td style="text-align: right; border: 1px solid black;">%s</td>%s</tr>',
             $this->translator->get('export.date-heading'),
-            $roomMarkup
+            $markup
         );
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function handleRoomsAndEvents(CarbonPeriod $period, string $desiredLocale): string
+    {
+        $tmp = '';
+
+        //handle events on date for given rooms
+        foreach ($period as $date) {
+            $biggestEventCountInRooms = 0;
+            $eventsForRoomsOnDate = $this->findEventsForRoomsOnDate($date);
+            foreach ($eventsForRoomsOnDate as $eventsForRoomOnDate) {
+                $eventCount = count($eventsForRoomOnDate);
+                if ($eventCount > $biggestEventCountInRooms) {
+                    $biggestEventCountInRooms = $eventCount;
+                }
+            }
+            $this->logger->info('event count: ' . $biggestEventCountInRooms);
+            //keep in mind: row in xlsx (for given date) is made of 2 <tr> tags
+            $biggestEventCountInRooms = 0;
+            if ($biggestEventCountInRooms === 0) {
+                //empty row for date
+                $tmp .= '<tr>';
+                $tmp .= sprintf(
+                    '<td style="border:1px solid #000000; border-bottom:none;">*%s, %s</td>',
+                    $this->translator->get('export.shortMonths.' . strtolower($date->format('M'))),
+                    $date->format(
+                        $desiredLocale === 'de' ?
+                            CarbonService::GERMAN_DATE_FORMAT :
+                            CarbonService::INTERNATIONAL_DATE_FORMAT
+                    )
+                );
+                foreach ($this->rooms as $room) {
+                    $tmp .= '<td style="border-top:1px solid #000000;"></td>' .
+                        '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
+                }
+                $tmp .= '</tr>';
+                $tmp .= '<tr><td style="border:1px solid #000000; border-top:none;"></td>';
+                foreach ($this->rooms as $room) {
+                    $tmp .= '<td style="border-bottom:1px solid #000000;"></td>' .
+                        '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
+                }
+                $tmp .= '</tr>';
+            }
+        }
+
+        return $tmp;
+
+
+//        foreach ($this->rooms as $room) {
+//            $roomId = $room->getAttribute('id');
+//
+//            /** @var Event $event */
+//            $events = $this->findEventsOfRoomOnDate($roomId, $date);
+
+//            foreach ($events as $event) {
+//                $eventType = $event->getAttribute('event_type');
+//                $eventStatus = $event->getAttribute('eventStatus');
+//                $eventId = $event->getAttribute('id');
+//
+//                $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ??
+//                    $eventStatus?->getAttribute('color') ??
+//                    '#FFFFFF';
+//
+//                //name, start time (hour and minutes), end time (hour and minutes)
+//                //background depending on event type and event status
+//                $roomEventsMarkup[$roomId][$eventId][] = sprintf(
+//                    '<td style="background-color: %s; border-top:1px solid #000000;">%s</td>' .
+//                    '<td style="border-top:1px solid #000000;">%s - %s</td>',
+//                    $eventNameBackgroundColorHexCode,
+//                    $event->getAttribute('name') ?? $event->getAttribute('eventName'),
+//                    $event->getAttribute('start_time')->format('H:i'),
+//                    $event->getAttribute('end_time')->format('H:i'),
+//                );
+//
+//                //event type, event status and description -> <td></td> <- is empty (saving space in file)
+//                $roomEventsMarkup[$roomId][$eventId][] = sprintf(
+//                    '<td style="border-bottom:1px solid #000000;">%s%s%s</td>' .
+//                    '<td style="border-bottom:1px solid #000000;"></td>',
+//                    $eventType->getAttribute('name') ?? '',
+//                    $eventStatus?->getAttribute('name') ?? '',
+//                    $event->getAttribute('description')
+//                );
+//            }
+//        }
+
+        //return $roomEventsMarkup;
+    }
+
+    private function handleEventsOfRoom(): void
+    {
     }
 
     private function createTableBody(
@@ -202,50 +299,80 @@ class EventCalendarExportBladeTemplateService
                 $firstEventStartDate,
             $this->desiresTimespanExport ?
                 $this->carbonService->create($this->dateEnd) :
-                $lastEventStartDate
+                $lastEventStartDate,
         );
         $this->logger->info(sprintf('--> Used date period: "%s" - "%s"', $period->first(), $period->last()));
-
-        $tableBody = '';
         /** @var Carbon $date */
-        foreach ($period as $date) {
-            $this->logger->info(strtolower($date->format('M')));
+        $tableBody = '';
+        $tableBody .= $this->handleRoomsAndEvents($period, $desiredLocale);
+        //foreach ($period as $date) {
 
-            $roomAndEventsForDateMarkup = '';
-            //iterate each room and save for later
-            foreach ($this->rooms as $room) {
-                //find events of given date and room
-
-
-
-                //event name with color -> check where to get from -> time of event <td></td><td></td>
-                $roomAndEventsForDateMarkup .= sprintf(
-                    '<td></td><td></td>'
-                );
-                //event infos <td>infos</td> -> <td></td> <- is empty (saving space in file)
-                $roomAndEventsForDateMarkup .= sprintf(
-                    '<td></td><td></td>'
-                );
-            }
-
-            $tableBody .= sprintf(
-                '<tr><td style="border-left:3px solid #000000;">*%s, %s</td>%s</tr>',
-                //translate
-                $this->translator->get('export.shortMonths.' . strtolower($date->format('M'))),
-                $date->format(
-                    $desiredLocale === 'de' ?
-                        CarbonService::GERMAN_DATE_FORMAT :
-                        CarbonService::INTERNATIONAL_DATE_FORMAT
-                ),
-                $roomAndEventsForDateMarkup
-            );
-
-
-
-
-        }
+//            $tmp = sprintf(
+//                '<td style="border-left:3px solid #000000;">*%s, %s</td>',
+//                $this->translator->get('export.shortMonths.' . strtolower($date->format('M'))),
+//                $date->format(
+//                    $desiredLocale === 'de' ?
+//                        CarbonService::GERMAN_DATE_FORMAT :
+//                        CarbonService::INTERNATIONAL_DATE_FORMAT
+//                )
+//            );
+//
+//            //create rows of day
+//            foreach ($roomEventsMarkup as $index => $roomEventMarkup) {
+//                $diff = $desiredRowsCount - count($roomEventMarkup);
+//                $tmp .= implode('', $roomEventMarkup);
+//
+//                if (() > 0) {
+//                    foreach (range(0, $diff) as $emptyCellsDesired) {
+//                        $tableBody .= '<td style="border-top:1px solid #000000;"></td>' .
+//                            '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
+//                        $tableBody .= '<td style="border-bottom:1px solid #000000;"></td>' .
+//                            '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
+//                    }
+//                }
+//            }
+//            $tableBody .= $tmp;
 
         return $tableBody;
+    }
+
+    /**
+     * @param Carbon $date
+     * @return array<int, array<int, Event>>
+     */
+    private function findEventsForRoomsOnDate(Carbon $date): array
+    {
+        $eventsForRoomsOnDate = [];
+
+        foreach ($this->rooms as $room) {
+            $roomId = $room->getAttribute('id');
+            $eventsForRoomsOnDate[$roomId] = $this->findEventsOfRoomOnDate($roomId, $date);
+        }
+
+        return $eventsForRoomsOnDate;
+    }
+
+    private function findEventsOfRoomOnDate(
+        int $roomId,
+        Carbon $date,
+    ): Collection {
+        return $this->events
+            ->filter(
+                function (Event $event) use ($roomId, $date): bool {
+                    $eventRoomId = $event->getAttribute('room_id');
+
+                    return $eventRoomId === $roomId &&
+                        $this->carbonService->isInBetween(
+                            $event->getAttribute('start_time'),
+                            $event->getAttribute('end_time'),
+                            $date,
+                        );
+                }
+            )->sortBy(
+                function (Event $event): Carbon {
+                    return $event->getAttribute('start_time');
+                }
+            );
     }
 
     private function getTranslatedMonthFrom(string $date): string

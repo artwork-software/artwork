@@ -59,7 +59,7 @@ class EventCalendarExportService extends EventExportService
                 ($desiresTimespanExport = $this->getFromCachedData('desiresTimespanExport'))
             )
             ->setCreatedBy($this->aggregateCreatedBy())
-            ->setRooms($this->roomService->getAllRoomNamesWithoutTrashed())
+            ->setRooms($this->roomService->getAllRoomsWithoutTrashed())
             ->setEvents($this->eventRepository->getEventsForEventListExportByFilters($this->getFromCachedData()));
 
         if ($desiresTimespanExport) {

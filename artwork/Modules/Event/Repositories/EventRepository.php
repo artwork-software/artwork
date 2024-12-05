@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
-use Illuminate\Support\Facades\Log;
 
 class EventRepository extends BaseRepository
 {
@@ -329,8 +328,6 @@ class EventRepository extends BaseRepository
                     }
                 }
             );
-
-        Log::debug($query->toRawSql());
 
         return $query->get();
     }

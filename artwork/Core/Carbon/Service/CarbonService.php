@@ -78,4 +78,9 @@ class CarbonService
     {
         return $dateFormat . ' ' . $timeFormat;
     }
+
+    public function isInBetween(Carbon $startDate, Carbon $endDate, Carbon $date): bool
+    {
+        return $date->between($startDate, $endDate);
+    }
 }

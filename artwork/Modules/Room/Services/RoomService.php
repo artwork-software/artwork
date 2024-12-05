@@ -383,11 +383,8 @@ readonly class RoomService
         return $room;
     }
 
-    /**
-     * @return array<int, string>
-     */
-    public function getAllRoomNamesWithoutTrashed(): array
+    public function getAllRoomsWithoutTrashed(): EloquentCollection
     {
-        return $this->roomRepository->allWithoutTrashed()->pluck('name')->toArray();
+        return $this->roomRepository->allWithoutTrashed();
     }
 }

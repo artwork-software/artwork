@@ -2210,5 +2210,12 @@
     "project": "Project",
     "room": "Room",
     "branding": "Branding",
-    "contract": "Contracts"
+    "contract": "Contract",
+    "Export artist residencies": "Export artist residencies",
+    "Export the artist residencies for this project.": "Export the artist residencies for this project.",
+    "PDF-Export": "PDF-Export",
+    "Select the language for the export.": "Select the language for the export.",
+    "Language": "Language",
+    "Export Type": "Export Type",
+    "Select the export type for the artist residencies.": "Select the export type for the artist residencies."
 }

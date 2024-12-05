@@ -87,7 +87,7 @@ class EventCalendarExportBladeTemplateService
         $output .= '</table>';
 
         $this->logger->debug('Echo output...');
-        //$this->logger->debug($output);
+        $this->logger->debug($output);
 
         echo $output;
     }

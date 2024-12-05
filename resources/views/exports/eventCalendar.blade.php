@@ -12,7 +12,7 @@
          */
         /** @var EventCalendarExportBladeTemplateService $eventCalendarExportBladeTemplateService */
         $eventCalendarExportBladeTemplateService = app()->make(EventCalendarExportBladeTemplateService::class);
-        $eventCalendarExportBladeTemplateService->initialize(
+        $eventCalendarExportBladeTemplateService->render(
             $desiresTimespanExport,
             $createdBy,
             $rooms,
@@ -20,5 +20,5 @@
             $projects,
             $dateStart,
             $dateEnd
-        )->render();
+        );
 @endphp

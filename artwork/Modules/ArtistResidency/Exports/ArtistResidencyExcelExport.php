@@ -9,21 +9,23 @@ use Illuminate\Database\Eloquent\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ArtistResidencyExcelExport implements FromView, ShouldAutoSize, WithStyles
+class ArtistResidencyExcelExport implements FromView, ShouldAutoSize, WithStyles, WithColumnFormatting
 {
     use Exportable;
 
     protected Collection $artistResidencies;
     protected object $project;
-    protected string $language;
+    public string $language;
 
     public function __construct(
         Collection $artistResidencies,
         object $project,
-        string $language = 'en',
+        string $language,
     ) {
         $this->artistResidencies = $artistResidencies;
         $this->project = $project;
@@ -50,6 +52,20 @@ class ArtistResidencyExcelExport implements FromView, ShouldAutoSize, WithStyles
         return [
             //first row bold
             1 => ['font' => ['bold' => true]],
+        ];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function columnFormats(): array
+    {
+        return [
+            'C' => NumberFormat::FORMAT_DATE_DATETIME,
+            'D' => NumberFormat::FORMAT_DATE_DATETIME,
+            'F' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'H' => NumberFormat::FORMAT_CURRENCY_EUR,
+            'I' => NumberFormat::FORMAT_CURRENCY_EUR,
         ];
     }
 }

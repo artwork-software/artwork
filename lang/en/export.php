@@ -12,4 +12,7 @@ return [
     'additional_allowance' => 'Additional Allowance',
     'cost_per_night' => 'Cost per Night',
     'total' => 'Total',
+    'get_sum' => 'Amount received',
+    'total_sum' => 'Total Amount',
+    'total_days' => 'Total Days',
 ];

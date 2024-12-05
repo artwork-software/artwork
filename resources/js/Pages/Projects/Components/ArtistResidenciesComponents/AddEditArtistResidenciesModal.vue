@@ -184,7 +184,7 @@
                         v-model="artistResidency.additional_daily_allowance"
                         :label="$t('Additional daily allowance')"
                         id="additional_daily_allowance"
-                        :step="0.01"
+                        :step="1"
                         :max="50000"
                     />
                 </div>
@@ -199,7 +199,7 @@
                         />
                     </div>
                     <div class="mt-3">
-                        <h4 class="xsDark">{{ calculateTotalNights() }}</h4>
+                        <h4 class="xsDark">{{ calculateTotalNights() + Math.floor(artistResidency.additional_daily_allowance)}}</h4>
                     </div>
                 </div>
 
@@ -310,9 +310,9 @@ const calculateTotalCost = computed(() => {
 })
 
 const calculateTotalDailyAllowance = computed(() => {
-    const totalNights = isNaN(calculateTotalNights()) ? 0 : calculateTotalNights()
+    const totalCost = isNaN(calculateTotalCost.value) ? 0 : calculateTotalCost.value
 
-    return ((artistResidency.daily_allowance * totalNights) + Math.floor(artistResidency.additional_daily_allowance)).toFixed(2)
+    return ((Math.floor(artistResidency.daily_allowance) * Math.floor(artistResidency.additional_daily_allowance)) + Math.floor(totalCost)).toFixed(2)
 })
 
 

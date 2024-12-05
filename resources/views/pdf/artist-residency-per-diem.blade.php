@@ -63,25 +63,27 @@
                 <th>{{ __('export.additional_allowance', [], $language) }}</th>
                 <th>{{ __('export.cost_per_night', [], $language) }}</th>
                 <th>{{ __('export.total', [], $language) }}</th>
+                <th>{{ __('export.get_sum', [], $language) }}</th>
             </tr>
         </thead>
         <tbody>
             @foreach($artistResidencies as $artistResidency)
                 @php
                     $totalCostWithout = ($artistResidency->cost_per_night * $artistResidency->days);
-                    $totalCostWith =  ($artistResidency->daily_allowance * $artistResidency->days) + $artistResidency->additional_daily_allowance;
-                    $totalCost = $totalCostWithout + $totalCostWith;
+                    $totalCostWith =  ($artistResidency->daily_allowance * $artistResidency->additional_daily_allowance) + $totalCostWithout;
+                    $totalCost = $totalCostWith;
                 @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $artistResidency->name }}</td>
                     <td>{{ $artistResidency->formatted_dates['arrival_date'] }} {{ $artistResidency->formatted_dates['arrival_time'] }}</td>
                     <td>{{ $artistResidency->formatted_dates['departure_date'] }} {{ $artistResidency->formatted_dates['departure_time'] }}</td>
-                    <td>{{ $artistResidency->days }}</td>
+                    <td style="text-align: center">{{ $artistResidency->days }}</td>
                     <td>{{ number_format($artistResidency->daily_allowance, 2, ',', '.') }} €</td>
-                    <td>{{ number_format($artistResidency->additional_daily_allowance, 2, ',', '.') }} €</td>
+                    <td style="text-align: center">{{ $artistResidency->additional_daily_allowance}}</td>
                     <td>{{ number_format($artistResidency->cost_per_night, 2, ',', '.') }} €</td>
                     <td>{{ number_format($totalCost, 2, ',', '.') }} €</td>
+                    <td></td>
                 </tr>
             @endforeach
 
@@ -89,19 +91,19 @@
                 @php
                     // brechne die Gesamtkosten für die Tage ohne und mit zusätzlicher Tagespauschale
 
-                    $totalCostWithout = 0;
                     $totalCostWith = 0;
                     $totalCost = 0;
                     foreach ($artistResidencies as $artistResidency) {
-                        $totalCostWithout += ($artistResidency->cost_per_night * $artistResidency->days);
-                        $totalCostWith += ($artistResidency->daily_allowance * $artistResidency->days) + $artistResidency->additional_daily_allowance;
+                        $totalCostWithout = ($artistResidency->cost_per_night * $artistResidency->days);
+                        $totalCostWith += ($artistResidency->daily_allowance * $artistResidency->additional_daily_allowance) + $totalCostWithout;
                     }
-                    $totalCost = $totalCostWithout + $totalCostWith;
+                    $totalCost = $totalCostWith;
                 @endphp
-                <td colspan="4" style="text-align: right; font-weight: bold">Total Days:</td>
-                <td style="text-align: left; text-decoration-line: underline">{{ $artistResidencies->sum('days') }}</td>
-                <td colspan="3" style="text-align: right; font-weight: bold">Total</td>
+                <td colspan="4" style="text-align: right; font-weight: bold">{{ __('export.total_days', [], $language) }}:</td>
+                <td style="text-align: center; text-decoration-line: underline">{{ $artistResidencies->sum('days') }}</td>
+                <td colspan="3" style="text-align: right; font-weight: bold">{{ __('export.total_sum', [], $language) }}:</td>
                 <td style="text-decoration-line: underline">{{ number_format($totalCost, 2, ',', '.') }} €</td>
+                <td></td>
             </tr>
         </tbody>
     </table>

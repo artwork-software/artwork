@@ -31,7 +31,7 @@ readonly class ArtistResidencyService
     /**
      * Exports artist residency data based on project and type.
      */
-    public function exportService(Project $project, string $type, string $language = 'en'): Response|BinaryFileResponse
+    public function exportService(Project $project, string $type, string $language): Response|BinaryFileResponse
     {
         $artistResidencies = $this->getArtistResidenciesByProjectId($project->id);
 
@@ -92,7 +92,11 @@ readonly class ArtistResidencyService
             now()->format('d-m-Y_H_i_s')
         );
 
-        return (new ArtistResidencyExcelExport($artistResidencies, $project->load(['costCenter'], $language)))
+        return (new ArtistResidencyExcelExport(
+            $artistResidencies,
+            $project->load(['costCenter']),
+            $language
+        ))
             ->download($filename)
             ->deleteFileAfterSend();
     }

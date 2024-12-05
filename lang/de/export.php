@@ -12,4 +12,7 @@ return [
     'additional_allowance' => 'Zusätzliches Tagegeld',
     'cost_per_night' => 'Kosten pro Nacht',
     'total' => 'Gesamt',
+    'get_sum' => 'Betrag erhalten',
+    'total_sum' => 'Gesamtbetrag',
+    'total_days' => 'Gesamt Tage'
 ];

@@ -148,30 +148,20 @@ class EventCalendarExportBladeTemplateService
             )
         );
 
-        if ($this->desiresTimespanExport) {
-            //date column in first row by dates given from ui
-            return sprintf(
-                '<tr><th colspan="3" height="20" class="text-2xl">%s (%s) - %s (%s)</th>%s</tr>',
-                $this->getTranslatedMonthFrom($this->dateStart),
-                $this->carbonService->formatFromString($this->dateStart, $desiredFormat),
-                $this->getTranslatedMonthFrom($this->dateEnd),
-                $this->carbonService->formatFromString($this->dateEnd, $desiredFormat),
-                $createdBy
-            );
-        }
-
-        //date column in first row by dates depending on first and last event
-        $dateStart = $firstStartingEvent->getAttribute('start_time');
-        $dateEnd = $lastStartingEvent->getAttribute('end_time');
+        $dateStart = $this->desiresTimespanExport ?
+            $this->dateStart :
+            $firstStartingEvent->getAttribute('start_time');
+        $dateEnd = $this->desiresTimespanExport ?
+            $this->dateEnd :
+            $lastStartingEvent->getAttribute('end_time');
 
         return sprintf(
-            '<tr><th colspan="3" height="20" class="text-2xl">%s (%s) - %s (%s)</th>%s - %s</tr>',
+            '<tr><th colspan="3" height="20" class="text-2xl">%s (%s) - %s (%s)</th>%s</tr>',
             $this->getTranslatedMonthFrom($dateStart),
             $this->carbonService->formatFromString($dateStart, $desiredFormat),
             $this->getTranslatedMonthFrom($dateEnd),
             $this->carbonService->formatFromString($dateEnd, $desiredFormat),
-            $createdBy,
-            implode(', ', $this->projects)
+            $createdBy
         );
     }
 
@@ -202,23 +192,21 @@ class EventCalendarExportBladeTemplateService
         $tmp = '';
 
         //handle events on date for given rooms
+        //keep in mind: row in xlsx (for given date) is made of 2 <tr> tags
         foreach ($period as $date) {
-            $biggestEventCountInRooms = 0;
+            $biggestEventCountInRoomsOfDate = 0;
             $eventsForRoomsOnDate = $this->findEventsForRoomsOnDate($date);
+
             foreach ($eventsForRoomsOnDate as $eventsForRoomOnDate) {
                 $eventCount = count($eventsForRoomOnDate);
-                if ($eventCount > $biggestEventCountInRooms) {
-                    $biggestEventCountInRooms = $eventCount;
+                if ($eventCount > $biggestEventCountInRoomsOfDate) {
+                    $biggestEventCountInRoomsOfDate = $eventCount;
                 }
             }
-            $this->logger->info('event count: ' . $biggestEventCountInRooms);
-            //keep in mind: row in xlsx (for given date) is made of 2 <tr> tags
-            $biggestEventCountInRooms = 0;
-            if ($biggestEventCountInRooms === 0) {
-                //empty row for date
-                $tmp .= '<tr>';
-                $tmp .= sprintf(
-                    '<td style="border:1px solid #000000; border-bottom:none;">*%s, %s</td>',
+
+            $createDateColumnCallback = function () use ($date, $desiredLocale) {
+                return sprintf(
+                    '<td style="border:1px solid #000000; border-bottom:none; font-weight: bold;">*%s, %s</td>',
                     $this->translator->get('export.shortMonths.' . strtolower($date->format('M'))),
                     $date->format(
                         $desiredLocale === 'de' ?
@@ -226,65 +214,115 @@ class EventCalendarExportBladeTemplateService
                             CarbonService::INTERNATIONAL_DATE_FORMAT
                     )
                 );
+            };
+            $createEmptyDateColumnCallback = function () {
+                return '<td style="border:1px solid #000000; border-top:none;"></td>';
+            };
+            $createEmptyTopRow = function () {
+                return '<td style="border-top:1px solid #000000;"></td>' .
+                    '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
+            };
+            $createEmptyBottomRow = function () {
+                return '<td style="border-bottom:1px solid #000000;"></td>' .
+                    '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
+            };
+
+            if ($biggestEventCountInRoomsOfDate === 0) {
+                //empty row for given date
+                $tmp .= '<tr>' . $createDateColumnCallback();
                 foreach ($this->rooms as $room) {
-                    $tmp .= '<td style="border-top:1px solid #000000;"></td>' .
-                        '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
+                    $tmp .= $createEmptyTopRow();
                 }
                 $tmp .= '</tr>';
-                $tmp .= '<tr><td style="border:1px solid #000000; border-top:none;"></td>';
+                $tmp .= '<tr>' . $createEmptyDateColumnCallback();
                 foreach ($this->rooms as $room) {
-                    $tmp .= '<td style="border-bottom:1px solid #000000;"></td>' .
-                        '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
+                    $tmp .= $createEmptyBottomRow();
                 }
+                $tmp .= '</tr>';
+
+                continue; //day finished
+            }
+
+            $desiredRows = $biggestEventCountInRoomsOfDate * 2;
+            foreach (range(1, $desiredRows) as $rowOfDay) {
+                $this->logger->info('-> Create row of day: ' . $rowOfDay);
+                $tmp .= '<tr>';
+                //append date or empty column at the beginning of given rowOfDay
+                if ($rowOfDay === 1) {
+                    $tmp .= $createDateColumnCallback();
+                } else {
+                    $tmp .= $createEmptyDateColumnCallback();
+                }
+
+                $roomEventIndices = [];
+                foreach ($this->rooms as $room) {
+                    $roomId = $room->getAttribute('id');
+                    if (!isset($roomEventIndices[$roomId])) {
+                        $this->logger->info('-> Create room event indices for room (value 0) ' . $roomId);
+                        $roomEventIndices[$roomId] = 0;
+                    }
+                    $this->logger->info('event count: ' . count($eventsForRoomsOnDate[$roomId]));
+                    if (count($eventsForRoomsOnDate[$roomId]) === 0) {
+                        $tmp .= '<td></td><td></td>';
+                        continue;
+                    }
+                    $event = $eventsForRoomsOnDate[$roomId][$roomEventIndices[$roomId]] ?? null;
+                    $hasEvent = $event instanceof Event;
+                    if ($rowOfDay % 2 === 0) {
+                        if ($hasEvent) {
+                            $eventType = $event->getAttribute('event_type');
+                            $eventStatus = $event->getAttribute('eventStatus');
+                            $tmp .= sprintf(
+                                '<td style="border-bottom:1px solid #000000;">%s%s%s</td>' .
+                                '<td style="border-bottom:1px solid #000000;"></td>',
+                                $eventType->getAttribute('name') ?? '',
+                                $eventStatus?->getAttribute('name') ?? '',
+                                $event->getAttribute('description')
+                            );
+                        } else {
+                            $tmp .= sprintf(
+                                '%s%s',
+                                '<td></td>',
+                                '<td></td>'
+                            );
+                        }
+                    } else if ($rowOfDay % 2 === 1) {
+                        if ($hasEvent) {
+                            $eventType = $event->getAttribute('event_type');
+                            $eventStatus = $event->getAttribute('eventStatus');
+                            $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ??
+                                $eventStatus?->getAttribute('color') ??
+                                '#FFFFFF';
+                            $tmp .= sprintf(
+                                '<td style="background-color: %s; border-top:1px solid #000000;">%s</td>' .
+                                '<td style="border-top:1px solid #000000;">%s - %s</td>',
+                                $eventNameBackgroundColorHexCode,
+                                $event->getAttribute('name') ?? $event->getAttribute('eventName'),
+                                $event->getAttribute('start_time')->format('H:i'),
+                                $event->getAttribute('end_time')->format('H:i'),
+                            );
+                        } else {
+                            $tmp .= sprintf(
+                                '%s%s',
+                                '<td></td>',
+                                '<td></td>'
+                            );
+                        }
+                        $roomEventIndices[$roomId]++;
+                    } else {
+                        $tmp .= sprintf(
+                            '%s%s',
+                            '<td></td>',
+                            '<td></td>'
+                        );
+                    }
+                }
+
                 $tmp .= '</tr>';
             }
         }
 
         return $tmp;
-
-
-//        foreach ($this->rooms as $room) {
-//            $roomId = $room->getAttribute('id');
-//
-//            /** @var Event $event */
-//            $events = $this->findEventsOfRoomOnDate($roomId, $date);
-
-//            foreach ($events as $event) {
-//                $eventType = $event->getAttribute('event_type');
-//                $eventStatus = $event->getAttribute('eventStatus');
-//                $eventId = $event->getAttribute('id');
-//
-//                $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ??
-//                    $eventStatus?->getAttribute('color') ??
-//                    '#FFFFFF';
-//
-//                //name, start time (hour and minutes), end time (hour and minutes)
-//                //background depending on event type and event status
-//                $roomEventsMarkup[$roomId][$eventId][] = sprintf(
-//                    '<td style="background-color: %s; border-top:1px solid #000000;">%s</td>' .
-//                    '<td style="border-top:1px solid #000000;">%s - %s</td>',
-//                    $eventNameBackgroundColorHexCode,
-//                    $event->getAttribute('name') ?? $event->getAttribute('eventName'),
-//                    $event->getAttribute('start_time')->format('H:i'),
-//                    $event->getAttribute('end_time')->format('H:i'),
-//                );
-//
-//                //event type, event status and description -> <td></td> <- is empty (saving space in file)
-//                $roomEventsMarkup[$roomId][$eventId][] = sprintf(
-//                    '<td style="border-bottom:1px solid #000000;">%s%s%s</td>' .
-//                    '<td style="border-bottom:1px solid #000000;"></td>',
-//                    $eventType->getAttribute('name') ?? '',
-//                    $eventStatus?->getAttribute('name') ?? '',
-//                    $event->getAttribute('description')
-//                );
-//            }
-//        }
-
-        //return $roomEventsMarkup;
-    }
-
-    private function handleEventsOfRoom(): void
-    {
     }
 
     private function createTableBody(
@@ -302,38 +340,8 @@ class EventCalendarExportBladeTemplateService
                 $lastEventStartDate,
         );
         $this->logger->info(sprintf('--> Used date period: "%s" - "%s"', $period->first(), $period->last()));
-        /** @var Carbon $date */
-        $tableBody = '';
-        $tableBody .= $this->handleRoomsAndEvents($period, $desiredLocale);
-        //foreach ($period as $date) {
 
-//            $tmp = sprintf(
-//                '<td style="border-left:3px solid #000000;">*%s, %s</td>',
-//                $this->translator->get('export.shortMonths.' . strtolower($date->format('M'))),
-//                $date->format(
-//                    $desiredLocale === 'de' ?
-//                        CarbonService::GERMAN_DATE_FORMAT :
-//                        CarbonService::INTERNATIONAL_DATE_FORMAT
-//                )
-//            );
-//
-//            //create rows of day
-//            foreach ($roomEventsMarkup as $index => $roomEventMarkup) {
-//                $diff = $desiredRowsCount - count($roomEventMarkup);
-//                $tmp .= implode('', $roomEventMarkup);
-//
-//                if (() > 0) {
-//                    foreach (range(0, $diff) as $emptyCellsDesired) {
-//                        $tableBody .= '<td style="border-top:1px solid #000000;"></td>' .
-//                            '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
-//                        $tableBody .= '<td style="border-bottom:1px solid #000000;"></td>' .
-//                            '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
-//                    }
-//                }
-//            }
-//            $tableBody .= $tmp;
-
-        return $tableBody;
+        return $this->handleRoomsAndEvents($period, $desiredLocale);
     }
 
     /**
@@ -346,7 +354,7 @@ class EventCalendarExportBladeTemplateService
 
         foreach ($this->rooms as $room) {
             $roomId = $room->getAttribute('id');
-            $eventsForRoomsOnDate[$roomId] = $this->findEventsOfRoomOnDate($roomId, $date);
+            $eventsForRoomsOnDate[$roomId] = $this->findEventsOfRoomOnDate($roomId, $date)->all();
         }
 
         return $eventsForRoomsOnDate;

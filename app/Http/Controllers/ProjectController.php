@@ -1912,7 +1912,8 @@ class ProjectController extends Controller
         FilterService $filterService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        EventService $eventService
+        EventService $eventService,
+        ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
 
 
@@ -2024,6 +2025,7 @@ class ProjectController extends Controller
                                 $eventTypeService,
                                 $areaService,
                                 $projectService,
+                                $projectCreateSettings,
                                 $project
                             ) :
                             $eventService->createEventManagementDto(
@@ -2034,6 +2036,7 @@ class ProjectController extends Controller
                                 $eventTypeService,
                                 $areaService,
                                 $projectService,
+                                $projectCreateSettings,
                                 $project
                             );
 

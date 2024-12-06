@@ -6,6 +6,11 @@
             </div>
         </div>
         <div class="flex items-center justify-end gap-x-2" v-if="!isInModal">
+            <ToolTipComponent icon="IconFileExport"
+                              icon-size="h-7 w-7"
+                              :tooltip-text="$t('Export project list')"
+                              direction="bottom"
+                              @click="showExportModal = true"/>
             <IconCalendarMonth class="w-6 h-6 cursor-pointer"
                                @click="useProjectTimePeriodAndRedirect()"/>
             <BaseMenu show-sort-icon dots-size="h-7 w-7" menu-width="w-72">
@@ -100,7 +105,14 @@
         @closed="onEventComponentClosed"
         :event-statuses="eventStatuses"
     />
-
+    <export-modal v-if="showExportModal"
+                  @close="showExportModal = false"
+                  :enums="[
+                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                      exportTabEnums.EXCEL_CALENDAR_EXPORT,
+                      exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+                  ]"
+                  :configuration="getExportModalConfiguration()"/>
 </template>
 
 <script setup>
@@ -116,7 +128,11 @@ import AlertComponent from "@/Components/Alerts/AlertComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {usePermission} from "@/Composeables/Permission.js";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
+const exportTabEnums = useExportTabEnums();
 const {hasAdminRole} = usePermission(usePage().props),
     $t = useTranslation(),
     props = defineProps({
@@ -181,6 +197,21 @@ const {hasAdminRole} = usePermission(usePage().props),
     isLoading = ref(true),
     eventComponentIsVisible = ref(false),
     eventToEdit = ref(null),
+    showExportModal = ref(false),
+    getExportModalConfiguration = () => {
+        const cfg = {};
+
+        cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+            show_artists: usePage().props.createSettings.show_artists,
+            project: props.project,
+        };
+
+        cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
+            project: props.project,
+        };
+
+        return cfg;
+    },
     onOpenEventComponent = (eventId) => {
         eventComponentIsVisible.value = true;
         eventToEdit.value = props.eventsInProject?.find((event) => {

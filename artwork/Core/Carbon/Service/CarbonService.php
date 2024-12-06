@@ -12,10 +12,9 @@ class CarbonService
     public const INTERNATIONAL_DATE_FORMAT = 'Y-m-d';
 
     public function __construct(
-        private readonly Carbon       $carbon,
+        private readonly Carbon $carbon,
         private readonly CarbonPeriod $carbonPeriod,
-    )
-    {
+    ) {
     }
 
     public function create(string $date): Carbon

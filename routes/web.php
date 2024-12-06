@@ -659,7 +659,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
-    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.module.store');
+    Route::post('/contract_modules/store', [ContractModuleController::class, 'store'])->name('contracts.module.store');
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])
         ->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
@@ -731,6 +731,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //artist_residencies.destroy
             Route::delete('/{artistResidency}', [ArtistResidencyController::class, 'destroy'])
                 ->name('artist-residency.destroy');
+
+            //artist-residencies.export-pdf
+            Route::post('/{project}/{language}/export-pdf', [ArtistResidencyController::class, 'exportPdf'])
+                ->name('artist-residencies.export-pdf');
+            //artist-residencies.export-excel
+            Route::get('/{project}/{language}/export-excel', [ArtistResidencyController::class, 'exportExcel'])
+                ->name('artist-residencies.export-excel');
+
+            //artist-residency.export.pdf.download
+            Route::get('/export-pdf/download/{filename}', [ArtistResidencyController::class, 'exportPdfDownload'])
+                ->name('artist-residency.export.pdf.download');
         });
 
 

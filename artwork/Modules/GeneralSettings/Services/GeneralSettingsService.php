@@ -74,4 +74,11 @@ class GeneralSettingsService
             'file_size' => $this->generalSettings->allowed_branding_file_size
         ];
     }
+    public function getAllowedContractFileMimeTypes(): array
+    {
+        return [
+            'mime_types' => $this->generalSettings->allowed_contract_file_mimetypes,
+            'file_size' => $this->generalSettings->allowed_contract_file_size
+        ];
+    }
 }

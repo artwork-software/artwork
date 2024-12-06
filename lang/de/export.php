@@ -56,5 +56,18 @@ return [
     ],
     'excel-event-calendar-export' => [
         'created-by' => 'Erstellt von :0 am :1'
-    ]
+    ],
+    'by' => 'Export erstellt von',
+    'date' => 'Exportdatum',
+    'artist_name' => 'Künstlername',
+    'arrival_time' => 'Ankunftszeit',
+    'departure_time' => 'Abreisezeit',
+    'nights_count' => 'Anzahl Übernachtungen',
+    'daily_allowance' => 'Tagegeld',
+    'additional_allowance' => 'Zusätzliches Tagegeld',
+    'cost_per_night' => 'Kosten pro Nacht',
+    'total' => 'Gesamt',
+    'get_sum' => 'Betrag erhalten',
+    'total_sum' => 'Gesamtbetrag',
+    'total_days' => 'Gesamt Tage'
 ];

@@ -34,7 +34,7 @@ const emit = defineEmits(['update:selectedProjectState'])
 </script>
 
 <template>
-    <Listbox as="div" class="flex w-full" v-model="currentState" :on-update:model-value="$emit('update:selectedProjectState', currentState)">
+    <Listbox as="div" class="w-full relative" v-model="currentState" :on-update:model-value="$emit('update:selectedProjectState', currentState)">
         <ListboxButton class="w-full text-left">
             <button class="menu-button">
                 <span class="w-full text-secondary" v-if="!selectedProjectState">
@@ -54,7 +54,7 @@ const emit = defineEmits(['update:selectedProjectState'])
                     leave-from-class="opacity-100"
                     leave-to-class="opacity-0">
             <ListboxOptions
-                class="absolute w-[88%] z-10 mt-12 bg-white shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                class="absolute z-10 w-full bg-white rounded-lg shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                 <ListboxOption as="template" class=""
                                v-for="state in projectStates"
                                :key="state.id"

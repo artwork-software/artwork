@@ -44,18 +44,15 @@
                 </SwitchLabel>
             </SwitchGroup>
         </div>
-        <div class="w-full flex stickyHeader">
-            <table class="w-full flex ml-6 py-5">
+        <div class="w-full flex sticky top-0 bg-[#CECDD8] z-30">
+            <table class="w-full flex ml-10 py-5">
                 <thead>
                 <tr class="">
-                    <th v-for="(column,index) in table.columns"
-                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
-                        :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
-                        <div class="flex items-center group" @mouseover="showMenu = column.id" :key="column.id"
-                             @mouseout="showMenu = null">
+                    <th v-for="(column,index) in table.columns" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
+                        <div class="flex items-center group" :key="column.id" :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
-                                <div :class="index <= 2 ? '' : 'justify-end'" class="flex items-center  pr-2">
-                                    <div v-if="column.subName" class="flex items-center">
+                                <div>
+                                    <div v-if="column.subName" class="flex items-center justify-end">
                                         <div class="flex items-center mr-2" v-if="column.is_locked">
                                             <div>
                                                 <svg  xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="" viewBox="0 0 11.975 13.686">
@@ -72,7 +69,7 @@
                                                                     width="5"/>
                                             </div>
                                         </div>
-                                        <div class="columnSubName text-white ">
+                                        <div class="text-xs text-white text-right">
                                             {{ column.subName }}
                                         </div>
 
@@ -112,20 +109,19 @@
                                         </Listbox>
                                     </span>
                                 </div>
-                                <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-16 justify-start' : index === 2 ? 'w-64 justify-start' : index === 3 ? 'w-48 justify-end' : 'w-40 px-3 justify-end'" class="h-5 pr-1 mr-1 xsDark flex "
+                                <div @click="column.clicked = !column.clicked" class="h-5 xsDark"
                                      v-if="!column.clicked">
                                     {{ column.name }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-16 text-left' : index === 2 ? 'w-64 text-left' : index === 3 ? 'w-48 text-right' : 'w-40 text-right'"
+                                        :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'"
                                         class="xsDark h-5  pr-1 mr-1 flex " type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <BaseMenu dots-color="text-artwork-context-dark" class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
+                            <BaseMenu dots-color="text-white" has-no-offset class="invisible group-hover:visible" v-if="this.hasBudgetAccess() || this.$can('edit budget templates')">
                                 <MenuItem v-slot="{ active }">
                                     <a @click="column.showColorMenu = true"
                                        :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -180,16 +176,15 @@
                                     </a>
                                 </MenuItem>
                             </BaseMenu>
-                            <div v-if="showMenu !== column.id" class="w-5"></div>
                         </div>
                     </th>
                     <th v-if="this.hasBudgetAccess()">
                         <div class="flex items-center">
-                        <div class="text-white hidden xl:block ml-3 mt-3">
+                        <div class="text-white hidden xl:block ml-10">
                             {{ $t('New column') }}
                         </div>
                         <button v-if="this.$can('edit budget templates') || !table.is_template"
-                                class="font-bold mr-2 ml-2 text-xl hover:bg-artwork-buttons-hover p-1 mt-3 bg-secondary border-white border-2 rounded-full items-center uppercase shadow-sm text-secondaryHover transition-all duration-150"
+                                class="font-bold mr-2 ml-2 text-xl hover:bg-artwork-buttons-hover p-1 bg-secondary border-white border-2 rounded-full items-center uppercase shadow-sm text-secondaryHover transition-all duration-150"
                                 @click="openAddColumnModal()">
                             <IconPlus stroke-width="1.5" class="h-4 w-4"/>
                         </button>

@@ -4,7 +4,13 @@
             <div class="sm:flex-auto">
                 <TinyPageHeadline :title="$t('Artist residencies')" :description="$t('Manage the artist residencies for this project.')"/>
             </div>
-            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex items-center gap-x-4">
+                <ToolTipComponent
+                    icon="IconFileExport"
+                    :tooltip-text="$t('Export artist residencies')"
+                    direction="bottom"
+                    @click="openExportArtistResidenciesModal = true"
+                />
                 <AddButtonSmall @click="showAddEditArtistResidenciesModal = true" :text="$t('Add artist residency')"/>
             </div>
         </div>
@@ -55,6 +61,12 @@
         :artist_residency="artistResidencyToEdit"
     />
 
+    <ExportArtistResidenciesModal
+        :project="project"
+        v-if="openExportArtistResidenciesModal"
+        @close="openExportArtistResidenciesModal = false"
+    />
+
 </template>
 
 <script setup>
@@ -70,6 +82,9 @@ import {computed, ref} from "vue";
 import {usePage} from "@inertiajs/vue3";
 import SingleArtistResidency from "@/Pages/Projects/Components/ArtistResidenciesComponents/SingleArtistResidency.vue";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
+import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import ExportArtistResidenciesModal
+    from "@/Pages/Projects/Components/ArtistResidenciesComponents/ExportArtistResidenciesModal.vue";
 
 const props = defineProps({
     loadedProjectInformation: {
@@ -91,6 +106,7 @@ const showAddEditArtistResidenciesModal = ref(false);
 const showSaveSuccess = ref(false);
 const artistResidencyToEdit = ref(null);
 const showDeleteConfirmation = ref(false);
+const openExportArtistResidenciesModal = ref(false);
 
 const closeAddEditArtistResidenciesModal = (boolean) => {
     showAddEditArtistResidenciesModal.value = false;

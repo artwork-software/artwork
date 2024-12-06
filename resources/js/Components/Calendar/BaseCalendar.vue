@@ -13,6 +13,7 @@
                 @jump-to-day-of-month="jumpToDayOfMonth"
             />
         </div>
+
         <div :class="computedFilteredEvents.length > 0 ? 'mt-20' : ''">
             <div v-if="computedFilteredEvents.length > 0" class="flex justify-center">
                 <div class="flex errorText items-center cursor-pointer my-2" @click="showEventsWithoutRoomComponent = true">
@@ -28,6 +29,7 @@
         <div v-if="!dateValue[0] && !dateValue[1]" class="mt-24 ml-4 text-error text-sm">
             {{ $t('The selected project has no dates') }}
         </div>
+
         <div v-else class="-mx-5 mt-4">
             <div :class="project ? 'bg-lightBackgroundGray/50 rounded-t-lg' : 'bg-white px-5'">
                 <AsyncCalendarHeader :rooms="rooms" :filtered-events-length="computedFilteredEvents.length"/>

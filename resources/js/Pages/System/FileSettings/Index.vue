@@ -11,7 +11,7 @@
       {{ usePage().props.flash.success }}
     </div>
     <div v-for="area in areas" :key="area.name" class="mt-8">
-      <h3 class="headline3">{{ area.name }}</h3>
+      <h3 class="headline3">{{ $t(area.name) }}</h3>
       <div class="mt-4">
         <Listbox as="div">
           <div class="relative mt-2 w-1/2">

@@ -12,9 +12,10 @@ class CarbonService
     public const INTERNATIONAL_DATE_FORMAT = 'Y-m-d';
 
     public function __construct(
-        private readonly Carbon $carbon,
+        private readonly Carbon       $carbon,
         private readonly CarbonPeriod $carbonPeriod,
-    ) {
+    )
+    {
     }
 
     public function create(string $date): Carbon
@@ -79,8 +80,18 @@ class CarbonService
         return $dateFormat . ' ' . $timeFormat;
     }
 
-    public function isInBetween(Carbon $startDate, Carbon $endDate, Carbon $date): bool
+    public function compareAsStringsForSameDate(Carbon $startDate, Carbon $endDate, Carbon $date): bool
     {
-        return $date->between($startDate, $endDate);
+        $dateFormatted = $date->format(self::INTERNATIONAL_DATE_FORMAT);
+
+        foreach ($this->createPeriodOf($startDate, $endDate) as $datePeriod) {
+            $datePeriodFormatted = $datePeriod->format(self::INTERNATIONAL_DATE_FORMAT);
+
+            if ($datePeriodFormatted === $dateFormatted) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

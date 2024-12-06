@@ -4,13 +4,11 @@ namespace Artwork\Core\Services;
 
 use Artwork\Core\Str\StrService;
 use Illuminate\Cache\CacheManager;
-use Psr\SimpleCache\InvalidArgumentException;
 use Throwable;
 
 final class CacheService
 {
-    private const TEN_SECONDS = 999999999;
-    //@todo: restore: private const TEN_SECONDS = 10;
+    private const TEN_SECONDS = 10;
 
     public function __construct(
         private readonly StrService $strService,
@@ -36,19 +34,22 @@ final class CacheService
         return $this->get($token);
     }
 
+    /**
+     * @throws Throwable
+     */
     private function get(string $key, bool $delete = true): mixed
     {
         $value = $this->cacheManager->get($key);
 
         if ($delete) {
-            //@todo: restore: $this->cacheManager->delete($key);
+            $this->cacheManager->delete($key);
         }
 
         return $value;
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws Throwable
      */
     private function set(string $key, mixed $value, int $ttl = 0): void
     {

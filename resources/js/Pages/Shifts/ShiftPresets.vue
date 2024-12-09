@@ -1,5 +1,8 @@
 <template>
     <ShiftHeader>
+        <div class="ml-5">
+            <ShiftPresetTabs />
+        </div>
         <div class="w-full flex my-auto items-center justify-between mb-3 mt-10">
             <div class="flex items-center justify-between">
                 <div class="flex ml-5 mr-4 headline1">
@@ -93,10 +96,14 @@ import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal
 import {SearchIcon, XIcon} from "@heroicons/vue/outline";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Input from "@/Jetstream/Input.vue";
+import TabComponent from "@/Components/Tabs/TabComponent.vue";
+import ShiftPresetTabs from "@/Pages/Shifts/Components/ShiftPresetTabs.vue";
 
 export default defineComponent({
     name: "ShiftPresets",
     components: {
+        ShiftPresetTabs,
+        TabComponent,
         Input,
         InputComponent,
         XIcon,

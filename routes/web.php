@@ -76,6 +76,7 @@ use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\System\FileSettingsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\TimelinePresetController;
 use App\Http\Controllers\ToolSettingsBrandingController;
 use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
 use App\Http\Controllers\ToolSettingsInterfacesController;
@@ -160,7 +161,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
             ->name('tool.module-settings.update');
-        Route::group(['namespace' => 'System', 'prefix' => 'system'], function() {
+        Route::group(['namespace' => 'System', 'prefix' => 'system'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');
             Route::put('/file-settings', [FileSettingsController::class, 'store'])
@@ -712,6 +713,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class
     )->only(['store', 'update']);
+
+    Route::group(['timeline-preset'], function (): void {
+        //shifts.timeline-presets.index
+        Route::get('/', [TimelinePresetController::class, 'index'])
+            ->name('shifts.timeline-presets.index');
+    });
 
     // Project Routes
     Route::group(['prefix' => 'project'], function (): void {

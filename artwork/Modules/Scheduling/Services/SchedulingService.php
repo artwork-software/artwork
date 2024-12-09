@@ -91,7 +91,7 @@ readonly class SchedulingService
                     $project = Project::find($schedulings->model_id);
                     $notificationTitle = __(
                         'notification.scheduling.changes_project',
-                        ['project' => $project->name],
+                        ['project' => $project?->name ?? 'Project name not found'],
                         $user->language
                     );
                     $broadcastMessage = [

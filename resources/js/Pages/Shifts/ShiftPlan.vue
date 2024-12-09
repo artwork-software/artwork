@@ -297,7 +297,7 @@
                                 </span>
                                 </Switch>
                                 <BaseFilter :whiteIcon="true" onlyIcon="true">
-                                    <div class="mx-auto w-full max-w-md rounded-2xl border-none mt-2">
+                                    <div class="mx-auto w-full max-w-md max-h-44 rounded-2xl border-none mt-2 pb-3">
                                         <div class="relative flex items-start mb-2">
                                             <div class="flex h-6 items-center">
                                                 <input id="showFreelancers" v-model="showFreelancers" aria-describedby="comments-description" name="comments" type="checkbox" class="input-checklist" />
@@ -307,7 +307,7 @@
                                             </div>
                                         </div>
                                         <CraftFilter :crafts="crafts" is_tiny/>
-                                        <div class="my-3">
+                                        <div class="py-4">
                                             <div>
                                                 <div class="h-9 flex items-center cursor-pointer" @click="showShiftQualificationFilter = !showShiftQualificationFilter">
                                                     <div class="flex items-center text-white text-xs">
@@ -1879,7 +1879,7 @@ export default {
         },
         stopResize(event) {
             event.preventDefault();
-            this.saveUserOverviewHeight();
+            //this.saveUserOverviewHeight();
             document.removeEventListener('mousemove', this.resizing);
             document.removeEventListener('mouseup', this.stopResize);
         },
@@ -1904,9 +1904,6 @@ export default {
         applyUserOverviewHeight() {
             router.patch(route('user.update.userOverviewHeight', {user: usePage().props.user.id}), {
                 drawer_height: this.userOverviewHeight
-            }, {
-                preserveState: true,
-                preserveScroll: true,
             });
         },
         applySort(shiftPlanWorkerSortEnumName) {
@@ -1994,6 +1991,7 @@ export default {
         if (this.originalVisit) {
             router.visit = this.originalVisit;
         }
+        this.applyUserOverviewHeight();
     },
     beforeDestroy() {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);

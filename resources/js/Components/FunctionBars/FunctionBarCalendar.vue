@@ -2,7 +2,7 @@
     <div class="py-4" :class="[project ? 'bg-white -mx-16 pr-20' : 'bg-gray-50 pr-16', isFullscreen ? 'pl-8' : 'pl-5']">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row">
+                <div v-if="!project && !isCalendarUsingProjectTimePeriod" class="flex flex-row items-center">
                     <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="false"/>
                     <div class="flex items-center">
                         <button v-if="!dailyView" class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
@@ -17,8 +17,13 @@
                         <button v-else class="ml-2 text-black nextTimeRange" @click="nextDay">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
+
                     </div>
+                    <BaseMenu show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
+                        <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
+                    </BaseMenu>
                 </div>
+
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
                         id="calendarProjectSearch"
@@ -29,7 +34,7 @@
                         :label="$t('Search project')"
                     />
                     <div v-if="projectSearchResults.length > 0"
-                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg">
+                         class="absolute translate-y-1 bg-primary truncate sm:text-sm min-w-48 rounded-lg z-50">
                         <div v-for="(project, index) in projectSearchResults"
                              :key="index"
                              @click="toggleProjectTimePeriodAndRedirect(project.id, true)"
@@ -289,8 +294,7 @@
                             />
                         </div>
                     </div>
-
-                    <div @click="showPDFConfigModal = true">
+                    <div @click="showExportModal = true">
                         <ToolTipComponent
                             direction="left"
                             :tooltip-text="$t('Export calendar')"
@@ -298,33 +302,26 @@
                             icon-size="h-7 w-7"
                         />
                     </div>
-
                     <PlusButton @click="$emit('wantsToAddNewEvent');"/>
-                    <!--<AddButtonSmall
-                        @click="createEventComponentIsVisible = true"
-                        :text="$t('New occupancy')"
-                        class="hidden"
-                    />-->
                 </div>
-
             </div>
         </div>
-
     </div>
-
-    <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project"
-                    :pdf-title="project ? project.name : 'Raumbelegung'"/>
-
+    <export-modal v-if="showExportModal"
+                  @close="showExportModal = false"
+                  :enums="[
+                      exportTabEnums.PDF_CALENDAR_EXPORT,
+                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                      exportTabEnums.EXCEL_CALENDAR_EXPORT
+                  ]"
+                  :configuration="getExportModalConfiguration()"/>
     <GeneralCalendarAboSettingModal
         :event-types="eventTypes"
         :rooms="rooms"
         :areas="areas"
         v-if="showCalendarAboSettingModal"
-        @close="closeCalendarAboSettingModal"
-    />
-
+        @close="closeCalendarAboSettingModal"/>
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
-
 </template>
 
 <script setup>
@@ -338,12 +335,15 @@ import {Menu, MenuButton, MenuItems, Switch} from "@headlessui/vue";
 import MultiEditSwitch from "@/Components/Calendar/Elements/MultiEditSwitch.vue";
 import {Link, router, useForm, usePage} from "@inertiajs/vue3";
 import {usePermission} from "@/Composeables/Permission.js";
-import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
 import Input from "@/Jetstream/Input.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
+import BaseMenu from "@/Components/Menu/BaseMenu.vue";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
 const eventTypes = inject('eventTypes');
 const rooms = inject('rooms');
@@ -359,13 +359,14 @@ const emits = defineEmits([
     'wantsToAddNewEvent',
     'previousDay',
     'nextDay',
-    'searchingForProject'
+    'searchingForProject',
+    'jumpToDayOfMonth'
 ]);
 const showCalendarAboSettingModal = ref(false);
 const atAGlance = ref(usePage().props.user.at_a_glance ?? false);
 const zoom_factor = ref(usePage().props.user.zoom_factor ?? 1);
 const dateValueCopy = ref(dateValue ?? []);
-const showPDFConfigModal = ref(false);
+const showExportModal = ref(false);
 const wantedRoom = ref(null);
 const roomCollisions = ref([]);
 const externUpdate = ref(false);
@@ -400,6 +401,27 @@ const toggleProjectTimePeriodAndRedirect = (projectId, enabled) => {
     );
 };
 
+const exportTabEnums = useExportTabEnums();
+const getExportModalConfiguration = () => {
+    const cfg = {};
+
+    cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
+        project: props.project
+    };
+
+    cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+        project: props.project,
+        show_artists: (usePage().props.createSettings?.show_artists ?? false) ||
+            (usePage().props.show_artists ?? false),
+    };
+
+    cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
+        project: props.project
+    };
+
+    return cfg;
+};
+
 const handleUseTimePeriodChange = (enabled) => {
     if (!enabled && isCalendarUsingProjectTimePeriod && getTimePeriodProjectId() > 0) {
         toggleProjectTimePeriodAndRedirect(0, false);
@@ -408,6 +430,7 @@ const handleUseTimePeriodChange = (enabled) => {
 
 const {hasAdminRole, canAny} = usePermission(usePage().props);
 
+const months = inject('months');
 
 const props = defineProps({
     project: {
@@ -557,6 +580,10 @@ const saveUserCalendarSettings = () => {
     userCalendarSettings.patch(route('user.calendar_settings.update', {user: usePage().props.user.id}), {
         preserveScroll: true,
     })
+}
+
+const jumpToDayOfMonth = (day) => {
+    emits('jumpToDayOfMonth', day);
 }
 
 

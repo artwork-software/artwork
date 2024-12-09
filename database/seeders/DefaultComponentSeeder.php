@@ -185,10 +185,21 @@ class DefaultComponentSeeder extends Seeder
             Component::create($component);
         }
 
-        if (!Component::query()->where('type', ProjectTabComponentEnum::BULK_EDIT)->get()) {
+        if (!Component::query()->where('type', ProjectTabComponentEnum::BULK_EDIT)->first()) {
             Component::create([
                 'name' => 'Bulk Event Create',
                 'type' => ProjectTabComponentEnum::BULK_EDIT,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false,
+                'permission_type' => ProjectTabComponentPermissionEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ]);
+        }
+
+        if (!Component::query()->where('type', ProjectTabComponentEnum::ARTIST_RESIDENCIES)->first()) {
+            Component::create([
+                'name' => 'Artist residencies',
+                'type' => ProjectTabComponentEnum::ARTIST_RESIDENCIES,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false,

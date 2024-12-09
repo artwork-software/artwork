@@ -38,6 +38,8 @@ enum ProjectTabComponentEnum: string
 
     case BULK_EDIT = 'BulkBody';
 
+    case ARTIST_RESIDENCIES = 'ArtistResidenciesComponent';
+
     /**
      * Get all available values
      * @return array<string, mixed>

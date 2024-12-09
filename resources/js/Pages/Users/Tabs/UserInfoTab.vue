@@ -526,19 +526,8 @@ export default {
         },
         validateTypeAndChange() {
             this.updateProfilePictureFeedback = "";
-            const forbiddenTypes = [
-                "application/vnd.microsoft.portable-executable",
-                "application/x-apple-diskimage",
-            ]
-
             if (this.$refs.photo.files[0]) {
-                if (forbiddenTypes.includes(this.$refs.photo.files[0]?.type)
-                    || this.$refs.photo.files[0].type.match('video.*')
-                    || this.$refs.photo.files[0].type === "") {
-                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
-                } else {
-                    this.changeProfilePicture()
-                }
+              this.changeProfilePicture()
             } else {
                 this.closeChangePictureModal()
             }

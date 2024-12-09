@@ -21,7 +21,6 @@
                 </div>
             </div>
         </div>
-
         <div class="flex items-center gap-x-2">
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
                <div class="flex items-center gap-x-2">
@@ -62,10 +61,7 @@
                     :at-a-glance="atAGlance"
                     :type="project ? 'project' : 'individual'"
                     :user_filters="user_filters"
-                    :extern-updated="externUpdate"
-                />
-
-
+                    :extern-updated="externUpdate"/>
                 <Menu as="div" class="relative inline-block items-center text-left">
                     <div class="flex items-center">
                         <MenuButton>
@@ -85,8 +81,7 @@
                         enter-to-class="transform scale-100 opacity-100"
                         leave-active-class="transition duration-75 ease-in"
                         leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0"
-                    >
+                        leave-to-class="transform scale-95 opacity-0">
                         <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-artwork-navigation-background ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="w-76 p-6">
                                 <div class="flex py-1" v-if="!project">
@@ -137,10 +132,9 @@
                     <IconCalendarStar class="h-5 w-5 group-hover:text-yellow-500 duration-150 transition-all ease-in-out"/>
                 </div>
             </div>
-            <div @click="showPDFConfigModal = true">
+            <div @click="showExportModal = true">
                 <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer" />
             </div>
-
             <PlusButton v-if="$can('request room occupancy')" @click="openEventComponent()" />
             <AddButtonSmall
                 v-if="$can('request room occupancy')"
@@ -149,21 +143,22 @@
                 class="hidden"
             />
         </div>
-
-
     </div>
-
     <div class="w-full overflow-y-scroll" :class="activeFilters.length > 0 ? 'mt-10' : 'my-3'">
         <div class="mb-1 ml-4 max-w-7xl">
             <div class="flex">
                 <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
             </div>
-
         </div>
     </div>
-
-    <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
-
+    <export-modal v-if="showExportModal"
+                  @close="showExportModal = false"
+                  :enums="[
+                      exportTabEnums.PDF_CALENDAR_EXPORT,
+                      exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                      exportTabEnums.EXCEL_CALENDAR_EXPORT
+                  ]"
+                  :configuration="getExportModalConfiguration()"/>
     <GeneralCalendarAboSettingModal
         v-if="showCalendarAboSettingModal"
         @close="closeCalendarAboSettingModal"
@@ -171,7 +166,6 @@
         :areas="filterOptions.areas"
         :rooms="filterOptions.rooms"
     />
-
     <CalendarAboInfoModal v-if="showCalendarAboInfoModal" @close="showCalendarAboInfoModal = false" />
 </template>
 
@@ -187,23 +181,24 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/Mixins/Permissions.vue";
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
-import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/Mixins/IconLib.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 import GeneralCalendarAboSettingModal from "@/Pages/Events/Components/GeneralCalendarAboSettingModal.vue";
 import CalendarAboInfoModal from "@/Pages/Shifts/Components/CalendarAboInfoModal.vue";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
-
+const exportTabEnums = useExportTabEnums();
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        ExportModal,
         CalendarAboInfoModal,
         GeneralCalendarAboSettingModal,
         PlusButton,
         AddButtonSmall,
-        PdfConfigModal,
         BaseFilter,
         BaseFilterTag,
         Dropdown,
@@ -222,7 +217,7 @@ export default {
         Switch,
         DatePickerComponent,
         ZoomInIcon,
-        ZoomOutIcon,
+        ZoomOutIcon
     },
     props: [
         'atAGlance',
@@ -250,10 +245,11 @@ export default {
                 work_shifts: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.work_shifts : false
             }),
             externUpdate: false,
-            showPDFConfigModal: false,
+            showExportModal: false,
             isPageScrolled: false,
             showCalendarAboSettingModal: false,
             showCalendarAboInfoModal: false,
+            exportTabEnums: exportTabEnums
         }
     },
     methods: {
@@ -383,6 +379,24 @@ export default {
         handleScroll() {
             this.isPageScrolled = window.scrollY > 358;
         },
+        getExportModalConfiguration() {
+            const cfg = {};
+
+            cfg[exportTabEnums.PDF_CALENDAR_EXPORT] = {
+                project: props.project
+            };
+
+            cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+                project: props.project,
+                show_artists: this.$page.props.createSettings?.show_artists,
+            };
+
+            cfg[exportTabEnums.EXCEL_CALENDAR_EXPORT] = {
+                project: props.project
+            };
+
+            return cfg;
+        }
     },
     mounted(){
         this.handleScroll();

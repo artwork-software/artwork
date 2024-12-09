@@ -8,7 +8,7 @@
         leave-to-class="transform opacity-0"
     >
         <div class="my-3 text-xs px-3 py-1.5 text-white rounded-lg" :class="backgroundColor" v-show="showSaveSuccess">
-            {{ $t('Saved. The changes have been successfully applied.') }}
+            {{ $t(text) }}
         </div>
     </transition>
 </template>
@@ -23,6 +23,10 @@ const props = defineProps({
     backgroundColor: {
         type: String,
         default: 'bg-green-600'
+    },
+    text: {
+        type: String,
+        default: 'Saved. The changes have been successfully applied.'
     }
 })
 

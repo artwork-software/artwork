@@ -2,37 +2,14 @@
 
 namespace Artwork\Modules\Room\Services;
 
-use App\Http\Controllers\FilterController;
 use App\Http\Resources\MinimalShiftPlanEventResource;
 use Artwork\Modules\Area\Models\Area;
-use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Calendar\Filter\CalendarFilter;
-use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\Category\Http\Resources\CategoryIndexResource;
-use Artwork\Modules\Change\Services\ChangeService;
-use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
-use Artwork\Modules\Event\Http\Resources\MinimalInventorySchedulingEventResource;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventCollectionService;
-use Artwork\Modules\EventType\Http\Resources\EventTypeResource;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Notification\Enums\NotificationEnum;
-use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Project\Http\Resources\ProjectIndexAdminResource;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Room\DTOs\ShowDto;
-use Artwork\Modules\Room\Http\Resources\AdjoiningRoomIndexResource;
-use Artwork\Modules\Room\Http\Resources\AttributeIndexResource;
-use Artwork\Modules\Room\Http\Resources\RoomCalendarResource;
-use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\User\Services\UserService;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
@@ -41,7 +18,6 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Throwable;
 
@@ -405,5 +381,10 @@ readonly class RoomService
         $this->roomRepository->update($room, $attributes);
 
         return $room;
+    }
+
+    public function getAllRoomsWithoutTrashed(): EloquentCollection
+    {
+        return $this->roomRepository->allWithoutTrashed();
     }
 }

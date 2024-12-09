@@ -65,6 +65,7 @@ return [
      * your settings class isn't a default PHP type.
      */
     'global_casts' => [
+        'array' => \Artwork\Core\System\Settings\ArrayCast::class,
         DateTimeInterface::class => Spatie\LaravelSettings\SettingsCasts\DateTimeInterfaceCast::class,
         DateTimeZone::class => Spatie\LaravelSettings\SettingsCasts\DateTimeZoneCast::class,
         Spatie\DataTransferObject\DataTransferObject::class => Spatie\LaravelSettings\SettingsCasts\DtoCast::class,

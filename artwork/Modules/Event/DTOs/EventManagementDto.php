@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Event\DTOs;
 
-use AllowDynamicProperties;
 use Artwork\Core\Abstracts\BaseDto;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
@@ -16,6 +15,7 @@ class EventManagementDto extends BaseDto
     public ?SupportCollection $calendar = null;
 
     public ?array $days = null;
+    public ?array $months = null;
 
     public ?array $dateValue = null;
 
@@ -29,7 +29,6 @@ class EventManagementDto extends BaseDto
 
     public ?Collection $rooms = null;
     public ?Collection $eventStatuses = null;
-
 
 
     public ?CalendarEventDto $events = null;
@@ -47,6 +46,8 @@ class EventManagementDto extends BaseDto
     public ?int $firstProjectShiftTabId = null;
 
     public Collection $areas;
+
+    public ?bool $show_artists;
 
     public ?string $projectNameUsedForProjectTimePeriod = null;
 
@@ -91,6 +92,13 @@ class EventManagementDto extends BaseDto
     public function setDays(?array $days): self
     {
         $this->days = $days;
+
+        return $this;
+    }
+
+    public function setMonths(?array $months): self
+    {
+        $this->months = $months;
 
         return $this;
     }
@@ -178,15 +186,24 @@ class EventManagementDto extends BaseDto
 
         return $this;
     }
+
     public function setFirstProjectShiftTabId(?int $firstProjectShiftTabId): self
     {
         $this->firstProjectShiftTabId = $firstProjectShiftTabId;
 
         return $this;
     }
+
     public function setProjectNameUsedForProjectTimePeriod(?string $projectNameUsedForProjectTimePeriod): self
     {
         $this->projectNameUsedForProjectTimePeriod = $projectNameUsedForProjectTimePeriod;
+
+        return $this;
+    }
+
+    public function setShowArtists(?bool $showArtists): self
+    {
+        $this->show_artists = $showArtists;
 
         return $this;
     }
@@ -210,6 +227,14 @@ class EventManagementDto extends BaseDto
     public function getDays(): ?array
     {
         return $this->days;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getMonths(): ?array
+    {
+        return $this->months;
     }
 
     /**
@@ -288,9 +313,15 @@ class EventManagementDto extends BaseDto
     {
         return $this->firstProjectShiftTabId;
     }
+
     public function getProjectNameUsedForProjectTimePeriod(): ?string
     {
         return $this->projectNameUsedForProjectTimePeriod;
+    }
+
+    public function getShowArtists(): ?bool
+    {
+        return $this->show_artists;
     }
 
     /**
@@ -302,6 +333,7 @@ class EventManagementDto extends BaseDto
             'eventTypes' => $this->getEventTypes(),
             'calendar' => $this->getCalendar(),
             'days' => $this->getDays(),
+            'months' => $this->getMonths(),
             'dateValue' => $this->getDateValue(),
             'calendarType' => $this->getCalendarType(),
             'selectedDate' => $this->getSelectedDate(),
@@ -318,6 +350,7 @@ class EventManagementDto extends BaseDto
             'areas' => $this->getAreas(),
             'projectNameUsedForProjectTimePeriod' => $this->getProjectNameUsedForProjectTimePeriod(),
             'eventStatuses' => $this->getEventStatuses(),
+            'show_artists' => $this->getShowArtists()
         ];
     }
 }

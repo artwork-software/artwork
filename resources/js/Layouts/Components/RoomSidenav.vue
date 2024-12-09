@@ -143,7 +143,7 @@ const showRoomAttributeEditModal = ref(false);
 const showFileUploadModal = ref(false);
 const showFileEditModal = ref(false);
 const showFileDeleteModal = ref(false);
-const showRoomFiles = ref(false);
+const showRoomFiles = ref(true);
 const roomFiles = ref(props.room.room_files)
 const roomFileToDelete = ref(null)
 

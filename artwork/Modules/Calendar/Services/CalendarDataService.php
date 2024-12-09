@@ -80,6 +80,18 @@ readonly class CalendarDataService
             ];
         }
 
+        $months = [];
+        foreach ($calendarPeriod as $period) {
+            $month = $period->format('m.Y');
+            if (!array_key_exists($month, $months)) {
+                $months[$month] = [
+                    'first_day_in_period' => $period->format('Y-m-d'),
+                    'month' => $period->monthName,
+                    'year' => $period->format('y'),
+                ];
+            }
+        }
+
         $dateValue = [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')];
         $calendarType = $startDate->format('d.m.Y') === $endDate->format('d.m.Y') ? 'daily' : 'individual';
         $selectedDate = $startDate->format('Y-m-d') === $endDate->format('Y-m-d') ?
@@ -135,6 +147,7 @@ readonly class CalendarDataService
 
         return [
             'days' => $periodArray,
+            'months' => $months,
             'dateValue' => $dateValue,
             'calendarType' => $calendarType,
             'selectedDate' => $selectedDate,

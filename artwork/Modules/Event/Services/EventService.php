@@ -36,6 +36,7 @@ use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -793,6 +794,7 @@ readonly class EventService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ProjectCreateSettings $projectCreateSettings,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -917,7 +919,8 @@ readonly class EventService
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
-            );
+            )
+            ->setShowArtists($projectCreateSettings->show_artists);
 
         if ($useProjectTimePeriod) {
             $eventManagementDto->setProjectNameUsedForProjectTimePeriod($project->getAttribute('name'));
@@ -938,6 +941,7 @@ readonly class EventService
         EventTypeService $eventTypeService,
         AreaService $areaService,
         ProjectService $projectService,
+        ProjectCreateSettings $projectCreateSettings,
         ?Project $project = null,
     ): EventManagementDto {
         $user = $userService->getAuthUser();
@@ -1006,6 +1010,7 @@ readonly class EventService
             ->setEventTypes(EventTypeResource::collection($eventTypeService->getAll())->resolve())
             ->setCalendar($showCalendar['roomsWithEvents'])
             ->setDays($showCalendar['days'])
+            ->setMonths($showCalendar['months'])
             ->setDateValue($showCalendar['dateValue'])
             ->setCalendarType($showCalendar['calendarType'])
             ->setSelectedDate($showCalendar['selectedDate'])
@@ -1029,7 +1034,8 @@ readonly class EventService
                 $projectTabService->getFirstProjectTabWithTypeIdOrFirstProjectTabId(
                     ProjectTabComponentEnum::SHIFT_TAB
                 )
-            );
+            )
+            ->setShowArtists($projectCreateSettings->show_artists);
 
 
         if ($useProjectTimePeriod) {
@@ -1195,6 +1201,7 @@ readonly class EventService
         Project $project,
         int $userId,
     ): void {
+
         $day = Carbon::parse($event['day']);
         [$startTime, $endTime, $allDay] = $this->processEventTimes(
             $day,
@@ -1246,7 +1253,7 @@ readonly class EventService
 
         if ($eventStatusSetting->enable_status) {
             $this->eventRepository->update($event, [
-                'event_status_id' => $event['status']['id']
+                'event_status_id' => $data['status']['id']
             ]);
         }
     }

@@ -6,7 +6,7 @@
                     <Link v-for="tab in tabs" v-show="tab.hasPermission" :href="tab.href" :key="tab?.name"
                        :class="[tab.current ? 'border-artwork-buttons-create text-artwork-buttons-create' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-semibold']"
                        :aria-current="tab.current ? 'page' : undefined">
-                        {{ tab?.name }}
+                        {{ $t(tab?.name) }}
                     </Link>
                 </nav>
             </div>
@@ -29,13 +29,13 @@ export default defineComponent({
         return {
             tabs: [
                 {
-                    name: this.$t('Users'),
+                    name: 'Users',
                     href: route('users'),
                     current: route().current('users'),
                     hasPermission: true
                 },
                 {
-                    name: this.$t('Addresses'),
+                    name: 'Addresses',
                     href: route('users.addresses'),
                     current: route().current('users.addresses'),
                     hasPermission: true
@@ -47,7 +47,7 @@ export default defineComponent({
                     hasPermission: this.$can('teammanagement')
                 },
                 {
-                    name: this.$t('Permission presets'),
+                    name: 'Permission presets',
                     href: route('permission-presets.index'),
                     current: route().current('permission-presets.index'),
                     hasPermission: this.hasAdminRole()

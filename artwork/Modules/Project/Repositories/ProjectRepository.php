@@ -160,4 +160,15 @@ class ProjectRepository extends BaseRepository
     {
         return Project::where('user_id', $userId)->orderBy('updated_at', 'DESC')->first();
     }
+
+    public function getProjectsByIds(array $ids, array $with = []): Collection
+    {
+        $query = Project::query();
+
+        if (count($with) > 0) {
+            $query->with($with);
+        }
+
+        return $query->whereIn('id', $ids)->get();
+    }
 }

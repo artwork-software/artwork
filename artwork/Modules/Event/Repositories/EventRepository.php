@@ -218,7 +218,7 @@ class EventRepository extends BaseRepository
         return $this->getNewModelQuery()->getOrderBySubQueryBuilder($column, $direction);
     }
 
-    public function getEventsForEventListExportByFilters(SupportCollection $exportConfiguration): Collection
+    public function getEventsForExport(SupportCollection $exportConfiguration): Collection
     {
         $query = $this->getNewModelQuery();
 
@@ -327,7 +327,7 @@ class EventRepository extends BaseRepository
                         );
                     }
                 }
-            );
+            )->orderBy('start_time');
 
         return $query->get();
     }

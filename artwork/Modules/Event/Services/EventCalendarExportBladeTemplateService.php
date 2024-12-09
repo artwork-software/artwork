@@ -26,9 +26,9 @@ class EventCalendarExportBladeTemplateService
 
     private ?array $projects;
 
-    private ?string $dateStart;
+    private ?Carbon $dateStart;
 
-    private ?string $dateEnd;
+    private ?Carbon $dateEnd;
 
     public function __construct(
         private readonly Logger $logger,
@@ -42,9 +42,9 @@ class EventCalendarExportBladeTemplateService
         string $createdBy,
         Collection $rooms,
         Collection $events,
+        Carbon $dateStart,
+        Carbon $dateEnd,
         ?array $projects,
-        ?string $dateStart,
-        ?string $dateEnd,
     ): void {
         $this->logger->debug(sprintf('Initialize %s"', self::class));
 
@@ -58,18 +58,10 @@ class EventCalendarExportBladeTemplateService
 
         $this->logger->debug(sprintf('-> Initialized %s"', self::class));
 
-        [
-            $desiredLocale,
-            $firstStartingEvent,
-            $lastStartingEvent
-        ] = $this->setup();
+        $desiredLocale = $this->translator->getLocale();
 
         $output = '<table>';
-        $output .= $this->renderDateAndCreator(
-            $desiredLocale,
-            $firstStartingEvent,
-            $lastStartingEvent
-        );
+        $output .= $this->renderDateAndCreator($desiredLocale);
         $output .= $this->createDateHeadingAndRooms();
 
         if ($this->events->isEmpty()) {
@@ -79,11 +71,7 @@ class EventCalendarExportBladeTemplateService
             return;
         }
 
-        $output .= $this->createTableBody(
-            $desiredLocale,
-            $firstStartingEvent?->getAttribute('start_time'),
-            $lastStartingEvent?->getAttribute('end_time')
-        );
+        $output .= $this->createTableBody($desiredLocale);
         $output .= '</table>';
 
         $this->logger->debug('Echo output...');
@@ -92,64 +80,23 @@ class EventCalendarExportBladeTemplateService
         echo $output;
     }
 
-    /**
-     * @return array<int, string|Event>
-     */
-    private function setup(): array
+    private function renderDateAndCreator(string $desiredLocale): string
     {
-        $this->logger->debug('-> Render Setup...');
-
-        $getSortByCallback = function (string $attribute) {
-            return function (Event $event) use ($attribute) {
-                return $event->getAttribute($attribute)->unix();
-            };
-        };
-
-        if (!$this->desiresTimespanExport) {
-            $firstStartingEvent = $this->events->sortBy(
-                $getSortByCallback('start_time'),
-                SORT_NUMERIC
-            )->first();
-
-            $lastStartingEvent = $this->events->sortBy(
-                $getSortByCallback('end_time'),
-                SORT_NUMERIC,
-                true
-            )->first();
-        }
-
-        return [
-            $this->translator->getLocale(),
-            $firstStartingEvent ?? null,
-            $lastStartingEvent ?? null,
-        ];
-    }
-
-    private function renderDateAndCreator(
-        string $desiredLocale,
-        ?Event $firstStartingEvent,
-        ?Event $lastStartingEvent,
-    ): string {
         $this->logger->debug('-> Create date and creator row...');
         $desiredFormat = $this->carbonService->getDesiredDateFormatFromLocale($desiredLocale);
-        $dateStart = $this->desiresTimespanExport ?
-            $this->dateStart :
-            $firstStartingEvent->getAttribute('start_time');
-        $dateEnd = $this->desiresTimespanExport ?
-            $this->dateEnd :
-            $lastStartingEvent->getAttribute('end_time');
 
         return sprintf(
             '<tr>' .
                 '<th colspan="3" height="20" style="width:230px; height:20px; font-size:18px;">%s (%s) - %s (%s)</th>' .
                 '%s' .
+                '<th>%s</th>' .
                 '</tr>',
-            $this->getTranslatedMonthFrom($dateStart),
-            $this->carbonService->formatFromString($dateStart, $desiredFormat),
-            $this->getTranslatedMonthFrom($dateEnd),
-            $this->carbonService->formatFromString($dateEnd, $desiredFormat),
+            $this->getTranslatedMonthFrom($this->dateStart),
+            $this->dateStart->format($desiredFormat),
+            $this->getTranslatedMonthFrom($this->dateEnd),
+            $this->dateEnd->format($desiredFormat),
             sprintf(
-                '<th colspan="3" height="20" style="width:160px; height:20px; font-size:18px;">%s %s</th>',
+                '<th colspan="3" height="20" style="width:160px; height:20px; font-size:18px;">%s</th>',
                 $this->translator->get(
                     'export.excel-event-calendar-export.created-by',
                     [
@@ -159,9 +106,9 @@ class EventCalendarExportBladeTemplateService
                             $this->carbonService->appendTimeToDateFormat($desiredFormat)
                         ),
                     ]
-                ),
-                !$this->desiresTimespanExport ? implode(', ', $this->projects) : ''
-            )
+                )
+            ),
+            !$this->desiresTimespanExport ? implode(', ', $this->projects) : ''
         );
     }
 
@@ -184,20 +131,10 @@ class EventCalendarExportBladeTemplateService
         );
     }
 
-    private function createTableBody(
-        string $desiredLocale,
-        ?Carbon $firstEventStartDate,
-        ?Carbon $lastEventStartDate,
-    ): string {
+    private function createTableBody(string $desiredLocale): string
+    {
         $this->logger->debug('-> Create table body...');
-        $period = $this->carbonService->createPeriodOf(
-            $this->desiresTimespanExport ?
-                $this->carbonService->create($this->dateStart) :
-                $firstEventStartDate,
-            $this->desiresTimespanExport ?
-                $this->carbonService->create($this->dateEnd) :
-                $lastEventStartDate,
-        );
+        $period = $this->carbonService->createPeriodOf($this->dateStart, $this->dateEnd);
 
         $desiredDateFormat = $this->carbonService->getDesiredDateFormatFromLocale($desiredLocale);
         $this->logger->debug(
@@ -234,15 +171,21 @@ class EventCalendarExportBladeTemplateService
                 //empty row for given date
                 $markup .= '<tr>' . $this->createDateColumn($date, $desiredLocale);
                 foreach ($this->rooms as $room) {
-                    $markup .= '<td style="border-top:1px solid #000000;"></td>' .
-                        '<td style="border-top: 1px solid #000000; border-right:1px solid #000000;"></td>';
+                    $markup .= sprintf(
+                        '<td style="%s"></td><td style="%s"></td>',
+                        'width: 125px; border-top:1px solid #000000;',
+                        'width: 125px; border-top: 1px solid #000000; border-right:1px solid #000000;'
+                    );
                 }
                 $markup .= '</tr>';
                 $markup .= '<tr>' . $this->createEmptyDateColumn();
 
                 foreach ($this->rooms as $room) {
-                    $markup .= '<td style="border-bottom:1px solid #000000;"></td>' .
-                        '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>';
+                    $markup .= sprintf(
+                        '<td style="%s"></td><td style="%s"></td>',
+                        'width: 125px; border-bottom:1px solid #000000;',
+                        'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
+                    );
                 }
                 $markup .= '</tr>';
 
@@ -337,8 +280,8 @@ class EventCalendarExportBladeTemplateService
 
                 if (count($eventsForRoomsOnDate[$roomId]) === 0) {
                     $this->logger->debug('--> Skip because there are no events');
-                    $markup .= '<td></td>' .
-                        '<td style="border-right:1px solid #000000;"></td>';
+                    $markup .= '<td style="width: 125px;"></td>' .
+                        '<td style="width: 125px; border-right:1px solid #000000;"></td>';
                     continue;
                 }
                 $this->logger->debug(sprintf('--> Event count: %d ', count($eventsForRoomsOnDate[$roomId])));
@@ -347,55 +290,56 @@ class EventCalendarExportBladeTemplateService
                 $hasEvent = $event instanceof Event;
                 if ($rowOfDay % 2 === 0) {
                     if ($hasEvent) {
-                        $this->logger->debug('--> Create event type, event status and description columns...');
-                        $eventType = $event->getAttribute('event_type');
-                        $eventStatus = $event->getAttribute('eventStatus');
+                        $this->logger->debug('--> Create event name and description columns...');
                         $markup .= sprintf(
-                            '<td style="border-bottom:1px solid #000000; border-left:1px solid #000000;">%s%s%s</td>' .
-                            '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>',
-                            $eventType->getAttribute('name') ?? '',
-                            $eventStatus?->getAttribute('name') ?? '',
-                            $event->getAttribute('description')
+                            '<td style="%s">%s %s</td><td style="%s"></td>',
+                            'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
+                            $event->getAttribute('name'),
+                            ($description = $event->getAttribute('description')) ? '| ' . $description : '',
+                            'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     } else {
                         $this->logger->debug(
                             '--> Create empty event type, event status and description columns...'
                         );
                         $markup .= sprintf(
-                            '%s%s',
-                            '<td style="border-bottom:1px solid #000000; border-left:1px solid #000000;"></td>',
-                            '<td style="border-bottom:1px solid #000000; border-right:1px solid #000000;"></td>'
+                            '<td style="%s"></td><td style="%s"></td>',
+                            'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
+                            'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     }
 
                     $roomEventIndicesOfDay[$roomId]++;
                 } elseif ($rowOfDay % 2 === 1) {
                     if ($hasEvent) {
-                        $this->logger->debug('--> Create name and start columns...');
+                        $this->logger->debug('--> Create event type and start columns...');
                         $eventType = $event->getAttribute('event_type');
-                        $eventStatus = $event->getAttribute('eventStatus');
-                        $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ??
-                            $eventStatus?->getAttribute('color') ??
-                            '#FFFFFF';
+
+                        $eventNameBackgroundColorHexCode = $eventType?->getAttribute('hex_code') ?? '#FFFFFF';
+                        [$r, $g, $b] = sscanf($eventNameBackgroundColorHexCode, "#%02x%02x%02x");
+                        $fontColor = (($r + $g + $b) > ((255 + 255 + 255) / 2)) ? 'color: black;' : 'color: white;';
                         $markup .= sprintf(
                             '<td style="%s">%s</td>' .
-                            '<td style="border-top:1px solid #000000; border-right:1px solid #000000;">%s - %s</td>',
+                            '<td style="%s">%s - %s</td>',
                             sprintf(
-                                '%s %s %s',
+                                '%s %s %s %s %s',
+                                'width: 125px;',
                                 sprintf('background-color: %s;', $eventNameBackgroundColorHexCode),
                                 'border-top:1px solid #000000;',
-                                'border-left:1px solid #000000;'
+                                'border-left:1px solid #000000;',
+                                $fontColor
                             ),
-                            $event->getAttribute('name') ?? $event->getAttribute('eventName'),
+                            $eventType->getAttribute('name'),
+                            'width: 125px; border-top:1px solid #000000; border-right:1px solid #000000;',
                             $event->getAttribute('start_time')->format('H:i'),
                             $event->getAttribute('end_time')->format('H:i'),
                         );
                     } else {
                         $this->logger->debug('--> Create empty name and start time columns...');
                         $markup .= sprintf(
-                            '%s%s',
-                            '<td style="border-top:1px solid #000000; border-left:1px solid #000000;"></td>',
-                            '<td style="border-top:1px solid #000000; border-right:1px solid #000000;"></td>'
+                            '<td style="%s"></td><td style="%s"></td>',
+                            'width: 125px; border-top:1px solid #000000; border-left:1px solid #000000;',
+                            'width: 125px; border-top:1px solid #000000; border-right:1px solid #000000;'
                         );
                     }
                 }
@@ -423,10 +367,10 @@ class EventCalendarExportBladeTemplateService
         return '<td style="border-left:1px solid #000000; border-right:1px solid #000000;"></td>';
     }
 
-    private function getTranslatedMonthFrom(string $date): string
+    private function getTranslatedMonthFrom(Carbon $date): string
     {
         return $this->translator->get(
-            'export.months.' . strtolower($this->carbonService->formatFromString($date, 'F'))
+            'export.months.' . strtolower($date->format('F'))
         );
     }
 }

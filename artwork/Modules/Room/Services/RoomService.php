@@ -90,8 +90,6 @@ readonly class RoomService
      * @throws Throwable
      * @deprectated use EventCollectionService::collectEventsForRoom
      */
-    //@todo: fix phpcs error - complexity too high
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
@@ -99,7 +97,6 @@ readonly class RoomService
         ?Project $project = null,
         ?bool $desiresInventorySchedulingResource = false
     ): array {
-
         return app(EventCollectionService::class)->collectEventsForRoom(
             $room,
             $calendarPeriod,
@@ -381,10 +378,5 @@ readonly class RoomService
         $this->roomRepository->update($room, $attributes);
 
         return $room;
-    }
-
-    public function getAllRoomsWithoutTrashed(): EloquentCollection
-    {
-        return $this->roomRepository->allWithoutTrashed();
     }
 }

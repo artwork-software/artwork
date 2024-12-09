@@ -2,14 +2,34 @@
 
 namespace Artwork\Modules\Room\Repositories;
 
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection as SupportCollection;
 
 class RoomRepository extends BaseRepository
 {
+    public function __construct(private readonly Room $room)
+    {
+    }
+
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
+    {
+        return $this->room->newInstance();
+    }
+
+    public function getNewModelQuery(): BaseBuilder|Builder
+    {
+        return $this->room->newModelQuery();
+    }
+
     public function allWithoutTrashed($with = [], $without = []): Collection
     {
         $query = Room::withoutTrashed();

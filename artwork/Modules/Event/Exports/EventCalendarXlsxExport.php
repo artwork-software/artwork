@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Event\Exports;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -22,9 +23,9 @@ class EventCalendarXlsxExport implements FromView, WithStyles
 
     private Collection $events;
 
-    private string $dateStart;
+    private Carbon $dateStart;
 
-    private string $dateEnd;
+    private Carbon $dateEnd;
 
     private array $projects;
 
@@ -41,9 +42,9 @@ class EventCalendarXlsxExport implements FromView, WithStyles
                 'createdBy' => $this->createdBy,
                 'rooms' => $this->rooms,
                 'events' => $this->events,
-                'projects' => $this->projects ?? null,
                 'dateStart' => $this->dateStart ?? null,
                 'dateEnd' => $this->dateEnd ?? null,
+                'projects' => $this->projects ?? null,
             ]
         );
     }
@@ -76,14 +77,14 @@ class EventCalendarXlsxExport implements FromView, WithStyles
         return $this;
     }
 
-    public function setDateStart(string $dateStart): self
+    public function setDateStart(Carbon $dateStart): self
     {
         $this->dateStart = $dateStart;
 
         return $this;
     }
 
-    public function setDateEnd(string $dateEnd): self
+    public function setDateEnd(Carbon $dateEnd): self
     {
         $this->dateEnd = $dateEnd;
 
@@ -93,9 +94,11 @@ class EventCalendarXlsxExport implements FromView, WithStyles
     /**
      * @param array $projects
      */
-    public function setProjects(array $projects): void
+    public function setProjects(array $projects): self
     {
         $this->projects = $projects;
+
+        return $this;
     }
 
     /**

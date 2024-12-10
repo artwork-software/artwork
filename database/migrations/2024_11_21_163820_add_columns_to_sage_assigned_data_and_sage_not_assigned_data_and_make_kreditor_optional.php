@@ -37,7 +37,8 @@ return new class extends Migration
                 $table->dropColumn('periode');
                 $table->dropColumn('kto_haben');
                 $table->dropColumn('kto_soll');
-                $table->decimal('buchungsbetrag', 8)->change();
+                //set back to total 8
+                $table->decimal('buchungsbetrag')->change();
             }
         );
 
@@ -47,7 +48,8 @@ return new class extends Migration
                 $table->dropColumn('periode');
                 $table->dropColumn('kto_haben');
                 $table->dropColumn('kto_soll');
-                $table->decimal('buchungsbetrag', 8)->change();
+                //set back to total 8
+                $table->decimal('buchungsbetrag')->change();
             }
         );
     }

@@ -8,11 +8,17 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\TableRepository;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Database\Eloquent\Collection;
 
 readonly class TableService
 {
     public function __construct(private TableRepository $tableRepository)
     {
+    }
+
+    public function getAll(array $with = []): Collection
+    {
+        return $this->tableRepository->getAll($with);
     }
 
     public function createTableInProject(

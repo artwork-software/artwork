@@ -60,21 +60,24 @@
                                     }} EUR</span>
                                 <span class="xsLight">{{ $t('Booking text') }}</span>
                                 <span class="xsLight text-black">{{ this.currentSageAssignedData.buchungstext }}</span>
-
                                 <span class="xsLight mt-4">{{ $t('Document number') }}</span>
                                 <span class="xsLight text-black mt-4">{{ this.currentSageAssignedData.belegnummer }}</span>
                                 <span class="xsLight">{{ $t('Document date') }}</span>
                                 <span class="xsLight text-black">
                                     {{ this.formatBookingDataDate(this.currentSageAssignedData.belegdatum) }}
                                 </span>
-
-                                <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
-                                <span class="xsLight text-black mt-4">{{ this.currentSageAssignedData.sa_kto }}</span>
+                                <span class="xsLight">{{ $t('General ledger account') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.sa_kto }}</span>
+                                <span class="xsLight">{{ $t('Sage period') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.periode }}</span>
+                                <span class="xsLight">{{ $t('Debit account') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.kto_soll }}</span>
+                                <span class="xsLight">{{ $t('Credit account') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.kto_haben }}</span>
                                 <span class="xsLight">{{ $t('Cost bearer') }}</span>
                                 <span class="xsLight text-black">{{ this.currentSageAssignedData.kst_traeger }}</span>
                                 <span class="xsLight">{{ $t('Cost center') }}</span>
                                 <span class="xsLight text-black">{{ this.currentSageAssignedData.kst_stelle }}</span>
-
                                 <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
                                 <span class="xsLight text-black mt-4">
                                     {{ this.formatBookingDataDate(this.currentSageAssignedData.buchungsdatum) }}
@@ -129,10 +132,9 @@
 import {defineComponent} from 'vue';
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import {TrashIcon} from "@heroicons/vue/solid";
 import Permissions from "@/Mixins/Permissions.vue";
-import {router} from "@inertiajs/vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/Mixins/IconLib.vue";
@@ -189,7 +191,7 @@ export default defineComponent({
                     onSuccess: () => {
                         //add created comment at first position in comments
                         sageAssignedData.comments.unshift(
-                            this.$page.props.recentlyCreatedSageAssignedDataComment
+                            this.$page.props.loadedProjectInformation["BudgetTab"].recentlyCreatedSageAssignedDataComment
                         );
                         this.bookingDataCommentForm.reset();
                     }

@@ -8,7 +8,7 @@
                 <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
             </div>
             <div class="overflow-x-hidden overflow-y-scroll" :class="[sageNotAssigned.projectsGroup?.length > 0 ? 'h-28' : '']" v-if="this.projectGroupOpened">
-                <div v-show="sageNotAssigned.projectsGroup.length > 0">
+                <div v-if="sageNotAssigned.projectsGroup.length > 0">
                     <div class="flex flex-row font-bold">
                         <div class="w-28">
                             {{ $t('KTO') }}
@@ -32,7 +32,7 @@
                         />
                     </div>
                 </div>
-                <div v-if="!sageNotAssigned.projectsGroup.length" class="italic font-light text-sm mb-3">
+                <div v-else class="italic font-light text-sm mb-3">
                     <p>Keine Daten vorhanden</p>
                 </div>
             </div>

@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageAssignedDataRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 readonly class SageAssignedDataService
 {
@@ -35,13 +36,16 @@ readonly class SageAssignedDataService
         $attributes = [
             'column_cell_id' => $columnCellId,
             'sage_id' => $sageApiData['ID'],
-            'tan' => $sageApiData['TAN'],
-            'kreditor' => $sageApiData['Kreditor'],
+            'tan' => $sageApiData['Tan'],
+            'periode' => $sageApiData['Periode'],
+            'kto_haben' => $sageApiData['KtoHaben'],
+            'kreditor' => $sageApiData['Kreditor'] ?? '',
             'buchungstext' => $sageApiData['Buchungstext'],
             'buchungsbetrag' => $sageApiData['Buchungsbetrag'],
             'belegnummer' => $sageApiData['Belegnummer'],
             'belegdatum' => $sageApiData['Belegdatum'],
-            'sa_kto' => $sageApiData['SaKto'],
+            'kto_soll' => $sageApiData['KtoSoll'],
+            'sa_kto' => $sageApiData['SaKto'] ?? '',
             'kst_traeger' => $sageApiData['KstTraeger'],
             'kst_stelle' => $sageApiData['KstStelle'],
             'buchungsdatum' => $sageApiData['Buchungsdatum'],
@@ -59,11 +63,14 @@ readonly class SageAssignedDataService
             'column_cell_id' => $columnCellId,
             'sage_id' => $sageNotAssignedData->sage_id,
             'tan' => $sageNotAssignedData->tan,
+            'periode' => $sageNotAssignedData->periode,
+            'kto_haben' => $sageNotAssignedData->kto_haben,
             'kreditor' => $sageNotAssignedData->kreditor,
             'buchungstext' => $sageNotAssignedData->buchungstext,
             'buchungsbetrag' => $sageNotAssignedData->buchungsbetrag,
             'belegnummer' => $sageNotAssignedData->belegnummer,
             'belegdatum' => $sageNotAssignedData->belegdatum,
+            'kto_soll' => $sageNotAssignedData->kto_soll,
             'sa_kto' => $sageNotAssignedData->sa_kto,
             'kst_traeger' => $sageNotAssignedData->kst_traeger,
             'kst_stelle' => $sageNotAssignedData->kst_stelle,
@@ -88,5 +95,15 @@ readonly class SageAssignedDataService
     public function findBySageId(int $sageId): SageAssignedData|null
     {
         return $this->sageAssignedDataRepository->findBySageId($sageId);
+    }
+
+    public function findAllBySageIdExcluded(int $sageId, array $excludedIds): Collection
+    {
+        return $this->sageAssignedDataRepository->findAllBySageIdExcluded($sageId, $excludedIds);
+    }
+
+    public function forceDeleteAll(): void
+    {
+        $this->sageAssignedDataRepository->forceDeleteAll();
     }
 }

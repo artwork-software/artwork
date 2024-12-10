@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $name
  * @property string $subName
  * @property string $type
+ * @property int $position
  * @property int $linked_first_column
  * @property int $linked_second_column
  * @property Collection<ColumnCell> $cells
@@ -38,12 +39,13 @@ class Column extends Model
         'name',
         'subName',
         'type',
+        'position',
         'linked_first_column',
         'linked_second_column',
         'color',
         'is_locked',
         'locked_by',
-        'commented'
+        'commented',
     ];
 
     protected $casts = [

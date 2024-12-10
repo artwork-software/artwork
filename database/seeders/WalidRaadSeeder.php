@@ -742,6 +742,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 0,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -749,6 +750,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 1,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -756,6 +758,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 2,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -763,6 +766,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => 'V1-03/23 (€)',
                 'subName' => 'A',
                 'type' => 'empty',
+                'position' => 3,
                 'linked_first_column' => null,
                 'linked_second_column' => null,
                 'color' => 'darkGreenColumn'
@@ -771,6 +775,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => 'V2-06/23 (€)',
                 'subName' => 'B',
                 'type' => 'empty',
+                'position' => 4,
                 'linked_first_column' => null,
                 'linked_second_column' => null,
                 'color' => 'darkLightBlueColumn'
@@ -779,6 +784,7 @@ class WalidRaadSeeder extends Seeder
                 'name' => 'V3-09/23 (€)',
                 'subName' => 'C',
                 'type' => 'empty',
+                'position' => 5,
                 'linked_first_column' => null,
                 'linked_second_column' => null,
                 'color' => 'redColumn'

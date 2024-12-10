@@ -36,4 +36,9 @@ readonly class SageAssignedDataCommentService
     {
         $this->sageAssignedDataCommentRepository->delete($sageAssignedDataComment);
     }
+
+    public function forceDeleteAll(): void
+    {
+        $this->sageAssignedDataCommentRepository->forceDeleteAll();
+    }
 }

@@ -36,11 +36,6 @@ class FreelancerRepository extends BaseRepository
         )->get();
     }
 
-    public function findOrFail($freelancerId): Freelancer
-    {
-        return Freelancer::findOrFail($freelancerId);
-    }
-
     public function findWorker(int $workerId): Freelancer|null
     {
         return Freelancer::query()->canWorkShifts()->where('id', $workerId)->first();

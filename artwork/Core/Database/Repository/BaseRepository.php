@@ -7,6 +7,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use BadMethodCallException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Notifications\DatabaseNotification;
@@ -40,6 +41,14 @@ abstract class BaseRepository
     public function find(int|string $id): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification|null
     {
         return static::getNewModelQuery()->find($id);
+    }
+
+    /**
+     * @throws ModelNotFoundException
+     */
+    public function findOrFail(int|string $id): Model|Pivot|CanSubstituteBaseModel
+    {
+        return static::getNewModelQuery()->findOrFail($id);
     }
 
     public function save(Model|Pivot|CanSubstituteBaseModel $model): Model|Pivot|CanSubstituteBaseModel
@@ -99,7 +108,6 @@ abstract class BaseRepository
         array $attributes
     ): Model|Pivot|CanSubstituteBaseModel|DatabaseNotification {
         $model->updateOrFail($attributes);
-
         return $model;
     }
 
@@ -133,9 +141,17 @@ abstract class BaseRepository
     ): Model|Pivot|CanSubstituteBaseModel {
         return $model->replicate($except);
     }
+
     public function findByKey(
         string $key,
     ): Model|Pivot|CanSubstituteBaseModel|null {
         return static::getNewModelQuery()->where('key', $key)->first();
+    }
+
+    public function forceDeleteAll(): void
+    {
+        foreach (static::getNewModelQuery()->get() as $model) {
+            $model->forceDelete();
+        }
     }
 }

@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -35,7 +36,10 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
         /** @var Table $budgetTable */
         $budgetTable = $this->project->table()
             ->with([
-                'columns',
+                'columns' => function (HasMany $query): void {
+                    $query->orderBy('position');
+                    $query->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
+                },
                 'mainPositions',
                 'mainPositions.subPositions' => function ($query) {
                     return $query->orderBy('position');
@@ -43,7 +47,12 @@ class BudgetExport implements FromView, ShouldAutoSize, WithStyles
                 'mainPositions.subPositions.subPositionRows' => function ($query) {
                     return $query->orderBy('position');
                 },
-                'mainPositions.subPositions.subPositionRows.cells',
+                'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
+                    $query
+                        ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
+                        ->orderBy('position')
+                        ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
+                },
                 'mainPositions.subPositions.subPositionRows.cells.sageAssignedData',
             ])
             ->first();

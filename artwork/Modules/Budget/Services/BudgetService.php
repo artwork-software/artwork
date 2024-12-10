@@ -55,25 +55,29 @@ class BudgetService
                 table: $table,
                 name: $columnSettingService->getColumnNameByColumnPosition(0),
                 subName: '',
-                type: 'empty'
+                type: 'empty',
+                position: 0
             );
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: $columnSettingService->getColumnNameByColumnPosition(1),
                 subName: '',
-                type: 'empty'
+                type: 'empty',
+                position: 1
             );
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: $columnSettingService->getColumnNameByColumnPosition(2),
                 subName: '',
-                type: 'empty'
+                type: 'empty',
+                position: 2
             );
             $columns[] = $columnService->createColumnInTable(
                 table: $table,
                 name: date('Y') . ' €',
                 subName: 'A',
-                type: 'empty'
+                type: 'empty',
+                position: 3
             );
 
             $costMainPosition = $mainPositionService->createMainPosition(
@@ -271,8 +275,9 @@ class BudgetService
             'budget' => [
                 'table' => $project->table()
                     ->with([
-                        'columns' => function ($query): void {
-                            $query->orderByRaw("CASE WHEN type = 'sage' THEN 1 ELSE 0 END");
+                        'columns' => function (HasMany $query): void {
+                            $query->orderBy('position');
+                            $query->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END');
                         },
                         'mainPositions',
                         'mainPositions.verified',
@@ -294,8 +299,8 @@ class BudgetService
                                 ])
                                 // sage cells should be at the end
                                 ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
-                                ->orderByRaw("CASE WHEN columns.type = 'sage' THEN 1 ELSE 0 END,
-                                 column_sub_position_row.id ASC")
+                                ->orderBy('position')
+                                ->orderByRaw('CASE WHEN type = "sage" THEN 1 ELSE 0 END')
                                 ->select('column_sub_position_row.*')
                                 ->withCount('comments')
                                 ->withCount(['calculations' => function ($query) {
@@ -329,8 +334,9 @@ class BudgetService
             ],
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
                 $sageAssignedDataCommentService
-            ),
+            )
         ];
+
         return $loadedProjectInformation;
     }
 

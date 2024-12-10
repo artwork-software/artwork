@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\DB;
 
 class ContentSeeder extends Seeder
 {
-
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly GenreService $genreService,

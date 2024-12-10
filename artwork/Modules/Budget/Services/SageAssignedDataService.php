@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageAssignedDataRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 readonly class SageAssignedDataService
 {
@@ -94,6 +95,11 @@ readonly class SageAssignedDataService
     public function findBySageId(int $sageId): SageAssignedData|null
     {
         return $this->sageAssignedDataRepository->findBySageId($sageId);
+    }
+
+    public function findAllBySageIdExcluded(int $sageId, array $excludedIds): Collection
+    {
+        return $this->sageAssignedDataRepository->findAllBySageIdExcluded($sageId, $excludedIds);
     }
 
     public function forceDeleteAll(): void

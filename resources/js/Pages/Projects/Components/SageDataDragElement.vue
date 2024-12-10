@@ -1,7 +1,7 @@
 <template>
     <div class="flex items-center my-1.5 cursor-grab" draggable="true" @dragstart="onDragStart">
         <div class="w-28">
-            {{ sageData.sa_kto }}
+            {{ sageData.sa_kto !== '' ? sageData.sa_kto : sageData.kto_soll }}
         </div>
         <div class="w-28">
             {{ sageData.kst_stelle }}

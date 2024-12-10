@@ -97,22 +97,55 @@ class Sage100Service
                 ->first()
                 ->id;
 
-            //check if SageNotAssignedData exists, if so create SageAssignedData from it
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
                 $sageAssignedDataService->createFromSageNotAssignedData(
                     $subPositionRowsSageColumnCellId,
                     $sageNotAssignedData,
                     $sageNotAssignedDataService
                 );
-
-                continue;
+            } else {
+                //otherwise create a new SageAssignedData entity
+                $sageAssignedDataService->createFromSageApiData(
+                    $subPositionRowsSageColumnCellId,
+                    $item
+                );
             }
 
-            //otherwise create a new SageAssignedData entity
-            $sageAssignedDataService->createFromSageApiData(
-                $subPositionRowsSageColumnCellId,
-                $item
-            );
+            if (
+                !$project->getAttribute('is_group') &&
+                ($projectGroups = $project->getAttribute('groups'))->isNotEmpty()
+            ) {
+                //if dataset isnt matching we dont create any SageNotAssignedData entities because its already
+                //assigned to previous handled project
+                foreach ($projectGroups as $projectGroup) {
+                    $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
+                        $item['KtoSoll'],
+                        $item['KstStelle'],
+                        $projectGroup
+                    );
+
+                    if ($subPositionRows->count() === 0) {
+                        continue;
+                    }
+
+                    /** @var Column|null $sageColumn */
+                    $sageColumn = $projectGroup->table->columns->where('type', 'sage')->first();
+                    if (!$sageColumn instanceof Column) {
+                        $sageColumn = $this->createSageColumnForTable($projectGroup->table, $columnService);
+                    }
+
+                    $subPositionRowsSageColumnCellId = $sageColumn
+                        ->cells
+                        ->where('sub_position_row_id', $subPositionRows->first()->id)
+                        ->first()
+                        ->id;
+
+                    $sageAssignedDataService->createFromSageApiData(
+                        $subPositionRowsSageColumnCellId,
+                        $item
+                    );
+                }
+            }
         }
 
         //if data was imported update import date from latest given booking-date (Buchungsdatum)
@@ -476,6 +509,24 @@ class Sage100Service
                 'belegnummer' => $item['Belegnummer'],
             ]
         );
+
+        $assignedSageDataBySageIdExcluded = $sageAssignedDataService->findAllBySageIdExcluded(
+            $sageAssignedData->getAttribute('sage_id'),
+            [$sageAssignedData->getAttribute('id')]
+        );
+
+        if ($assignedSageDataBySageIdExcluded->count() > 0) {
+            foreach ($assignedSageDataBySageIdExcluded as $assignedSageData) {
+                $sageAssignedDataService->update(
+                    $assignedSageData,
+                    [
+                        'buchungsdatum' => $item['Buchungsdatum'],
+                        'buchungsbetrag' => $item['Buchungsbetrag'],
+                        'belegnummer' => $item['Belegnummer'],
+                    ]
+                );
+            }
+        }
 
         //dataset already assigned, no need to import again or check if it can be assigned
         return true;

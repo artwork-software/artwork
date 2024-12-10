@@ -95,4 +95,9 @@ readonly class SageAssignedDataService
     {
         return $this->sageAssignedDataRepository->findBySageId($sageId);
     }
+
+    public function forceDeleteAll(): void
+    {
+        $this->sageAssignedDataRepository->forceDeleteAll();
+    }
 }

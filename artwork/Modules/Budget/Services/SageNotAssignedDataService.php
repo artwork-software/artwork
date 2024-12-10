@@ -60,11 +60,14 @@ readonly class SageNotAssignedDataService
             'project_id' => $projectId,
             'sage_id' => $sageAssignedData->sage_id,
             'tan' => $sageAssignedData->tan,
+            'periode' => $sageAssignedData->periode,
+            'kto_haben' => $sageAssignedData->kto_haben,
             'kreditor' => $sageAssignedData->kreditor,
             'buchungstext' => $sageAssignedData->buchungstext,
             'buchungsbetrag' => $sageAssignedData->buchungsbetrag,
             'belegnummer' => $sageAssignedData->belegnummer,
             'belegdatum' => $sageAssignedData->belegdatum,
+            'kto_soll' => $sageAssignedData->kto_soll,
             'sa_kto' => $sageAssignedData->sa_kto,
             'kst_traeger' => $sageAssignedData->kst_traeger,
             'kst_stelle' => $sageAssignedData->kst_stelle,
@@ -124,11 +127,14 @@ readonly class SageNotAssignedDataService
             $columnCell->sageAssignedData()->create([
                 'sage_id' => $sageNotAssignedData->sage_id,
                 'tan' => $sageNotAssignedData->tan,
+                'periode' => $sageNotAssignedData->periode,
+                'kto_haben' => $sageNotAssignedData->kto_haben,
                 'kreditor' => $sageNotAssignedData->kreditor,
                 'buchungstext' => $sageNotAssignedData->buchungstext,
                 'buchungsbetrag' => $sageNotAssignedData->buchungsbetrag,
                 'belegnummer' => $sageNotAssignedData->belegnummer,
                 'belegdatum' => $sageNotAssignedData->belegdatum,
+                'kto_soll' => $sageNotAssignedData->kto_soll,
                 'sa_kto' => $sageNotAssignedData->sa_kto,
                 'kst_traeger' => $sageNotAssignedData->kst_traeger,
                 'kst_stelle' => $sageNotAssignedData->kst_stelle,
@@ -151,5 +157,10 @@ readonly class SageNotAssignedDataService
                 __('flash-messages.budget-drag-and-drop.error.drop')
             );
         }
+    }
+
+    public function forceDeleteAll(): void
+    {
+        $this->sageNotAssignedDataRepository->forceDeleteAll();
     }
 }

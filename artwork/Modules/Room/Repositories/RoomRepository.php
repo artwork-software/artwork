@@ -25,11 +25,6 @@ class RoomRepository extends BaseRepository
         return $query->get();
     }
 
-    public function findOrFail(int $id): Room
-    {
-        return Room::findOrFail($id);
-    }
-
     public function getFilteredRoomsBy(
         ?array $roomIds,
         ?array $roomAttributeIds,

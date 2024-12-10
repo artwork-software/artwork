@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Sage100\Services;
 
+use Artwork\Core\Services\DatabaseService;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
@@ -11,6 +12,7 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Models\Project;
@@ -22,13 +24,16 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Throwable;
 
 class Sage100Service
 {
     private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
 
-    public function __construct(private readonly Sage100Client $sage100Client)
-    {
+    public function __construct(
+        private readonly Sage100Client $sage100Client,
+        private readonly DatabaseService $databaseService,
+    ) {
     }
 
     public function importDataToBudget(
@@ -38,10 +43,11 @@ class Sage100Service
         ColumnService $columnService,
         SageApiSettingsService $sageApiSettingsService,
         SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService
+        SageNotAssignedDataService $sageNotAssignedDataService,
     ): int {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
+        /** @var array $item */
         foreach (($data = $this->getData($count, $specificDay, $sageApiSettingsService)) as $item) {
             if (!$item['ID']) {
                 continue;
@@ -66,8 +72,8 @@ class Sage100Service
             }
 
             //find SubPositionRows containing ColumnCells with SaKto (KTO) and KstStelle (KST)
-            $subPositionRows = $this->findSubPositionRowsByKtoAndKst(
-                $item['SaKto'],
+            $subPositionRows = $this->findSubPositionRowsByKtoShouldAndKst(
+                $item['KtoSoll'],
                 $item['KstStelle'],
                 $project
             );
@@ -121,12 +127,13 @@ class Sage100Service
         Request $request,
         ColumnService $columnService,
         SageAssignedDataService $sageAssignedDataService,
-        SageNotAssignedDataService $sageNotAssignedDataService
+        SageNotAssignedDataService $sageNotAssignedDataService,
     ): void {
         /** @var Table $table */
         $table = Table::find($request->table_id);
         $columns = $table->columns()->whereNot('type', 'sage')->get();
 
+        /** @var SubPosition $subPosition */
         $subPosition = SubPosition::find($request->sub_position_id);
         $project = $table->project;
         /** @var SageNotAssignedData $sageNotAssignedData */
@@ -145,7 +152,7 @@ class Sage100Service
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $request->positionBefore + 1
+            'position' => $request->positionBefore + 1,
         ]);
 
         $columns->each(function ($column, $index) use ($subPositionRow, $sageNotAssignedData): void {
@@ -154,7 +161,9 @@ class Sage100Service
                     $subPositionRow->cells()->create([
                         'column_id' => $column->id,
                         'sub_position_row_id' => $subPositionRow->id,
-                        'value' => $sageNotAssignedData->sa_kto,
+                        'value' => $sageNotAssignedData->sa_kto !== '' ?
+                            $sageNotAssignedData->sa_kto :
+                            $sageNotAssignedData->kto_soll,
                         'verified_value' => null,
                         'linked_money_source_id' => null,
                     ]);
@@ -188,6 +197,7 @@ class Sage100Service
             }
         });
 
+        /** @var ColumnCell $sageColumnCell */
         $sageColumnCell = ColumnCell::create([
             'column_id' => $sageColumn->id,
             'sub_position_row_id' => $subPositionRow->id,
@@ -239,7 +249,7 @@ class Sage100Service
         SubPosition $subPosition,
         int $positionBefore,
         ColumnCell $columnCell,
-        ColumnService $columnService
+        ColumnService $columnService,
     ): void {
         if ($request->multiple === false) {
             $project = $table->project;
@@ -258,17 +268,20 @@ class Sage100Service
 
             $subPositionRow = $subPosition->subPositionRows()->create([
                 'commented' => false,
-                'position' => $positionBefore + 1
+                'position' => $positionBefore + 1,
             ]);
 
             $columns->each(function ($column, $index) use ($subPositionRow, $columnCell): void {
+                /** @var SageAssignedData $sageAssignedData */
                 $sageAssignedData = $columnCell->sageAssignedData->first();
                 switch ($index) {
                     case 0:
                         $subPositionRow->cells()->create([
                             'column_id' => $column->id,
                             'sub_position_row_id' => $subPositionRow->id,
-                            'value' => $sageAssignedData->sa_kto,
+                            'value' =>  $sageAssignedData->sa_kto !== '' ?
+                                $sageAssignedData->sa_kto :
+                                $sageAssignedData->kto_soll,
                             'verified_value' => null,
                             'linked_money_source_id' => null,
                         ]);
@@ -303,6 +316,7 @@ class Sage100Service
             });
             /** @var SageAssignedData|null $sageAssignedData */
             $sageAssignedData = $columnCell->sageAssignedData->first();
+            /** @var ColumnCell $sageColumnCell */
             $sageColumnCell = ColumnCell::create([
                 'column_id' => $sageColumn->id,
                 'sub_position_row_id' => $subPositionRow->id,
@@ -326,7 +340,7 @@ class Sage100Service
         SubPosition $subPosition,
         int $positionBefore,
         ColumnCell $columnCell,
-        ColumnService $columnService
+        ColumnService $columnService,
     ): void {
         $project = $table->project;
         $columns = $table->columns()->whereNot('type', 'sage')->get();
@@ -342,51 +356,66 @@ class Sage100Service
             ->where('position', '>', $positionBefore)
             ->increment('position');
 
+        /** @var SubPositionRow $subPositionRow */
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
-            'position' => $positionBefore + 1
+            'position' => $positionBefore + 1,
         ]);
 
-        $columns->each(function ($column, $index) use ($subPositionRow, $columnCell, $request): void {
-            $sageAssignedDataFirst = $columnCell->sageAssignedData->whereIn('id', $request->selectedData)->first();
-            switch ($index) {
-                case 0:
-                    $subPositionRow->cells()->create([
-                        'column_id' => $column->id,
-                        'sub_position_row_id' => $subPositionRow->id,
-                        'value' => $sageAssignedDataFirst->sa_kto,
-                        'verified_value' => null,
-                        'linked_money_source_id' => null,
-                    ]);
-                    break;
-                case 1:
-                    $subPositionRow->cells()->create([
-                        'column_id' => $column->id,
-                        'sub_position_row_id' => $subPositionRow->id,
-                        'value' => $sageAssignedDataFirst->kst_stelle,
-                        'verified_value' => null,
-                        'linked_money_source_id' => null,
-                    ]);
-                    break;
-                case 2:
-                    $subPositionRow->cells()->create([
-                        'column_id' => $column->id,
-                        'sub_position_row_id' => $subPositionRow->id,
-                        'value' => $sageAssignedDataFirst->buchungstext,
-                        'verified_value' => null,
-                        'linked_money_source_id' => null,
-                    ]);
-                    break;
-                default:
-                    $subPositionRow->cells()->create([
-                        'column_id' => $column->id,
-                        'sub_position_row_id' => $subPositionRow->id,
-                        'value' => '0,00',
-                        'verified_value' => null,
-                        'linked_money_source_id' => null,
-                    ]);
+        $columns->each(
+            function (
+                Column $column,
+                int $index
+            ) use (
+                $subPositionRow,
+                $columnCell,
+                $request
+            ): void {
+                /** @var SageAssignedData $sageAssignedData */
+                $sageAssignedData = $columnCell->sageAssignedData->whereIn('id', $request->selectedData)->first();
+                switch ($index) {
+                    case 0:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' =>  $sageAssignedData->sa_kto !== '' ?
+                                $sageAssignedData->sa_kto :
+                                $sageAssignedData->kto_soll,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    case 1:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => $sageAssignedData->kst_stelle,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    case 2:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => $sageAssignedData->buchungstext,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    default:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => '0,00',
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                }
             }
-        });
+        );
+
+        /** @var ColumnCell $sageColumnCell */
         $sageColumnCell = ColumnCell::create([
             'column_id' => $sageColumn->id,
             'sub_position_row_id' => $subPositionRow->id,
@@ -403,18 +432,18 @@ class Sage100Service
         $this->deleteMovedColumnCells($columnCell);
     }
 
-    private function findSubPositionRowsByKtoAndKst(string $kto, string $kst, Project $project): Collection
+    private function findSubPositionRowsByKtoShouldAndKst(string $ktoShould, string $kst, Project $project): Collection
     {
         $subPositionRows = Collection::make();
 
         $project->table->mainPositions->each(
-            function (MainPosition $mainPosition) use ($kto, $kst, $subPositionRows): void {
+            function (MainPosition $mainPosition) use ($ktoShould, $kst, $subPositionRows): void {
                 $mainPosition->subPositions->each(
-                    function (SubPosition $subPosition) use ($kto, $kst, $subPositionRows): void {
+                    function (SubPosition $subPosition) use ($ktoShould, $kst, $subPositionRows): void {
                         $subPosition->subPositionRows->each(
-                            function (SubPositionRow $subPositionRow) use ($kto, $kst, $subPositionRows): void {
+                            function (SubPositionRow $subPositionRow) use ($ktoShould, $kst, $subPositionRows): void {
                                 if (
-                                    $subPositionRow->cells->where('value', $kto)->first() &&
+                                    $subPositionRow->cells->where('value', $ktoShould)->first() &&
                                     $subPositionRow->cells->where('value', $kst)->first()
                                 ) {
                                     $subPositionRows->push($subPositionRow);
@@ -431,7 +460,7 @@ class Sage100Service
 
     private function updateExistingSageAssignedDataIfExists(
         array $item,
-        SageAssignedDataService $sageAssignedDataService
+        SageAssignedDataService $sageAssignedDataService,
     ): bool {
         $sageAssignedData = $sageAssignedDataService->findBySageId($item['ID']);
 
@@ -454,7 +483,7 @@ class Sage100Service
 
     private function updateExistingSageNotAssignedDataIfExists(
         array $item,
-        SageNotAssignedDataService $sageNotAssignedDataService
+        SageNotAssignedDataService $sageNotAssignedDataService,
     ): SageNotAssignedData|null {
         $sageNotAssignedData = $sageNotAssignedDataService->findBySageId($item['ID']);
 
@@ -475,7 +504,7 @@ class Sage100Service
     private function createSageNotAssignedData(
         array $item,
         SageNotAssignedDataService $sageNotAssignedDataService,
-        ?int $projectId = null
+        ?int $projectId = null,
     ): void {
         SageNotAssignedData::query()
             ->where('sage_id', $item['ID'])
@@ -491,7 +520,7 @@ class Sage100Service
 
     private function updateSageApiSettingsBookingDateFromData(
         array $data,
-        SageApiSettingsService $sageApiSettingsService
+        SageApiSettingsService $sageApiSettingsService,
     ): void {
         $lastDataset = array_pop($data);
         if (isset($lastDataset['Buchungsdatum'])) {
@@ -499,9 +528,12 @@ class Sage100Service
         }
     }
 
-    private function getData(int|null $count, string|null $specificDay, SageApiSettingsService $sageApiSettingsService)
-    {
-//      if u want to import from local json use this return and start artisan artwork:import-sage100-api-data
+    /** @return array<int, mixed> */
+    private function getData(
+        int|null $count,
+        string|null $specificDay,
+        SageApiSettingsService $sageApiSettingsService
+    ): array {
 //        return json_decode(
 //            file_get_contents(
 //                implode(
@@ -523,7 +555,7 @@ class Sage100Service
     private function buildQuery(
         int|null $count,
         string|null $specificDay,
-        SageApiSettingsService $sageApiSettingsService
+        SageApiSettingsService $sageApiSettingsService,
     ): array {
         $query = [];
 
@@ -554,7 +586,14 @@ class Sage100Service
 
     private function createSageColumnForTable(Table $table, ColumnService $columnService): Column
     {
-        $sageColumn = $columnService->createColumnInTable($table, 'Sage Abgleich', '-', 'sage');
+        $sageColumn = $columnService->createColumnInTable(
+            $table,
+            'Sage Abgleich',
+            '-',
+            'sage',
+            //position starts counting at 0 so current column count is desired position for new column
+            $table->columns()->count()
+        );
 
         $columnService->setColumnSubName($table->id);
 
@@ -566,7 +605,7 @@ class Sage100Service
                         'value' => '0,00',
                         'verified_value' => null,
                         'linked_money_source_id' => null,
-                        'commented' => $subPositionRow->commented
+                        'commented' => $subPositionRow->commented,
                     ]);
                 });
 
@@ -577,11 +616,11 @@ class Sage100Service
         });
 
         $sageColumn->budgetSumDetails()->create([
-            'type' => 'COST'
+            'type' => 'COST',
         ]);
 
         $sageColumn->budgetSumDetails()->create([
-            'type' => 'EARNING'
+            'type' => 'EARNING',
         ]);
 
         return $sageColumn;
@@ -596,6 +635,32 @@ class Sage100Service
                 $cell->delete();
             });
             $movedColumn->subPositionRow->delete();
+        }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function deleteSageData(
+        SageAssignedDataCommentService $sageAssignedDataCommentService,
+        SageAssignedDataService $sageAssignedDataService,
+        SageNotAssignedDataService $sageNotAssignedDataService,
+    ): int {
+        try {
+            if (!$this->databaseService->inTransaction()) {
+                $this->databaseService->beginTransaction();
+            }
+
+            $sageAssignedDataCommentService->forceDeleteAll();
+            $sageAssignedDataService->forceDeleteAll();
+            $sageNotAssignedDataService->forceDeleteAll();
+
+            $this->databaseService->commitTransaction();
+
+            return 0;
+        } catch (Throwable $t) {
+            $this->databaseService->rollbackTransaction();
+            throw $t;
         }
     }
 }

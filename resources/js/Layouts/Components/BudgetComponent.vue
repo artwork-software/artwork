@@ -1434,7 +1434,7 @@ export default {
                 {
                     project: projectId
                 }
-            ));
+            ), '_blank', 'noopener');
         },
         showRemoveSageNotAssignedDataConfirmationModal(sageNotAssignedData) {
             this.sageNotAssignedDataToDelete = sageNotAssignedData;

@@ -17,11 +17,13 @@
                         <button v-else class="ml-2 text-black nextTimeRange" @click="nextDay">
                             <IconChevronRight class="h-5 w-5 text-primary"/>
                         </button>
+
                     </div>
                     <BaseMenu show-custom-icon icon="IconReorder" v-if="!atAGlance" class="mx-2" translation-key="Jump to month" has-no-offset>
                         <BaseMenuItem icon="IconCalendarRepeat" without-translation v-for="month in months" :title="month.month + ' ' + month.year" @click="jumpToDayOfMonth(month.first_day_in_period)"/>
                     </BaseMenu>
                 </div>
+
                 <div v-else-if="!project" class="relative">
                     <TextInputComponent
                         id="calendarProjectSearch"

@@ -73,14 +73,12 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <div class="fixed bottom-0 w-full h-32 bg-artwork-navigation-background/30 z-40 pointer-events-none" v-if="multiEdit">
         <div class="flex items-center justify-center h-full gap-4">
             <div>
@@ -103,9 +101,6 @@
                     :disabled="computedCheckedEventsForMultiEditCount === 0"
                     :text="computedCheckedEventsForMultiEditCount + ' ' + $t('Delete events')"/>
             </div>
-
-
-
             <div>
                 <FormButton
                     class="bg-artwork-messages-error hover:bg-artwork-messages-error/70 transition-all duration-300 ease-in-out pointer-events-auto"
@@ -115,7 +110,6 @@
             </div>
         </div>
     </div>
-
     <EventComponent
         v-if="showEventComponent"
         :showHints="usePage().props.show_hints"
@@ -180,8 +174,7 @@
         :eventsWithoutRoom="computedFilteredEvents"
         :isAdmin="hasAdminRole()"
         :first_project_calendar_tab_id="first_project_calendar_tab_id"
-        @desires-reload="handleReload"
-    />
+        @desires-reload="handleReload"/>
 
     <div v-if="showReceivesNewDataOverlay"
          class="bg-opacity-50 bg-black text-white w-full h-full absolute inset-0 z-50 justify-center text-center">
@@ -193,6 +186,9 @@
 </template>
 
 <script setup>
+/* Comment: below very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
+
+/* Comment: above very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
 import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import SingleDayInCalendar from "@/Components/Calendar/Elements/SingleDayInCalendar.vue";
@@ -797,7 +793,9 @@ onMounted(() => {
     // add a watch or something to check if the user is scrolled down to CalendarRef if yes add to checkIfScrolledToCalendarRef = fixed
 
     window.addEventListener('scroll', () => {
-        if (document.getElementById('myCalendar').getBoundingClientRect().top < 0) {
+        //null check if someone switches to at a glance calendar, dom element is removed
+        //but listener is still registered
+        if (document.getElementById('myCalendar')?.getBoundingClientRect().top < 0) {
             checkIfScrolledToCalendarRef.value = 'fixed !-ml-2';
         } else {
             checkIfScrolledToCalendarRef.value = '';

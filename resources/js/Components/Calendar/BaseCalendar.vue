@@ -187,7 +187,7 @@
 
 <script setup>
 /* Comment: below very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
-
+import VueCal from 'vue-cal';
 /* Comment: above very important unused import new Date().format relies on it - do not remove otherwise ui breaks */
 import {computed, defineAsyncComponent, inject, onMounted, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";

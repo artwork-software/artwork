@@ -1429,12 +1429,16 @@ export default {
             this.showErrorModal = true;
         },
         downloadBudgetExport(projectId) {
-            window.open(route(
-                'projects.export.budget',
-                {
-                    project: projectId
-                }
-            ), '_blank', 'noopener');
+            window.open(
+                route(
+                    'projects.export.budget',
+                    {
+                        project: projectId
+                    }
+                ),
+                '_blank',
+                'noopener'
+            );
         },
         showRemoveSageNotAssignedDataConfirmationModal(sageNotAssignedData) {
             this.sageNotAssignedDataToDelete = sageNotAssignedData;

@@ -3,23 +3,14 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Area\Models\Area;
-use Artwork\Modules\Area\Services\AreaService;
-use Artwork\Modules\Calendar\Services\CalendarService;
-use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
-use Artwork\Modules\Notification\Services\NotificationService;
-use Artwork\Modules\Project\Services\ProjectService;
-use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
+use Artwork\Modules\Room\Http\Requests\UpdateRoomUserRequest;
 use Artwork\Modules\Room\Http\Resources\RoomIndexWithoutEventsResource;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomChangeService;
 use Artwork\Modules\Room\Services\RoomFrontendModelService;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\User\Services\UserService;
 use Barryvdh\Debugbar\Facades\Debugbar;
@@ -27,7 +18,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,11 +27,12 @@ use Inertia\ResponseFactory;
 class RoomController extends Controller
 {
     public function __construct(
-        protected readonly RoomService $roomService,
-        protected readonly CollisionService $collisionService,
+        private readonly RoomService $roomService,
+        private readonly CollisionService $collisionService,
         private readonly SchedulingService $schedulingService,
-        protected readonly RoomChangeService $roomChangeService,
+        private readonly RoomChangeService $roomChangeService,
         private readonly RoomFrontendModelService $roomFrontendModelService,
+        private readonly Redirector $redirector,
     ) {
     }
 
@@ -130,13 +122,15 @@ class RoomController extends Controller
 
     public function show(
         Room $room,
+        UserService $userService
     ): Response|ResponseFactory {
         $room->load(['creator']);
+
         return Inertia::render(
             'Rooms/Show',
             $this->roomFrontendModelService->createShowDto(
                 $room,
-                Auth::user(),
+                $userService->getAuthUser(),
             )
         );
     }
@@ -157,17 +151,32 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
+    public function updateRoomUsers(Room $room, UpdateRoomUserRequest $request): RedirectResponse
+    {
+        $room->users()->detach();
+
+        foreach ($request->all() as $user) {
+            $room->users()->attach(
+                $user['id'],
+                [
+                    'is_admin' => $user['is_admin'],
+                    'can_request' => $user['can_request'],
+                ]
+            );
+        }
+
+        return $this->redirector->back();
+    }
+
     public function update(
         Request $request,
         Room $room
     ): RedirectResponse {
-
         $roomReplicate = $room->replicate();
         $roomReplicate->admins = $room->users()->wherePivot('is_admin', true)->get();
         $roomReplicate->adjoining_rooms = $room->adjoining_rooms()->get();
         $roomReplicate->attributes = $room->attributes()->get();
         $roomReplicate->categories = $room->categories()->get();
-
 
         $room->update(
             $request->only(
@@ -195,9 +204,10 @@ class RoomController extends Controller
             $room->users()->detach();
             $room->users()->sync($new_users);
         }
-            $room->adjoining_rooms()->sync($request->adjoining_rooms);
-            $room->attributes()->sync($request->room_attributes);
-            $room->categories()->sync($request->room_categories);
+
+        $room->adjoining_rooms()->sync($request->adjoining_rooms);
+        $room->attributes()->sync($request->room_attributes);
+        $room->categories()->sync($request->room_categories);
 
         $this->roomChangeService->applyChanges(
             $room,

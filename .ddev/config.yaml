@@ -24,9 +24,9 @@ web_extra_exposed_ports:
       http_port: 6000
       https_port: 6001
 web_extra_daemons:
-    - name: queue-1
-      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
-      directory: /var/www/html
+#    - name: queue-1
+#      command: while true; do /usr/bin/php /var/www/html/artisan queue:work --sleep=3 --tries=3; sleep 1; done
+#      directory: /var/www/html
     - name: sockets
       command: npm run sockets
       directory: /var/www/html

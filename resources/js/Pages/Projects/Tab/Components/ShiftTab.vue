@@ -194,6 +194,7 @@
                                      :crafts="loadedProjectInformation['ShiftTab'].crafts"
                                      :currentUserCrafts="loadedProjectInformation['ShiftTab'].current_user_crafts"
                                      :event="event"
+                                     :relevant-event-id="relevantEventId"
                                      :event-types="headerObject.eventTypes"
                                      :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
@@ -270,7 +271,8 @@ export default defineComponent({
             activeCraftFilters: [],
             dropFeedback: null,
             closedCrafts: [],
-            userSearch: ''
+            userSearch: '',
+            relevantEventId: null,
         }
     },
     watch: {
@@ -421,7 +423,18 @@ export default defineComponent({
             }));
         }
     },
-    mounted() {
+  created() {
+    Echo.private('shifts')
+        .listen('.shift.updated', (data) => {
+          router.reload();
+        })
+        .listen('.shift.deleted', (data) => {
+          router.reload();
+        }).listen('.shift.assigned', (data) => {
+          router.reload();
+        });
+  },
+  mounted() {
         this.makeContainerDraggable();
     },
     methods: {

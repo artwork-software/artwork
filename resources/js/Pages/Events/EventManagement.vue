@@ -9,9 +9,7 @@
                               :events-without-room="eventsWithoutRoom"
                               :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
                               :first-project-shift-tab-id="first_project_shift_tab_id"
-                              :event-statuses="eventStatuses"
-                />
-
+                              :event-statuses="eventStatuses"/>
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :dateValue="dateValue"
                                                      :project="null"

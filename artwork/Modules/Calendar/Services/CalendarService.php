@@ -2,38 +2,22 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Controllers\FilterController;
-use Artwork\Modules\Area\Services\AreaService;
 use Artwork\Modules\Availability\Models\Available;
-use Artwork\Modules\Calendar\Filter\CalendarFilter;
-use Artwork\Modules\Event\Http\Resources\CalendarEventResource;
 use Artwork\Modules\Event\Http\Resources\MinimalCalendarEventResource;
 use Artwork\Modules\Event\Models\Event;
-use Artwork\Modules\Event\Services\EventService;
-use Artwork\Modules\EventType\Services\EventTypeService;
-use Artwork\Modules\Filter\Services\FilterService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
-use Artwork\Modules\User\Services\UserService;
+use Artwork\Modules\UserCalendarFilter\Models\UserCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use Throwable;
 
 class CalendarService
 {
-    public function __construct(private readonly EventService $eventService)
-    {
-    }
-
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
@@ -154,30 +138,39 @@ class CalendarService
     /**
      * @return array<int, MinimalCalendarEventResource>
      */
-    public function getEventsAtAGlance($startDate, $endDate, ?Project $project = null): array
-    {
+    public function getEventsAtAGlance(
+        $startDate,
+        $endDate,
+        UserCalendarFilter $userCalendarFilter,
+        ?Project $project = null,
+    ): array {
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $actualEvents = $eventsForRoom = [];
 
+        $eventsQuery = $this->filterEvents(
+            $startDate,
+            $endDate,
+            $userCalendarFilter,
+            null,
+            $project
+        )->with(
+            [
+                'room',
+                'creator',
+                'project',
+                'project.managerUsers',
+                'project.state',
+                'shifts',
+                'shifts.craft',
+                'shifts.users',
+                'shifts.freelancer',
+                'shifts.serviceProvider',
+                'shifts.shiftsQualifications',
+                'subEvents.event',
+                'subEvents.event.room'
+            ]
+        )->orderBy('start_time');
 
-        $eventsQuery = $this->filterEvents(Event::query(), $startDate, $endDate, null, $project)
-            ->with(
-                [
-                    'room',
-                    'creator',
-                    'project',
-                    'project.managerUsers',
-                    'project.state',
-                    'shifts',
-                    'shifts.craft',
-                    'shifts.users',
-                    'shifts.freelancer',
-                    'shifts.serviceProvider',
-                    'shifts.shiftsQualifications',
-                    'subEvents.event',
-                    'subEvents.event.room'
-                ]
-            )->orderBy('start_time');
         foreach ($eventsQuery->get()->all() as $event) {
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
                 $calendarPeriod->start :
@@ -201,40 +194,30 @@ class CalendarService
         return $eventsForRoom;
     }
 
-    public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
-    {
-        $all_events = Event::query();
-        $startDate = Carbon::parse($startDate)->startOfDay();
-        $endDate = Carbon::parse($endDate)->endOfDay();
-
-        $filteredEvents = $this->filterEvents($all_events, $startDate, $endDate, null, $project);
-        return $filteredEvents->get();
-    }
-
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function filterEvents(
-        $query,
-        $startDate,
-        $endDate,
+        Carbon $startDate,
+        Carbon $endDate,
+        UserCalendarFilter $userCalendarFilter,
         ?Room $room,
         ?Project $project
     ): Builder|HasMany {
-        $user = Auth::user();
-        $calendarFilter = $user->shift_calendar_filter()->first();
+        $isLoud = $userCalendarFilter->is_loud ?? false;
+        $isNotLoud = $userCalendarFilter->is_not_loud ?? false;
+        $hasAudience = $userCalendarFilter->has_audience ?? false;
+        $hasNoAudience = $userCalendarFilter->has_no_audience ?? false;
+        $showAdjoiningRooms = $userCalendarFilter->show_adjoining_rooms ?? false;
+        $eventTypeIds = $userCalendarFilter->event_types ?? null;
+        $roomIds = $userCalendarFilter->rooms ?? null;
+        $areaIds = $userCalendarFilter->areas ?? null;
+        $roomAttributeIds = $userCalendarFilter->room_attributes ?? null;
+        $roomCategoryIds = $userCalendarFilter->room_categories ?? null;
+        //@todo: clarify how to build query better (maybe start with rooms)
+        //$adjoiningNotLoud = $userCalendarFilter->adjoining_not_loud ?? null;
+        //$adjoiningWithoutAudience = $userCalendarFilter->adjoining_no_audience ?? null;
 
-        $isLoud = $calendarFilter->is_loud ?? false;
-        $isNotLoud = $calendarFilter->is_not_loud ?? false;
-        $hasAudience = $calendarFilter->has_audience ?? false;
-        $hasNoAudience = $calendarFilter->has_no_audience ?? false;
-        $showAdjoiningRooms = $calendarFilter->show_adjoining_rooms ?? false;
-        $eventTypeIds = $calendarFilter->event_types ?? null;
-        $roomIds = $calendarFilter->rooms ?? null;
-        $areaIds = $calendarFilter->areas ?? null;
-        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
-        $roomCategoryIds = $calendarFilter->room_categories ?? null;
-
-        return $query
+        return Event::query()
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id ?? null))
             ->when($room, fn(Builder $builder) => $builder->where('room_id', $room->id ?? null))
             ->unless(

@@ -894,7 +894,8 @@ readonly class EventService
                     $calendarService->getEventsAtAGlance(
                         $startDate,
                         $endDate,
-                        $useProjectTimePeriod ? null : $project
+                        $userCalendarFilter,
+                        $useProjectTimePeriod ? null : $project,
                     )
             )
             ->setRooms(

@@ -1915,9 +1915,6 @@ class ProjectController extends Controller
         EventService $eventService,
         ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
-
-
-
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent
@@ -2013,7 +2010,6 @@ class ProjectController extends Controller
                     $headerObject->project->events = $eventsSorted;
                     break;
                 case ProjectTabComponentEnum::CALENDAR->value:
-                    $atAGlance = $request->boolean('atAGlance');
                     $loadedProjectInformation['CalendarTab'] =
                         $userService->getAuthUser()->getAttribute('at_a_glance') ?
                             $eventService->createEventManagementDtoForAtAGlance(

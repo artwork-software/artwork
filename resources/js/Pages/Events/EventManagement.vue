@@ -11,7 +11,6 @@
                               :first-project-shift-tab-id="first_project_shift_tab_id"
                               :event-statuses="eventStatuses"
                 />
-
                 <IndividualCalendarAtGlanceComponent v-else
                                                      :dateValue="dateValue"
                                                      :project="null"
@@ -26,7 +25,8 @@
                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                      :first-project-shift-tab-id="first_project_shift_tab_id"
                                                      :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                :event-statuses="eventStatuses"/>
+                                                     :isCalendarViewRoute="true"
+                                                     :event-statuses="eventStatuses"/>
             </div>
             <div v-else>
                 <div class="mr-4">
@@ -43,7 +43,7 @@
                                        :user_filters="user_filters"
                                        :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                        :first-project-shift-tab-id="firstProjectShiftTabId"
-                    :event-statuses="eventStatuses"/>
+                                       :event-statuses="eventStatuses"/>
                 </div>
             </div>
 

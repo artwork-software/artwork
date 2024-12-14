@@ -33,6 +33,7 @@ class RoomController extends Controller
         private readonly RoomChangeService $roomChangeService,
         private readonly RoomFrontendModelService $roomFrontendModelService,
         private readonly Redirector $redirector,
+        private readonly UserService $userService
     ) {
     }
 
@@ -120,17 +121,15 @@ class RoomController extends Controller
         return Redirect::route('areas.management');
     }
 
-    public function show(
-        Room $room,
-        UserService $userService
-    ): Response|ResponseFactory {
+    public function show(Room $room): Response|ResponseFactory
+    {
         $room->load(['creator']);
 
         return Inertia::render(
             'Rooms/Show',
             $this->roomFrontendModelService->createShowDto(
                 $room,
-                $userService->getAuthUser(),
+                $this->userService->getAuthUser(),
             )
         );
     }

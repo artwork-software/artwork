@@ -427,14 +427,11 @@
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
-                                                 ]"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll"
+                                                    multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
+                                                ]"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                 @click="handleCellClick(user, day)">
-                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    {{ $t('Selected for Multi-Edit') }}
-                                                </div>
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
@@ -511,12 +508,9 @@
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    {{ $t('Selected for Multi-Edit') }}
-                                                </div>
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
@@ -1613,8 +1607,6 @@ export default {
         },
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
-
-
 
             handleReload(
                 this.rooms.map(room => room.id),

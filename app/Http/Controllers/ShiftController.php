@@ -12,6 +12,7 @@ use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\ServiceProvider\Models\ServiceProvider;
+use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftCountService;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
@@ -65,11 +66,10 @@ class ShiftController extends Controller
             $shift = $this->shiftService->createShiftByRequest($request->all(), $event);
         }
 
-        $shift->update([
-            'event_start_day' => Carbon::parse($event->start_time)->format('Y-m-d'),
-            'event_end_day' => Carbon::parse($event->end_time)->format('Y-m-d'),
-        ]);
-
+        $shift->event_start_day = Carbon::parse($event->start_time)->format('Y-m-d');
+        $shift->event_end_day = Carbon::parse($event->end_time)->format('Y-m-d');
+        
+        $this->shiftService->save($shift);
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->createShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
@@ -95,11 +95,10 @@ class ShiftController extends Controller
                         $request->craft_id
                     );
 
-                    $newShift->update([
-                        'shift_uuid' => $shiftUuid,
-                        'event_start_day' => Carbon::parse($seriesEvent->start_time)->format('Y-m-d'),
-                        'event_end_day' => Carbon::parse($seriesEvent->end_time)->format('Y-m-d'),
-                    ]);
+                    $newShift->shift_uuid = $shiftUuid;
+                    $newShift->event_start_day = Carbon::parse($seriesEvent->start_time)->format('Y-m-d');
+                    $newShift->event_end_day = Carbon::parse($seriesEvent->end_time)->format('Y-m-d');
+                    $this->shiftService->save($newShift);
                     foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
                         $shiftsQualificationsService->createShiftsQualificationForShift(
                             $newShift->id,
@@ -111,9 +110,8 @@ class ShiftController extends Controller
         }
 
         if ($event->is_series) {
-            $shift->update([
-                'shift_uuid' => $shiftUuid,
-            ]);
+            $shift->shift_uuid = $shiftUuid;
+            $this->shiftService->save($shift);
         }
 
         if ($shift->infringement) {
@@ -157,7 +155,7 @@ class ShiftController extends Controller
             );
         }
 
-        $shift->update($request->only([
+        $shift->fill($request->only([
             'start_date',
             'end_date',
             'start',
@@ -168,6 +166,8 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
+        
+        $this->shiftService->save($shift);
 
          return $this->redirector->route('shifts.plan');
     }
@@ -264,7 +264,7 @@ class ShiftController extends Controller
             }
         }
 
-        $shift->update($request->only([
+        $shift->fill($request->only([
             'start_date',
             'end_date',
             'start',
@@ -275,6 +275,8 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
+        
+        $this->shiftService->save($shift);
 
         foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
@@ -801,7 +803,7 @@ class ShiftController extends Controller
             $changeService,
             $request->get('seriesShiftData')
         );
-
+        broadcast(new ShiftAssigned(User::find($request->get('userId')), $shift));
         return $isShiftTab ? $this->redirector->back() : true;
     }
 

@@ -602,7 +602,7 @@ const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
         hasReceivedNewShiftPlanWorkerData,
         receivedRoomData,
         receivedWorkerData,
-        handleReload
+        handleReload,
     } = useShiftPlanReload();
 
 export default {
@@ -720,6 +720,23 @@ export default {
         }
     },
     mounted() {
+        Echo.private('shifts').listen('.shift.assigned', (e) => {
+          const event = e.event;
+          event.start = formatEventDateByDayJs(event.formattedDates.start)
+          event.end = formatEventDateByDayJs(event.formattedDates.end)
+          this.eventDesiresReload(e.user.id,0, event, []);
+        }).listen('.shift.updated', (e) => {
+          const event = e.event;
+          event.start = formatEventDateByDayJs(event.formatted_dates.start)
+          event.end = formatEventDateByDayJs(event.formatted_dates.end)
+          handleReload(
+              e.event.room_id,
+              getDaysOfEvent(
+                  formatEventDateByDayJs(event.start_time),
+                  formatEventDateByDayJs(event.end_time)
+              ), []
+          );
+        });
         // Listen for scroll events on both sections
         this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);

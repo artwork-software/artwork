@@ -1,6 +1,6 @@
 <template>
     <div :class="[highlight, 'w-[190px] flex flex-col relative']" :id="'shift-container-' + event.id + '-' + shift.id">
-        <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative"
+        <div class="h-[36px] rounded-t-lg flex items-center justify-between px-4 text-white text-xs relative shadow-md"
              :class="[
                  this.computedMaxWorkerCount === this.computedUsedWorkerCount ?
                     'bg-green-500' :

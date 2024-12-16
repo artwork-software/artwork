@@ -2,11 +2,9 @@
 
 namespace Artwork\Modules\ShiftPresetTimeline\Models;
 
-use Artwork\Core\Casts\TimeWithoutSeconds;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
@@ -20,27 +18,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ShiftPresetTimeline extends Model
 {
     use HasFactory;
+    use Searchable;
 
     protected $fillable = [
-        'shift_preset_id',
-        'start',
-        'end',
-        'description',
+        'name',
     ];
 
-    protected $casts = [
-        'start' => TimeWithoutSeconds::class,
-        'end' => TimeWithoutSeconds::class,
-
-    ];
-
-    public function shiftPreset(): BelongsTo
+    public function times(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->belongsTo(
-            ShiftPreset::class,
-            'shift_preset_id',
-            'id',
-            'shift_presets'
-        );
+        return $this->hasMany(PresetTimelineTime::class, 'preset_timeline_id', 'id');
+    }
+
+    public function searchableAs(): string
+    {
+        return 'shift_preset_timelines';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return $this->toArray();
     }
 }

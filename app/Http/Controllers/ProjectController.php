@@ -2229,6 +2229,7 @@ class ProjectController extends Controller
                 ->orderBy('end', 'DESC')
                 ->limit(1)
                 ->first();
+            /** @var Timeline $lastTimeline */
             $startTime = Carbon::parse($lastTimeline->end);
             $endTime = Carbon::parse($lastTimeline->end)->addHour();
 

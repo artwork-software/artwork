@@ -27,11 +27,10 @@
             </div>
         </div>
         <template #xButton>
-            <div v-if="can('can plan shifts') || hasAdminRole()" class="hidden group-hover:block ml-1"
-                 @click="event.is_series ? openDeleteUserModal(user.pivot.id, type) : deleteUserFromShift(user.pivot.id, type)">
+            <div v-if="can('can plan shifts') || hasAdminRole()" class="hidden group-hover:block ml-1">
                 <span class="flex items-center justify-center">
                     <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
-                        <IconX class="w-2 h-2 text-white" />
+                        <IconX class="w-2 h-2 text-white cursor-pointer" @click="event.is_series ? openDeleteUserModal(user.pivot.id, type) : deleteUserFromShift(user.pivot.id, type)"/>
                     </span>
                 </span>
             </div>

@@ -84,9 +84,9 @@ readonly class EventService
         ShiftsQualificationsService $shiftsQualificationsService,
     ): void {
         $timelineService->forceDeleteTimelines($event->timelines);
-        foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
+        /*foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
             $timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event);
-        }
+        }*/
 
         $shiftService->forceDeleteShifts($event->shifts);
         /** @var PresetShift $presetShift */
@@ -1173,7 +1173,7 @@ readonly class EventService
      * @param string|null $endTime
      * @return array{Carbon, Carbon, bool}
      */
-    private function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
+    public function processEventTimes(Carbon $day, ?string $startTime, ?string $endTime): array
     {
         $endDay = clone $day;
         $allDay = !$startTime || !$endTime;

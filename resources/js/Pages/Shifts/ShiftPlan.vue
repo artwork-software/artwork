@@ -180,65 +180,45 @@
                                 </div>
                             </div>
                             <div class="pointer-events-none -mt-1" v-if="multiEditMode">
-                                <div class="flex items-center justify-center gap-4" v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
-                                    <div>
-                                        <button type="button"
-                                                @click="resetMultiEditMode()"
-                                                class="pointer-events-auto rounded-md bg-gray-100 px-14 py-2 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                                            {{ $t('Close') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="initializeMultiEditSave"
-                                                :disabled="this.userForMultiEdit === null"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                this.userForMultiEdit === null ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Save') }}
-                                        </button>
-                                    </div>
+                                <div v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
+                                    <button type="button"
+                                            @click="initializeMultiEditSave"
+                                            :disabled="this.userForMultiEdit === null"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                this.userForMultiEdit === null ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Save') }}
+                                    </button>
                                 </div>
-                                <div v-else class="flex items-center justify-center gap-4">
-                                    <div>
-                                        <button type="button"
-                                                @click="resetMultiEditMode()"
-                                                class="pointer-events-auto rounded-md bg-gray-100 px-14 py-2 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                                            {{ $t('Close') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="showCellMultiEditModal = true"
-                                                :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Edit Entries') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="openCellMultiEditDelete = true"
-                                                :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Delete Entries') }}
-                                        </button>
-                                    </div>
+                                <div v-else class="flex items-center justify-center gap-3">
+                                    <button type="button"
+                                            @click="showCellMultiEditModal = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Edit Entries') }}
+                                    </button>
+                                    <button type="button"
+                                            @click="openCellMultiEditDelete = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Delete Entries') }}
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex items-center justify-end gap-x-3 pr-24 z-20">

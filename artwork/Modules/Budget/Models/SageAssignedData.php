@@ -12,11 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $column_sub_position_row_id
  * @property int $sage_id
  * @property int $tan
+ * @property int $periode
+ * @property string $kto_haben
  * @property string $kreditor
  * @property string $buchungstext
  * @property float $buchungsbetrag
  * @property string $belegnummer
  * @property string $belegdatum
+ * @property string $kto_soll
  * @property string $sa_kto
  * @property string $kst_traeger
  * @property string $kst_stelle
@@ -28,11 +31,14 @@ class SageAssignedData extends Model
         'column_cell_id',
         'sage_id',
         'tan',
+        'periode',
+        'kto_haben',
         'kreditor',
         'buchungstext',
         'buchungsbetrag',
         'belegnummer',
         'belegdatum',
+        'kto_soll',
         'sa_kto',
         'kst_traeger',
         'kst_stelle',

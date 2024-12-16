@@ -70,7 +70,7 @@ class EventListExportService extends EventExportService
             ->setRows(
                 $this->aggregateDesiredColumnsAndRowsFrom(
                     $desiredColumns,
-                    $this->eventRepository->getEventsForEventListExportByFilters($this->getFromCachedData())
+                    $this->eventRepository->getEventsForExport($this->getFromCachedData())
                 )
             )
             ->download($this->composeFilename())

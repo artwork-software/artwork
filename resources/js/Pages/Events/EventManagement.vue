@@ -1,59 +1,36 @@
 <template>
     <app-layout :title="$t('Calendar')">
         <div class="w-full ml-11 mt-1">
-            <div v-if="!calendarType || calendarType !== 'daily'">
-                <BaseCalendar v-if="!atAGlance"
-                              :rooms="rooms"
-                              :days="days"
-                              :calendar-data="calendar"
-                              :events-without-room="eventsWithoutRoom"
-                              :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                              :first-project-shift-tab-id="first_project_shift_tab_id"
-                              :event-statuses="eventStatuses"
-                />
-                <IndividualCalendarAtGlanceComponent v-else
-                                                     :dateValue="dateValue"
-                                                     :project="null"
-                                                     :atAGlance="atAGlance"
-                                                     :eventTypes="eventTypes"
-                                                     :rooms="rooms"
-                                                     :eventsAtAGlance="eventsAtAGlance"
-                                                     :filter-options="filterOptions"
-                                                     :personal-filters="personalFilters"
-                                                     :user_filters="user_filters"
-                                                     :first_project_tab_id="first_project_tab_id"
-                                                     :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                                     :first-project-shift-tab-id="first_project_shift_tab_id"
-                                                     :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                                                     :isCalendarViewRoute="true"
-                                                     :event-statuses="eventStatuses"/>
-            </div>
-            <div v-else>
-                <div class="mr-4">
-                    <CalendarComponent initial-view="day"
-                                       :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                                       :selected-date="selectedDate"
-                                       :dateValue="dateValue"
-                                       :eventTypes=eventTypes
-                                       :rooms="rooms"
-                                       :events="events ?? eventsAtAGlance"
-                                       :events-without-room="eventsWithoutRoom"
-                                       :filter-options="filterOptions"
-                                       :personal-filters="personalFilters"
-                                       :user_filters="user_filters"
-                                       :first_project_calendar_tab_id="first_project_calendar_tab_id"
-                                       :first-project-shift-tab-id="firstProjectShiftTabId"
-                                       :event-statuses="eventStatuses"/>
-                </div>
-            </div>
-
+            <BaseCalendar v-if="!atAGlance"
+                          :rooms="rooms"
+                          :days="days"
+                          :calendar-data="calendar"
+                          :events-without-room="eventsWithoutRoom"
+                          :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                          :first-project-shift-tab-id="first_project_shift_tab_id"
+                          :event-statuses="eventStatuses"
+            />
+            <IndividualCalendarAtGlanceComponent v-else
+                                                 :dateValue="dateValue"
+                                                 :project="null"
+                                                 :atAGlance="atAGlance"
+                                                 :eventTypes="eventTypes"
+                                                 :rooms="rooms"
+                                                 :eventsAtAGlance="eventsAtAGlance"
+                                                 :filter-options="filterOptions"
+                                                 :personal-filters="personalFilters"
+                                                 :user_filters="user_filters"
+                                                 :first_project_tab_id="first_project_tab_id"
+                                                 :first_project_calendar_tab_id="first_project_calendar_tab_id"
+                                                 :first-project-shift-tab-id="first_project_shift_tab_id"
+                                                 :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
+                                                 :event-statuses="eventStatuses"/>
         </div>
     </app-layout>
 </template>
 <script setup>
 import {provide, ref} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import {usePage} from "@inertiajs/vue3";
 import BaseCalendar from "@/Components/Calendar/BaseCalendar.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";

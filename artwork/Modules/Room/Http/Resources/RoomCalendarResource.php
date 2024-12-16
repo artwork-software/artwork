@@ -3,11 +3,12 @@
 namespace Artwork\Modules\Room\Http\Resources;
 
 use Artwork\Modules\Event\Http\Resources\EventShowResource;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\User\Http\Resources\UserWithoutApartmentIndexResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \Room
+ * @mixin Room
  */
 class RoomCalendarResource extends JsonResource
 {
@@ -49,11 +50,15 @@ class RoomCalendarResource extends JsonResource
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
             'everyone_can_book' => $this->everyone_can_book,
-            'room_admins' => UserWithoutApartmentIndexResource::collection($this->users()->wherePivot('is_admin', true)
-                ->get())->resolve(),
+            'room_admins' => UserWithoutApartmentIndexResource::collection(
+                $this->users()->wherePivot('is_admin', true)->get()
+            )->resolve(),
             'requestable_by' => UserWithoutApartmentIndexResource::collection(
                 $this->users()->wherePivot('can_request', true)->get()
             )->resolve(),
+            'users' => UserWithoutApartmentIndexResource::collection(
+                $this->users()->withPivot(['is_admin', 'can_request'])->get()
+            ),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
             'area' => $this->area,
         ];

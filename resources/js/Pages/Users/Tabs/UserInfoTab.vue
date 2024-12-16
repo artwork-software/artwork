@@ -1,9 +1,8 @@
 <template>
     <div>
-
         <div v-if="this.isSignedInUser() || this.hasAdminRole()" class="mb-8">
             <div>
-                <div class="col-span-6 sm:col-span-4 mb-4">
+                <div class="col-span-6 sm:col-span-4">
                     <!-- Profile Photo File Input -->
                     <input type="file" class="hidden"
                            ref="photo"
@@ -322,7 +321,6 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import TextareaComponent from "@/Components/Inputs/TextareaComponent.vue";
-import debounce from "lodash.debounce";
 import VisualFeedback from "@/Components/Feedback/VisualFeedback.vue";
 import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 

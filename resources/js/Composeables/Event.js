@@ -79,6 +79,26 @@ export function useEvent() {
                 handleReload
             };
         },
+        reloadRoomsAndDaysAndWorkersForShiftPlanWithoutWorkers = async(
+            desiredRoomIdsToReload,
+            desiredDaysToReload,
+        ) => {
+            let roomData = null;
+
+            await axios.get(
+                route('shifts.events.for-rooms-by-days-and-project-no-workers'),
+                {
+                    params: {
+                        rooms: desiredRoomIdsToReload,
+                        days: desiredDaysToReload,
+                    }
+                }
+            ).then((response) => {
+                roomData = response.data.roomData;
+            });
+
+            return {roomData};
+        },
         reloadRoomsAndDaysAndWorkersForShiftPlan = async (
             desiredRoomIdsToReload,
             desiredDaysToReload,
@@ -115,6 +135,15 @@ export function useEvent() {
                     desiredWorkersToReload
                 ) => {
                     showReceivesNewDataOverlay.value = true;
+                    if (desiredWorkersToReload.length === 0) {
+                        const  {roomData} = await reloadRoomsAndDaysAndWorkersForShiftPlanWithoutWorkers(
+                            desiredRoomIdsToReload,
+                            desiredDaysToReload
+                        );
+                        receivedRoomData.value = roomData;
+                        hasReceivedNewShiftPlanData.value = true;
+                        return;
+                    }
                     const {roomData, workerData} = await reloadRoomsAndDaysAndWorkersForShiftPlan(
                         desiredRoomIdsToReload,
                         desiredDaysToReload,

@@ -10,8 +10,9 @@ use Artwork\Modules\Event\Exports\EventCalendarXlsxExport;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventSettings\Services\EventSettingsService;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
-use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\User\Services\UserService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Translation\Translator;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -19,7 +20,7 @@ class EventCalendarExportService extends EventExportService
 {
     public function __construct(
         private readonly EventCalendarXlsxExport $eventCalendarXlsxExport,
-        private readonly RoomService $roomService,
+        private readonly RoomRepository $roomRepository,
         private readonly UserService $userService,
         EventSettingsService $eventSettingsService,
         EventRepository $eventRepository,
@@ -59,14 +60,38 @@ class EventCalendarExportService extends EventExportService
                 ($desiresTimespanExport = $this->getFromCachedData('desiresTimespanExport'))
             )
             ->setCreatedBy($this->aggregateCreatedBy())
-            ->setRooms($this->roomService->getAllRoomsWithoutTrashed())
-            ->setEvents($this->eventRepository->getEventsForEventListExportByFilters($this->getFromCachedData()));
+            ->setRooms($this->getFilteredRooms())
+            ->setEvents($this->eventRepository->getEventsForExport($this->getFromCachedData()));
 
         if ($desiresTimespanExport) {
             $this->eventCalendarXlsxExport
-                ->setDateStart($conditional['dateStart'])
-                ->setDateEnd($conditional['dateEnd']);
+                ->setDateStart($this->carbonService->create($conditional['dateStart']))
+                ->setDateEnd($this->carbonService->create($conditional['dateEnd']));
         } else {
+            $projects = $this->projectRepository->getProjectsByIds($conditional['projects'], ['events']);
+
+            $earliestStartDate = $latestEndDate = null;
+
+            foreach ($projects as $project) {
+                foreach ($project->getAttribute('events') as $event) {
+                    if (!$earliestStartDate && !$latestEndDate) {
+                        $earliestStartDate = $event->getAttribute('start_time');
+                        $latestEndDate = $event->getAttribute('end_time');
+                        continue;
+                    }
+
+                    $startTime = $event->getAttribute('start_time');
+                    $endTime = $event->getAttribute('end_time');
+                    if ($startTime < $earliestStartDate) {
+                        $earliestStartDate = $startTime;
+                    }
+
+                    if ($endTime > $latestEndDate) {
+                        $latestEndDate = $endTime;
+                    }
+                }
+            }
+
             $this->eventCalendarXlsxExport
                 ->setProjects(
                     array_map(
@@ -75,13 +100,36 @@ class EventCalendarExportService extends EventExportService
                         },
                         $conditional['projects']
                     )
-                );
+                )
+                ->setDateStart($earliestStartDate)
+                ->setDateEnd($latestEndDate);
         }
 
         return $this
             ->eventCalendarXlsxExport
             ->download($this->composeFilename())
             ->deleteFileAfterSend();
+    }
+
+    private function getFilteredRooms(): Collection
+    {
+        $filter = $this->getFromCachedData('filter');
+
+        $desiredRoomIds = $filter['rooms'];
+        $desiredRoomCategories = $filter['roomCategories'];
+        $desiredRoomAttributes = $filter['roomAttributes'];
+        $desiredAreaIds = $filter['areas'];
+
+        return $this->roomRepository->getFilteredRoomsBy(
+            count($desiredRoomIds) > 0 ? $desiredRoomIds : null,
+            count($desiredRoomAttributes) > 0 ? $desiredRoomAttributes : null,
+            count($desiredAreaIds) > 0 ? $desiredAreaIds : null,
+            count($desiredRoomCategories) > 0 ? $desiredRoomCategories : null,
+            null,
+            null,
+            null,
+            null
+        );
     }
 
     private function aggregateCreatedBy(): string

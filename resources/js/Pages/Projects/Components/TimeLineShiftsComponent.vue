@@ -58,7 +58,7 @@ export default defineComponent({
         'crafts',
         'currentUserCrafts',
         'shiftQualifications',
-        'shiftTimePresets'
+        'shiftTimePresets',
     ],
     components: {
         SingleShift,
@@ -136,6 +136,6 @@ export default defineComponent({
 
             this.reinitializeEventContainerPlacements();
         }
-    },
+    }
 })
 </script>

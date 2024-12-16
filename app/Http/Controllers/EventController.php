@@ -240,6 +240,21 @@ class EventController extends Controller
                 )
         ];
     }
+    
+    public function getEventsForRoomsByDaysWithoutUser(
+        Request $request,
+        UserService $userService
+    ): array {
+        return [
+            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
+                $this->roomService,
+                $userService,
+                $request->collect('rooms')->all(),
+                $request->collect('days')->all(),
+                $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+            ),
+        ];
+    }
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh

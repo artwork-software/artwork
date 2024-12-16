@@ -89,6 +89,7 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
@@ -158,6 +159,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'initializeSageSpecificDay'
             ]
         )->name('tool.interfaces.sage.initializeSpecificDay');
+        Route::delete('/interfaces/sage/delete', [ToolSettingsInterfacesController::class, 'deleteSageData'])
+            ->name('tool.interfaces.sage.delete');
         Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
@@ -460,10 +463,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
         ->name('rooms.show')->middleware(CanViewRoom::class);
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+    Route::patch('/rooms/{room}/users', [RoomController::class, 'updateRoomUsers'])->name('room.users.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
-
-
 
     //Trash
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
@@ -533,6 +535,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->can('can view shift plan');
     Route::get('/shifts/view/events-and-workers', [EventController::class, 'getEventsForRoomsByDaysWithUser'])
         ->name('shifts.events.for-rooms-by-days-and-project');
+    Route::get('/shifts/view/events-and-no-workers', [EventController::class, 'getEventsForRoomsByDaysWithoutUser'])
+        ->name('shifts.events.for-rooms-by-days-and-project-no-workers');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
@@ -932,6 +936,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.unfix.main-position');
             Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])
                 ->name('project.budget.column.update.commented');
+            Route::patch('/columns/update-orders', [TableColumnOrderController::class, 'updateTableColumnOrders'])
+                ->name('project.budget.updateTableColumnOrders');
 
             // DELETE
             Route::delete('/sub-position-row/{subPositionRow}', [ProjectController::class, 'deleteRow'])
@@ -1105,8 +1111,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('budget-settings.templates')
             ->can('view budget templates');
     });
-
-
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
         ->name('project.copyright.update');

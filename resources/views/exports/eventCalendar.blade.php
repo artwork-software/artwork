@@ -1,14 +1,15 @@
 @php
     use Artwork\Modules\Event\Services\EventCalendarExportBladeTemplateService;
     use Illuminate\Database\Eloquent\Collection;
+    use Carbon\Carbon;
         /**
          * @var bool $desiresTimespanExport
          * @var string $createdBy
          * @var Collection $rooms
          * @var array $events
          * @var array $projects
-         * @var string $dateStart
-         * @var string $dateEnd
+         * @var Carbon $dateStart
+         * @var Carbon $dateEnd
          */
         /** @var EventCalendarExportBladeTemplateService $eventCalendarExportBladeTemplateService */
         $eventCalendarExportBladeTemplateService = app()->make(EventCalendarExportBladeTemplateService::class);
@@ -17,8 +18,8 @@
             $createdBy,
             $rooms,
             $events,
-            $projects,
             $dateStart,
-            $dateEnd
+            $dateEnd,
+            $projects,
         );
 @endphp

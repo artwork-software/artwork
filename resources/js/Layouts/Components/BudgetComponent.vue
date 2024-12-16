@@ -48,7 +48,7 @@
             <table class="w-full flex ml-10 py-5">
                 <thead>
                 <tr class="">
-                    <th v-for="(column,index) in table.columns" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
+                    <th v-for="(column,index) in computedSortedColumns" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="index === 0 ? 'w-28' : index === 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48'">
                         <div class="flex items-center group" :key="column.id" :class="index > 2 ? 'justify-end text-right' : ' justify-between'">
                             <div>
                                 <div>
@@ -623,30 +623,30 @@
 
 <script>
 import {
-  DocumentReportIcon,
-  PencilAltIcon,
-  PlusCircleIcon,
-  TrashIcon,
-  XCircleIcon,
-  XIcon,
-  ZoomInIcon,
-  ZoomOutIcon
+    DocumentReportIcon,
+    PencilAltIcon,
+    PlusCircleIcon,
+    TrashIcon,
+    XCircleIcon,
+    XIcon,
+    ZoomInIcon,
+    ZoomOutIcon
 } from '@heroicons/vue/outline';
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, PlusIcon} from "@heroicons/vue/solid";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
 import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  Switch,
-  SwitchGroup,
-  SwitchLabel
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {router, useForm} from "@inertiajs/vue3";
@@ -806,7 +806,9 @@ export default {
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
-
+        computedSortedColumns: function() {
+            return this.sortColumns();
+        },
         tablesToShow: function () {
             let costTableArray = [];
             let earningTableArray = [];
@@ -832,18 +834,7 @@ export default {
                 }
             )
             return projectMemberArray;
-        },
-        sortedColumns() {
-            // Zuerst filtern wir die Spalten, die nicht vom Typ 'sage' sind
-            const nonSageColumns = this.table.columns.filter(column => column.type !== 'sage');
-            // Dann filtern wir die Spalten, die vom Typ 'sage' sind
-            const sageColumns = this.table.columns.filter(column => column.type === 'sage');
-            // Kombiniere die beiden Arrays, wobei die 'sage' Spalten am Ende stehen
-            return [...nonSageColumns, ...sageColumns];
         }
-    },
-    created() {
-        this.sortColumns(); // Sortiere die Spalten, wenn die Komponente initialisiert wird
     },
     watch: {
         userExcludeCommentedBudgetItems: {
@@ -934,6 +925,8 @@ export default {
                 if (b.type === 'sage') return -1; // Behalte 'sage' am Ende
                 return 0; // Ändere die Reihenfolge von a und b nicht
             });
+
+            return this.table.columns;
         },
         duplicateColumn(columnId){
             router.post(route('project.budget.column.duplicate', columnId), {}, {
@@ -1429,12 +1422,16 @@ export default {
             this.showErrorModal = true;
         },
         downloadBudgetExport(projectId) {
-            window.open(route(
-                'projects.export.budget',
-                {
-                    project: projectId
-                }
-            ));
+            window.open(
+                route(
+                    'projects.export.budget',
+                    {
+                        project: projectId
+                    }
+                ),
+                '_blank',
+                'noopener'
+            );
         },
         showRemoveSageNotAssignedDataConfirmationModal(sageNotAssignedData) {
             this.sageNotAssignedDataToDelete = sageNotAssignedData;

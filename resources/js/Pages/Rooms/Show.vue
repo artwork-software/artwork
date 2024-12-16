@@ -72,7 +72,6 @@
                 </div>
             </div>
         </div>
-
         <div class="my-12 ml-14" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
             <div class="flex mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> {{$t('Room assignment')}} </h3>
@@ -99,23 +98,22 @@
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent  :personal-filters="personalFilters"
-                                                  :filter-options="filterOptions"
-                                                  :eventsWithoutRoom="eventsWithoutRoom"
-                                                  :dateValue="dateValue"
-                                                  :eventTypes=this.event_types
-                                                  :calendarData="calendar"
-                                                  :days="days"
-                                                  :rooms="rooms"
-                                                  :user_filters="user_filters"
-                                                  :first_project_tab_id="this.first_project_tab_id"
-                                                  :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                                                  :event-statuses="eventStatuses"
+                    <SingleRoomCalendarComponent :personal-filters="personalFilters"
+                                                 :filter-options="filterOptions"
+                                                 :eventsWithoutRoom="eventsWithoutRoom"
+                                                 :dateValue="dateValue"
+                                                 :eventTypes=this.event_types
+                                                 :calendarData="calendar"
+                                                 :days="days"
+                                                 :rooms="rooms"
+                                                 :user_filters="user_filters"
+                                                 :first_project_tab_id="this.first_project_tab_id"
+                                                 :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                                                 :event-statuses="eventStatuses"
                     />
                 </div>
             </div>
         </div>
-
         <!-- Raum Bearbeiten-->
         <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal" modal-image="/Svgs/Overlays/illu_room_edit.svg">
                 <div class="mx-3">
@@ -409,6 +407,9 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxOption,
@@ -416,27 +417,24 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems,
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel
+    MenuItems
 } from "@headlessui/vue";
 import {
     DocumentTextIcon,
     DuplicateIcon,
+    MinusIcon,
     PencilAltIcon,
-    TrashIcon,
-    XIcon,
     PlusIcon,
-    MinusIcon
+    TrashIcon,
+    XIcon
 } from "@heroicons/vue/outline";
 import {
     CheckIcon,
     ChevronDownIcon,
+    ChevronRightIcon,
     DotsVerticalIcon,
     PlusSmIcon,
-    XCircleIcon,
-    ChevronRightIcon
+    XCircleIcon
 } from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import JetButton from "@/Jetstream/Button.vue";

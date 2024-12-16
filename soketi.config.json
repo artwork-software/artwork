@@ -1,5 +1,5 @@
 {
-  "debug": true,
+  "debug": false,
   "port": 6001,
   "appManager.array.apps": [
     {

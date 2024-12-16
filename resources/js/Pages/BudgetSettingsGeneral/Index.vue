@@ -5,7 +5,7 @@
         </div>
         <div v-for="budgetColumnSetting in this.budgetColumnSettings"
              class="flex flex-row items-center mb-2 gap-2">
-            <span class="xsLight w-20">{{ $t('Column') }} {{ budgetColumnSetting.column_position + 1 }}</span>
+            <span class="xsLight w-20">{{ $t('Column') }} {{ budgetColumnSetting.id }}</span>
             <input type="text" class="input w-52"  v-model="budgetColumnSetting.column_name"/>
             <button :class="[
                         budgetColumnSetting.column_name === '' ?

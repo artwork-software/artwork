@@ -10,6 +10,8 @@ use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
+use Illuminate\Support\Collection as SupportCollection;
+use Throwable;
 
 readonly class ColumnService
 {
@@ -22,6 +24,7 @@ readonly class ColumnService
         string $name,
         string $subName,
         string $type,
+        int $position,
         int|null $linked_first_column = null,
         int|null $linked_second_column = null
     ): Column|Model {
@@ -32,6 +35,7 @@ readonly class ColumnService
         $column->linked_second_column = $linked_second_column;
         $column->subName = $subName;
         $column->type = $type;
+        $column->position = $position;
         return $this->columnRepository->save($column);
     }
 
@@ -139,5 +143,18 @@ readonly class ColumnService
         );
 
         $this->columnRepository->forceDelete($column);
+    }
+
+    public function getColumnsGroupedByTableId(): SupportCollection
+    {
+        return $this->columnRepository->getColumnsGroupedByTableId();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateOrFail(Column $column, array $attributes): void
+    {
+        $this->columnRepository->updateOrFail($column, $attributes);
     }
 }

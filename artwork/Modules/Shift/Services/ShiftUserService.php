@@ -7,6 +7,7 @@ use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Role\Enums\RoleEnum;
+use Artwork\Modules\Shift\Events\ShiftAssigned;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -19,15 +20,15 @@ use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 
-readonly class ShiftUserService
+class ShiftUserService
 {
     public function __construct(
-        private ShiftRepository $shiftRepository,
-        private ShiftUserRepository $shiftUserRepository,
-        private ShiftFreelancerRepository $shiftFreelancerRepository,
-        private ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private ShiftsQualificationsService $shiftsQualificationsService,
+        private readonly ShiftRepository $shiftRepository,
+        private readonly ShiftUserRepository $shiftUserRepository,
+        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
+        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
+        private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
+        private readonly ShiftsQualificationsService $shiftsQualificationsService,
     ) {
     }
 
@@ -143,6 +144,8 @@ readonly class ShiftUserService
 
         $vacationConflictService->checkVacationConflictsShifts($shift, $notificationService, $user);
         $availabilityConflictService->checkAvailabilityConflictsShifts($shift, $notificationService, $user);
+        
+        broadcast(new ShiftAssigned($user, $shift));
     }
 
     private function assignUserToProjectIfNecessary(Shift $shift, User $user): void
@@ -627,7 +630,7 @@ readonly class ShiftUserService
                 $changeService
             );
         }
-
+        broadcast(new ShiftAssigned($user, $shift));
         if (!$removeFromSingleShift) {
             foreach ($this->shiftRepository->getShiftsByUuid($shift->shift_uuid) as $shiftByUuid) {
                 if ($shiftByUuid->id === $shift->id) {

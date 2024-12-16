@@ -778,6 +778,7 @@ export default {
                 cell.costUnitSearchResults = null;
                 return;
             }
+
             if (index === 0) {
                 axios.get(
                     route('budget-settings.account-management.search-accounts'),

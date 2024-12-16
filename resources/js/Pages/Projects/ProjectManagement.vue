@@ -123,8 +123,11 @@
                                     </div>
                                 </MenuItem>
                             </BaseMenu>
-                            <ToolTipComponent icon="IconFileExport" icon-size="h-7 w-7" :tooltip-text="$t('Export project list')"
-                                              direction="bottom" @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
+                            <ToolTipComponent icon="IconFileExport"
+                                              icon-size="h-7 w-7"
+                                              :tooltip-text="$t('Export project list')"
+                                              direction="bottom"
+                                              @click="openExportModal"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
@@ -272,11 +275,14 @@
             :access_budget="projectBudgetAccess"
             @closed="closeProjectHistoryModal"
         />
-        <project-export-budgets-by-budget-deadline-modal
-            v-if="showProjectExportBudgetsByBudgetDeadlineModal"
-            :show="showProjectExportBudgetsByBudgetDeadlineModal"
-            @closeProjectExportBudgetsByBudgetDeadlineModal="closeProjectExportBudgetsByBudgetDeadlineModal"
-        />
+        <export-modal v-if="showExportModal"
+                      @close="showExportModal = false"
+                      :enums="[
+                          exportTabEnums.EXCEL_EVENT_LIST_EXPORT,
+                          exportTabEnums.EXCEL_CALENDAR_EXPORT,
+                          exportTabEnums.EXCEL_BUDGET_BY_BUDGET_DEADLINE_EXPORT
+                      ]"
+                      :configuration="getExportModalConfiguration()"/>
     </app-layout>
 </template>
 
@@ -318,8 +324,6 @@ import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import {IconCheck, IconPin} from "@tabler/icons-vue";
-import ProjectExportBudgetsByBudgetDeadlineModal
-    from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
@@ -329,7 +333,6 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
@@ -343,11 +346,14 @@ import debounce from 'lodash.debounce'
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 import ToolTipComponent from "@/Components/ToolTips/ToolTipComponent.vue";
 import {useSortEnumTranslation} from "@/Composeables/SortEnumTranslation.js";
+import ExportModal from "@/Layouts/Components/Export/Modals/ExportModal.vue";
+import {useExportTabEnums} from "@/Layouts/Components/Export/Enums/ExportTabEnum.js";
 
 const {getSortEnumTranslation} = useSortEnumTranslation();
-
+const exportTabEnums = useExportTabEnums();
 export default defineComponent({
     components: {
+        ExportModal,
         ToolTipComponent,
         SideNotification,
         IconCheck,
@@ -362,7 +368,6 @@ export default defineComponent({
         BaseButton,
         SuccessModal,
         IconPin,
-        ProjectExportBudgetsByBudgetDeadlineModal,
         DocumentReportIcon,
         ProjectCreateModal,
         ProjectDataEditModal,
@@ -459,12 +464,13 @@ export default defineComponent({
             editingProject: false,
             projectToEdit: null,
             createProject: false,
-            showProjectExportBudgetsByBudgetDeadlineModal: false,
+            showExportModal: false,
             entitiesPerPage: [10, 15, 20, 30, 50, 75, 100],
             page: route().params.page ?? 1,
             perPage: route().params.entitiesPerPage ?? 10,
             showAddBulkEventModal: false,
-            dropFeedbackShown: null
+            dropFeedbackShown: null,
+            exportTabEnums: exportTabEnums
         }
     },
     computed: {
@@ -562,11 +568,8 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-        openProjectExportBudgetsByBudgetDeadlineModal() {
-            this.showProjectExportBudgetsByBudgetDeadlineModal = true;
-        },
-        closeProjectExportBudgetsByBudgetDeadlineModal() {
-            this.showProjectExportBudgetsByBudgetDeadlineModal = false;
+        openExportModal() {
+            this.showExportModal = true;
         },
         openSearchbar(){
             this.showSearchbar = !this.showSearchbar;
@@ -659,6 +662,15 @@ export default defineComponent({
                 this.dropFeedbackShown = false;
             }, 3000)
         },
+        getExportModalConfiguration() {
+            const cfg = {};
+
+            cfg[exportTabEnums.EXCEL_EVENT_LIST_EXPORT] = {
+                show_artists: this.createSettings.show_artists,
+            };
+
+            return cfg;
+        }
     },
     watch: {
         project_search: {
@@ -667,7 +679,7 @@ export default defineComponent({
             }
         }
     }
-})
+});
 </script>
 
 <style scoped>

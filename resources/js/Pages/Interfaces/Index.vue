@@ -10,14 +10,23 @@
                     <span class="ml-1 my-auto hind">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
                     <component is="IconArrowCurveRight" class="h-6 w-6 ml-1 mr-1 rotate-90 hind" stroke-width="1.7"/>
                 </div>
-                <RefreshIcon :class="[
-                                !this.sageInterfaceIsConfigured() || this.importProcessing ?
-                                    'bg-gray-600 cursor-not-allowed' :
-                                    'bg-artwork-buttons-create cursor-pointer',
-                                'w-10 h-10 rounded-full text-white p-2'
-                             ]"
-                             @click="this.initializeSageImport()"
-                />
+                <div class="flex flex-row gap-1">
+                    <RefreshIcon :class="[
+                                    !this.sageInterfaceIsConfigured() || this.importProcessing ?
+                                        'bg-gray-600 cursor-not-allowed' :
+                                        'bg-artwork-buttons-create cursor-pointer',
+                                    'w-10 h-10 rounded-full text-white p-2'
+                                 ]"
+                                 @click="this.initializeSageImport()"
+                    />
+                    <TrashIcon :class="[
+                                    !this.sageInterfaceIsConfigured() || this.importProcessing ?
+                                        'bg-gray-600 cursor-not-allowed' :
+                                        'bg-artwork-buttons-create cursor-pointer',
+                                    'w-10 h-10 rounded-full text-white p-2'
+                                 ]"
+                               @click="this.deleteSageData()"/>
+                </div>
             </div>
         </div>
         <div class="w-1/2 mt-4 grid grid-cols-1 gap-4">
@@ -99,7 +108,34 @@
                 />
             </div>
         </div>
-
+        <hr class="my-5"/>
+        <div class="flex flex-col">
+            <div class="headline2">
+                {{ $t("Column Order") }}
+            </div>
+            <div class="text-sm mb-5">
+                {{ $t("Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the 'Debit account' and the second the 'Cost center'.") }}
+            </div>
+            <draggable class="flex flex-col gap-2"
+                       ghost-class="opacity-50"
+                       key="draggableKey"
+                       item-key="id"
+                       :list="tableColumnOrder"
+                       @start="dragging=true"
+                       @end="dragging=false"
+                       @change="updateTableColumnOrders()">
+                <template #item="{element}" :key="element.id">
+                    <div class="text-sm flex flex-row gap-x-1 w-full p-4 group bg-artwork-project-background rounded-lg cursor-grab"
+                         :key="element.id"
+                         :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                        <IconDragDrop class="h-5 w-5 hidden group-hover:block"/>
+                        <span class="ml-2 group-hover:font-bold">
+                            {{ $t(element.display_text, [element.position === 0 ? $t('Debit account') : $t('Cost center')]) }}
+                        </span>
+                    </div>
+                </template>
+            </draggable>
+        </div>
     </ToolSettingsHeader>
     <confirmation-component v-if="this.showConfirmationComponent"
                             :titel="$t('Interface changes')"
@@ -126,9 +162,9 @@ import {defineComponent} from "vue";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import Input from "@/Jetstream/Input.vue";
-import {RefreshIcon, InformationCircleIcon} from "@heroicons/vue/solid";
+import {InformationCircleIcon, RefreshIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -137,9 +173,12 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import TimeInputComponent from "@/Components/Inputs/TimeInputComponent.vue";
+import {IconDragDrop} from "@tabler/icons-vue";
+import draggable from "vuedraggable";
 
 export default defineComponent({
     components: {
+        IconDragDrop,
         TimeInputComponent,
         DateInputComponent,
         TextInputComponent,
@@ -153,10 +192,13 @@ export default defineComponent({
         ToolSettingsHeader,
         InputComponent,
         RefreshIcon,
-        InformationCircleIcon
+        InformationCircleIcon,
+        TrashIcon,
+        draggable
     },
     props: [
-        'sageSettings'
+        'sageSettings',
+        'tableColumnOrder'
     ],
     data() {
         return {
@@ -176,6 +218,7 @@ export default defineComponent({
             }),
             importProcessing: false,
             specificDayImportDate: null,
+            dragging: false
         }
     },
     methods: {
@@ -254,6 +297,32 @@ export default defineComponent({
                 {
                     preserveScroll: true,
                     preserveState: false
+                }
+            );
+        },
+        deleteSageData() {
+            router.delete(
+                route('tool.interfaces.sage.delete'),
+                {
+                    preserveState: true,
+                    preserveScroll: true
+                }
+            );
+        },
+        updateTableColumnOrders() {
+            router.patch(
+                route('project.budget.updateTableColumnOrders'),
+                {
+                    tableColumnOrders: this.tableColumnOrder.map(
+                        (tableColumnOrder) => {
+                            //indices of payload are the new positions
+                            return tableColumnOrder.id;
+                        }
+                    )
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true
                 }
             );
         }

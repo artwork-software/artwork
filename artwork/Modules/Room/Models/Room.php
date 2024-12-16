@@ -49,10 +49,6 @@ use Illuminate\Support\Collection;
  * @property Collection<RoomAttribute> $attributes
  * @property Collection<User> $users
  * @property Collection<User> $admins
- *
- *
- *
- *
  */
 class Room extends Model
 {

@@ -57,6 +57,7 @@ class MinimalCalendarEventResource extends JsonResource
             'startTime' => $startTime,
             'end' => $this->getAttribute('end_time')->utc()->toIso8601String(),
             'allDay' => $this->getAttribute('allDay'),
+            'is_series' => $this->getAttribute('is_series'),
             'option_string' => $this->getAttribute('option_string'),
             'occupancy_option' => $this->getAttribute('occupancy_option'),
             'alwaysEventName' => $eventName,

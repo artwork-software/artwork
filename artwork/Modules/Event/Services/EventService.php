@@ -1195,6 +1195,46 @@ readonly class EventService
         return [$day, $endDay, $allDay];
     }
 
+    /**
+     * @param Carbon $day
+     * @param string|null $startTime
+     * @param string|null $endTime
+     * @return array{Carbon, Carbon, bool}
+     */
+    public function processEventTimesForTimeline(Carbon $day, ?string $startTime, ?string $endTime): array
+    {
+        $endDay = clone $day;
+        $allDay = false;
+
+        if (!$startTime && !$endTime) {
+            $allDay = true;
+            $day->startOfDay();
+            $endDay->endOfDay();
+        } else {
+            $startTime = $startTime ? Carbon::parse($startTime) : null;
+            $endTime = $endTime ? Carbon::parse($endTime) : null;
+
+            // Start- oder Endzeitpunkt fehlen
+            if (!$startTime && $endTime) {
+                $startTime = clone $endTime;
+            } elseif (!$endTime && $startTime) {
+                $endTime = clone $startTime;
+            } elseif ($startTime && $endTime) {
+                if ($endTime->lt($startTime) || $endTime->eq($startTime)) {
+                    $endDay->addDay();
+                }
+            }
+            if ($startTime) {
+                $day->setTimeFromTimeString($startTime->toTimeString());
+            }
+            if ($endTime) {
+                $endDay->setTimeFromTimeString($endTime->toTimeString());
+            }
+        }
+
+        return [$day, $endDay, $allDay];
+    }
+
 
     public function createBulkEvent(
         array $event,

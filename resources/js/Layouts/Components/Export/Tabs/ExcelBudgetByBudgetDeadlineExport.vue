@@ -62,7 +62,9 @@ const emits = defineEmits(['close']),
                     endBudgetDeadline: endBudgetDeadline.value,
                     type: generateDetailedExport.value
                 }
-            )
+            ),
+            '_blank',
+            'noopener'
         );
 
         emits.call(this, 'close');

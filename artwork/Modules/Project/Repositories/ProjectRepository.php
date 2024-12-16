@@ -2,16 +2,35 @@
 
 namespace Artwork\Modules\Project\Repositories;
 
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Notifications\DatabaseNotification;
 use Laravel\Scout\Builder;
 
 class ProjectRepository extends BaseRepository
 {
+    public function __construct(private readonly Project $project)
+    {
+    }
+
+    public function getNewModelInstance(): Model|Pivot|DatabaseNotification|CanSubstituteBaseModel
+    {
+        return $this->project->newInstance();
+    }
+
+    public function getNewModelQuery(): BaseBuilder|EloquentBuilder
+    {
+        return $this->project->newModelQuery();
+    }
+
     public function findManagers(Project $project): Collection
     {
         return $project->users()->wherePivot('is_manager', '=', 1)->get();

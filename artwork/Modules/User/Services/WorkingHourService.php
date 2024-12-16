@@ -77,7 +77,7 @@ class WorkingHourService
         return $totalWorkingMinutes;
     }
 
-    public function convertMinutesInHours(int $minutes): string
+    public function convertMinutesInHours(int|float $minutes): string
     {
         $hours = intdiv(abs($minutes), 60); // Ganze Stunden
         $remainingMinutes = abs($minutes) % 60; // Verbleibende Minuten

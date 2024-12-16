@@ -36,13 +36,12 @@ use Artwork\Modules\InventoryScheduling\Services\CraftInventoryItemEventService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectCreateSettings;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Enums\ProjectTabComponentEnum;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\RoomAttribute\Services\RoomAttributeService;
-use Artwork\Modules\RoomCategory\Services\RoomCategoryService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Scheduling\Services\SchedulingService;
 use Artwork\Modules\SeriesEvents\Models\SeriesEvents;
@@ -157,7 +156,8 @@ class EventController extends Controller
         ProjectTabService $projectTabService,
         EventTypeService $eventTypeService,
         AreaService $areaService,
-        ProjectService $projectService
+        ProjectService $projectService,
+        ProjectCreateSettings $projectCreateSettings
     ): Response {
         return Inertia::render(
             'Events/EventManagement',
@@ -170,7 +170,8 @@ class EventController extends Controller
                     $projectTabService,
                     $eventTypeService,
                     $areaService,
-                    $projectService
+                    $projectService,
+                    $projectCreateSettings
                 ) :
                 $eventService->createEventManagementDto(
                     $roomService,
@@ -179,7 +180,8 @@ class EventController extends Controller
                     $projectTabService,
                     $eventTypeService,
                     $areaService,
-                    $projectService
+                    $projectService,
+                    $projectCreateSettings,
                 )
         );
     }
@@ -236,6 +238,21 @@ class EventController extends Controller
                 ->getResolvedWorkerShiftPlanResourcesByIdsAndTypesWithPlannedWorkingHours(
                     $request->collect('workers')->all()
                 )
+        ];
+    }
+    
+    public function getEventsForRoomsByDaysWithoutUser(
+        Request $request,
+        UserService $userService
+    ): array {
+        return [
+            'roomData' => $this->roomService->collectEventsForRoomsShiftOnSpecificDays(
+                $this->roomService,
+                $userService,
+                $request->collect('rooms')->all(),
+                $request->collect('days')->all(),
+                $userService->getAuthUser()->getAttribute('shift_calendar_filter')
+            ),
         ];
     }
 

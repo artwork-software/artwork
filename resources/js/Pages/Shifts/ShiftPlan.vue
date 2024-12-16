@@ -180,65 +180,45 @@
                                 </div>
                             </div>
                             <div class="pointer-events-none -mt-1" v-if="multiEditMode">
-                                <div class="flex items-center justify-center gap-4" v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
-                                    <div>
-                                        <button type="button"
-                                                @click="resetMultiEditMode()"
-                                                class="pointer-events-auto rounded-md bg-gray-100 px-14 py-2 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                                            {{ $t('Close') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="initializeMultiEditSave"
-                                                :disabled="this.userForMultiEdit === null"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                this.userForMultiEdit === null ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Save') }}
-                                        </button>
-                                    </div>
+                                <div v-if="Object.keys(multiEditCellByDayAndUser).length === 0">
+                                    <button type="button"
+                                            @click="initializeMultiEditSave"
+                                            :disabled="this.userForMultiEdit === null"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                this.userForMultiEdit === null ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Save') }}
+                                    </button>
                                 </div>
-                                <div v-else class="flex items-center justify-center gap-4">
-                                    <div>
-                                        <button type="button"
-                                                @click="resetMultiEditMode()"
-                                                class="pointer-events-auto rounded-md bg-gray-100 px-14 py-2 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create">
-                                            {{ $t('Close') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="showCellMultiEditModal = true"
-                                                :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Edit Entries') }}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button"
-                                                @click="openCellMultiEditDelete = true"
-                                                :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
-                                                class="pointer-events-auto"
-                                                :class="[
-                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
-                                'bg-gray-600' :
-                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
-                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
-                            ]">
-                                            {{ $t('Delete Entries') }}
-                                        </button>
-                                    </div>
+                                <div v-else class="flex items-center justify-center gap-3">
+                                    <button type="button"
+                                            @click="showCellMultiEditModal = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-buttons-create hover:bg-artwork-buttons-create/90',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Edit Entries') }}
+                                    </button>
+                                    <button type="button"
+                                            @click="openCellMultiEditDelete = true"
+                                            :disabled="Object.keys(multiEditCellByDayAndUser).length === 0"
+                                            class="pointer-events-auto"
+                                            :class="[
+                                                Object.keys(multiEditCellByDayAndUser).length === 0 ?
+                                                'bg-gray-600' :
+                                                'cursor-pointer bg-artwork-messages-error hover:bg-artwork-messages-error/90',
+                                                'rounded-md px-14 py-2 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-artwork-buttons-create'
+                                            ]">
+                                        {{ $t('Delete Entries') }}
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex items-center justify-end gap-x-3 pr-24 z-20">
@@ -427,14 +407,11 @@
                                                     highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     $page.props.user.compact_mode ? 'h-8' : '',
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && craft.id === userForMultiEdit.craftId ? '' : 'opacity-30' : 'opacity-30' : '',
-                                                    multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
-                                                 ]"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll"
+                                                    multiEditMode && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : ''
+                                                ]"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-y-scroll hover:opacity-100"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}"
                                                 @click="handleCellClick(user, day)">
-                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    {{ $t('Selected for Multi-Edit') }}
-                                                </div>
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
@@ -511,12 +488,9 @@
                                                     multiEditMode ? userForMultiEdit ? userForMultiEdit.id === user.element.id && user.type === userForMultiEdit.type && userForMultiEdit.craftId === 0 ? '' : 'opacity-30' : 'opacity-30' : '',
                                                     multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-100 !overflow-hidden' : '',
                                                     multiEditMode ? '!overflow-hidden' : '']"
-                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll"
+                                                class="p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer overflow-scroll hover:opacity-100"
                                                 @click="handleCellClick(user, day)"
                                                 :style="{width: '202px', maxWidth: '202px', maxHeight: '50px'}">
-                                                <div class="text-[9px] flex items-center justify-center top-4 left-12 absolute" v-if="multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format)">
-                                                    {{ $t('Selected for Multi-Edit') }}
-                                                </div>
                                                 <ShiftPlanCell :user="user" :day="day" :classes="[multiEditMode &&  multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.type === user.type && multiEditCellByDayAndUser[user.element.id + '_' + user.type]?.days.includes(day.without_format) ? '!opacity-20' : '']"/>
                                             </div>
                                             <div v-else
@@ -628,7 +602,7 @@ const {getDaysOfEvent, formatEventDateByDayJs, useShiftPlanReload} = useEvent(),
         hasReceivedNewShiftPlanWorkerData,
         receivedRoomData,
         receivedWorkerData,
-        handleReload
+        handleReload,
     } = useShiftPlanReload();
 
 export default {
@@ -746,6 +720,23 @@ export default {
         }
     },
     mounted() {
+        Echo.private('shifts').listen('.shift.assigned', (e) => {
+          const event = e.event;
+          event.start = formatEventDateByDayJs(event.formattedDates.start)
+          event.end = formatEventDateByDayJs(event.formattedDates.end)
+          this.eventDesiresReload(e.user.id,0, event, []);
+        }).listen('.shift.updated', (e) => {
+          const event = e.event;
+          event.start = formatEventDateByDayJs(event.formatted_dates.start)
+          event.end = formatEventDateByDayJs(event.formatted_dates.end)
+          handleReload(
+              e.event.room_id,
+              getDaysOfEvent(
+                  formatEventDateByDayJs(event.start_time),
+                  formatEventDateByDayJs(event.end_time)
+              ), []
+          );
+        });
         // Listen for scroll events on both sections
         this.$refs.shiftPlan?.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview?.addEventListener('scroll', this.syncScrollUserOverview);
@@ -1613,8 +1604,6 @@ export default {
         },
         closeMultiEditCellModal(bool){
             this.showCellMultiEditModal = false;
-
-
 
             handleReload(
                 this.rooms.map(room => room.id),

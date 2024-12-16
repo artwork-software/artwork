@@ -17,9 +17,10 @@ class SageAssignedDataCommentController extends Controller
 
     public function store(StoreSageAssignedDataCommentRequest $request): RedirectResponse
     {
-        $sageAssignedDataComment = $this->sageAssignedDataCommentService->createFromRequest($request);
-
-        return Redirect::back()->with('recentlyCreatedSageAssignedDataCommentId', $sageAssignedDataComment->id);
+        return Redirect::back()->with(
+            'recentlyCreatedSageAssignedDataCommentId',
+            $this->sageAssignedDataCommentService->createFromRequest($request)->getAttribute('id')
+        );
     }
 
     public function destroy(SageAssignedDataComment $sageAssignedDataComment): void

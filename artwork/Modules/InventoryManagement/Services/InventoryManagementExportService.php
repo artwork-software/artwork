@@ -2,20 +2,18 @@
 
 namespace Artwork\Modules\InventoryManagement\Services;
 
+use Artwork\Core\Services\CacheService;
 use Artwork\Modules\InventoryManagement\Exports\InventoryManagementExport;
 use Carbon\Carbon;
-use DragonCode\Support\Helpers\Str;
-use Illuminate\Cache\CacheManager;
 use Illuminate\Support\Collection;
 use Throwable;
 
 class InventoryManagementExportService
 {
     public function __construct(
-        private readonly CacheManager $cacheManager,
         private readonly CraftsInventoryColumnService $craftsInventoryColumnService,
         private readonly InventoryManagementExport $inventoryManagementExport,
-        private readonly Str $str
+        private readonly CacheService $cacheService
     ) {
     }
 
@@ -24,10 +22,7 @@ class InventoryManagementExportService
      */
     public function cacheRequestData(Collection $data): string
     {
-        //cache forgets the item after 10 seconds, time enough to download
-        $this->cacheManager->set($token = $this->str->random(128), $data, 10);
-
-        return $token;
+        return $this->cacheService->setValueAndGetCacheTokenValidForTenSeconds($data);
     }
 
     /**
@@ -35,11 +30,7 @@ class InventoryManagementExportService
      */
     public function getCachedRequestData(string $token): Collection
     {
-        $data = $this->cacheManager->get($token);
-
-        $this->cacheManager->delete($token);
-
-        return $data;
+        return $this->cacheService->getValueByToken($token);
     }
 
     /**

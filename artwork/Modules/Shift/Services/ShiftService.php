@@ -7,6 +7,8 @@ use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\Shift\Events\ShiftAssigned;
+use Artwork\Modules\Shift\Events\ShiftUpdated;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
@@ -28,19 +30,19 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Routing\Redirector;
 use stdClass;
 
-readonly class ShiftService
+class ShiftService
 {
     public function __construct(
-        private ShiftRepository $shiftRepository,
-        private CraftService $craftService,
-        private NotificationService $notificationService,
+        private readonly ShiftRepository $shiftRepository,
+        private readonly CraftService $craftService,
+        private readonly NotificationService $notificationService,
         private readonly ChangeService $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
-        private ShiftUserService $shiftUserService,
-        private ShiftFreelancerService $shiftFreelancerService,
-        private ShiftServiceProviderService $shiftServiceProviderService,
-        private ShiftCountService $shiftCountService,
+        private readonly ShiftUserService $shiftUserService,
+        private readonly ShiftFreelancerService $shiftFreelancerService,
+        private readonly ShiftServiceProviderService $shiftServiceProviderService,
+        private readonly ShiftCountService $shiftCountService,
     ) {
     }
 
@@ -81,7 +83,7 @@ readonly class ShiftService
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
         $shift->is_committed = false;
-        return $this->shiftRepository->save($shift);
+        return $this->save($shift);
     }
 
     public function createShift(Event $event, Craft $craft, array $data): Shift|Model
@@ -95,7 +97,7 @@ readonly class ShiftService
         $shift->description = $data['description'];
         $shift->event()->associate($event);
         $shift->craft()->associate($craft);
-        return $this->shiftRepository->save($shift);
+        return $this->save($shift);
     }
 
     public function createShiftByRequest(array $data, Event $event): Model|Shift
@@ -118,7 +120,7 @@ readonly class ShiftService
         $shift->description = $data['description'];
         $shift->event()->associate($event);
         $shift->craft()->associate($craftId);
-        return $this->shiftRepository->save($shift);
+        return $this->save($shift);
     }
 
     public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, Event $event): Shift
@@ -233,6 +235,7 @@ readonly class ShiftService
     public function forceDelete(Shift $shift): bool
     {
         //relations are deleted on cascade
+        broadcast(new ShiftUpdated($shift))->toOthers();
         return $this->shiftRepository->forceDelete($shift);
     }
 
@@ -281,7 +284,12 @@ readonly class ShiftService
             $this->notificationService->createNotification();
         }
     }
-
+    
+    public function save(Shift $shift): Shift
+    {
+        broadcast(new ShiftUpdated($shift))->toOthers();
+        return $this->shiftRepository->save($shift);
+    }
 
     public function detachFromShifts(
         \Illuminate\Support\Collection $shifts,
@@ -316,5 +324,6 @@ readonly class ShiftService
                 ),
             };
         }
+        broadcast(new ShiftAssigned($entityModel, $shift))->toOthers();
     }
 }

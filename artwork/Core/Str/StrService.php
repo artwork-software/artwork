@@ -10,4 +10,9 @@ class StrService
     {
         return Str::random($length);
     }
+
+    public function createToken(int $length = 128): string
+    {
+        return $this->random($length);
+    }
 }

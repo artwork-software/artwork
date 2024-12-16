@@ -1,320 +1,303 @@
 <template>
     <app-layout :title="$t('Rooms & areas')">
-        <div class="">
-            <div class="max-w-screen-2xl mb-40 flex flex-row mt-5 ml-14 mr-40">
-                <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
-                        <div class="flex flex-wrap w-full">
-                            <div class="flex flex-wrap w-full">
-                                <h2 class="headline1 flex w-full">{{ $t('Rooms & areas')}}</h2>
-                                <div class="xsLight flex mt-4 w-full">
-                                    {{ $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')}}
-                                </div>
-                                <Tabs />
-                                <h2 class="headline2 w-full">{{ $t('Room properties')}}</h2>
-                                <div class="xsLight flex mt-4 w-full">
-                                    {{ $t('Define room categories and properties. These can then be filtered in the calendars.')}}
-                                </div>
-                                <div v-if="showInvalidNameErrorText" class="text-red-600 text-sm mt-4">
-                                    {{$t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
-                                </div>
-                                <div class=" w-full grid grid-cols-1 md:grid-cols-2 gap-4 my-10">
-                                    <!-- Raumkategorien -->
-                                    <div>
-                                        <div class="flex">
-                                            <div class="relative w-72">
-                                                <TextInputComponent
-                                                    v-on:keyup.enter=addRoomCategory
-                                                    id="roomCategory"
-                                                    v-model="roomCategoryInput"
-                                                    :label="$t('Enter room category')"/>
-                                            </div>
-
-                                            <div class="flex items-center h-full ml-2 mt-5">
-                                                <button :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']" @click="addRoomCategory" :disabled="!roomCategoryInput">
-                                                    <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-4 flex flex-wrap">
-                                        <span v-for="(category,index) in room_categories"
-                                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ category.name }}
-                                            <button type="button" @click="this.showRoomCategoryDeleteModal(category)">
-                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                                        </span>
-                                        </div>
+        <div class="max-w-screen-2xl flex flex-wrap-row mt-5 ml-14 mr-40">
+            <div class="w-full flex my-auto justify-between">
+                <div class="flex flex-wrap w-full">
+                    <div class="flex flex-wrap w-full">
+                        <h2 class="headline1 flex w-full">{{ $t('Rooms & areas')}}</h2>
+                        <div class="xsLight flex mt-4 w-full">
+                            {{ $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')}}
+                        </div>
+                        <Tabs />
+                        <h2 class="headline2 w-full">{{ $t('Room properties')}}</h2>
+                        <div class="xsLight flex mt-4 w-full">
+                            {{ $t('Define room categories and properties. These can then be filtered in the calendars.')}}
+                        </div>
+                        <div v-if="showInvalidNameErrorText" class="text-red-600 text-sm mt-4">
+                            {{$t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
+                        </div>
+                        <div class=" w-full grid grid-cols-1 md:grid-cols-2 gap-4 my-10">
+                            <!-- Raumkategorien -->
+                            <div>
+                                <div class="flex">
+                                    <div class="relative w-72">
+                                        <TextInputComponent
+                                            v-on:keyup.enter=addRoomCategory
+                                            id="roomCategory"
+                                            v-model="roomCategoryInput"
+                                            :label="$t('Enter room category')"/>
                                     </div>
-
-                                    <!-- Raumattribute -->
-                                    <div>
-                                        <div class="flex">
-                                            <div class="relative w-72">
-                                                <TextInputComponent
-                                                    v-on:keyup.enter=addRoomAttribute
-                                                    id="roomAttribute"
-                                                    v-model="roomAttributeInput"
-                                                    :label="$t('Enter room property')"
-                                                />
-                                            </div>
-                                            <div class="flex items-center ml-2 mt-5 h-full">
-                                                <button
-                                                    :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
-                                                    @click="addRoomAttribute" :disabled="!roomAttributeInput">
-                                                    <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
-                                                </button>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="mt-4 flex flex-wrap">
-                                        <span v-for="(attribute,index) in room_attributes"
-                                              class="mr-1 rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-3 text-sm mb-1 h-8 inline-flex">
-                                            {{ attribute.name }}
-                                            <button type="button" @click="this.showRoomAttributeDeleteModal(attribute)">
-                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error"/>
-                                            </button>
-                                        </span>
-                                        </div>
+                                    <div class="flex items-center h-full ml-2 mt-5">
+                                        <button :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']" @click="addRoomCategory" :disabled="!roomCategoryInput">
+                                            <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
+                                        </button>
                                     </div>
                                 </div>
-
-                                <div class="flex w-full justify-between">
-                                    <h2 class=" headline2">{{$t('Areas ')}}</h2>
-                                </div>
-                                <div class="flex w-full justify-between mt-6">
-                                    <div class="flex">
-                                        <div>
-                                            <AddButtonBig @click="openAddAreaModal" :text="$t('Add area')"/>
-                                        </div>
-                                        <div v-if="this.$page.props.show_hints" class="flex">
-                                            <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
-                                            <span
-                                                class="ml-1 mt-4 hind">{{ $t('Create new areas')}}</span>
-                                        </div>
-                                    </div>
-
+                                <div class="mt-4 flex flex-wrap">
+                                <span v-for="(category,index) in room_categories"
+                                      class="rounded-full items-center font-medium text-tagText
+                                    border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    {{ category.name }}
+                                    <button type="button" @click="this.showRoomCategoryDeleteModal(category)">
+                                        <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                        <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
                                 </div>
                             </div>
-                            <div class="flex w-full flex-wrap mt-10">
-                                <div v-for="area in areas"
-                                     class="flex w-full bg-white my-2 border border-gray-200">
-                                    <button class="bg-artwork-buttons-hover flex" @click="changeAreaStatus(area)">
-                                        <IconChevronUp stroke-width="1.5" v-if="this.opened_areas.includes(area.id)"
-                                                       class="h-6 w-6 text-white my-auto"></IconChevronUp>
-                                        <IconChevronDown stroke-width="1.5" v-else
-                                                         class="h-6 w-6 text-white my-auto"></IconChevronDown>
+                            <!-- Raumattribute -->
+                            <div>
+                                <div class="flex">
+                                    <div class="relative w-72">
+                                        <TextInputComponent
+                                            v-on:keyup.enter=addRoomAttribute
+                                            id="roomAttribute"
+                                            v-model="roomAttributeInput"
+                                            :label="$t('Enter room property')"
+                                        />
+                                    </div>
+                                    <div class="flex items-center ml-2 mt-5 h-full">
+                                        <button
+                                            :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-artwork-buttons-create hover:bg-artwork-buttons-hover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-white']"
+                                            @click="addRoomAttribute" :disabled="!roomAttributeInput">
+                                            <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex flex-wrap">
+                                <span v-for="(attribute,index) in room_attributes"
+                                      class="mr-1 rounded-full items-center font-medium text-tagText
+                                 border bg-tagBg border-tag px-3 text-sm mb-1 h-8 inline-flex">
+                                    {{ attribute.name }}
+                                    <button type="button" @click="this.showRoomAttributeDeleteModal(attribute)">
+                                        <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                        <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error"/>
                                     </button>
-                                    <div class="flex items-center w-full ml-4 flex-wrap p-4">
-                                        <div class="flex items-center justify-between w-full">
-                                            <div class="my-auto flex items-center">
-                                                <span class="headline2">
-                                                    {{ area.name }}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <BaseMenu>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openEditAreaModal(area)"
-                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                            <IconEdit stroke-width="1.5"
-                                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                      aria-hidden="true"/>
-                                                            {{ $t('edit')}}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a href="#"
-                                                           @click="duplicateArea(area)"
-                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconCopy stroke-width="1.5"
-                                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                      aria-hidden="true"/>
-                                                            {{ $t('Duplicate')}}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openSoftDeleteAreaModal(area)"
-                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconTrash stroke-width="1.5"
-                                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                       aria-hidden="true"/>
-                                                            {{ $t('In the recycle bin')}}
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openDeleteAllRoomsModal(area)"
-                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <IconRecycle stroke-width="1.5"
-                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                         aria-hidden="true"/>
-                                                            {{ $t('Remove all rooms')}}
-                                                        </a>
-                                                    </MenuItem>
-                                                </BaseMenu>
-                                            </div>
-                                        </div>
-                                        <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
-                                            <div class="">
-                                                <AddButtonBig @click="openAddRoomModal(area)" :text="$t('Add room')" />
-                                            </div>
-                                            <div v-if="this.$page.props.show_hints" class="flex">
-                                                <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                                <span
-                                                    class="hind text-secondary tracking-tight ml-1 text-xl">{{ $t('Create new rooms')}}</span>
-                                            </div>
-                                        </div>
-                                        <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
-                                            <draggable ghost-class="opacity-50"
-                                                       key="draggableKey"
-                                                       item-key="id" :list="area.rooms"
-                                                       @start="dragging=true" @end="dragging=false"
-                                                       @change="updateRoomOrder(area.rooms)">
-                                                <template #item="{element}" :key="element.id">
-                                                    <div v-show="!element.temporary" class="flex group"
-                                                         @mouseover="showMenu = element.id"
-                                                         :key="element.id"
-                                                         @mouseout="showMenu = null" >
-                                                        <div class="flex mt-6 flex-wrap w-full" :key="element.id"
-                                                             :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                            <div class="flex w-full items-center">
-                                                                <div class="flex items-center">
-                                                                    <Link :href="route('rooms.show',{room: element.id})"
-                                                                          class="ml-4 my-auto xsDark"
-                                                                    >
-                                                                        {{ element.name }}
-                                                                    </Link>
-                                                                    <div
-                                                                        class="ml-6 mt-1 flex items-center xsLight my-auto relative">
-                                                                        {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
-                                                                        <UserPopoverTooltip :user="element.created_by"
-                                                                                            :id="element.created_by.id + '-room-' + element.id"
-                                                                                            height="6" width="6"
-                                                                                            class="ml-2"/>
-                                                                    </div>
-                                                                </div>
-                                                                <BaseMenu :key="element.id" class="invisible group-hover:visible">
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditRoomModal(element)"
-                                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                            <IconEdit stroke-width="1.5"
-                                                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                      aria-hidden="true"/>
-                                                                            {{ $t('edit')}}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a href="#"
-                                                                           @click="duplicateRoom(element)"
-                                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <IconCopy stroke-width="1.5"
-                                                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                      aria-hidden="true"/>
-                                                                            {{ $t('Duplicate')}}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openSoftDeleteRoomModal(element)"
-                                                                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <IconTrash stroke-width="1.5"
-                                                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                       aria-hidden="true"/>
-                                                                            {{ $t('In the recycle bin')}}
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                </BaseMenu>
+                                </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex w-full justify-between">
+                            <h2 class=" headline2">{{$t('Areas ')}}</h2>
+                        </div>
+                        <div class="flex w-full justify-between mt-6">
+                            <div class="flex">
+                                <div>
+                                    <AddButtonBig @click="openAddAreaModal" :text="$t('Add area')"/>
+                                </div>
+                                <div v-if="this.$page.props.show_hints" class="flex">
+                                    <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
+                                    <span
+                                        class="ml-1 mt-4 hind">{{ $t('Create new areas')}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex w-full flex-wrap mt-10">
+                        <div v-for="area in areas"
+                             class="flex w-full bg-white my-2 border border-gray-200">
+                            <button class="bg-artwork-buttons-hover flex" @click="changeAreaStatus(area)">
+                                <IconChevronUp stroke-width="1.5" v-if="this.opened_areas.includes(area.id)"
+                                               class="h-6 w-6 text-white my-auto"></IconChevronUp>
+                                <IconChevronDown stroke-width="1.5" v-else
+                                                 class="h-6 w-6 text-white my-auto"></IconChevronDown>
+                            </button>
+                            <div class="flex items-center w-full ml-4 flex-wrap p-4">
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="my-auto flex items-center">
+                                        <span class="headline2">
+                                            {{ area.name }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <BaseMenu>
+                                            <MenuItem v-slot="{ active }">
+                                                <a @click="openEditAreaModal(area)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                    <IconEdit stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                    {{ $t('edit')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }">
+                                                <a href="#"
+                                                   @click="duplicateArea(area)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconCopy stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
+                                                    {{ $t('Duplicate')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }">
+                                                <a @click="openSoftDeleteAreaModal(area)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconTrash stroke-width="1.5"
+                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                               aria-hidden="true"/>
+                                                    {{ $t('In the recycle bin')}}
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }">
+                                                <a @click="openDeleteAllRoomsModal(area)"
+                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <IconRecycle stroke-width="1.5"
+                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                 aria-hidden="true"/>
+                                                    {{ $t('Remove all rooms')}}
+                                                </a>
+                                            </MenuItem>
+                                        </BaseMenu>
+                                    </div>
+                                </div>
+                                <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
+                                    <div class="">
+                                        <AddButtonBig @click="openAddRoomModal(area)" :text="$t('Add room')" />
+                                    </div>
+                                    <div v-if="this.$page.props.show_hints" class="flex">
+                                        <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                        <span
+                                            class="hind text-secondary tracking-tight ml-1 text-xl">{{ $t('Create new rooms')}}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
+                                    <draggable ghost-class="opacity-50"
+                                               key="draggableKey"
+                                               item-key="id" :list="area.rooms"
+                                               @start="dragging=true" @end="dragging=false"
+                                               @change="updateRoomOrder(area.rooms)">
+                                        <template #item="{element}" :key="element.id">
+                                            <div v-show="!element.temporary" class="flex group"
+                                                 @mouseover="showMenu = element.id"
+                                                 :key="element.id"
+                                                 @mouseout="showMenu = null" >
+                                                <div class="flex mt-6 flex-wrap w-full" :key="element.id"
+                                                     :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                                    <div class="flex w-full items-center">
+                                                        <div class="flex items-center">
+                                                            <Link :href="route('rooms.show',{room: element.id})"
+                                                                  class="ml-4 my-auto xsDark">
+                                                                {{ element.name }}
+                                                            </Link>
+                                                            <div class="ml-6 mt-1 flex items-center xsLight my-auto relative">
+                                                                {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
+                                                                <UserPopoverTooltip :user="element.created_by"
+                                                                                    :id="element.created_by.id + '-room-' + element.id"
+                                                                                    height="6" width="6"
+                                                                                    class="ml-2"/>
                                                             </div>
+                                                        </div>
+                                                        <BaseMenu :key="element.id" class="invisible group-hover:visible">
+                                                            <MenuItem v-slot="{ active }">
+                                                                <a @click="openEditRoomModal(element)"
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                                    <IconEdit stroke-width="1.5"
+                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                              aria-hidden="true"/>
+                                                                    {{ $t('edit')}}
+                                                                </a>
+                                                            </MenuItem>
+                                                            <MenuItem v-slot="{ active }">
+                                                                <a href="#"
+                                                                   @click="duplicateRoom(element)"
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                    <IconCopy stroke-width="1.5"
+                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                              aria-hidden="true"/>
+                                                                    {{ $t('Duplicate')}}
+                                                                </a>
+                                                            </MenuItem>
+                                                            <MenuItem v-slot="{ active }">
+                                                                <a @click="openSoftDeleteRoomModal(element)"
+                                                                   :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                    <IconTrash stroke-width="1.5"
+                                                                               class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                               aria-hidden="true"/>
+                                                                    {{ $t('In the recycle bin')}}
+                                                                </a>
+                                                            </MenuItem>
+                                                        </BaseMenu>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </draggable>
+                                    <div v-show="area.rooms.filter(room => room.temporary === true).length > 0"
+                                         class="mt-12">
+                                        <h2 v-on:click="switchVisibility(area.id)"
+                                            class="pb-2 flex xxsDarkBold cursor-pointer items-center">
+                                            {{ $t('Temporary rooms') }}
+                                            <IconChevronUp stroke-width="1.5" v-if="showTemporaryRooms.includes(area.id)"
+                                                           class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
+                                            <IconChevronDown stroke-width="1.5" v-else
+                                                             class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
+                                        </h2>
+                                        <draggable v-show="showTemporaryRooms.includes(area.id)"
+                                                   ghost-class="opacity-50"
+                                                   key="draggableKey"
+                                                   item-key="id" :list="area.rooms"
+                                                   @start="dragging=true" @end="dragging=false"
+                                                   @change="updateRoomOrder(area.rooms)">
+                                            <template #item="{element}" :key="element.id">
+                                                <div v-show="element.temporary" class="flex group"
+                                                     @mouseover="showMenu = element.id"
+                                                     :key="element.id"
+                                                     @mouseout="showMenu = null">
+                                                    <div class="flex mt-6 flex-wrap w-full" :key="element.id"
+                                                         :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                                        <div class="flex w-full">
+                                                            <div class="flex">
+                                                                <Link :href="route('rooms.show',{room: element.id})"
+                                                                    class="ml-4 my-auto xsDark">
+                                                                    {{ element.name }} ({{ element.start_date }}
+                                                                    - {{ element.end_date }})
+                                                                </Link>
+                                                                <div class="ml-6 flex items-center xsLight my-auto">
+                                                                    {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
+                                                                    <UserPopoverTooltip :user="element.created_by"
+                                                                                        :id="element.created_by.id + '-room-' + element.id"
+                                                                                        height="6"
+                                                                                        width="6"
+                                                                                        class="ml-2"/>
+                                                                </div>
+                                                            </div>
+                                                            <BaseMenu class="invisible group-hover:visible"
+                                                                      :key="element.id">
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click="openEditRoomModal(element)"
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                                                        <IconEdit stroke-width="1.5"
+                                                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                  aria-hidden="true"/>
+                                                                        {{ $t('Edit')}}
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a href="#"
+                                                                       @click="duplicateRoom(element)"
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <IconCopy  stroke-width="1.5"
+                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                   aria-hidden="true"/>
+                                                                        {{ $t('Duplicate')}}
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click="openSoftDeleteRoomModal(element)"
+                                                                       :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <IconTrash stroke-width="1.5"
+                                                                                   class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                   aria-hidden="true"/>
+                                                                        {{ $t('In the recycle bin')}}
+                                                                    </a>
+                                                                </MenuItem>
+                                                            </BaseMenu>
                                                         </div>
                                                     </div>
-                                                </template>
-                                            </draggable>
-                                            <div v-show="area.rooms.filter(room => room.temporary === true).length > 0"
-                                                 class="mt-12">
-                                                <h2 v-on:click="switchVisibility(area.id)"
-                                                    class="pb-2 flex xxsDarkBold cursor-pointer items-center">
-                                                    {{ $t('Temporary rooms')}}
-                                                    <IconChevronUp stroke-width="1.5" v-if="showTemporaryRooms.includes(area.id)"
-                                                                   class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
-                                                    <IconChevronDown stroke-width="1.5" v-else
-                                                                     class=" ml-1 mr-3 flex-shrink-0 h-4 w-4"/>
-                                                </h2>
-                                                <draggable v-show="showTemporaryRooms.includes(area.id)"
-                                                           ghost-class="opacity-50"
-                                                           key="draggableKey"
-                                                           item-key="id" :list="area.rooms"
-                                                           @start="dragging=true" @end="dragging=false"
-                                                           @change="updateRoomOrder(area.rooms)">
-                                                    <template #item="{element}" :key="element.id">
-                                                        <div v-show="element.temporary" class="flex group"
-                                                             @mouseover="showMenu = element.id"
-                                                             :key="element.id"
-                                                             @mouseout="showMenu = null">
-                                                            <div class="flex mt-6 flex-wrap w-full" :key="element.id"
-                                                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                                <div class="flex w-full">
-                                                                    <div class="flex">
-                                                                        <Link
-                                                                            :href="route('rooms.show',{room: element.id})"
-                                                                            class="ml-4 my-auto xsDark"
-                                                                        >
-                                                                            {{ element.name }} ({{ element.start_date }}
-                                                                            - {{ element.end_date }})
-                                                                        </Link>
-                                                                        <div
-                                                                            class="ml-6 flex items-center xsLight my-auto">
-                                                                            {{ $t('created on { created_at } by', {'created_at': element.created_at }) }}
-                                                                            <UserPopoverTooltip
-                                                                                :user="element.created_by"
-                                                                                :id="element.created_by.id + '-room-' + element.id"
-                                                                                height="6"
-                                                                                width="6"
-                                                                                class="ml-2"></UserPopoverTooltip>
-                                                                        </div>
-                                                                    </div>
-                                                                    <BaseMenu class="invisible group-hover:visible"
-                                                                              :key="element.id">
-                                                                        <MenuItem v-slot="{ active }">
-                                                                            <a @click="openEditRoomModal(element)"
-                                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                                <IconEdit stroke-width="1.5"
-                                                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                          aria-hidden="true"/>
-                                                                                {{ $t('Edit')}}
-                                                                            </a>
-                                                                        </MenuItem>
-                                                                        <MenuItem v-slot="{ active }">
-                                                                            <a href="#"
-                                                                               @click="duplicateRoom(element)"
-                                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                <IconCopy  stroke-width="1.5"
-                                                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                           aria-hidden="true"/>
-                                                                                {{ $t('Duplicate')}}
-                                                                            </a>
-                                                                        </MenuItem>
-                                                                        <MenuItem v-slot="{ active }">
-                                                                            <a @click="openSoftDeleteRoomModal(element)"
-                                                                               :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                <IconTrash stroke-width="1.5"
-                                                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                           aria-hidden="true"/>
-                                                                                {{ $t('In the recycle bin')}}
-                                                                            </a>
-                                                                        </MenuItem>
-                                                                    </BaseMenu>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </template>
-                                                </draggable>
-                                            </div>
-                                        </div>
+                                                </div>
+                                            </template>
+                                        </draggable>
                                     </div>
                                 </div>
                             </div>
@@ -405,7 +388,6 @@
                         id="description"
                     />
                 </div>
-
                 <Menu as="span" class="relative inline-block w-full text-left">
                     <div>
                         <MenuButton class="menu-button">
@@ -413,7 +395,6 @@
                             <ChevronDownIcon class="ml-2 -mr-1 h-5 w-5 text-primary float-right" aria-hidden="true"/>
                         </MenuButton>
                     </div>
-
                     <transition
                         enter-active-class="transition duration-50 ease-out"
                         enter-from-class="transform scale-100 opacity-100"
@@ -431,7 +412,6 @@
                                         <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"
                                         />
                                     </DisclosureButton>
-
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-if="room_categories.length > 0"
                                              v-for="category in room_categories"
@@ -450,7 +430,6 @@
                                         <div v-else class="text-secondary">{{$t('No room categories created yet')}}</div>
                                     </DisclosurePanel>
                                 </Disclosure>
-
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton class="flex w-full py-2 justify-between rounded-lg bg-artwork-navigation-background text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                                         <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Adjoining rooms')}}</span>
@@ -459,10 +438,8 @@
                                             class="h-4 w-4 mt-0.5 text-white"
                                         />
                                     </DisclosureButton>
-
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                        <div v-for="area in areas">
+                                        <div v-for="area in computedAreasAndRooms">
                                             <div v-if="area.rooms.length > 0"
                                                  v-for="room in area.rooms"
                                                  :key="room"
@@ -471,18 +448,15 @@
                                                        v-model="newRoomForm.adjoining_roomsToDisplay"
                                                        :value="{id:room.id,name: room.name}"
                                                        class="input-checklist-dark"/>
-                                                <p :class="[newRoomForm.adjoining_roomsToDisplay.includes(room)
-                                                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                <p :class="[newRoomForm.adjoining_roomsToDisplay.includes(room) ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-md subpixel-antialiased align-text-middle">
                                                     {{ room.name }}
                                                 </p>
                                             </div>
                                             <div v-else class="text-secondary">{{ $t('No rooms created yet')}}</div>
                                         </div>
-
                                     </DisclosurePanel>
                                 </Disclosure>
-                                <!--                                    -->
                                 <!-- Room Attributes Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
@@ -518,7 +492,6 @@
                             </div>
                         </MenuItems>
                     </transition>
-
                 </Menu>
                 <div class="flex flex-wrap">
                         <span v-for="(category, index) in newRoomForm.room_categoriesToDisplay"
@@ -592,9 +565,7 @@
     <!-- Raum Bearbeiten-->
     <BaseModal @closed="closeEditRoomModal" v-if="showEditRoomModal">
         <div class="mx-3">
-            <ModalHeader
-                :title="$t('Edit room')"
-            />
+            <ModalHeader :title="$t('Edit room')"/>
             <form @submit.prevent="editRoom" class="grid grid-cols-1 gap-4">
                 <div class="">
                     <TextInputComponent
@@ -672,10 +643,8 @@
                                             class="h-4 w-4 mt-0.5 text-white"
                                         />
                                     </DisclosureButton>
-
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                        <div v-for="area in areas">
+                                        <div v-for="area in computedAreasAndRooms">
                                             <div v-if="area.rooms.length > 0"
                                                  v-for="room in area.rooms"
                                                  :key="room"
@@ -692,10 +661,8 @@
                                             </div>
                                             <div v-else class="text-secondary">{{$t('No rooms created yet')}}</div>
                                         </div>
-
                                     </DisclosurePanel>
                                 </Disclosure>
-                                <!--                                    -->
                                 <!-- Room Attributes Section -->
                                 <Disclosure v-slot="{ open }">
                                     <DisclosureButton
@@ -707,7 +674,6 @@
                                             class="h-4 w-4 mt-0.5 text-white"
                                         />
                                     </DisclosureButton>
-
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-if="room_attributes.length > 0"
                                              v-for="attribute in room_attributes"
@@ -731,7 +697,6 @@
                             </div>
                         </MenuItems>
                     </transition>
-
                 </Menu>
                 <div class="mt-2 flex flex-wrap">
                                     <span v-for="(category, index) in editRoomForm.room_categoriesToDisplay"
@@ -753,16 +718,13 @@
                                         </button>
                                     </span>
                     <span v-for="(room, index) in editRoomForm.adjoining_roomsToDisplay"
-                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ $t('adjoining room from')}} {{ room.name }}
-                                        <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)"
-                                                type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-
+                          class="flex rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
+                        {{ $t('adjoining room from')}} {{ room.name }}
+                        <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)"
+                                type="button">
+                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                        </button>
+                    </span>
                 </div>
                 <div class="flex items-center">
                     <input v-model="editRoomForm.temporary"
@@ -938,7 +900,9 @@ export default defineComponent({
         DuplicateIcon,
         draggable,
         DocumentTextIcon,
-        Disclosure, DisclosureButton, DisclosurePanel
+        Disclosure,
+        DisclosureButton,
+        DisclosurePanel
     },
     name: 'Area Management',
     props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],
@@ -1018,6 +982,18 @@ export default defineComponent({
         },
         areaDeleteDescriptionText() {
             return this.$t('Are you sure you want to put the area {0} with all rooms in the recycle bin?', [this.areaToSoftDelete.name]);
+        },
+        computedAreasAndRooms() {
+            if (this.showEditRoomModal) {
+                let areas = JSON.parse(JSON.stringify(this.areas));
+                areas.forEach((area) => {
+                    area.rooms = area.rooms.filter((room) => this.editRoomForm.id !== room.id);
+                });
+
+                return areas;
+            }
+
+            return this.areas;
         }
     },
     methods: {
@@ -1311,7 +1287,3 @@ export default defineComponent({
     },
 })
 </script>
-
-<style scoped>
-
-</style>

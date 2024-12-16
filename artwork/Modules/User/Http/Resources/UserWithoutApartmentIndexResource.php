@@ -2,8 +2,12 @@
 
 namespace Artwork\Modules\User\Http\Resources;
 
+use Artwork\Modules\User\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin User
+ */
 class UserWithoutApartmentIndexResource extends JsonResource
 {
     public static $wrap = null;
@@ -14,7 +18,9 @@ class UserWithoutApartmentIndexResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        return [
+        $pivot = $this->getRelation('pivot');
+
+        $user = [
             'resource' => class_basename($this),
             'id' => $this->id,
             'first_name' => $this->first_name,
@@ -26,5 +32,14 @@ class UserWithoutApartmentIndexResource extends JsonResource
             'business' => $this->business,
             'phone_number' => $this->phone_number,
         ];
+
+        if ($pivot) {
+            $user['pivot'] = [
+                'is_admin' => (bool) $pivot->is_admin,
+                'can_request' => (bool) $pivot->can_request,
+            ];
+        }
+
+        return $user;
     }
 }

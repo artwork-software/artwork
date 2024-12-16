@@ -292,10 +292,13 @@ class EventCalendarExportBladeTemplateService
                     if ($hasEvent) {
                         $this->logger->debug('--> Create event name and description columns...');
                         $markup .= sprintf(
-                            '<td style="%s">%s %s</td><td style="%s"></td>',
+                            '<td style="%s">%s %s %s</td><td style="%s"></td>',
                             'width: 125px; border-bottom:1px solid #000000; border-left:1px solid #000000;',
-                            $event->getAttribute('name'),
-                            ($description = $event->getAttribute('description')) ? '| ' . $description : '',
+                            ($eventName = $event->getAttribute('name')) ? $eventName . ' | ' : '',
+                            (
+                                $eventStatusName = $event->getAttribute('eventStatus')?->getAttribute('name')
+                            ) ? $eventStatusName : '',
+                            ($description = $event->getAttribute('description')) ? ' | ' . $description : '',
                             'width: 125px; border-bottom:1px solid #000000; border-right:1px solid #000000;'
                         );
                     } else {

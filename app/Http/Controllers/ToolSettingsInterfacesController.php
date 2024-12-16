@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Core\Console\Commands\ImportSage100ApiDataCommand;
+use Artwork\Modules\Budget\Services\TableColumnOrderService;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -21,14 +22,16 @@ class ToolSettingsInterfacesController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function index(SageApiSettingsService $sageApiSettingsService): Response
-    {
+    public function index(
+        SageApiSettingsService $sageApiSettingsService,
+        TableColumnOrderService $tableColumnOrderService,
+    ): Response {
         $this->authorize('view', SageApiSettings::class);
-
         return Inertia::render(
             'Interfaces/Index',
             [
-                'sageSettings' => $sageApiSettingsService->getFirst()
+                'sageSettings' => $sageApiSettingsService->getFirst(),
+                'tableColumnOrder' => $tableColumnOrderService->getAllOrderedByPosition()
             ]
         );
     }
@@ -74,10 +77,31 @@ class ToolSettingsInterfacesController extends Controller
 
     public function initializeSageSpecificDay(Request $request): RedirectResponse
     {
-        if (Artisan::call(ImportSage100ApiDataCommand::class, ['specificDay' => $request->get('specificDay')]) === 0) {
+        if (
+            Artisan::call(
+                ImportSage100ApiDataCommand::class,
+                [
+                    'specificDay' => $request->get('specificDay')
+                ]
+            ) === 0
+        ) {
             return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
         }
 
         return Redirect::back()->with('error', __('flash-messages.interfaces.import_executed_unsuccessfully'));
+    }
+
+    public function deleteSageData(): RedirectResponse
+    {
+        // @todo: Controller method is removed in future, logic is preserved as command (can be used for dev purposes)
+        try {
+            if (Artisan::call(ImportSage100ApiDataCommand::class, ['--delete-sage-data' => true]) === 0) {
+                return Redirect::back()->with('success', __('Daten erfolgreich gelöscht.'));
+            }
+        } catch (Throwable $t) {
+            return Redirect::back()->with('error', $t->getMessage());
+        }
+
+        return Redirect::back()->with('error', 'Es ist ein unerwarteter Fehler aufgetreten.');
     }
 }

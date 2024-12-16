@@ -87,6 +87,7 @@ use App\Http\Controllers\UserShiftCalendarAboController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\VacationController;
 use App\Http\Controllers\WorkerController;
+use Artwork\Modules\Budget\Http\Controllers\TableColumnOrderController;
 use Artwork\Modules\Event\Http\Controllers\EventListOrCalendarExportController;
 use Artwork\Modules\GlobalNotification\Http\Controller\GlobalNotificationController;
 use Artwork\Modules\Inventory\Http\Controllers\InventoryController;
@@ -156,11 +157,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'initializeSageSpecificDay'
             ]
         )->name('tool.interfaces.sage.initializeSpecificDay');
+        Route::delete('/interfaces/sage/delete', [ToolSettingsInterfacesController::class, 'deleteSageData'])
+            ->name('tool.interfaces.sage.delete');
         Route::get('/module-settings', [ModuleSettingsController::class, 'index'])
             ->name('tool.module-settings.index');
         Route::patch('/module-settings', [ModuleSettingsController::class, 'update'])
             ->name('tool.module-settings.update');
-        Route::group(['namespace' => 'System', 'prefix' => 'system'], function() {
+        Route::group(['namespace' => 'System', 'prefix' => 'system'], function (): void {
             Route::get('/file-settings', [FileSettingsController::class, 'index'])
                 ->name('tool.file-settings.index');
             Route::put('/file-settings', [FileSettingsController::class, 'store'])
@@ -892,6 +895,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.unfix.main-position');
             Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])
                 ->name('project.budget.column.update.commented');
+            Route::patch('/columns/update-orders', [TableColumnOrderController::class, 'updateTableColumnOrders'])
+                ->name('project.budget.updateTableColumnOrders');
 
             // DELETE
             Route::delete('/sub-position-row/{subPositionRow}', [ProjectController::class, 'deleteRow'])
@@ -1065,8 +1070,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('budget-settings.templates')
             ->can('view budget templates');
     });
-
-
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
         ->name('project.copyright.update');

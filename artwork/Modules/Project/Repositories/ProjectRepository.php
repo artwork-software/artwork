@@ -22,14 +22,6 @@ class ProjectRepository extends BaseRepository
         return $project->users()->get();
     }
 
-    /**
-     * @throws ModelNotFoundException
-     */
-    public function findOrFail(int $id): Project
-    {
-        return Project::findOrFail($id);
-    }
-
     public function getProjectByCostCenter(string $costCenter): Project|null
     {
         return Project::byCostCenter($costCenter)

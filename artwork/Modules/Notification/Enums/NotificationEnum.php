@@ -37,8 +37,6 @@ enum NotificationEnum: string
 
     case NOTIFICATION_UPSERT_ROOM_REQUEST = 'NOTIFICATION_UPSERT_ROOM_REQUEST';
 
-    case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
-
     case NOTIFICATION_ROOM_CHANGED = 'NOTIFICATION_ROOM_CHANGED';
 
     case NOTIFICATION_ROOM_ANSWER = 'NOTIFICATION_ROOM_ANSWER';
@@ -86,7 +84,6 @@ enum NotificationEnum: string
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => "BUDGET",
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
 
@@ -117,7 +114,6 @@ enum NotificationEnum: string
             self::NOTIFICATION_ROOM_REQUEST => RoomRequestNotification::class,
             self::NOTIFICATION_CONFLICT,
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
             self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
@@ -156,14 +152,11 @@ enum NotificationEnum: string
             self::NOTIFICATION_BUDGET_STATE_CHANGED => 'Changes to budget status',
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => 'Changes to budget and funding sources',
             self::NOTIFICATION_MONEY_SOURCE_EXPIRATION => 'Funding source is expiring',
-            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED =>
-                'Funding source has reached the set threshold',
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => 'Funding source has reached the set threshold',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Changes to documents and contracts',
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "New/modified room request",
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Reminder for room requests",
             self::NOTIFICATION_ROOM_CHANGED => "Changes to room",
-
             self::NOTIFICATION_NEW_TASK => "New tasks",
             self::NOTIFICATION_TASK_REMINDER => "Reminders for Tasks",
             self::NOTIFICATION_TASK_CHANGED => "Changes to tasks",
@@ -201,7 +194,6 @@ enum NotificationEnum: string
                 'You will be notified as soon as the funding source reaches the defined threshold.',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Find out whether you have received approval for documents or contracts and whether there have been any changes to these documents.',
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Find out if there are new or changed room requests.",
-            self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Be reminded when room requests become urgent.",
             self::NOTIFICATION_ROOM_CHANGED => "You will be notified as soon as there are changes to your rooms or your room responsibilities.",
             self::NOTIFICATION_NEW_TASK => "Find out if there are new tasks for you or your team.",
             self::NOTIFICATION_TASK_REMINDER => "Be reminded when tasks become urgent or have already have already exceeded their deadline.",

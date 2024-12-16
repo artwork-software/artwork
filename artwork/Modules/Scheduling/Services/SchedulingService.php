@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\Scheduling\Services;
 
+use Artwork\Core\Carbon\Service\CarbonService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
 use Artwork\Modules\Notification\Services\NotificationService;
@@ -14,11 +15,15 @@ use Artwork\Modules\Scheduling\Repositories\SchedulingRepository;
 use Artwork\Modules\Task\Models\Task;
 use Artwork\Modules\User\Models\User;
 use Carbon\Carbon;
+use Psr\Log\LoggerInterface;
 
-readonly class SchedulingService
+class SchedulingService
 {
-    public function __construct(private SchedulingRepository $schedulingRepository)
-    {
+    public function __construct(
+        private readonly SchedulingRepository $schedulingRepository,
+        private readonly LoggerInterface $logger,
+        private readonly CarbonService $carbonService,
+    ) {
     }
 
     public function create(
@@ -61,12 +66,20 @@ readonly class SchedulingService
         NotificationService $notificationService,
         ProjectTabService $projectTabService
     ): void {
+        $this->logger->debug('Send notifications: ' . $this->carbonService->getNow()->format('Y-m-d H:i:s'));
+
         $schedulingsToNotify = $this->schedulingRepository->getAllWhereUpdatedAtLowerOrEqualThan(
-            Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone'))
+            $this->carbonService->getNow()->addMinutes(30)->setTimezone(config('app.timezone'))
         );
 
         foreach ($schedulingsToNotify as $schedulings) {
-            $user = User::find($schedulings->user_id);
+            $user = User::query()->find($schedulings->user_id);
+            if (!$user instanceof User) {
+                $this->logger->error('User with id: ' . $schedulings->user_id . ' not found.');
+                continue;
+            }
+
+            $this->logger->debug('Attempt to send scheduling type: ' . $schedulings->type);
             switch ($schedulings->type) {
                 case 'TASK_ADDED':
                     $notificationTitle = __(
@@ -88,7 +101,11 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'PROJECT_CHANGES':
-                    $project = Project::find($schedulings->model_id);
+                    $project = Project::query()->find($schedulings->model_id);
+                    if (!$project instanceof Project) {
+                        $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_project',
                         ['project' => $project->name],
@@ -112,7 +129,11 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'TASK_CHANGES':
-                    $task = Task::find($schedulings->model_id);
+                    $task = Task::query()->find($schedulings->model_id);
+                    if (!$task instanceof Task) {
+                        $this->logger->error('Task with id: ' . $schedulings->model_id . ' not found.');
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_task',
                         ['task' => $task?->name],
@@ -135,7 +156,11 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'ROOM_CHANGES':
-                    $room = Room::find($schedulings->model_id);
+                    $room = Room::query()->find($schedulings->model_id);
+                    if (!$room instanceof Room) {
+                        $this->logger->error('Room with id: ' . $schedulings->model_id . ' not found.');
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_room',
                         ['room' => $room?->name],
@@ -157,8 +182,9 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'EVENT_CHANGES':
-                    $event = Event::query()->firstOrFail($schedulings->model_id);
+                    $event = Event::query()->find($schedulings->model_id);
                     if (!$event instanceof Event) {
+                        $this->logger->error('Event with id: ' . $schedulings->model_id . ' not found.');
                         break;
                     }
                     $notificationTitle = __(
@@ -223,6 +249,7 @@ readonly class SchedulingService
                 case 'PUBLIC_CHANGES':
                     $project = Project::query()->find($schedulings->model_id);
                     if (!$project instanceof Project) {
+                        $this->logger->error('Project with id: ' . $schedulings->model_id . ' not found.');
                         break;
                     }
                     $notificationTitle = __(
@@ -249,7 +276,11 @@ readonly class SchedulingService
                     $notificationService->createNotification();
                     break;
                 case 'VACATION_CHANGES':
-                    $user = User::find($schedulings->model_id);
+                    $user = User::query()->find($schedulings->model_id);
+                    if (!$user instanceof User) {
+                        $this->logger->error('User with id: ' . $schedulings->model_id . ' not found.');
+                        break;
+                    }
                     $notificationTitle = __(
                         'notification.scheduling.changes_vacation',
                         [],
@@ -284,6 +315,13 @@ readonly class SchedulingService
                     break;
             }
             $schedulings->delete();
+            $this->logger->debug(
+                sprintf(
+                    'Successfully deleted scheduling model with id: %d after createNotification().',
+                    $schedulings->id
+                )
+            );
         }
+        $this->logger->debug(__CLASS__ . ' done.');
     }
 }

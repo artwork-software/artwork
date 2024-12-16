@@ -56,7 +56,11 @@
                                     );
                             @endphp
                             @if($columnCell->column->type === "empty")
-                                {{ (float) $columnCell->value }}
+                                @if ($loop->index === 1 || $loop->index === 2 || $loop->index === 3)
+                                    {{ $columnCell->value }}
+                                @else
+                                    {{ (float) $columnCell->value }}
+                                @endif
                             @elseif($columnCell->column->type === "sage")
                                 {{ (float) $columnCell->sage_value ?: 0 }}
                             @else
@@ -176,7 +180,11 @@
                                     );
                             @endphp
                             @if($columnCell->column->type === "empty")
-                                {{ (float) $columnCell->value }}
+                                @if ($loop->index === 1 || $loop->index === 2 || $loop->index === 3)
+                                    {{ $columnCell->value }}
+                                @else
+                                    {{ (float) $columnCell->value }}
+                                @endif
                             @elseif($columnCell->column->type === "sage")
                                 {{ (float) $columnCell->sage_value ?: 0 }}
                             @else

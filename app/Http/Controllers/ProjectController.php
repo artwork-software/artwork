@@ -396,6 +396,7 @@ class ProjectController extends Controller
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 0,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -403,6 +404,7 @@ class ProjectController extends Controller
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 1,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -410,6 +412,7 @@ class ProjectController extends Controller
                 'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
                 'subName' => '',
                 'type' => 'empty',
+                'position' => 2,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -417,6 +420,7 @@ class ProjectController extends Controller
                 'name' => date('Y') . ' €',
                 'subName' => 'A',
                 'type' => 'empty',
+                'position' => 3,
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
@@ -1915,9 +1919,6 @@ class ProjectController extends Controller
         EventService $eventService,
         ProjectCreateSettings $projectCreateSettings
     ): Response|ResponseFactory {
-
-
-
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = $project;
         $headerObject->project->cost_center = $project->costCenter; // needed for the ProjectShowHeaderComponent

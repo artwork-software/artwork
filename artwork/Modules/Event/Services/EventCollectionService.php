@@ -192,12 +192,10 @@ class EventCollectionService
                         $builder->when(
                             $calendarPeriod,
                             function (Builder $builder) use ($calendarPeriod): void {
-                                $builder->whereBetween(
-                                    'start_time',
-                                    [
-                                        $calendarPeriod->start,
-                                        $calendarPeriod->end
-                                    ]
+                                //see Event scopeStartAndEndTimeOverlap
+                                $builder->startAndEndTimeOverlap(
+                                    $calendarPeriod->start,
+                                    $calendarPeriod->end
                                 );
                             }
                         );
@@ -213,12 +211,10 @@ class EventCollectionService
                         $builder->when(
                             $calendarPeriod,
                             function (Builder $builder) use ($calendarPeriod): void {
-                                $builder->whereBetween(
-                                    'end_time',
-                                    [
-                                        $calendarPeriod->start,
-                                        $calendarPeriod->end
-                                    ]
+                                //see Event scopeStartAndEndTimeOverlap
+                                $builder->startAndEndTimeOverlap(
+                                    $calendarPeriod->start,
+                                    $calendarPeriod->end
                                 );
                             }
                         );
@@ -230,22 +226,6 @@ class EventCollectionService
                             }
                         );
                     });
-                }
-            )
-            ->when(
-                $calendarPeriod,
-                function (Builder $builder) use ($calendarPeriod): void {
-                    $builder->where(
-                        function ($builder) use ($calendarPeriod): void {
-                            $builder->where(function ($builder) use ($calendarPeriod): void {
-                                $builder->where('start_time', '<', $calendarPeriod->start)
-                                    ->where('end_time', '>', $calendarPeriod->end);
-                            })->orWhere(function ($builder) use ($calendarPeriod): void {
-                                $builder->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
-                                    ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
-                            });
-                        }
-                    );
                 }
             )
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))

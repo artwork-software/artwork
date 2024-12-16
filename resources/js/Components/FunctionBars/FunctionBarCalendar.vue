@@ -69,7 +69,7 @@
                 </Switch>
             </div>
             <div class="flex items-center gap-x-2">
-                <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
+                <div class="flex items-center">
                     <div class="flex items-center gap-x-2">
                         <MultiEditSwitch :multi-edit="multiEdit"
                                          :room-mode="roomMode"

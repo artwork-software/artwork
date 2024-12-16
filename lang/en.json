@@ -758,6 +758,9 @@
     "Document number": "Document number",
     "Document date": "Document date",
     "General ledger account": "General ledger account",
+    "Debit account": "Debit account",
+    "Credit account": "Credit account",
+    "Sage period": "Period",
     "Cost bearer": "Cost bearer",
     "Cost center": "Cost center",
     "Booking date": "Booking date",
@@ -2257,5 +2260,9 @@
     "Read from template": "Read from template",
     "Create timeline preset form Event": "Create timeline preset form Event",
     "Create a new timeline preset for the event": "Create a new timeline preset for the event",
-    "Create timeline preset": "Create timeline preset"
+    "Create timeline preset": "Create timeline preset",
+    "Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the 'Debit account' and the second the 'Cost center'.": "Configure the order of the first two columns in the budget. This sorting is only used when displaying columns. The first column is always considered the \"Debit account\" and the second the \"Cost center\".",
+    "Column order": "Column order",
+    "Column 1": "Column 1 ({0})",
+    "Column 2": "Column 2 ({0})"
 }

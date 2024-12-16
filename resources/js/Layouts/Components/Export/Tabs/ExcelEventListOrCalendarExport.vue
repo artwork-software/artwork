@@ -309,7 +309,9 @@ const props = defineProps({
                         {
                             cacheToken: response.data
                         }
-                    )
+                    ),
+                    '_blank',
+                    'noopener'
                 );
             }).catch(() => console.error($t('Export could not be created. Please try again.')));
 };

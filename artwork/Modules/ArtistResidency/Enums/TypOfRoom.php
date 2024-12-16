@@ -22,5 +22,4 @@ enum TypOfRoom: string
     case TWIN_ROOM = 'twin_room';
     case CHAMBRE_DE_HOTEL = 'chambre_de_hotel';
     case CHAMBRE_DU_SALON = 'chambre_du_salon';
-
 }

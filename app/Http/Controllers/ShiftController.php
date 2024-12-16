@@ -6,6 +6,8 @@ use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\Event\Services\EventTimelineService;
 use Artwork\Modules\Freelancer\Models\Freelancer;
 use Artwork\Modules\IndividualTimes\Services\IndividualTimeService;
 use Artwork\Modules\Notification\Enums\NotificationEnum;
@@ -21,6 +23,9 @@ use Artwork\Modules\Shift\Services\ShiftServiceProviderService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Shift\Services\ShiftUserService;
 use Artwork\Modules\ShiftPlanComment\Services\ShiftPlanCommentService;
+use Artwork\Modules\ShiftPresetTimeline\Http\Requests\TimelinePresetStoreRequest;
+use Artwork\Modules\ShiftPresetTimeline\Models\PresetTimelineTime;
+use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Artwork\Modules\User\Models\User;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
@@ -45,6 +50,8 @@ class ShiftController extends Controller
         private readonly IndividualTimeService $individualTimeService,
         private readonly ShiftPlanCommentService $shiftPlanCommentService,
         private readonly VacationService $vacationService,
+        private readonly EventService $eventService,
+        private EventTimelineService $eventTimelineService
     ) {
     }
 
@@ -972,5 +979,25 @@ class ShiftController extends Controller
                 $this->shiftService->detachFromShifts($shifts, $modelClass, $entityModel);
             }
         }
+    }
+
+    public function updateTimeLine(Event $event, Request $request): void
+    {
+        $this->eventTimelineService->updateTimeLines($event, $request->get('dataset'));
+    }
+
+    public function addTimeLine(Event $event, Request $request): void
+    {
+        $this->eventTimelineService->addTimeLines($event, $request->get('dataset'));
+    }
+
+    public function importTimelinePreset(Event $event, ShiftPresetTimeline $shiftPresetTimeline): void
+    {
+        $this->eventTimelineService->importTimelinePreset($event, $shiftPresetTimeline);
+    }
+
+    public function storeTimelinePresetFormEvent(Event $event, Request $request): void
+    {
+        $this->eventTimelineService->storeTimelinePresetFromEvent($event, $request->get('name'));
     }
 }

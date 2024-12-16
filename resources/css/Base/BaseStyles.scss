@@ -74,6 +74,18 @@
             @apply xsLight subpixel-antialiased;
         }
     }
+
+    .btn-group-hover {
+        @apply group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    }
+
+    .btn-hover {
+        @apply hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    }
+
+    .btn-border-hover {
+        @apply hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out
+    }
 }
 
 

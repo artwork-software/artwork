@@ -39,4 +39,76 @@ readonly class ShiftPresetTimelineService
 
         return $duplicatedShiftPresetTimeline;
     }
+
+    public function duplicate(ShiftPresetTimeline $shiftPresetTimeline): void
+    {
+        $duplicatedShiftPresetTimeline = $shiftPresetTimeline->replicate();
+        $duplicatedShiftPresetTimeline->name = $shiftPresetTimeline->name . ' (copy)';
+        $duplicatedShiftPresetTimeline->save();
+
+        $shiftPresetTimeline->times->each(function ($time) use ($duplicatedShiftPresetTimeline): void {
+            $duplicatedShiftPresetTimeline->times()->create([
+                'start' => $time->start,
+                'end' => $time->end,
+                'description' => $time->description
+            ]);
+        });
+    }
+
+    /**
+     * Update the timeline preset and associated times.
+     *
+     * @param ShiftPresetTimeline $shiftPresetTimeline
+     * @param array $data
+     * @return ShiftPresetTimeline
+     */
+    public function updateTimelinePreset(ShiftPresetTimeline $shiftPresetTimeline, array $data): ShiftPresetTimeline
+    {
+        $shiftPresetTimeline->update([
+            'name' => $data['name'],
+        ]);
+
+        $shiftPresetTimeline->times()->each(function ($time): void {
+            $time->delete();
+        });
+
+        $this->attachTimes($shiftPresetTimeline, $data['dataset']);
+
+        return $shiftPresetTimeline;
+    }
+
+    /**
+     * Store a new timeline preset and associated times.
+     *
+     * @param array $data
+     * @return ShiftPresetTimeline
+     */
+    public function storeTimelinePreset(array $data): ShiftPresetTimeline
+    {
+        $timelinePreset = ShiftPresetTimeline::create([
+            'name' => $data['name'],
+        ]);
+
+        $this->attachTimes($timelinePreset, $data['dataset']);
+
+        return $timelinePreset;
+    }
+
+    /**
+     * Attach times to a timeline preset.
+     *
+     * @param ShiftPresetTimeline $timelinePreset
+     * @param array $times
+     * @return void
+     */
+    private function attachTimes(ShiftPresetTimeline $timelinePreset, array $times): void
+    {
+        foreach ($times as $time) {
+            $timelinePreset->times()->create([
+                'start' => $time['start'],
+                'end' => $time['end'],
+                'description' => $time['description'],
+            ]);
+        }
+    }
 }

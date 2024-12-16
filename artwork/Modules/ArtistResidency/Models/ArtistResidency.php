@@ -48,7 +48,6 @@ class ArtistResidency extends Model
         'description',
     ];
 
-
     protected $appends = ['formatted_dates'];
 
     public function serviceProvider(): BelongsTo

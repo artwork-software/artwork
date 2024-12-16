@@ -37,16 +37,16 @@
             </div>
         </div>
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-            <PresetTimeLine :time-line="preset.timeline" :preset-id="preset.id" />
+            <!--<PresetTimeLine :time-line="preset.timeline" :preset-id="preset.id" />-->
             <div class="w-[175px]" v-for="presetShift in preset.shifts">
                 <SinglePresetShift :preset-shift="presetShift"
                                    :shift-qualifications="shiftQualifications"
                                    :crafts="this.crafts"
                 />
             </div>
-            <div class="w-[175px] flex items-center justify-center border-2 border-dashed"
+            <div class="w-[175px] h-[175px] flex items-center justify-center border-2 border-dashed rounded-lg group hover:border-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer"
                  @click="showAddShiftPresetModal = true">
-                <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue"/>
+                <component is="IconCircleDashedPlus" class="h-6 w-6 rounded-full text-gray-300 group-hover:text-artwork-buttons-hover transition-colors duration-300 ease-in-out cursor-pointer" stroke-width="2"/>
             </div>
         </div>
     </div>

@@ -44,12 +44,12 @@
             </Listbox>
             -->
             <div class="w-full mb-3 mt-3">
-                <input v-model="presetForm.name"
-                       id="changeEndTime"
-                       type="text"
-                       required
-                       :placeholder="$t('Name of the template*')"
-                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none w-full h-12"/>
+                <TextInputComponent
+                    v-model="presetForm.name"
+                    id="changeEndTime"
+                    type="text"
+                    required
+                    :label="$t('Name of the template*')"/>
             </div>
         </div>
         <div class="flex justify-center">
@@ -80,10 +80,12 @@ import {
 import {useForm} from "@inertiajs/vue3";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import BaseModal from "@/Components/Modals/BaseModal.vue";
+import TextInputComponent from "@/Components/Inputs/TextInputComponent.vue";
 
 export default defineComponent({
     name: "AddShiftPresetModal",
     components: {
+        TextInputComponent,
         BaseModal,
         FormButton,
         CheckIcon,
@@ -122,7 +124,7 @@ export default defineComponent({
             this.$emit('closed')
         },
         savePreset(){
-            this.presetForm.event_type_id = this.selectedEventType.id;
+            //this.presetForm.event_type_id = this.selectedEventType.id;
             if (this.eventId !== null && this.eventId !== undefined) {
                 this.presetForm.post(
                     route('shift-presets.store', { event: this.eventId }),

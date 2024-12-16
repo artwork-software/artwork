@@ -120,7 +120,7 @@ readonly class ShiftPresetService
     {
         $shiftPreset = new ShiftPreset([
             'name' => $request->get('name'),
-            'event_type_id' => $request->get('event_type_id')
+            //'event_type_id' => $request->get('event_type_id')
         ]);
         $this->shiftPresetRepository->save($shiftPreset);
 
@@ -129,7 +129,7 @@ readonly class ShiftPresetService
 
     public function updateFromRequest(ShiftPreset $shiftPreset, Request $request): ShiftPreset
     {
-        $shiftPreset->fill($request->only(['name', 'event_type_id']));
+        $shiftPreset->fill($request->only(['name']));
 
         $this->shiftPresetRepository->save($shiftPreset);
 
@@ -140,7 +140,7 @@ readonly class ShiftPresetService
     {
         $duplicatedShiftPreset = new ShiftPreset([
             'name' => $shiftPreset->name,
-            'event_type_id' => $shiftPreset->event_type_id
+            //'event_type_id' => $shiftPreset->event_type_id
         ]);
 
         $this->shiftPresetRepository->save($duplicatedShiftPreset);

@@ -46,9 +46,11 @@
         <ShiftNoteComponent :shift="presetShift" is-preset />
         <div v-for="shiftsQualification in this.presetShift.shifts_qualifications">
             <div v-for="(count) in shiftsQualification.value">
-                <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
-                    <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-                    <span class="text-xs">{{ $t('Unoccupied')}}</span>
+                <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded">
+                    <div class="flex items-center gap-x-2">
+                        <div class="h-4 w-4 rounded-full block bg-gray-500"></div>
+                        <div class="text-xs">{{ $t('Unoccupied')}}</div>
+                    </div>
                     <ShiftQualificationIconCollection
                         :classes="'w-4 h-4'"
                         :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>

@@ -1,6 +1,6 @@
 <template>
     <div :id="'timeline-container-' + event.id + '-' + timeLineForm.id"
-         class="flex flex-col relative h-full"
+         class="flex flex-col relative h-full mb-1"
          :class="{'cursor-pointer': can('can plan shifts') || hasAdminRole()}"
          v-if="timeLineForm.start !== null && timeLineForm.end !== null">
         <div class="text-xs bg-neutral-300 p-2 h-full rounded-lg" :class="time.clicked || editDescription ? '' : 'group flex justify-between'" >
@@ -68,13 +68,8 @@
             </div>
             <div class="invisible group-hover:visible" v-if="!time.clicked || editDescription">
                 <BaseMenu has-no-offset>
-                    <MenuItem v-slot="{ active }">
-                        <div @click="deleteTime"
-                           :class="[active ? 'bg-artwork-navigation-color/10 text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                            <IconTrash stroke-width="1.5" class="w-5 h-5 mr-3" />
-                            {{ $t('Delete') }}
-                        </div>
-                    </MenuItem>
+                    <BaseMenuItem title="Edit" @click="openCloseTimeEditor(true)" />
+                    <BaseMenuItem title="Delete" icon="IconTrash" @click="deleteTime" />
                 </BaseMenu>
             </div>
         </div>
@@ -97,6 +92,7 @@ import BaseMenu from "@/Components/Menu/BaseMenu.vue";
 import {MenuItem, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import DateInputComponent from "@/Components/Inputs/DateInputComponent.vue";
 import {useTranslation} from "@/Composeables/Translation.js";
+import BaseMenuItem from "@/Components/Menu/BaseMenuItem.vue";
 
 const props = defineProps({
     time: {

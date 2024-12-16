@@ -24,7 +24,8 @@
                                                  :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                                  :first-project-shift-tab-id="first_project_shift_tab_id"
                                                  :projectNameUsedForProjectTimePeriod="projectNameUsedForProjectTimePeriod"
-                                                 :event-statuses="eventStatuses"/>
+                                                 :event-statuses="eventStatuses"
+                                                 :isCalendarViewRoute="true"/>
         </div>
     </app-layout>
 </template>

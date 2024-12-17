@@ -94,7 +94,7 @@ readonly class EventTimelineService
      */
     private function createTimeline(Event $event, array $timeline): void
     {
-        [$startTime, $endTime, $allDay] = $this->eventService->processEventTimes(
+        [$startTime, $endTime, $allDay] = $this->eventService->processEventTimesForTimeline(
             Carbon::parse($event->start_time),
             $timeline['start'] ?? null,
             $timeline['end'] ?? null

@@ -20,7 +20,7 @@ class ShiftPresetRepository extends BaseRepository
             'shifts',
             'shifts.craft',
             'shifts.shiftsQualifications',
-            'timeline'
+            //'timeline'
         ])->get();
     }
 

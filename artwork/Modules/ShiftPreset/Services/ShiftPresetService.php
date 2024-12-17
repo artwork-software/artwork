@@ -23,7 +23,7 @@ readonly class ShiftPresetService
         $shiftPresets = $this->shiftPresetRepository->getAllWithEventTypesShiftsAndTimeline();
 
         /** @var ShiftPreset $shiftPreset */
-        foreach ($shiftPresets as $shiftPreset) {
+        /*foreach ($shiftPresets as $shiftPreset) {
             $presetTimelines = $shiftPreset->timeline->toArray();
 
             usort($presetTimelines, function ($a, $b) {
@@ -44,7 +44,7 @@ readonly class ShiftPresetService
             }
 
             $shiftPreset->setRelation('timeline', collect($presetTimelines));
-        }
+        }*/
 
         return $shiftPresets;
     }

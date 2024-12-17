@@ -20,7 +20,6 @@ class ImportSage100ApiDataCommand extends Command
     protected $description = 'Get data from Sage100 and import it to budget.';
 
     public function __construct(
-        private readonly Sage100Service $sage100Service,
         private readonly LoggerInterface $logger,
         private readonly ProjectService $projectService,
         private readonly ColumnService $columnService,
@@ -44,8 +43,7 @@ class ImportSage100ApiDataCommand extends Command
             $this->error('Sage API settings not found. Please configure settings in artworks Tool-Settings.');
             return 1;
         }
-
-        return $this->sage100Service->importDataToBudget(
+        return app()->get(Sage100Service::class)->importDataToBudget(
             $this->argument('count'),
             $this->argument('specificDay'),
             $this->projectService,
@@ -62,7 +60,7 @@ class ImportSage100ApiDataCommand extends Command
     private function deleteSageData(): int
     {
         try {
-            return $this->sage100Service->deleteSageData(
+            return app()->get(Sage100Service::class)->deleteSageData(
                 $this->sageAssignedDataCommentService,
                 $this->sageAssignedDataService,
                 $this->sageNotAssignedDataService,

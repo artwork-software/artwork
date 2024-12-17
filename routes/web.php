@@ -719,7 +719,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         UserCommentedBudgetItemsSettingController::class
     )->only(['store', 'update']);
 
-    Route::group(['timeline-preset'], function (): void {
+    Route::group(['prefix' => 'timeline-preset'], function (): void {
         //shifts.timeline-presets.index
         Route::get('/', [TimelinePresetController::class, 'index'])
             ->name('shifts.timeline-presets.index');
